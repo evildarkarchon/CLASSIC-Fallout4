@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T03:59:08.659691+00:00`
-- Tier-1 contract rows: **1225**
-- Tier-1 matched: **1223**
+- Generated: `2026-10-06T11:05:29.428990+00:00`
+- Tier-1 contract rows: **1226**
+- Tier-1 matched: **1224**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -128,6 +128,7 @@
 | `user_settings.update_with_show_statistics` | `user_settings` | `classic-user-settings-core` | `with_show_statistics` | `classic_user_settings.UserSettingsUpdate.set_show_statistics` | `matched` |
 | `user_settings.update_with_formid_value_lookup` | `user_settings` | `classic-user-settings-core` | `with_formid_value_lookup` | `classic_user_settings.UserSettingsUpdate.set_formid_value_lookup` | `matched` |
 | `user_settings.update_with_formid_databases` | `user_settings` | `classic-user-settings-core` | `with_formid_databases` | `classic_user_settings.UserSettingsUpdate.set_formid_databases` | `matched` |
+| `user_settings.update_with_formid_databases_for_game` | `user_settings` | `classic-user-settings-core` | `with_formid_databases_for_game` | `classic_user_settings.UserSettingsUpdate.set_formid_databases_for_game` | `matched` |
 | `user_settings.update_with_move_unsolved_logs` | `user_settings` | `classic-user-settings-core` | `with_move_unsolved_logs` | `classic_user_settings.UserSettingsUpdate.set_move_unsolved_logs` | `matched` |
 | `user_settings.update_with_unsolved_logs_destination` | `user_settings` | `classic-user-settings-core` | `with_unsolved_logs_destination` | `classic_user_settings.UserSettingsUpdate.set_unsolved_logs_destination` | `matched` |
 | `user_settings.update_with_custom_scan_input` | `user_settings` | `classic-user-settings-core` | `with_custom_scan_input` | `classic_user_settings.UserSettingsUpdate.set_custom_scan_input` | `matched` |

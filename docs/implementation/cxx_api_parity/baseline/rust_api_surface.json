@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T10:00:51Z",
+  "generated_at_utc": "2026-10-06T10:59:05Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -13365,6 +13365,18 @@
         {
           "name": "formid_database_paths",
           "type": "Vec<FormIdDatabasePathDto>"
+        },
+        {
+          "name": "has_formid_database_save",
+          "type": "bool"
+        },
+        {
+          "name": "formid_database_save_game",
+          "type": "String"
+        },
+        {
+          "name": "formid_database_save_paths",
+          "type": "Vec<String>"
         },
         {
           "name": "has_move_unsolved_logs",

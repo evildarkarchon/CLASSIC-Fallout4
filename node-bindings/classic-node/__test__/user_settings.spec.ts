@@ -11,6 +11,7 @@ import {
     commitUserSettingsBootstrap,
     commitUserSettingsUpdate,
     importLegacyTuiStateIntoUserSettings,
+    JsGameId,
     JsGuiWindow,
     openUserSettings,
     planUserSettingsMigration,
@@ -874,6 +875,35 @@ describe("User Settings Update preview", () => {
         expect(
             readFileSync(join(conflictRoot, "CLASSIC Settings.yaml")),
         ).toEqual(conflictContent);
+    });
+
+    test("user-settings-update-vr-formid-save-reports-legacy-key-removal", () => {
+        const root = makeRoot(fixture("vr_shared_and_legacy_formid_databases.yaml"));
+        const update = {
+            formidDatabasesForGame: {game: JsGameId.Fallout4Vr, paths: ["D:/VR.db"]},
+        };
+        const removal = [{
+            fieldPath: "/CLASSIC_Settings/FormID Databases",
+            code: "legacy_formid_databases_key_removed",
+        }];
+
+        const preview = previewUserSettingsUpdate(root, update);
+
+        expect(preview.accepted).toBe(true);
+        expect(preview.fields).toEqual([{
+            fieldPath: "/CLASSIC_Settings/FormID Databases",
+            value: {Fallout4: ["D:/VR.db"], Skyrim: ["databases/Skyrim FormIDs.db"]},
+        }]);
+        expect(preview.diagnostics).toMatchObject(removal);
+
+        const committed = commitUserSettingsUpdate(root, preview.baseRevision!, update);
+
+        expect(committed.status).toBe("committed");
+        expect(committed.diagnostics).toMatchObject(removal);
+        expect(openUserSettings(root).crashLogScanSettings.formidDatabases).toEqual({
+            Fallout4: ["D:/VR.db"],
+            Skyrim: ["databases/Skyrim FormIDs.db"],
+        });
     });
 
     test("frontend geometry transition replays one stale snapshot", () => {

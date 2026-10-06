@@ -3283,6 +3283,14 @@ export interface JsFileOperationResult {
   errors: Array<string>
 }
 
+/** One game's FormID database rows for a game-aware User Settings save. */
+export interface JsFormIdDatabaseSave {
+  /** Game whose Crash Log Scans read these rows. */
+  game: JsGameId
+  /** Complete replacement rows, exactly as they should be persisted. */
+  paths: Array<string>
+}
+
 /** One distinct semantic FormID Finding. */
 export interface JsFormIdFinding {
   /** Canonical uppercase eight-digit FormID including its load-order prefix. */
@@ -5043,7 +5051,10 @@ export interface JsUserSettingsCommitResult {
   expectedRevision: string
   /** Latest document revision, present only when a conflict is detected. */
   actualRevision?: string
-  /** Validation diagnostics, populated only when the update is rejected. */
+  /**
+   * Validation diagnostics when rejected; the accepted preview's effect diagnostics when
+   * committed.
+   */
   diagnostics: Array<JsUserSettingsUpdateDiagnostic>
 }
 
@@ -5211,6 +5222,14 @@ export interface JsUserSettingsUpdate {
   formidValueLookup?: boolean
   /** Requested replacement FormID database mapping. */
   formidDatabases?: Record<string, Array<string>>
+  /**
+   * Requested game-aware save of one game's FormID database rows.
+   *
+   * Rust stores Fallout 4 VR rows under `Fallout4` and removes a legacy `Fallout4VR` key,
+   * reporting the removal in the preview and commit `diagnostics`; any other game replaces
+   * only its own rows. Applied on top of `formidDatabases` when both are requested.
+   */
+  formidDatabasesForGame?: JsFormIdDatabaseSave
   /** Requested Move Unsolved Logs preference. */
   moveUnsolvedLogs?: boolean
   /** Requested Unsolved Logs destination; `null` explicitly selects the default. */
@@ -5223,7 +5242,10 @@ export interface JsUserSettingsUpdate {
   maxConcurrentScans?: number
 }
 
-/** Field-specific reason that a User Settings Update preview was rejected. */
+/**
+ * Field-specific User Settings Update diagnostic: a rejection reason, or a non-rejecting
+ * effect report on an accepted preview or committed result.
+ */
 export interface JsUserSettingsUpdateDiagnostic {
   /** Rejected canonical field path, absent for a preview-level failure. */
   fieldPath?: string
@@ -5249,7 +5271,10 @@ export interface JsUserSettingsUpdatePreview {
   baseRevision?: string
   /** Only the explicitly requested canonical fields, empty when rejected. */
   fields: Array<JsUserSettingsUpdateField>
-  /** All rejection diagnostics, empty when accepted. */
+  /**
+   * Rejection diagnostics when rejected; non-rejecting effect diagnostics (such as
+   * `legacy_formid_databases_key_removed`) when accepted.
+   */
   diagnostics: Array<JsUserSettingsUpdateDiagnostic>
 }
 
