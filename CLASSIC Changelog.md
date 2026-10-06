@@ -9,6 +9,7 @@
 - Fix drag-and-drop widget not expanding layout as well as sizing of the clear button.
 - Fix drag-and-drop showing a 🚫 indicator in certain circumstances
 - The CLI no longer falls back to the current working directory when CLASSIC Data is missing; it stops with a "CLASSIC Data not found" error instead.
+- The TUI can scan crash logs when its settings need migration, and starting a scan no longer saves the typed path inputs; save them explicitly when you want them kept.
 
 ### 9.0.0 CHANGES
 - Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.

@@ -25,17 +25,15 @@
 #[path = "scan_run_tests.rs"]
 mod tests;
 
+use classic_scan_launch::CrashLogScanLaunchDiagnostic;
 use classic_scan_presentation::{
     DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, RecoveryPrompt,
-    render_event, render_infrastructure_error, render_resume_error, render_run_result,
+    render_event, render_infrastructure_error, render_launch_diagnostics, render_resume_error,
+    render_run_result,
 };
+use classic_scanlog_core::ScanProgressPhase;
 use classic_scanlog_core::scan_run::contract::{
-    Configuration, Event, InfrastructureError, LocalIgnoreRecoveryDecision, LogEvent, Request,
-    ResumeError, RunResult,
-};
-use classic_scanlog_core::{
-    CrashLogScanSetupContext, ScanProgressPhase, StandardCrashLogScanSource,
-    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
+    Event, InfrastructureError, LocalIgnoreRecoveryDecision, LogEvent, ResumeError, RunResult,
 };
 
 // Coarse weights make in-flight lifecycle events visibly advance the gauge without pretending
@@ -184,43 +182,14 @@ fn present_severity(lines: &[DisplayLine]) -> DisplaySeverity {
         .map_or(DisplaySeverity::Info, |line| line.severity)
 }
 
-/// Typed scan intent projected by the TUI before execution.
-pub(crate) enum ScanRunIntent {
-    /// Normal discovery with the Standard-only Unsolved Logs policy.
-    Standard {
-        source: StandardCrashLogScanSource,
-        unsolved_logs: StandardUnsolvedLogsIntent,
-    },
-    /// Explicit user-selected inputs without relocation capability.
-    Targeted(TargetedCrashLogScanSource),
-}
-
-/// Constructs one invariant-preserving final-contract request.
-pub(crate) fn build_request(
-    configuration: Configuration,
-    intent: ScanRunIntent,
-    setup_context: Option<CrashLogScanSetupContext>,
-) -> Request {
-    match (intent, setup_context) {
-        (
-            ScanRunIntent::Standard {
-                source,
-                unsolved_logs,
-            },
-            Some(setup_context),
-        ) => Request::standard_with_fcx(configuration, source, unsolved_logs, setup_context),
-        (
-            ScanRunIntent::Standard {
-                source,
-                unsolved_logs,
-            },
-            None,
-        ) => Request::standard(configuration, source, unsolved_logs),
-        (ScanRunIntent::Targeted(source), Some(setup_context)) => {
-            Request::targeted_with_fcx(configuration, source, setup_context)
-        }
-        (ScanRunIntent::Targeted(source), None) => Request::targeted(configuration, source),
-    }
+/// Lays out Crash Log Scan Launch diagnostics for the scrollable Last Scan overlay.
+///
+/// Core renders what each diagnostic says; this keeps every line, in core's order, with its
+/// paths whole, exactly as a run result's own lines are kept.
+pub(crate) fn format_launch_diagnostics(
+    diagnostics: &[CrashLogScanLaunchDiagnostic],
+) -> Vec<PresentedLine> {
+    present_lines(&render_launch_diagnostics(diagnostics))
 }
 
 /// Returns the bracketed key this overlay binds to one recovery decision.

@@ -11,9 +11,15 @@ so as its own User Settings Update, before or apart from launching.
 
 ## Status
 
-The crate and its binding surfaces exist; **no frontend launches through it yet**. The GUI, CLI,
-TUI, Node CLI and Python CLI still build their own requests and switch in a later change. Every
-launch rule from ADR-0009 is implemented:
+The crate and its binding surfaces exist. **The TUI launches through it** (#287): its Standard and
+Targeted scans call `prepare_launch` with the Installation Root, pass the typed custom scan folder as
+a per-run `with_scan_path` override, show the launch diagnostics from their Display Content lines at
+the top of the Last Scan overlay, and never save User Settings when a scan starts ("save paths" stays
+its own User Settings Update). The consumer obligation `tui.scan-launch` in
+`tests/conformance/consumer-obligations.json` records it. A blank TUI custom scan input supplies no
+override, so a saved custom scan folder still applies: overrides can replace a saved value but not
+withhold one. The GUI, CLI, Node CLI and Python CLI still build their own requests and switch in a
+later change. Every launch rule from ADR-0009 is implemented:
 
 - the game-differs rule (#285): saved game-specific values are not applied to a non-managed game,
   each one reported as a typed launch diagnostic rendered as Display Content;

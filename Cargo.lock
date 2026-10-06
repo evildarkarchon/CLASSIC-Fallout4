@@ -1123,6 +1123,7 @@ dependencies = [
  "classic-config-core",
  "classic-path-core",
  "classic-resource-core",
+ "classic-scan-launch",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
