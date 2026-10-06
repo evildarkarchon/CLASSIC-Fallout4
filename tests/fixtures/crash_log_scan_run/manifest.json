@@ -266,6 +266,11 @@
       "category": "resume_error_kind",
       "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "name": "ResumeErrorKind"
+    },
+    {
+      "category": "observer_failure_policy",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "ObserverFailurePolicy"
     }
   ],
   "contractVariants": [
@@ -332,6 +337,8 @@
     "resume_error_kind.local_ignore_reset_replacement_failure",
     "resume_error_kind.local_ignore_reset_durability_unknown",
     "resume_error_kind.infrastructure",
+    "observer_failure_policy.continue_run",
+    "observer_failure_policy.cancel_run",
     "recovery_continuation.retained_snapshot",
     "recovery_continuation.single_use",
     "recovery_continuation.pre_resume_cancelled",

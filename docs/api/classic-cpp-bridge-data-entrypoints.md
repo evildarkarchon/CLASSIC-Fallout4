@@ -294,7 +294,8 @@ prose, or markdown.
 The only public complete-run flow starts through an opaque operation:
 
 ```cpp
-auto operation = scan_run_contract_execute(request, cancellation, observer);
+auto operation = scan_run_contract_execute(request, cancellation, observer,
+                                           ScanRunObserverFailurePolicy::CancelRun);
 auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
@@ -332,7 +333,7 @@ is the shape native frontends should move to. The separate resume and abandon
 entry points above stay until every frontend has migrated (#282 removes them).
 
 ```cpp
-auto operation = scan_run_contract_execute(request, cancellation, observer);
+auto operation = scan_run_contract_execute(request, cancellation, observer, policy);
 auto execution = scan_run_contract_execution_take_result(*operation);
 if (scan_run_contract_execution_has_pending_recovery(*operation)) {
     auto pending = scan_run_contract_execution_take_pending_recovery(*operation);
@@ -341,7 +342,7 @@ if (scan_run_contract_execution_has_pending_recovery(*operation)) {
         auto prompt = scan_run_pending_recovery_prompt(*pending);
         // ...ask the user; set has_decision/decision from the chosen description...
     }
-    auto settled = scan_run_pending_recovery_settle(*pending, settlement, observer);
+    auto settled = scan_run_pending_recovery_settle(*pending, settlement, observer, policy);
 }
 ```
 
@@ -351,7 +352,7 @@ if (scan_run_contract_execution_has_pending_recovery(*operation)) {
 | `scan_run_contract_execution_take_pending_recovery(execution)` | Moves the opaque `ScanRunPendingRecovery` out; throws when the run did not pause or it was already taken |
 | `scan_run_pending_recovery_prompt(pending)` | The `ScanRunRecoveryPrompt` Rust rendered for the pause, identical to the envelope's `recovery_prompt`, including Reset To Default availability |
 | `scan_run_pending_recovery_cancellation_requested(pending)` | Read live from the control passed to `scan_run_contract_execute`; when true, do not prompt and settle with no decision |
-| `scan_run_pending_recovery_settle(pending, settlement, observer)` | Settles once, synchronously; returns the ordinary `ScanRunContractExecutionResult` |
+| `scan_run_pending_recovery_settle(pending, settlement, observer, policy)` | Settles once, synchronously, applying the observer failure policy; returns the ordinary `ScanRunContractExecutionResult` |
 
 `ScanRunLocalIgnoreRecoverySettlement { has_decision, decision }` is the
 bridge's spelling of an optional Local Ignore Recovery Decision: `decision` is
@@ -367,7 +368,8 @@ The settled envelope is a shared struct, so it cannot carry a continuation or a
 pending recovery; `has_recovery_prompt` is always false on it. A second settle,
 or a legacy resume/abandon after settling, arrives as `has_resume_error` with
 code `scan_run_continuation_consumed`. Settle throws only for an out-of-range
-`decision` while `has_decision` is true, rejected before anything is claimed.
+`decision` while `has_decision` is true, or an out-of-range policy, rejected
+before anything is claimed.
 The legacy `ScanRunContinuation` and the `ScanRunPendingRecovery` taken from one
 execution share a single claim, so whichever is used first wins.
 
@@ -515,9 +517,20 @@ Pass `nullptr` for no observer or a live `ScanRunObserver` from
 execution order and cover discovery, effective concurrency, queued, started,
 phase, and finished events.
 
-The callback is `noexcept`. An adapter records delivery failure outside the
-core result and may request safe cancellation through the same cancellation
-object.
+The callback is `noexcept` and returns a `ScanRunObserverDelivery`: `{}` for
+a delivered event, `{true, message}` for a failed one. No exception crosses the
+bridge. `scan_run_contract_execute` and `scan_run_pending_recovery_settle` take
+a `ScanRunObserverFailurePolicy` — `ContinueRun` or `CancelRun` — that decides
+whether Rust cancels the run at the first failed delivery; out-of-range values
+throw before anything runs. Under either policy Rust stops delivering to that
+observer, and the envelope reports the failure in
+`has_observer_delivery_failure` / `observer_delivery_failure_message`, so an
+adapter no longer tracks it in its observer. A failure before the run pauses
+for Local Ignore recovery makes Rust abandon the recovery: the envelope is
+cancelled after discovery, `scan_run_contract_execution_has_pending_recovery`
+and `scan_run_contract_execution_has_continuation` are false, and nothing on
+disk changed. The legacy `scan_run_continuation_resume` takes no policy and
+continues the run.
 
 See
 [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md)

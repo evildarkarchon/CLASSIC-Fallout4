@@ -127,6 +127,7 @@ fn scoped_fcx_setup_hashes_only_in_the_supplied_scope() {
             YamlFileCacheScope::default_scope(),
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
     })
     .expect("scoped FCX scan should execute");
@@ -157,6 +158,7 @@ fn scoped_fcx_setup_hashes_only_in_the_supplied_scope() {
             YamlFileCacheScope::default_scope(),
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
     })
     .expect("repeat scoped FCX scan should execute");
@@ -181,6 +183,7 @@ fn unscoped_fcx_setup_keeps_hashing_through_the_default_scope() {
             installation.request(),
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
     })
     .expect("unscoped FCX scan should execute");

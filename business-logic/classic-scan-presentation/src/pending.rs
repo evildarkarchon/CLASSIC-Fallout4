@@ -17,8 +17,8 @@
 
 use crate::recovery::{RecoveryPrompt, render_local_ignore_recovery};
 use classic_scanlog_core::scan_run::contract::{
-    LocalIgnoreRecoveryDecision, Observer, PendingRecovery, ResumeError, RunResult,
-    SettledRunResult,
+    LocalIgnoreRecoveryDecision, Observer, ObserverFailurePolicy, PendingRecovery, ResumeError,
+    RunResult, SettledRunResult,
 };
 
 /// A paused Crash Log Scan Run's pending recovery together with its rendered prompt.
@@ -69,8 +69,11 @@ impl PendingRecoveryWithPrompt {
         &self,
         decision: Option<LocalIgnoreRecoveryDecision>,
         observer: Option<&mut dyn Observer>,
+        observer_failure_policy: ObserverFailurePolicy,
     ) -> Result<SettledRunResult, ResumeError> {
-        self.recovery.settle(decision, observer).await
+        self.recovery
+            .settle(decision, observer, observer_failure_policy)
+            .await
     }
 }
 

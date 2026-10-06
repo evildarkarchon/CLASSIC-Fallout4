@@ -66,7 +66,10 @@ public:
     }
 
     /// Presents one serialized event without allowing adapter failures to cross the CXX boundary.
-    void on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override
+    ///
+    /// A presentation failure is returned as a failed delivery, which Rust applies under the
+    /// cancel-run policy `doScan` passes.
+    scanner::ScanRunObserverDelivery on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override
     {
         try {
             const float percent = m_progress.update(event);
@@ -95,10 +98,12 @@ public:
                                                  static_cast<int>(event.total));
                 break;
             }
+            return {};
         } catch (...) {
             // Qt presentation failure is adapter-local; stop future admissions at Rust's next safe seam.
             m_deliveryFailed = true;
             scanner::scan_run_cancellation_cancel(m_cancellation);
+            return {true, "Qt scan progress presentation failed"};
         }
     }
 
@@ -141,7 +146,9 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
         auto request = classic::gui::buildScanRunRequest(installationRoot, baseDirectory, settings, setupXseLogPath,
                                                          targetedInputs);
         GuiScanRunObserver observer(*this, *m_cancellation);
-        auto operation = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer);
+        // The GUI has always stopped a run whose progress view failed, so it asks Rust to.
+        auto operation = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer,
+                                                            scanner::ScanRunObserverFailurePolicy::CancelRun);
         const auto execution = scanner::scan_run_contract_execution_take_result(*operation);
         if (observer.deliveryFailed()) {
             emit error(QStringLiteral("Crash Log Scan progress delivery failed; the run was cancelled safely."));

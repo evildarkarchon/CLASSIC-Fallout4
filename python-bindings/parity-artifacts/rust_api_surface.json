@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T12:50:00.938666+00:00",
+  "generated_at_utc": "2026-10-06T13:12:09.691015+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -11748,6 +11748,33 @@
       "tier": "tier1"
     },
     {
+      "symbol": "ObserverDelivery",
+      "kind": "trait",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub trait ObserverDelivery",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ObserverDeliveryFailure",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct ObserverDeliveryFailure",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ObserverFailurePolicy",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum ObserverFailurePolicy",
+      "tier": "tier1"
+    },
+    {
       "symbol": "Options",
       "kind": "struct",
       "crate": "classic-scanlog-core",
@@ -12966,31 +12993,31 @@
     {
       "symbol": "execute",
       "kind": "function",
-      "arity": 3,
+      "arity": 4,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub async fn execute(\n    request: Request,\n    cancellation: &Cancellation,\n    observer: Option<&mut dyn Observer>,\n)",
+      "source_decl": "pub async fn execute(\n    request: Request,\n    cancellation: &Cancellation,\n    observer: Option<&mut dyn Observer>,\n    observer_failure_policy: ObserverFailurePolicy,\n)",
       "tier": "tier1"
     },
     {
       "symbol": "execute_in_scopes",
       "kind": "function",
-      "arity": 6,
+      "arity": 7,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub async fn execute_in_scopes(\n    request: Request,\n    version_registry: VersionRegistryScope,\n    file_hash: FileHashScope,\n    yaml_file_cache: YamlFileCacheScope,\n    cancellation: &Cancellation,\n    observer: Option<&mut dyn Observer>,\n)",
+      "source_decl": "pub async fn execute_in_scopes(\n    request: Request,\n    version_registry: VersionRegistryScope,\n    file_hash: FileHashScope,\n    yaml_file_cache: YamlFileCacheScope,\n    cancellation: &Cancellation,\n    observer: Option<&mut dyn Observer>,\n    observer_failure_policy: ObserverFailurePolicy,\n)",
       "tier": "tier1"
     },
     {
       "symbol": "execute_in_version_registry_scope",
       "kind": "function",
-      "arity": 4,
+      "arity": 5,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub async fn execute_in_version_registry_scope(\n    request: Request,\n    version_registry: VersionRegistryScope,\n    cancellation: &Cancellation,\n    observer: Option<&mut dyn Observer>,\n)",
+      "source_decl": "pub async fn execute_in_version_registry_scope(\n    request: Request,\n    version_registry: VersionRegistryScope,\n    cancellation: &Cancellation,\n    observer: Option<&mut dyn Observer>,\n    observer_failure_policy: ObserverFailurePolicy,\n)",
       "tier": "tier1"
     },
     {
@@ -13749,6 +13776,16 @@
     {
       "symbol": "new",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn new(message: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
       "arity": 3,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
@@ -13983,11 +14020,11 @@
     {
       "symbol": "resume",
       "kind": "function",
-      "arity": 4,
+      "arity": 5,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub async fn resume(\n        &self,\n        decision: LocalIgnoreRecoveryDecision,\n        cancellation: &Cancellation,\n        mut observer: Option<&mut dyn Observer>,\n    )",
+      "source_decl": "pub async fn resume(\n        &self,\n        decision: LocalIgnoreRecoveryDecision,\n        cancellation: &Cancellation,\n        observer: Option<&mut dyn Observer>,\n        observer_failure_policy: ObserverFailurePolicy,\n    )",
       "tier": "tier1"
     },
     {
@@ -14051,11 +14088,11 @@
     {
       "symbol": "settle",
       "kind": "function",
-      "arity": 3,
+      "arity": 4,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub async fn settle(\n        &self,\n        decision: Option<LocalIgnoreRecoveryDecision>,\n        observer: Option<&mut dyn Observer>,\n    )",
+      "source_decl": "pub async fn settle(\n        &self,\n        decision: Option<LocalIgnoreRecoveryDecision>,\n        observer: Option<&mut dyn Observer>,\n        observer_failure_policy: ObserverFailurePolicy,\n    )",
       "tier": "tier1"
     },
     {

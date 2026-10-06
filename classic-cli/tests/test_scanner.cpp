@@ -22,7 +22,7 @@ namespace scanner = classic::scanner;
 scanner::ScanRunContractExecutionResult execute_result(
     const scanner::ScanRunRequest& request, const scanner::ScanRunCancellation& cancellation,
     const scanner::ScanRunObserver* observer) {
-    auto operation = scanner::scan_run_contract_execute(request, cancellation, observer);
+    auto operation = scanner::scan_run_contract_execute(request, cancellation, observer, scanner::ScanRunObserverFailurePolicy::ContinueRun);
     return scanner::scan_run_contract_execution_take_result(*operation);
 }
 

@@ -90,7 +90,8 @@ interface ExecutionFlowInput {
         | "before-discovery"
         | "on-first-log-queued"
         | "on-first-log-started"
-        | "on-observer-failure";
+        | "on-observer-failure"
+        | "none";
     observerFailure?: ObserverFailureInput | null;
 }
 
@@ -98,6 +99,8 @@ interface ExecutionFlowInput {
 interface ObserverFailureInput {
     eventKind: "discovery_completed";
     message: string;
+    /** The observer failure policy, passed to the binding as `cancelOnObserverError`. */
+    policy: "cancel-run" | "continue-run";
 }
 
 /** Input-only instructions for one terminal continuation claim and its replays. */
@@ -1936,14 +1939,17 @@ async function lifecycleObservation(
         discovery: discovery(result.discovery, root),
         logs: logResults(result.logs, root),
         events: compactEvents(result, callbacks),
+        // Whether delivery failed, and its message, come from the Rust result; the event kind
+        // is the boundary the plan told this runner's observer to refuse.
         observerFailure:
-            expectedFailure === null
+            execution.observerError === undefined
                 ? null
                 : {
                     kind: "observer_delivery_failure",
-                    eventKind: expectedFailure.eventKind,
-                    messageNonEmpty: execution.observerError!.length > 0,
+                    eventKind: expectedFailure?.eventKind ?? null,
+                    messageNonEmpty: execution.observerError.trim().length > 0,
                 },
+        pendingRecovery: execution.pendingRecovery !== undefined,
         cancellation: {requested: cancellation.isCancelled},
         durableEffects: await lifecycleDurableEffects(result.logs, input, root),
     };
@@ -1983,10 +1989,13 @@ async function executeScenario(
                 "executionFlow requires the lifecycle observation profile",
             );
         }
-        if (flow?.cancellation === "on-observer-failure") {
+        if (
+            flow?.cancellation === "on-observer-failure" ||
+            flow?.cancellation === "none"
+        ) {
             if (flow.observerFailure === undefined || flow.observerFailure === null) {
                 throw new RunnerContractError(
-                    "on-observer-failure cancellation requires observerFailure",
+                    `${flow.cancellation} cancellation requires observerFailure`,
                 );
             }
             if (
@@ -1997,12 +2006,21 @@ async function executeScenario(
                     "observerFailure requires discovery_completed and a non-empty message",
                 );
             }
+            // Only the cancel-run policy may be the plan's source of cancellation, and the
+            // continue-run policy runs with no cancellation at all.
+            const expectedPolicy =
+                flow.cancellation === "none" ? "continue-run" : "cancel-run";
+            if (flow.observerFailure.policy !== expectedPolicy) {
+                throw new RunnerContractError(
+                    `${flow.cancellation} cancellation requires a ${expectedPolicy} observerFailure`,
+                );
+            }
         } else if (
             flow?.observerFailure !== undefined &&
             flow.observerFailure !== null
         ) {
             throw new RunnerContractError(
-                "observerFailure requires on-observer-failure cancellation",
+                "observerFailure requires on-observer-failure or no cancellation",
             );
         }
         if (flow?.cancellation === "before-discovery") {
@@ -2035,7 +2053,8 @@ async function executeScenario(
                     cancellation.cancel();
                 }
             },
-            flow?.cancellation === "on-observer-failure",
+            // The binding maps this option onto the Rust observer failure policy.
+            flow?.observerFailure?.policy === "cancel-run",
         );
         if (input.observationProfile === "failure") {
             return await failureObservation(execution, input, root);

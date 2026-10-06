@@ -184,6 +184,13 @@ CRASH_LOG_SCAN_RUN_VARIANT_TARGETS = MappingProxyType(
             "reset-operational-failure",
             "scan-run.recovery.reset-operational-failure",
         ),
+        "observer_failure_policy.continue_run": _runtime(
+            "observer-delivery-failure-continue-run",
+            "scan-run.observer-failure.continue-run",
+        ),
+        "observer_failure_policy.cancel_run": _runtime(
+            "observer-delivery-failure", "scan-run.observer-failure.cancellation"
+        ),
         "recovery_continuation.retained_snapshot": _runtime(
             "proceed-without-ignore-recovery",
             "scan-run.recovery.initial-retained-snapshot",

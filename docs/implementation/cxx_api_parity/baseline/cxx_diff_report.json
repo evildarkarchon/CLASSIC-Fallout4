@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 670,
-    "current_total": 670,
-    "matched": 670,
+    "contract_total": 672,
+    "current_total": 672,
+    "matched": 672,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2793,6 +2793,14 @@
       "reason": "-"
     },
     {
+      "id": "656ed53c286370a4",
+      "rustSymbol": "ScanRunObserverFailurePolicy",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "792f70658ed4adf9",
       "rustSymbol": "classify_crash_pattern",
       "kind": "function",
@@ -3995,6 +4003,14 @@
     {
       "id": "e0e0fec08acd4c5b",
       "rustSymbol": "ScanRunLocalIgnoreResetRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "82e5222be05096af",
+      "rustSymbol": "ScanRunObserverDelivery",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

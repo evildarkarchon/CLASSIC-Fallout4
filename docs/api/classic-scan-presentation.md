@@ -205,9 +205,13 @@ impl PendingRecoveryWithPrompt {
         &self,
         decision: Option<LocalIgnoreRecoveryDecision>,
         observer: Option<&mut dyn Observer>,
+        observer_failure_policy: ObserverFailurePolicy,
     ) -> Result<SettledRunResult, ResumeError>;
 }
 ```
+
+`observer_failure_policy` is passed straight through to `PendingRecovery::settle`; see the
+[observer delivery failure policy](classic-scanlog-core.md#observer-delivery-failure-policy).
 
 ADR-0009 gives a paused run one pending-recovery object: the single-use continuation, the recovery
 prompt already rendered as Display Content, and whether cancellation was already requested. The

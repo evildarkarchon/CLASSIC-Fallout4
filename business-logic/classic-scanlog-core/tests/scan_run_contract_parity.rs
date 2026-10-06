@@ -343,6 +343,7 @@ fn shared_standard_and_targeted_fixtures_match_normalized_contract_with_isolated
             standard_request,
             &contract::Cancellation::new(),
             Some(&mut |event| standard_events.push(event)),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("shared Standard fixture should complete");
     assert_result(
@@ -389,6 +390,7 @@ fn shared_standard_and_targeted_fixtures_match_normalized_contract_with_isolated
             targeted_request,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("shared Targeted fixture should complete");
     assert_eq!(
@@ -445,6 +447,7 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
             request.clone(),
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("existing Local Ignore fixture should complete");
     assert_installed_yaml_data(&existing, &fixture.expected_existing);
@@ -462,6 +465,7 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
             request.clone(),
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("generated Local Ignore fixture should complete");
     assert_installed_yaml_data(&generated, &fixture.expected_generated);
@@ -487,6 +491,7 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
             request.clone(),
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("malformed Local Ignore should return expected recovery data");
     assert_eq!(
@@ -503,6 +508,7 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("Proceed Without Ignore should complete the retained shared run");
     assert_installed_yaml_data(&proceeded, &fixture.expected_proceed_without_ignore);
@@ -527,6 +533,7 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
             request,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("shared malformed Local Ignore should pause again for reset coverage");
     let reset_continuation = reset_recovery
@@ -538,6 +545,7 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("shared Reset To Default fixture should complete");
     assert_installed_yaml_data(&reset, &fixture.expected_reset_to_default);
