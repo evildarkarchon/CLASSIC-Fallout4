@@ -22,6 +22,7 @@ from .families.autoscan_report import AUTOSCAN_REPORT_COVERAGE_POLICY
 from .families.aux_operations import aux_operations_coverage_policy
 from .families.ba2_scan import BA2_SCAN_COVERAGE_POLICY
 from .families.config_operations import CONFIG_OPERATIONS_COVERAGE_POLICY
+from .families.crash_log_scan_launch import CRASH_LOG_SCAN_LAUNCH_COVERAGE_POLICY
 from .families.crash_log_scan_run import CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
 from .families.crash_pattern import CRASH_PATTERN_COVERAGE_POLICY
 from .families.crashgen_check import CRASHGEN_CHECK_COVERAGE_POLICY
@@ -185,6 +186,7 @@ FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     },
     AUTOSCAN_REPORT_COVERAGE_POLICY.family_id: AUTOSCAN_REPORT_COVERAGE_POLICY,
     CRASH_LOG_SCAN_RUN_COVERAGE_POLICY.family_id: CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+    CRASH_LOG_SCAN_LAUNCH_COVERAGE_POLICY.family_id: CRASH_LOG_SCAN_LAUNCH_COVERAGE_POLICY,
     USER_SETTINGS_COVERAGE_POLICY.family_id: USER_SETTINGS_COVERAGE_POLICY,
     INSTALLED_YAML_DATA_COVERAGE_POLICY.family_id: INSTALLED_YAML_DATA_COVERAGE_POLICY,
     CONFIG_OPERATIONS_COVERAGE_POLICY.family_id: CONFIG_OPERATIONS_COVERAGE_POLICY,

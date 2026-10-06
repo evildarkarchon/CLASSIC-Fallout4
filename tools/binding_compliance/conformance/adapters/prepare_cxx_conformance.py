@@ -51,6 +51,7 @@ SUPPORTED_FAMILIES = (
     "runtime-access",
     "autoscan-report",
     "crash-log-scan-run",
+    "crash-log-scan-launch",
     "user-settings",
     "crash-suspect",
     "crashgen-settings",
@@ -162,6 +163,14 @@ def _cxx_source_paths(
     if family == "user-settings":
         paths += (
             repo_root / "cpp-bindings" / "classic-cpp-bridge" / "src" / "settings.rs",
+            repo_root / "business-logic" / "classic-user-settings-core" / "src",
+        )
+    elif family == "crash-log-scan-launch":
+        # The launch reads User Settings through classic-scan-launch and is
+        # bridged by the scanner submodule beside the scan-run contract.
+        paths += (
+            repo_root / "cpp-bindings" / "classic-cpp-bridge" / "src" / "scanner",
+            repo_root / "business-logic" / "classic-scan-launch" / "src",
             repo_root / "business-logic" / "classic-user-settings-core" / "src",
         )
     elif family != "crash-log-scan-run":

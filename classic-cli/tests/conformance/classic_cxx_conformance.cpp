@@ -1953,6 +1953,7 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_game_setup_intake_conformance.h"
 #include "classic_cxx_yaml_update_operations_conformance.h"
 #include "classic_cxx_vocabulary_conformance.h"
+#include "classic_cxx_crash_log_scan_launch_conformance.h"
 
 /// Executes one planned case while retaining runner failures as receipt evidence.
 json scenario_receipt(const json& plan, const json& scenario) {
@@ -2000,6 +2001,8 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                     : plan.at("familyId") == "settings-validation" ? execute_settings_validation_scenario(plan, scenario)
                                     : plan.at("familyId") == "installed-yaml-data"
                                         ? execute_installed_yaml_data_scenario(plan, scenario)
+                                    : plan.at("familyId") == "crash-log-scan-launch"
+                                        ? execute_crash_log_scan_launch_scenario(plan, scenario)
                                     : plan.at("familyId") == "user-settings"
                                         ? execute_user_settings_scenario(plan, scenario)
                                         : execute_scenario(plan, scenario)},
@@ -2017,6 +2020,7 @@ json scenario_receipt(const json& plan, const json& scenario) {
 void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
         (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings" &&
+         plan.at("familyId") != "crash-log-scan-launch" &&
          plan.at("familyId") != "installed-yaml-data" && plan.at("familyId") != "autoscan-report" &&
          plan.at("familyId") != "game-integrity" && plan.at("familyId") != "game-setup-intake" &&
          plan.at("familyId") != "yaml-update-operations" && plan.at("familyId") != "path-backups" &&

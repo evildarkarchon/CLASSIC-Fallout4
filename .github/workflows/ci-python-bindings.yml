@@ -1124,6 +1124,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Python crash-log-scan-launch conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant python --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
+
+      - name: Upload Python crash-log-scan-launch conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-crash-log-scan-launch-conformance
+          path: tools/binding_compliance/artifacts/crash-log-scan-launch/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload Python Crash Log Scan Run conformance diagnostics
         if: always()
         uses: actions/upload-artifact@v6

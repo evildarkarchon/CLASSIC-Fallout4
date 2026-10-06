@@ -351,6 +351,26 @@ _EXECUTION_POLICIES += tuple(
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}
 )
+# Crash Log Scan Launch (ADR-0009) also uses the shared scan-run launcher, with
+# its own per-adapter runners, the same four semantic adapters, and separate
+# diagnostics. No frontend consumes it yet, so it has no consumer participants.
+_EXECUTION_POLICIES += tuple(
+    replace(
+        policy,
+        family_id="crash-log-scan-launch",
+        launcher_marker=(
+            f"run_scan_run_conformance.py --family crash-log-scan-launch --participant {policy.participant_id}"
+            if policy.participant_id != "cxx"
+            else "run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }}"
+        ),
+        artifact_marker=(
+            f"name: {policy.participant_id}-crash-log-scan-launch-conformance"
+            + ("-${{ matrix.compiler }}" if policy.participant_id == "cxx" else "")
+        ),
+    )
+    for policy in _EXECUTION_POLICIES[:7]
+    if policy.participant_id in {"rust", "node", "python", "cxx"}
+)
 # The CLI job retains its original suite and the bounded family launches.
 _EXECUTION_POLICIES = tuple(
     replace(policy, job_timeout_minutes=360) if policy.job_id == "cli-tests" else policy

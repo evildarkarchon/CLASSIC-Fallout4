@@ -50,6 +50,8 @@ class ParticipantCommand:
 # and XSE Folder derivation (#252); database's FormID Value Lookup; and the
 # presentation crate's Display Content. Binding all of them into source identity
 # keeps a receipt from certifying an owner whose current bytes it never ran.
+# Crash Log Scan Launch (ADR-0009) and the User Settings it reads build the
+# requests these runs execute, and every scan-run binding surface now links them.
 _COMMON_CORE_SOURCES = (
     Path(__file__).resolve(),
     *(
@@ -60,6 +62,8 @@ _COMMON_CORE_SOURCES = (
             "classic-database-core",
             "classic-scangame-core",
             "classic-scan-presentation",
+            "classic-scan-launch",
+            "classic-user-settings-core",
         )
     ),
 )
@@ -122,6 +126,71 @@ PARTICIPANT_COMMANDS = {
         ),
     ),
 }
+
+# Crash Log Scan Launch has its own runner per adapter: each launches through its
+# own scan-run binding surface (CXX runs through run_cxx_conformance.ps1) and
+# observes its own launch DTOs, so the commands differ from the scan-run ones.
+LAUNCH_PARTICIPANT_COMMANDS = {
+    "rust": ParticipantCommand(
+        arguments=(
+            "cargo",
+            "test",
+            "-p",
+            "classic-scan-launch",
+            "--test",
+            "launch_conformance",
+            "--",
+            "--exact",
+            "writes_launch_conformance_receipt",
+            "--nocapture",
+        ),
+        working_directory=REPO_ROOT,
+        source_paths=(
+            REPO_ROOT
+            / "business-logic"
+            / "classic-scan-launch"
+            / "tests"
+            / "launch_conformance.rs",
+            REPO_ROOT / "business-logic" / "classic-scan-launch" / "Cargo.toml",
+            *_COMMON_CORE_SOURCES,
+        ),
+    ),
+    "node": ParticipantCommand(
+        arguments=("bun", "run", "conformance:scan-launch"),
+        working_directory=REPO_ROOT / "node-bindings" / "classic-node",
+        source_paths=(
+            REPO_ROOT
+            / "node-bindings"
+            / "classic-node"
+            / "__test__"
+            / "scan_launch_conformance_runner.ts",
+            REPO_ROOT / "node-bindings" / "classic-node" / "src" / "scan_run.rs",
+            REPO_ROOT / "node-bindings" / "classic-node" / "src" / "scan_run_launch.rs",
+            REPO_ROOT / "node-bindings" / "classic-node" / "package.json",
+            *_COMMON_CORE_SOURCES,
+        ),
+    ),
+    "python": ParticipantCommand(
+        arguments=(
+            "uv",
+            "run",
+            "--project",
+            "python-bindings",
+            "python",
+            "python-bindings/tests/scan_launch_conformance_runner.py",
+        ),
+        working_directory=REPO_ROOT,
+        source_paths=(
+            REPO_ROOT / "python-bindings" / "tests" / "scan_launch_conformance_runner.py",
+            REPO_ROOT / "python-bindings/classic-python-bindings/src",
+            REPO_ROOT / "python-bindings/classic-python-bindings/python",
+            *_COMMON_CORE_SOURCES,
+        ),
+    ),
+}
+
+#: Participant commands by family; families absent here use ``PARTICIPANT_COMMANDS``.
+FAMILY_PARTICIPANT_COMMANDS = {"crash-log-scan-launch": LAUNCH_PARTICIPANT_COMMANDS}
 
 
 def _atomic_write_json(path: Path, document: dict[str, Any]) -> None:
@@ -343,7 +412,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeout-seconds", type=int, default=1_200)
     parser.add_argument(
         "--family",
-        choices=("crash-log-scan-run", "autoscan-report"),
+        choices=("crash-log-scan-run", "autoscan-report", "crash-log-scan-launch"),
         default="crash-log-scan-run",
     )
     return parser
@@ -353,6 +422,7 @@ def main(argv: list[str] | None = None) -> int:
     """Launch one adapter and print the artifact directory for CI collection."""
 
     args = build_argument_parser().parse_args(argv)
+    family_commands = FAMILY_PARTICIPANT_COMMANDS.get(args.family)
     try:
         result, artifact_dir = run_participant(
             args.participant,
@@ -362,6 +432,11 @@ def main(argv: list[str] | None = None) -> int:
                       / "tests/conformance/packs"
                       / args.family.replace("-", "_")
                       / "v1.json",
+            command=(
+                family_commands[args.participant]
+                if family_commands is not None
+                else None
+            ),
         )
     except (ConformanceCommandError, PackValidationError, ValueError) as error:
         print(f"Crash Log Scan Run conformance launch failed: {error}", file=sys.stderr)

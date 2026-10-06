@@ -94,6 +94,7 @@ def test_native_policy_cannot_drop_compiler_denominator(
             "named-record",
             "plugin-evidence",
             "autoscan-report",
+            "crash-log-scan-launch",
             "config-vocabulary",
             "scan-run-vocabulary",
             "config-operations",
@@ -135,7 +136,7 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
         f"run_cxx_conformance.ps1 -Family {family} -Compiler"
         if participant == "cxx"
         else f"run_scan_run_conformance.py --family {family} --participant {participant}"
-        if family == "autoscan-report"
+        if family in {"autoscan-report", "crash-log-scan-launch"}
         else f"run_semantic_conformance.py --family {family} --participant {participant}"
     )
     assert source.count(marker) == 1
