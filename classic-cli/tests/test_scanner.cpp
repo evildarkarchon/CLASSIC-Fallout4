@@ -4,13 +4,16 @@
 
 #include "scan_run_cli.h"
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <istream>
 #include <sstream>
 #include <streambuf>
 #include <string>
 #include <stdexcept>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -157,18 +160,42 @@ private:
     std::size_t position_ = 0;
 };
 
-PreparedScanUserSettings minimal_settings() {
-    PreparedScanUserSettings settings{};
-    settings.game = "Fallout4";
-    settings.game_version = "auto";
-    return settings;
-}
+/// An empty Installation Root: no User Settings document, so Crash Log Scan Launch uses defaults.
+class EmptyInstallationRoot final {
+public:
+    /// Creates a unique directory beneath the platform temporary directory.
+    EmptyInstallationRoot() {
+        const auto suffix = std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+        path_ = std::filesystem::temp_directory_path() / ("classic-cli-scanner-" + suffix);
+        std::filesystem::create_directories(path_);
+    }
+
+    /// Removes the directory without letting cleanup failures replace a test outcome.
+    ~EmptyInstallationRoot() {
+        std::error_code error;
+        std::filesystem::remove_all(path_, error);
+    }
+
+    EmptyInstallationRoot(const EmptyInstallationRoot&) = delete;
+    EmptyInstallationRoot& operator=(const EmptyInstallationRoot&) = delete;
+
+    /// Launches `args` through the CLI seam and returns the executable request.
+    [[nodiscard]] rust::Box<scanner::ScanRunRequest> launch(const CliArgs& args) const {
+        auto launched = launch_cli_scan_run(args, path_.string());
+        REQUIRE(launched.has_value());
+        REQUIRE_FALSE(scanner::scan_run_launch_error(**launched).has_error);
+        return scanner::scan_run_launch_request(**launched);
+    }
+
+private:
+    std::filesystem::path path_;
+};
 
 } // namespace
 
 TEST_CASE("CLI scan adapter submits Standard intent to the single execution operation", "[scanner][scan-run]") {
-    const CliArgs args{};
-    const auto request = build_cli_scan_run_request(args, minimal_settings(), ".", ".");
+    const EmptyInstallationRoot root;
+    const auto request = root.launch(CliArgs{});
     const auto cancellation = scanner::scan_run_cancellation_new();
     scanner::scan_run_cancellation_cancel(*cancellation);
 
@@ -180,11 +207,10 @@ TEST_CASE("CLI scan adapter submits Standard intent to the single execution oper
 }
 
 TEST_CASE("CLI scan adapter submits raw Targeted inputs to Rust discovery", "[scanner][scan-run]") {
+    const EmptyInstallationRoot root;
     CliArgs args{};
     args.input_paths.push_back("C:/not-a-crash-log.txt");
-    auto settings = minimal_settings();
-    settings.move_unsolved_logs = true;
-    const auto request = build_cli_scan_run_request(args, settings, ".", ".");
+    const auto request = root.launch(args);
     const auto cancellation = scanner::scan_run_cancellation_new();
 
     const auto execution = execute_result(*request, *cancellation, nullptr);
@@ -197,25 +223,6 @@ TEST_CASE("CLI scan adapter submits raw Targeted inputs to Rust discovery", "[sc
     REQUIRE(execution.result.discovery.accepted_logs.empty());
     REQUIRE(execution.result.discovery.rejected_inputs.size() == 1);
     REQUIRE(std::string(execution.result.discovery.rejected_inputs[0].path) == "C:/not-a-crash-log.txt");
-}
-
-TEST_CASE("CLI scan request builder maps every supported game to the scanner-local typed identity",
-          "[scanner][scan-run]") {
-    const CliArgs args{};
-    for (const std::string game : {"Fallout4", "Fallout4VR", "Skyrim", "Starfield"}) {
-        auto settings = minimal_settings();
-        settings.game = game;
-        const auto request = build_cli_scan_run_request(args, settings, ".", ".");
-        const auto cancellation = scanner::scan_run_cancellation_new();
-        scanner::scan_run_cancellation_cancel(*cancellation);
-        const auto execution = execute_result(*request, *cancellation, nullptr);
-        REQUIRE(execution.has_result);
-        REQUIRE(execution.result.status == scanner::ScanRunContractStatus::CancelledBeforeDiscovery);
-    }
-
-    auto invalid = minimal_settings();
-    invalid.game = "UnknownGame";
-    REQUIRE_THROWS_AS(build_cli_scan_run_request(args, invalid, ".", "."), std::invalid_argument);
 }
 
 TEST_CASE("CLI display line rendering concatenates Rust's segments in order", "[scanner][scan-run][render]") {
@@ -798,8 +805,8 @@ TEST_CASE("A real Crash Log Scan Run reaches the CLI already carrying what it sa
     // The fixtures above hand-build envelopes, which is what lets them assert rendering without
     // pinning wording. This one runs the real contract, so it is what proves the display lines are
     // actually populated on the way across rather than merely rendered correctly once present.
-    const CliArgs args{};
-    const auto request = build_cli_scan_run_request(args, minimal_settings(), ".", ".");
+    const EmptyInstallationRoot root;
+    const auto request = root.launch(CliArgs{});
     const auto cancellation = scanner::scan_run_cancellation_new();
     scanner::scan_run_cancellation_cancel(*cancellation);
 

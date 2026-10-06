@@ -11,9 +11,11 @@ so as its own User Settings Update, before or apart from launching.
 
 ## Status
 
-The crate and its binding surfaces exist. The Node and Python CLIs launch through it (#290); the
-GUI, CLI and TUI still build their own requests and switch in a later change. Every launch rule from
-ADR-0009 is implemented:
+The crate and its binding surfaces exist. The Node and Python CLIs launch through it (#290). The
+native C++ CLI launches through it too (#289): it maps its flags onto overrides, saves
+`--unsolved-logs-destination` as a separate User Settings Update before launching, and prints the
+launch's `display_lines`. Frontends not yet switched still build their own requests and switch in
+their own changes. Every launch rule from ADR-0009 is implemented:
 
 - the game-differs rule (#285): saved game-specific values are not applied to a non-managed game,
   each one reported as a typed launch diagnostic rendered as Display Content;

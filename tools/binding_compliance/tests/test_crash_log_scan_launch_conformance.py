@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from conformance.applicability import derive_applicability
+from conformance.consumers import load_consumer_obligations
 from conformance.coverage import (
     derive_row_coverage,
     load_retained_analyzer_kinds,
@@ -23,10 +24,21 @@ PACK = Path("tests/conformance/packs/crash_log_scan_launch/v1.json")
 
 
 def test_launch_requires_all_four_semantic_adapters() -> None:
-    """Every binding maps the launch crate, so none may skip its runner."""
+    """Every binding maps the launch crate, so none may skip its runner.
+
+    Frontends that launch through Crash Log Scan Launch join as consumers; the native CLI
+    is one of them (#289).
+    """
     pack = load_and_validate_pack(ROOT, PACK).document()
-    matrix = derive_applicability(pack, load_source_parity_rows(ROOT))
-    assert {p.id for p in matrix.participants} == {"rust", "cxx", "node", "python"}
+    matrix = derive_applicability(
+        pack,
+        load_source_parity_rows(ROOT),
+        consumer_catalog=load_consumer_obligations(ROOT),
+    )
+    participants = {p.id for p in matrix.participants}
+    assert {"rust", "cxx", "node", "python"} <= participants
+    assert "cli" in participants
+    assert participants - {"rust", "cxx", "node", "python"} <= {"cli", "gui", "tui"}
     assert next(
         p for p in matrix.participants if p.id == "cxx"
     ).execution_instance_ids == ("windows-clang-cl", "windows-msvc")

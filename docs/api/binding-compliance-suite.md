@@ -298,8 +298,14 @@ scan-run launcher selects a launch-specific runner per adapter
 (`classic-scan-launch/tests/launch_conformance.rs`,
 `__test__/scan_launch_conformance_runner.ts` via `bun run conformance:scan-launch`,
 `python-bindings/tests/scan_launch_conformance_runner.py`, and the CXX
-`classic_cxx_crash_log_scan_launch_conformance.h` dispatch). No frontend
-launches through it yet, so the family has no consumer obligations.
+`classic_cxx_crash_log_scan_launch_conformance.h` dispatch). Frontends that
+launch through it own consumer obligations in
+`tests/conformance/consumer-obligations.json`. The native CLI's `cli.scan-launch`
+parses each scenario's overrides as real command-line flags with the production
+parser, launches from an unrelated working directory through
+`launch_cli_scan_run`, and reports the launched values, diagnostic codes, and
+whether the Standard base folder is the Installation Root
+(`run_cli_consumer_conformance.ps1 -Family crash-log-scan-launch`).
 
 ```powershell
 python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant rust --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
@@ -307,6 +313,7 @@ python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-s
 uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant python --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler clang-cl -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers
 ```
 
 ## Installed YAML Data Blocking Execution
