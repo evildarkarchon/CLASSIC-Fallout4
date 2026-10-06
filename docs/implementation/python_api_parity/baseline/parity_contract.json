@@ -12618,6 +12618,56 @@
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "FormIDFindingLookupReplyKind",
       "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunch",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "CrashLogScanLaunchRequest",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunch",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunch.standard",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "prepare_launch",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunch.standard",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunch.targeted",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "prepare_launch",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunch.targeted",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunchOverrides",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "CrashLogScanLaunchOverrides",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunchOverrides",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunchDiagnostic",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "CrashLogScanLaunchDiagnostic",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunchDiagnostic",
+      "pythonKind": "class"
     }
   ]
 }

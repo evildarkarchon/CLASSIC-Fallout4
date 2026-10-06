@@ -8,6 +8,7 @@
 
 mod analyzer;
 mod contract;
+mod launch;
 mod papyrus;
 mod util;
 
@@ -37,6 +38,10 @@ pub(crate) use contract::{
     scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
+};
+pub(crate) use launch::{
+    ScanRunLaunch, scan_run_launch_error, scan_run_launch_request, scan_run_launch_standard,
+    scan_run_launch_targeted, scan_run_launch_view,
 };
 pub(crate) use papyrus::{
     CxxPapyrusAnalyzer, papyrus_analyze_full, papyrus_analyzer_new, papyrus_check_updates,
@@ -663,6 +668,92 @@ mod ffi {
         xse_log_path: String,
     }
 
+    /// Optional per-run values that win over saved User Settings for one Crash Log Scan Launch.
+    ///
+    /// Each `has_*` flag says whether its value was supplied. `game_version` takes a User
+    /// Settings game-version token (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`).
+    /// `max_concurrent` zero explicitly requests adaptive concurrency, which overrides a saved
+    /// limit. `show_formid_values` and `simplify_logs` are supplied-as-on: `true` turns the
+    /// option on for this run, `false` keeps the saved value.
+    struct ScanRunLaunchOverridesDto {
+        has_game: bool,
+        game: ScanRunGameId,
+        has_game_version: bool,
+        game_version: String,
+        has_scan_path: bool,
+        scan_path: String,
+        has_max_concurrent: bool,
+        max_concurrent: usize,
+        show_formid_values: bool,
+        simplify_logs: bool,
+    }
+
+    /// Which Crash Logs a launched request scans.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLaunchIntent {
+        Standard = 0,
+        Targeted = 1,
+    }
+
+    /// Standard-only Unsolved Logs intent carried by a launched request.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLaunchUnsolvedLogs {
+        LeaveInPlace = 0,
+        MoveToConfiguredOrDefault = 1,
+        MoveToCustom = 2,
+    }
+
+    /// Which launch rule produced a launch diagnostic.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLaunchDiagnosticKind {
+        UserSettings = 0,
+    }
+
+    /// One non-fatal launch diagnostic; the launch still produced a scannable request.
+    struct ScanRunLaunchDiagnosticDto {
+        kind: ScanRunLaunchDiagnosticKind,
+        /// Stable machine-readable code (the User Settings code for `UserSettings`).
+        code: String,
+        /// Human-readable context. Prose; branch on `kind` and `code` instead.
+        message: String,
+    }
+
+    /// Stable category of a typed launch error.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLaunchErrorKind {
+        TargetedWithoutInputs = 0,
+    }
+
+    /// Typed launch error. `has_error` is authoritative; the other fields are placeholders
+    /// when it is false.
+    struct ScanRunLaunchErrorDto {
+        has_error: bool,
+        kind: ScanRunLaunchErrorKind,
+        message: String,
+    }
+
+    /// Read-only view of a launched Crash Log Scan Run request and its diagnostics.
+    ///
+    /// The view reuses the request-construction DTOs, filled with exactly what the launch
+    /// decided. `standard_source` and `unsolved_logs*` are meaningful only for a Standard
+    /// intent, `targeted_source` only for a Targeted intent, and `setup_context` only when
+    /// `fcx_enabled`; CXX shared structs cannot omit fields, so the others are empty.
+    struct ScanRunLaunchRequestDto {
+        intent: ScanRunLaunchIntent,
+        configuration: ScanRunConfigurationDto,
+        standard_source: ScanRunStandardSourceDto,
+        unsolved_logs: ScanRunLaunchUnsolvedLogs,
+        unsolved_logs_custom_destination: String,
+        targeted_source: ScanRunTargetedSourceDto,
+        fcx_enabled: bool,
+        setup_context: ScanRunSetupContextDto,
+        diagnostics: Vec<ScanRunLaunchDiagnosticDto>,
+    }
+
     /// Stable lifecycle status from the final Crash Log Scan Run contract.
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunContractStatus {
@@ -1107,6 +1198,7 @@ mod ffi {
         type ScanRunCancellation;
         type ScanRunContractExecution;
         type ScanRunContinuation;
+        type ScanRunLaunch;
 
         /// Constructs and validates an immutable analyzer handle from owned configuration.
         ///
@@ -1352,6 +1444,38 @@ mod ffi {
         fn scan_run_local_ignore_reset_failure_stage_label(
             stage: ScanRunLocalIgnoreResetFailureStage,
         ) -> String;
+
+        /// Launches a Standard Crash Log Scan from saved User Settings and `overrides`.
+        ///
+        /// Opens User Settings under `installation_root` read-only and never writes them; the
+        /// Standard base folder is always `installation_root`. Degraded User Settings still
+        /// produce a request, with their diagnostics. Throws a CXX exception only when an input
+        /// cannot be represented (an empty root or path, an unknown game-version token, or an
+        /// out-of-range game discriminant); typed launch errors are read through
+        /// `scan_run_launch_error`.
+        fn scan_run_launch_standard(
+            installation_root: &str,
+            overrides: &ScanRunLaunchOverridesDto,
+        ) -> Result<Box<ScanRunLaunch>>;
+        /// Launches a Targeted Crash Log Scan of exactly `inputs`, in order.
+        ///
+        /// An empty `inputs` list is the typed `TargetedWithoutInputs` launch error, not an
+        /// exception. Otherwise behaves like `scan_run_launch_standard`.
+        fn scan_run_launch_targeted(
+            installation_root: &str,
+            inputs: &Vec<String>,
+            overrides: &ScanRunLaunchOverridesDto,
+        ) -> Result<Box<ScanRunLaunch>>;
+        /// Returns the typed launch error; `has_error` is false for a successful launch.
+        fn scan_run_launch_error(launch: &ScanRunLaunch) -> ScanRunLaunchErrorDto;
+        /// Returns the read-only view of the launched request and its diagnostics.
+        ///
+        /// Throws a CXX exception when the launch failed; check `scan_run_launch_error` first.
+        fn scan_run_launch_view(launch: &ScanRunLaunch) -> Result<ScanRunLaunchRequestDto>;
+        /// Returns an executable copy of the launched request for `scan_run_contract_execute`.
+        ///
+        /// Throws a CXX exception when the launch failed; check `scan_run_launch_error` first.
+        fn scan_run_launch_request(launch: &ScanRunLaunch) -> Result<Box<ScanRunRequest>>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

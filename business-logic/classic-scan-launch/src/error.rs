@@ -6,10 +6,10 @@ use std::fmt;
 /// Why a Crash Log Scan Launch could not produce a request.
 ///
 /// Degraded User Settings are never an error: they produce a request plus diagnostics.
-/// Errors are reserved for invalid caller input, so match with a wildcard arm as later
-/// launch rules add their own.
+/// Errors are reserved for invalid caller input. Like the diagnostics, the enum is
+/// deliberately exhaustive so a new error kind fails to compile in every binding until it
+/// is projected there.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum CrashLogScanLaunchError {
     /// A Targeted intent named no inputs, so there is nothing to scan.
     TargetedWithoutInputs,
@@ -39,7 +39,6 @@ impl std::error::Error for CrashLogScanLaunchError {}
 
 /// Stable category of a [`CrashLogScanLaunchError`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
 pub enum CrashLogScanLaunchErrorKind {
     /// See [`CrashLogScanLaunchError::TargetedWithoutInputs`].
     TargetedWithoutInputs,

@@ -40,6 +40,8 @@ mod vocabulary;
 
 // Wave 2: Complete Existing Modules
 mod scan_run;
+// Crash Log Scan Launch (ADR-0009), published beside the scan-run surface it feeds.
+mod scan_run_launch;
 mod scanlog;
 
 // Wave 3: File I/O & Data

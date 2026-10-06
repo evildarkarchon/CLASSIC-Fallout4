@@ -1358,6 +1358,49 @@ export declare class ScanRunContinuation {
 
 }
 
+/**
+ * The Crash Log Scan Run request a launch built, with its launch diagnostics.
+ *
+ * The read-only getters show exactly what the launch decided; `request()` returns an
+ * executable `ScanRunRequest` for `scanRunExecute`.
+ */
+export declare class ScanRunLaunch {
+  /**
+   * Launches a Standard Crash Log Scan from saved User Settings and `overrides`.
+   *
+   * Opens User Settings under `installationRoot` read-only and never writes them; the
+   * Standard base folder is always `installationRoot`. Degraded User Settings still
+   * produce a launch, with their diagnostics. Throws `InvalidArg` for an unrepresentable
+   * input (a blank root or scan path, or an unknown game-version token).
+   */
+  static standard(installationRoot: string, overrides?: JsScanRunLaunchOverrides | undefined | null): ScanRunLaunch
+  /**
+   * Launches a Targeted Crash Log Scan of exactly `inputs`, in order.
+   *
+   * An empty `inputs` list throws the typed launch error whose `code` and `kind` are
+   * `targeted_without_inputs`. Otherwise behaves like `standard`.
+   */
+  static targeted(installationRoot: string, inputs: Array<string>, overrides?: JsScanRunLaunchOverrides | undefined | null): ScanRunLaunch
+  /** Returns which Crash Logs the request scans. */
+  get intent(): 'standard' | 'targeted'
+  /** Returns the run configuration the launch built. */
+  get configuration(): JsScanRunConfiguration
+  /** Returns the Standard discovery source, or `null` for a Targeted request. */
+  get standardSource(): JsScanRunStandardSource | null
+  /** Returns the Standard Unsolved Logs intent, or `null` for a Targeted request. */
+  get unsolvedLogs(): 'leaveInPlace' | 'moveToConfiguredOrDefault' | 'moveToCustom' | null
+  /** Returns the Targeted discovery source, or `null` for a Standard request. */
+  get targetedSource(): JsScanRunTargetedSource | null
+  /** Returns whether the request enables FCX Mode. */
+  get fcxEnabled(): boolean
+  /** Returns the Crash Log Scan Setup Context when FCX Mode is enabled, otherwise `null`. */
+  get setupContext(): JsScanRunSetupContext | null
+  /** Returns the launch diagnostics, in the order they were produced. */
+  get diagnostics(): Array<JsScanRunLaunchDiagnostic>
+  /** Returns an executable copy of the launched request. */
+  request(): ScanRunRequest
+}
+
 /** Opaque invariant-preserving request for the final scan-run operation. */
 export declare class ScanRunRequest {
   /** Constructs a non-FCX Standard request. */
@@ -4696,6 +4739,34 @@ export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {
   LocalIgnoreGenerated = 'LocalIgnoreGenerated',
   /** Malformed Local Ignore YAML Data was reset from retained selected-Main defaults. */
   LocalIgnoreReset = 'LocalIgnoreReset'
+}
+
+/** One non-fatal launch diagnostic; the launch still produced a scannable request. */
+export interface JsScanRunLaunchDiagnostic {
+  /** Which launch rule produced it, as a camelCase Vocabulary Token. */
+  kind: 'userSettings'
+  /** Stable machine-readable code (the User Settings code for `userSettings`). */
+  code: string
+  /** Human-readable context. Prose; branch on `kind` and `code` instead. */
+  message: string
+}
+
+/**
+ * Optional per-run values that win over saved User Settings for one launch.
+ *
+ * Every field is optional. `gameVersion` takes a User Settings game-version token
+ * (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`). `maxConcurrent` zero
+ * explicitly requests adaptive concurrency, which overrides a saved limit.
+ * `showFormidValues` and `simplifyLogs` are supplied-as-on: `true` turns the option on for
+ * this run; `false` or absence keeps the saved value.
+ */
+export interface JsScanRunLaunchOverrides {
+  game?: JsGameId
+  gameVersion?: string
+  scanPath?: string
+  maxConcurrent?: number
+  showFormidValues?: boolean
+  simplifyLogs?: boolean
 }
 
 /** Explicit Local Ignore recovery decisions owned by Rust scan coordination. */

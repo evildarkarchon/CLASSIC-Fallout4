@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T07:25:36.772558+00:00",
+  "generated_at_utc": "2026-10-06T11:25:40.775194+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1517,6 +1517,22 @@
       "signature": "export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {"
     },
     {
+      "export": "JsScanRunLaunchDiagnostic",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunLaunchDiagnostic {"
+    },
+    {
+      "export": "JsScanRunLaunchOverrides",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunLaunchOverrides {"
+    },
+    {
       "export": "JsScanRunLocalIgnoreRecoveryDecision",
       "kind": "const_enum",
       "owner_module": "scanlog",
@@ -2163,6 +2179,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ScanRunContinuation {"
+    },
+    {
+      "export": "ScanRunLaunch",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ScanRunLaunch {"
     },
     {
       "export": "ScanRunRequest",

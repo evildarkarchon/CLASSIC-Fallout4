@@ -28,6 +28,8 @@ classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 [dev-dependencies]
 # Temp-dir Installation Roots holding User Settings fixtures.
 tempfile = { workspace = true }
+# The conformance runner reads input-only run plans and publishes JSON receipts.
+serde_json = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

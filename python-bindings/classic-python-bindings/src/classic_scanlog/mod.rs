@@ -103,6 +103,8 @@ pub mod plugin_analyzer;
 pub mod plugin_evidence_analyzer;
 mod py_adapters;
 pub mod record_scanner;
+// Crash Log Scan Launch (ADR-0009), published beside the scan-run surface it feeds.
+pub mod scan_launch;
 pub mod scan_run;
 pub mod version;
 
@@ -146,6 +148,10 @@ pub use plugin_evidence_analyzer::{
     PyPluginEvidenceAnalyzer,
 };
 pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
+pub use scan_launch::{
+    PyScanRunLaunch, PyScanRunLaunchDiagnostic, PyScanRunLaunchOverrides, ScanRunLaunchError,
+    ScanRunLaunchTargetedWithoutInputsError,
+};
 pub use scan_run::{
     PyScanRunCancellation, PyScanRunConfiguration, PyScanRunContinuation, PyScanRunDiscoveryResult,
     PyScanRunDisplayLine, PyScanRunDisplaySegment, PyScanRunEvent, PyScanRunExecution,
@@ -364,6 +370,7 @@ pub(crate) fn register_facade(m: &Bound<'_, PyModule>) -> PyResult<()> {
     plugin_evidence_analyzer::register(m)?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
+    scan_launch::register_scan_launch_exports(m)?;
 
     // Papyrus log analysis
     papyrus::register(m)?;
@@ -417,6 +424,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     plugin_evidence_analyzer::register(m)?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
+    scan_launch::register_scan_launch_exports(m)?;
 
     // Papyrus log analysis
     papyrus::register(m)?;

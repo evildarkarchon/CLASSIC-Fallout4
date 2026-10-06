@@ -568,6 +568,85 @@ class ScanRunRequest:
     ) -> ScanRunRequest: ...
 
 
+class ScanRunLaunchError(ValueError):
+    """A Crash Log Scan Launch could not produce a request; each launch error kind is a subclass."""
+
+
+class ScanRunLaunchTargetedWithoutInputsError(ScanRunLaunchError):
+    """A Targeted Crash Log Scan Launch named no inputs."""
+
+
+class ScanRunLaunchOverrides:
+    """Optional per-run values that win over saved User Settings for one launch.
+
+    ``game_version`` takes a User Settings game-version token. ``max_concurrent=0``
+    explicitly requests adaptive concurrency, overriding a saved limit.
+    ``show_formid_values`` and ``simplify_logs`` are supplied-as-on: ``True`` turns the
+    option on for this run, ``False`` keeps the saved value.
+    """
+
+    def __init__(
+            self,
+            game: GameId | None = None,
+            game_version: str | None = None,
+            scan_path: str | None = None,
+            max_concurrent: int | None = None,
+            show_formid_values: bool = False,
+            simplify_logs: bool = False,
+    ) -> None: ...
+
+
+class ScanRunLaunchDiagnostic:
+    """One non-fatal launch diagnostic; the launch still produced a scannable request."""
+
+    kind: Literal["user_settings"]
+    code: str
+    message: str
+
+
+class ScanRunLaunch:
+    """The Crash Log Scan Run request a launch built, with its launch diagnostics.
+
+    Launching opens User Settings read-only and never writes them. A Standard scan's
+    base folder is always the Installation Root. Degraded User Settings still produce a
+    launch, with their diagnostics.
+    """
+
+    intent: Literal["standard", "targeted"]
+    game: GameId
+    game_version: str
+    show_formid_values: bool
+    simplify_logs: bool
+    formid_database_paths: list[str]
+    unsolved_logs_destination: str | None
+    max_concurrent: int | None
+    base_directory: str | None
+    custom_scan_directory: str | None
+    configured_documents_root: str | None
+    unsolved_logs: Literal["leave_in_place", "move_to_configured_or_default", "move_to_custom"] | None
+    targeted_inputs: list[str] | None
+    fcx_enabled: bool
+    setup_context: ScanRunSetupContext | None
+    diagnostics: list[ScanRunLaunchDiagnostic]
+
+    @staticmethod
+    def standard(
+            installation_root: str,
+            overrides: ScanRunLaunchOverrides | None = None,
+    ) -> ScanRunLaunch: ...
+
+    @staticmethod
+    def targeted(
+            installation_root: str,
+            inputs: list[str],
+            overrides: ScanRunLaunchOverrides | None = None,
+    ) -> ScanRunLaunch:
+        """Raises :class:`ScanRunLaunchTargetedWithoutInputsError` for an empty ``inputs``."""
+        ...
+
+    def request(self) -> ScanRunRequest: ...
+
+
 class ScanRunCancellation:
     """Opaque monotonic cancellation control for one scan run."""
 

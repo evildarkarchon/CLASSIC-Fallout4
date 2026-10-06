@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-10-06T02:23:32.887012+00:00",
+  "generated_at_utc": "2026-10-06T11:25:40.985540+00:00",
   "summary": {
-    "tier1_contract_total": 937,
-    "tier1_matched": 920,
+    "tier1_contract_total": 940,
+    "tier1_matched": 923,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -13146,6 +13146,48 @@
       "expected_node_arity": null,
       "actual_node_arity": null,
       "reason": "Binding-owned result envelope combining core outcome, rendered presentation, and adapter observer failure; no single Rust core counterpart."
+    },
+    {
+      "id": "scanlog.scan_run_launch.ScanRunLaunch",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "rust_crate": "classic-scan-launch",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CrashLogScanLaunchRequest",
+      "node_export": "ScanRunLaunch",
+      "status": "matched",
+      "expected_node_kind": "class",
+      "actual_node_kind": "class",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.scan_run_launch.JsScanRunLaunchOverrides",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "rust_crate": "classic-scan-launch",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CrashLogScanLaunchOverrides",
+      "node_export": "JsScanRunLaunchOverrides",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.scan_run_launch.JsScanRunLaunchDiagnostic",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "rust_crate": "classic-scan-launch",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CrashLogScanLaunchDiagnostic",
+      "node_export": "JsScanRunLaunchDiagnostic",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
     }
   ],
   "gaps": [],
