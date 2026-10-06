@@ -51,7 +51,7 @@ FOUNDATION_PY_REL = "foundation"
 #: ``classic_foo_core::Bar`` and the PyO3-side ``classic_shared_py::Baz``.
 #:
 #: Intermediate module segments are consumed so the FINAL identifier is
-#: captured: ``classic_version_core::pe_version::is_valid_executable_path``
+#: captured: ``classic_shared_core::version::pe_version::is_valid_executable_path``
 #: must yield ``is_valid_executable_path``, not the module ``pe_version``.
 _QUALIFIED_RE = re.compile(
     r"\b(classic_[a-z0-9_]+?_(?:core|py))::(?:[a-z0-9_]+::)*([A-Za-z0-9_]+)"

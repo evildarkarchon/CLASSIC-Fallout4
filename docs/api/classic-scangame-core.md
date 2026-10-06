@@ -285,7 +285,7 @@ Important items:
 
 Behavior worth knowing:
 
-- Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted.
+- Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted. It writes no files, does not open, preview, or commit User Settings, and names only the already-opened `GameSetupSettings` group from `classic-user-settings-core`. `tests/game_setup_intake_read_only.rs` guards that source boundary, and the `game-setup-intake` conformance scenarios `explicit` (no proposals) and `proposal` (a `game_root` proposal discovered from the configured executable) prove that every participant sees the same proposals with the setup tree left byte-identical. Persisting a proposal is a separate caller step (see [`game-setup-workflow.md`](game-setup-workflow.md#2a-review-proposed-path-updates)).
 - `from_user_settings(game_setup_settings)` copies every typed Game Setup fact from an already-opened snapshot—including mods/staging, custom-scan, and Papyrus paths—performs no settings I/O, and consumes the effective documents root after User Settings has applied canonical-before-INI alias precedence.
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
 - a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
@@ -597,6 +597,8 @@ Important direct dependencies:
 - `classic-resource-core` - game-target DDS rules (`DDSAnalyzer`, `GameTarget`) used during loose-file scans
 - `classic-config-core` - optional rule-evaluation path for crashgen TOML checks via the absorbed crashgen rule model (`classic_config_core::crashgen_rules::*`, formerly a separate crate)
 - `classic-path-core` - path resolution and documents-folder checks used by Game Setup Intake
+- `classic-user-settings-core` - the typed, already-opened `GameSetupSettings` group consumed by `GameSetupIntake::from_user_settings()`; intake never opens, previews, or commits User Settings
+- `classic-file-io-core` - the scoped file-hash cache (`FileHashScope`) behind Game Setup Intake's executable and XSE script hashes
 - `classic-xse-core` - XSE loader probes for Game Setup Intake and XSE Folder derivation for `resolve_xse_folder_for_scan()`; `classic-config-core` supplies that resolver's Game Local facts
 - `classic-version-registry-core` - setup expectation metadata, Address Library metadata, and Fallout 4 version descriptions
 - `tokio` - async orchestration only

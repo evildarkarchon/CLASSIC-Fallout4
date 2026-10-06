@@ -73,12 +73,20 @@ export async function observeSetup(fixture: any): Promise<Record<string, unknown
             };
         }
 
+        /** Resolve one optional root-relative fact; an omitted fact stays unset so intake must discover it. */
+        function fact(name: string): string | undefined {
+            const value = fixture.facts[name];
+            if (value === undefined) return undefined;
+            if (value.includes("\\") || isAbsolute(value) || value.split("/").some((part: string) => ["", ".", ".."].includes(part))) throw new Error("setup fact escaped root");
+            return join(root, value);
+        }
+
         const direct = project(classic.runGameSetupIntake({
-            gameId: "Starfield",
-            gameVersion: "Original",
-            gameRoot: join(root, "Game"),
-            docsRoot: join(root, "Docs"),
-            gameExePath: join(root, "Game/Starfield.exe")
+            gameId: fixture.facts.gameId,
+            gameVersion: fixture.facts.gameVersion,
+            gameRoot: fact("gameRoot"),
+            docsRoot: fact("docsRoot"),
+            gameExePath: fact("gameExePath")
         }));
         const result = project(classic.runGameSetupIntakeFromUserSettings(root));
         if (JSON.stringify(direct) !== JSON.stringify(result)) throw new Error("equivalent setup facts differ");

@@ -7,7 +7,7 @@ Crate metadata:
 - Crate: `classic-version-registry-core`
 - Description: `Pure Rust version registry for CLASSIC - game version detection and matching`
 
-This crate is the Rust-side source of truth for known game versions, version matching, known-version queries, and per-version metadata such as Address Library, XSE, and crashgen compatibility data. It is the sole policy owner of the known-version queries `is_known_fallout4_version()` and `is_known_f4se_version()` (issue #244; they used to live in [`classic-version-core`](classic-version-core.md), which now only re-exports them until it retires in #258).
+This crate is the Rust-side source of truth for known game versions, version matching, known-version queries, and per-version metadata such as Address Library, XSE, and crashgen compatibility data. It is the sole policy owner of the known-version queries `is_known_fallout4_version()` and `is_known_f4se_version()` (issue #244; they used to live in `classic-version-core`, which was retired in #258 with no forwarding shim).
 
 Every registry snapshot sits behind a `VersionRegistryScope` handle. The unscoped accessors read one process default scope, which is what Rust, CXX, and Node callers have always observed; the Python facades that read the registry each select their own isolated scope (see [Version Registry Scopes](#version-registry-scopes)).
 
@@ -84,7 +84,7 @@ This crate does not expose its modules directly. `lib.rs` re-exports the public 
 Contributor note:
 
 - it is a sentinel only; it does not change registry behavior on its own
-- downstream crates such as [`classic-version-core`](classic-version-core.md) re-export it directly from this crate now that the dedicated constants crate is gone
+- callers import it directly from this crate now that the dedicated constants crate is gone; no other crate re-exports it (the former `classic-version-core` re-export ended with that crate in #258)
 
 ## `Fallout4Version`
 
@@ -235,7 +235,7 @@ Source-visible behavior:
 - the game query compares each entry's `major.minor.patch`, dropping the fourth (build) component, by exact equality
 - the F4SE query parses each entry's `xse.compatible_version` with the lenient shared-core `try_parse_version()`; entries without an XSE section or with an unparseable string never match
 
-These were `classic_version_core::is_known_fallout4_version()` / `is_known_f4se_version()` until issue #244. That crate re-exports the free functions unchanged until it retires (#258); new callers import this crate.
+These were `classic_version_core::is_known_fallout4_version()` / `is_known_f4se_version()` until issue #244. That crate re-exported the free functions unchanged until it was retired in #258 with no forwarding shim; callers import this crate.
 
 ## Version Registry Scopes
 

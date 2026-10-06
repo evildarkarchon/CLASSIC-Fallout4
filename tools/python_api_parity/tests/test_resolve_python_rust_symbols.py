@@ -24,11 +24,11 @@ SURFACE = {
         {
             "symbol": "is_valid_executable_path",
             "kind": "function",
-            "crate": "classic-version-core",
+            "crate": "classic-shared-core",
         }
     ],
     "pe_version": [
-        {"symbol": "pe_version", "kind": "module", "crate": "classic-version-core"}
+        {"symbol": "pe_version", "kind": "module", "crate": "classic-shared-core"}
     ],
     "get_runtime": [
         {"symbol": "get_runtime", "kind": "function", "crate": "classic-shared-core"}
@@ -216,7 +216,7 @@ def test_multi_segment_qualified_path_yields_the_final_symbol() -> None:
             "rust_name": "is_valid_pe_path",
             "kind": "fn",
             "body": (
-                "{ classic_version_core::pe_version::is_valid_executable_path"
+                "{ classic_shared_core::version::pe_version::is_valid_executable_path"
                 "(std::path::Path::new(path)) }"
             ),
         }

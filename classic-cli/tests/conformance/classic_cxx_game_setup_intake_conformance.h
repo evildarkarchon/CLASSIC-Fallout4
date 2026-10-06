@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MIT
-/// Run the public settings-backed intake against fully explicit owned setup paths.
+/// Run the public settings-backed intake against owned setup paths saved in User Settings.
+///
+/// The fixture's `facts` object is the explicit-facts twin used by Rust, Node, and Python; the
+/// bridge exposes only the settings-backed entry point, so this runner ignores it. When a saved
+/// path is absent, intake returns a path proposal and the tree snapshot proves nothing was written.
 json execute_game_setup_intake_scenario(const json& plan, const json& scenario) {
     TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(),
                                  scenario.at("id").get<std::string>());

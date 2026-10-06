@@ -10,7 +10,6 @@ The main utility-style Rust surfaces now live in dedicated crates, for example:
 - `classic-message-core`
 - `classic-path-core`
 - `classic-resource-core`
-- `classic-version-core`
 - `classic-version-registry-core`
 - `classic-web-core`
 - `classic-xse-core`

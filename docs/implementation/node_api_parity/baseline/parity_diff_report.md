@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T02:16:28.578149+00:00`
-- Tier-1 contract rows: **946**
-- Tier-1 matched: **929**
+- Generated: `2026-10-06T02:23:32.887012+00:00`
+- Tier-1 contract rows: **937**
+- Tier-1 matched: **920**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -812,19 +812,10 @@
 | `update.VERSION@rust` | `update` | `classic-update-core` | `VERSION@rust` | `None` | `matched` |
 | `update.github@rust` | `update` | `classic-update-core` | `github@rust` | `None` | `matched` |
 | `version.NULL_VERSION@rust` | `version_registry` | `classic-version-registry-core` | `NULL_VERSION@rust` | `None` | `matched` |
-| `version.PeVersionError@rust` | `version` | `classic-version-core` | `PeVersionError@rust` | `None` | `matched` |
-| `version.VersionError@rust` | `version` | `classic-version-core` | `VersionError@rust` | `None` | `matched` |
-| `version.VersionResult@rust` | `version` | `classic-version-core` | `VersionResult@rust` | `None` | `matched` |
-| `version.compare_versions@rust` | `version` | `classic-version-core` | `compare_versions@rust` | `None` | `matched` |
-| `version.extract_all_versions@rust` | `version` | `classic-version-core` | `extract_all_versions@rust` | `None` | `matched` |
-| `version.extract_version_from_filename@rust` | `version` | `classic-version-core` | `extract_version_from_filename@rust` | `None` | `matched` |
-| `version.extract_version_from_log@rust` | `version` | `classic-version-core` | `extract_version_from_log@rust` | `None` | `matched` |
-| `version.format_version@rust` | `version` | `classic-version-core` | `format_version@rust` | `None` | `matched` |
-| `version.is_known_f4se_version@rust` | `version` | `classic-version-core` | `is_known_f4se_version@rust` | `None` | `matched` |
-| `version.is_known_fallout4_version@rust` | `version` | `classic-version-core` | `is_known_fallout4_version@rust` | `None` | `matched` |
-| `version.parse_version@rust` | `version` | `classic-version-core` | `parse_version@rust` | `None` | `matched` |
-| `version.pe_version@rust` | `version` | `classic-version-core` | `pe_version@rust` | `None` | `matched` |
-| `version.try_parse_version@rust` | `version` | `classic-version-core` | `try_parse_version@rust` | `None` | `matched` |
+| `version.PeVersionError@rust` | `version` | `classic-shared-core` | `PeVersionError@rust` | `None` | `matched` |
+| `version.VersionError@rust` | `version` | `classic-shared-core` | `VersionError@rust` | `None` | `matched` |
+| `version.VersionResult@rust` | `version` | `classic-shared-core` | `VersionResult@rust` | `None` | `matched` |
+| `version.pe_version@rust` | `version` | `classic-shared-core` | `pe_version@rust` | `None` | `matched` |
 | `web.CLASSIC_VERSION@rust` | `web` | `classic-web-core` | `CLASSIC_VERSION@rust` | `None` | `matched` |
 | `web.ModSite@rust` | `web` | `classic-web-core` | `ModSite@rust` | `None` | `matched` |
 | `web.USER_AGENT_PREFIX@rust` | `web` | `classic-web-core` | `USER_AGENT_PREFIX@rust` | `None` | `matched` |

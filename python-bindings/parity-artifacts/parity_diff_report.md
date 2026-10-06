@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T02:16:34.283177+00:00`
+- Generated: `2026-10-06T02:23:33.706875+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -1089,10 +1089,10 @@
 | `version-registry-unknown-version-get-default` | `version_registry` | `classic-version-registry-core` | `UnknownVersionHandling` | `classic_version_registry.UnknownVersionHandling.get_default` | `matched` |
 | `version-registry-unknown-version-handling-class` | `version_registry` | `classic-version-registry-core` | `UnknownVersionHandling` | `classic_version_registry.UnknownVersionHandling` | `matched` |
 | `version-registry-version-info-class` | `version_registry` | `classic-version-registry-core` | `VersionInfo` | `classic_version_registry.VersionInfo` | `matched` |
-| `version.lib.PeVersionError@rust` | `version` | `classic-version-core` | `PeVersionError` | `classic_version.compare_versions` | `matched` |
-| `version.lib.PeVersionResult@rust` | `version` | `classic-version-core` | `PeVersionResult` | `classic_version.compare_versions` | `matched` |
-| `version.lib.VersionError@rust` | `version` | `classic-version-core` | `VersionError` | `classic_version.compare_versions` | `matched` |
-| `version.lib.VersionResult@rust` | `version` | `classic-version-core` | `VersionResult` | `classic_version.compare_versions` | `matched` |
+| `version.lib.PeVersionError@rust` | `version` | `classic-shared-core` | `PeVersionError` | `classic_version.compare_versions` | `matched` |
+| `version.lib.PeVersionResult@rust` | `version` | `classic-shared-core` | `PeVersionResult` | `classic_version.compare_versions` | `matched` |
+| `version.lib.VersionError@rust` | `version` | `classic-shared-core` | `VersionError` | `classic_version.compare_versions` | `matched` |
+| `version.lib.VersionResult@rust` | `version` | `classic-shared-core` | `VersionResult` | `classic_version.compare_versions` | `matched` |
 | `version.lib.compare_versions` | `version` | `classic-shared-core` | `compare_versions` | `classic_version.compare_versions` | `matched` |
 | `version.lib.extract_all_versions` | `version` | `classic-shared-core` | `extract_all_versions` | `classic_version.extract_all_versions` | `matched` |
 | `version.lib.extract_pe_version` | `version` | `classic-shared-core` | `extract_pe_version` | `classic_version.extract_pe_version` | `matched` |
@@ -1265,7 +1265,6 @@
 | `registry` | 0 |
 | `message` | 0 |
 | `path` | 0 |
-| `version` | 0 |
 | `resource` | 0 |
 | `xse` | 0 |
 | `web` | 0 |
