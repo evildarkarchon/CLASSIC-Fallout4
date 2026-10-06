@@ -2,9 +2,8 @@
 
 `classic_registry`, `classic_config`, and `classic_scanlog` each reach the
 typed registry through their own core-owned `RegistryScope` handle, so each
-facade keeps its own values and application directory. Today every facade is
-a separate extension image, so these probes pass trivially across facades;
-once the facades share one native library they become the regression gate
+facade keeps its own values and application directory. All facades share
+one native extension, so these probes are the regression gate
 that keeps one facade's set, clear, and exact-type key collision invisible to
 another.
 

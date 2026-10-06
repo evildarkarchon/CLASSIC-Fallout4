@@ -3,49 +3,16 @@
 from __future__ import annotations
 
 import importlib
-import os
-import shutil
-import subprocess
-import sys
 from pathlib import Path
 
 
 def _import_classic_scanlog():
-    if "classic_scanlog" in sys.modules:
-        return sys.modules["classic_scanlog"]
+    """Import the installed facade; the one wheel must be rebuilt first.
 
-    repo_root = Path(__file__).resolve().parents[2]
-    manifest_path = repo_root / "python-bindings" / "classic-scanlog-py" / "Cargo.toml"
-    subprocess.run(
-        [
-            "cargo",
-            "build",
-            "-p",
-            "classic-scanlog-py",
-            "--manifest-path",
-            str(manifest_path),
-        ],
-        check=True,
-        cwd=repo_root,
-        env={
-            **os.environ,
-            "PYO3_PYTHON": str(
-                repo_root / "python-bindings" / ".venv" / "Scripts" / "python.exe"
-            ),
-        },
-    )
-
-    target_dir = repo_root / "target" / "debug"
-    deps_dir = target_dir / "deps"
-    dll_path = target_dir / "classic_scanlog.dll"
-    pyd_path = target_dir / "classic_scanlog.pyd"
-    shutil.copyfile(dll_path, pyd_path)
-
-    if hasattr(os, "add_dll_directory"):
-        os.add_dll_directory(str(target_dir))
-        os.add_dll_directory(str(deps_dir))
-
-    sys.path.insert(0, str(target_dir))
+    The former fallback built a private `classic-scanlog-py` extension;
+    that crate is now a module of the one adapter wheel (#259), and a
+    separately built image would not share its native state.
+    """
     return importlib.import_module("classic_scanlog")
 
 
@@ -72,8 +39,9 @@ def test_gpu_detector_binding_is_stateless_and_repeatable() -> None:
 def test_gpu_detector_binding_source_stays_unit_struct() -> None:
     source = (
             Path(__file__).resolve().parents[1]
-            / "classic-scanlog-py"
+            / "classic-python-bindings"
             / "src"
+            / "classic_scanlog"
             / "gpu_detector.rs"
     ).read_text(encoding="utf-8")
 

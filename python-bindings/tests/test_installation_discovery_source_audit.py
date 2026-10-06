@@ -43,7 +43,9 @@ def test_platform_discovery_retains_native_owner_delegation() -> None:
     docs = (owner / "docs_path.rs").read_text()
     assert "query_game_registry(&self.game_name, vr_suffix, try_gog)?" in game
     assert "get_documents_path().map_err" in docs
-    binding = (ROOT / "python-bindings/classic-path-py/src/lib.rs").read_text()
+    binding = (
+        ROOT / "python-bindings/classic-python-bindings/src/classic_path/mod.rs"
+    ).read_text()
     assert ".find_game_path(cached.as_deref(), xse_log.as_deref())" in binding
     assert ".find_docs_path(cached_path.as_deref())" in binding
     xse = (ROOT / "business-logic/classic-xse-core/src/lib.rs").read_text()
