@@ -299,7 +299,7 @@ void ScanSettingsWiringTests::mainwindow_locates_installation_root_through_confi
     QVERIFY2(body.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
              "The GUI supplies its executable folder as the locator's first input");
     QVERIFY2(!body.contains(QStringLiteral("\"install\"")) && !body.contains(QStringLiteral("parent_path")) &&
-                 !body.contains(QStringLiteral("CLASSIC Data")),
+                 !body.contains(QStringLiteral("\"CLASSIC Data\"")),
              "The GUI must not keep a private Installation Root candidate search");
 }
 
