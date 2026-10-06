@@ -512,6 +512,12 @@ pub(crate) struct CrashLogScanRunServiceRequest {
     /// discovery, FCX setup, Installed YAML Data metadata, analysis
     /// configuration, and per-log analysis (also after a resume).
     pub version_registry: VersionRegistryScope,
+    /// File-hash scope the FCX Game Setup Intake step hashes the game
+    /// executable and XSE scripts through. Unscoped runs use the process
+    /// default; a binding facade passes its own isolated scope so its run
+    /// never reads, fills, or counts another facade's hash cache. A
+    /// continuation keeps the whole request, so `resume` keeps this scope too.
+    pub file_hash: FileHashScope,
     /// Request-scoped deterministic hooks used only by internal behavior tests.
     #[cfg(test)]
     pub(crate) test_hooks: ScanRunTestHooks,
@@ -1581,10 +1587,9 @@ fn evaluate_setup_for_scan(
         intake = intake.with_xse_log_path(path);
     }
 
-    // FCX setup hashes through the process default hash scope (#242 keeps
-    // scanlog's setup step there) but reads this run's Version Registry scope.
-    let game_setup =
-        intake.run_in_scopes(&FileHashScope::default_scope(), &request.version_registry);
+    // FCX setup hashes through this run's file-hash scope and reads this run's
+    // Version Registry scope; unscoped runs carry the process defaults for both.
+    let game_setup = intake.run_in_scopes(&request.file_hash, &request.version_registry);
     let configuration_issues = detect_setup_configuration_issues(
         game_setup.paths.game_root.as_deref(),
         context.game_root.as_deref(),
