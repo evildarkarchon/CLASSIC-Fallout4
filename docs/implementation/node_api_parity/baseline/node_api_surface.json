@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T10:00:21.664500+00:00",
+  "generated_at_utc": "2026-10-06T10:55:29.350090+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -3749,6 +3749,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function resetSettingsCacheStats(): void",
       "arity": 0
+    },
+    {
+      "export": "resolveXseLogForScan",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function resolveXseLogForScan(yamlDirData: string, game: string, selectedGameVersion: string, configuredDocsRoot?: string | undefined | null): string | null",
+      "arity": 4
     },
     {
       "export": "reverseUserSettingsMigrationPlan",

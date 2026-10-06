@@ -15,6 +15,7 @@ from _classic_native._native.classic_xse import (
     get_xse_info,
     is_xse_installed,
     parse_xse_type,
+    resolve_xse_log_for_scan,
 )
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "get_xse_info",
     "is_xse_installed",
     "parse_xse_type",
+    "resolve_xse_log_for_scan",
 ]

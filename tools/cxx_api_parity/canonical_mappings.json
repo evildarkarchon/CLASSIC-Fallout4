@@ -5811,6 +5811,15 @@
       "coreRustSymbol": "resolve_xse_folder_for_scan"
     },
     {
+      "id": "16d48d7de1e4bfe3",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "resolve_xse_log_for_scan"
+    },
+    {
       "id": "fed1f3c1692a2596",
       "rustSymbol": "xse_get_dll_prefix",
       "kind": "function",

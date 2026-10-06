@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T10:00:21.651550+00:00",
+  "generated_at_utc": "2026-10-06T10:55:29.345309+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8745,6 +8745,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "XseLogError",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use classic_xse_core::XseLogError;",
+      "source_expr": "classic_xse_core::XseLogError",
+      "tier": "tier1"
+    },
+    {
       "symbol": "anniversary_edition",
       "kind": "function",
       "arity": 0,
@@ -9737,7 +9747,7 @@
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, };",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, resolve_xse_log_for_scan, resolve_xse_log_for_scan_in_scopes, };",
       "source_expr": "xse_folder::resolve_xse_folder_for_scan",
       "tier": "tier1"
     },
@@ -9757,7 +9767,7 @@
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, };",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, resolve_xse_log_for_scan, resolve_xse_log_for_scan_in_scopes, };",
       "source_expr": "xse_folder::resolve_xse_folder_for_scan_in_scopes",
       "tier": "tier1"
     },
@@ -9777,8 +9787,48 @@
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, };",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, resolve_xse_log_for_scan, resolve_xse_log_for_scan_in_scopes, };",
       "source_expr": "xse_folder::resolve_xse_folder_for_scan_in_version_registry_scope",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_log_for_scan",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/xse_folder.rs",
+      "source_decl": "pub fn resolve_xse_log_for_scan(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_log_for_scan",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, resolve_xse_log_for_scan, resolve_xse_log_for_scan_in_scopes, };",
+      "source_expr": "xse_folder::resolve_xse_log_for_scan",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_log_for_scan_in_scopes",
+      "kind": "function",
+      "arity": 6,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/xse_folder.rs",
+      "source_decl": "pub fn resolve_xse_log_for_scan_in_scopes(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n    version_registry: &VersionRegistryScope,\n    yaml_file_cache: &YamlFileCacheScope,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_log_for_scan_in_scopes",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, resolve_xse_log_for_scan, resolve_xse_log_for_scan_in_scopes, };",
+      "source_expr": "xse_folder::resolve_xse_log_for_scan_in_scopes",
       "tier": "tier1"
     },
     {
@@ -19442,6 +19492,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "formid_databases_for_game",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn formid_databases_for_game(&self, game: GameId)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "formid_databases_origin",
       "kind": "function",
       "arity": 1,
@@ -21985,6 +22045,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "XseLogError",
+      "kind": "enum",
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub enum XseLogError",
+      "tier": "tier1"
+    },
+    {
       "symbol": "XseResult",
       "kind": "type",
       "crate": "classic-xse-core",
@@ -22120,6 +22189,26 @@
       "owner_module": "xse",
       "source_file": "business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn resolve_xse_folder_from_game_local_facts_in_version_registry_scope(\n    game_local: &XseGameLocalFacts,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n    version_registry: &VersionRegistryScope,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_log_from_game_local_facts",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub fn resolve_xse_log_from_game_local_facts(\n    game_local: &XseGameLocalFacts,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_log_from_game_local_facts_in_version_registry_scope",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub fn resolve_xse_log_from_game_local_facts_in_version_registry_scope(\n    game_local: &XseGameLocalFacts,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n    version_registry: &VersionRegistryScope,\n)",
       "tier": "tier1"
     },
     {

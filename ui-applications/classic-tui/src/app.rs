@@ -1317,22 +1317,17 @@ impl App {
         custom == crash || custom.starts_with(&crash)
     }
 
-    /// Projects the canonical managed game and its analysis-data FormID databases from one snapshot.
-    fn scan_game_projection(&self) -> (classic_shared_core::GameId, Vec<PathBuf>) {
+    /// Projects the canonical managed game and the FormID databases its Crash Log Scan reads.
+    ///
+    /// Row selection, including the Fallout 4 VR read rule, belongs to User Settings; the TUI
+    /// only converts the selected rows into paths. Public so the consumer conformance runner can
+    /// observe the exact rows a scan launch would use.
+    pub fn scan_game_projection(&self) -> (classic_shared_core::GameId, Vec<PathBuf>) {
         let managed_game = self.settings.game_setup_settings().managed_game();
-        // Fallout 4 VR keeps its runtime identity but shares Fallout 4's analysis data and FormID database rows.
-        let database_game = match managed_game {
-            classic_shared_core::GameId::Fallout4VR => classic_shared_core::GameId::Fallout4,
-            _ => managed_game,
-        };
-        let managed_game_key = database_game.as_str().to_string();
         let databases = self
             .settings
             .crash_log_scan_settings()
-            .formid_databases()
-            .get(&managed_game_key)
-            .cloned()
-            .unwrap_or_default()
+            .formid_databases_for_game(managed_game)
             .into_iter()
             .map(PathBuf::from)
             .collect();

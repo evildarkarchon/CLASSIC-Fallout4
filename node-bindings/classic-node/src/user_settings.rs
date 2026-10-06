@@ -63,6 +63,13 @@ pub struct JsCrashLogScanSettings {
     pub formid_databases: HashMap<String, Vec<String>>,
     /// Provenance token for FormID Databases.
     pub formid_databases_origin: String,
+    /// FormID database rows that apply to each supported game's Crash Log Scan.
+    ///
+    /// Rust applies the game-aware read: Fallout 4 VR reads the shared `Fallout4` rows followed
+    /// by legacy `Fallout4VR` rows, de-duplicated; every other game reads its own rows exactly.
+    /// Games whose scan reads no rows are absent. Scan launch reads this map, never
+    /// `formidDatabases`.
+    pub scan_formid_databases: HashMap<String, Vec<String>>,
     /// Whether a standard scan may move Unsolved Logs.
     pub move_unsolved_logs: bool,
     /// Provenance token for Move Unsolved Logs.
@@ -1408,6 +1415,18 @@ fn crash_log_scan_settings_to_js(settings: &UserSettings) -> JsCrashLogScanSetti
             .map(|(game, paths)| (game.clone(), paths.clone()))
             .collect(),
         formid_databases_origin: js_token(scan.formid_databases_origin().as_str()),
+        scan_formid_databases: classic_shared_core::GameId::all()
+            .into_iter()
+            .map(|game| {
+                let rows = scan
+                    .formid_databases_for_game(game)
+                    .into_iter()
+                    .map(ToOwned::to_owned)
+                    .collect::<Vec<_>>();
+                (game.as_str().to_string(), rows)
+            })
+            .filter(|(_, rows)| !rows.is_empty())
+            .collect(),
         move_unsolved_logs: scan.move_unsolved_logs(),
         move_unsolved_logs_origin: js_token(scan.move_unsolved_logs_origin().as_str()),
         unsolved_logs_destination: scan.unsolved_logs_destination().map(ToOwned::to_owned),

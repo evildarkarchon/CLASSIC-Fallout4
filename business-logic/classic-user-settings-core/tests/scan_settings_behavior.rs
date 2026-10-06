@@ -1,5 +1,6 @@
 //! Behavioral checks for Crash Log Scan User Settings through the public interface.
 
+use classic_shared_core::GameId;
 use classic_user_settings_core::{GameVersionSelection, PreferenceOrigin, UserSettings};
 use std::path::{Path, PathBuf};
 
@@ -247,4 +248,97 @@ fn missing_and_untrusted_documents_use_distinct_scan_defaults_and_safety_fallbac
             .is_empty()
     );
     assert!(!missing_root.path().join("CLASSIC Settings.yaml").exists());
+}
+
+/// Opens one temp-dir User Settings document whose FormID Databases mapping is the given YAML body.
+fn open_with_formid_databases(databases_yaml: &str) -> (tempfile::TempDir, UserSettings) {
+    let root = tempfile::tempdir().unwrap();
+    let content = format!(
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  FormID Databases:\n{databases_yaml}"
+    );
+    std::fs::write(root.path().join("CLASSIC Settings.yaml"), content).unwrap();
+    let settings = UserSettings::open(root.path());
+    assert!(settings.diagnostics().is_empty());
+    (root, settings)
+}
+
+#[test]
+fn fallout4_vr_scans_read_the_shared_fallout4_formid_database_rows() {
+    let (_root, settings) =
+        open_with_formid_databases("    Fallout4:\n      - databases/shared.db\n");
+
+    assert_eq!(
+        settings
+            .crash_log_scan_settings()
+            .formid_databases_for_game(GameId::Fallout4VR),
+        vec!["databases/shared.db"]
+    );
+}
+
+#[test]
+fn fallout4_vr_scans_still_read_legacy_fallout4vr_formid_database_rows() {
+    let (_root, settings) =
+        open_with_formid_databases("    Fallout4VR:\n      - databases/legacy-vr.db\n");
+
+    assert_eq!(
+        settings
+            .crash_log_scan_settings()
+            .formid_databases_for_game(GameId::Fallout4VR),
+        vec!["databases/legacy-vr.db"]
+    );
+}
+
+#[test]
+fn fallout4_vr_scans_read_shared_rows_before_legacy_vr_rows() {
+    let (_root, settings) = open_with_formid_databases(
+        "    Fallout4VR:\n      - databases/legacy-vr.db\n    Fallout4:\n      - databases/shared-a.db\n      - databases/shared-b.db\n",
+    );
+
+    assert_eq!(
+        settings
+            .crash_log_scan_settings()
+            .formid_databases_for_game(GameId::Fallout4VR),
+        vec![
+            "databases/shared-a.db",
+            "databases/shared-b.db",
+            "databases/legacy-vr.db"
+        ]
+    );
+}
+
+#[test]
+fn fallout4_vr_scans_drop_duplicate_rows_and_keep_first_occurrence_order() {
+    let (_root, settings) = open_with_formid_databases(
+        "    Fallout4:\n      - databases/b.db\n      - databases/a.db\n      - databases/b.db\n    Fallout4VR:\n      - databases/a.db\n      - databases/vr.db\n      - databases/vr.db\n",
+    );
+
+    assert_eq!(
+        settings
+            .crash_log_scan_settings()
+            .formid_databases_for_game(GameId::Fallout4VR),
+        vec!["databases/b.db", "databases/a.db", "databases/vr.db"]
+    );
+}
+
+#[test]
+fn every_other_game_reads_exactly_its_own_formid_database_rows() {
+    let (_root, settings) = open_with_formid_databases(
+        "    Fallout4:\n      - databases/fo4.db\n      - databases/fo4.db\n    Fallout4VR:\n      - databases/legacy-vr.db\n    Skyrim:\n      - databases/skyrim.db\n",
+    );
+    let scan = settings.crash_log_scan_settings();
+
+    assert_eq!(
+        scan.formid_databases_for_game(GameId::Fallout4),
+        vec!["databases/fo4.db", "databases/fo4.db"]
+    );
+    assert_eq!(
+        scan.formid_databases_for_game(GameId::Skyrim),
+        vec!["databases/skyrim.db"]
+    );
+    assert!(scan.formid_databases_for_game(GameId::Starfield).is_empty());
+    // The raw keyed map stays readable and unchanged by the game-aware read.
+    assert_eq!(
+        scan.formid_databases().get("Fallout4VR").unwrap(),
+        &["databases/legacy-vr.db"]
+    );
 }

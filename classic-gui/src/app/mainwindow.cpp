@@ -118,30 +118,24 @@ void showScanRunMessage(QWidget* parent, QMessageBox::Icon icon, const QString& 
     box.exec();
 }
 
-/// Resolve an existing Fallout 4 script-extender log to use as a setup detection hint.
-/// The selected version controls preference, while checking both names keeps auto-detected VR installs working.
+/// Resolve an existing script-extender log to use as a setup detection hint.
+///
+/// Rust owns the XSE log location (XSE Folder precedence plus the selected version's Version
+/// Registry XSE log name, so Fallout 4 VR has its own log); an empty result means no log exists.
+/// The log is only a hint, so an operational failure is logged and the caller continues without it
+/// rather than blocking setup or a scan.
 QString resolveExistingXseLogPath(const QString& yamlData, const QString& game, const QString& selectedGameVersion,
                                   const QString& configuredDocsRoot)
 {
-    const auto resolvedFolder = classic::xse::resolve_xse_folder_for_scan(
-        classic::toRustString(yamlData), classic::toRustString(game), classic::toRustString(selectedGameVersion),
-        classic::toRustString(configuredDocsRoot));
-    if (resolvedFolder.empty()) {
+    try {
+        const auto resolvedLog = classic::xse::resolve_xse_log_for_scan(
+            classic::toRustString(yamlData), classic::toRustString(game), classic::toRustString(selectedGameVersion),
+            classic::toRustString(configuredDocsRoot));
+        return resolvedLog.empty() ? QString{} : QDir::cleanPath(classic::toQString(resolvedLog));
+    } catch (const rust::Error& error) {
+        classic::message::log_warning(std::string("XSE log lookup failed: ") + error.what());
         return {};
     }
-
-    const QDir xseFolder(classic::toQString(resolvedFolder));
-    const bool preferVrLog = selectedGameVersion.compare(QStringLiteral("VR"), Qt::CaseInsensitive) == 0;
-    const QStringList logNames = preferVrLog ? QStringList{QStringLiteral("f4sevr.log"), QStringLiteral("f4se.log")}
-                                             : QStringList{QStringLiteral("f4se.log"), QStringLiteral("f4sevr.log")};
-    for (const QString& logName : logNames) {
-        const QString logPath = QDir::cleanPath(xseFolder.filePath(logName));
-        if (QFileInfo(logPath).isFile()) {
-            return logPath;
-        }
-    }
-
-    return {};
 }
 
 void logUpdateCheckFailure(const QString& errorMessage)

@@ -37,7 +37,8 @@ def _install_user_settings_fake(
         fcx_mode=fcx_mode,
         simplify_logs=True,
         formid_value_lookup=True,
-        formid_databases={"Fallout4": ["formids.db"]},
+        # Only the Rust-selected scan rows are faked; a raw-map read would fail loudly.
+        scan_formid_databases={"Fallout4": ["formids.db"]},
         unsolved_logs_destination="Unsolved Logs",
         game_version_selection="1.10.984",
         max_concurrent_scans=3,

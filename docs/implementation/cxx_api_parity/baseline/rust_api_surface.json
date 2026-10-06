@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T09:57:02Z",
+  "generated_at_utc": "2026-10-06T10:55:25Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -12301,6 +12301,10 @@
           "type": "String"
         },
         {
+          "name": "scan_formid_database_paths",
+          "type": "Vec<FormIdDatabasePathDto>"
+        },
+        {
           "name": "move_unsolved_logs",
           "type": "bool"
         },
@@ -15482,6 +15486,38 @@
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
       "coreRustSymbol": "resolve_xse_folder_for_scan"
+    },
+    {
+      "id": "16d48d7de1e4bfe3",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "yaml_dir_data",
+            "type": "&str"
+          },
+          {
+            "name": "game",
+            "type": "&str"
+          },
+          {
+            "name": "selected_game_version",
+            "type": "&str"
+          },
+          {
+            "name": "configured_docs_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<String>"
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "resolve_xse_log_for_scan"
     },
     {
       "id": "fed1f3c1692a2596",

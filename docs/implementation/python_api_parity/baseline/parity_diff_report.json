@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-10-06T09:57:49.950847+00:00",
+  "generated_at_utc": "2026-10-06T10:55:27.897007+00:00",
   "summary": {
-    "tier1_contract_total": 1226,
-    "tier1_matched": 1224,
+    "tier1_contract_total": 1227,
+    "tier1_matched": 1225,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -18685,6 +18685,22 @@
       "actual_python_kind": "function",
       "expected_python_arity": null,
       "actual_python_arity": 2
+    },
+    {
+      "id": "xse.lib.resolve_xse_log_for_scan",
+      "tier": "tier1",
+      "owner_module": "xse",
+      "rust_crate": "classic-scangame-core",
+      "squad": "Squad E (scangame/xse)",
+      "rust_symbol": "resolve_xse_log_for_scan",
+      "python_module": "classic_xse",
+      "python_export": "resolve_xse_log_for_scan",
+      "python_export_path": "resolve_xse_log_for_scan",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": null,
+      "actual_python_arity": 4
     },
     {
       "id": "xse.lib.is_xse_installed",

@@ -88,6 +88,7 @@ this state, so object results and returned duplicate maps now agree.
 - `GameIntegrityChecker`, `IntegrityConfig`
 - `XseChecker`, `GameVersion`, `ValidationResult`
 - `resolve_xse_folder_for_scan()`, `resolve_xse_folder_for_scan_in_version_registry_scope()`, `resolve_xse_folder_for_scan_in_scopes()`
+- `resolve_xse_log_for_scan()`, `resolve_xse_log_for_scan_in_scopes()`, and `XseLogError` (re-exported from `classic-xse-core`)
 - `CrashgenChecker`, `TomlConfigIssue`
 - `ModIniScanner`, `ModIniScanResult`
 - `UnpackedScanner`, `UnpackedIssues`
@@ -310,8 +311,24 @@ Neither owner can do this alone: config owns the Game Local document and XSE own
 Callers:
 
 - Crash Log collection: `classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery (with the run's Version Registry scope)
-- the C++ bridge's `classic::xse::resolve_xse_folder_for_scan`, which the GUI uses for its setup-detection XSE log hint, and `classic::files::log_collector_new_for_scan`
+- the C++ bridge's `classic::xse::resolve_xse_folder_for_scan` and `classic::files::log_collector_new_for_scan`
 - the `xse-folder` Binding Compliance Suite family's `xse-folder.resolve` capability (Rust and CXX participants), which credits this Local.yaml composition to this crate; the family's `domainOwner` is `classic-xse-core`, which owns the derivation (`xse-folder.derive`)
+
+### XSE log from the Game Local document
+
+`resolve_xse_log_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> Result<Option<PathBuf>, XseLogError>` locates the XSE log for an installation (#283). It reads the Game Local facts exactly like `resolve_xse_folder_for_scan`, then calls [`classic_xse_core::resolve_xse_log_from_game_local_facts`](classic-xse-core.md#xse-log-from-game-local-facts), which looks only in the XSE Folder that precedence selects, under the selected version's Version Registry XSE log name (Fallout 4 `f4se.log`, Fallout 4 VR its own `f4sevr.log`, both in `F4SE`).
+
+- `Ok(Some(path))`: the log exists.
+- `Ok(None)`: no XSE Folder resolved, or the folder or log is missing. The Game Local read stays fail-soft.
+- `Err(XseLogError::Inspect { .. })`: the log could not be inspected for a reason other than absence.
+
+`resolve_xse_log_for_scan_in_scopes(..., &VersionRegistryScope, &YamlFileCacheScope)` reads Version Registry metadata and the Game Local document only through the caller's scopes.
+
+Callers:
+
+- the GUI's setup-detection hint, FCX crash-log scan and game-files scan, through the C++ bridge's `classic::xse::resolve_xse_log_for_scan` (empty string = no log; operational failure raises `rust::Error`, which the GUI logs and treats as no hint). No frontend names XSE log files any more.
+- Node `resolveXseLogForScan` (`string | null`, throws on operational failure) and Python `classic_xse.resolve_xse_log_for_scan` (`str | None`, raises `OSError`)
+- the `xse-folder` family's `xse-folder.log` capability, which runs on the Rust, CXX, Node and Python adapters
 
 ## Loose-file and archive scanning APIs
 

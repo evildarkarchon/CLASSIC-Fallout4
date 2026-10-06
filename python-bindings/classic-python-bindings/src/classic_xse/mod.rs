@@ -330,6 +330,57 @@ fn get_xse_info(game_path: &str, xse_type: PyXseType) -> PyXseInfo {
     }
 }
 
+/// Locate the XSE log for a game and game version from an installation's
+/// `CLASSIC Data` directory.
+///
+/// Rust owns the location: the log is looked for only in the XSE Folder that
+/// XSE Folder precedence selects (recorded Game Local facts, then
+/// `configured_docs_root`, then platform discovery), under the selected
+/// version's Version Registry XSE log name, so Fallout 4 VR has its own log.
+///
+/// # Arguments
+///
+/// * `yaml_dir_data` - The installation's `CLASSIC Data` directory
+/// * `game` - The game identifier (e.g. "Fallout4", "Fallout4VR")
+/// * `selected_game_version` - The selected game version (e.g. "auto", "VR")
+/// * `configured_docs_root` - The configured documents root; `None` or empty means none
+///
+/// # Returns
+///
+/// The existing log path, or `None` when the XSE Folder or log is missing.
+///
+/// # Raises
+///
+/// * `OSError` - "cannot inspect XSE log ..." when the log cannot be inspected
+///
+/// # Examples
+///
+/// ```python
+/// import classic_xse
+///
+/// log = classic_xse.resolve_xse_log_for_scan("CLASSIC Data", "Fallout4", "auto", None)
+/// ```
+#[pyfunction]
+#[pyo3(signature = (yaml_dir_data, game, selected_game_version, configured_docs_root=None))]
+fn resolve_xse_log_for_scan(
+    yaml_dir_data: &str,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&str>,
+) -> PyResult<Option<String>> {
+    let configured_docs_root = configured_docs_root
+        .filter(|root| !root.trim().is_empty())
+        .map(PathBuf::from);
+    classic_scangame_core::resolve_xse_log_for_scan(
+        PathBuf::from(yaml_dir_data),
+        game,
+        selected_game_version,
+        configured_docs_root.as_deref(),
+    )
+    .map(|log| log.map(|path| path.to_string_lossy().to_string()))
+    .map_err(|e| PyIOError::new_err(e.to_string()))
+}
+
 /// Python module for XSE utilities.
 ///
 /// This module provides comprehensive Script Extender (XSE) handling for
@@ -348,6 +399,9 @@ pub(crate) fn register_facade(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Installation checking
     m.add_function(wrap_pyfunction!(is_xse_installed, m)?)?;
     m.add_function(wrap_pyfunction!(get_xse_info, m)?)?;
+
+    // XSE log location
+    m.add_function(wrap_pyfunction!(resolve_xse_log_for_scan, m)?)?;
 
     // Module metadata
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

@@ -69,6 +69,17 @@ json settings_selected_view(const classic::settings::GuiSettingsSnapshotDto& sna
                 databases.at(owned_string(row.game)).push_back(owned_string(row.path));
             }
             view[field] = std::move(databases);
+        } else if (field == "scan_formid_databases") {
+            // Rust publishes only games whose scan reads at least one row, already in read order.
+            json databases = json::object();
+            for (const auto& row : scan.scan_formid_database_paths) {
+                const std::string game = owned_string(row.game);
+                if (!databases.contains(game)) {
+                    databases[game] = json::array();
+                }
+                databases.at(game).push_back(owned_string(row.path));
+            }
+            view[field] = std::move(databases);
         } else {
             bool recognized = false;
             for (const auto& geometry : frontend.window_geometry) {

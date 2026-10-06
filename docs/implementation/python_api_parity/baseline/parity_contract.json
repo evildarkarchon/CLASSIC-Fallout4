@@ -12030,6 +12030,16 @@
       "pythonKind": "function"
     },
     {
+      "id": "xse.lib.resolve_xse_log_for_scan",
+      "tier": "tier1",
+      "ownerModule": "xse",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "pythonModule": "classic_xse",
+      "pythonExportPath": "resolve_xse_log_for_scan",
+      "pythonKind": "function"
+    },
+    {
       "id": "xse.lib.is_xse_installed",
       "tier": "tier1",
       "ownerModule": "xse",
