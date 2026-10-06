@@ -88,7 +88,7 @@ Important contributor takeaway:
 
 ## What Crash Log Scan Intake Reads At Scan Startup Today
 
-Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the `scan_formid_database_paths` rows for the effective game, and sends them through `ScanRunConfigurationDto.formid_database_paths` into a tagged final-contract request. Native GUI settings load opens one `GuiSettingsSnapshotDto`; at scan startup its Qt adapter creates an immutable `CrashLogScanLaunchSettings` from that accepted revision, selecting the managed game's rows from the same Rust-selected projection (`GuiCrashLogScanSettings::scanFormIdDatabases`). The C++ bridge creates `CrashLogScanFacts`, and the Rust-owned Crash Log Scan Run attaches those facts to `CrashLogScanIntake::from_installed_yaml_data(...).prepare()`. Intake receives the immutable snapshot selected once from the request's installation root and typed game and does not reopen selected Main, game, or Local Ignore paths.
+Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the `scan_formid_database_paths` rows for the effective game, and sends them through `ScanRunConfigurationDto.formid_database_paths` into a tagged final-contract request. The native GUI launches through Crash Log Scan Launch, which selects the managed game's rows in Rust when the scan starts; its settings snapshot keeps the same Rust-selected projection (`GuiCrashLogScanSettings::scanFormIdDatabases`) only for the Settings dialog. The C++ bridge creates `CrashLogScanFacts`, and the Rust-owned Crash Log Scan Run attaches those facts to `CrashLogScanIntake::from_installed_yaml_data(...).prepare()`. Intake receives the immutable snapshot selected once from the request's installation root and typed game and does not reopen selected Main, game, or Local Ignore paths.
 
 Current path assembly order is:
 
@@ -165,7 +165,7 @@ Contributor-visible GUI details:
 - the preservation-aware Rust patch retains unknown keys, unrelated known-invalid values, and other games' FormID lists
 - a committed save that removed a legacy `Fallout4VR` key shows the `legacy_formid_databases_key_removed` diagnostic in a `Settings Saved` information box
 
-[`classic-gui/src/workers/scanrequestbuilder.cpp`](../../classic-gui/src/workers/scanrequestbuilder.cpp) is the GUI's separate scan-request boundary. `MainWindow` derives `CrashLogScanLaunchSettings` from the accepted cached snapshot, and the controller and worker forward that immutable value. Scan launch neither reopens User Settings nor reads `CLASSIC_Settings.FormID Databases.{game}` through generic YAML operations.
+A GUI Crash Log Scan does not read FormID rows from the snapshot at all. [`classic-gui/src/workers/scanlaunch.cpp`](../../classic-gui/src/workers/scanlaunch.cpp) launches through Rust's Crash Log Scan Launch with the Installation Root and no overrides, and the launch selects the scanned game's rows with `formid_databases_for_game` (see [`classic-scan-launch.md`](classic-scan-launch.md)). Neither path reads `CLASSIC_Settings.FormID Databases.{game}` through generic YAML operations.
 
 ---
 
@@ -175,7 +175,7 @@ The typed-snapshot-to-explicit-facts handoff is the main place to inspect when a
 
 Common failure patterns:
 
-- a path accepted by the GUI appears under `CLASSIC_Settings.FormID Databases.{game}` and is reflected in the newly accepted typed snapshot; scan launch deliberately uses that snapshot rather than reopening or rediscovering the key
+- a path accepted by the GUI appears under `CLASSIC_Settings.FormID Databases.{game}`; a GUI scan reads it through Crash Log Scan Launch, which reopens User Settings read-only when the scan starts
 - a relative path may look correct in YAML but resolves under `yaml_dir_data` (`CLASSIC Data`), not relative to the settings file itself
 - a missing DB file may not fail scan startup loudly because `DatabasePool::initialize()` later skips nonexistent files with a warning instead of a hard error
 

@@ -11,9 +11,12 @@ so as its own User Settings Update, before or apart from launching.
 
 ## Status
 
-The crate and its binding surfaces exist; **no frontend launches through it yet**. The GUI, CLI,
-TUI, Node CLI and Python CLI still build their own requests and switch in a later change. Every
-launch rule from ADR-0009 is implemented:
+The crate and its binding surfaces exist. The native GUI launches through it (#288; see
+[`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md)): it passes the
+Installation Root, the scan intent (Standard, or Targeted with the dropped inputs) and no
+overrides, and shows the launch's `display_lines` as a scan warning. The CLI, TUI, Node CLI and
+Python CLI still build their own requests and switch in later changes. Every launch rule from
+ADR-0009 is implemented:
 
 - the game-differs rule (#285): saved game-specific values are not applied to a non-managed game,
   each one reported as a typed launch diagnostic rendered as Display Content;
