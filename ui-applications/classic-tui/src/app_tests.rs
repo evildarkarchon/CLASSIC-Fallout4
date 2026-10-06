@@ -169,6 +169,7 @@ fn scan_complete_with_errors_updates_status_message() {
         cancelled: 0,
         logs: Vec::new(),
         continuation: None,
+        observer_delivery_failure: None,
     }))));
 
     // Derived from the core Display Label rather than restated: the sentence is core's now, and a
@@ -206,6 +207,7 @@ fn paused_recovery_result() -> RunResult {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
+        observer_delivery_failure: None,
     }
 }
 
@@ -417,6 +419,7 @@ fn scan_complete_switches_to_results_when_enabled() {
         cancelled: 0,
         logs: Vec::new(),
         continuation: None,
+        observer_delivery_failure: None,
     }))));
 
     assert!(matches!(app.active_tab, TabIndex::Results));

@@ -106,9 +106,24 @@ async fn run_empty_case(version_registry: Option<VersionRegistryScope>) -> Strin
     let cancellation = contract::Cancellation::new();
     let result = match version_registry {
         Some(scope) => {
-            contract::execute_in_version_registry_scope(request, scope, &cancellation, None).await
+            contract::execute_in_version_registry_scope(
+                request,
+                scope,
+                &cancellation,
+                None,
+                contract::ObserverFailurePolicy::ContinueRun,
+            )
+            .await
         }
-        None => contract::execute(request, &cancellation, None).await,
+        None => {
+            contract::execute(
+                request,
+                &cancellation,
+                None,
+                contract::ObserverFailurePolicy::ContinueRun,
+            )
+            .await
+        }
     }
     .expect("scan should execute");
 

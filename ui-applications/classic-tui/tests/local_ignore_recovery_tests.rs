@@ -95,7 +95,12 @@ fn paused_run(root: &Path, logs: Vec<PathBuf>, cancellation: &Cancellation) -> R
         TargetedCrashLogScanSource { inputs: logs },
     );
     let result = get_runtime()
-        .block_on(contract::execute(request, cancellation, None))
+        .block_on(contract::execute(
+            request,
+            cancellation,
+            None,
+            classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
+        ))
         .expect("malformed Local Ignore is expected result data, not an infrastructure error");
     assert_eq!(
         result.status,

@@ -288,9 +288,15 @@ fn observer_scenario(delay: Option<Duration>) -> (contract::RunResult, Vec<contr
             request,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
     } else {
-        get_runtime().block_on(contract::execute(request, &cancellation, None))
+        get_runtime().block_on(contract::execute(
+            request,
+            &cancellation,
+            None,
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
     }
     .expect("observer scenario should complete");
 
@@ -370,6 +376,7 @@ fn paused_recovery_fixture_with_cancellation(
             cancellation,
             None,
             hooks.with_yaml_cache_root(root.join("isolated-cache")),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("malformed Local Ignore should pause with expected result data");
     assert_eq!(
@@ -393,6 +400,7 @@ fn sequential_fcx_runs_return_and_render_only_their_own_setup_facts() {
             first_request,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("first FCX run should complete");
     let second = get_runtime()
@@ -400,6 +408,7 @@ fn sequential_fcx_runs_return_and_render_only_their_own_setup_facts() {
             second_request,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("second FCX run should complete");
 
@@ -425,7 +434,13 @@ fn overlapping_fcx_runs_return_and_render_only_their_own_setup_facts() {
                     first_barrier.wait();
                 }
             };
-            contract::execute(first_request, &cancellation, Some(&mut observer)).await
+            contract::execute(
+                first_request,
+                &cancellation,
+                Some(&mut observer),
+                contract::ObserverFailurePolicy::ContinueRun,
+            )
+            .await
         });
         let second_barrier = Arc::clone(&admission_barrier);
         let second_task = tokio::spawn(async move {
@@ -435,7 +450,13 @@ fn overlapping_fcx_runs_return_and_render_only_their_own_setup_facts() {
                     second_barrier.wait();
                 }
             };
-            contract::execute(second_request, &cancellation, Some(&mut observer)).await
+            contract::execute(
+                second_request,
+                &cancellation,
+                Some(&mut observer),
+                contract::ObserverFailurePolicy::ContinueRun,
+            )
+            .await
         });
         tokio::join!(first_task, second_task)
     });
@@ -476,6 +497,7 @@ fn fcx_disabled_run_has_no_setup_result_or_fcx_report_content() {
             request,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("FCX-disabled run should complete");
 
@@ -513,6 +535,7 @@ fn targeted_run_uses_one_ready_installed_yaml_data_snapshot() {
             &contract::Cancellation::new(),
             None,
             ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("a valid installed snapshot should complete the run");
 
@@ -566,6 +589,7 @@ fn targeted_run_generates_missing_local_ignore_and_keeps_diagnostic_out_of_repor
             &contract::Cancellation::new(),
             None,
             ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("generated Local Ignore should remain a successful Ready run");
 
@@ -633,6 +657,7 @@ fn targeted_run_resumes_without_ignore_from_retained_discovery_and_snapshot() {
             &contract::Cancellation::new(),
             None,
             ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("malformed Local Ignore should be expected run result data");
 
@@ -695,6 +720,7 @@ fn targeted_run_resumes_without_ignore_from_retained_discovery_and_snapshot() {
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("Proceed Without Ignore should resume retained prepared intake");
 
@@ -770,6 +796,7 @@ fn targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot(
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &contract::Cancellation::new(),
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("Reset To Default should repair Local Ignore and resume retained preparation");
 
@@ -835,6 +862,7 @@ fn targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot(
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("successful reset resume should consume the continuation");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
@@ -858,6 +886,7 @@ fn reset_to_default_returns_typed_conflict_without_overwriting_current_local_ign
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("changed Local Ignore should reject reset as typed conflict data");
 
@@ -887,6 +916,7 @@ fn reset_to_default_returns_typed_conflict_without_overwriting_current_local_ign
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("conflicted reset resume should consume the continuation");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
@@ -914,6 +944,7 @@ fn reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis() 
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("backup preparation should fail with a stable reset outcome");
 
@@ -941,6 +972,7 @@ fn reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis() 
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("failed reset resume should consume the continuation");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
@@ -1040,6 +1072,7 @@ fn cancellation_before_reset_to_default_performs_no_durable_or_analysis_work() {
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("pre-reset cancellation should remain normal result data");
 
@@ -1082,6 +1115,7 @@ fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset(
             contract::LocalIgnoreRecoveryDecision::ResetToDefault,
             &resume_cancellation,
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
     });
     gate.wait_until_entered();
@@ -1212,6 +1246,7 @@ fn proceed_without_ignore_continuation_rejects_every_replay() {
                 contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
                 &cancellation,
                 None,
+                contract::ObserverFailurePolicy::ContinueRun,
             ))
         },
     ));
@@ -1221,6 +1256,7 @@ fn proceed_without_ignore_continuation_rejects_every_replay() {
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("every later resume should reject replay");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
@@ -1267,6 +1303,7 @@ fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("pre-resume cancellation should remain expected result data");
 
@@ -1285,6 +1322,7 @@ fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("cancelled resume should still consume the continuation");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
@@ -1412,6 +1450,7 @@ fn abandonment_consumes_the_continuation_exactly_once() {
                 contract::LocalIgnoreRecoveryDecision::ResetToDefault,
                 &contract::Cancellation::new(),
                 None,
+                contract::ObserverFailurePolicy::ContinueRun,
             )
             .await
             .expect_err("a resume after abandonment should reject replay too");
@@ -1469,6 +1508,7 @@ fn settling_with_proceed_without_ignore_resumes_the_same_discovered_crash_logs()
         .block_on(pending.settle(
             Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("Proceed Without Ignore should settle into a terminal result");
 
@@ -1525,6 +1565,7 @@ fn settling_with_reset_to_default_repairs_local_ignore_and_resumes_the_same_cras
         .block_on(pending.settle(
             Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("Reset To Default should settle into a terminal result");
 
@@ -1579,7 +1620,11 @@ fn settling_without_a_decision_finishes_cancelled_after_discovery_and_touches_no
     let mut observer = |event| events.push(event);
 
     let settled = get_runtime()
-        .block_on(pending.settle(None, Some(&mut observer)))
+        .block_on(pending.settle(
+            None,
+            Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
         .expect("settling without a decision should remain expected result data");
 
     assert_cancelled_after_discovery(&contract::RunResult::from(settled), &logs);
@@ -1611,6 +1656,7 @@ fn a_pending_recovery_whose_run_was_already_cancelled_reports_it_and_settles_can
         .block_on(pending.settle(
             Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("settling a cancelled run should remain expected result data");
 
@@ -1636,6 +1682,7 @@ fn settling_a_pending_recovery_twice_reports_the_typed_consumed_continuation_fai
             get_runtime().block_on(pending.settle(
                 Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
                 None,
+                contract::ObserverFailurePolicy::ContinueRun,
             ))
         })
     });
@@ -1649,7 +1696,7 @@ fn settling_a_pending_recovery_twice_reports_the_typed_consumed_continuation_fai
     assert_eq!(lost, contract::ResumeError::ContinuationConsumed);
 
     let replay = get_runtime()
-        .block_on(pending.settle(None, None))
+        .block_on(pending.settle(None, None, contract::ObserverFailurePolicy::ContinueRun))
         .expect_err("every later settlement should reject replay");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
     assert_eq!(replay.kind().as_str(), "scan_run_continuation_consumed");
@@ -1666,12 +1713,14 @@ fn the_legacy_resume_surface_and_settling_share_one_claim() {
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("the legacy resume should claim the continuation");
     let replay = get_runtime()
         .block_on(pending.settle(
             Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("settling after a legacy resume should reject replay");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
@@ -1779,6 +1828,7 @@ fn targeted_run_keeps_the_accepted_updated_snapshot_when_installation_files_chan
             &contract::Cancellation::new(),
             Some(&mut observer),
             ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("the retained snapshot should complete after installation changes");
 
@@ -1848,6 +1898,7 @@ fn targeted_run_exposes_independent_updated_candidate_fallback_diagnostics() {
             &contract::Cancellation::new(),
             None,
             ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("rejected update candidates should fall back independently");
 
@@ -1910,6 +1961,7 @@ fn targeted_run_selects_missing_canonical_main_previous_sibling_read_only() {
             &contract::Cancellation::new(),
             None,
             ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("a valid previous Main should complete the run");
 
@@ -2064,6 +2116,7 @@ fn targeted_cancellation_before_discovery_has_no_discovery_result() {
             request,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("pre-discovery cancellation should be an expected terminal result");
 
@@ -2096,6 +2149,7 @@ fn standard_cancellation_before_discovery_has_no_discovery_result_or_side_effect
             request,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("pre-discovery cancellation should be an expected terminal result");
 
@@ -2139,7 +2193,13 @@ fn targeted_cancellation_during_discovery_discards_partial_results() {
                 tokio::time::sleep(std::time::Duration::from_millis(1)).await;
                 cancellation_request.cancel();
             });
-            let result = contract::execute(request, &cancellation, Some(&mut observer)).await;
+            let result = contract::execute(
+                request,
+                &cancellation,
+                Some(&mut observer),
+                contract::ObserverFailurePolicy::ContinueRun,
+            )
+            .await;
             canceller.await.expect("cancellation task should complete");
             result
         })
@@ -2194,7 +2254,13 @@ fn standard_cancellation_during_discovery_discards_partial_results() {
                 .expect("standard discovery should move the first fixture");
                 cancellation_request.cancel();
             });
-            let result = contract::execute(request, &cancellation, Some(&mut observer)).await;
+            let result = contract::execute(
+                request,
+                &cancellation,
+                Some(&mut observer),
+                contract::ObserverFailurePolicy::ContinueRun,
+            )
+            .await;
             canceller.await.expect("cancellation task should complete");
             result
         })
@@ -2268,6 +2334,7 @@ fn targeted_cancellation_immediately_after_discovery_retains_the_complete_result
                 request,
                 &cancellation,
                 Some(&mut observer),
+                contract::ObserverFailurePolicy::ContinueRun,
             ))
             .expect("post-discovery cancellation should be an expected terminal result")
     };
@@ -2370,6 +2437,7 @@ fn standard_cancellation_immediately_after_discovery_retains_configured_sources(
                 request,
                 &cancellation,
                 Some(&mut observer),
+                contract::ObserverFailurePolicy::ContinueRun,
             ))
             .expect("post-discovery cancellation should be an expected terminal result")
     };
@@ -2508,6 +2576,7 @@ fn final_operation_accepts_optional_observer_and_retains_completed_discovery() {
             request,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("an empty targeted run should be an expected terminal result");
 
@@ -2541,6 +2610,7 @@ fn final_operation_rejects_zero_concurrency_with_typed_request_stage() {
             request,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect_err("zero is not a valid explicit concurrency value");
 
@@ -2627,6 +2697,7 @@ fn final_operation_reports_effective_concurrency_and_stable_log_events() {
             request,
             &contract::Cancellation::new(),
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("the final operation should route through the existing run internals");
 
@@ -2703,6 +2774,7 @@ fn adaptive_low_volume_run_selects_and_retains_one_worker() {
             request,
             &contract::Cancellation::new(),
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("adaptive low-volume run should complete");
 
@@ -2760,6 +2832,7 @@ fn serial_scheduler_finishes_one_log_before_starting_the_next() {
             request,
             &contract::Cancellation::new(),
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("serial final operation should complete");
 
@@ -2819,6 +2892,7 @@ fn cancellation_while_queued_never_emits_started() {
             request,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("queued cancellation should produce a terminal result");
 
@@ -2877,6 +2951,7 @@ fn cancellation_with_multiple_admitted_logs_preserves_their_durable_boundary() {
             request,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("admitted cancellation should produce a terminal result");
 
@@ -2943,6 +3018,7 @@ fn observer_can_request_cancellation_before_discovered_logs_are_admitted() {
             request,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("observer-requested cancellation should be a terminal result");
 
@@ -2989,6 +3065,7 @@ fn terminal_outcomes_remain_in_discovery_order_when_completion_is_out_of_order()
             &contract::Cancellation::new(),
             Some(&mut observer),
             hooks,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("both admitted logs should complete");
 
@@ -3029,6 +3106,7 @@ fn admitted_analysis_failure_does_not_abort_other_admitted_log() {
             &contract::Cancellation::new(),
             None,
             hooks,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("a per-log analysis failure should not abort other admitted work");
 
@@ -3125,6 +3203,7 @@ fn admitted_standard_log_finishes_report_failure_and_movement_after_cancellation
             request,
             &cancellation,
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("admitted cancellation should resolve as terminal result data");
 
@@ -3185,6 +3264,7 @@ fn partial_unsolved_logs_movement_retains_moved_state_and_failure() {
             &contract::Cancellation::new(),
             Some(&mut observer),
             hooks,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("per-log failures should not become a run-wide error");
 
@@ -3243,6 +3323,7 @@ fn targeted_report_failure_cannot_trigger_unsolved_logs_movement() {
             request,
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("report failure should remain per-log result data");
 
@@ -3298,6 +3379,7 @@ fn standard_unsolved_logs_collision_preserves_existing_destination() {
             request,
             &contract::Cancellation::new(),
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("collision should be an ordinary per-log finalization outcome");
 
@@ -3353,12 +3435,14 @@ fn overlapping_standard_runs_never_clobber_same_name_unsolved_logs() {
                 &first_cancellation,
                 None,
                 first_hooks,
+                contract::ObserverFailurePolicy::ContinueRun,
             ),
             contract::execute_with_test_hooks(
                 second_request,
                 &second_cancellation,
                 None,
                 second_hooks,
+                contract::ObserverFailurePolicy::ContinueRun,
             )
         )
     });
@@ -3414,6 +3498,7 @@ fn standard_unsolved_logs_filesystem_failure_is_structured() {
             request,
             &contract::Cancellation::new(),
             Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("filesystem failure should remain per-log result data");
 
@@ -3492,6 +3577,7 @@ fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
                 &contract::Cancellation::new(),
                 None,
                 hooks,
+                contract::ObserverFailurePolicy::ContinueRun,
             ))
             .expect_err("injected infrastructure failure should stop the run");
 
@@ -3708,4 +3794,272 @@ fn the_recovery_decision_labels_are_the_glossary_spelling() {
         contract::LocalIgnoreRecoveryDecision::ResetToDefault.label(),
         "Reset To Default"
     );
+}
+
+// --- Observer delivery failure policy ---------------------------------------
+
+/// Builds one targeted run over a minimal installation, optionally with a malformed Local Ignore.
+fn delivery_failure_request(
+    temp: &tempfile::TempDir,
+    log_names: &[&str],
+    malformed_local_ignore: bool,
+) -> (contract::Request, Vec<PathBuf>) {
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    if malformed_local_ignore {
+        std::fs::write(
+            data.join("CLASSIC Ignore.yaml"),
+            b"CLASSIC_Ignore_Fallout4: [unterminated",
+        )
+        .expect("malformed Local Ignore fixture should be written");
+    }
+    let logs = log_names
+        .iter()
+        .map(|name| write_fixture_log(temp, name))
+        .collect::<Vec<_>>();
+    let mut configuration = final_run_configuration();
+    configuration.installation_root = root.to_path_buf();
+    configuration.game_version = "Original".to_string();
+    configuration.options = contract::Options::new(false, false);
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: logs.clone(),
+        },
+    );
+    (request, logs)
+}
+
+/// Returns whether `event` is the run-level event a failing test observer refuses.
+fn is_discovery_completed(event: &contract::Event) -> bool {
+    matches!(event, contract::Event::DiscoveryCompleted(_))
+}
+
+/// With the cancel policy, the first failed delivery cancels the run and the result says so.
+#[test]
+fn a_failed_delivery_under_the_cancel_policy_cancels_the_run_and_is_reported() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let (request, logs) = delivery_failure_request(&temp, &["crash-delivery-cancel.log"], false);
+    let cancellation = contract::Cancellation::new();
+    let mut deliveries = 0_usize;
+    let mut observer = |event: contract::Event| {
+        deliveries += 1;
+        if is_discovery_completed(&event) {
+            Err(contract::ObserverDeliveryFailure::new(
+                "progress view went away",
+            ))
+        } else {
+            Ok(())
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+            contract::ObserverFailurePolicy::CancelRun,
+        ))
+        .expect("a delivery failure should stay expected result data");
+
+    assert_eq!(result.status, contract::RunStatus::Cancelled);
+    assert!(cancellation.is_cancelled());
+    assert_eq!(
+        result.observer_delivery_failure,
+        Some(contract::ObserverDeliveryFailure::new(
+            "progress view went away"
+        ))
+    );
+    // Rust stops delivering to an observer once it has failed.
+    assert_eq!(deliveries, 1);
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+}
+
+/// With the continue policy, the run finishes and the result still reports the failure.
+#[test]
+fn a_failed_delivery_under_the_continue_policy_finishes_the_run_and_is_reported() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let (request, logs) = delivery_failure_request(&temp, &["crash-delivery-continue.log"], false);
+    let cancellation = contract::Cancellation::new();
+    let mut deliveries = 0_usize;
+    let mut observer = |event: contract::Event| {
+        deliveries += 1;
+        if is_discovery_completed(&event) {
+            Err(contract::ObserverDeliveryFailure::new("console closed"))
+        } else {
+            Ok(())
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
+        .expect("a delivery failure should stay expected result data");
+
+    assert_eq!(result.status, contract::RunStatus::Completed);
+    assert!(!cancellation.is_cancelled());
+    assert_eq!(
+        result.observer_delivery_failure,
+        Some(contract::ObserverDeliveryFailure::new("console closed"))
+    );
+    assert_eq!(deliveries, 1);
+    assert!(
+        logs.iter()
+            .all(|log| crate::report::autoscan_report_path(log).is_file())
+    );
+}
+
+/// A run whose observer never fails, or that has none, reports no delivery failure.
+#[test]
+fn a_run_without_a_failed_delivery_reports_none() {
+    let (observed, events) = observer_scenario(Some(Duration::ZERO));
+    assert!(!events.is_empty());
+    assert_eq!(observed.observer_delivery_failure, None);
+    let (unobserved, _) = observer_scenario(None);
+    assert_eq!(unobserved.observer_delivery_failure, None);
+}
+
+/// A failed delivery before a pending recovery makes Rust abandon it, under either policy.
+#[test]
+fn a_failed_delivery_before_a_pending_recovery_abandons_it_without_touching_anything() {
+    for policy in [
+        contract::ObserverFailurePolicy::ContinueRun,
+        contract::ObserverFailurePolicy::CancelRun,
+    ] {
+        let temp = tempdir().expect("tempdir should succeed");
+        let (request, logs) =
+            delivery_failure_request(&temp, &["crash-delivery-before-recovery.log"], true);
+        let before = snapshot_tree(temp.path());
+        let cancellation = contract::Cancellation::new();
+        let mut observer = |event: contract::Event| {
+            if is_discovery_completed(&event) {
+                Err(contract::ObserverDeliveryFailure::new("GUI progress lost"))
+            } else {
+                Ok(())
+            }
+        };
+
+        let mut result = get_runtime()
+            .block_on(contract::execute_with_test_hooks(
+                request,
+                &cancellation,
+                Some(&mut observer),
+                ScanRunTestHooks::default().with_yaml_cache_root(temp.path().join("cache")),
+                policy,
+            ))
+            .expect("a delivery failure should stay expected result data");
+
+        assert_cancelled_after_discovery(&result, &logs);
+        assert!(result.take_pending_recovery().is_none(), "{policy:?}");
+        assert_eq!(
+            result.observer_delivery_failure,
+            Some(contract::ObserverDeliveryFailure::new("GUI progress lost"))
+        );
+        // Abandonment is cancellation, so the frontend's own control reports it.
+        assert!(cancellation.is_cancelled());
+        let mut after = snapshot_tree(temp.path());
+        after.retain(|path, _| !path.starts_with(temp.path().join("cache")));
+        assert_tree_unchanged(&before, &after);
+    }
+}
+
+/// Settling takes the same policy: a failed delivery while resuming can cancel the settled run.
+#[test]
+fn settling_applies_the_observer_failure_policy_and_reports_the_failure() {
+    for (policy, expected_status) in [
+        (
+            contract::ObserverFailurePolicy::CancelRun,
+            contract::RunStatus::Cancelled,
+        ),
+        (
+            contract::ObserverFailurePolicy::ContinueRun,
+            contract::RunStatus::Completed,
+        ),
+    ] {
+        let (_temp, _logs, _ignore_path, _malformed_ignore, cancellation, _paused, pending) =
+            pending_recovery_fixture(&[
+                "crash-settle-delivery-a.log",
+                "crash-settle-delivery-b.log",
+            ]);
+        let mut deliveries = 0_usize;
+        let mut observer = |_event: contract::Event| {
+            deliveries += 1;
+            Err(contract::ObserverDeliveryFailure::new("settle view lost"))
+        };
+
+        let settled = get_runtime()
+            .block_on(pending.settle(
+                Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+                Some(&mut observer),
+                policy,
+            ))
+            .expect("a delivery failure while settling should stay expected result data");
+
+        assert_eq!(settled.status, expected_status, "{policy:?}");
+        assert_eq!(
+            cancellation.is_cancelled(),
+            policy == contract::ObserverFailurePolicy::CancelRun
+        );
+        assert_eq!(
+            settled.observer_delivery_failure,
+            Some(contract::ObserverDeliveryFailure::new("settle view lost"))
+        );
+        assert_eq!(deliveries, 1);
+    }
+}
+
+/// A run that ends in an infrastructure error still reports a delivery failure that preceded it.
+#[test]
+fn an_infrastructure_error_reports_a_delivery_failure_that_preceded_it() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let (request, _logs) =
+        delivery_failure_request(&temp, &["crash-delivery-infrastructure.log"], false);
+    let mut observer = |event: contract::Event| {
+        if is_discovery_completed(&event) {
+            Err(contract::ObserverDeliveryFailure::new("pipe closed"))
+        } else {
+            Ok(())
+        }
+    };
+
+    let error = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+            ScanRunTestHooks::default()
+                .with_infrastructure_failure(InfrastructureFault::Intake, "intake broke"),
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
+        .expect_err("the injected intake failure should stop the run");
+
+    assert_eq!(error.stage, contract::InfrastructureErrorStage::Intake);
+    assert_eq!(
+        error.observer_delivery_failure,
+        Some(contract::ObserverDeliveryFailure::new("pipe closed"))
+    );
+}
+
+/// Closures that return nothing remain observers that never fail.
+#[test]
+fn a_closure_returning_unit_is_an_observer_that_always_delivers() {
+    let mut seen = 0_usize;
+    let mut observer = |_event: contract::Event| seen += 1;
+    let delivered = contract::Observer::on_event(
+        &mut observer,
+        contract::Event::EffectiveConcurrencySelected {
+            effective_concurrency: 1,
+        },
+    );
+    assert_eq!(delivered, Ok(()));
+    assert_eq!(seen, 1);
 }

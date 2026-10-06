@@ -421,6 +421,7 @@ fn observe_styling_categories(plan: &RunPlan, obligation: &ObligationPlan) -> Ru
         targeted_request(&recovery.root, vec![initial_log, late_log], 1),
         &cancellation,
         None,
+        classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
     ))?;
     let mut recovery_app = App::new_for_testing();
     recovery_app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(paused))));
@@ -432,6 +433,7 @@ fn observe_styling_categories(plan: &RunPlan, obligation: &ObligationPlan) -> Ru
             stage: InfrastructureErrorStage::Intake,
             message: "consumer style fixture".to_string(),
             path: None,
+            observer_delivery_failure: None,
         },
     ))));
     let failure_lines = failure_app.scan_run_summary_lines();
@@ -555,7 +557,12 @@ fn observe_recovery_interaction(plan: &RunPlan, scenario_id: &str) -> RunnerResu
     let (scenario, initial_log, late_log) = materialize_recovery(plan, scenario_id)?;
     let cancellation = Cancellation::new();
     let request = targeted_request(&scenario.root, vec![initial_log, late_log.clone()], 1);
-    let paused = get_runtime().block_on(contract::execute(request, &cancellation, None))?;
+    let paused = get_runtime().block_on(contract::execute(
+        request,
+        &cancellation,
+        None,
+        classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
+    ))?;
     copy_fixture(
         &plan.fixtures,
         "malformedLocalIgnoreYaml",
@@ -655,6 +662,7 @@ fn observe_cancellation_interaction(plan: &RunPlan, scenario_id: &str) -> Runner
             request,
             &cancellation,
             Some(&mut observer),
+            classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
         ))?
     };
     app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(result))));
@@ -699,7 +707,12 @@ fn execute_standard(plan: &RunPlan) -> RunnerResult<(MaterializedScenario, RunRe
         StandardUnsolvedLogsIntent::LeaveInPlace,
     );
     let cancellation = Cancellation::new();
-    let result = get_runtime().block_on(contract::execute(request, &cancellation, None))?;
+    let result = get_runtime().block_on(contract::execute(
+        request,
+        &cancellation,
+        None,
+        classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
+    ))?;
     Ok((scenario, result))
 }
 

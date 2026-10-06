@@ -195,9 +195,14 @@ async fn assert_golden_case(case: &GoldenCase) {
         contract::Request::targeted(configuration, source)
     };
 
-    let result = contract::execute(request, &contract::Cancellation::new(), None)
-        .await
-        .unwrap_or_else(|error| panic!("{} scan should execute: {error}", case.name));
+    let result = contract::execute(
+        request,
+        &contract::Cancellation::new(),
+        None,
+        contract::ObserverFailurePolicy::ContinueRun,
+    )
+    .await
+    .unwrap_or_else(|error| panic!("{} scan should execute: {error}", case.name));
 
     assert_eq!(
         result.status,
