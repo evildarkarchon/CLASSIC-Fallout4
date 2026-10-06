@@ -534,7 +534,6 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                     "classic-database-core",
                     "classic-version-registry-core",
                     "classic-scangame-core",
-                    "classic-settings-core",
                     "classic-update-core",
                     "classic-xse-core",
                     "classic-registry-core",

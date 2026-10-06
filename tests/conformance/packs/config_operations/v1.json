@@ -60,7 +60,7 @@
     },
     {
       "id": "config-operations.clear-cache",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbols": [
         "clear_global_yaml_cache"
       ],

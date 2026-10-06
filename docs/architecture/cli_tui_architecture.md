@@ -18,7 +18,7 @@ The native CLI is the supported non-interactive scanner. The TUI is a native Rus
 - `classic-tui/` packages input, screens, widgets, and messages around direct Rust core APIs.
 - Async Rust work uses the shared runtime from `classic-shared-core`; frontends do not create independent Tokio runtimes.
 - User Settings source discovery, schema interpretation, defaults, serialization, previews, and commits belong exclusively to `classic-user-settings-core`.
-- Generic YAML data and cache helpers in `classic-config-core` and `classic-settings-core` are not User Settings APIs.
+- Generic YAML data and cache helpers in `classic-config-core` and `classic_shared_core::yaml` are not User Settings APIs.
 
 ## Native CLI flow
 

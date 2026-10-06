@@ -103,7 +103,6 @@ SUPPORTED_FAMILIES = (
 
 _COMMON_SOURCES = (
     REPO_ROOT / "tools/binding_compliance/platform_path_oracle.ps1",
-    REPO_ROOT / "business-logic/classic-settings-core/src",
     REPO_ROOT / "business-logic/classic-xse-core/src",
     REPO_ROOT / "business-logic/classic-registry-core/src",
     REPO_ROOT / "business-logic/classic-web-core/src",

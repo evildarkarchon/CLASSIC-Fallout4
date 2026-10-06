@@ -60,7 +60,7 @@ Generate CPU flamegraphs for Rust benchmarks or applications:
 .\scripts\profile\run_flamegraph.ps1 -Bench -BenchFilter "parse_yaml"
 
 # Profile specific crate
-.\scripts\profile\run_flamegraph.ps1 -Crate classic-settings-core -Open
+.\scripts\profile\run_flamegraph.ps1 -Crate classic-shared-core -Open
 ```
 
 Output: `target/profiling/flamegraphs/flamegraph-{timestamp}.svg`

@@ -20,9 +20,10 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 def test_rust_target_crates_count_matches_repo_root_inventory() -> None:
     # 18 after #256 retired the classic-perf-core facade crate; 17 after
-    # #258 retired the classic-version-core facade crate.
-    assert len(RUST_TARGET_CRATES) == 17, (
-        f"Expected 17 RUST_TARGET_CRATES in the repo-root inventory, "
+    # #258 retired the classic-version-core facade crate; 16 after #257
+    # retired the classic-settings-core facade crate.
+    assert len(RUST_TARGET_CRATES) == 16, (
+        f"Expected 16 RUST_TARGET_CRATES in the repo-root inventory, "
         f"got {len(RUST_TARGET_CRATES)}"
     )
 
@@ -31,6 +32,12 @@ def test_retired_classic_perf_core_is_not_tracked() -> None:
     """#256 retired classic-perf-core; timing rows are owned by classic-shared-core."""
     assert "classic-perf-core" not in RUST_TARGET_CRATES
     assert "classic-perf-core" not in RUST_OWNER_BY_CRATE
+
+
+def test_retired_classic_settings_core_is_not_tracked() -> None:
+    """#257 retired classic-settings-core; generic YAML rows are owned by classic-shared-core."""
+    assert "classic-settings-core" not in RUST_TARGET_CRATES
+    assert "classic-settings-core" not in RUST_OWNER_BY_CRATE
 
 
 def test_retired_classic_version_core_is_not_tracked() -> None:

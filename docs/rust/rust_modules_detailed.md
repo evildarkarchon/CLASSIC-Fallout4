@@ -20,12 +20,10 @@ Representative maintained crates include:
 - `classic-resource-core`
 - `classic-scangame-core`
 - `classic-scanlog-core`
-- `classic-settings-core`
 - `classic-update-core`
 - `classic-version-registry-core`
 - `classic-web-core`
 - `classic-xse-core`
-- `classic-settings-core` (absorbed the former `classic-yaml-core` in v9.1.0 Phase 1)
 
 ## Binding crates
 

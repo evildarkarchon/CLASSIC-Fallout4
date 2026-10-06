@@ -242,19 +242,19 @@ def test_qualified_reference_cannot_borrow_a_namesake_from_another_crate() -> No
 
 
 def test_external_reexport_resolves_to_the_defining_core_crate() -> None:
-    """A wrapper's config path may reexport a settings-owned operation."""
+    """A wrapper's config path may reexport a shared-core-owned operation."""
     surface = {
         "clear_global_yaml_cache": [
             {
                 "symbol": "clear_global_yaml_cache",
                 "kind": "reexport",
                 "crate": "classic-config-core",
-                "source_expr": "classic_settings_core::clear_global_yaml_cache",
+                "source_expr": "classic_shared_core::yaml::clear_global_yaml_cache",
             },
             {
                 "symbol": "clear_global_yaml_cache",
                 "kind": "function",
-                "crate": "classic-settings-core",
+                "crate": "classic-shared-core",
             },
         ]
     }
@@ -270,7 +270,7 @@ def test_external_reexport_resolves_to_the_defining_core_crate() -> None:
     res = rps.resolve_export("clear_yaml_cache", info, surface)
 
     assert (rps.source_backed_crate(res), rps.source_backed_symbol(res)) == (
-        "classic-settings-core",
+        "classic-shared-core",
         "clear_global_yaml_cache",
     )
 

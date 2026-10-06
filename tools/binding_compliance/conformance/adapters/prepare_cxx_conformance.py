@@ -98,11 +98,11 @@ def _cxx_source_paths(
         / "classic-cli/tests/conformance/classic_cxx_settings_validation_conformance.h",
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_version_values_conformance.h",
-        repo_root / "business-logic/classic-settings-core/src",
         # The generic YAML rules and logical-key cache (#239), then
         # YamlOperations and the path/mtime YAML-file cache (#240), moved out
-        # of classic-settings-core; every family that hashed the old location
-        # must keep fingerprinting their shared-core owner.
+        # of classic-settings-core, which then retired (#257); every family
+        # that hashed the old location must keep fingerprinting their
+        # shared-core owner.
         repo_root / "foundation/classic-shared-core/src/yaml",
         *(
             repo_root
