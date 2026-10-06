@@ -281,6 +281,7 @@ if(BUILD_TESTING AND Catch2_FOUND)
         tests/test_scan_run_contract.cpp
         tests/test_scanner.cpp
         tests/test_user_settings_action.cpp
+        tests/test_perf_timing_contract.cpp
         src/yaml_update.cpp
         src/app_update.cpp
         src/progress.cpp
