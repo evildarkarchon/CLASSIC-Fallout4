@@ -57,6 +57,18 @@ def _install_user_settings_fake(
     monkeypatch.setitem(sys.modules, "classic_user_settings", module)
 
 
+def _installation_root(tmp_path: Path) -> Path:
+    """Create an explicit Installation Root for scan tests to pass with ``--installation-root``.
+
+    The CLI no longer infers its root from the repository or the scanned fixture, so each
+    test names the root it scans under instead of depending on where pytest was started.
+    """
+
+    root = tmp_path / "installation"
+    (root / "CLASSIC Data").mkdir(parents=True, exist_ok=True)
+    return root
+
+
 def _fake_display_lines(status: str) -> list[types.SimpleNamespace]:
     """Return flattened display lines shaped as the binding publishes them.
 
@@ -344,6 +356,148 @@ def test_update_validate_url_returns_product_failure_for_invalid_url(monkeypatch
     assert payload["data"] == {"url": "not-a-url", "valid": False}
 
 
+def _scan_must_not_run(_configuration: dict[str, object], _paths: list[str]) -> list[types.SimpleNamespace]:
+    """Fail the test if a scan starts; used where the CLI must stop before any work."""
+
+    raise AssertionError("scan logs ran without an Installation Root")
+
+
+def test_scan_logs_stops_with_classic_data_not_found(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+                                                     capsys: pytest.CaptureFixture[str]) -> None:
+    """With no CLASSIC Data where the CLI looks, the scan stops instead of using the working directory."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(fake, _scan_must_not_run)
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+    working_dir = tmp_path / "work"
+    working_dir.mkdir()
+    # Search from an empty folder; the real `classic_config` locator does the looking.
+    monkeypatch.chdir(working_dir)
+
+    code = main(["--json", "scan", "logs", "--path", str(working_dir)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 2
+    assert payload["success"] is False
+    assert payload["exitCode"] == 2
+    assert payload["error"]["classification"] == "installation-root-not-found"
+    assert payload["summary"].startswith("CLASSIC Data not found")
+    assert str(working_dir) in payload["summary"]
+    assert not (working_dir / "CLASSIC Settings.yaml").exists()
+
+
+def test_explicit_installation_root_without_classic_data_is_not_found(
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An explicit root is an input, not a hint: it must itself hold CLASSIC Data."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(fake, _scan_must_not_run)
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+    not_an_installation = tmp_path / "not-an-installation"
+    not_an_installation.mkdir()
+
+    code = main(["--json", "--installation-root", str(not_an_installation), "scan", "logs", "--path", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 2
+    assert payload["error"]["classification"] == "installation-root-not-found"
+    assert payload["summary"].startswith("CLASSIC Data not found")
+    assert str(not_an_installation) in payload["summary"]
+
+
+def test_scan_logs_locates_the_installation_root_through_config(
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Without an explicit root the CLI asks Config's shared locator.
+
+    ``<working directory>/install`` is one of the locator's candidates and one this CLI's
+    old repository walk-up never considered, so a match there proves whose search ran.
+    """
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    working_dir = tmp_path / "work"
+    installation_root = working_dir / "install"
+    (installation_root / "CLASSIC Data").mkdir(parents=True)
+    observed: list[object] = []
+
+    def make_logs(configuration: dict[str, object], _paths: list[str]) -> list[types.SimpleNamespace]:
+        observed.append(configuration["installation_root"])
+        return []
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(fake, make_logs)
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+    monkeypatch.chdir(working_dir)
+
+    code = main(["--json", "scan", "logs", "--path", str(working_dir)])
+
+    assert code == 0, capsys.readouterr().out
+    assert observed == [str(installation_root)]
+
+
+def test_config_main_version_stops_with_classic_data_not_found(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+                                                               capsys: pytest.CaptureFixture[str]) -> None:
+    """The bundled main YAML is read from the Installation Root, never from a guessed folder."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    monkeypatch.chdir(tmp_path)
+
+    code = main(["--json", "config", "main-version"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 2
+    assert payload["error"]["classification"] == "installation-root-not-found"
+    assert payload["summary"].startswith("CLASSIC Data not found")
+
+
+def test_config_main_version_reads_the_explicit_installation_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+                                                                  capsys: pytest.CaptureFixture[str]) -> None:
+    """An explicit root selects whose CLASSIC Data/databases the version is read from."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    installation_root = _installation_root(tmp_path)
+    requested: list[str] = []
+    fake = types.ModuleType("classic_config")
+    fake.__version__ = "test"
+
+    def load_main_yaml_version(path: str) -> str:
+        requested.append(path)
+        return "9.1.0"
+
+    fake.load_main_yaml_version = load_main_yaml_version
+    monkeypatch.setitem(sys.modules, "classic_config", fake)
+
+    code = main(["--json", "--installation-root", str(installation_root), "config", "main-version"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload["data"] == {"version": "9.1.0"}
+    assert requested == [str(installation_root.resolve() / "CLASSIC Data" / "databases")]
+
+
 def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
                                                    capsys: pytest.CaptureFixture[str]) -> None:
     """Per-log scan failures are visible in JSON without failing the completed batch."""
@@ -355,6 +509,7 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
     scan_dir.mkdir()
     (scan_dir / "good.log").write_text("good log\n", encoding="utf-8")
     (scan_dir / "bad.log").write_text("bad log\n", encoding="utf-8")
+    installation_root = _installation_root(tmp_path)
 
     fake = types.ModuleType("classic_scanlog")
     fake.__version__ = "test"
@@ -363,7 +518,7 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
             configuration: dict[str, object],
             paths: list[str],
     ) -> list[types.SimpleNamespace]:
-        assert configuration["installation_root"] == str(REPO_ROOT)
+        assert configuration["installation_root"] == str(installation_root.resolve())
         assert configuration["game"] is sys.modules["classic_shared"].GameId.Fallout4
         assert paths == [str(scan_dir)]
         return [
@@ -383,7 +538,7 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
     _install_user_settings_fake(monkeypatch)
 
-    code = main(["--json", "scan", "logs", "--path", str(scan_dir)])
+    code = main(["--json", "--installation-root", str(installation_root), "scan", "logs", "--path", str(scan_dir)])
     payload = json.loads(capsys.readouterr().out)
 
     assert code == 0
@@ -429,7 +584,7 @@ def test_scan_logs_reports_unsuccessful_terminal_statuses(
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
     _install_user_settings_fake(monkeypatch)
 
-    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
 
     assert code == expected_exit_code
@@ -476,7 +631,7 @@ def test_scan_logs_states_a_paused_run_in_rusts_words(
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
     _install_user_settings_fake(monkeypatch)
 
-    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
 
     assert code == 1
@@ -502,7 +657,7 @@ def test_scan_logs_states_a_paused_run_in_rusts_words(
     # The plain stream is where `text_lines` surfaces; the JSON envelope carries the
     # structured projection above instead. Both have to state the question, so the
     # decisions are asserted on each.
-    assert main(["scan", "logs", "--path", str(tmp_path)]) == 1
+    assert main(["scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))]) == 1
     rendered = capsys.readouterr().out
     assert "why the run paused" in rendered
     assert "Proceed Without Ignore - what proceeding does" in rendered
@@ -664,13 +819,13 @@ def test_scan_logs_consumes_final_result_and_event_contract(
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
     _install_user_settings_fake(monkeypatch, fcx_mode=True)
 
-    code = main(["--json", "scan", "logs", "--path", str(crash_log)])
+    code = main(["--json", "scan", "logs", "--path", str(crash_log), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
 
     assert code == 0
     assert observed["targetedInputs"] == [str(crash_log)]
     assert observed["configuration"] == {
-        "installation_root": str(REPO_ROOT),
+        "installation_root": str(_installation_root(tmp_path).resolve()),
         "game": sys.modules["classic_shared"].GameId.Fallout4,
         "game_version": "1.10.984",
         "show_formid_values": True,
@@ -769,6 +924,8 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     fake_config = types.ModuleType("classic_config")
     fake_config.__version__ = "test"
     fake_config.load_main_yaml_version = lambda path: "9.1.0"
+    # `config main-version` carries no explicit root, so it asks the locator.
+    fake_config.locate_installation_root = lambda executable_dir=None, working_dir=None: str(REPO_ROOT)
     fake_path = types.ModuleType("classic_path")
     fake_path.__version__ = "test"
     fake_path.PathValidator = type("PathValidator", (), {"is_valid_path": staticmethod(lambda path: True)})
@@ -822,6 +979,10 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
         "classic-py",
         "scan",
         "logs",
+        # The fixture tree is named as the Installation Root rather than inferred from
+        # where the scanned log happens to sit.
+        "--installation-root",
+        "python-bindings/tests/fixtures",
         "--path",
         "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log",
     ]
@@ -875,7 +1036,8 @@ def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.Mon
             "scan_run_execute",
             "ScanRunLogResult.autoscan_report",
         ],
-        ["scan", "logs", "--path", "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
+        ["scan", "logs", "--installation-root", "python-bindings/tests/fixtures", "--path",
+         "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
         ["python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
         0,
         ["contract-test"],
@@ -1068,7 +1230,7 @@ def test_scan_logs_prints_the_runs_lines_and_composes_no_summary(
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
     _install_user_settings_fake(monkeypatch)
 
-    code = main(["scan", "logs", "--path", str(tmp_path)])
+    code = main(["scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     printed = capsys.readouterr().out.splitlines()
 
     assert code == 0
@@ -1120,7 +1282,7 @@ def test_scan_logs_states_an_infrastructure_failure_in_rusts_words(
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
     _install_user_settings_fake(monkeypatch)
 
-    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
 
     assert code == 1
@@ -1182,7 +1344,7 @@ def test_scan_logs_json_output_carries_no_display_content(
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
     _install_user_settings_fake(monkeypatch)
 
-    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
 
     assert code == 0

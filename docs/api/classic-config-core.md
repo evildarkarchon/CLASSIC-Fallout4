@@ -293,7 +293,13 @@ The two process facts are **inputs**, so callers and tests choose where the sear
 
 There is no fallback: `None` means no Installation Root, and each caller turns that into its own user-facing "CLASSIC Data not found" message. An absent or empty input skips only the candidates derived from it (an empty path would otherwise silently mean the working directory); a `CLASSIC Data` *file* does not count. The search only inspects metadata, never writes, and returns a path built verbatim from the caller's input (no canonicalization).
 
-Callers: the GUI (`MainWindow::findDataRoot()` passes `QCoreApplication::applicationDirPath()` and `QDir::currentPath()`), the TUI (`classic_tui::state::locate_installation_root()`, which refuses to start with a "CLASSIC Data not found" message instead of falling back to the executable folder), and update-core's first-party YAML Data check/apply when no `bundled_yaml_dir` layout hint is supplied. The C++ CLI, Node CLI, and Python CLI still carry their own root resolution until #276 moves them onto this locator.
+Callers: the GUI (`MainWindow::findDataRoot()` passes `QCoreApplication::applicationDirPath()` and `QDir::currentPath()`), the TUI (`classic_tui::state::locate_installation_root()`, which refuses to start with a "CLASSIC Data not found" message instead of falling back to the executable folder), update-core's first-party YAML Data check/apply when no `bundled_yaml_dir` layout hint is supplied, and every CLI:
+
+- the C++ CLI (`classic-cli/src/installation_root.cpp`) passes its `GetModuleFileNameW` folder and working directory for the scan, `--check-app-update`, `--check-yaml-updates`, and `--apply-yaml-updates` paths;
+- the Node CLI (`node-bindings/classic-node/cli/run-scan.ts`) passes its own script folder as the executable folder (the parent and grandparent candidates reach the package root from both `cli/` and `dist/cli/`) plus the working directory;
+- the Python CLI (`classic-py`) passes its package folder and the working directory, unless an explicit `--installation-root` is given, which must itself hold `CLASSIC Data`.
+
+On no match each CLI prints a "CLASSIC Data not found" message naming both search starts and exits with status `2` before any scan, settings, or update work; none falls back to the working directory.
 
 Binding adapters expose it as CXX `classic::config::locate_installation_root(executable_dir, working_dir) -> rust::String` (empty input = unavailable, empty result = not found), Node `locateInstallationRoot(executableDir?, workingDir?) -> string | null` (synchronous), and Python `classic_config.locate_installation_root(executable_dir=None, working_dir=None) -> str | None`. The executable [`installation-paths`](binding-compliance-suite.md) conformance family proves each candidate position, first-match-wins, and the no-match result on all four adapters.
 

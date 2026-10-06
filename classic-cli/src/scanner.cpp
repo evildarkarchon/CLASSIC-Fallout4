@@ -1,13 +1,11 @@
 #include "scanner.h"
+#include "installation_root.h"
 #include "progress.h"
 #include "scan_run_cli.h"
 #include "user_settings_action.h"
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <io.h>
-#include <windows.h>
 #else
 #include <unistd.h>
 #endif
@@ -51,40 +49,6 @@ static bool stdin_is_interactive() {
 struct DataDirs {
     std::string root;
 };
-
-/// Find the installation root containing "CLASSIC Data/".
-/// Mirrors the CLASSIC Data candidate search performed by MainWindow::findDataRoot().
-static DataDirs find_data_root() {
-    std::error_code ec;
-    fs::path exe_path = fs::current_path(ec); // fallback, overridden below
-
-#ifdef _WIN32
-    // Try getting actual exe path on Windows
-    wchar_t buf[MAX_PATH];
-    DWORD len = GetModuleFileNameW(nullptr, buf, MAX_PATH);
-    if (len > 0 && len < MAX_PATH) {
-        fs::path ep(buf);
-        exe_path = ep.parent_path();
-        if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
-            return DataDirs{exe_path.string()};
-        }
-    }
-#endif
-
-    // Check: Current working directory for "CLASSIC Data/" (development / distribution)
-    auto cwd = fs::current_path(ec);
-    if (fs::is_directory(cwd / "CLASSIC Data", ec)) {
-        return DataDirs{cwd.string()};
-    }
-
-    // Check: Exe directory for "CLASSIC Data/" (running from build dir)
-    if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
-        return DataDirs{exe_path.string()};
-    }
-
-    // Fallback: use cwd anyway (will fail at config load with a clear error)
-    return DataDirs{cwd.string()};
-}
 
 // ── Filename extraction helper ─────────────────────────────────────
 
@@ -261,7 +225,21 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 // ── Public entry point ─────────────────────────────────────────────
 
 int run_scan(const CliArgs& args) {
+    return run_scan(args, current_cli_process_location());
+}
+
+int run_scan(const CliArgs& args, const CliProcessLocation& location) {
     auto total_start = std::chrono::steady_clock::now();
+
+    // Locate the Installation Root before the runtime starts: a run from the wrong folder stops
+    // here with "CLASSIC Data not found" instead of scanning that folder as if it were the
+    // installation (the old private search fell back to the working directory).
+    const auto installation_root = require_cli_installation_root(location);
+    if (!installation_root) {
+        return kCliInstallationRootNotFoundExitCode;
+    }
+    const DataDirs dirs{*installation_root};
+
     const std::string correlation_id = startup_correlation_id();
 
     // Initialize Rust runtime + logging
@@ -279,8 +257,6 @@ int run_scan(const CliArgs& args) {
         return 2;
     }
 
-    // Find data root
-    auto dirs = find_data_root();
     fmt::print("Data root: {}\n", dirs.root);
     fmt::print("\n");
 

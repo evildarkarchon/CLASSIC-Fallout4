@@ -9,18 +9,9 @@
 
 #include <fmt/core.h>
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#endif
-
 #include <cstdint>
-#include <filesystem>
 #include <iostream>
 #include <string>
-
-namespace fs = std::filesystem;
 
 // ── Constants ─────────────────────────────────────────────────────────
 //
@@ -37,43 +28,6 @@ constexpr std::uint32_t kYamlTagUpdateAvailable = 1u;
 constexpr std::uint32_t kYamlTagUpToDate = 2u;
 constexpr std::uint32_t kYamlTagUnknown = 3u;
 constexpr std::uint32_t kYamlTagError = 4u;
-
-// ── Data-root discovery ───────────────────────────────────────────────
-//
-// A trimmed variant of `find_data_root()` in scanner.cpp — we only need the
-// CLASSIC root used by the typed User Settings boundary. Duplicated here instead of pulled out of
-// scanner.cpp because scanner.cpp is a heavier translation unit that also
-// wires the thread pool; sharing a tiny helper is cheaper than a header
-// dependency.
-
-struct SettingsPaths {
-    std::string data_root;
-};
-
-SettingsPaths resolve_settings_paths() {
-    std::error_code ec;
-    fs::path cwd = fs::current_path(ec);
-
-    auto try_root = [](const fs::path& candidate) -> SettingsPaths { return {candidate.string()}; };
-
-#ifdef _WIN32
-    wchar_t buf[MAX_PATH];
-    const DWORD len = GetModuleFileNameW(nullptr, buf, MAX_PATH);
-    if (len > 0 && len < MAX_PATH) {
-        fs::path exe_dir = fs::path(buf).parent_path();
-        if (fs::is_directory(exe_dir / "CLASSIC Data", ec)) {
-            return try_root(exe_dir);
-        }
-    }
-#endif
-
-    if (fs::is_directory(cwd / "CLASSIC Data", ec)) {
-        return try_root(cwd);
-    }
-
-    // Missing settings are represented by Rust-owned typed defaults.
-    return try_root(cwd);
-}
 
 /// Opens the typed update-policy snapshot and surfaces any read or migration diagnostics.
 bool read_update_check_setting(const std::string& classic_root) {
@@ -207,13 +161,24 @@ bool confirm_apply_prompt() {
 
 // ── Public entry points ───────────────────────────────────────────────
 
-int run_check_yaml_updates(const CliArgs& /*args*/) {
+int run_check_yaml_updates(const CliArgs& args) {
+    return run_check_yaml_updates(args, current_cli_process_location());
+}
+
+int run_check_yaml_updates(const CliArgs& /*args*/, const CliProcessLocation& location) {
+    // Locate first: with no Installation Root there are no User Settings to read and no installed
+    // YAML Data to compare, so the command stops before the runtime or network is touched. The
+    // old private search fell back to the working directory and read typed defaults there.
+    const auto installation_root = require_cli_installation_root(location);
+    if (!installation_root) {
+        return kCliInstallationRootNotFoundExitCode;
+    }
+
     if (!init_runtime_for_yaml_update()) {
         return 2;
     }
 
-    const auto paths = resolve_settings_paths();
-    const bool enabled = read_update_check_setting(paths.data_root);
+    const bool enabled = read_update_check_setting(*installation_root);
 
     int exit_code;
     try {
@@ -231,13 +196,22 @@ int run_check_yaml_updates(const CliArgs& /*args*/) {
     return exit_code;
 }
 
-int run_apply_yaml_updates(const CliArgs& /*args*/) {
+int run_apply_yaml_updates(const CliArgs& args) {
+    return run_apply_yaml_updates(args, current_cli_process_location());
+}
+
+int run_apply_yaml_updates(const CliArgs& /*args*/, const CliProcessLocation& location) {
+    // Same ordering as the check: no Installation Root, no runtime, no download, no install.
+    const auto installation_root = require_cli_installation_root(location);
+    if (!installation_root) {
+        return kCliInstallationRootNotFoundExitCode;
+    }
+
     if (!init_runtime_for_yaml_update()) {
         return 2;
     }
 
-    const auto paths = resolve_settings_paths();
-    const bool enabled = read_update_check_setting(paths.data_root);
+    const bool enabled = read_update_check_setting(*installation_root);
 
     int exit_code = 0;
     try {
