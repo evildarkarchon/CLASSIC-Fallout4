@@ -53,4 +53,4 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 
 Each skipped step has a distinct failure mode: skipping step 1 makes cargo's pyo3-build-config chase a stale `VIRTUAL_ENV`; skipping `--inexact` in step 2 wipes the `classic-python-bindings` wheel from the venv on each re-sync; skipping step 3 produces `ModuleNotFoundError` at pytest collection time.
 
-For deeper context (why `.cargo/config.toml` intentionally omits a global PyO3 pin, which `-py` crates this rebuilds, or how the parity gates fit on top), see the Python binding test rule and the PyO3 Quick Note in `AGENTS.md`, plus `docs/implementation/python_api_parity/`.
+For deeper context (why `.cargo/config.toml` intentionally omits a global PyO3 pin, how step 3 builds the one `classic-python-bindings` wheel behind all 18 `classic_*` facades, or how the parity gates fit on top), see the Python binding test rule and the PyO3 Quick Note in `AGENTS.md`, plus `docs/implementation/python_api_parity/`.

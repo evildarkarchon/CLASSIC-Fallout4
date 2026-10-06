@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Deterministically merge one owner group into another inside a parity contract JSON file.
 
-Reusable across Phases 1-3 of the v9.1.0 consolidation milestone. See
-`.planning/phases/01-yaml-settings-merge/01-03-PLAN.md` section A for the design spec,
-and the phase 1 plan 3 summary for live usage notes.
+Reusable across Phases 1-3 of the v9.1.0 consolidation milestone. (Historical: the
+design spec lived in `.planning/phases/01-yaml-settings-merge/01-03-PLAN.md` section A,
+which is no longer in the repository.)
 
 The helper performs all mutations in-place:
 
@@ -22,14 +22,17 @@ Contract schema detection is by row-field presence, NOT by filename:
 
 The helper never rewrites `nodeExport`, `rustSymbol`, or row `id` fields.
 
-Usage:
+Usage (the yaml -> settings owner merge, crediting the generic YAML rows to
+their current Rust owner, ``classic-shared-core``; the intermediate
+``classic-settings-core`` owner used during that phase has since retired in
+#257, so never pass it as ``--rust-crate-new``):
 
     python tools/parity_contract_merge_owner.py \
         --contract docs/implementation/python_api_parity/baseline/parity_contract.json \
         --source-owner yaml \
         --target-owner settings \
         --rust-crate-old classic-yaml-core \
-        --rust-crate-new classic-settings-core \
+        --rust-crate-new classic-shared-core \
         --binding-module-old classic_yaml \
         --binding-module-new classic_settings \
         [--dry-run]

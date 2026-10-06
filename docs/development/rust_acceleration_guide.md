@@ -5,7 +5,7 @@ This guide describes the current Rust-backed Python binding workflow for CLASSIC
 ## Current state
 
 - Rust business logic lives in `business-logic/*-core`.
-- Python bindings live in `python-bindings/*-py` plus `foundation/classic-shared-py`.
+- Python bindings live in one PyO3 adapter crate, `python-bindings/classic-python-bindings`, which builds a single wheel behind all 18 `classic_*` facades (the former per-module `*-py` crates and `foundation/classic-shared-py` were folded into it in issue #259).
 - Active imports are split modules such as `classic_config`, `classic_scanlog`, `classic_version_registry`, and `classic_shared`.
 - The current maintained workflow does not use a monolithic `classic_core` module.
 
