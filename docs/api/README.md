@@ -29,8 +29,8 @@ Use this directory in this order:
 15. [`classic-xse-core.md`](classic-xse-core.md) - XSE loader/version detection helpers used by setup checks and bindings
 16. [`game-setup-workflow.md`](game-setup-workflow.md) - current cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
 17. [`formid-settings-boundary.md`](formid-settings-boundary.md) - current split between Rust config serialization and scan-time FormID DB path consumption
-18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, and hashing (with `FileHashScope` handles for facade-owned hash caches); Crash Log collection moved to scanlog core, game-target backup and game-file operations to resource core
-19. [`classic-resource-core.md`](classic-resource-core.md) - lightweight resource classification, enumeration, and per-file validation helpers, plus the game-target backup and game-file operations
+18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, and hashing (with `FileHashScope` handles for facade-owned hash caches); Crash Log collection moved to scanlog core; game-target DDS rules, game-target backup, and game-file operations moved to resource core
+19. [`classic-resource-core.md`](classic-resource-core.md) - lightweight resource classification, enumeration, and per-file validation helpers, plus game-target DDS rules (`DDSAnalyzer`), the game-target backup, and game-file operations
 20. [`classic-database-core.md`](classic-database-core.md) - SQLite/FormID lookup pool used by analysis paths
 21. [`formid-sqlite-conventions.md`](formid-sqlite-conventions.md) - practical fixture/schema/path rules for contributor FormID DB work
 22. [`classic-scangame-core.md`](classic-scangame-core.md) - game-installation, archive, loose-file, and setup validation workflows
@@ -76,7 +76,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `game-setup-workflow.md` explains how current setup/install validation is split across path, XSE, scangame, and Version Registry crates
 - `formid-settings-boundary.md` documents the typed FormID settings boundary shared by scan callers and the C++ bridge
 - `classic-file-io-core` provides shared file-system, decoding, and hashing helpers used by higher layers (Crash Log collection and Targeted input resolution belong to `classic-scanlog-core`; the game-target backup and game-file operations belong to `classic-resource-core`); every hash cache sits behind an opaque `FileHashScope` handle whose process default serves every unscoped caller, while the Python `classic_file_io` and `classic_scangame` facades each select their own isolated scope
-- `classic-resource-core` provides lightweight resource classification and enumeration helpers used alongside broader file and scan workflows, and owns the game-target backup and game-file operations (built on `classic-file-io-core`, never the reverse)
+- `classic-resource-core` provides lightweight resource classification and enumeration helpers used alongside broader file and scan workflows, owns the game-target DDS rules applied to file I/O's neutral `DDSHeader`, and owns the game-target backup and game-file operations (built on `classic-file-io-core`, never the reverse)
 - `classic-database-core` manages async SQLite pools and FormID lookups for analysis consumers
 - `formid-sqlite-conventions.md` captures the current source-backed fixture/schema/path assumptions around FormID databases
 - `classic-scangame-core` handles game setup validation, archive/loose-file checks, and related install-scanning workflows

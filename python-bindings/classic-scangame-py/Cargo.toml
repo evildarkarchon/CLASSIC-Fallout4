@@ -29,6 +29,8 @@ classic-shared-py = { path = "../../foundation/classic-shared-py" }
 
 # File I/O operations (for DDS and file handling)
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+# Game-target DDS rules (`GameTarget`) for the game scan orchestrator (#249)
+classic-resource-core = { path = "../../business-logic/classic-resource-core" }
 
 # Error handling (minimal for bindings)
 anyhow = { workspace = true }

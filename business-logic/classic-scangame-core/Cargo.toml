@@ -19,6 +19,8 @@ classic-file-io-core = { path = "../classic-file-io-core" }
 classic-path-core = { path = "../classic-path-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 classic-xse-core = { path = "../classic-xse-core" }
+# Game-target DDS rules for unpacked texture checks (#249)
+classic-resource-core = { path = "../classic-resource-core" }
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }

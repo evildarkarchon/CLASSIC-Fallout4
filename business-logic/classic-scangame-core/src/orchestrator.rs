@@ -35,7 +35,7 @@ use crate::mod_ini::ModIniScanner;
 use crate::unpacked::UnpackedScanner;
 use crate::wrye::WryeBashParser;
 use crate::xse::{GameVersion, XseChecker};
-use classic_file_io_core::dds::{DDSAnalyzer, GameTarget};
+use classic_resource_core::dds::{DDSAnalyzer, GameTarget};
 
 /// Issue map type: category -> set of formatted issue strings
 type IssueMap = BTreeMap<String, BTreeSet<String>>;
@@ -160,7 +160,7 @@ pub fn detect_config_issues(game_path: &Path, game_name: &str) -> Vec<ConfigIssu
 ///
 /// ```rust,no_run
 /// use classic_scangame_core::orchestrator::{GameScanOrchestrator, GameScanConfig};
-/// use classic_file_io_core::dds::GameTarget;
+/// use classic_resource_core::dds::GameTarget;
 /// use classic_scangame_core::xse::GameVersion;
 /// use std::path::PathBuf;
 /// use std::collections::HashMap;

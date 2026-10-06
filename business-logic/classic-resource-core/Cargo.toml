@@ -13,12 +13,17 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 [dependencies]
 # Generic path primitives and PathError
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
-
-# General file I/O. The game-target backup and game-file operations (#250)
-# keep returning `FileIOError`, so their binding error projections stay the
-# same. Resource depends on file I/O, never the reverse. These modules do not
-# need Durable Publication; resource core must not gain that edge for them.
+# Neutral DDS header parsing (`DDSHeader`) stays in file I/O core; resource
+# core owns the game-target DDS rules applied to parsed headers (#249). The
+# edge points inward only: file I/O must never depend back on resource core.
+# The game-target backup and game-file operations (#250) also keep returning
+# `FileIOError` from here, so their binding error projections stay the same.
+# Those modules do not need Durable Publication; resource core must not gain
+# that edge for them.
 classic-file-io-core = { path = "../classic-file-io-core" }
+
+# Parallel batch validation of DDS textures
+rayon = { workspace = true }
 
 # Async file operations for the game-target backup and game-file operations
 tokio = { workspace = true, features = ["fs", "rt", "macros"] }
@@ -44,6 +49,8 @@ serde = { workspace = true, features = ["derive"] }
 [dev-dependencies]
 # Testing
 tempfile = { workspace = true }
+# Builds real DDS fixtures for the game-target DDS rule tests
+ddsfile = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

@@ -846,6 +846,7 @@ name = "classic-file-io-py"
 version = "9.1.0"
 dependencies = [
  "classic-file-io-core",
+ "classic-resource-core",
  "classic-scanlog-core",
  "classic-shared-core",
  "classic-shared-py",
@@ -987,6 +988,8 @@ dependencies = [
  "chrono",
  "classic-file-io-core",
  "classic-shared-core",
+ "ddsfile",
+ "rayon",
  "serde",
  "tempfile",
  "thiserror 2.0.21",
@@ -1029,6 +1032,7 @@ dependencies = [
  "classic-config-core",
  "classic-file-io-core",
  "classic-path-core",
+ "classic-resource-core",
  "classic-shared-core",
  "classic-user-settings-core",
  "classic-version-registry-core",
@@ -1070,6 +1074,7 @@ dependencies = [
  "classic-config-core",
  "classic-config-py",
  "classic-file-io-core",
+ "classic-resource-core",
  "classic-scangame-core",
  "classic-shared-core",
  "classic-shared-py",

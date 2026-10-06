@@ -499,10 +499,10 @@ impl JsBackupManager {
 // ============================================================================
 
 /// Parse a game target string to the core enum.
-fn parse_game_target(s: &str) -> Result<classic_file_io_core::dds::GameTarget> {
+fn parse_game_target(s: &str) -> Result<classic_resource_core::dds::GameTarget> {
     match s {
-        "Fallout4" => Ok(classic_file_io_core::dds::GameTarget::Fallout4),
-        "SkyrimSE" | "SkyrimSe" => Ok(classic_file_io_core::dds::GameTarget::SkyrimSE),
+        "Fallout4" => Ok(classic_resource_core::dds::GameTarget::Fallout4),
+        "SkyrimSE" | "SkyrimSe" => Ok(classic_resource_core::dds::GameTarget::SkyrimSE),
         _ => Err(napi::Error::from_reason(format!(
             "Unknown game target: {s}. Valid: Fallout4, SkyrimSE"
         ))),
@@ -522,7 +522,7 @@ pub struct JsDDSIssue {
 /// (dimension limits, BC compression compatibility, mipmap recommendations).
 #[napi]
 pub struct JsDDSAnalyzer {
-    inner: classic_file_io_core::dds::DDSAnalyzer,
+    inner: classic_resource_core::dds::DDSAnalyzer,
 }
 
 #[napi]
@@ -534,7 +534,7 @@ impl JsDDSAnalyzer {
     pub fn new(game_target: String) -> Result<Self> {
         let target = parse_game_target(&game_target)?;
         Ok(Self {
-            inner: classic_file_io_core::dds::DDSAnalyzer::new(target),
+            inner: classic_resource_core::dds::DDSAnalyzer::new(target),
         })
     }
 
@@ -588,7 +588,7 @@ impl JsDDSAnalyzer {
     /// @returns Array of validation issues.
     #[napi]
     pub fn validate_dimensions(width: u32, height: u32) -> Vec<JsDDSIssue> {
-        classic_file_io_core::dds::DDSAnalyzer::validate_dimensions(width, height)
+        classic_resource_core::dds::DDSAnalyzer::validate_dimensions(width, height)
             .into_iter()
             .map(|issue| JsDDSIssue {
                 message: issue.message,
