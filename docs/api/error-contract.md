@@ -99,6 +99,15 @@ means "an argument may be unrepresentable", not "the operation may fail" —
 operational failure always travels in the typed envelope. Declaring a `throws`
 contract that can never fire would only force callers into unreachable handling.
 
+`scan_run_pending_recovery_settle(...)` (ADR-0009) returns that same envelope
+directly rather than an execution operation, and so cannot hand back a second
+continuation or pending recovery. A replay sets `has_resume_error` with code
+`scan_run_continuation_consumed`, exactly as resume and abandon do, because all
+three share one claim. It is declared `Result<_>` for resume's reason only: it
+throws for an out-of-range decision when `has_decision` is true, before anything
+is claimed. `scan_run_contract_execution_take_pending_recovery(...)` throws when
+the run did not pause or the pending recovery was already taken.
+
 **Pattern:** `rust::Error` exceptions for hard failures, empty-string sentinels for fail-soft returns.
 
 **Example 1 -- empty-string sentinel:** `db_pool_get_entry()` in [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) returns `""` on lookup failure because Qt callers check `.isEmpty()` rather than catching exceptions.
@@ -121,6 +130,8 @@ All five resume rejections now go through one builder, so `scan_run_continuation
 
 `scanRunAbandon(...)` shares that rejection channel and narrows it to one case. It takes no decision, and cancellation short-circuits ahead of every stage that produces a reset or infrastructure failure, so the only rejection it can raise is `scan_run_continuation_consumed` — the shared one-shot claim, spent by whichever of the two entry points ran first. A consumer that already handles resume's rejections needs no new branch.
 
+`scanRunSettle(...)` (ADR-0009) rejects exactly as `scanRunResume(...)` does: `scan_run_continuation_consumed` on replay or concurrent double settlement, including after a legacy resume or abandon spent the claim, and the Reset To Default codes with their metadata and `displayLines`. A run-wide failure of the settled run resolves as `JsScanRunFailure`; a successful settlement resolves `JsScanRunSettledSuccess`, which has no recovery prompt or pending recovery.
+
 **Example 1:** `config_error_to_napi_err()` in [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs) converts `ConfigError` variants to NAPI errors with structured codes. JavaScript consumers use `catch (e) { if (e.code === "ParseError") ... }`.
 
 **Example 2:** `settings_error_to_napi_err()` in the same file converts `SettingsError` variants with codes like `"NotFound"`, `"YamlError"`, etc.
@@ -142,6 +153,8 @@ Every one of those exceptions also carries `display_lines` — what the failure 
 All five resume exceptions now go through one builder, so `ScanRunContinuationConsumedError` gained the `kind` attribute the four reset subclasses have published since they were written. It duplicates `code`, and its `code` and `message` are unchanged. It is kept because this was the one member of the resume family without it, so `except (...) as error: error.kind` raised `AttributeError` for exactly one variant; the shared builder is what made it free, not what made it correct. Node publishes the same property on its own resume rejections, but that is not the reason — binding surfaces are held to the core's contract, not to each other's shapes.
 
 `scan_run_abandon(...)` shares that exception channel and narrows it to one case. It takes no decision, and cancellation short-circuits ahead of every stage that produces a reset or infrastructure failure, so the only exception it can raise is `ScanRunContinuationConsumedError` — the shared one-shot claim, spent by whichever of the two entry points ran first. A consumer that already handles resume's exceptions needs no new `except` clause.
+
+`scan_run_settle(...)` (ADR-0009) raises the same typed exceptions as `scan_run_resume(...)`: `ScanRunContinuationConsumedError` on sequential or concurrent replay, including after a legacy `scan_run_resume` or `scan_run_abandon` spent the claim, and the four `ScanRunLocalIgnoreReset*Error` subclasses for Reset To Default. A run-wide failure of the settled run is returned in `ScanRunSettledExecution.error`, not raised.
 
 **Example 1:** `config_error_to_pyerr()` in [`python-bindings/classic-python-bindings/src/classic_config/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_config/mod.rs) maps each `ConfigError` variant to a specific Python exception class.
 

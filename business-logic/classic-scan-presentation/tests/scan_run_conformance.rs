@@ -563,21 +563,20 @@ fn execute_continuation_flow(
     )?;
     // A settle flow reaches the paused run only through its pending recovery, exactly as a
     // frontend does; resume and abandon flows keep claiming the bare continuation.
-    let target =
-        if settles {
-            let pending = take_pending_recovery(initial_result).ok_or_else(|| {
-                invalid_data("continuationFlow initial result has no pending recovery")
-            })?;
-            initial["pendingRecovery"] = json!({
-                "cancellationRequested": pending.cancellation_requested(),
-                "prompt": project_recovery_prompt(root, pending.prompt())?,
-            });
-            ClaimTarget::Pending(pending)
-        } else {
-            ClaimTarget::Continuation(initial_result.continuation.take().ok_or_else(|| {
-                invalid_data("continuationFlow initial result has no continuation")
-            })?)
-        };
+    let target = if settles {
+        let pending = take_pending_recovery(initial_result).ok_or_else(|| {
+            invalid_data("continuationFlow initial result has no pending recovery")
+        })?;
+        initial["pendingRecovery"] = json!({
+            "cancellationRequested": pending.cancellation_requested(),
+            "prompt": project_recovery_prompt(root, pending.prompt())?,
+        });
+        ClaimTarget::Pending(Box::new(pending))
+    } else {
+        ClaimTarget::Continuation(Box::new(initial_result.continuation.take().ok_or_else(
+            || invalid_data("continuationFlow initial result has no continuation"),
+        )?))
+    };
     materialize_placements(fixtures, &flow.post_pause_data, root)?;
 
     if flow.cancellation == Some(CancellationBoundaryInput::BeforeResume) {
@@ -691,11 +690,14 @@ fn validate_continuation_action(action: ContinuationActionInput) -> RunnerResult
 }
 
 /// What a continuation flow claims: a bare continuation, or the pending recovery bundling one.
+///
+/// Both variants are boxed because the retained continuation is a few kilobytes and the bundle
+/// adds its rendered prompt on top, so neither belongs inline in an enum.
 enum ClaimTarget {
     /// Taken straight from the paused result, as resume and abandon flows always have.
-    Continuation(contract::CrashLogScanRunContinuation),
+    Continuation(Box<contract::CrashLogScanRunContinuation>),
     /// Taken through the presentation crate, as a settling frontend receives it.
-    Pending(PendingRecoveryWithPrompt),
+    Pending(Box<PendingRecoveryWithPrompt>),
 }
 
 impl ClaimTarget {

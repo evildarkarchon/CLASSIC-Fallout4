@@ -82,6 +82,10 @@ EXPECTED_SCENARIO_IDS = [
     "reset-pre-cancelled",
     "reset-post-critical-cancelled",
     "abandon-local-ignore-recovery",
+    "settle-proceed-without-ignore",
+    "settle-reset-to-default",
+    "settle-without-decision",
+    "settle-already-cancelled",
     "standard-fcx-request-validation",
     "targeted-fcx-request-validation",
     "configured-unsolved-logs-finalization-failure",
@@ -1265,6 +1269,11 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     assert "scan_run_contract_execution_take_continuation" in runner
     assert "scan_run_continuation_resume" in runner
     assert "scan_run_continuation_abandon" in runner
+    assert "scan_run_contract_execution_take_pending_recovery" in runner
+    assert "scan_run_pending_recovery_prompt" in runner
+    assert "scan_run_pending_recovery_cancellation_requested" in runner
+    assert "scan_run_pending_recovery_settle" in runner
+    assert '"before-pending-recovery"' in runner
     assert "materialize_post_pause_data" in runner
     assert 'flow.value("replays"' in runner
     assert "project_terminal_resume_error" in runner
@@ -1329,6 +1338,9 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "run_continuation_action",
             "ContinuationOperationInput::Resume",
             "ContinuationOperationInput::Abandon",
+            "ContinuationOperationInput::Settle",
+            "take_pending_recovery",
+            "CancellationBoundaryInput::BeforePendingRecovery",
             "flow.post_pause_data",
             "flow.replays",
             "project_terminal_error",
@@ -1339,6 +1351,9 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "scanRunExecute",
             "scanRunResume",
             "scanRunAbandon",
+            "scanRunSettle",
+            "pendingRecovery",
+            '"before-pending-recovery"',
             'from "../index.js"',
             "flow.postPauseData",
             "flow.replays",
@@ -1350,6 +1365,9 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "scan_run_execute",
             "scan_run_resume",
             "scan_run_abandon",
+            "scan_run_settle",
+            "pending_recovery",
+            '"before-pending-recovery"',
             "import classic_scanlog",
             'flow.get("postPauseData"',
             'flow.get("replays"',
