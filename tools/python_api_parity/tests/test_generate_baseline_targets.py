@@ -22,9 +22,10 @@ def test_rust_target_crates_count_matches_repo_root_inventory() -> None:
     # 18 after #256 retired the classic-perf-core facade crate; 17 after
     # #258 retired the classic-version-core facade crate; 16 after #257
     # retired the classic-settings-core facade crate; 15 after #259 folded
-    # the classic-shared-py binding library into the one Python adapter.
-    assert len(RUST_TARGET_CRATES) == 15, (
-        f"Expected 15 RUST_TARGET_CRATES in the repo-root inventory, "
+    # the classic-shared-py binding library into the one Python adapter; 16
+    # after #284 added classic-scan-launch, which the Python facade exposes.
+    assert len(RUST_TARGET_CRATES) == 16, (
+        f"Expected 16 RUST_TARGET_CRATES in the repo-root inventory, "
         f"got {len(RUST_TARGET_CRATES)}"
     )
 
