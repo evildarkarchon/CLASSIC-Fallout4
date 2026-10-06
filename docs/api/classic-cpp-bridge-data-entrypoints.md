@@ -474,7 +474,9 @@ User Settings read-only and never writes them; no frontend uses it yet.
   root or scan path, an unknown game-version token, or an out-of-range
   `ScanRunGameId`.
 - `scan_run_launch_error(launch)` returns `ScanRunLaunchErrorDto`;
-  `has_error` is authoritative and `kind` is `TargetedWithoutInputs` today.
+  `has_error` is authoritative and `kind` is `TargetedWithoutInputs` or
+  `XseLogInspect` (FCX Mode on and the XSE log location could not be
+  inspected, not mere absence).
 - `scan_run_launch_view(launch)` returns `ScanRunLaunchRequestDto`, which
   reuses `ScanRunConfigurationDto`, `ScanRunStandardSourceDto`,
   `ScanRunTargetedSourceDto` and `ScanRunSetupContextDto` filled with what the
@@ -487,7 +489,11 @@ User Settings read-only and never writes them; no frontend uses it yet.
 `ScanRunLaunchOverridesDto` uses `has_*` presence flags. A present
 `max_concurrent` of zero requests adaptive concurrency and so overrides a saved
 limit, unlike `ScanRunConfigurationDto`, where present zero is a request
-validation error. `show_formid_values` and `simplify_logs` are supplied-as-on.
+validation error. `show_formid_values`, `simplify_logs` and `fcx_mode` are
+supplied-as-on. With FCX Mode on, by saved setting or `fcx_mode`, the view's
+`setup_context` carries the game folder, documents folder, game executable and
+XSE log that Rust resolved; the GUI's own executable normalization and XSE log
+lookup are no longer needed once it launches through here.
 `view` and `request` throw when the launch failed; check the error first.
 
 ### Cancellation
