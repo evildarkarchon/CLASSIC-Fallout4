@@ -480,8 +480,13 @@ User Settings read-only and never writes them; no frontend uses it yet.
 - `scan_run_launch_view(launch)` returns `ScanRunLaunchRequestDto`, which
   reuses `ScanRunConfigurationDto`, `ScanRunStandardSourceDto`,
   `ScanRunTargetedSourceDto` and `ScanRunSetupContextDto` filled with what the
-  launch decided, plus `intent`, `unsolved_logs`, `fcx_enabled`, and
-  `diagnostics` (`ScanRunLaunchDiagnosticDto`: `kind`, `code`, `message`).
+  launch decided, plus `intent`, `unsolved_logs`, `fcx_enabled`,
+  `diagnostics` (`ScanRunLaunchDiagnosticDto`: `kind`, `code`, `message`), and
+  `display_lines` (`ScanRunDisplayLine`, one per diagnostic in the same order,
+  rendered by the scan presentation module). `ScanRunLaunchDiagnosticKind` is
+  `UserSettings` or one of the game-differs kinds `GameVersionNotApplied`,
+  `FcxModeNotApplied`, `CustomScanFolderNotApplied`, `SetupFoldersNotApplied`,
+  whose `code` is the kind's snake_case token.
   Fields that do not apply to the intent are empty placeholders.
 - `scan_run_launch_request(launch)` returns an executable `ScanRunRequest`
   copy for `scan_run_contract_execute`.

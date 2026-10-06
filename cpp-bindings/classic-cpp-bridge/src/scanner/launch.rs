@@ -2,15 +2,19 @@
 //!
 //! Every merge rule lives in `classic-scan-launch`; this module only converts bridge
 //! primitives into its overrides and projects the launched request into the same DTOs a
-//! caller would otherwise have built by hand.
+//! caller would otherwise have built by hand, plus the Display Content the scan presentation
+//! module renders for its diagnostics.
 
-use super::contract::{ScanRunRequest, required_path, scan_run_game_id_to_core};
+use super::contract::{
+    ScanRunRequest, display_lines_to_dto, required_path, scan_run_game_id_to_core,
+};
 use super::ffi;
 use classic_scan_launch::{
     CrashLogScanIntent, CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind,
     CrashLogScanLaunchError, CrashLogScanLaunchErrorKind, CrashLogScanLaunchOverrides,
     CrashLogScanLaunchRequest, GameVersionSelection, MaxConcurrency, prepare_launch,
 };
+use classic_scan_presentation::render_launch_diagnostics;
 use classic_scanlog_core::scan_run::contract::{Configuration, Request};
 use classic_scanlog_core::{
     CrashLogScanSetupContext, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
@@ -190,6 +194,7 @@ fn launch_view(launched: &CrashLogScanLaunchRequest) -> ffi::ScanRunLaunchReques
             .iter()
             .map(diagnostic_to_dto)
             .collect(),
+        display_lines: display_lines_to_dto(&render_launch_diagnostics(launched.diagnostics())),
     }
 }
 
@@ -274,6 +279,18 @@ fn map_diagnostic_kind(kind: CrashLogScanLaunchDiagnosticKind) -> ffi::ScanRunLa
     match kind {
         CrashLogScanLaunchDiagnosticKind::UserSettings => {
             ffi::ScanRunLaunchDiagnosticKind::UserSettings
+        }
+        CrashLogScanLaunchDiagnosticKind::GameVersionNotApplied => {
+            ffi::ScanRunLaunchDiagnosticKind::GameVersionNotApplied
+        }
+        CrashLogScanLaunchDiagnosticKind::FcxModeNotApplied => {
+            ffi::ScanRunLaunchDiagnosticKind::FcxModeNotApplied
+        }
+        CrashLogScanLaunchDiagnosticKind::CustomScanFolderNotApplied => {
+            ffi::ScanRunLaunchDiagnosticKind::CustomScanFolderNotApplied
+        }
+        CrashLogScanLaunchDiagnosticKind::SetupFoldersNotApplied => {
+            ffi::ScanRunLaunchDiagnosticKind::SetupFoldersNotApplied
         }
     }
 }

@@ -1,7 +1,8 @@
 //! Crash Log Scan Run Display Content.
 //!
 //! This crate decides *what a Crash Log Scan Run says*. It turns a run result, a single run
-//! event, a run-wide infrastructure failure, or a resume failure into an ordered sequence of
+//! event, a run-wide infrastructure failure, a resume failure, or the diagnostics a Crash Log
+//! Scan Launch reported ([`render_launch_diagnostics`]) into an ordered sequence of
 //! [`DisplayLine`]s. Each line is a [`DisplaySeverity`] plus an ordered list of typed
 //! [`DisplaySegment`]s, so a frontend can style a path as a clickable link or emphasise a
 //! number without re-deciding the words around it. It also renders the one interactive
@@ -62,11 +63,13 @@
 //! surfaces follow.
 
 mod display;
+mod launch;
 mod pending;
 mod recovery;
 mod render;
 
 pub use display::{DisplayLine, DisplaySegment, DisplaySeverity};
+pub use launch::{render_launch_diagnostic, render_launch_diagnostics};
 pub use pending::{PendingRecoveryWithPrompt, take_pending_recovery};
 pub use recovery::{RecoveryDecisionDescription, RecoveryPrompt, render_local_ignore_recovery};
 pub use render::{

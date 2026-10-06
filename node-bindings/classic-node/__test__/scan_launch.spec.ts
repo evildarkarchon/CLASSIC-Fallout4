@@ -3,7 +3,7 @@ import {mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 
-import {JsGameId, ScanRunLaunch, ScanRunRequest} from "../index.js";
+import {JsGameId, JsScanRunDisplaySeverity, ScanRunLaunch, ScanRunRequest} from "../index.js";
 
 const roots: string[] = [];
 
@@ -58,6 +58,20 @@ describe("ScanRunLaunch", () => {
         expect(launch.diagnostics.map(diagnostic => [diagnostic.kind, diagnostic.code])).toEqual([
             ["userSettings", "migration_required_unversioned_document"],
         ]);
+    });
+
+    test("a non-managed game withholds saved game-specific values and renders why", () => {
+        const root = rootWithSettings(MANAGED_FALLOUT4);
+
+        const launch = ScanRunLaunch.standard(root, {game: JsGameId.Fallout4Vr});
+
+        expect(launch.configuration.gameVersion).toBe("auto");
+        expect(launch.diagnostics.map(diagnostic => [diagnostic.kind, diagnostic.code])).toEqual([
+            ["gameVersionNotApplied", "game_version_not_applied"],
+        ]);
+        expect(launch.displayLines).toHaveLength(1);
+        expect(launch.displayLines[0].severity).toBe(JsScanRunDisplaySeverity.Notice);
+        expect(launch.displayLines[0].segments.map(segment => segment.text)).toContain("Fallout 4 VR");
     });
 
     test("a Targeted launch without inputs throws the typed launch error", () => {

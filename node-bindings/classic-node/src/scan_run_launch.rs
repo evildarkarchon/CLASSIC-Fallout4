@@ -9,8 +9,8 @@
 mod tests;
 
 use crate::scan_run::{
-    JsScanRunConfiguration, JsScanRunSetupContext, JsScanRunStandardSource,
-    JsScanRunTargetedSource, ScanRunRequest,
+    JsScanRunConfiguration, JsScanRunDisplayLine, JsScanRunSetupContext, JsScanRunStandardSource,
+    JsScanRunTargetedSource, ScanRunRequest, display_lines_to_js,
 };
 use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
 use crate::vocabulary::js_token;
@@ -19,6 +19,7 @@ use classic_scan_launch::{
     CrashLogScanLaunchOverrides, CrashLogScanLaunchRequest, GameVersionSelection, MaxConcurrency,
     prepare_launch,
 };
+use classic_scan_presentation::render_launch_diagnostics;
 use classic_scanlog_core::StandardUnsolvedLogsIntent;
 use classic_scanlog_core::scan_run::contract::{Configuration, Request};
 use classic_vocabulary::Vocabulary;
@@ -48,9 +49,12 @@ pub struct JsScanRunLaunchOverrides {
 #[napi(object)]
 pub struct JsScanRunLaunchDiagnostic {
     /// Which launch rule produced it, as a camelCase Vocabulary Token.
-    #[napi(ts_type = "'userSettings'")]
+    #[napi(
+        ts_type = "'userSettings' | 'gameVersionNotApplied' | 'fcxModeNotApplied' | 'customScanFolderNotApplied' | 'setupFoldersNotApplied'"
+    )]
     pub kind: String,
-    /// Stable machine-readable code (the User Settings code for `userSettings`).
+    /// Stable machine-readable code (the User Settings code for `userSettings`, the
+    /// kind's snake_case token otherwise).
     pub code: String,
     /// Human-readable context. Prose; branch on `kind` and `code` instead.
     pub message: String,
@@ -201,6 +205,14 @@ impl ScanRunLaunch {
             .iter()
             .map(diagnostic_to_js)
             .collect()
+    }
+
+    /// Returns the launch diagnostics rendered as Display Content, one line per
+    /// diagnostic in the same order. Show these rather than phrasing `diagnostics` in
+    /// JavaScript.
+    #[napi(getter)]
+    pub fn display_lines(&self) -> Vec<JsScanRunDisplayLine> {
+        display_lines_to_js(&render_launch_diagnostics(self.inner.diagnostics()))
     }
 
     /// Returns an executable copy of the launched request.

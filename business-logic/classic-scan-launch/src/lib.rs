@@ -12,6 +12,12 @@
 //! a game ([`CrashLogScanSettings::formid_databases_for_game`]), and scanlog core owns the
 //! request it builds.
 //!
+//! Launch owns one rule of its own, the game-differs rule: a scan of a game other than the
+//! managed game never applies the managed game's saved game version, FCX Mode, custom scan
+//! folder or setup folders, and reports each one withheld as a
+//! [`CrashLogScanLaunchDiagnostic::SavedValueNotApplied`]. The scan presentation module
+//! renders every launch diagnostic as Display Content (ADR-0007).
+//!
 //! [`CrashLogScanSettings::formid_databases_for_game`]:
 //!     classic_user_settings_core::CrashLogScanSettings::formid_databases_for_game
 
@@ -25,7 +31,9 @@ mod launch;
 mod overrides;
 
 pub use classic_user_settings_core::GameVersionSelection;
-pub use diagnostic::{CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind};
+pub use diagnostic::{
+    CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind, SavedGameSpecificValue,
+};
 pub use error::{CrashLogScanLaunchError, CrashLogScanLaunchErrorKind};
 pub use launch::{CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch};
 pub use overrides::{CrashLogScanLaunchOverrides, MaxConcurrency};
