@@ -322,6 +322,52 @@ decision to reject, abandonment has no argument that can be unrepresentable.
 Replay still arrives as `has_resume_error` with code
 `scan_run_continuation_consumed`, exactly as it does for a replayed resume.
 
+### Pending recovery and settling (ADR-0009)
+
+A paused run also offers the same recovery as one **pending recovery**, which
+is the shape native frontends should move to. The separate resume and abandon
+entry points above stay until every frontend has migrated (#282 removes them).
+
+```cpp
+auto operation = scan_run_contract_execute(request, cancellation, observer);
+auto execution = scan_run_contract_execution_take_result(*operation);
+if (scan_run_contract_execution_has_pending_recovery(*operation)) {
+    auto pending = scan_run_contract_execution_take_pending_recovery(*operation);
+    ScanRunLocalIgnoreRecoverySettlement settlement{};  // has_decision = false: abandon
+    if (!scan_run_pending_recovery_cancellation_requested(*pending)) {
+        auto prompt = scan_run_pending_recovery_prompt(*pending);
+        // ...ask the user; set has_decision/decision from the chosen description...
+    }
+    auto settled = scan_run_pending_recovery_settle(*pending, settlement, observer);
+}
+```
+
+| Function | Contract |
+|---|---|
+| `scan_run_contract_execution_has_pending_recovery(execution)` | True exactly when the run paused and the pending recovery has not been taken |
+| `scan_run_contract_execution_take_pending_recovery(execution)` | Moves the opaque `ScanRunPendingRecovery` out; throws when the run did not pause or it was already taken |
+| `scan_run_pending_recovery_prompt(pending)` | The `ScanRunRecoveryPrompt` Rust rendered for the pause, identical to the envelope's `recovery_prompt`, including Reset To Default availability |
+| `scan_run_pending_recovery_cancellation_requested(pending)` | Read live from the control passed to `scan_run_contract_execute`; when true, do not prompt and settle with no decision |
+| `scan_run_pending_recovery_settle(pending, settlement, observer)` | Settles once, synchronously; returns the ordinary `ScanRunContractExecutionResult` |
+
+`ScanRunLocalIgnoreRecoverySettlement { has_decision, decision }` is the
+bridge's spelling of an optional Local Ignore Recovery Decision: `decision` is
+read only when `has_decision` is true. With a decision, settling resumes the
+same discovered Crash Logs without rediscovery, Reset To Default still running
+as one non-interruptible transaction. With none, Rust cancels the run's own
+control and finishes cancelled after discovery with no filesystem work; that is
+abandonment, not a third decision. No callback crosses the bridge for the
+decision: the frontend prompts on whatever thread it already uses and settles
+afterwards.
+
+The settled envelope is a shared struct, so it cannot carry a continuation or a
+pending recovery; `has_recovery_prompt` is always false on it. A second settle,
+or a legacy resume/abandon after settling, arrives as `has_resume_error` with
+code `scan_run_continuation_consumed`. Settle throws only for an out-of-range
+`decision` while `has_decision` is true, rejected before anything is claimed.
+The legacy `ScanRunContinuation` and the `ScanRunPendingRecovery` taken from one
+execution share a single claim, so whichever is used first wins.
+
 ### Scan-run Display Labels
 
 Seven free functions project the human-facing Display Label for the run
