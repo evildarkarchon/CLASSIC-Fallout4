@@ -41,3 +41,39 @@ def test_dds_observation_predicates_reject_missing_and_changed_fields() -> None:
         if row.rust_symbol == "DDSHeader" and row.mapping_origin == "canonical_rust"
     ]
     assert {row.participant_id for row in exported} == {"python"}
+
+
+def test_dds_capabilities_route_parsing_to_file_io_and_game_rules_to_resource() -> None:
+    """Neutral header parsing stays with file I/O; game-target rules belong to resource.
+
+    The pack's domain owner covers the parse and file-reader capabilities,
+    while the game-target validation capability names resource core (#249).
+    Every live parity row for the moved analyzer, issue, and target types must
+    name that owner too, so a stale same-named file I/O mapping cannot satisfy
+    source parity.
+    """
+
+    root = Path(__file__).resolve().parents[3]
+    pack = load_and_validate_pack(
+        root, Path("tests/conformance/packs/dds_header/v1.json")
+    ).document()
+    owner = pack["domainOwner"]["rustCrate"]
+    routes = {
+        capability["id"]: capability.get("rustCrate", owner)
+        for capability in pack["capabilities"]
+    }
+    assert routes == {
+        "dds-header.parse": "classic-file-io-core",
+        "dds-header.files": "classic-file-io-core",
+        "dds-header.validate": "classic-resource-core",
+    }
+
+    moved = {"DDSAnalyzer", "DDSIssue", "GameTarget"}
+    rows = [
+        row
+        for row in load_source_parity_rows(root)
+        if row.rust_symbol is not None
+        and row.rust_symbol.removesuffix("@rust") in moved
+    ]
+    assert {row.participant_id for row in rows} == {"node", "python"}
+    assert {row.rust_crate for row in rows} == {"classic-resource-core"}

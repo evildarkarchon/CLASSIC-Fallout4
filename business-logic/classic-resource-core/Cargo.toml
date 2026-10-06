@@ -13,6 +13,13 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 [dependencies]
 # Generic path primitives and PathError
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
+# Neutral DDS header parsing (`DDSHeader`) stays in file I/O core; resource
+# core owns the game-target DDS rules applied to parsed headers (#249). The
+# edge points inward only: file I/O must never depend back on resource core.
+classic-file-io-core = { path = "../classic-file-io-core" }
+
+# Parallel batch validation of DDS textures
+rayon = { workspace = true }
 
 # Error handling
 thiserror = { workspace = true }
@@ -29,6 +36,8 @@ serde = { workspace = true, features = ["derive"] }
 [dev-dependencies]
 # Testing
 tempfile = { workspace = true }
+# Builds real DDS fixtures for the game-target DDS rule tests
+ddsfile = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

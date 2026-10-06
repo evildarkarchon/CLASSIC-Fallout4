@@ -30,7 +30,10 @@ pub use atomic_install::{
 };
 pub use backup::{BackupInfo, BackupManager, BackupType};
 pub use core::FileIOCore;
-pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};
+pub use dds::DDSHeader;
+// Game-target DDS rules (DDSAnalyzer, GameTarget, DDSIssue) are owned by
+// classic-resource-core (#249). No re-export here: resource core depends on
+// file I/O, so a re-export would close a dependency cycle.
 pub use encoding::EncodingDetector;
 pub use error::FileIOError;
 pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};
