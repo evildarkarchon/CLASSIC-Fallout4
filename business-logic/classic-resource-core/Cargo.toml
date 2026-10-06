@@ -14,6 +14,21 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 # Generic path primitives and PathError
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
+# General file I/O. The game-target backup and game-file operations (#250)
+# keep returning `FileIOError`, so their binding error projections stay the
+# same. Resource depends on file I/O, never the reverse. These modules do not
+# need Durable Publication; resource core must not gain that edge for them.
+classic-file-io-core = { path = "../classic-file-io-core" }
+
+# Async file operations for the game-target backup and game-file operations
+tokio = { workspace = true, features = ["fs", "rt", "macros"] }
+
+# Logging
+tracing = { workspace = true }
+
+# Backup creation timestamps
+chrono = "0.4"
+
 # Error handling
 thiserror = { workspace = true }
 anyhow = { workspace = true }

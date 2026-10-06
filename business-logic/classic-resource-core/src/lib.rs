@@ -11,6 +11,10 @@
 //! - **BA2 Archive Support**: Access resources in BA2 archives
 //! - **Resource Enumeration**: List and filter resources
 //! - **Resource Validation**: Check resource integrity and format
+//! - **Game-Target Backup**: Per-type (XSE, ReShade, Vulkan, ENB) backup,
+//!   restore, and removal under the game root ([`backup`])
+//! - **Game-File Operations**: Pattern-matched backup, restore, and removal of
+//!   game-root entries ([`game_files`])
 //!
 //! # Examples
 //!
@@ -32,6 +36,15 @@ use thiserror::Error;
 use walkdir::WalkDir;
 
 use classic_shared_core::path_core::PathError;
+
+// Game-target backup and game-file operations moved here from
+// classic-file-io-core (#250). File I/O does not re-export them: resource
+// depends on file I/O, so a re-export would close a dependency cycle.
+pub mod backup;
+pub mod game_files;
+
+pub use backup::{BackupInfo, BackupManager, BackupType};
+pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};
 
 /// Resource management errors.
 #[derive(Error, Debug)]

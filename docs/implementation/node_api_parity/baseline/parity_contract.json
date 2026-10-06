@@ -2964,7 +2964,7 @@
       "rustSymbol": "BackupInfo",
       "nodeExport": "JsBackupInfo",
       "nodeKind": "interface",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-backup-manager",
@@ -2973,7 +2973,7 @@
       "rustSymbol": "BackupManager",
       "nodeExport": "JsBackupManager",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-file-generator",
@@ -3000,7 +3000,7 @@
       "rustSymbol": "FileOperationResult",
       "nodeExport": "JsFileOperationResult",
       "nodeKind": "interface",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-game-files-manager",
@@ -3009,7 +3009,7 @@
       "rustSymbol": "GameFilesManager",
       "nodeExport": "JsGameFilesManager",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-message",
@@ -5959,7 +5959,7 @@
       "id": "file_io.BackupType@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "BackupType@rust",
       "rustKind": "reexport"
     },
@@ -6015,7 +6015,7 @@
       "id": "file_io.FileOperation@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "FileOperation@rust",
       "rustKind": "reexport"
     },
@@ -6055,7 +6055,7 @@
       "id": "file_io.backup@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "backup@rust",
       "rustKind": "module"
     },
@@ -6087,7 +6087,7 @@
       "id": "file_io.game_files@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "game_files@rust",
       "rustKind": "module"
     },

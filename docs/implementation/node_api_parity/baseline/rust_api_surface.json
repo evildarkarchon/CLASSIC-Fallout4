@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-05T23:38:53.720789+00:00",
+  "generated_at_utc": "2026-10-06T00:01:15.134138+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -3011,63 +3011,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "BackupInfo",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
-      "source_expr": "backup::BackupInfo",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupInfo",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub struct BackupInfo",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupManager",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
-      "source_expr": "backup::BackupManager",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupManager",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub struct BackupManager",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupType",
-      "kind": "enum",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub enum BackupType",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupType",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
-      "source_expr": "backup::BackupType",
-      "tier": "tier1"
-    },
-    {
       "symbol": "CacheStats",
       "kind": "struct",
       "crate": "classic-file-io-core",
@@ -3267,63 +3210,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "FileOperation",
-      "kind": "enum",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub enum FileOperation",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "FileOperation",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
-      "source_expr": "game_files::FileOperation",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "FileOperationResult",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
-      "source_expr": "game_files::FileOperationResult",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "FileOperationResult",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub struct FileOperationResult",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "GameFilesManager",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
-      "source_expr": "game_files::GameFilesManager",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "GameFilesManager",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub struct GameFilesManager",
-      "tier": "tier1"
-    },
-    {
       "symbol": "GameTarget",
       "kind": "enum",
       "crate": "classic-file-io-core",
@@ -3409,16 +3295,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "all",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub fn all()",
-      "tier": "tier1"
-    },
-    {
       "symbol": "append_file",
       "kind": "function",
       "arity": 3,
@@ -3435,45 +3311,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod atomic_install;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "backup",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub async fn backup(\n        &self,\n        label: &str,\n        patterns: &[String],\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "backup",
-      "kind": "module",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub mod backup;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "backup_dir_name",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub fn backup_dir_name(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "backup_exists",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub async fn backup_exists(&self, backup_type: BackupType)",
       "tier": "tier1"
     },
     {
@@ -3586,16 +3423,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "create_backup",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub async fn create_backup(&self, backup_type: BackupType)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "dds",
       "kind": "module",
       "crate": "classic-file-io-core",
@@ -3632,16 +3459,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/encoding.rs",
       "source_decl": "pub fn detect_name(&self, bytes: &[u8])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "display_name",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub fn display_name(&self)",
       "tier": "tier1"
     },
     {
@@ -3683,16 +3500,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "file_patterns",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub fn file_patterns(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "from_bytes",
       "kind": "function",
       "arity": 1,
@@ -3700,15 +3507,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/dds.rs",
       "source_decl": "pub fn from_bytes(bytes: &[u8])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "game_files",
-      "kind": "module",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub mod game_files;",
       "tier": "tier1"
     },
     {
@@ -3788,16 +3586,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod generation;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_backup_info",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub async fn get_backup_info(\n        &self,\n        backup_type: BackupType,\n    )",
       "tier": "tier1"
     },
     {
@@ -3960,16 +3748,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "is_partial",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub fn is_partial(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "is_reasonable_size",
       "kind": "function",
       "arity": 1,
@@ -3977,16 +3755,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/dds.rs",
       "source_decl": "pub fn is_reasonable_size(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_success",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub fn is_success(&self)",
       "tier": "tier1"
     },
     {
@@ -4007,16 +3775,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/core.rs",
       "source_decl": "pub fn metadata_cache_size(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub fn new(game_root: PathBuf, backup_base: Option<PathBuf>)",
       "tier": "tier1"
     },
     {
@@ -4047,16 +3805,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/encoding.rs",
       "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub fn new(game_root: PathBuf, backup_root: PathBuf)",
       "tier": "tier1"
     },
     {
@@ -4160,26 +3908,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "remove",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub async fn remove(\n        &self,\n        label: &str,\n        patterns: &[String],\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "remove_backup",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub async fn remove_backup(&self, backup_type: BackupType)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "reset_cache_stats",
       "kind": "function",
       "arity": 1,
@@ -4197,26 +3925,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn reset_cache_stats()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "restore",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
-      "source_decl": "pub async fn restore(\n        &self,\n        label: &str,\n        patterns: &[String],\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "restore_backup",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/backup.rs",
-      "source_decl": "pub async fn restore_backup(&self, backup_type: BackupType)",
       "tier": "tier1"
     },
     {
@@ -6911,6 +6619,120 @@
       "tier": "tier1"
     },
     {
+      "symbol": "BackupInfo",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
+      "source_expr": "backup::BackupInfo",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupInfo",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub struct BackupInfo",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupManager",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
+      "source_expr": "backup::BackupManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupManager",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub struct BackupManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupType",
+      "kind": "enum",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub enum BackupType",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupType",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
+      "source_expr": "backup::BackupType",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileOperation",
+      "kind": "enum",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub enum FileOperation",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileOperation",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
+      "source_expr": "game_files::FileOperation",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileOperationResult",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
+      "source_expr": "game_files::FileOperationResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileOperationResult",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub struct FileOperationResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameFilesManager",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
+      "source_expr": "game_files::GameFilesManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameFilesManager",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub struct GameFilesManager",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ResourceError",
       "kind": "enum",
       "crate": "classic-resource-core",
@@ -6947,6 +6769,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "all",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub fn all()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "as_str",
       "kind": "function",
       "arity": 1,
@@ -6954,6 +6786,45 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/lib.rs",
       "source_decl": "pub fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "backup",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub async fn backup(\n        &self,\n        label: &str,\n        patterns: &[String],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "backup",
+      "kind": "module",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub mod backup;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "backup_dir_name",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub fn backup_dir_name(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "backup_exists",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub async fn backup_exists(&self, backup_type: BackupType)",
       "tier": "tier1"
     },
     {
@@ -6967,6 +6838,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "create_backup",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub async fn create_backup(&self, backup_type: BackupType)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "detect_resource_type",
       "kind": "function",
       "arity": 1,
@@ -6974,6 +6855,16 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/lib.rs",
       "source_decl": "pub fn detect_resource_type(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "display_name",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub fn display_name(&self)",
       "tier": "tier1"
     },
     {
@@ -6997,6 +6888,55 @@
       "tier": "tier1"
     },
     {
+      "symbol": "file_patterns",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub fn file_patterns(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_files",
+      "kind": "module",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub mod game_files;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_backup_info",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub async fn get_backup_info(\n        &self,\n        backup_type: BackupType,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_partial",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub fn is_partial(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_success",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub fn is_success(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "is_supported_resource",
       "kind": "function",
       "arity": 1,
@@ -7014,6 +6954,66 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/lib.rs",
       "source_decl": "pub fn new(path: PathBuf)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub fn new(game_root: PathBuf, backup_base: Option<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub fn new(game_root: PathBuf, backup_root: PathBuf)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub async fn remove(\n        &self,\n        label: &str,\n        patterns: &[String],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove_backup",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub async fn remove_backup(&self, backup_type: BackupType)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "restore",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/game_files.rs",
+      "source_decl": "pub async fn restore(\n        &self,\n        label: &str,\n        patterns: &[String],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "restore_backup",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/backup.rs",
+      "source_decl": "pub async fn restore_backup(&self, backup_type: BackupType)",
       "tier": "tier1"
     },
     {

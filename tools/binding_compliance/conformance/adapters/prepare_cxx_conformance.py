@@ -186,6 +186,9 @@ def _cxx_source_paths(
             repo_root / "business-logic/classic-config-core/src",
             repo_root / "business-logic/classic-user-settings-core/src",
             repo_root / "business-logic/classic-file-io-core/src",
+            # The game-target backup and game-file operations behind the
+            # file-backups family moved here from file I/O (#250).
+            repo_root / "business-logic/classic-resource-core/src",
             repo_root / "business-logic/classic-path-core/src",
             repo_root / "foundation/classic-shared-core/src",
             repo_root
