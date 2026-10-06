@@ -17,6 +17,9 @@ crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
 # back edge from here would add a third participant to it.
 classic-scanlog-core = { path = "../classic-scanlog-core" }
 classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+# Launch diagnostics are rendered here (ADR-0007, ADR-0009). One-way edge:
+# `classic-scan-launch` must never depend on this crate.
+classic-scan-launch = { path = "../classic-scan-launch" }
 # The scan-run contract exposes Installed YAML Data types it does not re-export,
 # so naming them requires the owning crate directly. `classic-tui` carries the
 # same dependency for the same reason.
