@@ -737,14 +737,13 @@ and binding-local CLIs construct requests and present Rust-owned facts; they do
 not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
 
-`CrashLogScanRunContinuation::abandon` reaches every surface. The TUI depends on
-this crate directly and calls it; CXX exposes it as
+`CrashLogScanRunContinuation::abandon` reaches every surface. CXX exposes it as
 `scan_run_continuation_abandon`, Node as `scanRunAbandon`, and Python as
 `scan_run_abandon`. Each takes a continuation and a cancellation and no
-decision, and returns the same envelope its `resume` sibling does. The TUI and
-the Qt GUI route the choice through this operation, so neither writes the
-cancel-then-resume-with-a-placeholder sequence any more. The native CLI no
-longer calls it: it settles the pending recovery instead (below). `classic-py-cli` has no
+decision, and returns the same envelope its `resume` sibling does. No
+frontend calls it any more: the TUI, the native CLI, and the Qt GUI each settle
+the pending recovery instead (below), so none of them writes the
+cancel-then-resume-with-a-placeholder sequence. `classic-py-cli` has no
 such choice to route: it treats a recovery-required result as terminal and never
 resumes.
 
@@ -769,8 +768,22 @@ resume and abandon surfaces keep working and share the one claim. See
 [classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md)
 and [node-python-contract-map.md](node-python-contract-map.md).
 
-The native CLI (`classic-cli/src/scan_run_cli.cpp`, #281) is the first frontend
-on this flow: execute, check for a pending recovery, and when its run is already
+The TUI depends on this crate directly and settles (#279). On `ScanFinished` it
+takes the pending recovery with `classic_scan_presentation::take_pending_recovery`
+before rendering anything; a result with none is terminal. When
+`cancellation_requested()` is already `true` it shows no overlay and settles
+with no decision. Otherwise the non-blocking overlay draws the pending
+recovery's own prompt, and the answer settles once on a spawned shared-runtime
+task: `p` / `r` pass that decision, and `Esc`, `c`, or closing the overlay pass
+none. The completion message `AsyncMessage::ScanSettleFinished` carries the
+decision passed to settling and the `SettledRunResult`, so the TUI has no
+second-recovery or missing-continuation branch left. Its observer returns
+`ObserverDeliveryFailure` when the App's channel is closed, and both execution
+and settling pass `ObserverFailurePolicy::CancelRun`; the TUI tracks no delivery
+failure of its own.
+
+The native CLI (`classic-cli/src/scan_run_cli.cpp`, #281) follows the
+same flow: execute, check for a pending recovery, and when its run is already
 cancelled settle with no decision without printing anything; otherwise print the
 pending recovery's prompt lines, then settle with the chosen decision, or with no
 decision when the user cancels. A non-interactive run reports the paused
@@ -779,6 +792,10 @@ resume, or abandon, and its "second recovery request" and "recovery without a
 continuation" fatal branches are gone: the settled envelope cannot carry another
 recovery. Its `cli.recovery-interaction` consumer obligation records the
 decision passed to settling as `settledDecision`.
+
+The Qt GUI's `ScanWorker` settles the same way (#280), including when it has no
+configured prompt, which settles with no decision and ends the run cancelled; see
+[classic-gui-scan-progress-consumer.md](classic-gui-scan-progress-consumer.md).
 
 The observer failure policy and the reported delivery failure reach every
 surface (#278). CXX observers return `ScanRunObserverDelivery` from

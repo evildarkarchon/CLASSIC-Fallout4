@@ -470,9 +470,10 @@
             {
               "id": "tui.recovery-interaction",
               "scenarioIds": [
-                "proceed-without-ignore-recovery",
-                "reset-to-default-recovery",
-                "abandon-local-ignore-recovery"
+                "settle-proceed-without-ignore",
+                "settle-reset-to-default",
+                "settle-without-decision",
+                "settle-already-cancelled"
               ],
               "expected": {
                 "interactions": [
@@ -483,8 +484,10 @@
                       "reset-to-default"
                     ],
                     "overlayAfterSelection": "none",
-                    "remainingContinuationCount": 0,
-                    "scenarioId": "proceed-without-ignore-recovery",
+                    "overlayShown": true,
+                    "remainingPendingRecoveryCount": 0,
+                    "scenarioId": "settle-proceed-without-ignore",
+                    "settledDecision": "proceed-without-ignore",
                     "terminalStatus": "completed"
                   },
                   {
@@ -494,8 +497,10 @@
                       "reset-to-default"
                     ],
                     "overlayAfterSelection": "none",
-                    "remainingContinuationCount": 0,
-                    "scenarioId": "reset-to-default-recovery",
+                    "overlayShown": true,
+                    "remainingPendingRecoveryCount": 0,
+                    "scenarioId": "settle-reset-to-default",
+                    "settledDecision": "reset-to-default",
                     "terminalStatus": "completed"
                   },
                   {
@@ -505,8 +510,20 @@
                       "reset-to-default"
                     ],
                     "overlayAfterSelection": "none",
-                    "remainingContinuationCount": 0,
-                    "scenarioId": "abandon-local-ignore-recovery",
+                    "overlayShown": true,
+                    "remainingPendingRecoveryCount": 0,
+                    "scenarioId": "settle-without-decision",
+                    "settledDecision": null,
+                    "terminalStatus": "cancelled"
+                  },
+                  {
+                    "key": null,
+                    "offeredDecisions": [],
+                    "overlayAfterSelection": "none",
+                    "overlayShown": false,
+                    "remainingPendingRecoveryCount": 0,
+                    "scenarioId": "settle-already-cancelled",
+                    "settledDecision": null,
                     "terminalStatus": "cancelled"
                   }
                 ]

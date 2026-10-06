@@ -1,11 +1,9 @@
 use super::{App, AsyncMessage, LastScanRun, Overlay, TabIndex};
 use crate::widgets::path_input::PathValidationState;
+use classic_scanlog_core::CrashLogScanRunStatus;
 use classic_scanlog_core::scan_run::contract::{
     Cancellation, Event as ScanRunEvent, LocalIgnoreRecoveryDecision, LogDisposition, LogEvent,
     ResumeError, RunResult,
-};
-use classic_scanlog_core::{
-    CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRunStatus,
 };
 use std::path::PathBuf;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -187,56 +185,9 @@ fn scan_complete_with_errors_updates_status_message() {
     assert!(app.status_clear_at.is_some());
 }
 
-/// Builds a paused-run projection whose continuation this test intentionally cannot fabricate.
-fn paused_recovery_result() -> RunResult {
-    RunResult {
-        status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
-        discovery: Some(CrashLogScanDiscoveryResult {
-            source: CrashLogScanDiscoverySource::Standard,
-            accepted_logs: vec![PathBuf::from("Crash Logs/crash-01.log")],
-            rejected_inputs: Vec::new(),
-            searched_locations: vec![PathBuf::from("Crash Logs")],
-        }),
-        setup: None,
-        installed_yaml_data: None,
-        continuation: None,
-        effective_concurrency: None,
-        message: Some("Local Ignore recovery is required".to_string()),
-        total: 1,
-        succeeded: 0,
-        failed: 0,
-        cancelled: 0,
-        logs: Vec::new(),
-        observer_delivery_failure: None,
-    }
-}
-
-/// Verifies the TUI reports a missing continuation instead of deciding on the user's behalf.
+/// Verifies decisions are inert when no run is paused, so a stray key press cannot settle twice.
 #[test]
-fn recovery_without_a_retained_continuation_reports_the_adapter_invariant() {
-    let mut app = App::new_for_testing();
-    app.scan_cancellation = Some(Cancellation::new());
-
-    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(
-        paused_recovery_result(),
-    ))));
-
-    assert!(app.pending_local_ignore_recovery.is_none());
-    assert_eq!(app.active_overlay, None);
-    assert!(
-        app.scan_status
-            .contains("without retaining its continuation"),
-        "unexpected status: {}",
-        app.scan_status
-    );
-    // An unanswerable invariant must not expire quietly into a "Ready" status line.
-    assert!(app.status_clear_at.is_none());
-    assert!(matches!(app.last_scan_run, Some(LastScanRun::Run(_))));
-}
-
-/// Verifies decisions are inert when no run is paused, so a stray key press cannot resume twice.
-#[test]
-fn recovery_decisions_are_inert_without_a_pending_continuation() {
+fn recovery_decisions_are_inert_without_a_pending_recovery() {
     let mut app = App::new_for_testing();
     let baseline = app.scan_status.clone();
 
@@ -249,16 +200,17 @@ fn recovery_decisions_are_inert_without_a_pending_continuation() {
     assert!(app.last_scan_run.is_none());
 }
 
-/// Verifies a typed resume failure is retained, presented, and never auto-cleared.
+/// Verifies a typed settle failure is retained, presented, and never auto-cleared.
 #[test]
-fn recovery_resume_failure_is_retained_as_actionable_status() {
+fn recovery_settle_failure_is_retained_as_actionable_status() {
     let mut app = App::new_for_testing();
     app.scan_in_progress = true;
     app.scan_cancellation = Some(Cancellation::new());
 
-    app.handle_async_message(AsyncMessage::ScanResumeFinished(Box::new(Err(
-        ResumeError::ContinuationConsumed,
-    ))));
+    app.handle_async_message(AsyncMessage::ScanSettleFinished {
+        decision: Some(LocalIgnoreRecoveryDecision::ResetToDefault),
+        outcome: Box::new(Err(ResumeError::ContinuationConsumed)),
+    });
 
     assert!(!app.scan_in_progress);
     assert!(app.scan_cancellation.is_none());
@@ -299,26 +251,6 @@ fn recovery_resume_failure_is_retained_as_actionable_status() {
         Some(app.scan_status.as_str()),
         "the overlay and the status line must open on the same core line"
     );
-}
-
-/// Verifies a second recovery request after resume is reported rather than looped into.
-#[test]
-fn a_second_recovery_request_after_resume_is_reported_as_an_invariant() {
-    let mut app = App::new_for_testing();
-
-    app.handle_async_message(AsyncMessage::ScanResumeFinished(Box::new(Ok(
-        paused_recovery_result(),
-    ))));
-
-    assert!(app.pending_local_ignore_recovery.is_none());
-    assert_eq!(app.active_overlay, None);
-    assert!(
-        app.scan_status
-            .contains("unexpected second recovery request"),
-        "unexpected status: {}",
-        app.scan_status
-    );
-    assert!(app.status_clear_at.is_none());
 }
 
 /// Verifies the recovery overlay body is only offered while a run is actually paused.

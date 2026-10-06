@@ -1,8 +1,8 @@
 //! Source audits over the TUI's own text, for two contracts a compiler cannot see.
 //!
 //! The first is the shared Tokio runtime rule (`AGENTS.md` rule 5). Every TUI background workflow
-//! — including resuming a Local Ignore recovery continuation — must run on the single runtime owned
-//! by `classic_shared_core`. A second runtime would give a resumed run a different scheduler from
+//! — including settling a Local Ignore pending recovery — must run on the single runtime owned
+//! by `classic_shared_core`. A second runtime would give a settled run a different scheduler from
 //! the scan it continues, so this is pinned here rather than left to review.
 //!
 //! The second is the Vocabulary naming contract: the Rust core crate defining a domain concept owns
@@ -283,11 +283,11 @@ fn the_audit_covers_every_declared_workflow_module() {
 }
 
 #[test]
-fn local_ignore_recovery_resume_is_dispatched_like_every_other_workflow() {
+fn local_ignore_recovery_settle_is_dispatched_like_every_other_workflow() {
     let app_rs = read_source("app.rs");
     assert!(
-        app_rs.contains("fn resume_local_ignore_recovery"),
-        "the recovery resume seam should stay a named function in app.rs"
+        app_rs.contains("fn settle_local_ignore_recovery"),
+        "the recovery settle seam should stay a named function in app.rs"
     );
     assert!(
         app_rs.contains("get_runtime().spawn("),
