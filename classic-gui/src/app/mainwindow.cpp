@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 
 #include <cstdint>
-#include <filesystem>
 #include <limits>
 #include <QApplication>
 #include <QCoreApplication>
@@ -69,8 +68,6 @@
 #include <QGroupBox>
 #include <QTabBar>
 #include <QUrl>
-
-namespace fs = std::filesystem;
 
 namespace {
 QString format_elapsed_seconds(const QElapsedTimer& timer)
@@ -1119,31 +1116,15 @@ void MainWindow::checkFirstRunPaths()
 
 QString MainWindow::findDataRoot() const
 {
-    std::error_code ec;
-
-    QString appDir = QCoreApplication::applicationDirPath();
-    fs::path appPath(appDir.toStdWString());
-    fs::path cwd = fs::current_path(ec);
-
-    std::vector<fs::path> candidates;
-    candidates.push_back(appPath);                             // deployed exe dir
-    candidates.push_back(cwd);                                 // launch cwd
-    candidates.push_back(appPath.parent_path());               // build dir parent
-    candidates.push_back(appPath.parent_path().parent_path()); // repo root from build/*
-    candidates.push_back(appPath.parent_path() / "install");   // classic-gui/install
-    candidates.push_back(cwd / "install");                     // cwd/install
-
-    for (const auto& base : candidates) {
-        if (base.empty()) {
-            continue;
-        }
-        if (fs::is_directory(base / "CLASSIC Data", ec)) {
-            return QString::fromStdWString(base.wstring());
-        }
-    }
-
-    // Fallback: return empty (caller should handle)
-    return QString();
+    // Config owns the one Installation Root search shared with the TUI and update-core, so the
+    // GUI only supplies its two process facts. A development build in classic-gui/build still
+    // resolves the repository root (the executable's grandparent). An empty result means no
+    // Installation Root; callers show their own "CLASSIC Data not found" dialogs.
+    const QByteArray executableDir = QCoreApplication::applicationDirPath().toUtf8();
+    const QByteArray workingDir = QDir::currentPath().toUtf8();
+    return classic::toQString(classic::config::locate_installation_root(
+        rust::Str(executableDir.constData(), static_cast<std::size_t>(executableDir.size())),
+        rust::Str(workingDir.constData(), static_cast<std::size_t>(workingDir.size()))));
 }
 
 // ── Per-tab window geometry ────────────────────────────────────────

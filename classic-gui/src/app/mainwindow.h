@@ -66,6 +66,8 @@ private:
     /// Runs typed Game Setup Intake and commits only paths explicitly accepted by the user.
     /// Declined proposals and cancelled manual entry leave User Settings unchanged.
     void checkFirstRunPaths();
+    /// Returns the Installation Root from config's shared locator, or an empty string when no
+    /// candidate folder holds CLASSIC Data. Holds no candidate list of its own.
     QString findDataRoot() const;
 
     /// Persists one accepted frontend geometry transition through the revision-aware typed update.
