@@ -519,7 +519,9 @@ Source-observed limitation:
 
 ## Generic YAML (`yaml`)
 
-`classic_shared_core::yaml` is the single owner of CLASSIC's domain-neutral YAML rules. The generic rules and logical-key cache moved here from `classic-settings-core` in issue #239, and `YamlOperations` with its path/mtime-aware YAML-file cache followed in issue #240. `classic-settings-core` now only re-exports these items until its retirement (issue #257), so loading through either path reads and clears the **same** default-scope caches.
+`classic_shared_core::yaml` is the single owner of CLASSIC's domain-neutral YAML rules. The generic rules and logical-key cache moved here from `classic-settings-core` in issue #239, and `YamlOperations` with its path/mtime-aware YAML-file cache followed in issue #240.
+
+The former `classic-settings-core` crate, a re-export facade over this module, was retired in issue #257. Its `classic_settings_core::*` import paths, including `classic_settings_core::validators::*`, end with no forwarding shim; Rust callers import `classic_shared_core::yaml` directly (for example `classic_shared_core::yaml::validators::SettingType`). The CXX, Node, and Python parity contracts name `classic-shared-core` as the owning Rust crate for every generic YAML, `YamlOperations`, YAML-file cache, and validator row, including the Rust-only `settings.*@rust` / `yaml.*@rust` proxy rows; do not restore `classic-settings-core` as an owner during a baseline refresh. The `classic-settings-py` Python package and the Node/CXX `settings` modules keep their published names and call this module directly.
 
 Everything is reached through the module path, for example `classic_shared_core::yaml::load_yaml_sync` or `classic_shared_core::yaml::validators::SettingType`. Nothing from `yaml` is re-exported at the crate root, which keeps `yaml::Result` from colliding with other crate-root names.
 
@@ -660,7 +662,7 @@ Parity: the scope handles and `YamlOperations::with_cache_scope` / `cache_scope`
 
 ### `YamlOperations`
 
-`YamlOperations` is the integration type for parsing, serializing, saving, and reading dot-path values from single YAML documents, with an optional path/mtime-aware file cache. It moved here from `classic-settings-core` (issue #240), which still re-exports it.
+`YamlOperations` is the integration type for parsing, serializing, saving, and reading dot-path values from single YAML documents, with an optional path/mtime-aware file cache. It moved here from `classic-settings-core` (issue #240); that crate has since retired (issue #257).
 
 Construction and cache control:
 
@@ -958,7 +960,7 @@ That is useful for contributor ergonomics, but callers that need to preserve exa
 
 This crate does not replace the more specific error enums in higher layers such as:
 
-- `SettingsError` and `YamlError` in this crate's own [`yaml`](#generic-yaml-yaml) module, which `classic-settings-core` re-exports
+- `SettingsError` and `YamlError` in this crate's own [`yaml`](#generic-yaml-yaml) module
 - `ConfigError` in [`classic-config-core`](../../docs/api/classic-config-core.md)
 - `FileIOError` in [`classic-file-io-core`](../../docs/api/classic-file-io-core.md)
 - `DatabaseError` in [`classic-database-core`](../../docs/api/classic-database-core.md)

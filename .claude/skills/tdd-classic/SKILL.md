@@ -185,7 +185,7 @@ cargo test -p classic-scanlog-core
 cargo test --workspace -- --nocapture
 
 # Specific test by name
-cargo test -p classic-settings-core -- load_modify_save
+cargo test -p classic-shared-core -- load_modify_save
 ```
 
 Set `PYO3_PYTHON` first if the command can build a PyO3 crate — see `AGENTS.md`.

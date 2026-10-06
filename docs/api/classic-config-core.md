@@ -166,7 +166,7 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
-- `clear_global_yaml_cache` from [`classic_shared_core::yaml`](classic-shared-core.md#yaml-file-cache) (moved there from `classic-settings-core` in issue #240; historical note: that crate absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- `clear_global_yaml_cache` from [`classic_shared_core::yaml`](classic-shared-core.md#yaml-file-cache) (moved there from `classic-settings-core` in issue #240; historical note: that crate absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1 and was itself retired in issue #257)
 - crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
 - Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
 - `yaml_cache_dir`, `yaml_cache_dir_with_env`, `ensure_yaml_cache_dir`, `ensure_yaml_cache_dir_with_env` from `yaml_cache`
@@ -584,7 +584,7 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 ## Related Crates And Integration Points
 
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
-- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - generic YAML loaders, document merging, the mtime-aware YAML-file cache, and `schema_version` compatibility used by YAML Data loading (this crate has no `classic-settings-core` edge; that crate only re-exports the shared-core items until its retirement in issue #257)
+- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - generic YAML loaders, document merging, the mtime-aware YAML-file cache, and `schema_version` compatibility used by YAML Data loading (the former `classic-settings-core` re-export facade over these items was retired in issue #257; import them from `classic_shared_core::yaml`)
 - [`classic-durable-publication`](classic-durable-publication.md) - staging, verified backup, and atomic publish sequence for the Local Ignore reset critical section; backup location, conflict policy, and the reset lock stay in this crate
 - [`classic-vocabulary`](classic-vocabulary.md) - the Vocabulary Token contract this crate implements for its Installed YAML Data and Local Ignore enums
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution

@@ -1,7 +1,7 @@
 # Generic settings loader fixtures
 
 Input-only temporary YAML files exercise public sync/async single-file and
-batch loaders in `classic-settings-core`. The oracle lives separately in
+batch loaders in `classic_shared_core::yaml`. The oracle lives separately in
 `tests/conformance/packs/settings_load/v1.json`.
 
 Multiple documents, an empty stream, a missing batch member and a malformed

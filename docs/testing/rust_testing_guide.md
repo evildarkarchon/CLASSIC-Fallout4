@@ -15,9 +15,6 @@ This guide covers testing patterns, fixtures, and coverage requirements for CLAS
 │           └── test_path_lru.rs
 │
 ├── business-logic/
-│   ├── classic-settings-core/
-│   │   └── tests/
-│   │       └── integration_tests.rs  # YAML operations tests
 │   ├── classic-database-core/
 │   │   └── tests/
 │   │       └── integration_tests.rs  # Database pool tests
@@ -56,8 +53,8 @@ cargo test --workspace -- --nocapture
 ### Run Tests for Specific Crate
 
 ```bash
-# Run classic-settings-core tests
-cargo test -p classic-settings-core
+# Run classic-shared-core tests (includes the generic YAML module)
+cargo test -p classic-shared-core
 
 # Run classic-database-core tests (requires async runtime)
 cargo test -p classic-database-core
@@ -73,7 +70,7 @@ cargo test -p classic-config-core
 cargo test --workspace --test integration_tests
 
 # Run specific crate integration tests
-cargo test -p classic-settings-core --test integration_tests
+cargo test -p classic-shared-core --test yaml_operations_integration_tests
 ```
 
 ## Test Patterns
@@ -205,7 +202,6 @@ fn test_concurrent_access() {
 | classic-file-io-core/core.rs | 15% | 70% | CRITICAL |
 | classic-config-core/yamldata.rs | 0% | 70% | HIGH |
 | classic-scanlog-core (5 modules) | 0% | 60% | HIGH |
-| classic-settings-core | 57% | 75% | MEDIUM |
 | classic-file-io-core/encoding.rs | 53% | 80% | MEDIUM |
 
 ### Well-Covered Crates (No Action Needed)
@@ -215,7 +211,6 @@ fn test_concurrent_access() {
 | classic-message-core | 100% |
 | classic-perf-core | 98-100% |
 | classic-pybridge-core | 100% |
-| classic-settings-core | 85-100% |
 | classic-constants-core | 89% |
 
 ### Running Coverage Locally
