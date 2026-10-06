@@ -866,20 +866,17 @@ def _scan_event_summary(event: object) -> dict[str, Any]:
     return summary
 
 
-def _typed_scan_game(shared_module: object, game_name: str) -> object:
-    """Map a User Settings game token to the shared binding's typed identity."""
+def _scan_launch_diagnostics(launch: object) -> list[dict[str, str]]:
+    """Project Crash Log Scan Launch's typed diagnostics into stable CLI JSON.
 
-    game_id = shared_module.GameId
-    supported = {
-        "Fallout4": game_id.Fallout4,
-        "Fallout4VR": game_id.Fallout4VR,
-        "Skyrim": game_id.Skyrim,
-        "Starfield": game_id.Starfield,
-    }
-    try:
-        return supported[game_name]
-    except KeyError as exc:
-        raise ValueError(f"unsupported managed game: {game_name}") from exc
+    Kind, code and message are carried as Rust produced them; the human-facing account
+    of each is the launch's rendered ``display_lines``, which the text stream prints.
+    """
+
+    return [
+        {"kind": str(item.kind), "code": str(item.code), "message": str(item.message)}
+        for item in getattr(launch, "diagnostics", [])
+    ]
 
 
 @contextmanager
@@ -895,7 +892,12 @@ def _working_directory(path: Path):
 
 
 def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
-    """Run a deterministic scanlog binding path over an explicit log directory."""
+    """Run a Targeted Crash Log Scan of an explicit log path, launched through Crash Log Scan Launch.
+
+    The request comes entirely from ``classic_scanlog.ScanRunLaunch.targeted`` under the
+    Installation Root; this command builds none of it. A run that pauses for Local Ignore
+    recovery is terminal here and exits as a product failure.
+    """
 
     scan_path = Path(args.path or context.fixture_root)
     if not scan_path.is_absolute():
@@ -905,46 +907,16 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         # than opening User Settings or scanning under a folder that is not an installation.
         installation_root = _installation_root(context)
         module = require_binding("classic_scanlog")
-        shared_module = require_binding("classic_shared")
-        settings_module = require_binding("classic_user_settings")
-        snapshot = settings_module.open_user_settings(str(installation_root))
-        scan_settings = snapshot.crash_log_scan_settings
-        setup_settings = snapshot.game_setup_settings
-        game_name = str(setup_settings.managed_game)
-        game = _typed_scan_game(shared_module, game_name)
-        # Rust selects the rows that apply to this game's scan, including the Fallout 4 VR
-        # read rule; never pick rows out of the raw keyed ``formid_databases`` mapping.
-        formid_databases = scan_settings.scan_formid_databases
-        max_concurrent = int(scan_settings.max_concurrent_scans)
         events: list[dict[str, Any]] = []
         with _working_directory(installation_root):
-            configuration = module.ScanRunConfiguration(
-                installation_root=str(installation_root),
-                game=game,
-                game_version=str(scan_settings.game_version_selection),
-                show_formid_values=bool(scan_settings.formid_value_lookup),
-                simplify_logs=bool(scan_settings.simplify_logs),
-                formid_database_paths=[
-                    str(path) for path in formid_databases.get(game_name, [])
-                ],
-                unsolved_logs_destination=scan_settings.unsolved_logs_destination,
-                max_concurrent=max_concurrent or None,
-            )
-            source = module.ScanRunTargetedSource(inputs=[str(scan_path)])
-            if scan_settings.fcx_mode:
-                request = module.ScanRunRequest.targeted_with_fcx(
-                    configuration,
-                    source,
-                    module.ScanRunSetupContext(
-                        game_root=setup_settings.game_root,
-                        docs_root=setup_settings.documents_root,
-                        game_exe_path=setup_settings.game_executable,
-                    ),
-                )
-            else:
-                request = module.ScanRunRequest.targeted(configuration, source)
+            # Crash Log Scan Launch owns the whole request: it reads User Settings read-only,
+            # picks the managed game and its saved values, selects that game's FormID rows
+            # (including the Fallout 4 VR read rule), and builds the FCX setup context when
+            # FCX Mode is saved on. This command has no per-run flags, so it passes no
+            # overrides -- only the Targeted input the user named.
+            launch = module.ScanRunLaunch.targeted(str(installation_root), [str(scan_path)])
             execution = module.scan_run_execute(
-                request,
+                launch.request(),
                 module.ScanRunCancellation(),
                 lambda event: events.append(_scan_event_summary(event)),
                 cancel_on_observer_error=True,
@@ -956,7 +928,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     except AttributeError:
         return failure(
             "scan logs",
-            "scanlog or User Settings binding does not expose the final scan-run contract",
+            "scanlog binding does not expose Crash Log Scan Launch and the final scan-run contract",
             int(ExitCode.BINDING_IMPORT),
         )
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
@@ -966,6 +938,11 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     # One field covers both payloads, describing whichever of `result` and `error` the
     # envelope carries -- the same shape the C++ bridge's execution envelope has.
     display_lines = _scan_run_display_lines(execution)
+    # What the launch withheld or degraded, in Rust's words. It describes the request the
+    # run executed, so it precedes the run's own lines in every branch's text stream; the
+    # summary stays the run's leading line, because that is what states the outcome.
+    launch_lines = _scan_run_display_lines(launch)
+    launch_diagnostics = _scan_launch_diagnostics(launch)
     if infrastructure_error is not None:
         stage = str(getattr(infrastructure_error, "stage", "internal_invariant"))
         message = str(getattr(infrastructure_error, "message", infrastructure_error))
@@ -980,8 +957,8 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             _scan_run_summary(display_lines),
             int(ExitCode.PRODUCT_FAILURE),
             error={"classification": "scan-run-infrastructure", "stage": stage, "message": message, "path": path},
-            data={"events": events, "observerError": observer_error},
-            text_lines=display_lines,
+            data={"events": events, "observerError": observer_error, "launchDiagnostics": launch_diagnostics},
+            text_lines=launch_lines + display_lines,
         )
     result = getattr(execution, "result", None)
     if result is None:
@@ -991,7 +968,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "scan logs",
             "classic_scanlog returned neither a result nor an infrastructure error",
             int(ExitCode.PRODUCT_FAILURE),
-            data={"events": events, "observerError": observer_error},
+            data={"events": events, "observerError": observer_error, "launchDiagnostics": launch_diagnostics},
         )
     terminal_status = str(result.status)
     unsuccessful_exit_code = _UNSUCCESSFUL_TERMINAL_EXIT_CODES.get(terminal_status)
@@ -1004,6 +981,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         data: dict[str, Any] = {
             "events": events,
             "observerError": observer_error,
+            "launchDiagnostics": launch_diagnostics,
             "result": _scan_run_result_summary(result),
         }
         # A paused run is terminal for this CLI, but terminal is not the same as
@@ -1012,10 +990,10 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         # claims the continuation, so no file is touched and there is nothing to
         # abandon -- the run is simply left where Rust left it.
         recovery_prompt = _scan_recovery_prompt(execution)
-        terminal_lines = display_lines
+        terminal_lines = launch_lines + display_lines
         if recovery_prompt is not None:
             data["recoveryPrompt"] = recovery_prompt
-            terminal_lines = display_lines + _scan_recovery_prompt_lines(recovery_prompt)
+            terminal_lines = terminal_lines + _scan_recovery_prompt_lines(recovery_prompt)
         return failure(
             "scan logs",
             _scan_run_summary(display_lines),
@@ -1044,9 +1022,10 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "reportEvidence": report_evidence,
             "events": events,
             "observerError": observer_error,
+            "launchDiagnostics": launch_diagnostics,
             "result": _scan_run_result_summary(result),
         },
-        text_lines=display_lines,
+        text_lines=launch_lines + display_lines,
     )
 
 
