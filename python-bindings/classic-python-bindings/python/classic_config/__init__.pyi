@@ -6,7 +6,7 @@ and converts Rust types to Python types.
 
 Architecture:
     - classic-config-core: Business logic (YamlDataCore, configuration loading)
-    - classic-config-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Usage:
     from classic_config import ExplicitYamlDataGame, load_installed_yaml_data

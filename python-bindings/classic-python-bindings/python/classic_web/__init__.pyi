@@ -5,7 +5,7 @@ including URL validation, user agent generation, and mod site constants.
 
 Architecture:
     - classic-web-core: Business logic (URL handling, web constants)
-    - classic-web-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - URL validation and parsing

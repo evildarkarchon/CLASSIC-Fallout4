@@ -7,7 +7,7 @@ Architecture:
     - classic-shared-core (`yaml` module): Business logic (logical-key YAML caching,
       batch loading, validators, YamlOperations, path/mtime-aware YAML-file cache)
     - classic-config-core: YamlSource (projected here as YamlFile)
-    - classic-settings-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - Thread-safe settings cache with DashMap

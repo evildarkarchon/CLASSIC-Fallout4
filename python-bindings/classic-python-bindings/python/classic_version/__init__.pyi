@@ -8,7 +8,7 @@ Architecture:
       parsing, comparison, extraction, formatting, PE version extraction)
     - classic-version-registry-core: Known-version queries (Version Registry
       policy owner)
-    - classic-version-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - Flexible version string parsing (supports multiple formats)

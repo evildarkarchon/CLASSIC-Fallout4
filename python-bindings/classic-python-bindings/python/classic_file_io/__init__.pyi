@@ -6,7 +6,7 @@ This module offers 10-40x speedup over Python's built-in file operations.
 
 Architecture:
     - classic-file-io-core: Business logic (file I/O, encoding detection, DDS parsing)
-    - classic-file-io-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - Automatic encoding detection (chardet)

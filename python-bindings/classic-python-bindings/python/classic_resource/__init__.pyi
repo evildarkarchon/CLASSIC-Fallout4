@@ -5,7 +5,7 @@ for Bethesda game files, including file type detection, resource enumeration, an
 
 Architecture:
     - classic-resource-core: Business logic (resource detection, enumeration)
-    - classic-resource-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - File type detection for game resources

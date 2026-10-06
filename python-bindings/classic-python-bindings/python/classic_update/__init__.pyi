@@ -5,7 +5,7 @@ with GitHub API integration.
 
 Architecture:
     - classic-update-core: Business logic (GitHub API, version comparison)
-    - classic-update-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - GitHub API integration for release monitoring (5-10x faster)
