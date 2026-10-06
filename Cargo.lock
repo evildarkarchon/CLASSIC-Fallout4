@@ -817,7 +817,6 @@ name = "classic-file-io-core"
 version = "9.1.0"
 dependencies = [
  "anyhow",
- "chrono",
  "classic-durable-publication",
  "classic-shared-core",
  "criterion 0.6.0",
@@ -985,6 +984,7 @@ name = "classic-resource-core"
 version = "9.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "classic-file-io-core",
  "classic-shared-core",
  "ddsfile",
@@ -993,6 +993,8 @@ dependencies = [
  "serde",
  "tempfile",
  "thiserror 2.0.21",
+ "tokio",
+ "tracing",
  "walkdir",
 ]
 
@@ -1234,8 +1236,8 @@ version = "9.1.0"
 dependencies = [
  "arboard",
  "classic-config-core",
- "classic-file-io-core",
  "classic-path-core",
+ "classic-resource-core",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",

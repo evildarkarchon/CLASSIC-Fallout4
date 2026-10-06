@@ -55,12 +55,14 @@ classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-scan-presentation = { path = "../../business-logic/classic-scan-presentation" }
 classic-database-core = { path = "../../business-logic/classic-database-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+# Game-target backup and game-file operations (moved from file I/O in #250)
+# and the version-labelled backup behind backup_create_timestamped /
+# backup_list_existing (moved from path core in #251).
+classic-resource-core = { path = "../../business-logic/classic-resource-core" }
 classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
 classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
 classic-xse-core = { path = "../../business-logic/classic-xse-core" }
 classic-path-core = { path = "../../business-logic/classic-path-core" }
-# Version-labelled backup behind backup_create_timestamped / backup_list_existing
-classic-resource-core = { path = "../../business-logic/classic-resource-core" }
 classic-update-core = { path = "../../business-logic/classic-update-core" }
 classic-web-core = { path = "../../business-logic/classic-web-core" }
 

@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T01:15:14.118070+00:00`
+- Generated: `2026-10-06T01:23:32.703255+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -346,9 +346,9 @@
 | `database.formid_value_lookup.FormIdValueLookup.from_shared_pool` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.from_shared_pool` | `matched` |
 | `database.formid_value_lookup.FormIdValueLookup.lookup` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup` | `matched` |
 | `database.formid_value_lookup.FormIdValueLookup.lookup_batch` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup_batch` | `matched` |
-| `file_io.core.BackupInfo@rust` | `file_io` | `classic-file-io-core` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.BackupManager@rust` | `file_io` | `classic-file-io-core` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.BackupType@rust` | `file_io` | `classic-file-io-core` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupInfo@rust` | `file_io` | `classic-resource-core` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupManager@rust` | `file_io` | `classic-resource-core` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupType@rust` | `file_io` | `classic-resource-core` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.FileIOCore` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.FileIOCore.__init__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.__init__` | `matched` |
 | `file_io.core.FileIOCore.append_file` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.append_file` | `matched` |
@@ -371,13 +371,13 @@
 | `file_io.core.FileIOCore.write_bytes` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_bytes` | `matched` |
 | `file_io.core.FileIOCore.write_file` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_file` | `matched` |
 | `file_io.core.FileIOCore.write_lines` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_lines` | `matched` |
-| `file_io.core.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.FileOperationResult@rust` | `file_io` | `classic-file-io-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.GameFilesManager@rust` | `file_io` | `classic-file-io-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileOperation@rust` | `file_io` | `classic-resource-core` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileOperationResult@rust` | `file_io` | `classic-resource-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.GameFilesManager@rust` | `file_io` | `classic-resource-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.backup@rust` | `file_io` | `classic-file-io-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.backup@rust` | `file_io` | `classic-resource-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.calculate_similarity` | `file_io` | `classic-file-io-core` | `calculate_similarity` | `classic_file_io.calculate_similarity` | `matched` |
 | `file_io.core.core@rust` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `classic-scanlog-core` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
