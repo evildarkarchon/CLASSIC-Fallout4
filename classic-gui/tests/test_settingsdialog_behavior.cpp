@@ -126,6 +126,8 @@ private slots:
     void ok_bootstraps_missing_settings_with_the_selected_vr_executable();
     void validation_failure_keeps_the_original_document();
     void concurrent_change_surfaces_conflict_and_preserves_newer_values();
+    /// A VR user sees legacy Fallout4VR rows through the Rust read and is told when saving moves them.
+    void vr_dialog_shows_legacy_formid_rows_and_reports_their_move_on_save();
     void formid_add_button_accepts_multiple_files_and_deduplicates_paths();
     void reset_uses_rust_owned_defaults_and_clears_dependent_executable();
     /// Verifies that rollback invalidates the reviewed update decision and disables Apply.
@@ -302,6 +304,39 @@ void SettingsDialogBehaviorTests::concurrent_change_surfaces_conflict_and_preser
     QCOMPARE(title, QStringLiteral("User Settings Changed"));
     QVERIFY(message.contains(QStringLiteral("Reload Settings and try again")));
     QCOMPARE(classic::gui::GuiUserSettings::open(root.path()).scan.maxConcurrentScans, 4);
+}
+
+void SettingsDialogBehaviorTests::vr_dialog_shows_legacy_formid_rows_and_reports_their_move_on_save()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    writeSettings(root.path(), QByteArrayLiteral("schema_version: \"1.0\"\n"
+                                                 "CLASSIC_Settings:\n"
+                                                 "  Managed Game: Fallout 4 VR\n"
+                                                 "  Game Version: VR\n"
+                                                 "  FormID Databases:\n"
+                                                 "    Fallout4VR:\n"
+                                                 "      - databases/Legacy VR FormIDs.db\n"));
+    SettingsDialog dialog(root.path(), nullptr);
+    auto* databases = dialog.findChild<QListWidget*>(QStringLiteral("settings.formIdDatabases"));
+    auto* ok = dialog.findChild<QPushButton*>(QStringLiteral("settings.okButton"));
+    QVERIFY(databases);
+    QVERIFY(ok);
+    QCOMPARE(databases->count(), 1);
+    QCOMPARE(databases->item(0)->text(), QStringLiteral("databases/Legacy VR FormIDs.db"));
+    databases->addItem(QStringLiteral("E:/Databases/vr-extra.db"));
+    QString title;
+    QString message;
+    closeNextMessageBox(&title, &message);
+
+    QTest::mouseClick(ok, Qt::LeftButton);
+
+    QCOMPARE(dialog.result(), static_cast<int>(QDialog::Accepted));
+    QVERIFY(message.contains(QStringLiteral("legacy_formid_databases_key_removed")));
+    const auto reopened = classic::gui::GuiUserSettings::open(root.path());
+    QCOMPARE(reopened.scan.formIdDatabases.value(QStringLiteral("Fallout4")),
+             QStringList({QStringLiteral("databases/Legacy VR FormIDs.db"), QStringLiteral("E:/Databases/vr-extra.db")}));
+    QVERIFY(!reopened.scan.formIdDatabases.contains(QStringLiteral("Fallout4VR")));
 }
 
 void SettingsDialogBehaviorTests::formid_add_button_accepts_multiple_files_and_deduplicates_paths()

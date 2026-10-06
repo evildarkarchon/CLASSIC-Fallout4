@@ -316,6 +316,14 @@ class UserSettingsUpdate:
     def set_formid_databases(self, value: dict[str, list[str]]) -> None:
         """Request replacement FormID database paths keyed by managed game."""
 
+    def set_formid_databases_for_game(self, game: str, paths: list[str]) -> None:
+        """Request a game-aware save of the FormID database rows game's scans read.
+
+        Fallout 4 VR rows are stored under Fallout4 and a legacy Fallout4VR key is
+        removed, reported as ``legacy_formid_databases_key_removed`` in the preview
+        and commit diagnostics. Any other game replaces only its own rows.
+        """
+
     def set_move_unsolved_logs(self, value: bool) -> None:
         """Request a new Move Unsolved Logs preference."""
 
@@ -333,7 +341,7 @@ class UserSettingsUpdate:
 
 
 class UserSettingsUpdateDiagnostic:
-    """One field-specific diagnostic from a rejected update preview."""
+    """One update diagnostic: a rejection reason, or an accepted update's effect report."""
 
     @property
     def field_path(self) -> str | None: ...
@@ -388,6 +396,9 @@ class UserSettingsCommitOutcome:
 
     @property
     def actual_revision(self) -> str | None: ...
+
+    @property
+    def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]: ...
 
 
 class UserSettingsFrontendTransitionOutcome:

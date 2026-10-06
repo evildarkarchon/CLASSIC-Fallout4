@@ -452,7 +452,9 @@ void SettingsDialog::applySettingsToWidgets(const classic::gui::GuiUserSettingsS
     m_editIniFolder->setText(settings.gameSetup.documentsRoot.value_or(QString{}));
 
     m_listFormIdDbs->clear();
-    const auto databases = settings.scan.formIdDatabases.value(settings.gameSetup.managedGame);
+    // Show the rows the managed game's scans actually read; Rust owns that selection (for
+    // Fallout 4 VR it merges the shared Fallout4 rows with any legacy Fallout4VR rows).
+    const auto databases = settings.scan.scanFormIdDatabases.value(settings.gameSetup.managedGame);
     for (const auto& database : databases) {
         m_listFormIdDbs->addItem(database);
     }
@@ -514,12 +516,14 @@ bool SettingsDialog::saveSettings()
         changes.documentsRoot = {true, iniText.isEmpty() ? std::nullopt : std::optional<QString>{iniText}};
         changes.iniFolder = changes.documentsRoot;
 
-        changes.formIdDatabases = m_settingsSnapshot.scan.formIdDatabases;
+        // Rust decides which stored key these rows land under, so the dialog never writes the
+        // managed game's raw key itself.
         QStringList selectedDatabases;
         for (int i = 0; i < m_listFormIdDbs->count(); ++i) {
             selectedDatabases.append(m_listFormIdDbs->item(i)->text());
         }
-        changes.formIdDatabases->insert(m_settingsSnapshot.gameSetup.managedGame, selectedDatabases);
+        changes.formIdDatabaseSave =
+            classic::gui::GuiFormIdDatabaseSave{m_settingsSnapshot.gameSetup.managedGame, selectedDatabases};
 
         const auto result = m_settingsSnapshot.revision == QStringLiteral("missing")
                                 ? classic::gui::GuiUserSettings::bootstrap(m_dataDir, changes)
@@ -540,6 +544,14 @@ bool SettingsDialog::saveSettings()
                                  diagnostics.isEmpty() ? QStringLiteral("The settings update was rejected.")
                                                        : diagnostics.join(QLatin1Char('\n')));
             return false;
+        }
+        if (!result.diagnostics.empty()) {
+            // Committed effects such as removing a legacy FormID Databases key must never be silent.
+            QStringList diagnostics;
+            for (const auto& diagnostic : result.diagnostics) {
+                diagnostics.append(QStringLiteral("[%1] %2").arg(diagnostic.code, diagnostic.message));
+            }
+            QMessageBox::information(this, QStringLiteral("Settings Saved"), diagnostics.join(QLatin1Char('\n')));
         }
 
         return true;

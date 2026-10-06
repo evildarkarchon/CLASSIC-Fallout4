@@ -28,6 +28,8 @@ cargo test -p classic-user-settings-core --test compatibility_contract
 | `canonical_current_nested.yaml` | Current nested document with the explicit schema version and published labels |
 | `vr_shared_and_legacy_formid_databases.yaml` | Fallout 4 VR document whose scan read takes the shared `Fallout4` rows, then legacy `Fallout4VR` rows, with duplicates dropped; other games read their own key |
 | `vr_legacy_formid_databases.yaml` | Fallout 4 VR document saved before the corpus was shared, whose legacy `Fallout4VR` rows stay readable for scans |
+| `vr_shared_and_legacy_formid_databases_after_vr_save.yaml` | Game-aware FormID save for Fallout 4 VR: the saved rows land under `Fallout4`, the legacy `Fallout4VR` key is removed (reported as `legacy_formid_databases_key_removed` in preview and commit diagnostics), and other games' rows survive |
+| `vr_shared_and_legacy_formid_databases_after_skyrim_save.yaml` | Game-aware FormID save for another game: only that game's key changes; the shared and legacy Fallout 4 rows survive untouched |
 | `flat_classic_config.yaml` | Legacy snake_case `ClassicConfig`, nested `paths`, and `formid_databases` shape |
 | `flat_migrated.yaml` | Expected explicit migration in which every flat scalar or sequence leaf has one canonical destination |
 | `previous_location_nested.yaml` | Unversioned nested document from `<CLASSIC root>/CLASSIC Data/CLASSIC Settings.yaml` |
@@ -47,7 +49,12 @@ The operation scenarios collectively distinguish and validate read-only open, de
 
 Entries carrying `conformance` also drive the input-only cross-adapter scenario
 pack. They specify caller consent, update or bootstrap preview mode, installation
-root presence, requested values, and exact structured rejection diagnostics.
+root presence, requested values, and exact structured preview diagnostics: the
+reasons a rejected preview was refused, or the non-rejecting effect diagnostics an
+accepted preview carries and its commit reports again. A requested selector below
+`/CLASSIC_Settings/FormID Databases/<game>` names a game-aware FormID database
+save rather than a raw key write; its `expected_preview` records the complete
+mapping the save publishes.
 The central engine retains expected output fixtures and compares successful
 publication as typed YAML; runners emit only actual public values and raw file
 bytes. `bootstrap_defaults.yaml` and `bootstrap_overrides.yaml` characterize
