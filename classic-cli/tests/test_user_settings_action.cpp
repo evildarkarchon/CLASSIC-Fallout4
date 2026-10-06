@@ -210,21 +210,6 @@ TEST_CASE("native scan preparation lets explicit FCX override cross-game isolati
     fs::remove_all(root, ec);
 }
 
-TEST_CASE("native Fallout 4 VR scans reuse Fallout 4 FormID database rows", "[bridge][settings][scan]") {
-    const fs::path root = make_scan_settings_root();
-    CliArgs args{};
-    args.game = "Fallout4VR";
-    args.game_was_explicit = true;
-
-    const auto prepared = prepare_scan_user_settings(args, root.string());
-
-    REQUIRE(prepared.has_value());
-    REQUIRE(prepared->formid_database_paths == std::vector<std::string>{"databases/custom.db"});
-
-    std::error_code ec;
-    fs::remove_all(root, ec);
-}
-
 TEST_CASE("native scan preparation exposes degraded typed snapshot metadata", "[bridge][settings][scan]") {
     const fs::path root = make_malformed_scan_settings_root();
 

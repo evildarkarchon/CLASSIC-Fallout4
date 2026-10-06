@@ -448,10 +448,26 @@ QJsonObject settingsObservation(const QJsonObject& plan, const QJsonObject& obli
         const auto before = settingsBytes(path);
         const auto snapshot = GuiUserSettings::open(root);
         const auto launch = snapshot.scanLaunchSettings(QStringLiteral("Fallout4"));
+        const bool unchanged = before == settingsBytes(path);
+
+        // The maintained Crash Logs launch passes the managed game, so a Fallout 4 VR user's
+        // launch is observed the same way rather than by naming the VR key here.
+        if (!QFile::remove(path)
+            || !QFile::copy(fixtures.value(QStringLiteral("vr_shared_and_legacy_formid_databases")).toString(),
+                            path)) {
+            throw RunnerError("cannot copy Fallout 4 VR GUI settings fixture");
+        }
+        const auto vrBefore = settingsBytes(path);
+        const auto vrSnapshot = GuiUserSettings::open(root);
+        const auto vrLaunch = vrSnapshot.scanLaunchSettings(vrSnapshot.gameSetup.managedGame);
+        const QJsonObject fallout4Vr{
+            {"game", vrLaunch.game},
+            {"formIdDatabasePaths", QJsonArray::fromStringList(vrLaunch.formIdDatabasePaths)},
+            {"unchanged", vrBefore == settingsBytes(path)}};
         return {{"classification", snapshot.classification}, {"updateCheck", snapshot.update.updateCheck},
                 {"game", launch.game}, {"gameVersion", launch.gameVersion},
                 {"formIdDatabasePaths", QJsonArray::fromStringList(launch.formIdDatabasePaths)},
-                {"unchanged", before == settingsBytes(path)}};
+                {"unchanged", unchanged}, {"fallout4Vr", fallout4Vr}};
     }
     if (id == QStringLiteral("gui.settings-explicit-bootstrap")) {
         GuiUserSettings::open(root);

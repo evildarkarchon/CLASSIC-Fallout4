@@ -28,7 +28,13 @@ struct GuiCrashLogScanSettings {
     bool simplifyLogs = false;
     bool showStatistics = false;
     bool formIdValueLookup = false;
+    /// Raw saved FormID rows keyed by game; the Settings dialog edits this mapping.
     QMap<QString, QStringList> formIdDatabases;
+    /// Rust-selected FormID rows that apply to each game's Crash Log Scan.
+    ///
+    /// Already carries the Fallout 4 VR read rule (shared Fallout4 rows, then legacy
+    /// Fallout4VR rows, de-duplicated). Scan launch reads only this projection.
+    QMap<QString, QStringList> scanFormIdDatabases;
     bool moveUnsolvedLogs{};
     std::optional<QString> unsolvedLogsDestination;
     std::optional<QString> customScanInput;
@@ -98,7 +104,8 @@ struct GuiUserSettingsSnapshot {
 
     /// Builds an immutable scan-launch value object from this accepted typed snapshot.
     ///
-    /// `game` selects the corresponding FormID database list without rereading User Settings.
+    /// `game` selects the Rust-projected scan FormID database rows for that game (including the
+    /// Fallout 4 VR read rule) without rereading User Settings.
     CrashLogScanLaunchSettings scanLaunchSettings(const QString& game) const;
 };
 
