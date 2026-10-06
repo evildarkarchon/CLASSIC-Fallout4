@@ -19,7 +19,9 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # Durable Publication (staging, verified backup, atomic publish) for the YAML
 # Data Update Channel install path. It owns the digest verification, the
 # `.prev` rollback generation, and the one cross-process lock this module's
-# rollback and self-heal also serialize on.
+# rollback and self-heal also serialize on. Only `atomic_install` uses it: the
+# game-target backup and game-file operations moved to classic-resource-core
+# (#250) and never relied on this edge.
 classic-durable-publication = { path = "../classic-durable-publication" }
 
 # File I/O
@@ -57,8 +59,7 @@ thiserror = { workspace = true }
 log = { workspace = true }
 tracing = { workspace = true }
 
-# Time handling
-chrono = "0.4"
+# Time handling (chrono) left with the game-target backup (#250).
 
 # NO PyO3 dependency!
 

@@ -9,7 +9,9 @@ Crate metadata:
 
 This crate is the small Rust resource-discovery layer for CLASSIC. It detects resource types from file extensions, enumerates supported files under a directory tree, provides a lightweight `ResourceInfo` struct, validates that an individual resource path exists and points to a file, and owns the game-target DDS texture rules applied to parsed DDS headers.
 
-It is a synchronous business-logic crate. It does not parse Bethesda file formats, mount BA2 archives, or own a runtime.
+It also owns the game-target backup (`backup`: `BackupManager`, `BackupType`, `BackupInfo`) and game-file operations (`game_files`: `GameFilesManager`, `FileOperation`, `FileOperationResult`), which moved here from `classic-file-io-core` in #250. See [Game-Target Backup And Game-File Operations](#game-target-backup-and-game-file-operations).
+
+Resource discovery is synchronous; the backup and game-file operations are async and run on the caller's (shared) Tokio runtime. The crate does not parse Bethesda file formats, mount BA2 archives, or own a runtime.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -25,13 +27,15 @@ Use this crate when you need to:
 - attach basic metadata (`path`, detected type, file size) to resource entries
 - validate that a candidate resource path exists and is a readable file
 - check DDS textures against game-target rules (Fallout 4 / Skyrim SE)
+- back up, restore, or remove a fixed game-target file group (XSE, ReShade, Vulkan, ENB) under the game root
+- back up, restore, or remove pattern-matched game-root entries under a labeled backup directory
 
 Do not use this crate for:
 
 - parsing plugin, BA2, NIF, DDS, or INI contents (neutral DDS header parsing is `classic-file-io-core`'s `DDSHeader`)
 - resolving game-install or documents paths
 - validating archive internals or mod compatibility rules
-- async I/O, shared runtime ownership, or UI/binding-specific behavior
+- general async file I/O, shared runtime ownership, or UI/binding-specific behavior
 
 Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the Node/Python binding wrappers.
 
@@ -39,7 +43,7 @@ Those concerns live in related crates such as [`classic-path-core`](../../busine
 
 ## Module And API Map
 
-The resource-discovery API lives at the crate root in `src/lib.rs`. The public `dds` module holds the game-target DDS rules, also re-exported at the root.
+The resource-discovery API lives at the crate root in `src/lib.rs`. The public `dds` module holds the game-target DDS rules, and the `backup` and `game_files` modules hold the game-target backup and game-file operations; their main types are also re-exported at the root.
 
 ## Root-level types and aliases
 
@@ -59,6 +63,7 @@ The resource-discovery API lives at the crate root in `src/lib.rs`. The public `
 ## Root-level re-exports
 
 - `DDSAnalyzer`, `DDSIssue`, `GameTarget` from `dds` (see [Game-Target DDS Rules](#game-target-dds-rules-dds))
+- `backup::{BackupInfo, BackupManager, BackupType}` and `game_files::{FileOperation, FileOperationResult, GameFilesManager}` (#250)
 
 The former `PathError` / `PathResult` re-exports from `classic-path-core` ended in #245: the generic path error is owned by `classic_shared_core::path_core`, which callers import directly. `ResourceError::PathError` wraps that shared-core type, and the crate's native result alias is `ResourceResult<T>`.
 
@@ -262,6 +267,60 @@ Valid, missing, and malformed resources:
 
 Consumers: `classic-scangame-core` validates loose `.dds` files from unpacked mod scans with `DDSAnalyzer::new(config.game_target)`. Node (`JsDdsAnalyzer` / `JsDDSAnalyzer`, `JsDdsIssue`) and Python (`classic_file_io.DDSAnalyzer`) keep their existing export names and module locations; only their Rust owner changed.
 
+## Game-Target Backup And Game-File Operations
+
+These two file-group operations moved here from `classic-file-io-core` in #250. The old `classic_file_io_core::backup` and `classic_file_io_core::game_files` modules and their root re-exports are gone, with no forwarding re-export: resource depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_resource_core`. Both operations still report failures as [`classic_file_io_core::FileIOError`](classic-file-io-core.md#fileioerror), not `ResourceError`, so every CXX, Node, and Python error projection is unchanged. Neither uses Durable Publication.
+
+The game-target backup is distinct from the version-labelled XSE backup: it keeps one fixed directory per backup type under the game root and does not label backups by version.
+
+### `backup` - game-target backup
+
+Typed backup workflow for known modding-related file groups.
+
+- `BackupType` variants: `XSE`, `ReShade`, `Vulkan`, `ENB`
+- `BackupType::display_name()`, `file_patterns()`, `backup_dir_name()`, `all()`
+- `BackupInfo` - `backup_type`, `backup_dir`, `created_at`, `file_count`, `exists`
+- `BackupManager::new(game_root, backup_base)`
+- `backup_exists(type) -> Result<bool, FileIOError>`
+- `get_backup_info(type) -> Result<BackupInfo, FileIOError>`
+- `create_backup(type) -> Result<BackupInfo, FileIOError>`
+- `restore_backup(type) -> Result<usize, FileIOError>`
+- `remove_backup(type) -> Result<(), FileIOError>`
+
+Destination, conflict, and recovery behavior:
+
+- default backup root is `game_root/CLASSIC_Backups`; each type uses its own fixed directory (`XSE_Backup`, `ReShade_Backup`, `Vulkan_Backup`, `ENB_Backup`)
+- backup matching uses a simple `*` prefix/suffix matcher over top-level file names only
+- `create_backup()` replaces an existing typed backup directory before copying
+- if no files match the backup type's patterns, `create_backup()` removes the newly created backup directory and returns `FileIOError::NotFound`
+- `restore_backup()` copies every top-level file in the typed backup directory back into the game root, overwriting existing files, and returns `FileIOError::NotFound` when no backup exists
+- `remove_backup()` succeeds when the backup directory is already absent
+
+### `game_files` - game-file operations
+
+Generalized pattern-based file-group operations.
+
+- `GameFilesManager::new(game_root, backup_root)`
+- `backup(label, patterns) -> Result<FileOperationResult, FileIOError>`
+- `restore(label, patterns) -> Result<FileOperationResult, FileIOError>`
+- `remove(label, patterns) -> Result<FileOperationResult, FileIOError>`
+- `FileOperation` - `Backup`, `Restore`, or `Remove` (displayed as `BACKUP`, `RESTORE`, `REMOVE`)
+- `FileOperationResult` - `operation`, `label`, `files_affected`, `errors`; `is_success()` and `is_partial()`
+
+Behavior worth knowing:
+
+- matching is case-insensitive substring matching on top-level entry names in `game_root`, and covers both files and directories
+- a missing `game_root` returns `FileIOError::NotFound`
+- `backup()` copies into `backup_root/<label>/`, overwriting files and replacing matched directories
+- operations run in chunks with bounded Tokio-task concurrency
+- per-entry failures are accumulated in `FileOperationResult.errors` instead of failing the whole operation after matching succeeds
+- `restore()` restores only entries that both match the requested patterns and exist in the labeled backup directory
+- `remove()` treats an already-missing entry as success
+
+Both managers scan only top-level entries of their configured roots; they do not recursively discover nested matches before copying a matched directory tree.
+
+Callers: the CXX bridge (`files.rs`: `backup_manager_*`, `game_files_*`), the Node binding (`JsBackupManager`, `JsGameFilesManager`), and the TUI backup workflow. Python does not expose either operation.
+
 ---
 
 ## Resource Discovery And Management Flow
@@ -287,12 +346,13 @@ That is why it fits best as a small shared helper layer, not as a complete resou
 
 ## Error Handling Model
 
-This crate uses one top-level domain error type, `ResourceError`, plus a `ResourceResult<T>` alias.
+Resource discovery uses one top-level domain error type, `ResourceError`, plus a `ResourceResult<T>` alias.
 
 In practice, the public API splits into two styles:
 
 - pure classification helpers (`detect_resource_type()`, `is_supported_resource()`, `ResourceType::from_str()`) are infallible
 - filesystem-touching helpers (`enumerate_resources()`, `count_resources_by_type()`, `validate_resource()`) return `ResourceResult<_>`
+- the game-target backup and game-file operations return `Result<_, classic_file_io_core::FileIOError>`, the error type they had before moving here, so binding error projections stay unchanged
 
 Important contributor caveats from the current implementation:
 
@@ -312,6 +372,8 @@ Important direct dependencies:
 - `classic-shared-core` - `path_core::PathError` wrapped by `ResourceError::PathError`
 - `classic-file-io-core` - neutral `DDSHeader` parsing consumed by the `dds` rules (inward edge only)
 - `rayon` - parallel `DDSAnalyzer::validate_batch()`
+- [`classic-file-io-core`](classic-file-io-core.md) - `FileIOError`, returned by the game-target backup and game-file operations (file I/O never depends back on this crate)
+- `tokio`, `tracing`, and `chrono` - async file operations, operation logging, and backup timestamps for `backup` and `game_files`
 
 Declared dependency with no visible use in current `src/lib.rs`:
 
@@ -322,7 +384,8 @@ Related CLASSIC crates and wrappers:
 - [`classic-path-core`](../../business-logic/classic-path-core) - neighboring game/documents path layer (this crate no longer depends on it)
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it uses this crate's `dds` rules for loose-texture checks and handles scan orchestration itself
 - [`classic-resource-py`](../../python-bindings/classic-resource-py) - Python wrapper for this crate's public API
-- [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers
+- [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers, plus `JsBackupManager` and `JsGameFilesManager`
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - CXX `files` bridge module that wraps `BackupManager` and `GameFilesManager`
 
 Binding collaboration visible in source today:
 
@@ -366,7 +429,8 @@ If the caller needs stricter directory validation before enumeration, validate t
 
 ## Contributor Notes And Known Limits
 
-- the public surface lives in `src/lib.rs` and the `dds` module; any new `pub` item there changes the crate API directly
+- the public surface lives in `src/lib.rs` and the `dds`, `backup`, and `game_files` modules; any new `pub` item there changes the crate API directly
+- `tests/game_file_dependency_boundary.rs` guards that this crate keeps no Durable Publication edge for the game-file policy and that file I/O never depends back on it
 - `ResourceType` is extension-based only; it does not inspect file headers or contents
 - `ResourceType::from_str()` is intentionally permissive and maps unknown strings to `Other`
 - `enumerate_resources()` is best-effort because `WalkDir` entry errors are dropped

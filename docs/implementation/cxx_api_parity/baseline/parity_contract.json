@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T00:54:03Z",
+  "generated_at_utc": "2026-10-06T01:06:08Z",
   "schema_version": 2,
   "entries": [
     {
@@ -3891,8 +3891,8 @@
         ],
         "returnType": "Result<String>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "create_backup"
     },
     {
@@ -3915,8 +3915,8 @@
         ],
         "returnType": "Result<bool>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "backup_exists"
     },
     {
@@ -3935,8 +3935,8 @@
         ],
         "returnType": "Box<CxxBackupManager>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "BackupManager"
     },
     {
@@ -3959,8 +3959,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "remove_backup"
     },
     {
@@ -3983,8 +3983,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "restore_backup"
     },
     {
@@ -4053,8 +4053,8 @@
         ],
         "returnType": "Result<String>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "backup"
     },
     {
@@ -4077,8 +4077,8 @@
         ],
         "returnType": "Box<CxxGameFilesManager>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "GameFilesManager"
     },
     {
@@ -4105,8 +4105,8 @@
         ],
         "returnType": "Result<String>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "remove"
     },
     {
@@ -4133,8 +4133,8 @@
         ],
         "returnType": "Result<String>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "restore"
     },
     {
@@ -4396,8 +4396,8 @@
       "bridgeModule": "files",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "BackupManager"
     },
     {
@@ -4407,8 +4407,8 @@
       "bridgeModule": "files",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "GameFilesManager"
     },
     {
