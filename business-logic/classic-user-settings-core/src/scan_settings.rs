@@ -8,6 +8,7 @@ use crate::preference::{
     OptionalPathField, Preference, aliased_optional_absolute_path_preference,
     optional_absolute_path_preference,
 };
+use classic_shared_core::GameId;
 use classic_shared_core::yaml::Yaml;
 use std::collections::BTreeMap;
 
@@ -127,6 +128,37 @@ impl CrashLogScanSettings {
     /// Paths remain exactly as persisted; scan preparation resolves relative paths later.
     pub fn formid_databases(&self) -> &BTreeMap<String, Vec<String>> {
         &self.formid_databases.value
+    }
+
+    /// Returns the FormID database rows that apply to a Crash Log Scan of `game`.
+    ///
+    /// This is the only scan-selection read of the FormID Databases mapping; frontends must not
+    /// pick rows out of [`Self::formid_databases`] themselves. Fallout 4 VR shares the Fallout 4
+    /// corpus, as it already does for the Main database and YAML Data, so it reads the
+    /// `Fallout4` rows followed by any legacy `Fallout4VR` rows, de-duplicated with the first
+    /// occurrence kept. Every other game reads exactly the rows saved under its own key. Paths
+    /// remain exactly as persisted; scan preparation resolves relative paths later.
+    pub fn formid_databases_for_game(&self, game: GameId) -> Vec<&str> {
+        let databases = &self.formid_databases.value;
+        let rows_for = |key: GameId| {
+            databases
+                .get(key.as_str())
+                .into_iter()
+                .flatten()
+                .map(String::as_str)
+        };
+        if game != GameId::Fallout4VR {
+            return rows_for(game).collect();
+        }
+        // Legacy documents saved VR rows under their own key before the corpus was shared, so
+        // those rows stay readable after the shared ones; repeats across both keys collapse.
+        let mut rows: Vec<&str> = Vec::new();
+        for row in rows_for(GameId::Fallout4).chain(rows_for(GameId::Fallout4VR)) {
+            if !rows.contains(&row) {
+                rows.push(row);
+            }
+        }
+        rows
     }
 
     /// Returns the source of the FormID Databases mapping.

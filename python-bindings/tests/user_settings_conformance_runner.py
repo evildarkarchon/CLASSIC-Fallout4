@@ -140,6 +140,7 @@ def _selected_view(snapshot: Any, fields: object) -> dict[str, Any]:
         "simplify_logs": scan.simplify_logs,
         "show_formid_values": scan.formid_value_lookup,
         "formid_databases": scan.formid_databases,
+        "scan_formid_databases": scan.scan_formid_databases,
         "main_tab_width": geometry.main_tab.width,
         "main_tab_maximized": geometry.main_tab.maximized,
         "custom_scan_folder": scan.custom_scan_input,

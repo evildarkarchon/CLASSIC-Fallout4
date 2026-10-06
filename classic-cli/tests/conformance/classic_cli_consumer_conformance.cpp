@@ -434,7 +434,7 @@ json observe_user_settings(const json& plan, const json& obligation) {
     const auto& root = temporary.path();
     const auto settings = root / "CLASSIC Settings.yaml";
     if (id == "cli.settings-scan-projection") {
-        validate_scenario_ids(obligation, {"canonical-current-nested"});
+        validate_scenario_ids(obligation, {"canonical-current-nested", "vr-shared-and-legacy-formid-databases"});
         fs::copy_file(plan.at("fixtures").at("canonical_current_nested").get<std::string>(), settings);
         const auto before = settings_bytes(settings);
         CliArgs args{};
@@ -446,11 +446,26 @@ json observe_user_settings(const json& plan, const json& obligation) {
         if (!prepared) {
             throw RunnerError("CLI did not prepare typed settings");
         }
+        const bool unchanged = before == settings_bytes(settings);
+
+        // A Fallout 4 VR managed game reaches the CLI scan through the same preparation path,
+        // with no explicit --game, so the observed rows are the ones a VR user's scan would read.
+        fs::copy_file(plan.at("fixtures").at("vr_shared_and_legacy_formid_databases").get<std::string>(), settings,
+                      fs::copy_options::overwrite_existing);
+        const auto vr_before = settings_bytes(settings);
+        const auto vr = prepare_scan_user_settings(CliArgs{}, root.string());
+        if (!vr) {
+            throw RunnerError("CLI did not prepare Fallout 4 VR typed settings");
+        }
         return json{{"game", prepared->game}, {"gameVersion", prepared->game_version},
                     {"maxConcurrent", prepared->max_concurrent},
                     {"formIdDatabasePaths", prepared->formid_database_paths},
                     {"classification", prepared->classification}, {"commitEligibility", prepared->commit_eligibility},
-                    {"unchanged", before == settings_bytes(settings)}};
+                    {"unchanged", unchanged},
+                    {"fallout4Vr",
+                     json{{"game", vr->game},
+                          {"formIdDatabasePaths", vr->formid_database_paths},
+                          {"unchanged", vr_before == settings_bytes(settings)}}}};
     }
     if (id == "cli.settings-explicit-save") {
         validate_scenario_ids(obligation, {"bootstrap-missing-overrides", "commit-one-canonical-field-without-losing-unknowns"});

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T09:59:40.744301+00:00",
+  "generated_at_utc": "2026-10-06T10:44:40.633439+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -19460,6 +19460,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
       "source_decl": "pub fn formid_databases(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "formid_databases_for_game",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn formid_databases_for_game(&self, game: GameId)",
       "tier": "tier1"
     },
     {

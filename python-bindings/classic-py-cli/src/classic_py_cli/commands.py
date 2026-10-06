@@ -877,7 +877,9 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         setup_settings = snapshot.game_setup_settings
         game_name = str(setup_settings.managed_game)
         game = _typed_scan_game(shared_module, game_name)
-        formid_databases = scan_settings.formid_databases
+        # Rust selects the rows that apply to this game's scan, including the Fallout 4 VR
+        # read rule; never pick rows out of the raw keyed ``formid_databases`` mapping.
+        formid_databases = scan_settings.scan_formid_databases
         max_concurrent = int(scan_settings.max_concurrent_scans)
         events: list[dict[str, Any]] = []
         with _working_directory(installation_root):

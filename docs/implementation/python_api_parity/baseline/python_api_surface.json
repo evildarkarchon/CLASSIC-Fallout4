@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T10:08:07.993288+00:00",
+  "generated_at_utc": "2026-10-06T10:44:43.799354+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -12156,6 +12156,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
       "signature": "def move_unsolved_logs_origin(self) -> str: ..."
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "scan_formid_databases",
+      "export_path": "CrashLogScanSettings.scan_formid_databases",
+      "parent_class": "CrashLogScanSettings",
+      "kind": "property",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
+      "signature": "def scan_formid_databases(self) -> dict[str, list[str]]:"
     },
     {
       "module": "classic_user_settings",

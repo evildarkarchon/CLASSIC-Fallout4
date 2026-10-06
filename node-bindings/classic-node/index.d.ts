@@ -3062,6 +3062,15 @@ export interface JsCrashLogScanSettings {
   formidDatabases: Record<string, Array<string>>
   /** Provenance token for FormID Databases. */
   formidDatabasesOrigin: string
+  /**
+   * FormID database rows that apply to each supported game's Crash Log Scan.
+   *
+   * Rust applies the game-aware read: Fallout 4 VR reads the shared `Fallout4` rows followed
+   * by legacy `Fallout4VR` rows, de-duplicated; every other game reads its own rows exactly.
+   * Games whose scan reads no rows are absent. Scan launch reads this map, never
+   * `formidDatabases`.
+   */
+  scanFormidDatabases: Record<string, Array<string>>
   /** Whether a standard scan may move Unsolved Logs. */
   moveUnsolvedLogs: boolean
   /** Provenance token for Move Unsolved Logs. */

@@ -26,6 +26,8 @@ cargo test -p classic-user-settings-core --test compatibility_contract
 | Fixture or case | Compatibility evidence |
 | --- | --- |
 | `canonical_current_nested.yaml` | Current nested document with the explicit schema version and published labels |
+| `vr_shared_and_legacy_formid_databases.yaml` | Fallout 4 VR document whose scan read takes the shared `Fallout4` rows, then legacy `Fallout4VR` rows, with duplicates dropped; other games read their own key |
+| `vr_legacy_formid_databases.yaml` | Fallout 4 VR document saved before the corpus was shared, whose legacy `Fallout4VR` rows stay readable for scans |
 | `flat_classic_config.yaml` | Legacy snake_case `ClassicConfig`, nested `paths`, and `formid_databases` shape |
 | `flat_migrated.yaml` | Expected explicit migration in which every flat scalar or sequence leaf has one canonical destination |
 | `previous_location_nested.yaml` | Unversioned nested document from `<CLASSIC root>/CLASSIC Data/CLASSIC Settings.yaml` |
