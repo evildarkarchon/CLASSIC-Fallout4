@@ -224,6 +224,7 @@
             "classic-gui/src/workers/scanrunpresentation.cpp",
             "classic-gui/src/workers/scanrunpresentation.h",
             "classic-gui/src/workers/scanworker.cpp",
+            "classic-gui/src/workers/scanworker.h",
             "classic-gui/tests/CMakeLists.txt",
             "classic-gui/tests/conformance/classic_gui_consumer_conformance.cpp",
             "classic-gui/vcpkg.json",
@@ -260,8 +261,9 @@
             {
               "id": "gui.recovery-interaction",
               "scenarioIds": [
-                "proceed-without-ignore-recovery",
-                "reset-to-default-recovery"
+                "settle-proceed-without-ignore",
+                "settle-reset-to-default",
+                "settle-without-decision"
               ],
               "expected": {
                 "decisionOrder": [
@@ -273,7 +275,30 @@
                   false
                 ],
                 "selected": "reset-to-default",
-                "promptThread": "gui"
+                "promptThread": "gui",
+                "settlements": [
+                  {
+                    "scenarioId": "settle-proceed-without-ignore",
+                    "selected": "proceed-without-ignore",
+                    "promptThread": "gui",
+                    "settledDecision": "proceed-without-ignore",
+                    "terminal": "completed"
+                  },
+                  {
+                    "scenarioId": "settle-reset-to-default",
+                    "selected": "reset-to-default",
+                    "promptThread": "gui",
+                    "settledDecision": "reset-to-default",
+                    "terminal": "completed"
+                  },
+                  {
+                    "scenarioId": "settle-without-decision",
+                    "selected": "cancel",
+                    "promptThread": "gui",
+                    "settledDecision": null,
+                    "terminal": "cancelled"
+                  }
+                ]
               }
             },
             {
