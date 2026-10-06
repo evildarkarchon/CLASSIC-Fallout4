@@ -131,32 +131,31 @@ def _rust_facts(
 
 
 #: Where the standard exception macros live: the one Python adapter's
-#: ``support`` module, or the retired ``classic-shared-py`` crate layout.
+#: ``support`` module. There is deliberately no fallback to the retired
+#: ``foundation/classic-shared-py`` crate (#259): source checks must not pass
+#: against a retired owner, so a macro left or restored there earns nothing.
 SHARED_EXCEPTION_MACRO_PATHS = (
     "python-bindings/classic-python-bindings/src/support/exceptions.rs",
-    "foundation/classic-shared-py/src/exceptions.rs",
 )
 
 #: ``use`` prefixes that import the shared helpers, ending at the opening brace.
+#: The retired ``use classic_shared::{...}`` crate import is not accepted.
 SHARED_HELPER_USE_PREFIXES = (
     ["use", "crate", ":", ":", "support", ":", ":", "{"],
     ["use", "crate", ":", ":", "{"],
-    ["use", "classic_shared", ":", ":", "{"],
 )
 
 
 def _binding_stub_sources(root: Path) -> list[tuple[str, Path, list[Path]]]:
     """Pair each maintained Python stub with the Rust sources of its module.
 
-    Returns ``(module, stub, rust_sources)``. A legacy direct crate keeps
-    ``<crate>-py/<module>.pyi`` beside ``src/``; the one adapter keeps
+    Returns ``(module, stub, rust_sources)``. The one adapter keeps
     ``python/<module>/__init__.pyi`` and that facade's Rust under
-    ``src/<module>/``.
+    ``src/<module>/``. Stubs in the retired per-module ``<crate>-py/`` layout
+    (folded into the adapter in #259) are not maintained surfaces and are
+    ignored, so they cannot claim declaration evidence.
     """
     pairs: list[tuple[str, Path, list[Path]]] = []
-    for layer in ("foundation", "python-bindings"):
-        for stub in sorted((root / layer).glob("*-py/*.pyi")):
-            pairs.append((stub.stem, stub, sorted((stub.parent / "src").rglob("*.rs"))))
     for stub in sorted((root / "python-bindings").glob("*/python/classic_*/__init__.pyi")):
         module = stub.parent.name
         adapter = stub.parents[2]

@@ -66,18 +66,21 @@ def test_python_binding_namespaces_are_structural_only_without_constructor(
         tmp_path: Path,
 ) -> None:
     """A static namespace is a declaration; a separately exported constructor is runtime."""
-    crate = tmp_path / "python-bindings/classic-binding-py"
-    (crate / "src").mkdir(parents=True)
-    (crate / "binding.pyi").write_text(
+    # The one Python adapter layout (#259): facade stub under python/<module>/
+    # and that facade's Rust under src/<module>/.
+    adapter = tmp_path / "python-bindings/classic-python-bindings"
+    (adapter / "python/classic_binding").mkdir(parents=True)
+    (adapter / "src/classic_binding").mkdir(parents=True)
+    (adapter / "python/classic_binding/__init__.pyi").write_text(
         "class Namespace: ...\nclass Object:\n    def __init__(self) -> None: ...\n"
     )
-    (crate / "src/lib.rs").write_text(
+    (adapter / "src/classic_binding/mod.rs").write_text(
         "#[pyclass]\npub struct Namespace {}\n#[pyclass]\npub struct Object {}\n#[pymethods]\nimpl Object { #[new] pub fn new() -> Self { Self {} } }\nfn register(m: Module) { m.add_class::<Namespace>(); m.add_class::<Object>(); }\n"
     )
     rows = [
         {
             "id": "namespace",
-            "pythonModule": "binding",
+            "pythonModule": "classic_binding",
             "pythonExportPath": "Namespace",
             "pythonKind": "class",
             "rustSymbol": None,
@@ -85,7 +88,7 @@ def test_python_binding_namespaces_are_structural_only_without_constructor(
         },
         {
             "id": "class",
-            "pythonModule": "binding",
+            "pythonModule": "classic_binding",
             "pythonExportPath": "Object",
             "pythonKind": "class",
             "rustSymbol": None,
@@ -93,7 +96,7 @@ def test_python_binding_namespaces_are_structural_only_without_constructor(
         },
         {
             "id": "ctor",
-            "pythonModule": "binding",
+            "pythonModule": "classic_binding",
             "pythonExportPath": "Object.__init__",
             "pythonKind": "method",
             "rustSymbol": None,
