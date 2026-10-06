@@ -1,5 +1,5 @@
 use super::*;
-use classic_path_core::ensure_yaml_cache_dir_with_env;
+use crate::yaml_cache::ensure_yaml_cache_dir_with_env;
 use classic_shared_core::yaml::clear_global_yaml_cache;
 use serial_test::serial;
 use std::collections::HashMap;
@@ -16,9 +16,9 @@ fn env_map(entries: &[(&str, String)]) -> impl Fn(&str) -> Option<String> + Clon
     move |name| map.get(name).cloned()
 }
 
-/// Resolve the cache dir for the same env the test just mocked. Not a
-/// re-export from `classic-path-core` because production code doesn't
-/// need it, only the tests here do.
+/// Resolve (and create) the cache dir for the same env the test just mocked,
+/// through this crate's own YAML cache location policy so the test writes to
+/// exactly the directory production selection consults.
 fn resolve_cache_dir<F: Fn(&str) -> Option<String>>(env: F) -> PathBuf {
     ensure_yaml_cache_dir_with_env(env).unwrap()
 }

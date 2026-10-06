@@ -5,17 +5,17 @@ Contributor-facing API documentation for [`business-logic/classic-settings-core/
 Crate metadata:
 
 - Crate: `classic-settings-core`
-- Description: `CLASSIC YAML settings facade over classic-shared-core generic YAML and YAML operations, plus YamlFile`
+- Description: `CLASSIC YAML settings facade over classic-shared-core generic YAML and YAML operations`
 
 The generic YAML rules this crate used to own now live in [`classic_shared_core::yaml`](classic-shared-core.md#generic-yaml-yaml): parsing, document and merge-key merging, sync/async loaders, scalar validators, schema-version compatibility, and the logical-key settings cache (issue #239), then [`YamlOperations`](classic-shared-core.md#yamloperations) and its [path/mtime-aware YAML-file cache](classic-shared-core.md#yaml-file-cache) (issue #240). This crate re-exports every one of those items unchanged, so `classic_settings_core::load_settings_sync` and `classic_shared_core::yaml::load_settings_sync` are the same function, and `classic_settings_core::YamlOperations::new()` is a shared-core object. Both paths read and clear the **same** default-scope caches, with the same capacities (`64` logical-key, `128` YAML-file), freshness, counters, and errors. The two caches stay distinct from each other.
 
 The [cache scope handles](classic-shared-core.md#cache-scopes) (`LogicalKeyCacheScope`, `YamlFileCacheScope`) and `YamlOperations::with_cache_scope` are new shared-core API and are deliberately **not** re-exported here; reach them through `classic_shared_core::yaml`.
 
-The crate still owns `YamlFile`, CLASSIC's domain-specific YAML file identity, until config becomes the canonical file-policy owner (issue #246).
+The crate no longer owns any type. `YamlFile`, CLASSIC's domain-specific YAML file identity, retired in issue #246 in favor of the config-owned [`classic_config_core::YamlSource`](classic-config-core.md#yamlsource), which keeps its six kinds, tokens, descriptions, order, `Display`, and serialization. `classic_settings_core::YamlFile` deliberately ends with no forwarding re-export (a re-export would need a settings-to-config edge for a crate that is itself retiring). Its binding projections keep their published names and now map to `YamlSource`.
 
 The crate identity is scheduled for retirement (issue #257) once its remaining callers import the accepted owners directly. Until then its re-exported paths, including `classic_settings_core::validators::*`, stay valid.
 
-Parity ownership: CXX, Node, and Python parity rows for the logical-key cache, loaders, merge, validators, `YamlOperations`, and the YAML-file cache name `classic-shared-core` as the owning Rust crate, because the behavior lives there. Do not restore `classic-settings-core` as the owner of those rows during a baseline refresh. Only `YamlFile` rows, and Rust-only `@rust` proxy rows for items this facade still re-exports, name `classic-settings-core`.
+Parity ownership: CXX, Node, and Python parity rows for the logical-key cache, loaders, merge, validators, `YamlOperations`, and the YAML-file cache name `classic-shared-core` as the owning Rust crate, because the behavior lives there. Do not restore `classic-settings-core` as the owner of those rows during a baseline refresh. The CXX `YamlFile`, Node `JsYamlFile`/`getAllYamlFiles`/`getYamlFileDescription`, and Python `classic_settings.YamlFile` rows name `classic-config-core` / `YamlSource`. Only Rust-only `@rust` proxy rows for items this facade still re-exports name `classic-settings-core`.
 
 This crate does not interpret raw User Settings key paths or own the `CLASSIC Settings.yaml` schema. That contract belongs exclusively to [`classic-user-settings-core`](classic-user-settings-core.md).
 
@@ -35,38 +35,6 @@ Re-exported from `classic_shared_core::yaml` (see the [shared-core guide](classi
 - YAML-file operations and cache: `YamlOperations`, `YamlCacheStats`, `yaml_cache_stats`, `reset_yaml_cache_stats`, `clear_global_yaml_cache` (see the shared-core [`YamlOperations`](classic-shared-core.md#yamloperations) and [YAML-file cache](classic-shared-core.md#yaml-file-cache) sections)
 - the public module `validators` (`SettingType`, `CoercedValue`, `validate_setting_value`, `coerce_setting_value`), re-exported as a module so `classic_settings_core::validators::SettingType` still resolves
 
-Owned by this crate:
-
-- `YamlFile` - type-safe identifiers for CLASSIC YAML/config files
-
----
-
-## `YamlFile`
-
-`YamlFile` is the contributor-facing enum for CLASSIC YAML file roles.
-
-Variants:
-
-- `Main`
-- `Ignore`
-- `Game`
-- `GameLocal`
-- `Test`
-- `Cache`
-
-Important methods and traits:
-
-- `as_str() -> &'static str`
-- `description() -> &'static str`
-- `all() -> [YamlFile; 6]`
-- `Display`, `Serialize`, `Deserialize`, `Clone`, `Copy`, `Hash`
-
-Contributor note:
-
-- this enum labels file roles only; it does not build real paths
-- it moved here from the retired constants crate because the enum is part of the settings domain rather than the version domain
-- it is domain-specific, so it did not move to shared core with the generic YAML rules; config will take ownership of it
-
 ---
 
 ## Important Dependencies And Related Crates
@@ -74,14 +42,13 @@ Contributor note:
 Important direct dependencies visible in current behavior:
 
 - `classic-shared-core` - owner of every re-exported YAML item
-- `serde` - `YamlFile` serialization
 
 Related CLASSIC crates and consumers:
 
 - [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - owner of the generic YAML rules, `YamlOperations`, and both scoped caches
-- [`classic-node`](../../node-bindings/classic-node/src/settings.rs) - exposes the caches, loaders, YAML operations, and `YamlFile` to JavaScript/TypeScript
-- [`classic-settings-py`](../../python-bindings/classic-settings-py/src/lib.rs) - exposes the generic YAML, YAML operations, scalar-validator, and `YamlFile` surface to Python, using its own shared-core cache scopes
-- [`classic-config-core`](../../docs/api/classic-config-core.md) - higher-level CLASSIC YAML Data loader; use it when raw `Yaml` documents are not enough
+- [`classic-node`](../../node-bindings/classic-node/src/settings.rs) - exposes the caches, loaders, and YAML operations to JavaScript/TypeScript (its `JsYamlFile` projects config's `YamlSource`)
+- [`classic-settings-py`](../../python-bindings/classic-settings-py/src/lib.rs) - exposes the generic YAML, YAML operations, and scalar-validator surface to Python, using its own shared-core cache scopes (its `YamlFile` class projects config's `YamlSource`)
+- [`classic-config-core`](../../docs/api/classic-config-core.md) - higher-level CLASSIC YAML Data loader and owner of the CLASSIC YAML file identity (`YamlSource`); use it when raw `Yaml` documents are not enough
 - [`classic-user-settings-core`](../../docs/api/classic-user-settings-core.md) - exclusive owner of typed User Settings
 
 ---
@@ -119,6 +86,5 @@ assert!(get_cached("ignore").is_some());
 If you change this crate, update this document when you change:
 
 - root-level re-exports in `src/lib.rs`
-- `YamlFile` variants, methods, display, or serialization
 
 Changes to `YamlOperations` or either cache belong in the [shared-core guide](classic-shared-core.md#generic-yaml-yaml).

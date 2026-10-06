@@ -19,8 +19,8 @@ classic-registry-core = { path = "../classic-registry-core" }
 
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
-# Path resolution (yaml cache directory) and atomic install / rollback
-classic-path-core = { path = "../classic-path-core" }
+# Atomic install / rollback. The per-user YAML cache location is owned by this
+# crate (src/yaml_cache.rs), so config does not depend on classic-path-core.
 classic-file-io-core = { path = "../classic-file-io-core" }
 
 # Durable Publication (staging, verified backup, atomic publish) for the
@@ -43,6 +43,7 @@ yaml-rust2 = { workspace = true }
 # Ordered collections (preserves YAML key order for Python parity)
 indexmap = { workspace = true }
 
+serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 dirs = { workspace = true }

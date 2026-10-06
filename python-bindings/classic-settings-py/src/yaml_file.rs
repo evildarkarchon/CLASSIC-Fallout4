@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 #[pyclass(module = "classic_settings", name = "YamlFile", from_py_object)]
 #[derive(Clone)]
 pub struct PyYamlFile {
-    inner: classic_settings_core::YamlFile,
+    inner: classic_config_core::YamlSource,
 }
 
 #[pymethods]
@@ -12,7 +12,7 @@ impl PyYamlFile {
     #[allow(non_snake_case)]
     fn Main() -> Self {
         Self {
-            inner: classic_settings_core::YamlFile::Main,
+            inner: classic_config_core::YamlSource::Main,
         }
     }
 
@@ -20,7 +20,7 @@ impl PyYamlFile {
     #[allow(non_snake_case)]
     fn Ignore() -> Self {
         Self {
-            inner: classic_settings_core::YamlFile::Ignore,
+            inner: classic_config_core::YamlSource::Ignore,
         }
     }
 
@@ -28,7 +28,7 @@ impl PyYamlFile {
     #[allow(non_snake_case)]
     fn Game() -> Self {
         Self {
-            inner: classic_settings_core::YamlFile::Game,
+            inner: classic_config_core::YamlSource::Game,
         }
     }
 
@@ -36,7 +36,7 @@ impl PyYamlFile {
     #[allow(non_snake_case)]
     fn GameLocal() -> Self {
         Self {
-            inner: classic_settings_core::YamlFile::GameLocal,
+            inner: classic_config_core::YamlSource::GameLocal,
         }
     }
 
@@ -44,7 +44,7 @@ impl PyYamlFile {
     #[allow(non_snake_case)]
     fn Test() -> Self {
         Self {
-            inner: classic_settings_core::YamlFile::Test,
+            inner: classic_config_core::YamlSource::Test,
         }
     }
 
@@ -52,7 +52,7 @@ impl PyYamlFile {
     #[allow(non_snake_case)]
     fn Cache() -> Self {
         Self {
-            inner: classic_settings_core::YamlFile::Cache,
+            inner: classic_config_core::YamlSource::Cache,
         }
     }
 

@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T00:36:17.192776+00:00`
+- Generated: `2026-10-06T00:53:55.335449+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -274,13 +274,13 @@
 | `shared.lib.GameId.exe_name` | `shared` | `classic-shared-core` | `GameId` | `classic_shared.GameId.exe_name` | `matched` |
 | `shared.lib.GameId.is_vr` | `shared` | `classic-shared-core` | `GameId` | `classic_shared.GameId.is_vr` | `matched` |
 | `version_registry.lib.NULL_VERSION@rust` | `version_registry` | `classic-version-registry-core` | `NULL_VERSION` | `classic_version_registry.Fallout4Version` | `matched` |
-| `settings.lib.YamlFile` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile` | `matched` |
-| `settings.lib.YamlFile.__eq__` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.__eq__` | `matched` |
-| `settings.lib.YamlFile.__hash__` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.__hash__` | `matched` |
-| `settings.lib.YamlFile.__repr__` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.__repr__` | `matched` |
-| `settings.lib.YamlFile.__str__` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.__str__` | `matched` |
-| `settings.lib.YamlFile.as_str` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.as_str` | `matched` |
-| `settings.lib.YamlFile.description` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.description` | `matched` |
+| `settings.lib.YamlFile` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile` | `matched` |
+| `settings.lib.YamlFile.__eq__` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.__eq__` | `matched` |
+| `settings.lib.YamlFile.__hash__` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.__hash__` | `matched` |
+| `settings.lib.YamlFile.__repr__` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.__repr__` | `matched` |
+| `settings.lib.YamlFile.__str__` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.__str__` | `matched` |
+| `settings.lib.YamlFile.as_str` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.as_str` | `matched` |
+| `settings.lib.YamlFile.description` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.description` | `matched` |
 | `version_registry.lib.display_name@rust` | `version_registry` | `classic-version-registry-core` | `display_name` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.display_name_string@rust` | `version_registry` | `classic-version-registry-core` | `display_name_string` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.game_version@rust` | `version_registry` | `classic-version-registry-core` | `game_version` | `classic_version_registry.Fallout4Version` | `matched` |

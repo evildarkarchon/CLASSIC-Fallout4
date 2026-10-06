@@ -55,6 +55,110 @@ fn exposes_only_non_user_settings_sources() {
     );
 }
 
+// The stable tokens, descriptions, order, display, and serde form below are
+// the projections the retired `classic_settings_core::YamlFile` exposed. The
+// literals come from that former contract (and the `yaml-file-values`
+// conformance pack), not from this implementation.
+#[test]
+fn as_str_keeps_the_former_yaml_file_tokens() {
+    assert_eq!(YamlSource::Main.as_str(), "Main");
+    assert_eq!(YamlSource::Ignore.as_str(), "Ignore");
+    assert_eq!(YamlSource::Game.as_str(), "Game");
+    assert_eq!(YamlSource::GameLocal.as_str(), "GameLocal");
+    assert_eq!(YamlSource::Test.as_str(), "Test");
+    assert_eq!(YamlSource::Cache.as_str(), "Cache");
+}
+
+#[test]
+fn description_keeps_the_former_yaml_file_locations() {
+    assert_eq!(
+        YamlSource::Main.description(),
+        "CLASSIC Data/databases/CLASSIC Main.yaml"
+    );
+    assert_eq!(YamlSource::Ignore.description(), "CLASSIC Ignore.yaml");
+    assert_eq!(
+        YamlSource::Game.description(),
+        "CLASSIC Data/databases/CLASSIC {Game}.yaml"
+    );
+    assert_eq!(
+        YamlSource::GameLocal.description(),
+        "CLASSIC Data/CLASSIC {Game} Local.yaml"
+    );
+    assert_eq!(YamlSource::Test.description(), "tests/test_settings.yaml");
+    assert_eq!(
+        YamlSource::Cache.description(),
+        "User config dir/CLASSIC/cache.yaml"
+    );
+}
+
+#[test]
+fn all_lists_the_six_kinds_in_stable_order() {
+    assert_eq!(
+        YamlSource::all(),
+        [
+            YamlSource::Main,
+            YamlSource::Ignore,
+            YamlSource::Game,
+            YamlSource::GameLocal,
+            YamlSource::Test,
+            YamlSource::Cache,
+        ]
+    );
+}
+
+#[test]
+fn display_uses_the_stable_token_not_the_display_name() {
+    assert_eq!(YamlSource::Main.to_string(), "Main");
+    assert_eq!(YamlSource::GameLocal.to_string(), "GameLocal");
+    // `display_name` stays the human-facing label and is unaffected.
+    assert_eq!(YamlSource::Main.display_name(), "Main Database");
+}
+
+#[test]
+fn serde_uses_the_former_yaml_file_variant_names() {
+    assert_eq!(
+        serde_json::to_string(&YamlSource::GameLocal).unwrap(),
+        "\"GameLocal\""
+    );
+    for source in YamlSource::all() {
+        let json = serde_json::to_string(&source).unwrap();
+        assert_eq!(json, format!("\"{}\"", source.as_str()));
+        let round_trip: YamlSource = serde_json::from_str(&json).unwrap();
+        assert_eq!(round_trip, source);
+    }
+    assert!(serde_json::from_str::<YamlSource>("\"Settings\"").is_err());
+}
+
+#[test]
+fn schema_compat_names_the_range_for_each_update_eligible_file() {
+    assert_eq!(
+        YamlSource::Main.schema_compat(""),
+        Some(SchemaCompat::new(2, 0))
+    );
+    assert_eq!(
+        YamlSource::Game.schema_compat("Fallout4"),
+        Some(SchemaCompat::new(1, 0))
+    );
+    // Fallout 4 VR shares the Fallout 4 game database and its range.
+    assert_eq!(
+        YamlSource::Game.schema_compat("Fallout4VR"),
+        Some(SchemaCompat::new(1, 0))
+    );
+}
+
+#[test]
+fn schema_compat_is_absent_for_files_without_a_declared_range() {
+    assert_eq!(YamlSource::Game.schema_compat("Skyrim"), None);
+    for source in [
+        YamlSource::Ignore,
+        YamlSource::GameLocal,
+        YamlSource::Test,
+        YamlSource::Cache,
+    ] {
+        assert_eq!(source.schema_compat("Fallout4"), None, "{source}");
+    }
+}
+
 #[test]
 fn resolves_generic_paths() {
     assert_eq!(

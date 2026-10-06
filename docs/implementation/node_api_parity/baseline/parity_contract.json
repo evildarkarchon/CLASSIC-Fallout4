@@ -2080,28 +2080,28 @@
       "id": "config-yaml-file-enum",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlFile",
+      "rustSymbol": "YamlSource",
       "nodeExport": "JsYamlFile",
       "nodeKind": "const_enum",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-get-all-yaml-files",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlFile",
+      "rustSymbol": "YamlSource",
       "nodeExport": "getAllYamlFiles",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-get-yaml-file-description",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlFile",
+      "rustSymbol": "YamlSource",
       "nodeExport": "getYamlFileDescription",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-default-cache-ttl-const",
@@ -5514,14 +5514,6 @@
       "rustCrate": "classic-version-registry-core",
       "rustSymbol": "NULL_VERSION@rust",
       "rustKind": "reexport"
-    },
-    {
-      "id": "settings.YamlFile@rust",
-      "tier": "tier1",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "rustSymbol": "YamlFile@rust",
-      "rustKind": "enum"
     },
     {
       "id": "version_registry.display_name@rust",

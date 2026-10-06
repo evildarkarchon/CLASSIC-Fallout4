@@ -9,8 +9,8 @@
 //! The logical-key cache, loaders, merge-key helper, validators,
 //! `YamlOperations`, and the path/mtime-aware YAML-file cache are owned by
 //! `classic_shared_core::yaml` and are called through that path directly so
-//! parity tooling attributes them to their real owner; `YamlFile` still comes
-//! from `classic-settings-core`.
+//! parity tooling attributes them to their real owner. The `YamlFile` class
+//! projects the config-owned `classic_config_core::YamlSource`.
 //!
 //! # Cache scopes
 //!

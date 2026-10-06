@@ -44,14 +44,24 @@ Those concerns live in related crates such as [`classic-scanlog-core`](../../bus
 
 ### `yaml_source`
 
-Generic non-User-Settings CLASSIC YAML locations.
+The canonical CLASSIC YAML file identity and its per-file policy (issue #246). This is the one six-kind identity for non-User-Settings CLASSIC YAML; the former `classic_settings_core::YamlFile` retired in its favor.
 
-- `YamlSource` - enum of Main, Ignore, Game, Game Local, Test, and Cache locations
+- `YamlSource` - enum of Main, Ignore, Game, Game Local, Test, and Cache, with stable tokens, documented locations, resolved paths, display names, serde form, and per-file schema ranges
+
+### `yaml_cache`
+
+The per-user YAML Data cache location (`CLASSIC/yaml-cache`), owned here as YAML file policy since issue #246 (formerly `classic-path-core`). Root re-exported.
+
+- `yaml_cache_dir()` / `yaml_cache_dir_with_env(env)` - resolve without touching the filesystem
+- `ensure_yaml_cache_dir()` / `ensure_yaml_cache_dir_with_env(env)` - resolve and create (idempotent)
 
 ### `game_local`
 
-Independent persistence for runtime-discovered paths in a caller-selected Game Local YAML document.
+Game Local facts and independent persistence for runtime-discovered paths in a Game Local YAML document.
 
+- `GameLocalFacts` - the recorded `Game_Info` folders (`root_folder_game`, `root_folder_docs`, `docs_folder_xse`) as plain trimmed `Option<PathBuf>` values
+- `read_game_local_facts(yaml_dir_data, game)` - fail-soft reader for `<yaml_dir_data>/CLASSIC {game} Local.yaml`
+- `game_local_yaml_path(yaml_dir_data, game)` - the Game Local document path
 - `persist_game_local_paths(path, game_root, docs_root)` - root-reexported writer that updates supplied Game Local path keys without opening User Settings
 
 ### `yamldata`
@@ -141,6 +151,8 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 - `clear_global_yaml_cache` from [`classic_shared_core::yaml`](classic-shared-core.md#yaml-file-cache) (moved there from `classic-settings-core` in issue #240; historical note: that crate absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
 - Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
+- `yaml_cache_dir`, `yaml_cache_dir_with_env`, `ensure_yaml_cache_dir`, `ensure_yaml_cache_dir_with_env` from `yaml_cache`
+- `GameLocalFacts`, `read_game_local_facts`, `game_local_yaml_path`, `persist_game_local_paths` from `game_local`
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers. It clears the default YAML-file cache scope, which is the one config's own `YamlOperations::new()` loaders fill.
 
@@ -150,31 +162,78 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 
 ## `YamlSource`
 
-`YamlSource` identifies generic CLASSIC YAML file locations that are not User Settings. `classic-user-settings-core` separately owns the source and root-relative location of `CLASSIC Settings.yaml`.
+`YamlSource` is the canonical CLASSIC YAML file identity: the one enum for generic CLASSIC YAML files that are not User Settings. `classic-user-settings-core` separately owns the source and root-relative location of `CLASSIC Settings.yaml`.
 
-Variants:
+Variants, with their stable token (`as_str()`) and documented location (`description()`):
 
-- `Main` -> `CLASSIC Data/databases/CLASSIC Main.yaml`
-- `Ignore` -> `CLASSIC Ignore.yaml`
-- `Game` -> `CLASSIC Data/databases/CLASSIC {game}.yaml`; `Fallout4VR` resolves to the shared `CLASSIC Fallout4.yaml`
-- `GameLocal` -> `CLASSIC Data/CLASSIC {game} Local.yaml`
-- `Test` -> `tests/test_settings.yaml`
-- `Cache` -> `User config dir/CLASSIC/cache.yaml` with application-relative compatibility fallback
+| Variant | `as_str()` | `description()` | Resolved by `path(game)` |
+| --- | --- | --- | --- |
+| `Main` | `Main` | `CLASSIC Data/databases/CLASSIC Main.yaml` | same |
+| `Ignore` | `Ignore` | `CLASSIC Ignore.yaml` | same |
+| `Game` | `Game` | `CLASSIC Data/databases/CLASSIC {Game}.yaml` | `Fallout4VR` resolves to the shared `CLASSIC Fallout4.yaml` |
+| `GameLocal` | `GameLocal` | `CLASSIC Data/CLASSIC {Game} Local.yaml` | `game` used verbatim (Fallout 4 VR keeps its own Local file) |
+| `Test` | `Test` | `tests/test_settings.yaml` | same |
+| `Cache` | `Cache` | `User config dir/CLASSIC/cache.yaml` | user config dir, with application-relative compatibility fallback |
 
 Important methods:
 
+- `all() -> [YamlSource; 6]` - every kind in the stable order above
+- `as_str(&self) -> &'static str` - the stable token; also the `Display` form and the serde form (`"Main"`, `"GameLocal"`, ...)
+- `description(&self) -> &'static str` - the documented location with a `{Game}` placeholder
+- `schema_compat(&self, game: &str) -> Option<SchemaCompat>` - the client schema range for this file, see [Per-file schema ranges](#per-file-schema-ranges)
 - `path(&self, game: &str) -> PathBuf`
 - `path_in_registry_scope(&self, game: &str, registry: &classic_registry_core::RegistryScope) -> PathBuf`
-- `display_name(&self) -> &'static str`
+- `display_name(&self) -> &'static str` - the human-facing label (`Main Database`, `Game Local Config`, ...), distinct from `as_str()`
 - `display_name_with_game(&self, game: &str) -> String`
 - `load(&self, game: &str) -> anyhow::Result<yaml_rust2::Yaml>`
+
+`YamlSource` derives `Serialize`/`Deserialize`, `Copy`, `Eq`, and `Hash`. The tokens, descriptions, order, `Display`, and serialization are exactly those of the retired `classic_settings_core::YamlFile`; that import path ended in issue #246 with no forwarding re-export. Binding projections keep their published names: CXX `classic::settings::YamlFile` with `yaml_file_as_str` / `yaml_file_description`, Node `JsYamlFile` with `getAllYamlFiles` / `getYamlFileDescription`, and Python `classic_settings.YamlFile`, each backed by `YamlSource`; Node `JsYamlSource` and Python `classic_config.YamlSource` remain the path/display-name projections. The `yaml-file-values` and `yaml-source-values` conformance packs pin both projections.
 
 Contributor notes:
 
 - `YamlSource::Game` and `YamlSource::GameLocal` require a non-empty `game` string and will panic otherwise.
 - `YamlSource::Cache` uses the `CLASSIC` base directory for user config/cache paths.
 - The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). The Python `classic_config` facade passes its own facade-owned scope so `classic_registry` cannot replace or clear config's application directory once both facades share one native library.
-- `load()` reads the full YAML stream, merges documents with `classic_shared_core::yaml`, and returns one merged mapping.
+- `load()` reads the full YAML stream, merges documents with `classic_shared_core::yaml`, and returns one merged mapping. A file with a declared schema range (`schema_compat` returns `Some`) loads through the cache-aware shippable selection instead, gated by that range.
+
+### Per-file schema ranges
+
+The client schema ranges are config-owned file policy. The range values live in `client_schemas` (`MAIN_YAML`, `GAME_FALLOUT4_YAML`, and `shippable_schema_entries()` for the YAML Data Update Channel); `YamlSource::schema_compat(game)` is the per-file lookup:
+
+| File | Range |
+| --- | --- |
+| `Main` | `client_schemas::MAIN_YAML` |
+| `Game` for `Fallout4` or `Fallout4VR` | `client_schemas::GAME_FALLOUT4_YAML` |
+| `Game` for any other game, `Ignore`, `GameLocal`, `Test`, `Cache` | `None` (no declared range; not update-eligible) |
+
+No other crate declares a CLASSIC file's range. First-party YAML Data update checks take them from `shippable_schema_entries()`; the binding update APIs that accept caller-built client schema entries are explicit-input seams, not a second declaration.
+
+## YAML Cache Location
+
+`yaml_cache_dir()` resolves the per-user directory where YAML Data updates are installed and where Installed YAML Data selection looks for update candidates:
+
+- Windows: `%LOCALAPPDATA%\CLASSIC\yaml-cache\`, falling back to `%APPDATA%\CLASSIC\yaml-cache\`
+- other targets (source portability): `${XDG_CACHE_HOME:-$HOME/.cache}/CLASSIC/yaml-cache/`
+
+`ensure_yaml_cache_dir()` additionally creates it (idempotent). Both return `classic_shared_core::path_core::PathError`: `InvalidPath("<missing vars>; cannot resolve YAML cache directory")` when no cache root is set, and `IoError` when creation fails. The `_with_env(env)` forms take an environment-lookup closure for tests and tooling.
+
+This location moved from `classic-path-core` in issue #246, so config no longer depends on path. The neutral OS cache root it builds on is `classic_shared_core::path_core::user_cache_root_with_env`. The app-notification cache stays in `classic-path-core` and is a disjoint sibling (`CLASSIC/app-notification/...`); `classic-update-core/tests/cache_locations_disjoint.rs` pins that disjointness. `classic-update-core` imports these functions from config.
+
+## Game Local Facts
+
+The Game Local document (`CLASSIC Data/CLASSIC {game} Local.yaml`, `YamlSource::GameLocal`) records per-installation folders under `Game_Info`. Config owns its location and keys.
+
+`read_game_local_facts(yaml_dir_data: &Path, game: &str) -> GameLocalFacts` reads `game_local_yaml_path(yaml_dir_data, game)` and returns:
+
+| Field | Key | Meaning |
+| --- | --- | --- |
+| `root_folder_game` | `Game_Info.Root_Folder_Game` | game installation folder |
+| `root_folder_docs` | `Game_Info.Root_Folder_Docs` | the game's documents folder |
+| `docs_folder_xse` | `Game_Info.Docs_Folder_XSE` | explicit XSE Folder override |
+
+Each value is trimmed; an absent, non-string, or blank value is `None`. The reader is fail-soft: a missing, unreadable, or malformed document returns `GameLocalFacts::default()`, because these facts only refine path discovery. It reads through the default-scope path/mtime YAML-file cache (`YamlOperations::new()`). `GameLocalFacts::from_yaml(&Yaml)` extracts the same facts from an already-loaded document.
+
+`GameLocalFacts` carries no YAML and no policy, so crates that must not depend on config consume its plain paths. The XSE Folder resolver takes them as `classic_xse_core::XseGameLocalFacts` through `resolve_xse_folder_from_game_local_facts[_in_version_registry_scope]`; a composing caller (scangame, scanlog, or an adapter) reads the facts here and copies `docs_folder_xse` and `root_folder_docs` across. `classic-scangame-core/tests/game_local_xse_facts.rs` pins that the composed result matches XSE's own Local.yaml-reading resolver. There is no XSE-to-config Cargo edge.
 
 ## Game Local Path Persistence
 

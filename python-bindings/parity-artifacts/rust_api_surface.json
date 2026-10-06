@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T00:36:16.846695+00:00",
+  "generated_at_utc": "2026-10-06T00:53:54.859424+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -369,6 +369,25 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, load_explicit_yaml_data_in_version_registry_scope, };",
       "source_expr": "explicit_yaml_data::GameDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameLocalFacts",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, };",
+      "source_expr": "game_local::GameLocalFacts",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameLocalFacts",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/game_local.rs",
+      "source_decl": "pub struct GameLocalFacts",
       "tier": "tier1"
     },
     {
@@ -1061,6 +1080,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "all",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
+      "source_decl": "pub const fn all()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "as_str",
       "kind": "function",
       "arity": 1,
@@ -1068,6 +1097,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
+      "source_decl": "pub const fn as_str(&self)",
       "tier": "tier1"
     },
     {
@@ -1168,6 +1207,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "description",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
+      "source_decl": "pub const fn description(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "diagnostics",
       "kind": "function",
       "arity": 1,
@@ -1225,6 +1274,36 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
       "source_decl": "pub fn display_name_with_game(&self, game: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ensure_yaml_cache_dir",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_cache.rs",
+      "source_decl": "pub fn ensure_yaml_cache_dir()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ensure_yaml_cache_dir",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
+      "source_expr": "yaml_cache::ensure_yaml_cache_dir",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ensure_yaml_cache_dir_with_env",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
+      "source_expr": "yaml_cache::ensure_yaml_cache_dir_with_env",
       "tier": "tier1"
     },
     {
@@ -1294,6 +1373,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
       "source_decl": "pub fn from_bytes(bytes: &[u8])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "from_yaml",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/game_local.rs",
+      "source_decl": "pub fn from_yaml(yaml: &Yaml)",
       "tier": "tier1"
     },
     {
@@ -1443,6 +1532,26 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub mod game_local;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_local_yaml_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/game_local.rs",
+      "source_decl": "pub fn game_local_yaml_path(yaml_dir_data: &Path, game: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_local_yaml_path",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, };",
+      "source_expr": "game_local::game_local_yaml_path",
       "tier": "tier1"
     },
     {
@@ -1960,7 +2069,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use game_local::persist_game_local_paths;",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, };",
       "source_expr": "game_local::persist_game_local_paths",
       "tier": "tier1"
     },
@@ -1982,6 +2091,26 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
       "source_decl": "pub const fn provenance(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "read_game_local_facts",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/game_local.rs",
+      "source_decl": "pub fn read_game_local_facts(yaml_dir_data: &Path, game: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "read_game_local_facts",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, };",
+      "source_expr": "game_local::read_game_local_facts",
       "tier": "tier1"
     },
     {
@@ -2062,6 +2191,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
       "source_decl": "pub const fn role(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "schema_compat",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
+      "source_decl": "pub fn schema_compat(&self, game: &str)",
       "tier": "tier1"
     },
     {
@@ -2152,6 +2291,45 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/yamldata.rs",
       "source_decl": "pub fn values(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml_cache",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod yaml_cache;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml_cache_dir",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_cache.rs",
+      "source_decl": "pub fn yaml_cache_dir()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml_cache_dir",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
+      "source_expr": "yaml_cache::yaml_cache_dir",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml_cache_dir_with_env",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
+      "source_expr": "yaml_cache::yaml_cache_dir_with_env",
       "tier": "tier1"
     },
     {
@@ -5465,36 +5643,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "ensure_yaml_cache_dir",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/yaml_cache.rs",
-      "source_decl": "pub fn ensure_yaml_cache_dir()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ensure_yaml_cache_dir",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
-      "source_expr": "yaml_cache::ensure_yaml_cache_dir",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ensure_yaml_cache_dir_with_env",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
-      "source_expr": "yaml_cache::ensure_yaml_cache_dir_with_env",
-      "tier": "tier1"
-    },
-    {
       "symbol": "extract_version_from_xse_log",
       "kind": "function",
       "arity": 2,
@@ -6130,36 +6278,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/game_path.rs",
       "source_decl": "pub fn xse_loader(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "yaml_cache_dir",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/yaml_cache.rs",
-      "source_decl": "pub fn yaml_cache_dir()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "yaml_cache_dir",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
-      "source_expr": "yaml_cache::yaml_cache_dir",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "yaml_cache_dir_with_env",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
-      "source_expr": "yaml_cache::yaml_cache_dir_with_env",
       "tier": "tier1"
     },
     {
@@ -13506,16 +13624,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "*",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_file::*;",
-      "source_expr": "yaml_file::*",
-      "tier": "tier1"
-    },
-    {
       "symbol": "CacheStats",
       "kind": "reexport",
       "crate": "classic-settings-core",
@@ -13636,15 +13744,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "YamlFile",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_file.rs",
-      "source_decl": "pub enum YamlFile",
-      "tier": "tier1"
-    },
-    {
       "symbol": "YamlOperations",
       "kind": "reexport",
       "crate": "classic-settings-core",
@@ -13662,26 +13761,6 @@
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
       "source_expr": "classic_shared_core::yaml::YamlSchemaError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "all",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_file.rs",
-      "source_decl": "pub const fn all()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "as_str",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_file.rs",
-      "source_decl": "pub const fn as_str(&self)",
       "tier": "tier1"
     },
     {
@@ -13732,16 +13811,6 @@
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use classic_shared_core::yaml::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
       "source_expr": "classic_shared_core::yaml::clear_global_yaml_cache",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "description",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_file.rs",
-      "source_decl": "pub const fn description(&self)",
       "tier": "tier1"
     },
     {
@@ -22913,6 +22982,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "XseGameLocalFacts",
+      "kind": "struct",
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub struct XseGameLocalFacts",
+      "tier": "tier1"
+    },
+    {
       "symbol": "XseInfo",
       "kind": "struct",
       "crate": "classic-xse-core",
@@ -23057,6 +23135,26 @@
       "owner_module": "xse",
       "source_file": "business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn resolve_xse_folder_for_scan_in_version_registry_scope(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n    version_registry: &VersionRegistryScope,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_folder_from_game_local_facts",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub fn resolve_xse_folder_from_game_local_facts(\n    game_local: &XseGameLocalFacts,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_folder_from_game_local_facts_in_version_registry_scope",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub fn resolve_xse_folder_from_game_local_facts_in_version_registry_scope(\n    game_local: &XseGameLocalFacts,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n    version_registry: &VersionRegistryScope,\n)",
       "tier": "tier1"
     },
     {

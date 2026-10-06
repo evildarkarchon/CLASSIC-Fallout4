@@ -57,8 +57,8 @@ use classic_config_core::{
     InstalledYamlDataInspection, InstalledYamlDataInspectionRequest, client_schemas,
     inspect_installed_yaml_data, inspect_installed_yaml_data_with_env,
 };
+use classic_config_core::{ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env};
 use classic_file_io_core::{FileIOError, RollbackOutcome as FsRollbackOutcome, install_atomic};
-use classic_path_core::{ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env};
 use classic_shared_core::GameId;
 use classic_shared_core::path_core::{PathError, non_empty_env_var};
 use classic_shared_core::yaml::{
@@ -494,7 +494,7 @@ pub enum RollbackOutcome {
 ///
 /// The `cache_dir` argument points at the directory where ETag and cached
 /// manifest body are persisted. In production this is
-/// [`classic_path_core::yaml_cache_dir`]; tests inject a tempdir. Passing
+/// [`classic_config_core::yaml_cache_dir`]; tests inject a tempdir. Passing
 /// `None` disables caching entirely — no `If-None-Match` header is sent,
 /// no 304 cached-body read is attempted, and no files are written.
 ///
