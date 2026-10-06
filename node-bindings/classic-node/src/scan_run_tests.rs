@@ -6,7 +6,7 @@ use classic_config_core::YamlDataContentIdentity;
 use classic_scan_presentation::RecoveryDecisionDescription;
 use classic_scanlog_core::scan_run::contract::{
     InfrastructureError, InfrastructureErrorStage, LogDisposition, LogEvent, LogFailure,
-    LogFailureStage, LogResult, RunResult,
+    LogFailureStage, LogResult, RunResult, SettledRunResult,
 };
 use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
 // Imported here as well as in `scan_run.rs`, which needs it since the run status
@@ -1021,6 +1021,60 @@ fn assert_segments_match(actual: &[JsScanRunDisplaySegment], expected: &[JsScanR
             "segment {index} count"
         );
     }
+}
+
+/// Builds a completed settled result.
+///
+/// Built twice for the reason [`completed_run_result`] is: a settled result is not `Clone`.
+fn completed_settled_result() -> SettledRunResult {
+    SettledRunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        effective_concurrency: Some(1),
+        message: Some("settled message".to_string()),
+        total: 1,
+        succeeded: 1,
+        failed: 0,
+        cancelled: 0,
+        logs: vec![],
+    }
+}
+
+#[test]
+/// A settled run resolves with what it says, its observer outcome, and nothing to resume.
+fn a_settled_envelope_states_the_settled_run_and_carries_no_continuation() {
+    let expected = display_lines_to_js(&render_run_result(&RunResult::from(
+        completed_settled_result(),
+    )));
+
+    let envelope = settled_envelope(
+        completed_settled_result(),
+        Some("observer failed".to_string()),
+    );
+
+    assert_eq!(envelope.result.status, "completed");
+    assert_eq!(envelope.result.message.as_deref(), Some("settled message"));
+    assert!(envelope.result.continuation.is_none());
+    assert_eq!(envelope.observer_error.as_deref(), Some("observer failed"));
+    assert_display_lines_match(&envelope.display_lines, &expected);
+}
+
+#[test]
+/// Only a real paused run, which retains a continuation, offers a pending recovery.
+///
+/// A hand-built recovery-required result has no continuation, so it still resolves with
+/// the prompt this surface always rendered but with nothing to settle.
+fn only_a_run_that_retains_a_continuation_offers_a_pending_recovery() {
+    assert!(
+        success_envelope(completed_run_result(), None)
+            .pending_recovery
+            .is_none()
+    );
+    let paused_without_continuation = success_envelope(recovery_required_run_result(), None);
+    assert!(paused_without_continuation.recovery_prompt.is_some());
+    assert!(paused_without_continuation.pending_recovery.is_none());
 }
 
 #[test]

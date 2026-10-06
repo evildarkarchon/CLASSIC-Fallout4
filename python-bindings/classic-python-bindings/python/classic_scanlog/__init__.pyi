@@ -1012,6 +1012,33 @@ class ScanRunExecution:
     observer_error: str | None
     display_lines: list[ScanRunDisplayLine]
     recovery_prompt: ScanRunRecoveryPrompt | None
+    pending_recovery: ScanRunPendingRecovery | None
+
+
+class ScanRunPendingRecovery:
+    """A paused Crash Log Scan Run waiting to be settled exactly once.
+
+    Bundles the single-use continuation with the recovery prompt Rust rendered
+    and whether the run's cancellation was already requested. Settle it with
+    :func:`scan_run_settle`. When ``cancellation_requested`` is ``True``, do not
+    prompt: settle with no decision.
+    """
+
+    prompt: ScanRunRecoveryPrompt
+    cancellation_requested: bool
+
+
+class ScanRunSettledExecution:
+    """Envelope returned by :func:`scan_run_settle`.
+
+    A settled run carries no continuation, so this envelope has no
+    ``recovery_prompt`` and no ``pending_recovery``.
+    """
+
+    result: ScanRunResult | None
+    error: ScanRunInfrastructureError | None
+    observer_error: str | None
+    display_lines: list[ScanRunDisplayLine]
 
 
 def scan_run_execute(
@@ -1051,6 +1078,22 @@ def scan_run_abandon(
     ``cancellation`` is left cancelled afterwards. Replay raises
     :class:`ScanRunContinuationConsumedError`, exactly as
     :func:`scan_run_resume` does.
+    """
+
+
+def scan_run_settle(
+        pending_recovery: ScanRunPendingRecovery,
+        decision: ScanRunLocalIgnoreRecoveryDecision | None = None,
+        observer: Callable[[ScanRunEvent], None] | None = None,
+        cancel_on_observer_error: bool = False,
+) -> ScanRunSettledExecution:
+    """Settle one paused run once, with a recovery decision or with none.
+
+    A decision resumes the same discovered Crash Logs without rediscovery. No
+    decision abandons the run: it cancels the run's own control and finishes
+    cancelled after discovery with no filesystem work. Replay, here or through
+    :func:`scan_run_resume` / :func:`scan_run_abandon` (they share the claim),
+    raises :class:`ScanRunContinuationConsumedError`.
     """
 
 

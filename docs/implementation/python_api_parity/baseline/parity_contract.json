@@ -1238,6 +1238,17 @@
       "pythonArity": 1
     },
     {
+      "id": "user_settings.update_with_formid_databases_for_game",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_formid_databases_for_game",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_formid_databases_for_game",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
       "id": "user_settings.update_with_move_unsolved_logs",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -2395,6 +2406,17 @@
       "pythonExportPath": "persist_game_local_paths",
       "pythonKind": "function",
       "pythonArity": 3
+    },
+    {
+      "id": "config.installation_root.locate_installation_root",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "locate_installation_root",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "locate_installation_root",
+      "pythonKind": "function",
+      "pythonArity": 2
     },
     {
       "id": "config.installed_yaml_data.installed_yaml_data_provenance_label",
@@ -12016,6 +12038,16 @@
       "rustSymbol": "get_xse_info",
       "pythonModule": "classic_xse",
       "pythonExportPath": "get_xse_info",
+      "pythonKind": "function"
+    },
+    {
+      "id": "xse.lib.resolve_xse_log_for_scan",
+      "tier": "tier1",
+      "ownerModule": "xse",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "pythonModule": "classic_xse",
+      "pythonExportPath": "resolve_xse_log_for_scan",
       "pythonKind": "function"
     },
     {

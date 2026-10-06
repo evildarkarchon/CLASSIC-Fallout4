@@ -321,6 +321,24 @@ fn paused_recovery_fixture_with_hooks(
     Vec<u8>,
     contract::RunResult,
 ) {
+    paused_recovery_fixture_with_cancellation(log_names, hooks, &contract::Cancellation::new())
+}
+
+/// Creates one malformed-Ignore targeted run paused under the caller's own cancellation control.
+///
+/// A pending recovery settles on the run's own control, so the settle tests need to hold the
+/// control `execute` was given rather than one created and dropped inside the fixture.
+fn paused_recovery_fixture_with_cancellation(
+    log_names: &[&str],
+    hooks: ScanRunTestHooks,
+    cancellation: &contract::Cancellation,
+) -> (
+    tempfile::TempDir,
+    Vec<PathBuf>,
+    PathBuf,
+    Vec<u8>,
+    contract::RunResult,
+) {
     let temp = tempdir().expect("tempdir should succeed");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
@@ -349,7 +367,7 @@ fn paused_recovery_fixture_with_hooks(
     let result = get_runtime()
         .block_on(contract::execute_with_test_hooks(
             request,
-            &contract::Cancellation::new(),
+            cancellation,
             None,
             hooks.with_yaml_cache_root(root.join("isolated-cache")),
         ))
@@ -1405,6 +1423,279 @@ fn abandonment_consumes_the_continuation_exactly_once() {
         std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
         malformed_ignore
     );
+}
+
+/// Pauses one malformed-Ignore run and takes its pending recovery under a held control.
+fn pending_recovery_fixture(
+    log_names: &[&str],
+) -> (
+    tempfile::TempDir,
+    Vec<PathBuf>,
+    PathBuf,
+    Vec<u8>,
+    contract::Cancellation,
+    contract::RunResult,
+    contract::PendingRecovery,
+) {
+    let cancellation = contract::Cancellation::new();
+    let (temp, logs, ignore_path, malformed_ignore, mut paused) =
+        paused_recovery_fixture_with_cancellation(
+            log_names,
+            ScanRunTestHooks::default(),
+            &cancellation,
+        );
+    let pending = paused
+        .take_pending_recovery()
+        .expect("a recovery-required result should offer a pending recovery");
+    (
+        temp,
+        logs,
+        ignore_path,
+        malformed_ignore,
+        cancellation,
+        paused,
+        pending,
+    )
+}
+
+/// Settling with Proceed Without Ignore finishes the same discovered Crash Logs, untouched Ignore.
+#[test]
+fn settling_with_proceed_without_ignore_resumes_the_same_discovered_crash_logs() {
+    let (_temp, logs, ignore_path, malformed_ignore, cancellation, paused, pending) =
+        pending_recovery_fixture(&["crash-settle-proceed.log"]);
+    assert!(!pending.cancellation_requested());
+
+    let settled = get_runtime()
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+            None,
+        ))
+        .expect("Proceed Without Ignore should settle into a terminal result");
+
+    assert_eq!(settled.status, contract::RunStatus::Completed);
+    assert_eq!(
+        settled
+            .discovery
+            .as_ref()
+            .expect("a settled run should retain the paused discovery")
+            .accepted_logs,
+        paused
+            .discovery
+            .as_ref()
+            .expect("the paused run should retain completed discovery")
+            .accepted_logs
+    );
+    assert_eq!(
+        settled
+            .logs
+            .iter()
+            .map(|log| (log.discovery_index, log.crash_log.clone()))
+            .collect::<Vec<_>>(),
+        vec![(0, logs[0].clone())]
+    );
+    assert_eq!(
+        settled
+            .installed_yaml_data
+            .as_ref()
+            .expect("a settled run should keep its Installed YAML Data facts")
+            .local_ignore_state,
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    assert!(crate::report::autoscan_report_path(&logs[0]).is_file());
+    assert!(!cancellation.is_cancelled());
+}
+
+/// Settling with Reset To Default repairs Local Ignore once, then finishes the same Crash Logs.
+#[test]
+fn settling_with_reset_to_default_repairs_local_ignore_and_resumes_the_same_crash_logs() {
+    let (_temp, logs, ignore_path, malformed_ignore, _cancellation, _paused, pending) =
+        pending_recovery_fixture(&[
+            "crash-settle-reset-first.log",
+            "crash-settle-reset-second.log",
+        ]);
+    assert!(pending.installed_yaml_data().local_ignore_reset_available);
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let settled = get_runtime()
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
+            Some(&mut observer),
+        ))
+        .expect("Reset To Default should settle into a terminal result");
+
+    assert_eq!(settled.status, contract::RunStatus::Completed);
+    assert_eq!(
+        settled
+            .discovery
+            .as_ref()
+            .expect("a settled run should retain the paused discovery")
+            .accepted_logs,
+        logs
+    );
+    assert!(
+        events
+            .iter()
+            .all(|event| !matches!(event, contract::Event::DiscoveryCompleted(_))),
+        "settling must not rediscover"
+    );
+    let installed = settled
+        .installed_yaml_data
+        .as_ref()
+        .expect("a settled reset should expose its Installed YAML Data facts");
+    assert_eq!(
+        installed.local_ignore_state,
+        contract::LocalIgnoreRunState::ResetToDefault
+    );
+    let reset = installed
+        .local_ignore_reset
+        .as_ref()
+        .expect("a settled reset should expose its backup and replacement");
+    assert_eq!(
+        std::fs::read(&reset.backup_path).expect("verified reset backup should be readable"),
+        malformed_ignore
+    );
+    assert_eq!(
+        std::fs::read_to_string(&ignore_path).expect("reset Local Ignore should be readable"),
+        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n"
+    );
+    assert!(
+        logs.iter()
+            .all(|log| crate::report::autoscan_report_path(log).is_file())
+    );
+}
+
+/// Settling with no decision is abandonment: cancel, then cancelled after discovery, no writes.
+#[test]
+fn settling_without_a_decision_finishes_cancelled_after_discovery_and_touches_nothing() {
+    let (temp, logs, ignore_path, malformed_ignore, cancellation, _paused, pending) =
+        pending_recovery_fixture(&["crash-settle-abandoned.log"]);
+    let before = snapshot_tree(temp.path());
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let settled = get_runtime()
+        .block_on(pending.settle(None, Some(&mut observer)))
+        .expect("settling without a decision should remain expected result data");
+
+    assert_cancelled_after_discovery(&contract::RunResult::from(settled), &logs);
+    assert!(events.is_empty());
+    // No decision cancels the run's own control, so the frontend holding it sees the same
+    // cancelled run every other cancellation path produces.
+    assert!(cancellation.is_cancelled());
+    assert!(pending.cancellation_requested());
+    assert_tree_unchanged(&before, &snapshot_tree(temp.path()));
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+}
+
+/// A run cancelled before the frontend asks reports it, and no decision can then touch disk.
+#[test]
+fn a_pending_recovery_whose_run_was_already_cancelled_reports_it_and_settles_cancelled() {
+    let (temp, logs, ignore_path, malformed_ignore, cancellation, _paused, pending) =
+        pending_recovery_fixture(&["crash-settle-already-cancelled.log"]);
+    assert!(!pending.cancellation_requested());
+    // The frontend's own handle, not one reached through the pending recovery.
+    cancellation.cancel();
+    assert!(pending.cancellation_requested());
+    let before = snapshot_tree(temp.path());
+
+    // Reset To Default is the one decision that could write; cancellation must still win.
+    let settled = get_runtime()
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
+            None,
+        ))
+        .expect("settling a cancelled run should remain expected result data");
+
+    assert_cancelled_after_discovery(&contract::RunResult::from(settled), &logs);
+    assert_tree_unchanged(&before, &snapshot_tree(temp.path()));
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+}
+
+/// Replaying a settlement, sequentially or concurrently, is the typed consumed failure.
+#[test]
+fn settling_a_pending_recovery_twice_reports_the_typed_consumed_continuation_failure() {
+    let (_temp, _logs, _ignore_path, _malformed_ignore, _cancellation, _paused, pending) =
+        pending_recovery_fixture(&["crash-settle-replay.log"]);
+    let pending = Arc::new(pending);
+    let barrier = Arc::new(Barrier::new(2));
+    let racers = [Arc::clone(&pending), Arc::clone(&pending)].map(|pending| {
+        let barrier = Arc::clone(&barrier);
+        std::thread::spawn(move || {
+            barrier.wait();
+            get_runtime().block_on(pending.settle(
+                Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+                None,
+            ))
+        })
+    });
+    let [first, second] =
+        racers.map(|racer| racer.join().expect("racing settle thread should not panic"));
+    assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
+    let lost = first
+        .err()
+        .or_else(|| second.err())
+        .expect("one racing settlement should fail");
+    assert_eq!(lost, contract::ResumeError::ContinuationConsumed);
+
+    let replay = get_runtime()
+        .block_on(pending.settle(None, None))
+        .expect_err("every later settlement should reject replay");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+    assert_eq!(replay.kind().as_str(), "scan_run_continuation_consumed");
+}
+
+/// The resume surface that predates settling claims the same continuation, so they cannot both win.
+#[test]
+fn the_legacy_resume_surface_and_settling_share_one_claim() {
+    let (_temp, _logs, _ignore_path, _malformed_ignore, _cancellation, _paused, pending) =
+        pending_recovery_fixture(&["crash-settle-shared-claim.log"]);
+
+    get_runtime()
+        .block_on(pending.continuation().resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("the legacy resume should claim the continuation");
+    let replay = get_runtime()
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+            None,
+        ))
+        .expect_err("settling after a legacy resume should reject replay");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Only a paused run offers a pending recovery, and taking it leaves no continuation behind.
+#[test]
+fn only_a_paused_run_offers_a_pending_recovery_and_only_once() {
+    let (completed, _events) = observer_scenario(None);
+    let mut completed = completed;
+    assert_eq!(completed.status, contract::RunStatus::Completed);
+    assert!(completed.take_pending_recovery().is_none());
+
+    let (_temp, _logs, _ignore_path, _malformed_ignore, _cancellation, mut paused, _pending) =
+        pending_recovery_fixture(&["crash-settle-taken-once.log"]);
+    assert_eq!(
+        paused.status,
+        contract::RunStatus::LocalIgnoreRecoveryRequired
+    );
+    assert!(paused.continuation.is_none());
+    assert!(paused.take_pending_recovery().is_none());
+    // The paused facts stay readable after the pending recovery left, for rendering the pause.
+    assert!(paused.installed_yaml_data.is_some());
+    assert!(paused.discovery.is_some());
 }
 
 #[test]

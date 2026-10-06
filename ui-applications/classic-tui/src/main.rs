@@ -60,14 +60,26 @@ fn main() -> color_eyre::Result<()> {
         return exit_code;
     }
 
-    let _log_guard = init_logging();
+    let log_guard = init_logging();
     let _ = classic_shared_core::get_runtime();
+
+    // Locate the installation before taking over the terminal, so the "CLASSIC Data not found"
+    // message lands on a normal console instead of an alternate screen that is about to vanish.
+    let mut app = match App::new() {
+        Ok(app) => app,
+        Err(not_found) => {
+            tracing::error!("{not_found}");
+            eprintln!("{not_found}");
+            // `exit` skips destructors; flush the non-blocking log writer first.
+            drop(log_guard);
+            std::process::exit(1);
+        }
+    };
 
     let _terminal_state = TerminalStateGuard::enter()?;
 
     let backend = CrosstermBackend::new(stderr());
     let mut terminal = Terminal::new(backend)?;
-    let mut app = App::new();
 
     app.run(&mut terminal)
 }

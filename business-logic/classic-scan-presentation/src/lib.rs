@@ -27,6 +27,9 @@
 //! Every entry point borrows, because a [`RunResult`](classic_scanlog_core::scan_run::contract::RunResult)
 //! is not clonable — it retains a one-shot Crash Log Scan Run Continuation. Take the
 //! continuation out of the result **before** rendering; see [`render_run_result`].
+//! [`take_pending_recovery`] is the way to take it: it returns a [`PendingRecoveryWithPrompt`]
+//! that bundles the continuation with the recovery prompt this crate renders, which is the one
+//! pending-recovery object every binding hands its frontends.
 //!
 //! # Rules an adapter must follow
 //!
@@ -59,10 +62,12 @@
 //! surfaces follow.
 
 mod display;
+mod pending;
 mod recovery;
 mod render;
 
 pub use display::{DisplayLine, DisplaySegment, DisplaySeverity};
+pub use pending::{PendingRecoveryWithPrompt, take_pending_recovery};
 pub use recovery::{RecoveryDecisionDescription, RecoveryPrompt, render_local_ignore_recovery};
 pub use render::{
     render_event, render_infrastructure_error, render_resume_error, render_run_result,

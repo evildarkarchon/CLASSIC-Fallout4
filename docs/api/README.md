@@ -21,7 +21,7 @@ Use this directory in this order:
 11. [`classic-update-core.md`](classic-update-core.md) - async GitHub release/update-check client and DTO layer
 11a. [`yaml-update-delivery.md`](yaml-update-delivery.md) - cross-crate YAML-data update flow: schema_version contract, client load-precedence, manifest format, Pages-mirrored publish workflow
 11b. [`app-update-notification-delivery.md`](app-update-notification-delivery.md) - payload-free app-update notification channel: manifest schema, Pages-first + Releases fallback, classification model, maintainer publish workflow
-12. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata, AND the absorbed crashgen rule model (formerly its own crate, merged into config-core in v9.1.0 Phase 2)
+12. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata, AND the absorbed crashgen rule model (formerly its own crate, merged into config-core in v9.1.0 Phase 2), plus the one Installation Root locator every frontend shares
 13. [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md) - standalone runtime contract for generic source/cache paths, merged YAML semantics, and Main/Game/Ignore/Game Local keys
 14. [`classic-path-core.md`](classic-path-core.md) - game-path, documents-path, Game/Documents settings validation and cache-directory helpers (custom-scan policy moved to scanlog core; version-labelled backup moved to resource core)
 15. [`classic-xse-core.md`](classic-xse-core.md) - XSE loader/version detection helpers used by setup checks and bindings

@@ -78,6 +78,7 @@ add_executable(classic-cli
     src/progress.cpp
     src/yaml_update.cpp
     src/app_update.cpp
+    src/installation_root.cpp
     src/user_settings_action.cpp
 )
 
@@ -282,8 +283,13 @@ if(BUILD_TESTING AND Catch2_FOUND)
         tests/test_scanner.cpp
         tests/test_user_settings_action.cpp
         tests/test_perf_timing_contract.cpp
+        tests/test_installation_root.cpp
         src/yaml_update.cpp
         src/app_update.cpp
+        src/installation_root.cpp
+        # Linked so the Installation Root test can drive `run_scan` itself; the not-found path
+        # returns before the runtime or any scan work starts.
+        src/scanner.cpp
         src/progress.cpp
         src/scan_run_cli.cpp
         src/user_settings_action.cpp

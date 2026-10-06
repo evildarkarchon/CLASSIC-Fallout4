@@ -4,9 +4,9 @@ use classic_config_core::{
     YamlDataContentIdentity,
 };
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
-    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
-    render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, PendingRecoveryWithPrompt, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result, take_pending_recovery,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -18,6 +18,7 @@ use classic_scanlog_core::{
 use classic_shared_core::GameId;
 use classic_vocabulary::display_label;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use super::ffi;
 
@@ -43,15 +44,30 @@ pub(crate) struct ScanRunCancellation {
     inner: contract::Cancellation,
 }
 
-/// Opaque execution operation that owns a DTO envelope and optional recovery continuation.
+/// Opaque execution operation that owns a DTO envelope and optional recovery handles.
+///
+/// While frontends migrate (ADR-0009) a paused run offers its recovery twice: as the legacy
+/// continuation and as the pending recovery. Both wrap the same [`PendingRecoveryWithPrompt`],
+/// so they share one single-use claim; whichever is used first wins and the other reports the
+/// typed consumed-continuation envelope.
 pub(crate) struct ScanRunContractExecution {
     result: ffi::ScanRunContractExecutionResult,
     continuation: Option<ScanRunContinuation>,
+    pending_recovery: Option<ScanRunPendingRecovery>,
 }
 
 /// Process-local, non-cloneable carrier for one retained Local Ignore recovery.
+///
+/// The legacy resume and abandon surface. It claims the continuation inside the same pending
+/// recovery `ScanRunPendingRecovery` settles, but with the caller's own cancellation control.
 pub(crate) struct ScanRunContinuation {
-    inner: contract::CrashLogScanRunContinuation,
+    inner: Arc<PendingRecoveryWithPrompt>,
+}
+
+/// A paused run's pending recovery: the prompt to show, whether cancellation was already
+/// requested, and the one settlement the run accepts.
+pub(crate) struct ScanRunPendingRecovery {
+    inner: Arc<PendingRecoveryWithPrompt>,
 }
 
 /// Creates Standard intent that leaves failed Crash Logs and reports in place.
@@ -246,20 +262,13 @@ pub(crate) unsafe fn scan_run_continuation_resume(
     let observer = unsafe { observer.as_ref() };
     // Reject CXX's non-exhaustive sentinel before claiming the one-shot continuation.
     let decision = map_local_ignore_recovery_decision(decision)?;
+    let retained = continuation.inner.recovery().continuation();
     let result = match observer {
         Some(observer) => {
             let mut adapter = CxxObserverAdapter { observer };
-            block_on(
-                continuation
-                    .inner
-                    .resume(decision, &cancellation.inner, Some(&mut adapter)),
-            )
+            block_on(retained.resume(decision, &cancellation.inner, Some(&mut adapter)))
         }
-        None => block_on(
-            continuation
-                .inner
-                .resume(decision, &cancellation.inner, None),
-        ),
+        None => block_on(retained.resume(decision, &cancellation.inner, None)),
     };
 
     Ok(Box::new(execution_from_resume_result(result)))
@@ -291,19 +300,94 @@ pub(crate) unsafe fn scan_run_continuation_abandon(
     // SAFETY: the caller contract requires a non-null pointer to stay live for
     // this synchronous invocation; null explicitly means observation is disabled.
     let observer = unsafe { observer.as_ref() };
+    let retained = continuation.inner.recovery().continuation();
     let result = match observer {
         Some(observer) => {
             let mut adapter = CxxObserverAdapter { observer };
-            block_on(
-                continuation
-                    .inner
-                    .abandon(&cancellation.inner, Some(&mut adapter)),
-            )
+            block_on(retained.abandon(&cancellation.inner, Some(&mut adapter)))
         }
-        None => block_on(continuation.inner.abandon(&cancellation.inner, None)),
+        None => block_on(retained.abandon(&cancellation.inner, None)),
     };
 
     Box::new(execution_from_resume_result(result))
+}
+
+/// Returns whether the operation still offers a pending recovery to settle.
+pub(crate) fn scan_run_contract_execution_has_pending_recovery(
+    execution: &ScanRunContractExecution,
+) -> bool {
+    execution.pending_recovery.is_some()
+}
+
+/// Moves the pending recovery out of its initial execution operation.
+///
+/// Returns an error when the run did not pause, or when the pending recovery was already taken.
+/// The legacy continuation stays in the operation: both wrap the same single-use claim.
+pub(crate) fn scan_run_contract_execution_take_pending_recovery(
+    execution: &mut ScanRunContractExecution,
+) -> Result<Box<ScanRunPendingRecovery>, String> {
+    execution
+        .pending_recovery
+        .take()
+        .map(Box::new)
+        .ok_or_else(|| "scan run execution has no pending recovery".to_string())
+}
+
+/// Returns the recovery prompt Rust rendered for this pending recovery.
+pub(crate) fn scan_run_pending_recovery_prompt(
+    pending: &ScanRunPendingRecovery,
+) -> ffi::ScanRunRecoveryPrompt {
+    recovery_prompt_to_dto(pending.inner.prompt())
+}
+
+/// Returns whether cancellation of the paused run was already requested.
+///
+/// Read live from the control the caller handed to `scan_run_contract_execute`. When true, a
+/// frontend must not prompt; it settles with no decision.
+pub(crate) fn scan_run_pending_recovery_cancellation_requested(
+    pending: &ScanRunPendingRecovery,
+) -> bool {
+    pending.inner.cancellation_requested()
+}
+
+/// Settles the paused run once, synchronously, with an optional Local Ignore Recovery Decision.
+///
+/// `settlement.has_decision == false` abandons the run: Rust cancels the run's own control and
+/// finishes cancelled after discovery with no filesystem work. The result is the ordinary
+/// execution envelope, which is a shared struct and so can never carry a continuation or a
+/// pending recovery; that is what makes a second recovery request unrepresentable here. Replay
+/// is projected into the typed consumed-continuation resume-error envelope.
+///
+/// Returns an error only for an out-of-range decision, rejected before anything is claimed.
+///
+/// # Safety
+///
+/// A non-null `observer` must point to a live `ScanRunObserver` for this synchronous call.
+pub(crate) unsafe fn scan_run_pending_recovery_settle(
+    pending: &ScanRunPendingRecovery,
+    settlement: ffi::ScanRunLocalIgnoreRecoverySettlement,
+    observer: *const ffi::ScanRunObserver,
+) -> Result<ffi::ScanRunContractExecutionResult, String> {
+    // SAFETY: the caller contract requires a non-null pointer to stay live for
+    // this synchronous invocation; null explicitly means observation is disabled.
+    let observer = unsafe { observer.as_ref() };
+    // `decision` is meaningful only beside `has_decision`, as with every other `has_` pair on
+    // this bridge, so an out-of-range value is rejected only when a decision is claimed.
+    let decision = if settlement.has_decision {
+        Some(map_local_ignore_recovery_decision(settlement.decision)?)
+    } else {
+        None
+    };
+    let result = match observer {
+        Some(observer) => {
+            let mut adapter = CxxObserverAdapter { observer };
+            block_on(pending.inner.settle(decision, Some(&mut adapter)))
+        }
+        None => block_on(pending.inner.settle(decision, None)),
+    };
+
+    // Widened back into a run result only to share the one projection; it has no continuation.
+    Ok(execution_from_resume_result(result.map(contract::RunResult::from)).result)
 }
 
 fn execution_from_initial_result(
@@ -314,16 +398,22 @@ fn execution_from_initial_result(
         // therefore before it is rendered. That ordering is now load-bearing rather than
         // incidental: `render_run_result` borrows the result, so moving the continuation
         // out afterwards would borrow across the move and not compile.
-        Ok(mut result) => ScanRunContractExecution {
-            continuation: result
-                .continuation
-                .take()
-                .map(|inner| ScanRunContinuation { inner }),
-            result: success_execution_result_dto(result),
-        },
+        Ok(mut result) => {
+            // Taken through the presentation crate so the pending recovery carries the prompt
+            // it rendered; both recovery handles then share this one bundle and its claim.
+            let pending = take_pending_recovery(&mut result).map(Arc::new);
+            ScanRunContractExecution {
+                continuation: pending.as_ref().map(|inner| ScanRunContinuation {
+                    inner: Arc::clone(inner),
+                }),
+                pending_recovery: pending.map(|inner| ScanRunPendingRecovery { inner }),
+                result: success_execution_result_dto(result),
+            }
+        }
         Err(error) => ScanRunContractExecution {
             result: infrastructure_execution_result_dto(error),
             continuation: None,
+            pending_recovery: None,
         },
     }
 }
@@ -356,6 +446,7 @@ fn execution_from_resume_result(
     ScanRunContractExecution {
         result,
         continuation: None,
+        pending_recovery: None,
     }
 }
 

@@ -139,8 +139,9 @@ second line is a prompt line rather than part of the withheld decision's `descri
 description says what a decision *does* and stays true whether or not this run can honor it.
 
 **Backing out is not a decision.** `LocalIgnoreRecoveryDecision` has exactly two variants by design;
-abandonment is spelled as the *absence* of a decision and reaches the contract through
-`CrashLogScanRunContinuation::abandon`. The cancel affordance and its wording stay each frontend's.
+abandonment is spelled as the *absence* of a decision and reaches the contract by settling a pending
+recovery with no decision (or through `CrashLogScanRunContinuation::abandon`, which settling
+replaces). The cancel affordance and its wording stay each frontend's.
 
 **The argument is optional** because a caller holding `RunResult::installed_yaml_data` holds an
 `Option` and must do something when it is absent. All three native frontends independently decided
@@ -189,6 +190,38 @@ let lines = render_run_result(&result);
 Rendering first and moving the continuation afterwards borrows the result across the move and will
 not compile. All three native frontends already sequence it this way; documenting it makes the
 ordering a contract rather than a coincidence.
+
+## The pending recovery a frontend receives
+
+```rust
+pub fn take_pending_recovery(result: &mut RunResult) -> Option<PendingRecoveryWithPrompt>;
+
+impl PendingRecoveryWithPrompt {
+    pub fn new(recovery: PendingRecovery) -> Self;
+    pub fn prompt(&self) -> &RecoveryPrompt;
+    pub fn cancellation_requested(&self) -> bool;
+    pub fn recovery(&self) -> &PendingRecovery;
+    pub async fn settle(
+        &self,
+        decision: Option<LocalIgnoreRecoveryDecision>,
+        observer: Option<&mut dyn Observer>,
+    ) -> Result<SettledRunResult, ResumeError>;
+}
+```
+
+ADR-0009 gives a paused run one pending-recovery object: the single-use continuation, the recovery
+prompt already rendered as Display Content, and whether cancellation was already requested. The
+scanlog core crate owns the mechanics in `PendingRecovery` but cannot render the prompt, because it
+must never depend on this crate. `take_pending_recovery` is the bundling step: it takes the contract's
+pending recovery out of a paused result (the same take-before-render ordering as above) and renders
+its prompt once with `render_local_ignore_recovery`, so the prompt always agrees with what settling
+can honour, including whether Reset To Default is available.
+
+When `cancellation_requested()` is `true`, do not prompt: settle with no decision. `settle(None, ..)`
+is abandonment, not a third decision. Every binding projects this bundle as its pending-recovery
+object, and backs its legacy continuation with the same bundle so the two share one claim until #282
+removes the legacy surface. `tests/pending_recovery.rs` pins the prompt against
+`render_local_ignore_recovery`, with and without retained defaults.
 
 ## Rules an adapter must follow
 
@@ -311,6 +344,11 @@ empty one, so a consumer cannot mistake "nothing to ask" for "ask with no option
   a `recovery_prompt: ScanRunRecoveryPrompt | None` getter on `ScanRunExecution`. Both languages have
   a native absent form, and `undefined`/`None` is what a consumer on each surface already reads as
   "not present".
+
+Each surface also offers the same prompt through its pending-recovery object, which is what a
+settling frontend reads: `scan_run_pending_recovery_prompt` on the bridge, the
+`ScanRunPendingRecovery.prompt` getter on Node, and the `ScanRunPendingRecovery.prompt` property on
+Python. It is the same rendering as the envelope's prompt, taken from the bundle described above.
 
 A decision's `description` is an ordinary segment list on all three, flattened exactly as the lines
 beside it are, so a consumer renders one with the renderer it already has. The `decision` itself

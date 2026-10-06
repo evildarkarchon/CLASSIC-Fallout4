@@ -1010,6 +1010,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Node xse-folder conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family xse-folder --participant node --artifact-root tools/binding_compliance/artifacts/xse-folder
+
+      - name: Upload Node xse-folder conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-xse-folder-conformance
+          path: tools/binding_compliance/artifacts/xse-folder/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Node installation-paths conformance
         if: matrix.runtime == 'node' && !cancelled()
         run: python tools/binding_compliance/run_semantic_conformance.py --family installation-paths --participant node --artifact-root tools/binding_compliance/artifacts/installation-paths

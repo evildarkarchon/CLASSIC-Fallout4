@@ -109,6 +109,7 @@ use classic_config_core::{
 };
 use classic_config_core::{
     ConfigError, CoreModExclude, ModSolutionCriteria, YamlDataCore, YamlSource as CoreYamlSource,
+    locate_installation_root as core_locate_installation_root,
     persist_game_local_paths as core_persist_game_local_paths,
 };
 use classic_registry_core::RegistryScope;
@@ -794,6 +795,23 @@ pub fn persist_game_local_paths(
     .map_err(runtime_to_pyerr)
 }
 
+/// Locate the Installation Root from an executable folder and a working directory.
+///
+/// Delegates to config's one shared candidate search and returns the first
+/// candidate holding ``CLASSIC Data`` as a string built from the given input,
+/// or ``None`` when no candidate does (there is no fallback). ``None`` for an
+/// input skips only the candidates derived from it. Only directory metadata is
+/// inspected, so the GIL is kept.
+#[pyfunction]
+#[pyo3(signature = (executable_dir=None, working_dir=None))]
+pub fn locate_installation_root(
+    executable_dir: Option<PathBuf>,
+    working_dir: Option<PathBuf>,
+) -> Option<String> {
+    core_locate_installation_root(executable_dir.as_deref(), working_dir.as_deref())
+        .map(|root| pathbuf_to_string(&root))
+}
+
 /// Clear the default path/mtime YAML-file cache scope.
 ///
 /// Evicts every entry in the process default `YamlFileCacheScope` without
@@ -869,6 +887,7 @@ pub(crate) fn register_facade(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyYamlSource>()?;
     m.add_function(wrap_pyfunction!(persist_game_local_paths, m)?)?;
+    m.add_function(wrap_pyfunction!(locate_installation_root, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
     m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;
@@ -898,6 +917,7 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyYamlSource>()?;
     m.add_function(wrap_pyfunction!(persist_game_local_paths, m)?)?;
+    m.add_function(wrap_pyfunction!(locate_installation_root, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
     m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;

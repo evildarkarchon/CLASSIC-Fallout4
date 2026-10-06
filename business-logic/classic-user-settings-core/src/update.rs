@@ -21,6 +21,13 @@ struct PendingTuiRememberedState {
     sort_ascending: bool,
 }
 
+/// Raw game-aware FormID database save retained until preview validates the game and rows.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PendingFormIdDatabaseSave {
+    game: String,
+    paths: Vec<String>,
+}
+
 /// Canonical metadata for the three fields that make up one remembered window geometry.
 #[derive(Debug, Clone, Copy)]
 struct WindowGeometrySettings {
@@ -53,6 +60,7 @@ pub struct UserSettingsUpdate {
     show_statistics: Option<bool>,
     formid_value_lookup: Option<bool>,
     formid_databases: Option<BTreeMap<String, Vec<String>>>,
+    formid_databases_for_game: Option<PendingFormIdDatabaseSave>,
     move_unsolved_logs: Option<bool>,
     unsolved_logs_destination: Option<Option<String>>,
     custom_scan_input: Option<Option<String>>,
@@ -198,6 +206,34 @@ impl UserSettingsUpdate {
     /// Requests replacement FormID database path lists keyed by managed game.
     pub fn with_formid_databases(mut self, value: BTreeMap<String, Vec<String>>) -> Self {
         self.formid_databases = Some(value);
+        self
+    }
+
+    /// Requests saving the FormID database rows that apply to Crash Log Scans of `game`.
+    ///
+    /// This is the write-side twin of
+    /// [`CrashLogScanSettings::formid_databases_for_game`](crate::CrashLogScanSettings::formid_databases_for_game):
+    /// frontends that edit one game's rows must save them here rather than rewriting the raw
+    /// keyed map themselves. Preview starts from the snapshot's saved mapping (or from a whole
+    /// mapping requested through [`Self::with_formid_databases`] in the same update), replaces
+    /// only the rows stored for `game`, and publishes the result as the one
+    /// `FormID Databases` field. Fallout 4 VR shares the Fallout 4 corpus, so its rows are
+    /// stored under `Fallout4` and any legacy `Fallout4VR` key is removed; the removal is
+    /// reported through [`AcceptedUserSettingsUpdate::diagnostics`] and the committed outcome.
+    /// Every other game touches only its own key.
+    ///
+    /// `game` accepts the same stable and human-facing identifiers as
+    /// [`Self::with_managed_game`]; an unsupported identifier or an empty path is rejected at
+    /// preview. One update carries at most one save; a later call replaces an earlier one.
+    pub fn with_formid_databases_for_game(
+        mut self,
+        game: impl Into<String>,
+        paths: Vec<String>,
+    ) -> Self {
+        self.formid_databases_for_game = Some(PendingFormIdDatabaseSave {
+            game: game.into(),
+            paths,
+        });
         self
     }
 
@@ -390,7 +426,11 @@ fn metadata_paths(setting: SettingMetadata) -> (&'static str, &'static str) {
     (setting.pointer_path, setting.dotted_path)
 }
 
-/// Field-specific reason that a User Settings Update preview was rejected.
+/// Structured User Settings Update diagnostic.
+///
+/// A rejected preview carries the field-specific reasons it was rejected. An accepted preview
+/// (and the outcome of committing it) carries non-rejecting diagnostics that report an effect
+/// the commit has beyond the requested values, such as removing a legacy FormID Databases key.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UpdateDiagnostic {
     field_path: Option<&'static str>,
@@ -417,7 +457,8 @@ impl UpdateDiagnostic {
         }
     }
 
-    /// Returns the rejected canonical field path, or `None` for a preview-level failure.
+    /// Returns the canonical field path the diagnostic concerns, or `None` for a preview-level
+    /// failure.
     pub fn field_path(&self) -> Option<&'static str> {
         self.field_path
     }
@@ -427,7 +468,7 @@ impl UpdateDiagnostic {
         self.code
     }
 
-    /// Returns human-readable rejection context.
+    /// Returns human-readable rejection or effect context.
     pub fn message(&self) -> &str {
         &self.message
     }
@@ -441,6 +482,7 @@ impl UpdateDiagnostic {
 pub struct AcceptedUserSettingsUpdate {
     base_revision: Revision,
     fields: Vec<UserSettingsUpdateField>,
+    diagnostics: Vec<UpdateDiagnostic>,
     bootstrap: bool,
 }
 
@@ -453,6 +495,17 @@ impl AcceptedUserSettingsUpdate {
     /// Returns only the canonical fields explicitly requested and accepted by the preview.
     pub fn fields(&self) -> &[UserSettingsUpdateField] {
         &self.fields
+    }
+
+    /// Returns non-rejecting diagnostics describing effects this update has beyond the
+    /// requested values, so callers can show them before committing.
+    ///
+    /// Empty for ordinary updates. A Fallout 4 VR FormID database save that removes a legacy
+    /// `Fallout4VR` key reports `legacy_formid_databases_key_removed` here; committing the
+    /// update reports the same diagnostics on
+    /// [`UserSettingsCommitOutcome::Committed`](crate::UserSettingsCommitOutcome::Committed).
+    pub fn diagnostics(&self) -> &[UpdateDiagnostic] {
+        &self.diagnostics
     }
 
     /// Returns whether this artifact was accepted through the missing-document bootstrap seam.
@@ -515,6 +568,8 @@ impl UserSettings {
     ) -> UserSettingsUpdatePreview {
         let mut fields = Vec::new();
         let mut diagnostics = Vec::new();
+        // Non-rejecting effect reports; they are only published when the preview is accepted.
+        let mut notices = Vec::new();
 
         if let Some(value) = update.update_check {
             fields.push(UserSettingsUpdateField::UpdateCheck(value));
@@ -667,16 +722,25 @@ impl UserSettings {
         if let Some(value) = update.formid_value_lookup {
             fields.push(UserSettingsUpdateField::FormIdValueLookup(value));
         }
+        let mut formid_databases = None;
         if let Some(value) = update.formid_databases {
             if valid_formid_databases(&value) {
-                fields.push(UserSettingsUpdateField::FormIdDatabases(value));
+                formid_databases = Some(value);
             } else {
-                diagnostics.push(UpdateDiagnostic::for_field(
-                    FORMID_DATABASES.pointer_path,
-                    "invalid_value_formid_databases",
-                    "FormID Databases game names and path strings must not be empty",
-                ));
+                diagnostics.push(invalid_formid_databases_value());
             }
+        }
+        if let Some(save) = update.formid_databases_for_game {
+            // The save rewrites the whole stored mapping, so it starts from the mapping this
+            // preview is anchored to; commit's revision check keeps that base from going stale.
+            let base = formid_databases
+                .take()
+                .unwrap_or_else(|| self.crash_log_scan_settings().formid_databases().clone());
+            formid_databases =
+                save_formid_databases_for_game(base, save, &mut diagnostics, &mut notices);
+        }
+        if let Some(value) = formid_databases {
+            fields.push(UserSettingsUpdateField::FormIdDatabases(value));
         }
         if let Some(value) = update.move_unsolved_logs {
             fields.push(UserSettingsUpdateField::MoveUnsolvedLogs(value));
@@ -730,12 +794,65 @@ impl UserSettings {
             UserSettingsUpdatePreview::Accepted(AcceptedUserSettingsUpdate {
                 base_revision: self.revision().clone(),
                 fields,
+                diagnostics: notices,
                 bootstrap,
             })
         } else {
             UserSettingsUpdatePreview::Rejected(diagnostics)
         }
     }
+}
+
+/// Returns the shared rejection for an empty FormID Databases game name or path.
+fn invalid_formid_databases_value() -> UpdateDiagnostic {
+    UpdateDiagnostic::for_field(
+        FORMID_DATABASES.pointer_path,
+        "invalid_value_formid_databases",
+        "FormID Databases game names and path strings must not be empty",
+    )
+}
+
+/// Applies one game-aware FormID database save to `databases`.
+///
+/// Returns the complete mapping to publish, or `None` after pushing rejection diagnostics.
+/// Fallout 4 VR shares the Fallout 4 corpus (the read rule in
+/// `CrashLogScanSettings::formid_databases_for_game`), so its rows are stored under `Fallout4`
+/// and a legacy `Fallout4VR` key is removed with a notice; every other game replaces only the
+/// rows under its own key.
+fn save_formid_databases_for_game(
+    mut databases: BTreeMap<String, Vec<String>>,
+    save: PendingFormIdDatabaseSave,
+    diagnostics: &mut Vec<UpdateDiagnostic>,
+    notices: &mut Vec<UpdateDiagnostic>,
+) -> Option<BTreeMap<String, Vec<String>>> {
+    let game = parse_managed_game(&save.game);
+    if game.is_none() {
+        diagnostics.push(UpdateDiagnostic::for_field(
+            FORMID_DATABASES.pointer_path,
+            "invalid_enum_formid_databases_game",
+            "FormID Databases can only be saved for Fallout 4, Fallout 4 VR, Skyrim SE, or Starfield",
+        ));
+    }
+    if save.paths.iter().any(String::is_empty) {
+        diagnostics.push(invalid_formid_databases_value());
+    }
+    let game = game.filter(|_| !save.paths.iter().any(String::is_empty))?;
+
+    let storage_game = if game == GameId::Fallout4VR {
+        GameId::Fallout4
+    } else {
+        game
+    };
+    databases.insert(storage_game.as_str().to_string(), save.paths);
+    if game == GameId::Fallout4VR && databases.remove(GameId::Fallout4VR.as_str()).is_some() {
+        notices.push(UpdateDiagnostic::for_field(
+            FORMID_DATABASES.pointer_path,
+            "legacy_formid_databases_key_removed",
+            "Fallout 4 VR FormID databases are saved under Fallout4; the legacy Fallout4VR \
+             FormID Databases entry is removed",
+        ));
+    }
+    Some(databases)
 }
 
 /// Validates one persisted GUI dimension without discarding other update diagnostics.

@@ -8,6 +8,7 @@
 - Add a **NEW** badge on the GUI Results tab for reports generated during the current session (compared against a startup snapshot of existing `*-AUTOSCAN.md` files, not file modification times).
 - Fix drag-and-drop widget not expanding layout as well as sizing of the clear button.
 - Fix drag-and-drop showing a 🚫 indicator in certain circumstances
+- The CLI no longer falls back to the current working directory when CLASSIC Data is missing; it stops with a "CLASSIC Data not found" error instead.
 
 ### 9.0.0 CHANGES
 - Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.

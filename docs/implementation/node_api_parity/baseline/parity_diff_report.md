@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T11:25:40.985540+00:00`
-- Tier-1 contract rows: **940**
-- Tier-1 matched: **923**
+- Generated: `2026-10-06T12:00:00.211676+00:00`
+- Tier-1 contract rows: **945**
+- Tier-1 matched: **927**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -201,6 +201,7 @@
 | `config-create-yamldata-content` | `config` | `classic-config-core` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
 | `config-clear-yaml-cache` | `config` | `classic-shared-core` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
 | `config.game_local.persistGameLocalPaths` | `config` | `classic-config-core` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
+| `config.installation_root.locateInstallationRoot` | `config` | `classic-config-core` | `locate_installation_root` | `locateInstallationRoot` | `matched` |
 | `config.installed_yaml_data.installedYamlDataProvenanceLabel` | `config` | `classic-config-core` | `InstalledYamlDataProvenance` | `installedYamlDataProvenanceLabel` | `matched` |
 | `config.installed_yaml_data.installedYamlDataDiagnosticKindLabel` | `config` | `classic-config-core` | `InstalledYamlDataDiagnosticKind` | `installedYamlDataDiagnosticKindLabel` | `matched` |
 | `config.installed_yaml_data.localIgnoreYamlDataStateLabel` | `config` | `classic-config-core` | `LocalIgnoreYamlDataState` | `localIgnoreYamlDataStateLabel` | `matched` |
@@ -415,6 +416,7 @@
 | `aux-phase4b-get-user-agent-prefix` | `aux` | `classic-web-core` | `USER_AGENT_PREFIX` | `getUserAgentPrefix` | `matched` |
 | `aux-phase4b-get-user-agent-with-suffix` | `aux` | `classic-web-core` | `get_user_agent_with_suffix` | `getUserAgentWithSuffix` | `matched` |
 | `aux-phase4b-get-xse-info` | `aux` | `classic-xse-core` | `get_xse_info` | `getXseInfo` | `matched` |
+| `aux-xse-resolve-log-for-scan` | `aux` | `classic-scangame-core` | `resolve_xse_log_for_scan` | `resolveXseLogForScan` | `matched` |
 | `aux-phase4b-has-update` | `aux` | `classic-update-core` | `has_update` | `hasUpdate` | `matched` |
 | `aux-phase4b-is-supported-resource` | `aux` | `classic-resource-core` | `is_supported_resource` | `isSupportedResource` | `matched` |
 | `aux-phase4b-is-valid-url` | `aux` | `classic-web-core` | `is_valid_url` | `isValidUrl` | `matched` |
@@ -919,9 +921,11 @@
 | `scanlog.scan_run.ScanRunUnsolvedLogs` | `scanlog` | `classic-scanlog-core` | `StandardUnsolvedLogsIntent` | `ScanRunUnsolvedLogs` | `matched` |
 | `scanlog.scan_run.ScanRunCancellation` | `scanlog` | `classic-scanlog-core` | `Cancellation` | `ScanRunCancellation` | `matched` |
 | `scanlog.scan_run.ScanRunContinuation` | `scanlog` | `classic-scanlog-core` | `CrashLogScanRunContinuation` | `ScanRunContinuation` | `matched` |
+| `scanlog.scan_run.ScanRunPendingRecovery` | `scanlog` | `classic-scanlog-core` | `PendingRecovery` | `ScanRunPendingRecovery` | `matched` |
 | `scanlog.scan_run.scanRunExecute` | `scanlog` | `classic-scanlog-core` | `execute` | `scanRunExecute` | `matched` |
 | `scanlog.scan_run.scanRunResume` | `scanlog` | `classic-scanlog-core` | `resume` | `scanRunResume` | `matched` |
 | `scanlog.scan_run.scanRunAbandon` | `scanlog` | `classic-scanlog-core` | `abandon` | `scanRunAbandon` | `matched` |
+| `scanlog.scan_run.scanRunSettle` | `scanlog` | `classic-scanlog-core` | `settle` | `scanRunSettle` | `matched` |
 | `scanlog.scan_run.JsScanRunConfiguration` | `scanlog` | `classic-scanlog-core` | `Configuration` | `JsScanRunConfiguration` | `matched` |
 | `scanlog.scan_run.JsScanRunStandardSource` | `scanlog` | `classic-scanlog-core` | `StandardCrashLogScanSource` | `JsScanRunStandardSource` | `matched` |
 | `scanlog.scan_run.JsScanRunTargetedSource` | `scanlog` | `classic-scanlog-core` | `TargetedCrashLogScanSource` | `JsScanRunTargetedSource` | `matched` |
@@ -949,6 +953,7 @@
 | `scanlog.scan_run.JsScanRunRecoveryDecisionDescription` | `scanlog` | `classic-scan-presentation` | `RecoveryDecisionDescription` | `JsScanRunRecoveryDecisionDescription` | `matched` |
 | `scanlog.scan_run.JsScanRunRecoveryPrompt` | `scanlog` | `classic-scan-presentation` | `RecoveryPrompt` | `JsScanRunRecoveryPrompt` | `matched` |
 | `scanlog.scan_run.JsScanRunSuccess` | `scanlog` | `-` | `None` | `JsScanRunSuccess` | `unmapped` |
+| `scanlog.scan_run.JsScanRunSettledSuccess` | `scanlog` | `-` | `None` | `JsScanRunSettledSuccess` | `unmapped` |
 | `scanlog.scan_run.JsScanRunFailure` | `scanlog` | `-` | `None` | `JsScanRunFailure` | `unmapped` |
 | `scanlog.scan_run_launch.ScanRunLaunch` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchRequest` | `ScanRunLaunch` | `matched` |
 | `scanlog.scan_run_launch.JsScanRunLaunchOverrides` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchOverrides` | `JsScanRunLaunchOverrides` | `matched` |

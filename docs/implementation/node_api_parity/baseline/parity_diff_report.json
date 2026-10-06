@@ -1,13 +1,13 @@
 {
-  "generated_at_utc": "2026-10-06T11:25:40.985540+00:00",
+  "generated_at_utc": "2026-10-06T12:00:00.211676+00:00",
   "summary": {
-    "tier1_contract_total": 940,
-    "tier1_matched": 923,
+    "tier1_contract_total": 945,
+    "tier1_matched": 927,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
     "tier1_owner_mismatch": 0,
-    "tier1_unmapped": 17,
+    "tier1_unmapped": 18,
     "total_gaps": 0,
     "tier1_gap_total": 0
   },
@@ -2644,6 +2644,20 @@
       "actual_node_kind": "function",
       "expected_node_arity": 3,
       "actual_node_arity": 3
+    },
+    {
+      "id": "config.installation_root.locateInstallationRoot",
+      "tier": "tier1",
+      "owner_module": "config",
+      "rust_crate": "classic-config-core",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "locate_installation_root",
+      "node_export": "locateInstallationRoot",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 2,
+      "actual_node_arity": 2
     },
     {
       "id": "config.installed_yaml_data.installedYamlDataProvenanceLabel",
@@ -5653,6 +5667,20 @@
       "actual_node_kind": "function",
       "expected_node_arity": 2,
       "actual_node_arity": 2
+    },
+    {
+      "id": "aux-xse-resolve-log-for-scan",
+      "tier": "tier1",
+      "owner_module": "aux",
+      "rust_crate": "classic-scangame-core",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "resolve_xse_log_for_scan",
+      "node_export": "resolveXseLogForScan",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 4,
+      "actual_node_arity": 4
     },
     {
       "id": "aux-phase4b-has-update",
@@ -12712,6 +12740,20 @@
       "actual_node_arity": null
     },
     {
+      "id": "scanlog.scan_run.ScanRunPendingRecovery",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "rust_crate": "classic-scanlog-core",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "PendingRecovery",
+      "node_export": "ScanRunPendingRecovery",
+      "status": "matched",
+      "expected_node_kind": "class",
+      "actual_node_kind": "class",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
       "id": "scanlog.scan_run.scanRunExecute",
       "tier": "tier1",
       "owner_module": "scanlog",
@@ -12747,6 +12789,20 @@
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "abandon",
       "node_export": "scanRunAbandon",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 4,
+      "actual_node_arity": 4
+    },
+    {
+      "id": "scanlog.scan_run.scanRunSettle",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "rust_crate": "classic-scanlog-core",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "settle",
+      "node_export": "scanRunSettle",
       "status": "matched",
       "expected_node_kind": "function",
       "actual_node_kind": "function",
@@ -13131,6 +13187,21 @@
       "expected_node_arity": null,
       "actual_node_arity": null,
       "reason": "Binding-owned result envelope combining core outcome, rendered presentation, and adapter observer failure; no single Rust core counterpart."
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunSettledSuccess",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "rust_crate": null,
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": null,
+      "node_export": "JsScanRunSettledSuccess",
+      "status": "unmapped",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null,
+      "reason": "Binding-owned settled result envelope combining the core settled outcome, rendered presentation, and adapter observer failure; no single Rust core counterpart."
     },
     {
       "id": "scanlog.scan_run.JsScanRunFailure",

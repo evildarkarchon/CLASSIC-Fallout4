@@ -1,47 +1,66 @@
 //! TUI adapter paths for the shared canonical User Settings store.
 
-use std::path::PathBuf;
+use std::fmt;
+use std::path::{Path, PathBuf};
 
 use directories::ProjectDirs;
 
-/// Returns the CLASSIC root used by every canonical User Settings operation.
+/// Locates the Installation Root used by every canonical User Settings operation.
 ///
-/// The TUI already resolves YAML Data and Crash Logs relative to its working root, so using the
-/// same explicit root avoids splitting one run across multiple settings locations.
-pub fn classic_root() -> PathBuf {
-    let current_dir = std::env::current_dir().unwrap_or_default();
+/// The TUI resolves User Settings, YAML Data and Crash Logs relative to this one root, so a run
+/// never splits across installations. The search itself is config's shared locator, fed with this
+/// process's executable folder and working directory, so the TUI agrees with the GUI and
+/// update-core and still finds the repository root from a `target/<profile>` build output folder.
+///
+/// # Errors
+///
+/// Returns [`InstallationRootNotFound`] when no candidate holds `CLASSIC Data`. There is
+/// deliberately no fallback folder: opening settings somewhere else would silently create a
+/// second, empty installation.
+pub fn locate_installation_root() -> Result<PathBuf, InstallationRootNotFound> {
     let executable_dir = std::env::current_exe()
         .ok()
-        .and_then(|path| path.parent().map(PathBuf::from));
+        .and_then(|path| path.parent().map(Path::to_path_buf));
+    let working_dir = std::env::current_dir().ok();
 
-    let mut candidates = Vec::new();
-    if let Some(application_dir) = executable_dir.as_ref() {
-        candidates.push(application_dir.clone());
-    }
-    candidates.push(current_dir.clone());
-    if let Some(application_dir) = executable_dir.as_ref() {
-        // Match the native frontends' development/install search so every executable resolves the
-        // same data root even when it is launched from a build output directory.
-        if let Some(parent) = application_dir.parent() {
-            candidates.push(parent.to_path_buf());
-            if let Some(grandparent) = parent.parent() {
-                candidates.push(grandparent.to_path_buf());
-            }
-            candidates.push(parent.join("install"));
-        }
-    }
-    candidates.push(current_dir.join("install"));
-
-    select_classic_root(candidates, executable_dir.unwrap_or(current_dir))
+    classic_config_core::locate_installation_root(executable_dir.as_deref(), working_dir.as_deref())
+        .ok_or(InstallationRootNotFound {
+            executable_dir,
+            working_dir,
+        })
 }
 
-/// Selects the first native-frontend-compatible root, retaining a stable application fallback.
-fn select_classic_root(candidates: Vec<PathBuf>, fallback: PathBuf) -> PathBuf {
-    candidates
-        .into_iter()
-        .find(|candidate| candidate.join("CLASSIC Data").is_dir())
-        .unwrap_or(fallback)
+/// No Installation Root was found from this process's executable folder or working directory.
+///
+/// Its `Display` text is the user-facing "CLASSIC Data not found" message the TUI prints before
+/// it would otherwise take over the terminal.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InstallationRootNotFound {
+    /// Folder holding the running executable, when the platform reported one.
+    pub executable_dir: Option<PathBuf>,
+    /// Process working directory, when it could be read.
+    pub working_dir: Option<PathBuf>,
 }
+
+impl fmt::Display for InstallationRootNotFound {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let describe = |path: &Option<PathBuf>| {
+            path.as_deref().map_or_else(
+                || "(unavailable)".to_owned(),
+                |path| path.display().to_string(),
+            )
+        };
+        write!(
+            f,
+            "CLASSIC Data not found. Run classic-tui from the CLASSIC installation folder, or place \
+             it next to the CLASSIC Data folder.\n  Executable folder: {}\n  Working directory: {}",
+            describe(&self.executable_dir),
+            describe(&self.working_dir)
+        )
+    }
+}
+
+impl std::error::Error for InstallationRootNotFound {}
 
 /// Returns the former TUI-only remembered-state path, when the platform exposes one.
 ///

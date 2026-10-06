@@ -26,15 +26,18 @@ pub(crate) use analyzer::{
     plugin_evidence_analyzer_construction_result, plugin_evidence_analyzer_new,
 };
 pub(crate) use contract::{
-    ScanRunCancellation, ScanRunContinuation, ScanRunContractExecution, ScanRunRequest,
-    ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
-    scan_run_cancellation_new, scan_run_continuation_abandon, scan_run_continuation_resume,
-    scan_run_contract_execute, scan_run_contract_execution_has_continuation,
-    scan_run_contract_execution_take_continuation, scan_run_contract_execution_take_result,
+    ScanRunCancellation, ScanRunContinuation, ScanRunContractExecution, ScanRunPendingRecovery,
+    ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
+    scan_run_cancellation_is_cancelled, scan_run_cancellation_new, scan_run_continuation_abandon,
+    scan_run_continuation_resume, scan_run_contract_execute,
+    scan_run_contract_execution_has_continuation, scan_run_contract_execution_has_pending_recovery,
+    scan_run_contract_execution_take_continuation,
+    scan_run_contract_execution_take_pending_recovery, scan_run_contract_execution_take_result,
     scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_installed_yaml_data_provenance_label, scan_run_local_ignore_reset_failure_stage_label,
     scan_run_local_ignore_yaml_data_state_label, scan_run_log_disposition_label,
-    scan_run_log_failure_stage_label, scan_run_request_standard,
+    scan_run_log_failure_stage_label, scan_run_pending_recovery_cancellation_requested,
+    scan_run_pending_recovery_prompt, scan_run_pending_recovery_settle, scan_run_request_standard,
     scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
@@ -612,6 +615,16 @@ mod ffi {
     enum ScanRunLocalIgnoreRecoveryDecision {
         ProceedWithoutIgnore = 0,
         ResetToDefault = 1,
+    }
+
+    /// An optional Local Ignore Recovery Decision for `scan_run_pending_recovery_settle`.
+    ///
+    /// The bridge has no `Option`, so the absence of a decision is spelled like every other
+    /// optional field here: `decision` is read only when `has_decision` is true. No decision
+    /// abandons the run; it is not a third decision.
+    struct ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: bool,
+        decision: ScanRunLocalIgnoreRecoveryDecision,
     }
 
     /// One setup check in a Crash Log Scan Setup Result.
@@ -1199,6 +1212,7 @@ mod ffi {
         type ScanRunContractExecution;
         type ScanRunContinuation;
         type ScanRunLaunch;
+        type ScanRunPendingRecovery;
 
         /// Constructs and validates an immutable analyzer handle from owned configuration.
         ///
@@ -1394,6 +1408,40 @@ mod ffi {
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
         ) -> Box<ScanRunContractExecution>;
+        /// Returns whether a paused run still offers its pending recovery.
+        fn scan_run_contract_execution_has_pending_recovery(
+            execution: &ScanRunContractExecution,
+        ) -> bool;
+        /// Moves the pending recovery out of its execution operation.
+        ///
+        /// Throws when the run did not pause or the pending recovery was already taken. It shares
+        /// one single-use claim with the legacy continuation the same execution offers.
+        fn scan_run_contract_execution_take_pending_recovery(
+            execution: &mut ScanRunContractExecution,
+        ) -> Result<Box<ScanRunPendingRecovery>>;
+        /// Returns the recovery prompt Rust rendered for this pending recovery.
+        fn scan_run_pending_recovery_prompt(
+            pending: &ScanRunPendingRecovery,
+        ) -> ScanRunRecoveryPrompt;
+        /// Returns whether cancellation of the paused run was already requested.
+        ///
+        /// Read live from the control passed to `scan_run_contract_execute`. When true, do not
+        /// prompt: settle with no decision.
+        fn scan_run_pending_recovery_cancellation_requested(
+            pending: &ScanRunPendingRecovery,
+        ) -> bool;
+        /// Settles the paused run once, synchronously, with an optional decision.
+        ///
+        /// No decision abandons the run: the run's own control is cancelled and the run finishes
+        /// cancelled after discovery with no filesystem work. Returns the ordinary envelope,
+        /// which cannot carry a continuation; a replay is the typed consumed-continuation
+        /// resume error. Throws only for an out-of-range decision. `observer` may be null and
+        /// receives only post-discovery lifecycle events; no callback crosses for the decision.
+        unsafe fn scan_run_pending_recovery_settle(
+            pending: &ScanRunPendingRecovery,
+            settlement: ScanRunLocalIgnoreRecoverySettlement,
+            observer: *const ScanRunObserver,
+        ) -> Result<ScanRunContractExecutionResult>;
 
         /// Human-facing Display Label for one scan-run Installed YAML Data
         /// diagnostic kind.

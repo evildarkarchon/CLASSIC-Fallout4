@@ -21,6 +21,9 @@ from .user_settings_migration import (
     normalize_migration,
 )
 from .user_settings_updates import (
+    FORMID_DATABASE_SAVE_PREDICATE,
+    FORMID_DATABASE_SAVE_PREFIX,
+    FORMID_DATABASES_POINTER,
     UPDATE_FIELD_ORDER,
     grouped_setter_predicates,
     setter_predicates,
@@ -405,8 +408,28 @@ def _compile_operations(
             raise ValueError(
                 "User Settings operation input does not match its independent oracle"
             )
-        if set(operation["requested_update"]) - set(field_order):
+        save_selectors = [
+            field
+            for field in operation["requested_update"]
+            if field.startswith(FORMID_DATABASE_SAVE_PREFIX)
+            and len(field) > len(FORMID_DATABASE_SAVE_PREFIX)
+        ]
+        if (
+            set(operation["requested_update"]) - set(field_order) - set(save_selectors)
+            or len(save_selectors) > 1
+        ):
             raise ValueError("unsupported User Settings operation update selector")
+        # A game-aware save publishes a complete mapping that differs from its request, so it
+        # must author the accepted values; raw field writes accept exactly what they request.
+        accepted_values = operation.get("expected_preview", operation["requested_update"])
+        if save_selectors and set(accepted_values) != {FORMID_DATABASES_POINTER}:
+            raise ValueError(
+                "User Settings FormID database save must author its published mapping"
+            )
+        if not save_selectors and accepted_values != operation["requested_update"]:
+            raise ValueError(
+                "User Settings field writes must accept exactly their requested values"
+            )
         if (
             type(config["commit"]) is not bool
             or type(config["installation_root_exists"]) is not bool
@@ -420,16 +443,20 @@ def _compile_operations(
                 "User Settings operation must select an explicit supported preview mode"
             )
         diagnostics = copy.deepcopy(config["preview_diagnostics"])
-        accepted = not diagnostics
+        # Accepted previews may carry non-rejecting effect diagnostics, so the authored
+        # outcome rather than an empty diagnostic list decides acceptance.
+        accepted = operation["outcome"] != "rejected_commit"
+        if not accepted and not diagnostics:
+            raise ValueError("rejected User Settings operation must author its diagnostics")
         attempted = accepted and config["commit"]
         committed = attempted and operation["writes_document"]
         preview = {
             "status": "accepted" if accepted else "rejected",
             "baseRevision": _revision(source) if accepted else None,
             "acceptedFields": [
-                {"fieldPath": field, "value": operation["requested_update"][field]}
+                {"fieldPath": field, "value": accepted_values[field]}
                 for field in field_order
-                if field in operation["requested_update"]
+                if field in accepted_values
             ]
             if accepted
             else [],
@@ -446,6 +473,8 @@ def _compile_operations(
             if attempted and not committed
             else None,
             "actualRevision": _revision(disk) if attempted and not committed else None,
+            # A committed update reports the same effect diagnostics its preview showed.
+            "diagnostics": copy.deepcopy(diagnostics) if committed else [],
         }
         before = _tree(source, root_exists=config["installation_root_exists"])
         after = _tree(
@@ -777,6 +806,7 @@ USER_SETTINGS_COVERAGE_POLICY = FamilyCoveragePolicy(
         LEGACY_IMPORT_PREDICATE,
         *setter_predicates(),
         *grouped_setter_predicates(),
+        FORMID_DATABASE_SAVE_PREDICATE,
         CoveragePredicate(
             "user-settings.game-setup",
             "user-settings.open",

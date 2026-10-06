@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-10-06T11:23:36.964791+00:00",
+  "generated_at_utc": "2026-10-06T12:00:53.970796+00:00",
   "summary": {
-    "tier1_contract_total": 1230,
-    "tier1_matched": 1228,
+    "tier1_contract_total": 1233,
+    "tier1_matched": 1231,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -1853,6 +1853,22 @@
       "actual_python_arity": 1
     },
     {
+      "id": "user_settings.update_with_formid_databases_for_game",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "rust_crate": "classic-user-settings-core",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "with_formid_databases_for_game",
+      "python_module": "classic_user_settings",
+      "python_export": "UserSettingsUpdate.set_formid_databases_for_game",
+      "python_export_path": "UserSettingsUpdate.set_formid_databases_for_game",
+      "status": "matched",
+      "expected_python_kind": "method",
+      "actual_python_kind": "method",
+      "expected_python_arity": 2,
+      "actual_python_arity": 2
+    },
+    {
       "id": "user_settings.update_with_move_unsolved_logs",
       "tier": "tier1",
       "owner_module": "user_settings",
@@ -3659,6 +3675,22 @@
       "actual_python_kind": "function",
       "expected_python_arity": 3,
       "actual_python_arity": 3
+    },
+    {
+      "id": "config.installation_root.locate_installation_root",
+      "tier": "tier1",
+      "owner_module": "config",
+      "rust_crate": "classic-config-core",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "locate_installation_root",
+      "python_module": "classic_config",
+      "python_export": "locate_installation_root",
+      "python_export_path": "locate_installation_root",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 2,
+      "actual_python_arity": 2
     },
     {
       "id": "config.installed_yaml_data.installed_yaml_data_provenance_label",
@@ -18669,6 +18701,22 @@
       "actual_python_kind": "function",
       "expected_python_arity": null,
       "actual_python_arity": 2
+    },
+    {
+      "id": "xse.lib.resolve_xse_log_for_scan",
+      "tier": "tier1",
+      "owner_module": "xse",
+      "rust_crate": "classic-scangame-core",
+      "squad": "Squad E (scangame/xse)",
+      "rust_symbol": "resolve_xse_log_for_scan",
+      "python_module": "classic_xse",
+      "python_export": "resolve_xse_log_for_scan",
+      "python_export_path": "resolve_xse_log_for_scan",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": null,
+      "actual_python_arity": 4
     },
     {
       "id": "xse.lib.is_xse_installed",
