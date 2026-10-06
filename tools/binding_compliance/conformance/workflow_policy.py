@@ -387,6 +387,23 @@ _EXECUTION_POLICIES += tuple(
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id == "cli"
 )
+# The GUI launches every Crash Log Scan through Crash Log Scan Launch (#288), so
+# its launch receipt is a blocking step of the GUI job with its own artifact,
+# after the build that step reuses.
+_EXECUTION_POLICIES += tuple(
+    replace(
+        policy,
+        family_id="crash-log-scan-launch",
+        launcher_marker=(
+            "run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }}"
+        ),
+        artifact_marker=(
+            "name: gui-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}"
+        ),
+    )
+    for policy in _EXECUTION_POLICIES[:7]
+    if policy.participant_id == "gui"
+)
 # The CLI job retains its original suite and the bounded family launches.
 _EXECUTION_POLICIES = tuple(
     replace(policy, job_timeout_minutes=360) if policy.job_id == "cli-tests" else policy

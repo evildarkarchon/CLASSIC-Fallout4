@@ -1211,7 +1211,13 @@ void MainWindow::onTabChanged(int index)
 
 QString MainWindow::readCrashLogsDir() const
 {
-    return QDir::cleanPath(QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("Crash Logs")));
+    // A Standard scan's base folder is the Installation Root (Crash Log Scan Launch decides that),
+    // so this is where it looks for Crash Logs and where the Results tab must watch. No
+    // Installation Root means no Crash Logs folder; callers treat empty as "not configured".
+    if (m_dataRoot.isEmpty()) {
+        return {};
+    }
+    return QDir::cleanPath(QDir(m_dataRoot).filePath(QStringLiteral("Crash Logs")));
 }
 
 bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const
@@ -1361,31 +1367,10 @@ void MainWindow::onScanCrashLogs()
         return;
     }
 
-    auto launchSettings = m_guiSettings.scanLaunchSettings(m_guiSettings.gameSetup.managedGame);
-    QString setupGameRoot;
-    QString setupDocsPath;
-    QString setupGameExePath;
-    QString setupXseLogPath;
-    if (launchSettings.fcxMode) {
-        if (!loadValidatedGameAndDocsPaths(&setupGameRoot, &setupDocsPath)) {
-            QMessageBox::warning(this, QStringLiteral("FCX Mode Requires Paths"),
-                                 QStringLiteral("FCX mode requires valid game and INI folder paths.\n\n"
-                                                "Open Settings and configure both paths before scanning crash logs."));
-            return;
-        }
-
-        setupGameExePath = QDir::cleanPath(launchSettings.setupGameExecutable.trimmed());
-        const auto executableName =
-            classic::path::resolve_fallout4_exe_name(launchSettings.gameVersion.toStdString());
-        setupGameExePath = classic::gui::normalizeGameExecutablePath(
-            setupGameExePath, setupGameRoot, classic::toQString(executableName));
-        setupXseLogPath =
-            resolveExistingXseLogPath(m_dataDir, launchSettings.game, launchSettings.gameVersion, setupDocsPath);
-        launchSettings.setupGameRoot = setupGameRoot;
-        launchSettings.setupDocumentsRoot = setupDocsPath;
-        launchSettings.setupGameExecutable = setupGameExePath;
-    }
-
+    // Nothing about the saved settings is checked or resolved here. Crash Log Scan Launch reads them
+    // on the worker thread and fills in the FCX setup context (game folder, documents folder, game
+    // executable, XSE log) itself; an FCX scan with a missing folder runs and reports the problem in
+    // its Crash Log Scan Setup Result instead of being refused before it starts.
     m_btnScanCrashLogs->setEnabled(false);
     m_btnScanCrashLogs->setText(QStringLiteral("SCANNING..."));
     m_crashScanTotalLogs = 0;
@@ -1398,7 +1383,7 @@ void MainWindow::onScanCrashLogs()
     setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
-    m_scanController->startScan(m_dataRoot, launchSettings, setupXseLogPath, m_targetedInputPaths);
+    m_scanController->startScan(m_dataRoot, m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()

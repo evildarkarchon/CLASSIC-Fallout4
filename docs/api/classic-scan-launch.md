@@ -14,8 +14,12 @@ so as its own User Settings Update, before or apart from launching.
 The crate and its binding surfaces exist. The Node and Python CLIs launch through it (#290). The
 native C++ CLI launches through it too (#289): it maps its flags onto overrides, saves
 `--unsolved-logs-destination` as a separate User Settings Update before launching, and prints the
-launch's `display_lines`. Frontends not yet switched still build their own requests and switch in
-their own changes. Every launch rule from ADR-0009 is implemented:
+launch's `display_lines`. The native GUI launches through it (#288; see
+[`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md)): it passes the
+Installation Root, the scan intent (Standard, or Targeted with the dropped inputs) and no
+overrides, and shows the launch's `display_lines` as a scan warning. Frontends not yet switched
+still build their own requests and switch in their own changes. Every launch rule from ADR-0009 is
+implemented:
 
 - the game-differs rule (#285): saved game-specific values are not applied to a non-managed game,
   each one reported as a typed launch diagnostic rendered as Display Content;

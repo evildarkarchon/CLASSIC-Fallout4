@@ -210,13 +210,6 @@ add_classic_gui_qt_test(classic-gui-test-scan-run-presentation
 )
 link_classic_gui_rust_bridge(classic-gui-test-scan-run-presentation)
 
-add_classic_gui_qt_test(classic-gui-test-scan-request-builder
-    test_scanrequestbuilder.cpp
-    ${CMAKE_SOURCE_DIR}/src/core/guiusersettings.cpp
-    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
-)
-link_classic_gui_rust_bridge(classic-gui-test-scan-request-builder)
-
 # Local Ignore recovery dialog behavior. Drives the real modal prompt so the offered choices, the
 # non-destructive default, and every dismissal path are asserted at runtime rather than by grepping
 # mainwindow.cpp for button labels.
@@ -234,7 +227,7 @@ add_classic_gui_qt_test(classic-gui-test-scancontroller-recovery
     ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
     ${CMAKE_SOURCE_DIR}/src/core/threadmanager.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
-    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanlaunch.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
 )
@@ -251,7 +244,7 @@ add_classic_gui_qt_test(classic-gui-test-recovery-prompt-nonblocking
     ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
     ${CMAKE_SOURCE_DIR}/src/core/threadmanager.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
-    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanlaunch.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
 )
@@ -260,11 +253,22 @@ link_classic_gui_rust_bridge(classic-gui-test-recovery-prompt-nonblocking)
 add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
     test_scanworker_cancellation.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
-    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanlaunch.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
 )
 link_classic_gui_rust_bridge(classic-gui-test-scanworker-cancellation)
+
+# Real runs launched through Crash Log Scan Launch: the Installation Root base folder, FCX Mode
+# running instead of refusing, and launch diagnostics reaching the user.
+add_classic_gui_qt_test(classic-gui-test-scanworker-launch
+    test_scanworker_launch.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanlaunch.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-scanworker-launch)
 
 # Executable consumer evidence for the maintained Qt Crash Log Scan Run seam. The runner is a
 # separate consumer participant: it observes worker dispatch, recovery marshalling, progress-model
@@ -276,7 +280,7 @@ add_classic_gui_qt_test(classic-gui-consumer-conformance
     ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
     ${CMAKE_SOURCE_DIR}/src/core/threadmanager.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
-    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanlaunch.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
 )

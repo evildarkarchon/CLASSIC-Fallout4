@@ -2,7 +2,7 @@
 
 Contributor-facing documentation for how the active Qt frontend consumes the final Rust-owned Crash Log Scan Run contract through:
 
-- [`classic-gui/src/workers/scanrequestbuilder.cpp`](../../classic-gui/src/workers/scanrequestbuilder.cpp)
+- [`classic-gui/src/workers/scanlaunch.cpp`](../../classic-gui/src/workers/scanlaunch.cpp)
 - [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp)
 - [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp)
 - [`classic-gui/src/workers/scanrunpresentation.cpp`](../../classic-gui/src/workers/scanrunpresentation.cpp)
@@ -20,7 +20,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 Use this page to understand:
 
-- how Qt constructs only valid tagged Standard or Targeted requests
+- how Qt launches a Standard or Targeted scan through Rust's Crash Log Scan Launch
 - where Rust-owned discovery, concurrency, and lifecycle events enter Qt
 - how `BatchProgressModel` projects serialized final-contract events into visible progress
 - how cancellation and terminal statuses become Qt signals
@@ -32,16 +32,15 @@ For the CXX observer contract, see [`classic-cpp-bridge-scan-progress-callback.m
 
 ## Request Construction Boundary
 
-`ScanController::startScan(...)` does not collect Crash Logs. It captures the immutable, revision-approved `CrashLogScanLaunchSettings`, the runtime FCX XSE-log hint, and the optional Targeted input list, then invokes `ScanWorker::doScan(...)` on a worker thread.
+The GUI builds no Crash Log Scan Run request itself (ADR-0009). `MainWindow::onScanCrashLogs()` checks only that an Installation Root was found, then calls `ScanController::startScan(installationRoot, targetedInputs)` with the dropped Targeted inputs, if any. It reads no saved scan setting, resolves no FCX folder, game executable, or XSE log, and refuses nothing: an FCX scan with a missing game or documents folder runs, and FCX setup validation reports the problem in the run's Crash Log Scan Setup Result, which reaches the user through the `SetupFailed` error dialog.
 
-`buildScanRunRequest(...)` projects those values into one opaque Rust-owned `ScanRunRequest`:
+On the worker thread, `ScanWorker::doScan(...)` calls `classic::gui::launchScanRun(...)` ([`scanlaunch.cpp`](../../classic-gui/src/workers/scanlaunch.cpp)), the GUI's whole share of request building:
 
-- no Targeted inputs constructs Standard intent with a `ScanRunStandardSourceDto`
-- one or more Targeted inputs constructs Targeted intent with a `ScanRunTargetedSourceDto`
-- Standard requests receive either `LeaveInPlace` or `MoveToConfiguredOrDefault` Unsolved Logs intent
-- Targeted constructors have no Unsolved Logs parameter, so persisted Standard movement settings cannot leak into a Targeted run
-- FCX requests use the corresponding `_with_fcx` constructor and must carry `ScanRunSetupContextDto`
-- a positive configured concurrency becomes an explicit value; a non-positive GUI setting omits it and selects Rust's adaptive policy
+- no Targeted inputs calls `scan_run_launch_standard(installationRoot, overrides)`; Rust makes the Installation Root the Standard base folder, so a Standard scan looks in `<Installation Root>/Crash Logs` (plus the saved custom scan folder), the same place the CLI and TUI look. `MainWindow::readCrashLogsDir()` follows it, so the Results tab and Open Crash Logs watch that folder too
+- one or more Targeted inputs calls `scan_run_launch_targeted(installationRoot, inputs, overrides)`, which scans exactly those inputs in order and has no Unsolved Logs capability
+- the overrides DTO is value-initialised: the GUI has no per-run overrides, so Rust applies the saved User Settings (managed game, game version, Fallout 4 VR FormID row rule, concurrency, Unsolved Logs policy, and with FCX Mode on the FCX setup context including the XSE log) unchanged
+
+Launching reads User Settings at the moment the scan starts, on the worker thread, so the scan uses what was last saved rather than the window's cached snapshot. A typed launch error (`scan_run_launch_error(...).has_error`, for example an XSE log location that cannot be inspected) ends the scan through `error` before any run starts. Otherwise the launch's diagnostics, which arrive as Rust-rendered Display Content lines (`ScanRunLaunchRequestDto.display_lines`), are laid out by `formatScanRunLaunchWarning(...)` and published once through `ScanWorker::launchWarning`; `ScanController` relays that as `scanWarning`, so a degraded User Settings document is reported in Rust's words while the scan goes ahead from defaults. The worker then takes the executable request with `scan_run_launch_request(...)`.
 
 The worker starts exactly one operation and moves out its result envelope:
 
@@ -278,7 +277,7 @@ Autoscan Report content.
 
 ## What Current Tests Assert
 
-[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) behavior-tests the tagged constructor boundary: one installation root and typed game cross the request seam, empty Targeted input creates Standard discovery, while Targeted input creates Targeted discovery with structured rejections and cannot express Standard movement.
+What a launch builds is pinned in Rust and by the `crash-log-scan-launch` conformance family; the GUI's `gui.scan-launch` consumer obligation (run by `run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch`) observes `launchScanRun` itself: the Installation Root as Standard base folder, dropped inputs becoming a Targeted intent in order, an FCX launch with missing saved folders still launching, and degraded settings producing warning lines. [`test_scanworker_launch.cpp`](../../classic-gui/tests/test_scanworker_launch.cpp) runs real scans through the worker: a Standard scan discovers Crash Logs under the Installation Root, an FCX scan with missing folders runs and reports its Crash Log Scan Setup Result instead of being refused, and launch diagnostics are published as a warning while the run continues.
 
 [`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) uses `ScanRunContractEvent` directly. It verifies discovery/concurrency initialization, monotonic serialized lifecycle progress, interleaved per-log advancement, late-phase suppression, and full work contribution for a failed `LogFinished` event.
 
@@ -310,7 +309,7 @@ Autoscan Report content.
 
 ## Contributor Rule Of Thumb
 
-- Change request policy in Rust and its tagged constructors, not by adding GUI flag combinations.
+- Change request policy in Rust's Crash Log Scan Launch, not by adding GUI flag combinations or GUI-side settings reads.
 - When final observer tags or fields change, update the bridge observer documentation, `BatchProgressModel`, presentation tests, and this page together.
 - Debug totals and accepted paths from `DiscoveryCompleted`; debug concurrency from `EffectiveConcurrencySelected`; debug success/failure details from the terminal execution result.
 - Do not add a second progress DTO, caller-input correlation, completion-order result reconstruction, GUI discovery, or GUI-owned durable finalization to this flow.

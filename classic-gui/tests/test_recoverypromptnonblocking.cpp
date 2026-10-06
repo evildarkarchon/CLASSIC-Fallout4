@@ -356,15 +356,11 @@ ScanWorkerRun driveThroughScanWorker(const QString& installationRoot, const QStr
     QSignalSpy cancelledSpy(&worker, &ScanWorker::cancelled);
     QSignalSpy errorSpy(&worker, &ScanWorker::error);
 
-    classic::gui::CrashLogScanLaunchSettings settings;
-    settings.game = QStringLiteral("Fallout4");
-    settings.gameVersion = QStringLiteral("auto");
-
     QThread thread;
     worker.moveToThread(&thread);
     QObject::connect(&thread, &QThread::started, &worker,
-                     [&worker, &thread, installationRoot, settings, crashLog]() {
-                         worker.doScan(installationRoot, settings, installationRoot, {}, {crashLog});
+                     [&worker, &thread, installationRoot, crashLog]() {
+                         worker.doScan(installationRoot, {crashLog});
                          thread.quit();
                      });
 

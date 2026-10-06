@@ -1472,6 +1472,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run GUI Crash Log Scan Launch consumer conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }} -Preset ci-system-qt -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers -TestOnly
+
+      - name: Upload GUI Crash Log Scan Launch consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: gui-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}
+          path: tools/binding_compliance/artifacts/crash-log-scan-launch-consumers/gui/windows-${{ matrix.compiler }}/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload GUI diagnostics
         if: failure()
         uses: actions/upload-artifact@v6

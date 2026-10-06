@@ -46,8 +46,8 @@ qt_add_executable(ClassicGui WIN32
     workers/scanprogressmodel.cpp
     workers/scanworker.h
     workers/scanworker.cpp
-    workers/scanrequestbuilder.h
-    workers/scanrequestbuilder.cpp
+    workers/scanlaunch.h
+    workers/scanlaunch.cpp
     workers/scanrunpresentation.h
     workers/scanrunpresentation.cpp
     workers/gamefilesworker.h

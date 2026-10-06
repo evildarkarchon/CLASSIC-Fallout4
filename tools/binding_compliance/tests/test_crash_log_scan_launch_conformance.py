@@ -26,8 +26,8 @@ PACK = Path("tests/conformance/packs/crash_log_scan_launch/v1.json")
 def test_launch_requires_all_four_semantic_adapters() -> None:
     """Every binding maps the launch crate, so none may skip its runner.
 
-    Frontends that launch through Crash Log Scan Launch join as consumers; the native CLI
-    is one of them (#289).
+    Frontends that launch through Crash Log Scan Launch join as consumers, never as semantic
+    adapters; the native CLI (#289) and the GUI (#288) are among them.
     """
     pack = load_and_validate_pack(ROOT, PACK).document()
     matrix = derive_applicability(
@@ -38,6 +38,7 @@ def test_launch_requires_all_four_semantic_adapters() -> None:
     participants = {p.id for p in matrix.participants}
     assert {"rust", "cxx", "node", "python"} <= participants
     assert "cli" in participants
+    assert "gui" in participants
     assert participants - {"rust", "cxx", "node", "python"} <= {"cli", "gui", "tui"}
     assert next(
         p for p in matrix.participants if p.id == "cxx"

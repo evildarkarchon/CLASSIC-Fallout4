@@ -231,9 +231,9 @@
             "classic-gui/src/controllers/scancontroller.h",
             "classic-gui/src/core/signalhub.cpp",
             "classic-gui/src/core/threadmanager.cpp",
+            "classic-gui/src/workers/scanlaunch.cpp",
             "classic-gui/src/workers/scanprogressmodel.cpp",
             "classic-gui/src/workers/scanprogressmodel.h",
-            "classic-gui/src/workers/scanrequestbuilder.cpp",
             "classic-gui/src/workers/scanrunpresentation.cpp",
             "classic-gui/src/workers/scanrunpresentation.h",
             "classic-gui/src/workers/scanworker.cpp",
@@ -951,6 +951,96 @@
                     "fcxEnabled": false,
                     "diagnosticCodes": [],
                     "settingsUnchanged": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "gui",
+          "executionInstanceIds": [
+            "windows-clang-cl",
+            "windows-msvc"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-scan-launch/src",
+            "business-logic/classic-scan-presentation/src",
+            "business-logic/classic-user-settings-core/src",
+            "classic-gui/build_gui.ps1",
+            "classic-gui/src/controllers/scancontroller.cpp",
+            "classic-gui/src/controllers/scancontroller.h",
+            "classic-gui/src/workers/scanlaunch.cpp",
+            "classic-gui/src/workers/scanlaunch.h",
+            "classic-gui/src/workers/scanrunpresentation.cpp",
+            "classic-gui/src/workers/scanworker.cpp",
+            "classic-gui/src/workers/scanworker.h",
+            "classic-gui/tests/CMakeLists.txt",
+            "classic-gui/tests/conformance/classic_gui_consumer_conformance.cpp",
+            "classic-gui/vcpkg.json",
+            "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+            "cpp-bindings/classic-cpp-bridge/src/scanner/launch.rs",
+            "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py",
+            "tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1"
+          ],
+          "obligations": [
+            {
+              "id": "gui.scan-launch",
+              "scenarioIds": [
+                "managed-game-saved-values",
+                "targeted-scans-exactly-its-inputs",
+                "fcx-missing-setup-folders-still-launch",
+                "malformed-settings-launch-from-defaults"
+              ],
+              "expected": {
+                "launches": [
+                  {
+                    "scenarioId": "managed-game-saved-values",
+                    "outcome": "launched",
+                    "intent": "standard",
+                    "baseDirectory": ".",
+                    "targetedInputs": null,
+                    "fcxEnabled": false,
+                    "setupFolders": null,
+                    "warningLines": 0
+                  },
+                  {
+                    "scenarioId": "targeted-scans-exactly-its-inputs",
+                    "outcome": "launched",
+                    "intent": "targeted",
+                    "baseDirectory": null,
+                    "targetedInputs": [
+                      "b.log",
+                      "a folder"
+                    ],
+                    "fcxEnabled": false,
+                    "setupFolders": null,
+                    "warningLines": 0
+                  },
+                  {
+                    "scenarioId": "fcx-missing-setup-folders-still-launch",
+                    "outcome": "launched",
+                    "intent": "standard",
+                    "baseDirectory": ".",
+                    "targetedInputs": null,
+                    "fcxEnabled": true,
+                    "setupFolders": {
+                      "gameRoot": "Fallout 4",
+                      "docsRoot": "Documents",
+                      "gameRootExists": false,
+                      "docsRootExists": false
+                    },
+                    "warningLines": 0
+                  },
+                  {
+                    "scenarioId": "malformed-settings-launch-from-defaults",
+                    "outcome": "launched",
+                    "intent": "standard",
+                    "baseDirectory": ".",
+                    "targetedInputs": null,
+                    "fcxEnabled": false,
+                    "setupFolders": null,
+                    "warningLines": 2
                   }
                 ]
               }

@@ -196,7 +196,7 @@ That last group is renderer conformance and deliberately says nothing about word
 
 [`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) verifies the separate event-order domain: state is keyed by discovery index, interleaved logs advance independently, and late lower-rank events cannot regress visible progress.
 
-[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) verifies that Standard and Targeted discovery begin through distinct tagged requests and that Targeted rejection remains structured discovery data.
+Standard and Targeted discovery begin through distinct launch intents that Rust's Crash Log Scan Launch turns into tagged requests; the `crash-log-scan-launch` conformance family and the GUI's `gui.scan-launch` consumer obligation pin that, and the `crash-log-scan-run` `targeted-happy-path` scenario keeps Targeted rejection structured discovery data.
 
 [`test_resultscontroller.cpp`](../../classic-gui/tests/test_resultscontroller.cpp) and [`test_reportlistwidget.cpp`](../../classic-gui/tests/test_reportlistwidget.cpp) cover directory baselines, NEW-path behavior, refresh, and badge rendering. Those tests do not redefine terminal scan-result order.
 
