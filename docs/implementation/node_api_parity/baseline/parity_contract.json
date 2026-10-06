@@ -7327,7 +7327,7 @@
       "id": "version.PeVersionError@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PeVersionError@rust",
       "rustKind": "reexport"
     },
@@ -7335,7 +7335,7 @@
       "id": "version.VersionError@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "VersionError@rust",
       "rustKind": "enum"
     },
@@ -7343,89 +7343,17 @@
       "id": "version.VersionResult@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "VersionResult@rust",
       "rustKind": "type"
-    },
-    {
-      "id": "version.compare_versions@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "compare_versions@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "version.extract_all_versions@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "extract_all_versions@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.extract_version_from_filename@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "extract_version_from_filename@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.extract_version_from_log@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "extract_version_from_log@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.format_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "format_version@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.is_known_f4se_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "is_known_f4se_version@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.is_known_fallout4_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "is_known_fallout4_version@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.parse_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "parse_version@rust",
-      "rustKind": "reexport"
     },
     {
       "id": "version.pe_version@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "pe_version@rust",
       "rustKind": "module"
-    },
-    {
-      "id": "version.try_parse_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "try_parse_version@rust",
-      "rustKind": "reexport"
     },
     {
       "id": "web.CLASSIC_VERSION@rust",

@@ -46,7 +46,7 @@
       "description": "classic_path binding (classic-path-py wrapping classic-path-core)"
     },
     "version": {
-      "description": "classic_version binding (classic-version-py wrapping classic-version-core)"
+      "description": "classic_version binding (classic-version-py wrapping classic-shared-core version helpers and classic-version-registry-core known-version queries)"
     },
     "resource": {
       "description": "classic_resource binding (classic-resource-py wrapping classic-resource-core)"
@@ -11101,7 +11101,7 @@
       "id": "version.lib.PeVersionError@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PeVersionError",
       "pythonModule": "classic_version",
       "pythonExportPath": "compare_versions",
@@ -11111,7 +11111,7 @@
       "id": "version.lib.PeVersionResult@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PeVersionResult",
       "pythonModule": "classic_version",
       "pythonExportPath": "compare_versions",
@@ -11121,7 +11121,7 @@
       "id": "version.lib.VersionError@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "VersionError",
       "pythonModule": "classic_version",
       "pythonExportPath": "compare_versions",
@@ -11131,7 +11131,7 @@
       "id": "version.lib.VersionResult@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "VersionResult",
       "pythonModule": "classic_version",
       "pythonExportPath": "compare_versions",

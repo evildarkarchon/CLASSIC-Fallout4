@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T01:36:23.690577+00:00",
+  "generated_at_utc": "2026-10-06T01:50:05.572266+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -13,7 +13,6 @@
       "classic-settings-core",
       "classic-message-core",
       "classic-path-core",
-      "classic-version-core",
       "classic-resource-core",
       "classic-xse-core",
       "classic-web-core",
@@ -33,7 +32,6 @@
       "business-logic/classic-settings-core/src/lib.rs",
       "business-logic/classic-message-core/src/lib.rs",
       "business-logic/classic-path-core/src/lib.rs",
-      "business-logic/classic-version-core/src/lib.rs",
       "business-logic/classic-resource-core/src/lib.rs",
       "business-logic/classic-xse-core/src/lib.rs",
       "business-logic/classic-web-core/src/lib.rs",
@@ -21523,216 +21521,6 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn with_window_geometry(\n        mut self,\n        window: GuiWindow,\n        maximized: bool,\n        width: i64,\n        height: i64,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "NULL_VERSION",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::NULL_VERSION;",
-      "source_expr": "classic_version_registry_core::NULL_VERSION",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "PeVersionError",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::PeVersionError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "PeVersionResult",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::PeVersionResult",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "VersionError",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::VersionError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "VersionInfo",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::VersionInfo",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "VersionRegistry",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::VersionRegistry",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "VersionRegistryError",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::VersionRegistryError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "VersionResult",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::VersionResult",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "compare_versions",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::compare_versions",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_all_versions",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::extract_all_versions",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_pe_version",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::extract_pe_version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_version_from_filename",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::extract_version_from_filename",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_version_from_log",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::extract_version_from_log",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "format_version",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::format_version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_version_registry",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::get_version_registry",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_known_f4se_version",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{is_known_f4se_version, is_known_fallout4_version};",
-      "source_expr": "classic_version_registry_core::is_known_f4se_version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_known_fallout4_version",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{is_known_f4se_version, is_known_fallout4_version};",
-      "source_expr": "classic_version_registry_core::is_known_fallout4_version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_valid_executable_path",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::is_valid_executable_path",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "parse_version",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::parse_version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "pe_version",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::pe_version;",
-      "source_expr": "classic_shared_core::version::pe_version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "try_parse_version",
-      "kind": "reexport",
-      "crate": "classic-version-core",
-      "owner_module": "version",
-      "source_file": "business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::version::{ PeVersionError, PeVersionResult, VersionError, VersionResult, compare_versions, extract_all_versions, extract_pe_version, extract_version_from_filename, extract_version_from_log, format_version, is_valid_executable_path, parse_version, try_parse_version, };",
-      "source_expr": "classic_shared_core::version::try_parse_version",
       "tier": "tier1"
     },
     {
