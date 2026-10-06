@@ -630,7 +630,7 @@ fn maps_setup_and_run_optional_fields_without_loss() {
     Python::attach(|py| {
         let with_values = run_result_to_py(
             py,
-            contract::RunResult {
+            contract::RunResult::from(contract::SettledRunResult {
                 status: CrashLogScanRunStatus::SetupFailed,
                 discovery: Some(discovery()),
                 setup: Some(CrashLogScanSetupResult {
@@ -644,7 +644,6 @@ fn maps_setup_and_run_optional_fields_without_loss() {
                     rendered_report: setup.rendered_report.clone(),
                 }),
                 installed_yaml_data: None,
-                continuation: None,
                 effective_concurrency: Some(2),
                 message: Some("run message".to_string()),
                 total: 4,
@@ -653,7 +652,7 @@ fn maps_setup_and_run_optional_fields_without_loss() {
                 cancelled: 1,
                 logs: Vec::new(),
                 observer_delivery_failure: None,
-            },
+            }),
         )
         .expect("mapped result should allocate");
         let with_values = with_values.borrow(py);
@@ -674,12 +673,11 @@ fn maps_setup_and_run_optional_fields_without_loss() {
 
         let without_values = run_result_to_py(
             py,
-            contract::RunResult {
+            contract::RunResult::from(contract::SettledRunResult {
                 status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
                 discovery: None,
                 setup: None,
                 installed_yaml_data: None,
-                continuation: None,
                 effective_concurrency: None,
                 message: None,
                 total: 0,
@@ -688,7 +686,7 @@ fn maps_setup_and_run_optional_fields_without_loss() {
                 cancelled: 0,
                 logs: Vec::new(),
                 observer_delivery_failure: None,
-            },
+            }),
         )
         .expect("mapped result should allocate");
         let without_values = without_values.borrow(py);
@@ -1128,7 +1126,7 @@ fn a_recovery_decision_description_flattens_like_any_other_segments() {
 /// Both contract decisions cross as distinct Python twins.
 ///
 /// The enum crosses rather than a token, unlike every other tag on this surface,
-/// because `scan_run_resume` takes the enum: a consumer answers with exactly what it
+/// because `scan_run_settle` takes the enum: a consumer answers with exactly what it
 /// was offered rather than mapping a string back.
 fn every_recovery_decision_crosses_as_its_own_python_twin() {
     assert_eq!(
@@ -1147,12 +1145,11 @@ fn every_recovery_decision_crosses_as_its_own_python_twin() {
 /// A run paused on Local Ignore recovery carries the prompt Rust rendered for it.
 fn the_execution_envelope_carries_the_recovery_prompt_core_rendered() {
     Python::attach(|py| {
-        let build = || contract::RunResult {
+        let build = || contract::RunResult::from(contract::SettledRunResult {
             status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
             discovery: None,
             setup: None,
             installed_yaml_data: None,
-            continuation: None,
             effective_concurrency: None,
             message: Some("Local Ignore requires a recovery decision".to_string()),
             total: 0,
@@ -1161,7 +1158,7 @@ fn the_execution_envelope_carries_the_recovery_prompt_core_rendered() {
             cancelled: 0,
             logs: Vec::new(),
             observer_delivery_failure: None,
-        };
+        });
         let expected = recovery_prompt_to_py(&render_local_ignore_recovery(None));
         let execution = success_execution(py, build()).expect("envelope should build");
 
@@ -1184,12 +1181,11 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
     Python::attach(|py| {
         let completed = success_execution(
             py,
-            contract::RunResult {
+            contract::RunResult::from(contract::SettledRunResult {
                 status: CrashLogScanRunStatus::Completed,
                 discovery: None,
                 setup: None,
                 installed_yaml_data: None,
-                continuation: None,
                 effective_concurrency: None,
                 message: None,
                 total: 0,
@@ -1198,7 +1194,7 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
                 cancelled: 0,
                 logs: Vec::new(),
                 observer_delivery_failure: None,
-            },
+            }),
         )
         .expect("envelope should build");
         assert!(completed.recovery_prompt().is_none());
@@ -1225,12 +1221,11 @@ fn an_envelope_without_a_retained_continuation_offers_no_pending_recovery() {
     Python::attach(|py| {
         let execution = success_execution(
             py,
-            contract::RunResult {
+            contract::RunResult::from(contract::SettledRunResult {
                 status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
                 discovery: None,
                 setup: None,
                 installed_yaml_data: None,
-                continuation: None,
                 effective_concurrency: None,
                 message: None,
                 total: 0,
@@ -1239,7 +1234,7 @@ fn an_envelope_without_a_retained_continuation_offers_no_pending_recovery() {
                 cancelled: 0,
                 logs: Vec::new(),
                 observer_delivery_failure: None,
-            },
+            }),
         )
         .expect("envelope should build");
 
@@ -1297,7 +1292,6 @@ fn a_settled_envelope_projects_the_settled_result_and_its_lines() {
             .expect("a settled run carries its result");
         let result = result.borrow(py);
         assert_eq!(result.status(), "cancelled");
-        assert!(result.continuation(py).is_none());
         assert!(execution.error().is_none());
         assert_eq!(execution.observer_error().as_deref(), Some("observer failed"));
         assert_eq!(
@@ -1338,12 +1332,11 @@ fn observer_error_is_read_from_the_rust_result_not_tracked_by_the_binding() {
         let reported = || Some(contract::ObserverDeliveryFailure::new("callback raised"));
         let completed = success_execution(
             py,
-            contract::RunResult {
+            contract::RunResult::from(contract::SettledRunResult {
                 status: CrashLogScanRunStatus::Completed,
                 discovery: None,
                 setup: None,
                 installed_yaml_data: None,
-                continuation: None,
                 effective_concurrency: None,
                 message: None,
                 total: 0,
@@ -1352,7 +1345,7 @@ fn observer_error_is_read_from_the_rust_result_not_tracked_by_the_binding() {
                 cancelled: 0,
                 logs: Vec::new(),
                 observer_delivery_failure: reported(),
-            },
+            }),
         )
         .expect("envelope should build");
         assert_eq!(completed.observer_error().as_deref(), Some("callback raised"));

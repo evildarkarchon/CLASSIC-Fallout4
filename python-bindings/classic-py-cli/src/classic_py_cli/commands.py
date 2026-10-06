@@ -700,8 +700,8 @@ _UNRENDERED_RUN = "classic_scanlog published no Display Content for this Crash L
 # and no longer appears here at all.
 #
 # `local_ignore_recovery_required` is terminal for this CLI. The run paused before
-# analysing any log and returned a one-shot continuation that only an interactive caller
-# can answer; `scan logs` never resumes it. Falling through to the success path reported
+# analysing any log and returned a one-shot pending recovery that only an interactive caller
+# can answer; `scan logs` never settles it. Falling through to the success path reported
 # "0 succeeded, 0 failed" and exit 0, which is indistinguishable from a healthy scan of
 # an empty directory even though the real cause was a malformed CLASSIC Ignore.yaml the
 # caller was never told about.
@@ -767,7 +767,7 @@ def _scan_recovery_prompt(execution: object) -> dict[str, Any] | None:
     decision the run had already reported it cannot honor. The availability is read
     from the description that carries it, so there is no second fact to consult.
 
-    ``decision`` is ``str()`` of the binding's own enum -- ``scan_run_resume`` takes
+    ``decision`` is ``str()`` of the binding's own enum -- ``scan_run_settle`` takes
     that enum rather than a snake_case token, and the binding publishes no token for
     it. Stringifying is what keeps the mapping table out of this frontend; writing one
     here is exactly the drift the enum was chosen to prevent.

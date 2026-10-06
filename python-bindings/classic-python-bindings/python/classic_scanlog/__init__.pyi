@@ -818,10 +818,6 @@ class ScanRunLocalIgnoreRecoveryDecision:
     ResetToDefault: ScanRunLocalIgnoreRecoveryDecision
 
 
-class ScanRunContinuation:
-    """Opaque process-local carrier for one paused Crash Log Scan Run."""
-
-
 class ScanRunContinuationConsumedError(RuntimeError):
     """Raised when a recovery continuation is consumed more than once.
 
@@ -905,7 +901,6 @@ class ScanRunResult:
     discovery: ScanRunDiscoveryResult | None
     setup: ScanRunSetupResult | None
     installed_yaml_data: ScanRunInstalledYamlDataRunData | None
-    continuation: ScanRunContinuation | None
     effective_concurrency: int | None
     message: str | None
     total: int
@@ -968,7 +963,7 @@ class ScanRunRecoveryDecisionDescription:
     continuation, so the user is left with no scan and no second attempt.
 
     ``decision`` is the enum rather than a token, unlike every other tag this
-    surface publishes on an output, because ``scan_run_resume`` takes the enum:
+    surface publishes on an output, because ``scan_run_settle`` takes the enum:
     a consumer answers with exactly what it was offered.
     """
 
@@ -987,7 +982,7 @@ class ScanRunRecoveryPrompt:
     themselves are not.
 
     Backing out appears nowhere here: it is spelled as the absence of a decision
-    through ``scan_run_abandon``.
+    when settling through ``scan_run_settle``.
     """
 
     lines: list[ScanRunDisplayLine]
@@ -1081,37 +1076,6 @@ def scan_run_execute(
     """
 
 
-def scan_run_resume(
-        continuation: ScanRunContinuation,
-        decision: ScanRunLocalIgnoreRecoveryDecision,
-        cancellation: ScanRunCancellation,
-        observer: Callable[[ScanRunEvent], None] | None = None,
-        cancel_on_observer_error: bool = False,
-) -> ScanRunExecution:
-    """Resume retained work without repeating discovery or YAML Data selection."""
-
-
-def scan_run_abandon(
-        continuation: ScanRunContinuation,
-        cancellation: ScanRunCancellation,
-        observer: Callable[[ScanRunEvent], None] | None = None,
-        cancel_on_observer_error: bool = False,
-) -> ScanRunExecution:
-    """Abandon retained work without applying either recovery decision.
-
-    Requests cancellation on ``cancellation`` and then claims the continuation,
-    returning the ordinary post-discovery cancelled execution. Nothing on disk
-    is touched. Prefer this over cancelling and then calling
-    :func:`scan_run_resume` with a placeholder decision; that sequence is what
-    this replaces, and getting its ordering wrong spends the one-shot
-    continuation on a real recovery attempt.
-
-    ``cancellation`` is left cancelled afterwards. Replay raises
-    :class:`ScanRunContinuationConsumedError`, exactly as
-    :func:`scan_run_resume` does.
-    """
-
-
 def scan_run_settle(
         pending_recovery: ScanRunPendingRecovery,
         decision: ScanRunLocalIgnoreRecoveryDecision | None = None,
@@ -1122,9 +1086,9 @@ def scan_run_settle(
 
     A decision resumes the same discovered Crash Logs without rediscovery. No
     decision abandons the run: it cancels the run's own control and finishes
-    cancelled after discovery with no filesystem work. Replay, here or through
-    :func:`scan_run_resume` / :func:`scan_run_abandon` (they share the claim),
-    raises :class:`ScanRunContinuationConsumedError`.
+    cancelled after discovery with no filesystem work. Settling is the only way
+    to answer a paused run. Replay raises
+    :class:`ScanRunContinuationConsumedError`.
 
     ``cancel_on_observer_error`` is the observer failure policy Rust applies to
     the settled run, exactly as for :func:`scan_run_execute`.

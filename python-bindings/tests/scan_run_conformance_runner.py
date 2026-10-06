@@ -1318,7 +1318,7 @@ def _local_ignore_observation(
         execution,
         callbacks,
         root,
-        continuation_available=result.continuation is not None,
+        continuation_available=execution.pending_recovery is not None,
         recovery_prompt=execution.recovery_prompt,
     )
     observation["durableEffects"] = _local_ignore_durable_effects(result, inputs, root)
@@ -1326,7 +1326,11 @@ def _local_ignore_observation(
 
 
 def _continuation_action(raw_action: object, label: str) -> tuple[str, str | None]:
-    """Validate one continuation operation and its optional plan decision."""
+    """Validate one continuation operation and its optional plan decision.
+
+    Settling is the only operation: the separate resume and abandon entry points were
+    removed (ADR-0009), so a plan naming either is rejected rather than silently skipped.
+    """
 
     action = _require_mapping(raw_action, label)
     operation = _require_string(action.get("operation"), f"{label}.operation")
@@ -1334,64 +1338,30 @@ def _continuation_action(raw_action: object, label: str) -> tuple[str, str | Non
     decision = None
     if raw_decision is not None:
         decision = _require_string(raw_decision, f"{label}.decision")
-    if operation == "resume" and decision in {
-        "proceed-without-ignore",
-        "reset-to-default",
-    }:
-        return operation, decision
-    if operation == "abandon" and decision is None:
-        return operation, None
+    if operation != "settle":
+        raise RunnerContractError(f"{label}.operation must be settle")
     # Settling takes an optional decision: none is abandonment, not a third decision.
-    if operation == "settle" and decision in {
-        None,
-        "proceed-without-ignore",
-        "reset-to-default",
-    }:
-        return operation, decision
-    if operation in {"resume", "settle"}:
+    if decision not in {None, "proceed-without-ignore", "reset-to-default"}:
         raise RunnerContractError(f"{label} has no supported recovery decision")
-    if operation == "abandon":
-        raise RunnerContractError(f"{label} abandon operation must not have a decision")
-    raise RunnerContractError(f"{label}.operation must be resume, abandon, or settle")
+    return operation, decision
 
 
 def _run_continuation_action(
         classic_scanlog: Any,
-        continuation: Any,
-        cancellation: Any,
+        pending_recovery: Any,
         raw_action: object,
         label: str,
         callbacks: list[Any] | None,
-        pending_recovery: Any | None = None,
 ) -> Any:
-    """Invoke one public resume, abandon, or settle operation on the retained run.
+    """Settle the retained run's pending recovery for one plan action."""
 
-    Settling goes through ``pending_recovery``; resume and abandon go through the legacy
-    ``continuation``, which shares the same one-shot claim.
-    """
-
-    operation, decision = _continuation_action(raw_action, label)
+    _, decision = _continuation_action(raw_action, label)
     observer = None if callbacks is None else callbacks.append
-    if operation == "settle":
-        if pending_recovery is None:
-            raise RunnerContractError(f"{label} settle requires a pending recovery")
-        return classic_scanlog.scan_run_settle(
-            pending_recovery,
-            None
-            if decision is None
-            else _recovery_decision(classic_scanlog, decision, f"{label}.decision"),
-            observer,
-        )
-    if operation == "resume":
-        return classic_scanlog.scan_run_resume(
-            continuation,
-            _recovery_decision(classic_scanlog, decision, f"{label}.decision"),
-            cancellation,
-            observer,
-        )
-    return classic_scanlog.scan_run_abandon(
-        continuation,
-        cancellation,
+    return classic_scanlog.scan_run_settle(
+        pending_recovery,
+        None
+        if decision is None
+        else _recovery_decision(classic_scanlog, decision, f"{label}.decision"),
         observer,
     )
 
@@ -1532,29 +1502,25 @@ def _execute_continuation_flow(
             cancellation_boundary, "continuationFlow.cancellation"
         )
         if cancellation_boundary not in {
-            "before-resume",
+            "before-settle",
             "after-reset-critical-section",
             "before-pending-recovery",
         }:
             raise RunnerContractError(
-                "continuationFlow.cancellation must be before-resume, "
+                "continuationFlow.cancellation must be before-settle, "
                 "after-reset-critical-section, or before-pending-recovery"
             )
-    settles = _continuation_action(action, "continuationFlow.action")[0] == "settle"
     if cancellation_boundary == "before-pending-recovery":
-        if not settles:
-            raise RunnerContractError(
-                "before-pending-recovery cancellation requires a settle action"
-            )
         # The run's own control, cancelled after the pause and before the frontend reads
         # its pending recovery.
         cancellation.cancel()
 
-    initial_result = _result_or_raise(initial_execution)
-    continuation = initial_result.continuation
-    if continuation is None:
+    _result_or_raise(initial_execution)
+    # A settling frontend reaches the paused run only through its pending recovery.
+    pending_recovery = initial_execution.pending_recovery
+    if pending_recovery is None:
         raise RunnerContractError(
-            "continuationFlow initial result has no retained continuation"
+            "continuationFlow initial execution has no pending recovery"
         )
     prompt = initial_execution.recovery_prompt
     if prompt is None:
@@ -1569,20 +1535,12 @@ def _execute_continuation_flow(
         continuation_available=True,
         recovery_prompt=prompt,
     )
-    pending_recovery = None
-    if settles:
-        # A settling frontend reaches the paused run only through its pending recovery.
-        pending_recovery = initial_execution.pending_recovery
-        if pending_recovery is None:
-            raise RunnerContractError(
-                "continuationFlow initial execution has no pending recovery"
-            )
-        initial["pendingRecovery"] = {
-            "cancellationRequested": bool(pending_recovery.cancellation_requested),
-            "prompt": _project_recovery_prompt(
-                classic_scanlog, pending_recovery.prompt, root
-            ),
-        }
+    initial["pendingRecovery"] = {
+        "cancellationRequested": bool(pending_recovery.cancellation_requested),
+        "prompt": _project_recovery_prompt(
+            classic_scanlog, pending_recovery.prompt, root
+        ),
+    }
 
     _materialize_post_pause_data(
         plan,
@@ -1592,11 +1550,11 @@ def _execute_continuation_flow(
     )
     reset_entry_observed: threading.Event | None = None
     canceller: threading.Thread | None = None
-    if cancellation_boundary == "before-resume":
+    if cancellation_boundary == "before-settle":
         cancellation.cancel()
     elif cancellation_boundary == "after-reset-critical-section":
-        operation, decision = _continuation_action(action, "continuationFlow.action")
-        if operation != "resume" or decision != "reset-to-default":
+        _, decision = _continuation_action(action, "continuationFlow.action")
+        if decision != "reset-to-default":
             raise RunnerContractError(
                 "after-reset-critical-section cancellation requires reset-to-default"
             )
@@ -1624,12 +1582,10 @@ def _execute_continuation_flow(
     try:
         terminal_execution = _run_continuation_action(
             classic_scanlog,
-            continuation,
-            cancellation,
+            pending_recovery,
             action,
             "continuationFlow.action",
             terminal_callbacks,
-            pending_recovery,
         )
     except Exception as error:  # noqa: BLE001 - typed reset rejection is receipt data.
         terminal_error = _project_terminal_resume_error(error, terminal_callbacks, root)
@@ -1658,12 +1614,10 @@ def _execute_continuation_flow(
         try:
             _run_continuation_action(
                 classic_scanlog,
-                continuation,
-                cancellation,
+                pending_recovery,
                 replay,
                 label,
                 None,
-                pending_recovery,
             )
         except Exception as error:  # noqa: BLE001 - typed rejection is receipt data.
             replay_observations.append(
