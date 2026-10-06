@@ -14,6 +14,10 @@
 //! - **Game-Target DDS Rules**: Validate parsed DDS texture headers against
 //!   Fallout 4 / Skyrim SE requirements ([`dds::DDSAnalyzer`]); neutral header
 //!   parsing stays in `classic-file-io-core`
+//! - **Game-Target Backup**: Per-type (XSE, ReShade, Vulkan, ENB) backup,
+//!   restore, and removal under the game root ([`backup`])
+//! - **Game-File Operations**: Pattern-matched backup, restore, and removal of
+//!   game-root entries ([`game_files`])
 //!
 //! # Examples
 //!
@@ -39,6 +43,15 @@ use classic_shared_core::path_core::PathError;
 pub mod dds;
 
 pub use dds::{DDSAnalyzer, DDSIssue, GameTarget};
+
+// Game-target backup and game-file operations moved here from
+// classic-file-io-core (#250). File I/O does not re-export them: resource
+// depends on file I/O, so a re-export would close a dependency cycle.
+pub mod backup;
+pub mod game_files;
+
+pub use backup::{BackupInfo, BackupManager, BackupType};
+pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};
 
 /// Resource management errors.
 #[derive(Error, Debug)]

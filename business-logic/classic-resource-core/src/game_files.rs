@@ -9,6 +9,10 @@
 //!
 //! Pattern matching uses case-insensitive substring matching: a pattern `"reshade"`
 //! will match any file whose name contains `"reshade"` (case-insensitive).
+//!
+//! Game-file operations moved here from `classic-file-io-core` (#250). They
+//! still return [`FileIOError`] so every binding error projection stays the
+//! same; resource core depends on file I/O, never the reverse.
 
 use std::fmt;
 use std::future::Future;
@@ -18,7 +22,7 @@ use tokio::fs;
 use tokio::task::JoinSet;
 use tracing::{error, info, warn};
 
-use crate::error::FileIOError;
+use classic_file_io_core::FileIOError;
 
 /// Maximum number of concurrent file operations.
 const MAX_CONCURRENT_OPS: usize = 8;
@@ -78,7 +82,7 @@ impl FileOperationResult {
 /// # Example
 /// ```no_run
 /// use std::path::PathBuf;
-/// use classic_file_io_core::game_files::GameFilesManager;
+/// use classic_resource_core::game_files::GameFilesManager;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let manager = GameFilesManager::new(

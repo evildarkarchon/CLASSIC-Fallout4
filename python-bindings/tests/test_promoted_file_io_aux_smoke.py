@@ -384,8 +384,11 @@ def test_rust_only_symbols_in_core_surface() -> None:
     Each row resolves against its own ``rustCrate`` surface. Crash Log
     collection rows (``LogCollector``, ``resolve_targeted_inputs``, the two
     patterns, and their result types) keep their ``file_io`` row IDs but name
-    ``classic-scanlog-core`` since #254, so a crate-qualified lookup is what
-    keeps a stale file-I/O owner from passing.
+    ``classic-scanlog-core`` since #254, and the game-target backup and
+    game-file operation rows (``backup``, ``BackupManager``, ``BackupType``,
+    ``BackupInfo``, ``GameFilesManager``, ``FileOperation``,
+    ``FileOperationResult``) name ``classic-resource-core`` since #250, so a
+    crate-qualified lookup is what keeps a stale file-I/O owner from passing.
     """
     surface_path = Path("docs/implementation/python_api_parity/baseline/rust_api_surface.json")
     contract_path = Path("docs/implementation/python_api_parity/baseline/parity_contract.json")
@@ -427,6 +430,26 @@ def test_rust_only_symbols_in_core_surface() -> None:
         }
     }
     assert moved and set(moved.values()) == {"classic-scanlog-core"}, moved
+
+    # The game-target backup and game-file operation rows moved to resource
+    # core in #250; a stale file I/O owner must not satisfy them.
+    moved_to_resource = {
+        r["id"]: r["rustCrate"]
+        for r in rust_only_rows
+        if r["rustSymbol"]
+        in {
+            "backup",
+            "BackupManager",
+            "BackupType",
+            "BackupInfo",
+            "GameFilesManager",
+            "FileOperation",
+            "FileOperationResult",
+        }
+    }
+    assert len(moved_to_resource) == 7 and set(moved_to_resource.values()) == {
+        "classic-resource-core"
+    }, moved_to_resource
 
     assert not missing, (
             "Rust-only file_io @rust-suffix rows missing from rust_api_surface: "

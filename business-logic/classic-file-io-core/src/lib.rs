@@ -15,12 +15,10 @@
 //! - Configuration file generation (Phase 5)
 
 pub mod atomic_install;
-pub mod backup;
 pub mod core;
 pub mod dds;
 pub mod encoding;
 pub mod error;
-pub mod game_files;
 pub mod generation;
 pub mod hash;
 pub mod similarity;
@@ -28,7 +26,11 @@ pub mod similarity;
 pub use atomic_install::{
     InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal,
 };
-pub use backup::{BackupInfo, BackupManager, BackupType};
+// The game-target backup (`BackupManager`, `BackupType`, `BackupInfo`) and
+// game-file operations (`GameFilesManager`, `FileOperation`,
+// `FileOperationResult`) are owned by classic-resource-core (#250). No
+// re-export here: resource depends on file I/O, so a re-export would close a
+// dependency cycle.
 pub use core::FileIOCore;
 pub use dds::DDSHeader;
 // Game-target DDS rules (DDSAnalyzer, GameTarget, DDSIssue) are owned by
@@ -36,7 +38,6 @@ pub use dds::DDSHeader;
 // file I/O, so a re-export would close a dependency cycle.
 pub use encoding::EncodingDetector;
 pub use error::FileIOError;
-pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};
 pub use generation::{
     FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
 };
