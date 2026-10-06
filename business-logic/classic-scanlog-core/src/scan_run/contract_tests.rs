@@ -697,10 +697,9 @@ fn targeted_run_resumes_without_ignore_from_retained_discovery_and_snapshot() {
     }));
     let selected_main = initial_installed.main.clone();
     let selected_game = initial_installed.game_file.clone();
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry an opaque continuation");
+    let pending = initial
+        .take_pending_recovery()
+        .expect("recovery-required result should offer a pending recovery");
 
     std::fs::write(
         data.join("databases/CLASSIC Main.yaml"),
@@ -716,9 +715,8 @@ fn targeted_run_resumes_without_ignore_from_retained_discovery_and_snapshot() {
     assert_eq!(created_after_pause, undiscovered_log);
 
     let resumed = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            &contract::Cancellation::new(),
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -773,10 +771,9 @@ fn targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot(
         .expect("recovery-required result should expose selected Installed YAML Data");
     let selected_main = initial_installed.main.clone();
     let selected_game = initial_installed.game_file.clone();
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry an opaque continuation");
+    let pending = initial
+        .take_pending_recovery()
+        .expect("recovery-required result should offer a pending recovery");
     let data = temp.path().join("CLASSIC Data");
     std::fs::write(
         data.join("databases/CLASSIC Main.yaml"),
@@ -792,9 +789,8 @@ fn targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot(
     let mut observer = |event| events.push(event);
 
     let resumed = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &contract::Cancellation::new(),
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             Some(&mut observer),
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -858,9 +854,8 @@ fn targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot(
             .all(|log| crate::report::autoscan_report_path(log).is_file())
     );
     let replay = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &contract::Cancellation::new(),
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -873,18 +868,16 @@ fn targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot(
 fn reset_to_default_returns_typed_conflict_without_overwriting_current_local_ignore() {
     let (_temp, logs, ignore_path, _malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-reset-conflict.log"]);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry an opaque continuation");
+    let pending = initial
+        .take_pending_recovery()
+        .expect("recovery-required result should offer a pending recovery");
     let replacement = b"CLASSIC_Ignore_Fallout4:\n  - UserChanged.dll\n";
     std::fs::write(&ignore_path, replacement)
         .expect("conflicting Local Ignore bytes should be written");
 
     let error = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &contract::Cancellation::new(),
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -912,9 +905,8 @@ fn reset_to_default_returns_typed_conflict_without_overwriting_current_local_ign
             .all(|log| !crate::report::autoscan_report_path(log).exists())
     );
     let replay = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &contract::Cancellation::new(),
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -927,10 +919,9 @@ fn reset_to_default_returns_typed_conflict_without_overwriting_current_local_ign
 fn reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis() {
     let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-reset-backup-failure.log"]);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry an opaque continuation");
+    let pending = initial
+        .take_pending_recovery()
+        .expect("recovery-required result should offer a pending recovery");
     let root = ignore_path
         .parent()
         .and_then(std::path::Path::parent)
@@ -940,9 +931,8 @@ fn reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis() 
         .expect("backup root blocker should be written");
 
     let error = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &contract::Cancellation::new(),
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -968,9 +958,8 @@ fn reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis() 
             .all(|log| !crate::report::autoscan_report_path(log).exists())
     );
     let replay = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &contract::Cancellation::new(),
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -1058,19 +1047,16 @@ fn cancellation_before_reset_to_default_performs_no_durable_or_analysis_work() {
     let expected = shared_reset_outcomes();
     let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-reset-pre-cancelled.log"]);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry an opaque continuation");
-    let cancellation = contract::Cancellation::new();
-    cancellation.cancel();
+    let pending = initial
+        .take_pending_recovery()
+        .expect("recovery-required result should offer a pending recovery");
+    pending.cancellation().cancel();
     let mut events = Vec::new();
     let mut observer = |event| events.push(event);
 
     let cancelled = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &cancellation,
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             Some(&mut observer),
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -1103,17 +1089,15 @@ fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset(
     let hooks = ScanRunTestHooks::default().with_local_ignore_reset_gate(gate.clone());
     let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
         paused_recovery_fixture_with_hooks(&["crash-reset-racing-cancel.log"], hooks);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry an opaque continuation");
-    let cancellation = contract::Cancellation::new();
-    let resume_cancellation = cancellation.clone();
+    let pending = initial
+        .take_pending_recovery()
+        .expect("recovery-required result should offer a pending recovery");
+    // The run's own control: settling runs under it, so the racing cancel must land there.
+    let cancellation = pending.cancellation().clone();
 
     let handle = std::thread::spawn(move || {
-        get_runtime().block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &resume_cancellation,
+        get_runtime().block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
@@ -1172,10 +1156,11 @@ fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset(
     );
 }
 
-/// Races two one-shot claims on real threads and returns both outcomes in completion-agnostic order.
+/// Races two one-shot settlements on real threads and returns both outcomes in completion-agnostic
+/// order.
 ///
 /// These tests previously used `tokio::join!`, which polls both futures on one task. The claim
-/// inside `resume` is a synchronous `take()` under a mutex with nothing awaited before it, so
+/// inside settling is a synchronous `take()` under a mutex with nothing awaited before it, so
 /// joined futures always resolve in poll order and the mutex is never contended — nothing about
 /// concurrent access was exercised at all. Two OS threads released together by a barrier put the
 /// claim under genuine parallel entry.
@@ -1191,32 +1176,30 @@ fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset(
 /// contract still holds end to end: exactly one caller wins, the loser gets the typed consumed
 /// error rather than a wrong-typed or infrastructure one, and neither thread deadlocks or panics.
 ///
-/// `claim` is a plain `fn` rather than a closure so each caller can supply its own operation —
-/// `abandon`, or `resume` with a chosen decision — without this helper having to name the borrowing
-/// future those methods return.
+/// `claim` is a plain `fn` rather than a closure so each caller can supply its own settlement —
+/// with no decision, or with a chosen one — without this helper having to name the borrowing
+/// future `settle` returns.
 fn race_two_claims(
-    continuation: &Arc<contract::CrashLogScanRunContinuation>,
+    pending: &Arc<contract::PendingRecovery>,
     claim: fn(
-        Arc<contract::CrashLogScanRunContinuation>,
-        contract::Cancellation,
-    ) -> Result<contract::RunResult, contract::ResumeError>,
-) -> [Result<contract::RunResult, contract::ResumeError>; 2] {
+        Arc<contract::PendingRecovery>,
+    ) -> Result<contract::SettledRunResult, contract::ResumeError>,
+) -> [Result<contract::SettledRunResult, contract::ResumeError>; 2] {
     let barrier = Arc::new(Barrier::new(2));
-    let racers = [Arc::clone(continuation), Arc::clone(continuation)].map(|continuation| {
+    let racers = [Arc::clone(pending), Arc::clone(pending)].map(|pending| {
         let barrier = Arc::clone(&barrier);
         std::thread::spawn(move || {
-            // Every per-thread setup cost is paid before the barrier, so both threads leave it
-            // with nothing left to do but claim.
-            let cancellation = contract::Cancellation::new();
             barrier.wait();
-            claim(continuation, cancellation)
+            claim(pending)
         })
     });
     racers.map(|racer| racer.join().expect("racing claim thread should not panic"))
 }
 
 /// Asserts exactly one of two racing claims won and the loser reported a consumed continuation.
-fn assert_exactly_one_claim_won(outcomes: [Result<contract::RunResult, contract::ResumeError>; 2]) {
+fn assert_exactly_one_claim_won(
+    outcomes: [Result<contract::SettledRunResult, contract::ResumeError>; 2],
+) {
     let [first, second] = outcomes;
     assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
     let error = first
@@ -1229,45 +1212,40 @@ fn assert_exactly_one_claim_won(outcomes: [Result<contract::RunResult, contract:
 
 /// Sequential and concurrent replay both return the same typed consumed-continuation failure.
 #[test]
-fn proceed_without_ignore_continuation_rejects_every_replay() {
+fn proceed_without_ignore_settlement_rejects_every_replay() {
     let (_temp, _logs, _ignore_path, _malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-continuation-replay.log"]);
-    let continuation = Arc::new(
+    let pending = Arc::new(
         initial
-            .continuation
-            .take()
-            .expect("recovery-required result should carry a continuation"),
+            .take_pending_recovery()
+            .expect("recovery-required result should offer a pending recovery"),
     );
 
-    assert_exactly_one_claim_won(race_two_claims(
-        &continuation,
-        |continuation, cancellation| {
-            get_runtime().block_on(continuation.resume(
-                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-                &cancellation,
-                None,
-                contract::ObserverFailurePolicy::ContinueRun,
-            ))
-        },
-    ));
-
-    let replay = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            &contract::Cancellation::new(),
+    assert_exactly_one_claim_won(race_two_claims(&pending, |pending| {
+        get_runtime().block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
-        .expect_err("every later resume should reject replay");
+    }));
+
+    let replay = get_runtime()
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+            None,
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
+        .expect_err("every later settlement should reject replay");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
 }
 
 /// Asserts the ordinary post-discovery cancelled shape.
 ///
 /// Complete discovery is retained, every accepted log counts as cancelled, and no intake or
-/// concurrency facts are present because neither stage was reached. Shared by the two paths that
-/// produce this shape from a paused run — a pre-cancelled `resume` and `abandon` — so the contract
-/// they are both required to honour is written down once and cannot drift between them.
+/// concurrency facts are present because neither stage was reached. Shared by every path that
+/// produces this shape from a paused run — a pre-cancelled settlement, a settlement with no
+/// decision, and Rust abandoning a recovery after a failed delivery — so the contract they are all
+/// required to honour is written down once and cannot drift between them.
 fn assert_cancelled_after_discovery(result: &contract::RunResult, logs: &[PathBuf]) {
     assert_eq!(result.status, contract::RunStatus::Cancelled);
     assert_eq!(result.cancelled, logs.len());
@@ -1284,30 +1262,27 @@ fn assert_cancelled_after_discovery(result: &contract::RunResult, logs: &[PathBu
     assert!(result.continuation.is_none());
 }
 
-/// Pre-resume cancellation consumes the continuation before recovery or analysis can begin.
+/// Pre-settle cancellation consumes the continuation before recovery or analysis can begin.
 #[test]
-fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_result() {
+fn cancellation_before_settling_returns_normal_cancelled_after_discovery_result() {
     let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-continuation-cancelled.log"]);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry a continuation");
-    let cancellation = contract::Cancellation::new();
-    cancellation.cancel();
+    let pending = initial
+        .take_pending_recovery()
+        .expect("recovery-required result should offer a pending recovery");
+    pending.cancellation().cancel();
     let mut events = Vec::new();
     let mut observer = |event| events.push(event);
 
     let cancelled = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            &cancellation,
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
             Some(&mut observer),
             contract::ObserverFailurePolicy::ContinueRun,
         ))
-        .expect("pre-resume cancellation should remain expected result data");
+        .expect("pre-settle cancellation should remain expected result data");
 
-    assert_cancelled_after_discovery(&cancelled, &logs);
+    assert_cancelled_after_discovery(&contract::RunResult::from(cancelled), &logs);
     assert!(events.is_empty());
     assert!(
         logs.iter()
@@ -1318,13 +1293,12 @@ fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_
         malformed_ignore
     );
     let replay = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            &contract::Cancellation::new(),
+        .block_on(pending.settle(
+            Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
             None,
             contract::ObserverFailurePolicy::ContinueRun,
         ))
-        .expect_err("cancelled resume should still consume the continuation");
+        .expect_err("a cancelled settlement should still consume the continuation");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
 }
 
@@ -1373,88 +1347,47 @@ fn assert_tree_unchanged(
     }
 }
 
-/// Abandoning a paused run yields the ordinary cancelled result and writes nothing at all.
+/// Settling with no decision claims the continuation once, so concurrent and later attempts are
+/// all rejected and nothing on disk changes.
 #[test]
-fn abandoning_a_paused_run_returns_the_cancelled_result_and_touches_nothing() {
-    let (temp, logs, ignore_path, malformed_ignore, mut initial) =
-        paused_recovery_fixture(&["crash-continuation-abandoned.log"]);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry a continuation");
-    let cancellation = contract::Cancellation::new();
-    let before = snapshot_tree(temp.path());
-    let mut events = Vec::new();
-    let mut observer = |event| events.push(event);
-
-    let abandoned = get_runtime()
-        .block_on(continuation.abandon(&cancellation, Some(&mut observer)))
-        .expect("abandonment should remain expected result data");
-
-    assert_cancelled_after_discovery(&abandoned, &logs);
-    assert!(events.is_empty());
-    // Abandonment cancels the run's own monotonic control, so a frontend that shares it observes
-    // the same cancelled run every other cancellation path produces.
-    assert!(cancellation.is_cancelled());
-    // The tree comparison is the general claim; the two assertions after it name the specific
-    // hazards a reader cares about — the user's malformed bytes, and analysis never starting.
-    assert_tree_unchanged(&before, &snapshot_tree(temp.path()));
-    assert_eq!(
-        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
-        malformed_ignore
-    );
-    assert!(
-        logs.iter()
-            .all(|log| !crate::report::autoscan_report_path(log).exists())
-    );
-
-    let replay = get_runtime()
-        .block_on(continuation.abandon(&contract::Cancellation::new(), None))
-        .expect_err("abandonment should still consume the continuation");
-    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
-}
-
-/// Abandonment claims the continuation once, so concurrent and later attempts are all rejected.
-#[test]
-fn abandonment_consumes_the_continuation_exactly_once() {
+fn settling_without_a_decision_consumes_the_continuation_exactly_once() {
     let (temp, _logs, ignore_path, malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-continuation-abandon-replay.log"]);
-    let continuation = Arc::new(
+    let pending = Arc::new(
         initial
-            .continuation
-            .take()
-            .expect("recovery-required result should carry a continuation"),
+            .take_pending_recovery()
+            .expect("recovery-required result should offer a pending recovery"),
     );
     let before = snapshot_tree(temp.path());
 
-    assert_exactly_one_claim_won(race_two_claims(
-        &continuation,
-        |continuation, cancellation| {
-            get_runtime().block_on(continuation.abandon(&cancellation, None))
-        },
-    ));
+    assert_exactly_one_claim_won(race_two_claims(&pending, |pending| {
+        get_runtime().block_on(pending.settle(
+            None,
+            None,
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
+    }));
 
     get_runtime().block_on(async {
-        let replayed_abandon = continuation
-            .abandon(&contract::Cancellation::new(), None)
+        let replayed_abandon = pending
+            .settle(None, None, contract::ObserverFailurePolicy::ContinueRun)
             .await
-            .expect_err("every later abandonment should reject replay");
+            .expect_err("every later settlement without a decision should reject replay");
         assert_eq!(
             replayed_abandon,
             contract::ResumeError::ContinuationConsumed
         );
-        // The spent claim also closes the resume seam, and Reset To Default is the one decision
-        // that could have written to disk had the claim survived.
-        let replayed_resume = continuation
-            .resume(
-                contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-                &contract::Cancellation::new(),
+        // The spent claim also closes settling with a decision, and Reset To Default is the one
+        // decision that could have written to disk had the claim survived.
+        let replayed_reset = pending
+            .settle(
+                Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
                 None,
                 contract::ObserverFailurePolicy::ContinueRun,
             )
             .await
-            .expect_err("a resume after abandonment should reject replay too");
-        assert_eq!(replayed_resume, contract::ResumeError::ContinuationConsumed);
+            .expect_err("a reset after abandonment should reject replay too");
+        assert_eq!(replayed_reset, contract::ResumeError::ContinuationConsumed);
     });
 
     assert_tree_unchanged(&before, &snapshot_tree(temp.path()));
@@ -1700,30 +1633,6 @@ fn settling_a_pending_recovery_twice_reports_the_typed_consumed_continuation_fai
         .expect_err("every later settlement should reject replay");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
     assert_eq!(replay.kind().as_str(), "scan_run_continuation_consumed");
-}
-
-/// The resume surface that predates settling claims the same continuation, so they cannot both win.
-#[test]
-fn the_legacy_resume_surface_and_settling_share_one_claim() {
-    let (_temp, _logs, _ignore_path, _malformed_ignore, _cancellation, _paused, pending) =
-        pending_recovery_fixture(&["crash-settle-shared-claim.log"]);
-
-    get_runtime()
-        .block_on(pending.continuation().resume(
-            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            &contract::Cancellation::new(),
-            None,
-            contract::ObserverFailurePolicy::ContinueRun,
-        ))
-        .expect("the legacy resume should claim the continuation");
-    let replay = get_runtime()
-        .block_on(pending.settle(
-            Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
-            None,
-            contract::ObserverFailurePolicy::ContinueRun,
-        ))
-        .expect_err("settling after a legacy resume should reject replay");
-    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
 }
 
 /// Only a paused run offers a pending recovery, and taking it leaves no continuation behind.
