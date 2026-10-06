@@ -26,9 +26,8 @@
 mod tests;
 
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, render_event,
-    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
-    render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_resume_error, render_run_result,
 };
 use classic_scanlog_core::scan_run::contract::{
     Configuration, Event, InfrastructureError, LocalIgnoreRecoveryDecision, LogEvent, Request,
@@ -384,17 +383,18 @@ pub(crate) fn join_presented(lines: &[PresentedLine]) -> String {
 
 /// Projects the Rust-owned paused-run facts the TUI shows before asking for an explicit decision.
 ///
-/// Every fact comes from the retained result; the TUI adds no policy and never inspects the
-/// malformed file itself.
-pub(crate) fn describe_local_ignore_recovery(result: &RunResult) -> LocalIgnoreRecoveryPrompt {
-    // Absent Installed YAML Data used to be resolved here, identically to how the native CLI and
-    // the Qt GUI each resolved it for themselves. `render_local_ignore_recovery` takes the
-    // `Option` precisely so that stays one rule rather than three.
-    let prompt = render_local_ignore_recovery(result.installed_yaml_data.as_ref());
+/// `prompt` is the pending recovery's own prompt, already rendered as Display Content by
+/// `classic-scan-presentation` when the pending recovery was taken, so the overlay asks exactly
+/// the question settling can honour. The run detail and retained discovery come from the paused
+/// result; the TUI adds no policy and never inspects the malformed file itself.
+pub(crate) fn describe_local_ignore_recovery(
+    result: &RunResult,
+    prompt: &RecoveryPrompt,
+) -> LocalIgnoreRecoveryPrompt {
     LocalIgnoreRecoveryPrompt {
         run_detail: present_lines(&render_run_result(result)),
         prompt_lines: present_lines(&prompt.lines),
-        decisions: prompt.decisions,
+        decisions: prompt.decisions.clone(),
         message: result.message.clone(),
         retained_logs: result
             .discovery
