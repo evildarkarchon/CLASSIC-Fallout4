@@ -13,6 +13,8 @@ members = [
     "business-logic/classic-file-io-core",
     "business-logic/classic-scanlog-core",
     "business-logic/classic-scan-presentation",
+    # Crash Log Scan Launch (ADR-0009): sits above scanlog core and User Settings.
+    "business-logic/classic-scan-launch",
     "business-logic/classic-config-core",
     "business-logic/classic-user-settings-core",
     "business-logic/classic-scangame-core",

@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T11:28:44.240407+00:00`
-- Tier-1 contract rows: **1228**
-- Tier-1 matched: **1226**
+- Generated: `2026-10-06T12:00:53.970796+00:00`
+- Tier-1 contract rows: **1233**
+- Tier-1 matched: **1231**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -1241,6 +1241,11 @@
 | `scanlog.formid_finding_analyzer.FormIDFindingLookupEntry` | `scanlog` | `classic-database-core` | `FormIdValueLookupEntry` | `classic_scanlog.FormIDFindingLookupEntry` | `matched` |
 | `scanlog.formid_finding_analyzer.FormIDFindingLookupEntry.__init__` | `scanlog` | `classic-database-core` | `FormIdValueLookupEntry` | `classic_scanlog.FormIDFindingLookupEntry.__init__` | `matched` |
 | `scanlog.formid_finding_analyzer.FormIDFindingLookupReplyKind` | `scanlog` | `classic-database-core` | `FormIdValueLookupInMemoryReply` | `classic_scanlog.FormIDFindingLookupReplyKind` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunch` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchRequest` | `classic_scanlog.ScanRunLaunch` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunch.standard` | `scanlog` | `classic-scan-launch` | `prepare_launch` | `classic_scanlog.ScanRunLaunch.standard` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunch.targeted` | `scanlog` | `classic-scan-launch` | `prepare_launch` | `classic_scanlog.ScanRunLaunch.targeted` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunchOverrides` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchOverrides` | `classic_scanlog.ScanRunLaunchOverrides` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunchDiagnostic` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchDiagnostic` | `classic_scanlog.ScanRunLaunchDiagnostic` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

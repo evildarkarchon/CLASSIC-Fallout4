@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T11:39:09Z",
+  "generated_at_utc": "2026-10-06T11:54:30Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -7326,6 +7326,65 @@
       "coreRustSymbol": "InstalledYamlDataRole"
     },
     {
+      "id": "cea0da4e43b4a17a",
+      "rustSymbol": "ScanRunLaunchDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "UserSettings"
+      ],
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchDiagnosticKind"
+    },
+    {
+      "id": "8209ae76fc056f3e",
+      "rustSymbol": "ScanRunLaunchErrorKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "TargetedWithoutInputs"
+      ],
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchErrorKind"
+    },
+    {
+      "id": "ca8c406aa53c2c9d",
+      "rustSymbol": "ScanRunLaunchIntent",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Standard",
+        "Targeted"
+      ],
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanIntent"
+    },
+    {
+      "id": "000462851ef67b6e",
+      "rustSymbol": "ScanRunLaunchUnsolvedLogs",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "LeaveInPlace",
+        "MoveToConfiguredOrDefault",
+        "MoveToCustom"
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
+    },
+    {
       "id": "1ca5c72cad0943dd",
       "rustSymbol": "ScanRunLocalIgnoreRecoveryDecision",
       "kind": "enum",
@@ -8305,6 +8364,118 @@
       "coreRustSymbol": "InstalledYamlDataProvenance"
     },
     {
+      "id": "beb69275d5176d3b",
+      "rustSymbol": "scan_run_launch_error",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "launch",
+            "type": "&ScanRunLaunch"
+          }
+        ],
+        "returnType": "ScanRunLaunchErrorDto"
+      },
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchError"
+    },
+    {
+      "id": "7a8d35972d45cfa1",
+      "rustSymbol": "scan_run_launch_request",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "launch",
+            "type": "&ScanRunLaunch"
+          }
+        ],
+        "returnType": "Result<Box<ScanRunRequest>>"
+      },
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchRequest"
+    },
+    {
+      "id": "cffca841e1206122",
+      "rustSymbol": "scan_run_launch_standard",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "installation_root",
+            "type": "&str"
+          },
+          {
+            "name": "overrides",
+            "type": "&ScanRunLaunchOverridesDto"
+          }
+        ],
+        "returnType": "Result<Box<ScanRunLaunch>>"
+      },
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "prepare_launch"
+    },
+    {
+      "id": "280bcca2d7fcd1a0",
+      "rustSymbol": "scan_run_launch_targeted",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "installation_root",
+            "type": "&str"
+          },
+          {
+            "name": "inputs",
+            "type": "&Vec<String>"
+          },
+          {
+            "name": "overrides",
+            "type": "&ScanRunLaunchOverridesDto"
+          }
+        ],
+        "returnType": "Result<Box<ScanRunLaunch>>"
+      },
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "prepare_launch"
+    },
+    {
+      "id": "55fcffaf675620e4",
+      "rustSymbol": "scan_run_launch_view",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "launch",
+            "type": "&ScanRunLaunch"
+          }
+        ],
+        "returnType": "Result<ScanRunLaunchRequestDto>"
+      },
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchRequest"
+    },
+    {
       "id": "3e7dcba09e694224",
       "rustSymbol": "scan_run_local_ignore_reset_failure_stage_label",
       "kind": "function",
@@ -8723,6 +8894,17 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "RunResult"
+    },
+    {
+      "id": "95da635bec943a19",
+      "rustSymbol": "ScanRunLaunch",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchRequest"
     },
     {
       "id": "9d43dc52d6749684",
@@ -10976,6 +11158,158 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "InstalledYamlDataRunData"
+    },
+    {
+      "id": "603a4b666b13c135",
+      "rustSymbol": "ScanRunLaunchDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "ScanRunLaunchDiagnosticKind"
+        },
+        {
+          "name": "code",
+          "type": "String"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ],
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchDiagnostic"
+    },
+    {
+      "id": "548f89a1359f6191",
+      "rustSymbol": "ScanRunLaunchErrorDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "kind",
+          "type": "ScanRunLaunchErrorKind"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ],
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchError"
+    },
+    {
+      "id": "ea7cb17add81ffae",
+      "rustSymbol": "ScanRunLaunchOverridesDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_game",
+          "type": "bool"
+        },
+        {
+          "name": "game",
+          "type": "ScanRunGameId"
+        },
+        {
+          "name": "has_game_version",
+          "type": "bool"
+        },
+        {
+          "name": "game_version",
+          "type": "String"
+        },
+        {
+          "name": "has_scan_path",
+          "type": "bool"
+        },
+        {
+          "name": "scan_path",
+          "type": "String"
+        },
+        {
+          "name": "has_max_concurrent",
+          "type": "bool"
+        },
+        {
+          "name": "max_concurrent",
+          "type": "usize"
+        },
+        {
+          "name": "show_formid_values",
+          "type": "bool"
+        },
+        {
+          "name": "simplify_logs",
+          "type": "bool"
+        }
+      ],
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchOverrides"
+    },
+    {
+      "id": "3af3ade35638b7e7",
+      "rustSymbol": "ScanRunLaunchRequestDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "intent",
+          "type": "ScanRunLaunchIntent"
+        },
+        {
+          "name": "configuration",
+          "type": "ScanRunConfigurationDto"
+        },
+        {
+          "name": "standard_source",
+          "type": "ScanRunStandardSourceDto"
+        },
+        {
+          "name": "unsolved_logs",
+          "type": "ScanRunLaunchUnsolvedLogs"
+        },
+        {
+          "name": "unsolved_logs_custom_destination",
+          "type": "String"
+        },
+        {
+          "name": "targeted_source",
+          "type": "ScanRunTargetedSourceDto"
+        },
+        {
+          "name": "fcx_enabled",
+          "type": "bool"
+        },
+        {
+          "name": "setup_context",
+          "type": "ScanRunSetupContextDto"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<ScanRunLaunchDiagnosticDto>"
+        }
+      ],
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchRequest"
     },
     {
       "id": "96174ecfa4e972be",

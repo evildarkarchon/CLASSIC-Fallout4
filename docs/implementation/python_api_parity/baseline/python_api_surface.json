@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T11:39:10.856711+00:00",
+  "generated_at_utc": "2026-10-06T12:00:53.604671+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -9946,6 +9946,104 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
       "signature": "class ScanRunInstalledYamlDataRunData:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunch",
+      "export_path": "ScanRunLaunch",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunch:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "request",
+      "export_path": "ScanRunLaunch.request",
+      "parent_class": "ScanRunLaunch",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def request(self) -> ScanRunRequest: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "standard",
+      "export_path": "ScanRunLaunch.standard",
+      "parent_class": "ScanRunLaunch",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def standard( installation_root: str, overrides: ScanRunLaunchOverrides | None = None, ) -> ScanRunLaunch: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "targeted",
+      "export_path": "ScanRunLaunch.targeted",
+      "parent_class": "ScanRunLaunch",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def targeted( installation_root: str, inputs: list[str], overrides: ScanRunLaunchOverrides | None = None, ) -> ScanRunLaunch:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchDiagnostic",
+      "export_path": "ScanRunLaunchDiagnostic",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchDiagnostic:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchError",
+      "export_path": "ScanRunLaunchError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchError(ValueError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchOverrides",
+      "export_path": "ScanRunLaunchOverrides",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchOverrides:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ScanRunLaunchOverrides.__init__",
+      "parent_class": "ScanRunLaunchOverrides",
+      "kind": "method",
+      "arity": 6,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def __init__( self, game: GameId | None = None, game_version: str | None = None, scan_path: str | None = None, max_concurrent: int | None = None, show_formid_values: bool = False, simplify_logs: bool = False, ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchTargetedWithoutInputsError",
+      "export_path": "ScanRunLaunchTargetedWithoutInputsError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchTargetedWithoutInputsError(ScanRunLaunchError):"
     },
     {
       "module": "classic_scanlog",

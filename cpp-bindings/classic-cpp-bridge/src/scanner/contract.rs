@@ -27,6 +27,13 @@ pub(crate) struct ScanRunRequest {
     inner: contract::Request,
 }
 
+impl ScanRunRequest {
+    /// Wraps a request the Crash Log Scan Launch already built, so it executes unchanged.
+    pub(super) fn from_core(inner: contract::Request) -> Self {
+        Self { inner }
+    }
+}
+
 /// Opaque Standard-only Unsolved Logs intent.
 pub(crate) struct ScanRunUnsolvedLogs {
     inner: classic_scanlog_core::StandardUnsolvedLogsIntent,
@@ -1478,7 +1485,7 @@ fn configuration_to_core(
 }
 
 /// Converts the scanner-local CXX game enum to the shared core identity.
-fn scan_run_game_id_to_core(value: ffi::ScanRunGameId) -> Result<GameId, String> {
+pub(super) fn scan_run_game_id_to_core(value: ffi::ScanRunGameId) -> Result<GameId, String> {
     match value {
         ffi::ScanRunGameId::Fallout4 => Ok(GameId::Fallout4),
         ffi::ScanRunGameId::Fallout4VR => Ok(GameId::Fallout4VR),
@@ -1536,7 +1543,7 @@ fn setup_context_to_core(
     })
 }
 
-fn required_path(raw: &str, field: &str) -> Result<PathBuf, String> {
+pub(super) fn required_path(raw: &str, field: &str) -> Result<PathBuf, String> {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
         Err(format!("{field} must not be empty"))

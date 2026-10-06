@@ -1,0 +1,5 @@
+schema_version: "99.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4 VR
+  FCX Mode: true
+  Max Concurrent Scans: 9

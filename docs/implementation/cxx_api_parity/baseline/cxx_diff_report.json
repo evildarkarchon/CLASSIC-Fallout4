@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 656,
-    "current_total": 656,
-    "matched": 656,
+    "contract_total": 670,
+    "current_total": 670,
+    "matched": 670,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2737,6 +2737,38 @@
       "reason": "-"
     },
     {
+      "id": "cea0da4e43b4a17a",
+      "rustSymbol": "ScanRunLaunchDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8209ae76fc056f3e",
+      "rustSymbol": "ScanRunLaunchErrorKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ca8c406aa53c2c9d",
+      "rustSymbol": "ScanRunLaunchIntent",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "000462851ef67b6e",
+      "rustSymbol": "ScanRunLaunchUnsolvedLogs",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "1ca5c72cad0943dd",
       "rustSymbol": "ScanRunLocalIgnoreRecoveryDecision",
       "kind": "enum",
@@ -3113,6 +3145,46 @@
       "reason": "-"
     },
     {
+      "id": "beb69275d5176d3b",
+      "rustSymbol": "scan_run_launch_error",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7a8d35972d45cfa1",
+      "rustSymbol": "scan_run_launch_request",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "cffca841e1206122",
+      "rustSymbol": "scan_run_launch_standard",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "280bcca2d7fcd1a0",
+      "rustSymbol": "scan_run_launch_targeted",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "55fcffaf675620e4",
+      "rustSymbol": "scan_run_launch_view",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "3e7dcba09e694224",
       "rustSymbol": "scan_run_local_ignore_reset_failure_stage_label",
       "kind": "function",
@@ -3299,6 +3371,14 @@
     {
       "id": "20927c22fed83137",
       "rustSymbol": "ScanRunContractExecution",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "95da635bec943a19",
+      "rustSymbol": "ScanRunLaunch",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3867,6 +3947,38 @@
     {
       "id": "453cd25252d2362f",
       "rustSymbol": "ScanRunInstalledYamlDataRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "603a4b666b13c135",
+      "rustSymbol": "ScanRunLaunchDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "548f89a1359f6191",
+      "rustSymbol": "ScanRunLaunchErrorDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ea7cb17add81ffae",
+      "rustSymbol": "ScanRunLaunchOverridesDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3af3ade35638b7e7",
+      "rustSymbol": "ScanRunLaunchRequestDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

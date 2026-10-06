@@ -111,7 +111,7 @@ impl PyScanRunConfiguration {
 }
 
 /// Converts an authentic `classic_shared.GameId` without reparsing its display text.
-fn typed_game_id_to_core(game: &Bound<'_, PyAny>) -> PyResult<GameId> {
+pub(super) fn typed_game_id_to_core(game: &Bound<'_, PyAny>) -> PyResult<GameId> {
     let shared = PyModule::import(game.py(), "classic_shared")?;
     let game_id_type = shared.getattr("GameId")?;
     if !game.is_instance(&game_id_type)? {

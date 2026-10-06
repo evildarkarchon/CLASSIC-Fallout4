@@ -128,6 +128,13 @@ pub struct ScanRunRequest {
     inner: contract::Request,
 }
 
+impl ScanRunRequest {
+    /// Wraps a request the Crash Log Scan Launch already built, so it executes unchanged.
+    pub(crate) fn from_core(inner: contract::Request) -> Self {
+        Self { inner }
+    }
+}
+
 #[napi]
 impl ScanRunRequest {
     /// Constructs a non-FCX Standard request.
