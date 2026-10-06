@@ -1479,3 +1479,211 @@ def test_a_completed_run_carries_no_recovery_prompt(tmp_path: Path) -> None:
 
     assert execution.result.status == "completed"
     assert execution.recovery_prompt is None
+    assert execution.pending_recovery is None
+
+
+def _paused_shared_run(
+        classic_scanlog: object,
+        tmp_path: Path,
+        cancellation: object,
+) -> tuple[object, Path, Path]:
+    """Pause one shared-fixture run on a malformed Local Ignore under the caller's control.
+
+    Returns the initial execution, the Crash Log, and the Local Ignore path. The caller
+    keeps ``cancellation`` because a pending recovery settles on the run's own control.
+    """
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    crash_log = _write_shared_scan_run_logs(tmp_path, [fixture["input"]])[0]
+    ignore_path = tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    ignore_path.write_text(fixture["malformedLocalIgnore"], encoding="utf-8")
+    execution = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, tmp_path),
+            classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+        ),
+        cancellation,
+    )
+    assert execution.result.status == "local_ignore_recovery_required"
+    return execution, crash_log, ignore_path
+
+
+def test_a_paused_run_offers_a_pending_recovery_carrying_the_rendered_prompt(
+        tmp_path: Path,
+) -> None:
+    """The pending recovery bundles the prompt Rust rendered and the run's cancellation."""
+
+    import classic_scanlog
+
+    execution, _crash_log, _ignore_path = _paused_shared_run(
+        classic_scanlog, tmp_path, classic_scanlog.ScanRunCancellation()
+    )
+
+    pending = execution.pending_recovery
+    assert isinstance(pending, classic_scanlog.ScanRunPendingRecovery)
+    assert pending.cancellation_requested is False
+    expected = execution.recovery_prompt
+    actual = pending.prompt
+    assert [
+        (line.severity, [segment.text for segment in line.segments])
+        for line in actual.lines
+    ] == [
+        (line.severity, [segment.text for segment in line.segments])
+        for line in expected.lines
+    ]
+    assert [
+        (description.decision, description.label, description.available)
+        for description in actual.decisions
+    ] == [
+        (description.decision, description.label, description.available)
+        for description in expected.decisions
+    ]
+    # The legacy continuation stays available alongside it while frontends migrate.
+    assert execution.result.continuation is not None
+
+
+@pytest.mark.parametrize(
+    ("decision", "local_ignore_state"),
+    [
+        ("ProceedWithoutIgnore", "proceed_without_ignore"),
+        ("ResetToDefault", "reset_to_default"),
+    ],
+)
+def test_settling_with_a_decision_finishes_the_same_discovered_crash_logs(
+        tmp_path: Path,
+        decision: str,
+        local_ignore_state: str,
+) -> None:
+    """Each Local Ignore Recovery Decision resumes the retained run without rediscovery."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    execution, crash_log, ignore_path = _paused_shared_run(
+        classic_scanlog, tmp_path, classic_scanlog.ScanRunCancellation()
+    )
+    events: list[object] = []
+
+    settled = classic_scanlog.scan_run_settle(
+        execution.pending_recovery,
+        getattr(classic_scanlog.ScanRunLocalIgnoreRecoveryDecision, decision),
+        events.append,
+    )
+
+    assert isinstance(settled, classic_scanlog.ScanRunSettledExecution)
+    assert not hasattr(settled, "pending_recovery")
+    assert not hasattr(settled, "recovery_prompt")
+    assert settled.error is None
+    assert settled.observer_error is None
+    assert settled.display_lines != []
+    result = settled.result
+    assert result.status == "completed"
+    assert result.continuation is None
+    assert result.discovery.accepted_logs == execution.result.discovery.accepted_logs
+    assert result.installed_yaml_data.local_ignore_state == local_ignore_state
+    assert all(event.kind != "discovery_completed" for event in events)
+    assert Path(result.logs[0].crash_log) == crash_log
+    if decision == "ProceedWithoutIgnore":
+        assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+    else:
+        assert ignore_path.read_text(encoding="utf-8") != fixture["malformedLocalIgnore"]
+        assert result.installed_yaml_data.local_ignore_reset is not None
+
+
+def test_settling_without_a_decision_abandons_and_touches_nothing(
+        tmp_path: Path,
+) -> None:
+    """No decision cancels the run's own control and finishes cancelled after discovery."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    cancellation = classic_scanlog.ScanRunCancellation()
+    execution, _crash_log, ignore_path = _paused_shared_run(
+        classic_scanlog, tmp_path, cancellation
+    )
+
+    settled = classic_scanlog.scan_run_settle(execution.pending_recovery)
+
+    result = settled.result
+    assert result.status == "cancelled"
+    assert result.cancelled == result.total
+    assert all(log.disposition == "cancelled_before_start" for log in result.logs)
+    assert cancellation.is_cancelled is True
+    assert execution.pending_recovery.cancellation_requested is True
+    assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+    assert (tmp_path / "CLASSIC Backup").exists() is False
+
+
+def test_a_pending_recovery_reports_a_cancellation_already_requested(
+        tmp_path: Path,
+) -> None:
+    """A run cancelled before the prompt says so, and no decision can then touch disk."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    cancellation = classic_scanlog.ScanRunCancellation()
+    execution, _crash_log, ignore_path = _paused_shared_run(
+        classic_scanlog, tmp_path, cancellation
+    )
+    pending = execution.pending_recovery
+    assert pending.cancellation_requested is False
+
+    cancellation.cancel()
+
+    assert pending.cancellation_requested is True
+    settled = classic_scanlog.scan_run_settle(
+        pending,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+    )
+    assert settled.result.status == "cancelled"
+    assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+    assert (tmp_path / "CLASSIC Backup").exists() is False
+
+
+def test_settling_twice_raises_the_typed_consumed_continuation_error(
+        tmp_path: Path,
+) -> None:
+    """Replay, through settle or the legacy resume, is the typed consumed failure."""
+
+    import classic_scanlog
+
+    execution, _crash_log, _ignore_path = _paused_shared_run(
+        classic_scanlog, tmp_path, classic_scanlog.ScanRunCancellation()
+    )
+    classic_scanlog.scan_run_settle(
+        execution.pending_recovery,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+    )
+
+    with pytest.raises(classic_scanlog.ScanRunContinuationConsumedError) as replay:
+        classic_scanlog.scan_run_settle(execution.pending_recovery)
+    assert replay.value.code == "scan_run_continuation_consumed"
+    assert replay.value.display_lines != []
+    # The legacy continuation is the same claim, so it is spent too.
+    with pytest.raises(classic_scanlog.ScanRunContinuationConsumedError):
+        classic_scanlog.scan_run_resume(
+            execution.result.continuation,
+            classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+            classic_scanlog.ScanRunCancellation(),
+        )
+
+
+def test_a_legacy_resume_spends_the_pending_recovery(tmp_path: Path) -> None:
+    """The older resume surface and settling share one claim, so only one can win."""
+
+    import classic_scanlog
+
+    execution, _crash_log, _ignore_path = _paused_shared_run(
+        classic_scanlog, tmp_path, classic_scanlog.ScanRunCancellation()
+    )
+    classic_scanlog.scan_run_resume(
+        execution.result.continuation,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+        classic_scanlog.ScanRunCancellation(),
+    )
+
+    with pytest.raises(classic_scanlog.ScanRunContinuationConsumedError):
+        classic_scanlog.scan_run_settle(execution.pending_recovery)

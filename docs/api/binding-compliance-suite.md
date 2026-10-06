@@ -452,7 +452,7 @@ an explicit retained disposition and grants no semantic receipt credit.
 `tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
-independently authored twenty-seven-scenario blocking oracle: Standard and Targeted
+independently authored thirty-one-scenario blocking oracle: Standard and Targeted
 happy paths, generated Local Ignore, pre-discovery cancellation,
 post-discovery queued cancellation, admitted/durable cancellation, observer
 delivery failure, public request-validation, discovery, intake, report-write,
@@ -460,7 +460,15 @@ FormID database access, and Unsolved Logs finalization failures (default and
 configured destinations), a successful custom Unsolved Logs move, the
 `no_crash_logs_found` and `setup_failed` run statuses, both recovery decisions, intervening-change conflict,
 portable backup failure, both reset cancellation boundaries, replay,
-abandonment, both FCX request factories, and `ConfigIssue` construction. Its
+abandonment, settling a pending recovery (with each decision, with no decision,
+and after the run's cancellation was already requested), both FCX request
+factories, and `ConfigIssue` construction. The four settle scenarios use a
+`settle` continuation action whose decision is optional, a
+`before-pending-recovery` cancellation boundary, and an
+`initial.pendingRecovery` observation (`cancellationRequested` plus the prompt
+read from each adapter's own pending-recovery DTO); every runner traverses its
+binding's settle surface for them, and the legacy resume replay in
+`settle-without-decision` proves the old and new surfaces share one claim. Its
 materialized plans contain only declared inputs and normalization policy; the
 Rust, Node, Python, and CXX runners cannot read its expected observations. The pack
 compares ordered discovery, setup absence, effective concurrency, Installed

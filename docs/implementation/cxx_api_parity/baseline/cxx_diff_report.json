@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 649,
-    "current_total": 649,
-    "matched": 649,
+    "contract_total": 656,
+    "current_total": 656,
+    "matched": 656,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -3057,8 +3057,24 @@
       "reason": "-"
     },
     {
+      "id": "87c18c84692a0b8f",
+      "rustSymbol": "scan_run_contract_execution_has_pending_recovery",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "bcba7f5d14da68c4",
       "rustSymbol": "scan_run_contract_execution_take_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fa07ea60a0e724d3",
+      "rustSymbol": "scan_run_contract_execution_take_pending_recovery",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3123,6 +3139,30 @@
     {
       "id": "594f2973e02fe0ce",
       "rustSymbol": "scan_run_log_failure_stage_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "33c8278f0480e268",
+      "rustSymbol": "scan_run_pending_recovery_cancellation_requested",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1b7bd7cd9a081d86",
+      "rustSymbol": "scan_run_pending_recovery_prompt",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "70f8563542a526f4",
+      "rustSymbol": "scan_run_pending_recovery_settle",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3267,6 +3307,14 @@
     {
       "id": "9d43dc52d6749684",
       "rustSymbol": "ScanRunObserver",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "217acdac98879071",
+      "rustSymbol": "ScanRunPendingRecovery",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3819,6 +3867,14 @@
     {
       "id": "453cd25252d2362f",
       "rustSymbol": "ScanRunInstalledYamlDataRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "96174ecfa4e972be",
+      "rustSymbol": "ScanRunLocalIgnoreRecoverySettlement",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

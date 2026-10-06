@@ -2079,3 +2079,296 @@ fn assert_decisions_match(
         }
     }
 }
+
+/// One targeted run paused on a malformed Local Ignore, with the control it was started under.
+struct PausedCxxRun {
+    temp: tempfile::TempDir,
+    ignore_path: std::path::PathBuf,
+    malformed_ignore: &'static [u8],
+    cancellation: Box<ScanRunCancellation>,
+    execution: Box<ScanRunContractExecution>,
+    initial: ffi::ScanRunContractExecutionResult,
+}
+
+/// Executes a targeted run over a malformed Local Ignore until it pauses for recovery.
+fn paused_cxx_run(log_name: &str) -> PausedCxxRun {
+    let temp = tempdir().expect("create pending recovery fixture root");
+    let data = temp.path().join("CLASSIC Data");
+    write_minimal_scan_yaml_tree(temp.path(), &data);
+    let malformed_ignore: &'static [u8] = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
+    let log = temp.path().join(log_name);
+    std::fs::write(&log, FIXTURE_LOG_SMALL).expect("write accepted Crash Log fixture");
+    let mut configuration = sample_configuration();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
+    configuration.game_version = "Original".to_string();
+    let source = ffi::ScanRunTargetedSourceDto {
+        inputs: vec![log.to_string_lossy().into_owned()],
+    };
+    let request = scan_run_request_targeted(&configuration, &source)
+        .expect("valid recovery request should be constructible");
+    let cancellation = scan_run_cancellation_new();
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut execution =
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let initial = scan_run_contract_execution_take_result(&mut execution);
+    assert_eq!(
+        initial.result.status,
+        ffi::ScanRunContractStatus::LocalIgnoreRecoveryRequired,
+        "{}",
+        initial.error.message
+    );
+    PausedCxxRun {
+        temp,
+        ignore_path,
+        malformed_ignore,
+        cancellation,
+        execution,
+        initial,
+    }
+}
+
+/// Builds the bridge's optional-decision settlement value.
+fn settlement(
+    decision: Option<ffi::ScanRunLocalIgnoreRecoveryDecision>,
+) -> ffi::ScanRunLocalIgnoreRecoverySettlement {
+    ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: decision.is_some(),
+        // Ignored when `has_decision` is false; any in-range value keeps the struct well formed.
+        decision: decision.unwrap_or(ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+    }
+}
+
+/// Settles through the bridge with no observer.
+fn settle(
+    pending: &ScanRunPendingRecovery,
+    decision: Option<ffi::ScanRunLocalIgnoreRecoveryDecision>,
+) -> ffi::ScanRunContractExecutionResult {
+    // SAFETY: null is the documented representation of an omitted observer.
+    unsafe { scan_run_pending_recovery_settle(pending, settlement(decision), std::ptr::null()) }
+        .expect("an in-range settlement should reach an envelope")
+}
+
+/// Asserts an envelope is the typed consumed-continuation replay.
+fn assert_consumed_replay(envelope: &ffi::ScanRunContractExecutionResult) {
+    assert!(!envelope.has_result);
+    assert!(!envelope.has_error);
+    assert!(envelope.has_resume_error);
+    assert_eq!(
+        envelope.resume_error.kind,
+        ffi::ScanRunContractResumeErrorKind::ContinuationConsumed
+    );
+    assert_eq!(envelope.resume_error.code, "scan_run_continuation_consumed");
+}
+
+/// Asserts no Autoscan Report and no Local Ignore backup exist below the fixture root.
+fn assert_nothing_written(paused: &PausedCxxRun) {
+    assert_eq!(
+        std::fs::read(&paused.ignore_path).expect("read malformed Local Ignore"),
+        paused.malformed_ignore
+    );
+    assert!(
+        std::fs::read_dir(paused.temp.path())
+            .expect("read fixture root")
+            .filter_map(Result::ok)
+            .all(|entry| !entry.file_name().to_string_lossy().contains("AUTOSCAN"))
+    );
+    assert!(!paused.temp.path().join("CLASSIC Backup").exists());
+}
+
+#[test]
+/// A paused run offers a pending recovery whose prompt is the one Rust rendered for the pause.
+fn cxx_pending_recovery_carries_the_rendered_prompt() {
+    let mut paused = paused_cxx_run("crash-bridge-pending.log");
+
+    assert!(scan_run_contract_execution_has_pending_recovery(
+        &paused.execution
+    ));
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+    assert!(!scan_run_contract_execution_has_pending_recovery(
+        &paused.execution
+    ));
+    assert!(
+        scan_run_contract_execution_take_pending_recovery(&mut paused.execution).is_err(),
+        "the pending recovery is offered once"
+    );
+
+    let prompt = scan_run_pending_recovery_prompt(&pending);
+    assert!(paused.initial.has_recovery_prompt);
+    assert_display_lines_match(&prompt.lines, &paused.initial.recovery_prompt.lines);
+    assert_decisions_match(&prompt.decisions, &paused.initial.recovery_prompt.decisions);
+    assert!(!scan_run_pending_recovery_cancellation_requested(&pending));
+    // Taking the pending recovery leaves the legacy continuation in place while frontends migrate.
+    assert!(scan_run_contract_execution_has_continuation(
+        &paused.execution
+    ));
+}
+
+#[test]
+/// A run that did not pause offers no pending recovery, and taking one throws.
+fn cxx_execution_without_a_pause_offers_no_pending_recovery() {
+    let root = tempdir().expect("create empty root");
+    let mut configuration = sample_configuration();
+    configuration.installation_root = root.path().to_string_lossy().into_owned();
+    let request = scan_run_request_targeted(&configuration, &sample_targeted_source())
+        .expect("valid request should be constructible");
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut execution = unsafe {
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+    };
+
+    assert!(!scan_run_contract_execution_has_pending_recovery(&execution));
+    let error = scan_run_contract_execution_take_pending_recovery(&mut execution)
+        .err()
+        .expect("a run that did not pause has no pending recovery");
+    assert!(error.contains("no pending recovery"));
+}
+
+#[test]
+/// Settling with each decision resumes the same discovered Crash Logs into a terminal envelope.
+fn cxx_settling_with_each_decision_resumes_the_same_crash_logs() {
+    for (decision, state) in [
+        (
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore,
+        ),
+        (
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+            ffi::ScanRunLocalIgnoreYamlDataState::ResetToDefault,
+        ),
+    ] {
+        let mut paused = paused_cxx_run("crash-bridge-settle.log");
+        let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+            .expect("a paused run should offer its pending recovery");
+
+        let settled = settle(&pending, Some(decision));
+
+        assert!(settled.has_result, "{}", settled.error.message);
+        assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Completed);
+        assert_eq!(
+            settled.result.discovery.accepted_logs,
+            paused.initial.result.discovery.accepted_logs
+        );
+        assert_eq!(settled.result.installed_yaml_data.local_ignore_state, state);
+        // A settled envelope is never waiting on a decision again.
+        assert!(!settled.has_recovery_prompt);
+        assert!(!settled.display_lines.is_empty());
+        assert!(!scan_run_cancellation_is_cancelled(&paused.cancellation));
+    }
+}
+
+#[test]
+/// Settling with no decision is abandonment: the run's own control is cancelled, nothing written.
+fn cxx_settling_without_a_decision_cancels_the_run_and_touches_nothing() {
+    let mut paused = paused_cxx_run("crash-bridge-settle-abandon.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+
+    let settled = settle(&pending, None);
+
+    assert!(settled.has_result, "{}", settled.error.message);
+    assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
+    assert_eq!(
+        settled.result.logs[0].disposition,
+        ffi::ScanRunContractLogDisposition::CancelledBeforeStart
+    );
+    // The control the caller handed to `scan_run_contract_execute`, not a fresh one.
+    assert!(scan_run_cancellation_is_cancelled(&paused.cancellation));
+    assert!(scan_run_pending_recovery_cancellation_requested(&pending));
+    assert_nothing_written(&paused);
+}
+
+#[test]
+/// A run cancelled before its pending recovery is read says so, and settling then writes nothing.
+fn cxx_pending_recovery_reports_an_already_cancelled_run() {
+    let mut paused = paused_cxx_run("crash-bridge-settle-cancelled.log");
+    scan_run_cancellation_cancel(&paused.cancellation);
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+
+    assert!(scan_run_pending_recovery_cancellation_requested(&pending));
+    // Reset To Default is the one decision that could write; cancellation still wins.
+    let settled = settle(
+        &pending,
+        Some(ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault),
+    );
+
+    assert!(settled.has_result, "{}", settled.error.message);
+    assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
+    assert_nothing_written(&paused);
+}
+
+#[test]
+/// Replaying a settlement, or claiming through the legacy continuation, is the consumed envelope.
+fn cxx_settling_twice_or_after_a_legacy_claim_reports_the_consumed_envelope() {
+    let mut paused = paused_cxx_run("crash-bridge-settle-replay.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+    let continuation = scan_run_contract_execution_take_continuation(&mut paused.execution)
+        .expect("the legacy continuation stays offered while frontends migrate");
+
+    let settled = settle(
+        &pending,
+        Some(ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+    );
+    assert!(settled.has_result, "{}", settled.error.message);
+
+    assert_consumed_replay(&settle(&pending, None));
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut legacy = unsafe {
+        scan_run_continuation_resume(
+            &continuation,
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+        )
+    }
+    .expect("an in-range decision should reach an envelope");
+    assert_consumed_replay(&scan_run_contract_execution_take_result(&mut legacy));
+
+    // And the other way round: a legacy claim spends the pending recovery too.
+    let mut paused = paused_cxx_run("crash-bridge-legacy-first.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+    let continuation = scan_run_contract_execution_take_continuation(&mut paused.execution)
+        .expect("the legacy continuation stays offered while frontends migrate");
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut abandoned = unsafe {
+        scan_run_continuation_abandon(&continuation, &scan_run_cancellation_new(), std::ptr::null())
+    };
+    assert!(scan_run_contract_execution_take_result(&mut abandoned).has_result);
+    assert_consumed_replay(&settle(
+        &pending,
+        Some(ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+    ));
+}
+
+#[test]
+/// An out-of-range decision is rejected before it can spend the pending recovery.
+fn cxx_settling_rejects_an_out_of_range_decision_without_claiming() {
+    let mut paused = paused_cxx_run("crash-bridge-settle-invalid.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+    let invalid = ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: true,
+        decision: ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX },
+    };
+
+    // SAFETY: null is the documented representation of an omitted observer.
+    let error = unsafe { scan_run_pending_recovery_settle(&pending, invalid, std::ptr::null()) }
+        .err()
+        .expect("an unknown recovery decision must be rejected");
+    assert!(error.contains("unsupported ScanRunLocalIgnoreRecoveryDecision discriminant"));
+
+    // An out-of-range value is ignored when no decision is claimed, like any other `has_` pair.
+    let ignored = ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: false,
+        decision: ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX },
+    };
+    // SAFETY: null is the documented representation of an omitted observer.
+    let settled = unsafe { scan_run_pending_recovery_settle(&pending, ignored, std::ptr::null()) }
+        .expect("no decision has nothing out of range to reject");
+    assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
+}

@@ -10,7 +10,9 @@ import {
     JsScanRunLocalIgnoreState,
     type JsScanRunSetupContext,
     scanRunExecute,
+    ScanRunPendingRecovery,
     ScanRunRequest,
+    scanRunSettle,
     ScanRunUnsolvedLogs,
 } from "../index.js";
 
@@ -95,6 +97,30 @@ if ("result" in execution) {
     void failureLines;
     // @ts-expect-error A failed envelope cannot also contain a terminal run result.
     execution.result;
+}
+
+// A paused run offers one pending recovery: its rendered prompt, whether its run was
+// already cancelled, and the handle it is settled through.
+if ("result" in execution && execution.pendingRecovery !== undefined) {
+    const pending: ScanRunPendingRecovery = execution.pendingRecovery;
+    const promptLines: JsScanRunDisplayLine[] = pending.prompt.lines;
+    const cancellationRequested: boolean = pending.cancellationRequested;
+    void promptLines;
+    void cancellationRequested;
+    // No decision is a settlement too: it abandons the run.
+    void scanRunSettle(pending);
+    void scanRunSettle(pending, JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore);
+}
+
+type Settled = Awaited<ReturnType<typeof scanRunSettle>>;
+declare const settled: Settled;
+if ("result" in settled) {
+    const settledLines: JsScanRunDisplayLine[] = settled.displayLines;
+    void settledLines;
+    // @ts-expect-error A settled run cannot offer a second pending recovery.
+    settled.pendingRecovery;
+    // @ts-expect-error A settled run has nothing left to ask.
+    settled.recoveryPrompt;
 }
 
 const resetRunState: JsScanRunLocalIgnoreState =

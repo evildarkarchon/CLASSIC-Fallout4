@@ -37,8 +37,9 @@
 //!
 //! Every frontend also offers some way to back out, and none of them appears here.
 //! [`LocalIgnoreRecoveryDecision`] has exactly two variants by design; backing out is spelled
-//! as the *absence* of a decision and reaches the contract through
-//! `CrashLogScanRunContinuation::abandon`. A third variant would reshape a type crossing five
+//! as the *absence* of a decision and reaches the contract by settling a pending recovery with
+//! no decision (or through `CrashLogScanRunContinuation::abandon`, the entry point settling
+//! replaces). A third variant would reshape a type crossing five
 //! binding surfaces and reopen the run contract's cancellation semantics, so the cancel
 //! affordance and its wording stay each frontend's own.
 

@@ -1359,6 +1359,20 @@ json project_local_ignore_effects(const fs::path& root, const json& input,
                 {"forbidden", std::move(forbidden)}};
 }
 
+/// Projects one public recovery prompt: its lines, and each decision with its availability.
+json project_recovery_prompt(const scanner::ScanRunRecoveryPrompt& recovery_prompt, const fs::path& root) {
+    json decisions = json::array();
+    for (const auto& decision : recovery_prompt.decisions) {
+        decisions.push_back(json{{"decision", recovery_decision_token(decision.decision)},
+                                 {"label", owned_string(decision.label)},
+                                 {"description", serialize_display_segments(decision.description, root)},
+                                 {"available", decision.available}});
+    }
+    return json{{"displaySeverities", display_severities(recovery_prompt.lines)},
+                {"displayContent", serialize_display(recovery_prompt.lines, root)},
+                {"decisions", std::move(decisions)}};
+}
+
 /// Projects one initial or terminal Local Ignore envelope without reading durable effects.
 json project_local_ignore_phase(const scanner::ScanRunContractExecutionResult& execution,
                                 const RecordingObserver& observer, const fs::path& root, bool continuation_available,
@@ -1386,16 +1400,7 @@ json project_local_ignore_phase(const scanner::ScanRunContractExecutionResult& e
         if (!execution.has_recovery_prompt) {
             throw RunnerError("Local Ignore recovery result omitted its public recovery prompt");
         }
-        json decisions = json::array();
-        for (const auto& decision : execution.recovery_prompt.decisions) {
-            decisions.push_back(json{{"decision", recovery_decision_token(decision.decision)},
-                                     {"label", owned_string(decision.label)},
-                                     {"description", serialize_display_segments(decision.description, root)},
-                                     {"available", decision.available}});
-        }
-        prompt = json{{"displaySeverities", display_severities(execution.recovery_prompt.lines)},
-                      {"displayContent", serialize_display(execution.recovery_prompt.lines, root)},
-                      {"decisions", std::move(decisions)}};
+        prompt = project_recovery_prompt(execution.recovery_prompt, root);
     }
 
     return json{{"run", json{{"status", status_token(result.status)},
@@ -1473,21 +1478,48 @@ scanner::ScanRunLocalIgnoreRecoveryDecision parse_recovery_decision(const json& 
     throw RunnerError("unsupported Local Ignore recovery decision: " + decision);
 }
 
+/// Returns whether one plan action names a recovery decision.
+bool has_recovery_decision(const json& action) {
+    return action.contains("decision") && !action.at("decision").is_null();
+}
+
+/// Builds the bridge's optional-decision settlement from one settle action.
+scanner::ScanRunLocalIgnoreRecoverySettlement parse_recovery_settlement(const json& action) {
+    scanner::ScanRunLocalIgnoreRecoverySettlement settlement{};
+    settlement.has_decision = has_recovery_decision(action);
+    // `decision` is read only beside `has_decision`; any in-range value keeps the struct well formed.
+    settlement.decision = settlement.has_decision ? parse_recovery_decision(action)
+                                                  : scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+    return settlement;
+}
+
 /// Invokes one public continuation action without inferring intent from a scenario identifier.
-rust::Box<scanner::ScanRunContractExecution> run_continuation_action(const scanner::ScanRunContinuation& continuation,
-                                                                     const json& action,
-                                                                     const scanner::ScanRunCancellation& cancellation,
-                                                                     const scanner::ScanRunObserver* observer) {
+///
+/// `settle` claims through the pending recovery, which must be present; `resume` and `abandon`
+/// claim through the legacy continuation, which shares the pending recovery's one claim.
+scanner::ScanRunContractExecutionResult run_continuation_action(const scanner::ScanRunContinuation& continuation,
+                                                                const scanner::ScanRunPendingRecovery* pending,
+                                                                const json& action,
+                                                                const scanner::ScanRunCancellation& cancellation,
+                                                                const scanner::ScanRunObserver* observer) {
     const std::string operation = action.at("operation").get<std::string>();
+    if (operation == "settle") {
+        if (pending == nullptr) {
+            throw RunnerError("settle continuation action requires a pending recovery");
+        }
+        return scanner::scan_run_pending_recovery_settle(*pending, parse_recovery_settlement(action), observer);
+    }
     if (operation == "resume") {
-        return scanner::scan_run_continuation_resume(continuation, parse_recovery_decision(action), cancellation,
-                                                     observer);
+        auto result = scanner::scan_run_continuation_resume(continuation, parse_recovery_decision(action),
+                                                            cancellation, observer);
+        return scanner::scan_run_contract_execution_take_result(*result);
     }
     if (operation == "abandon") {
-        if (action.contains("decision") && !action.at("decision").is_null()) {
+        if (has_recovery_decision(action)) {
             throw RunnerError("Abandon continuation action must not have a recovery decision");
         }
-        return scanner::scan_run_continuation_abandon(continuation, cancellation, observer);
+        auto result = scanner::scan_run_continuation_abandon(continuation, cancellation, observer);
+        return scanner::scan_run_contract_execution_take_result(*result);
     }
     throw RunnerError("unsupported continuation operation: " + operation);
 }
@@ -1499,7 +1531,7 @@ json project_replay(const json& action, const scanner::ScanRunContractExecutionR
     }
     const std::string operation = action.at("operation").get<std::string>();
     json decision = nullptr;
-    if (operation == "resume") {
+    if (operation == "resume" || (operation == "settle" && has_recovery_decision(action))) {
         decision = recovery_decision_token(parse_recovery_decision(action));
     }
     return json{{"operation", operation},
@@ -1809,10 +1841,8 @@ json execute_scenario(const json& plan, const json& scenario) {
         if (!continuation_available) {
             throw RunnerError("continuationFlow initial result has no continuation");
         }
-        const json initial = project_local_ignore_phase(execution, observer, temporary.path(), true, true);
-        auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
         const json& flow = input.at("continuationFlow");
-        materialize_post_pause_data(plan, scenario, flow, temporary.path());
+        const bool settles = flow.at("action").at("operation") == "settle";
 
         std::string cancellation_mode;
         if (flow.contains("cancellation") && !flow.at("cancellation").is_null()) {
@@ -1820,7 +1850,8 @@ json execute_scenario(const json& plan, const json& scenario) {
                 throw RunnerError("continuationFlow.cancellation must be a string or null");
             }
             cancellation_mode = flow.at("cancellation").get<std::string>();
-            if (cancellation_mode != "before-resume" && cancellation_mode != "after-reset-critical-section") {
+            if (cancellation_mode != "before-resume" && cancellation_mode != "after-reset-critical-section" &&
+                cancellation_mode != "before-pending-recovery") {
                 throw RunnerError("unsupported continuationFlow cancellation boundary: " + cancellation_mode);
             }
             if (cancellation_mode == "after-reset-critical-section" &&
@@ -1828,16 +1859,40 @@ json execute_scenario(const json& plan, const json& scenario) {
                  flow.at("action").at("decision") != "reset-to-default")) {
                 throw RunnerError("after-reset-critical-section cancellation requires Reset To Default");
             }
+            if (cancellation_mode == "before-pending-recovery" && !settles) {
+                throw RunnerError("before-pending-recovery cancellation requires a settle continuation action");
+            }
         }
+        // The run already paused; this boundary cancels its control before anything reads the pause.
+        if (cancellation_mode == "before-pending-recovery") {
+            scanner::scan_run_cancellation_cancel(*cancellation);
+        }
+
+        json initial = project_local_ignore_phase(execution, observer, temporary.path(), true, true);
+        // A settle flow reaches the pause through the pending recovery, exactly as a frontend does;
+        // the legacy continuation is still taken so replays can prove the two share one claim.
+        std::optional<rust::Box<scanner::ScanRunPendingRecovery>> pending;
+        if (settles) {
+            pending.emplace(scanner::scan_run_contract_execution_take_pending_recovery(*operation));
+            initial["pendingRecovery"] =
+                json{{"cancellationRequested", scanner::scan_run_pending_recovery_cancellation_requested(**pending)},
+                     {"prompt", project_recovery_prompt(scanner::scan_run_pending_recovery_prompt(**pending),
+                                                        temporary.path())}};
+        }
+        const scanner::ScanRunPendingRecovery* pending_recovery = pending.has_value() ? &**pending : nullptr;
+        auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
+        materialize_post_pause_data(plan, scenario, flow, temporary.path());
+
         if (cancellation_mode == "before-resume") {
             scanner::scan_run_cancellation_cancel(*cancellation);
         }
 
         const bool cancelled_before_terminal = scanner::scan_run_cancellation_is_cancelled(*cancellation);
         const RecordingObserver terminal_observer(temporary.path());
-        auto terminal_operation = [&]() -> rust::Box<scanner::ScanRunContractExecution> {
+        const auto terminal_execution = [&]() -> scanner::ScanRunContractExecutionResult {
             if (cancellation_mode != "after-reset-critical-section") {
-                return run_continuation_action(*continuation, flow.at("action"), *cancellation, &terminal_observer);
+                return run_continuation_action(*continuation, pending_recovery, flow.at("action"), *cancellation,
+                                               &terminal_observer);
             }
 
             const fs::path reset_lock = temporary.path() / ".classic-local-ignore-reset.lock";
@@ -1854,14 +1909,14 @@ json execute_scenario(const json& plan, const json& scenario) {
                     scanner::scan_run_cancellation_cancel(*cancellation);
                 }
             });
-            auto result = run_continuation_action(*continuation, flow.at("action"), *cancellation, &terminal_observer);
+            auto result = run_continuation_action(*continuation, pending_recovery, flow.at("action"), *cancellation,
+                                                  &terminal_observer);
             cancel_after_reset_entry.join();
             if (!observed_reset_entry.load(std::memory_order_acquire)) {
                 throw RunnerError("reset critical-section cancellation boundary was not observed");
             }
             return result;
         }();
-        const auto terminal_execution = scanner::scan_run_contract_execution_take_result(*terminal_operation);
         const bool cancelled_after_terminal = scanner::scan_run_cancellation_is_cancelled(*cancellation);
         json terminal = nullptr;
         json terminal_error = nullptr;
@@ -1881,8 +1936,8 @@ json execute_scenario(const json& plan, const json& scenario) {
 
         json replays = json::array();
         for (const auto& action : flow.value("replays", json::array())) {
-            auto replay_operation = run_continuation_action(*continuation, action, *cancellation, nullptr);
-            const auto replay_execution = scanner::scan_run_contract_execution_take_result(*replay_operation);
+            const auto replay_execution =
+                run_continuation_action(*continuation, pending_recovery, action, *cancellation, nullptr);
             replays.push_back(project_replay(action, replay_execution, temporary.path()));
         }
         return json{

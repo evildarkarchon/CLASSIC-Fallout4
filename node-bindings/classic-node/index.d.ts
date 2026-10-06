@@ -1353,9 +1353,39 @@ export declare class ScanRunCancellation {
   get isCancelled(): boolean
 }
 
-/** Opaque process-local carrier for one paused Crash Log Scan Run. */
+/**
+ * Opaque process-local carrier for one paused Crash Log Scan Run.
+ *
+ * Backed by the same pending recovery as the run's [`ScanRunPendingRecovery`], so
+ * `scanRunResume`, `scanRunAbandon` and `scanRunSettle` all claim one continuation and
+ * only the first of them wins. Kept until every frontend settles instead.
+ */
 export declare class ScanRunContinuation {
 
+}
+
+/**
+ * The pending recovery a paused Crash Log Scan Run offers: one object to prompt from and
+ * settle.
+ *
+ * It carries the recovery prompt Rust already rendered and whether the run's cancellation
+ * was already requested. When `cancellationRequested` is true, do not prompt: settle with no
+ * decision. Settle it once with `scanRunSettle`.
+ */
+export declare class ScanRunPendingRecovery {
+  /**
+   * What to ask the user, and which answers this run can honor.
+   *
+   * The same Display Content the paused envelope's `recoveryPrompt` carries, including
+   * Reset To Default's availability.
+   */
+  get prompt(): JsScanRunRecoveryPrompt
+  /**
+   * Whether cancellation of the paused run was already requested.
+   *
+   * Read live from the control the run was started with, each time it is read.
+   */
+  get cancellationRequested(): boolean
 }
 
 /** Opaque invariant-preserving request for the final scan-run operation. */
@@ -4771,7 +4801,7 @@ export interface JsScanRunLogResult {
  * while the fact lived beside the prompt instead of on the decision.
  */
 export interface JsScanRunRecoveryDecisionDescription {
-  /** The decision to hand back to `scanRunResume`. */
+  /** The decision to hand back to `scanRunSettle` (or the older `scanRunResume`). */
   decision: JsScanRunLocalIgnoreRecoveryDecision
   /** The decision's Display Label. */
   label: string
@@ -4791,7 +4821,7 @@ export interface JsScanRunRecoveryDecisionDescription {
  *
  * Backing out appears nowhere here. `JsScanRunLocalIgnoreRecoveryDecision` has
  * exactly two variants by design, and abandonment is spelled as the absence of a
- * decision through `scanRunAbandon`.
+ * decision: `scanRunSettle` with no decision, or the older `scanRunAbandon`.
  */
 export interface JsScanRunRecoveryPrompt {
   /** Why the run paused and what is being decided about, in reading order. */
@@ -4822,6 +4852,19 @@ export interface JsScanRunResult {
   failed: number
   cancelled: number
   logs: Array<JsScanRunLogResult>
+}
+
+/**
+ * Successful envelope of a settled Crash Log Scan Run.
+ *
+ * Deliberately has no `recoveryPrompt` and no `pendingRecovery`: a settled run cannot ask
+ * for a second recovery, so this type has nowhere to put one.
+ */
+export interface JsScanRunSettledSuccess {
+  result: JsScanRunResult
+  observerError?: string
+  /** What the settled run says, in Rust's words. */
+  displayLines: Array<JsScanRunDisplayLine>
 }
 
 /** JavaScript-compatible setup check. */
@@ -4897,6 +4940,14 @@ export interface JsScanRunSuccess {
    * projected copy of the run and cannot render from the Rust value later.
    */
   recoveryPrompt?: JsScanRunRecoveryPrompt
+  /**
+   * The pending recovery to prompt from and settle with `scanRunSettle`.
+   *
+   * Present exactly when the run paused and retains a continuation to settle. It
+   * claims the same continuation as `result.continuation`, so settling it spends that
+   * too.
+   */
+  pendingRecovery?: ScanRunPendingRecovery
 }
 
 /** Targeted discovery inputs for one request. */
@@ -6246,6 +6297,22 @@ export declare function scanRunLogFailureStageLabel(token: string): string
  * Infrastructure failures retain the same resolved envelope used by [`scan_run_execute`].
  */
 export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
+
+/**
+ * Settles one paused Crash Log Scan Run once, with a recovery decision or with none.
+ *
+ * A decision resumes the same discovered Crash Logs without rediscovery. No decision
+ * (`undefined` or `null`) abandons the run: it cancels the run's own control and resolves
+ * with the ordinary cancelled-after-discovery envelope, touching nothing on disk. When
+ * `pendingRecovery.cancellationRequested` is already true, every settlement resolves
+ * cancelled, so do not prompt; settle with no decision.
+ *
+ * The resolved success has no recovery prompt and no pending recovery, so a settled run
+ * cannot ask again. Replay and concurrent double consumption reject with code
+ * `scan_run_continuation_consumed`; Reset To Default conflicts and failures reject with their
+ * stable codes, exactly as `scanRunResume` does.
+ */
+export declare function scanRunSettle(pendingRecovery: ScanRunPendingRecovery, decision?: JsScanRunLocalIgnoreRecoveryDecision | undefined | null, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSettledSuccess | JsScanRunFailure>
 
 /**
  * Convenience function to scan for unpacked files.

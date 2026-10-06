@@ -10,9 +10,9 @@ use classic_config_core::{
     YamlDataContentIdentity,
 };
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
-    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
-    render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, PendingRecoveryWithPrompt, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result, take_pending_recovery,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -811,9 +811,44 @@ pub enum PyScanRunLocalIgnoreRecoveryDecision {
 }
 
 /// Opaque process-local carrier for one paused Crash Log Scan Run.
+///
+/// Backed by the same pending recovery as [`PyScanRunPendingRecovery`], so `scan_run_resume`
+/// and `scan_run_abandon` claim the one continuation `scan_run_settle` would: whichever is called
+/// first wins, and the others raise [`ScanRunContinuationConsumedError`].
 #[pyclass(name = "ScanRunContinuation", frozen, skip_from_py_object)]
 pub struct PyScanRunContinuation {
-    inner: Arc<contract::CrashLogScanRunContinuation>,
+    inner: Arc<PendingRecoveryWithPrompt>,
+}
+
+/// A paused Crash Log Scan Run waiting to be settled exactly once.
+///
+/// Bundles the single-use continuation with the recovery prompt Rust rendered and with whether
+/// the run's cancellation was already requested. Settle it with [`scan_run_settle`].
+#[pyclass(name = "ScanRunPendingRecovery", frozen, skip_from_py_object)]
+pub struct PyScanRunPendingRecovery {
+    inner: Arc<PendingRecoveryWithPrompt>,
+}
+
+#[pymethods]
+impl PyScanRunPendingRecovery {
+    /// Returns what to ask the user, and which answers this run can honor.
+    ///
+    /// The same Display Content as the paused execution's `recovery_prompt`, rendered from
+    /// this pending recovery's own facts, so Reset To Default is unavailable here exactly
+    /// when settling with it could not succeed.
+    #[getter]
+    pub fn prompt(&self) -> PyScanRunRecoveryPrompt {
+        recovery_prompt_to_py(self.inner.prompt())
+    }
+
+    /// Returns whether cancellation of the paused run was already requested.
+    ///
+    /// Read live from the control the run was executed with. When `True`, do not prompt:
+    /// settle with no decision, which finishes cancelled after discovery and touches nothing.
+    #[getter]
+    pub fn cancellation_requested(&self) -> bool {
+        self.inner.cancellation_requested()
+    }
 }
 
 /// Complete terminal Crash Log Scan Run result.
@@ -1158,10 +1193,22 @@ pub struct PyScanRunExecution {
     observer_error: Option<String>,
     display_lines: Vec<PyScanRunDisplayLine>,
     recovery_prompt: Option<PyScanRunRecoveryPrompt>,
+    pending_recovery: Option<Py<PyScanRunPendingRecovery>>,
 }
 
 #[pymethods]
 impl PyScanRunExecution {
+    /// Returns the pending recovery a paused run offers, to settle with `scan_run_settle`.
+    ///
+    /// Present exactly when the run paused on Local Ignore recovery and retains a continuation
+    /// to answer with; `None` for every other run.
+    #[getter]
+    pub fn pending_recovery(&self, py: Python<'_>) -> Option<Py<PyScanRunPendingRecovery>> {
+        self.pending_recovery
+            .as_ref()
+            .map(|pending| pending.clone_ref(py))
+    }
+
     /// Returns a terminal result when core execution succeeded.
     #[getter]
     pub fn result(&self, py: Python<'_>) -> Option<Py<PyScanRunResult>> {
@@ -1209,6 +1256,45 @@ impl PyScanRunExecution {
     #[getter]
     pub fn recovery_prompt(&self) -> Option<PyScanRunRecoveryPrompt> {
         self.recovery_prompt.clone()
+    }
+}
+
+/// Envelope returned by `scan_run_settle`: the settled run, which can never ask again.
+///
+/// Deliberately has no `recovery_prompt` and no `pending_recovery`. A settled run carries no
+/// continuation, so a second recovery request is not something this type can express.
+#[pyclass(name = "ScanRunSettledExecution", skip_from_py_object)]
+pub struct PyScanRunSettledExecution {
+    result: Option<Py<PyScanRunResult>>,
+    error: Option<PyScanRunInfrastructureError>,
+    observer_error: Option<String>,
+    display_lines: Vec<PyScanRunDisplayLine>,
+}
+
+#[pymethods]
+impl PyScanRunSettledExecution {
+    /// Returns the settled terminal result when the resumed run produced one.
+    #[getter]
+    pub fn result(&self, py: Python<'_>) -> Option<Py<PyScanRunResult>> {
+        self.result.as_ref().map(|result| result.clone_ref(py))
+    }
+
+    /// Returns a typed infrastructure failure when the resumed run produced no result.
+    #[getter]
+    pub fn error(&self) -> Option<PyScanRunInfrastructureError> {
+        self.error.clone()
+    }
+
+    /// Returns the first adapter-only observer delivery failure while settling.
+    #[getter]
+    pub fn observer_error(&self) -> Option<String> {
+        self.observer_error.clone()
+    }
+
+    /// Returns what the settled run says, in Rust's words, for whichever payload is present.
+    #[getter]
+    pub fn display_lines(&self) -> Vec<PyScanRunDisplayLine> {
+        self.display_lines.clone()
     }
 }
 
@@ -1676,15 +1762,27 @@ fn installed_yaml_data_to_py(
     }
 }
 
-/// Maps the complete terminal result while preserving one opaque continuation object.
+/// Maps a terminal result that offers no pending recovery.
 fn run_result_to_py(py: Python<'_>, value: contract::RunResult) -> PyResult<Py<PyScanRunResult>> {
-    let continuation = value
-        .continuation
-        .map(|continuation| {
+    run_result_with_pending_to_py(py, value, None)
+}
+
+/// Maps the complete terminal result, exposing `pending` as its legacy continuation object.
+///
+/// `value.continuation` has already been taken into `pending` by [`take_pending_recovery`]
+/// before this runs; the field is not read here, so the legacy carrier and the pending recovery
+/// always wrap the same claim.
+fn run_result_with_pending_to_py(
+    py: Python<'_>,
+    value: contract::RunResult,
+    pending: Option<&Arc<PendingRecoveryWithPrompt>>,
+) -> PyResult<Py<PyScanRunResult>> {
+    let continuation = pending
+        .map(|pending| {
             Py::new(
                 py,
                 PyScanRunContinuation {
-                    inner: Arc::new(continuation),
+                    inner: Arc::clone(pending),
                 },
             )
         })
@@ -1863,18 +1961,24 @@ const fn local_ignore_recovery_decision_to_py(
 
 /// Builds the success envelope, rendering the run before projecting it.
 ///
-/// The order is load-bearing. `run_result_to_py` consumes the result — including
-/// moving its one-shot continuation into the opaque carrier — so the render has to
+/// The order is load-bearing. `run_result_with_pending_to_py` consumes the result, so the
+/// render has to
 /// happen while the Rust value is still borrowable. Rendering afterwards would have
 /// nothing left to render, and writing it that way does not compile.
 ///
 /// `scan_run_execute` and `scan_run_resume` both build this envelope, which is why
 /// one builder serves the initial run and the continuation resume alike.
+///
+/// The pending recovery is taken out first, which is the presentation crate's documented
+/// ordering: rendering only borrows, and the continuation must not be left in a value that is
+/// about to be consumed. The legacy continuation object and `pending_recovery` then wrap the same
+/// bundle, so they share one claim.
 fn success_execution(
     py: Python<'_>,
-    result: contract::RunResult,
+    mut result: contract::RunResult,
     observer_error: Option<String>,
 ) -> PyResult<PyScanRunExecution> {
+    let pending = take_pending_recovery(&mut result).map(Arc::new);
     let display_lines = display_lines_to_py(&render_run_result(&result));
     // Rendered only for the one status that pauses for an answer. Every other status has
     // nothing to ask, and a prompt attached to a finished run would invite a consumer to
@@ -1885,12 +1989,56 @@ fn success_execution(
                 result.installed_yaml_data.as_ref(),
             ))
         });
+    let pending_recovery = pending
+        .as_ref()
+        .map(|pending| {
+            Py::new(
+                py,
+                PyScanRunPendingRecovery {
+                    inner: Arc::clone(pending),
+                },
+            )
+        })
+        .transpose()?;
     Ok(PyScanRunExecution {
-        result: Some(run_result_to_py(py, result)?),
+        result: Some(run_result_with_pending_to_py(py, result, pending.as_ref())?),
         error: None,
         observer_error,
         display_lines,
         recovery_prompt,
+        pending_recovery,
+    })
+}
+
+/// Builds the envelope `scan_run_settle` returns from a settled run or its run-wide failure.
+///
+/// The settled result is widened into the run result shape only to share one projection; it
+/// carries no continuation, and this envelope has nowhere to put one.
+fn settled_execution(
+    py: Python<'_>,
+    outcome: Result<contract::SettledRunResult, contract::InfrastructureError>,
+    observer_error: Option<String>,
+) -> PyResult<PyScanRunSettledExecution> {
+    Ok(match outcome {
+        Ok(settled) => {
+            let result = contract::RunResult::from(settled);
+            let display_lines = display_lines_to_py(&render_run_result(&result));
+            PyScanRunSettledExecution {
+                result: Some(run_result_to_py(py, result)?),
+                error: None,
+                observer_error,
+                display_lines,
+            }
+        }
+        Err(error) => {
+            let display_lines = display_lines_to_py(&render_infrastructure_error(&error));
+            PyScanRunSettledExecution {
+                result: None,
+                error: Some(infrastructure_error_to_py(error)),
+                observer_error,
+                display_lines,
+            }
+        }
     })
 }
 
@@ -1907,6 +2055,7 @@ fn failure_execution(
         display_lines,
         // A run that failed run-wide never reached a decision to pause on.
         recovery_prompt: None,
+        pending_recovery: None,
     }
 }
 
@@ -2280,7 +2429,7 @@ pub fn scan_run_abandon(
 /// release, and the same exception mapping, so the two cannot drift.
 fn claim_continuation(
     py: Python<'_>,
-    continuation: Arc<contract::CrashLogScanRunContinuation>,
+    pending: Arc<PendingRecoveryWithPrompt>,
     decision: Option<contract::LocalIgnoreRecoveryDecision>,
     cancellation: contract::Cancellation,
     observer: Option<Py<PyAny>>,
@@ -2294,6 +2443,9 @@ fn claim_continuation(
             delivery_error: None,
             delivery_failed: false,
         });
+        // The legacy entry points claim the pending recovery's own continuation with the
+        // caller's control, exactly as before settling existed.
+        let continuation = pending.recovery().continuation();
         let result = match decision {
             Some(decision) => {
                 continuation
@@ -2325,6 +2477,67 @@ fn claim_continuation(
         Ok(result) => success_execution(py, result, observer_error),
         Err(contract::ResumeError::Infrastructure(error)) => {
             Ok(failure_execution(error, observer_error))
+        }
+        Err(error) => Err(scan_run_resume_error_to_py(py, error)),
+    }
+}
+
+/// Settles one paused Crash Log Scan Run once, with a recovery decision or with none.
+///
+/// `decision` resumes the same discovered Crash Logs without rediscovery; `None` abandons the
+/// run, cancelling its own control and finishing cancelled after discovery with no filesystem
+/// work. If `pending_recovery.cancellation_requested` is already `True`, either form finishes
+/// cancelled after discovery. The GIL is released while the shared runtime executes, and the
+/// observer's optional safe cancellation uses the run's own control.
+///
+/// Returns a [`PyScanRunSettledExecution`], which has no continuation and no pending recovery.
+/// Sequential or concurrent replay — through this function or the legacy `scan_run_resume` and
+/// `scan_run_abandon`, which share the claim — raises [`ScanRunContinuationConsumedError`] with
+/// code `scan_run_continuation_consumed`; reset conflict and failures raise the same typed
+/// exceptions as `scan_run_resume`. A run-wide failure of the resumed run resolves as the
+/// envelope's `error`.
+#[pyfunction]
+#[pyo3(signature = (pending_recovery, decision=None, observer=None, cancel_on_observer_error=false))]
+pub fn scan_run_settle(
+    py: Python<'_>,
+    pending_recovery: PyRef<'_, PyScanRunPendingRecovery>,
+    decision: Option<PyScanRunLocalIgnoreRecoveryDecision>,
+    observer: Option<Py<PyAny>>,
+    cancel_on_observer_error: bool,
+) -> PyResult<PyScanRunSettledExecution> {
+    let decision = decision.map(|decision| match decision {
+        PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault => {
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault
+        }
+    });
+    let pending = Arc::clone(&pending_recovery.inner);
+    let (result, observer_error) = without_gil_block_on(py, || async move {
+        let mut observer = observer.map(|callback| PyObserverAdapter {
+            callback,
+            cancellation: pending.recovery().cancellation().clone(),
+            cancel_on_error: cancel_on_observer_error,
+            delivery_error: None,
+            delivery_failed: false,
+        });
+        let result = pending
+            .settle(
+                decision,
+                observer
+                    .as_mut()
+                    .map(|adapter| adapter as &mut dyn contract::Observer),
+            )
+            .await;
+        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
+        (result, observer_error)
+    });
+
+    match result {
+        Ok(settled) => settled_execution(py, Ok(settled), observer_error),
+        Err(contract::ResumeError::Infrastructure(error)) => {
+            settled_execution(py, Err(error), observer_error)
         }
         Err(error) => Err(scan_run_resume_error_to_py(py, error)),
     }
