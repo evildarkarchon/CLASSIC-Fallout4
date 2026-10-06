@@ -1999,8 +1999,8 @@
       "rustSymbol": "check_restricted_path",
       "kind": "function",
       "bridgeModule": "game",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "is_restricted_path"
     },
     {
@@ -2283,8 +2283,8 @@
       "rustSymbol": "check_restricted_path",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "is_restricted_path"
     },
     {
@@ -2337,8 +2337,8 @@
       "rustSymbol": "is_restricted_path",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "is_restricted_path"
     },
     {
@@ -2364,8 +2364,8 @@
       "rustSymbol": "path_validate_custom_scan",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "validate_custom_scan_path"
     },
     {

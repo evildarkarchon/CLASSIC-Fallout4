@@ -2278,7 +2278,7 @@
       "id": "config-validate-settings-paths",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "validate_settings_paths",
       "nodeExport": "validateSettingsPaths",
       "nodeKind": "function"
@@ -3198,7 +3198,7 @@
       "rustSymbol": "is_restricted_path",
       "nodeExport": "isRestrictedPath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "aux-phase4a-is-runtime-available",
@@ -3378,7 +3378,7 @@
       "rustSymbol": "validate_custom_scan_path",
       "nodeExport": "validateCustomScanPath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "aux-phase4a-validate-path-with-permissions",
@@ -6415,7 +6415,7 @@
       "id": "path.validate_settings_paths@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "validate_settings_paths@rust",
       "rustKind": "reexport"
     },

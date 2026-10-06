@@ -1,9 +1,12 @@
 //! Path validation utilities.
 //!
 //! This module provides comprehensive path validation functionality:
-//! - Restriction validation for custom scans
-//! - Settings path verification
+//! - Settings path verification (Game and Documents paths)
 //! - Required file validation
+//!
+//! Custom-scan folder policy (restricted-path rejection and custom-scan path
+//! validation) is owned by `classic_scanlog_core::custom_scan` (#254
+//! follow-up); path core does not re-export it.
 //!
 //! The generic existence, kind, permission, drive, and read-only primitives
 //! these checks build on live in `classic_shared_core::path_core`.
@@ -11,64 +14,6 @@
 use crate::error::{ValidationError, ValidationResult};
 use classic_shared_core::path_core::validate_is_directory;
 use std::path::Path;
-
-/// Check if a path is restricted for custom scans.
-///
-/// Restricted paths include:
-/// - Game installation directory
-/// - Documents folder
-/// - System directories
-/// - Root directories
-///
-/// This prevents users from accidentally scanning sensitive or system directories.
-///
-/// # Arguments
-///
-/// * `path` - The path to check
-///
-/// # Returns
-///
-/// `true` if the path is restricted, `false` if it's safe for custom scans.
-///
-/// # Examples
-///
-/// ```rust
-/// use classic_path_core::is_restricted_path;
-/// use std::path::Path;
-///
-/// let safe_path = Path::new("C:\\Users\\Name\\Downloads\\Mods");
-/// assert!(!is_restricted_path(&safe_path));
-///
-/// let restricted = Path::new("C:\\Windows");
-/// assert!(is_restricted_path(&restricted));
-/// ```
-pub fn is_restricted_path(path: &Path) -> bool {
-    let path_str = path.to_string_lossy().to_lowercase();
-
-    // Check for system directories
-    let restricted_patterns = [
-        "windows",
-        "program files",
-        "program files (x86)",
-        "programdata",
-        "system32",
-        "syswow64",
-        "appdata",
-    ];
-
-    for pattern in &restricted_patterns {
-        if path_str.contains(pattern) {
-            return true;
-        }
-    }
-
-    // Check if it's a root directory (e.g., C:\, D:\, /)
-    if path.parent().is_none() || path.components().count() <= 2 {
-        return true;
-    }
-
-    false
-}
 
 /// Validate that required files exist in a directory.
 ///
@@ -106,38 +51,6 @@ pub fn validate_required_files(
                 file: file_name.clone(),
             });
         }
-    }
-
-    Ok(())
-}
-
-/// Validate a custom scan path.
-///
-/// Ensures the path exists, is a directory, and is not restricted.
-///
-/// # Arguments
-///
-/// * `path` - The path to validate for custom scanning
-///
-/// # Returns
-///
-/// `Ok(())` if valid for custom scanning, or a `ValidationError` if not.
-///
-/// # Examples
-///
-/// ```rust,no_run
-/// use classic_path_core::validate_custom_scan_path;
-/// use std::path::Path;
-///
-/// let scan_path = Path::new("C:\\Users\\Name\\Downloads\\Mods");
-/// validate_custom_scan_path(scan_path)?;
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-pub fn validate_custom_scan_path(path: &Path) -> ValidationResult<()> {
-    validate_is_directory(path)?;
-
-    if is_restricted_path(path) {
-        return Err(ValidationError::RestrictedPath(path.to_path_buf()));
     }
 
     Ok(())
@@ -193,45 +106,41 @@ pub fn validate_settings_path(
     Ok(())
 }
 
-/// Validate all common settings paths.
+/// Validate the Game and Documents settings paths.
 ///
-/// This function validates:
-/// - Game root path (with game executable)
-/// - Documents path
-/// - Custom scan path (if set)
-/// - Mods folder path (if set)
-/// - INI folder path (if set)
+/// Checks, in order:
+/// 1. The game root path exists, is a directory, and contains `game_exe`
+///    (reported under the "Game Path" setting name)
+/// 2. The documents path exists (reported under the "Documents Path" setting name)
 ///
-/// **Note**: This function requires external configuration to get the actual paths
-/// and settings. In the Rust-only context, you'd pass these as parameters. When
-/// called from Python, the Python layer handles loading settings from YAML.
+/// Custom-scan folder policy is not part of path core: the combined
+/// settings-path check that also validates a custom scan folder is
+/// `classic_scanlog_core::validate_settings_paths`, which calls this first.
 ///
 /// # Arguments
 ///
 /// * `game_path` - Game installation path to validate
 /// * `docs_path` - Documents folder path to validate
-/// * `custom_scan_path` - Optional custom scan path
 /// * `game_exe` - Game executable name (e.g., "Fallout4.exe")
 ///
 /// # Returns
 ///
-/// `Ok(())` if all paths are valid, or the first `ValidationError` encountered.
+/// `Ok(())` if both paths are valid, or the first `ValidationError` encountered.
 ///
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validate_settings_paths;
+/// use classic_path_core::validate_game_and_documents_paths;
 /// use std::path::PathBuf;
 ///
 /// let game = PathBuf::from("C:\\Games\\Fallout4");
 /// let docs = PathBuf::from("C:\\Users\\Name\\Documents\\My Games\\Fallout4");
-/// validate_settings_paths(&game, &docs, None, "Fallout4.exe")?;
+/// validate_game_and_documents_paths(&game, &docs, "Fallout4.exe")?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-pub fn validate_settings_paths(
+pub fn validate_game_and_documents_paths(
     game_path: &Path,
     docs_path: &Path,
-    custom_scan_path: Option<&Path>,
     game_exe: &str,
 ) -> ValidationResult<()> {
     // Validate game root path
@@ -239,11 +148,6 @@ pub fn validate_settings_paths(
 
     // Validate documents path
     validate_settings_path(docs_path, "Documents Path", None)?;
-
-    // Validate custom scan path if set
-    if let Some(scan_path) = custom_scan_path {
-        validate_custom_scan_path(scan_path)?;
-    }
 
     Ok(())
 }

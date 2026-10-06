@@ -3,7 +3,9 @@
 //! Bridges version registry, version parsing, PE version extraction,
 //! XSE detection, and path validation/detection.
 
-use classic_path_core::{GamePathFinder, is_restricted_path};
+use classic_path_core::GamePathFinder;
+// Custom-scan folder policy is owned by scanlog core (#254 follow-up).
+use classic_scanlog_core::is_restricted_path;
 use classic_shared_core::path_core::is_valid_path;
 use classic_shared_core::version::pe_version::extract_pe_version;
 use classic_version_registry_core::{GameVersion, get_version_registry};

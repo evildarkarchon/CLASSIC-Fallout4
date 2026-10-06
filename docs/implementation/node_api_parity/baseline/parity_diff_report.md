@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-05T23:38:53.968500+00:00`
+- Generated: `2026-10-06T00:00:50.651642+00:00`
 - Tier-1 contract rows: **947**
 - Tier-1 matched: **930**
 - Tier-1 missing Rust: **0**
@@ -237,7 +237,7 @@
 | `config-get-settings-cache-stats` | `config` | `classic-shared-core` | `cache_stats` | `getSettingsCacheStats` | `matched` |
 | `config-reset-settings-cache-stats` | `config` | `classic-shared-core` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
 | `config-validate-settings-path` | `path` | `classic-path-core` | `validate_settings_path` | `validateSettingsPath` | `matched` |
-| `config-validate-settings-paths` | `path` | `classic-path-core` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
+| `config-validate-settings-paths` | `path` | `classic-scanlog-core` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
 | `config-yaml-document-class` | `config` | `classic-shared-core` | `YamlOperations` | `YamlDocument` | `matched` |
 | `config-yaml-parse` | `config` | `classic-shared-core` | `parse_yaml` | `yamlParse` | `matched` |
 | `config-yaml-stringify` | `config` | `classic-shared-core` | `dump_yaml` | `yamlStringify` | `matched` |
@@ -335,7 +335,7 @@
 | `aux-phase4a-hash-file` | `aux` | `classic-file-io-core` | `FileHasher` | `hashFile` | `matched` |
 | `aux-phase4a-hash-files-parallel` | `aux` | `classic-file-io-core` | `FileHasher` | `hashFilesParallel` | `matched` |
 | `aux-phase4a-intern-string` | `aux` | `classic-shared-core` | `intern` | `internString` | `matched` |
-| `aux-phase4a-is-restricted-path` | `aux` | `classic-path-core` | `is_restricted_path` | `isRestrictedPath` | `matched` |
+| `aux-phase4a-is-restricted-path` | `aux` | `classic-scanlog-core` | `is_restricted_path` | `isRestrictedPath` | `matched` |
 | `aux-phase4a-is-runtime-available` | `aux` | `classic-shared-core` | `get_runtime` | `isRuntimeAvailable` | `matched` |
 | `aux-phase4a-is-valid-executable-path` | `aux` | `classic-shared-core` | `is_executable_file_path` | `isValidExecutablePath` | `matched` |
 | `aux-phase4a-is-valid-path` | `aux` | `classic-shared-core` | `is_valid_path` | `isValidPath` | `matched` |
@@ -355,7 +355,7 @@
 | `aux-phase4a-registry-set` | `aux` | `classic-registry-core` | `register` | `registrySet` | `matched` |
 | `aux-phase4a-registry-set-game` | `aux` | `classic-registry-core` | `set_game` | `registrySetGame` | `matched` |
 | `aux-phase4a-remove-readonly` | `aux` | `classic-shared-core` | `remove_readonly` | `removeReadonly` | `matched` |
-| `aux-phase4a-validate-custom-scan-path` | `aux` | `classic-path-core` | `validate_custom_scan_path` | `validateCustomScanPath` | `matched` |
+| `aux-phase4a-validate-custom-scan-path` | `aux` | `classic-scanlog-core` | `validate_custom_scan_path` | `validateCustomScanPath` | `matched` |
 | `aux-phase4a-validate-path-with-permissions` | `aux` | `classic-shared-core` | `validate_path_with_permissions` | `validatePathWithPermissions` | `matched` |
 | `aux-phase4a-validate-paths-batch` | `aux` | `classic-shared-core` | `validate_paths_batch` | `validatePathsBatch` | `matched` |
 | `aux-phase4a-validate-required-files` | `aux` | `classic-path-core` | `validate_required_files` | `validateRequiredFiles` | `matched` |
@@ -698,7 +698,7 @@
 | `path.validate_is_file@rust` | `path` | `classic-shared-core` | `validate_is_file@rust` | `None` | `matched` |
 | `path.validate_path_exists@rust` | `path` | `classic-shared-core` | `validate_path_exists@rust` | `None` | `matched` |
 | `path.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path@rust` | `None` | `matched` |
-| `path.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths@rust` | `None` | `matched` |
+| `path.validate_settings_paths@rust` | `path` | `classic-scanlog-core` | `validate_settings_paths@rust` | `None` | `matched` |
 | `registry.Keys@rust` | `registry` | `classic-registry-core` | `Keys@rust` | `None` | `matched` |
 | `registry.get_application_dir@rust` | `registry` | `classic-registry-core` | `get_application_dir@rust` | `None` | `matched` |
 | `registry.get_game_path_gui@rust` | `registry` | `classic-registry-core` | `get_game_path_gui@rust` | `None` | `matched` |
