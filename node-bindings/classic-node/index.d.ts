@@ -1403,6 +1403,12 @@ export declare class ScanRunLaunch {
   get setupContext(): JsScanRunSetupContext | null
   /** Returns the launch diagnostics, in the order they were produced. */
   get diagnostics(): Array<JsScanRunLaunchDiagnostic>
+  /**
+   * Returns the launch diagnostics rendered as Display Content, one line per
+   * diagnostic in the same order. Show these rather than phrasing `diagnostics` in
+   * JavaScript.
+   */
+  get displayLines(): Array<JsScanRunDisplayLine>
   /** Returns an executable copy of the launched request. */
   request(): ScanRunRequest
 }
@@ -4783,8 +4789,11 @@ export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {
 /** One non-fatal launch diagnostic; the launch still produced a scannable request. */
 export interface JsScanRunLaunchDiagnostic {
   /** Which launch rule produced it, as a camelCase Vocabulary Token. */
-  kind: 'userSettings'
-  /** Stable machine-readable code (the User Settings code for `userSettings`). */
+  kind: 'userSettings' | 'gameVersionNotApplied' | 'fcxModeNotApplied' | 'customScanFolderNotApplied' | 'setupFoldersNotApplied'
+  /**
+   * Stable machine-readable code (the User Settings code for `userSettings`, the
+   * kind's snake_case token otherwise).
+   */
   code: string
   /** Human-readable context. Prose; branch on `kind` and `code` instead. */
   message: string

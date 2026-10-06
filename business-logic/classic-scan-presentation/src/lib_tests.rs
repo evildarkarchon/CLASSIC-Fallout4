@@ -10,7 +10,8 @@
 
 use super::{
     DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
-    render_local_ignore_recovery, render_resume_error, render_run_result,
+    render_launch_diagnostic, render_launch_diagnostics, render_local_ignore_recovery,
+    render_resume_error, render_run_result,
 };
 use crate::display::{
     BYTE, CONCURRENT_SCAN, CRASH_LOG, CountedNoun, LOG, SEARCHED_LOCATION, TARGETED_INPUT,
@@ -23,6 +24,10 @@ use crate::render::{
 use classic_config_core::{
     InstalledYamlDataProvenance, InstalledYamlDataRole, YamlDataContentIdentity,
 };
+use classic_scan_launch::{
+    CrashLogScanIntent, CrashLogScanLaunchDiagnostic, CrashLogScanLaunchOverrides,
+    SavedGameSpecificValue, prepare_launch,
+};
 use classic_scanlog_core::scan_run::contract::{
     Event, InfrastructureError, InfrastructureErrorStage, InstalledYamlDataRunDiagnosticKind,
     LocalIgnoreResetConflictError, LocalIgnoreResetDurabilityUnknownError, LocalIgnoreResetFailure,
@@ -33,6 +38,7 @@ use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRejectedInput,
     ScanProgressPhase,
 };
+use classic_shared_core::GameId;
 use std::path::PathBuf;
 
 use DisplaySegment::{Count, Emphasis, Label, Path, Text};
@@ -1005,6 +1011,108 @@ fn per_event_progress_pins_selected_concurrency() {
     );
 }
 
+// -- launch diagnostics -----------------------------------------------------------------
+
+/// Builds the game-differs diagnostic for `value`, scanning Fallout 4 VR while Fallout 4 is
+/// the managed game.
+fn not_applied(value: SavedGameSpecificValue) -> CrashLogScanLaunchDiagnostic {
+    CrashLogScanLaunchDiagnostic::SavedValueNotApplied {
+        value,
+        managed_game: GameId::Fallout4,
+        target_game: GameId::Fallout4VR,
+    }
+}
+
+/// Returns the User Settings diagnostics a launch surfaces for a malformed document.
+///
+/// User Settings diagnostics have no public constructor, so the fixture is a real launch
+/// against a temporary Installation Root rather than a hand-built value.
+fn malformed_settings_launch_diagnostics() -> Vec<CrashLogScanLaunchDiagnostic> {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Broken Sequence: [one, two\n",
+    )
+    .unwrap();
+    prepare_launch(
+        root.path(),
+        CrashLogScanIntent::Standard,
+        &CrashLogScanLaunchOverrides::new(),
+    )
+    .unwrap()
+    .diagnostics()
+    .to_vec()
+}
+
+/// Pins the game-differs line for each saved value, including the game version's fallback.
+#[test]
+fn launch_diagnostic_pins_each_saved_value_not_applied() {
+    let tail = |label: &'static str| {
+        vec![
+            Label(label),
+            Text("- this scan targets"),
+            DisplaySegment::Name("Fallout 4 VR".to_string()),
+            Text("but saved settings belong to the managed game"),
+            DisplaySegment::Name("Fallout 4".to_string()),
+        ]
+    };
+    let mut game_version = tail("saved game version not applied");
+    game_version.push(Text("- the game version is detected automatically"));
+
+    assert_eq!(
+        render_launch_diagnostics(&[
+            not_applied(SavedGameSpecificValue::GameVersion),
+            not_applied(SavedGameSpecificValue::FcxMode),
+            not_applied(SavedGameSpecificValue::CustomScanFolder),
+            not_applied(SavedGameSpecificValue::SetupFolders),
+        ]),
+        vec![
+            DisplayLine {
+                severity: Notice,
+                segments: game_version,
+            },
+            DisplayLine {
+                severity: Notice,
+                segments: tail("saved FCX Mode not applied"),
+            },
+            DisplayLine {
+                severity: Notice,
+                segments: tail("saved custom scan folder not applied"),
+            },
+            DisplayLine {
+                severity: Notice,
+                segments: tail("saved setup folders not applied"),
+            },
+        ]
+    );
+}
+
+/// Pins a User Settings diagnostic surfaced by a launch: its message, never its code.
+#[test]
+fn launch_diagnostic_pins_a_user_settings_diagnostic() {
+    let diagnostics = malformed_settings_launch_diagnostics();
+    let CrashLogScanLaunchDiagnostic::UserSettings(first) = &diagnostics[0] else {
+        panic!("a malformed document reports User Settings diagnostics first");
+    };
+
+    assert_eq!(
+        render_launch_diagnostic(&diagnostics[0]),
+        DisplayLine {
+            severity: Warning,
+            segments: vec![
+                Label("User Settings"),
+                Text("-"),
+                Emphasis(first.message().to_string()),
+            ],
+        }
+    );
+    // One line per diagnostic, in launch order.
+    assert_eq!(
+        render_launch_diagnostics(&diagnostics).len(),
+        diagnostics.len()
+    );
+}
+
 // -- crate-wide invariants --------------------------------------------------------------
 
 /// Renders every path this crate has, so the invariant tests below see all of its output.
@@ -1237,6 +1345,18 @@ fn rendered_corpus() -> Vec<DisplayLine> {
             segments: description.description,
         }));
     }
+
+    for value in [
+        SavedGameSpecificValue::GameVersion,
+        SavedGameSpecificValue::FcxMode,
+        SavedGameSpecificValue::CustomScanFolder,
+        SavedGameSpecificValue::SetupFolders,
+    ] {
+        lines.push(render_launch_diagnostic(&not_applied(value)));
+    }
+    lines.extend(render_launch_diagnostics(
+        &malformed_settings_launch_diagnostics(),
+    ));
 
     lines
 }

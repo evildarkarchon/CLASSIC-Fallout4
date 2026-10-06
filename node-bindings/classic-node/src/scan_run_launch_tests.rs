@@ -1,4 +1,5 @@
 use super::*;
+use crate::scan_run::{JsScanRunDisplaySegmentKind, JsScanRunDisplaySeverity};
 
 #[test]
 fn zero_max_concurrent_override_requests_adaptive_concurrency() {
@@ -33,6 +34,50 @@ fn unknown_game_version_override_is_an_invalid_argument() {
     .expect_err("an unknown game-version token cannot be represented");
 
     assert_eq!(error.status, Status::InvalidArg);
+}
+
+#[test]
+fn non_managed_game_projects_withheld_values_and_their_display_lines() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  \
+         Game Version: NextGen\n  SCAN Custom Path: 'C:/Saved Custom Logs'\n",
+    )
+    .unwrap();
+    let launched = ScanRunLaunch {
+        inner: prepare_launch(
+            root.path(),
+            CrashLogScanIntent::Standard,
+            &overrides_to_core(JsScanRunLaunchOverrides {
+                game: Some(JsGameId::Fallout4Vr),
+                ..JsScanRunLaunchOverrides::default()
+            })
+            .unwrap(),
+        )
+        .unwrap(),
+    };
+
+    let kinds: Vec<_> = launched
+        .diagnostics()
+        .into_iter()
+        .map(|diagnostic| diagnostic.kind)
+        .collect();
+    assert_eq!(
+        kinds,
+        ["gameVersionNotApplied", "customScanFolderNotApplied"]
+    );
+    let lines = launched.display_lines();
+    assert_eq!(lines.len(), 2);
+    assert!(matches!(
+        lines[0].severity,
+        JsScanRunDisplaySeverity::Notice
+    ));
+    assert!(matches!(
+        lines[0].segments[0].kind,
+        JsScanRunDisplaySegmentKind::Label
+    ));
+    assert_eq!(lines[0].segments[0].text, "saved game version not applied");
 }
 
 #[test]

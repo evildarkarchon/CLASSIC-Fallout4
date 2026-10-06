@@ -102,10 +102,23 @@ pub fn render_event(event: &Event) -> Vec<DisplayLine>;
 pub fn render_infrastructure_error(error: &InfrastructureError) -> Vec<DisplayLine>;
 pub fn render_resume_error(error: &ResumeError) -> Vec<DisplayLine>;
 pub fn render_local_ignore_recovery(data: Option<&InstalledYamlDataRunData>) -> RecoveryPrompt;
+pub fn render_launch_diagnostics(diagnostics: &[CrashLogScanLaunchDiagnostic]) -> Vec<DisplayLine>;
+pub fn render_launch_diagnostic(diagnostic: &CrashLogScanLaunchDiagnostic) -> DisplayLine;
 ```
 
-All five entry points are pure over a borrowed contract value, so wording can be pinned without
-running a scan.
+All of these entry points are pure over a borrowed value, so wording can be pinned without running
+a scan.
+
+### Launch diagnostics
+
+`render_launch_diagnostics` renders what a Crash Log Scan Launch reported
+([`classic-scan-launch.md`](classic-scan-launch.md), ADR-0009), one line per diagnostic in launch
+order. A User Settings diagnostic surfaced by the launch is a `Warning` line: the `User Settings`
+Display Label, then its free-text message as `Emphasis`; its machine code stays on the typed
+diagnostic. A saved value the game-differs rule withheld is a `Notice` line: the kind's Display Label
+(`saved FCX Mode not applied`, …), then the scanned game and the managed game as `Name` segments; the
+game-version line also says the version is detected automatically. Every binding carries these lines
+beside the typed diagnostics on its launch surface.
 
 ### The Local Ignore recovery prompt
 
@@ -153,8 +166,8 @@ for itself. Taking the `Option` here makes it one rule rather than three.
 
 Six kinds, fixed for this version. Each addition touches three binding parity baselines, so growth
 must be a deliberate decision rather than incidental. `Name` carries a domain entity that is not a
-filesystem path; no render path emits one yet, and the variant exists so the kind a non-path name
-will need is declared now rather than bolted on later.
+filesystem path; launch diagnostics are its first emitter, naming games by their display names. It
+was declared before any render path used it so that kind did not have to be bolted on later.
 
 ### Severity is not colour
 
@@ -243,7 +256,8 @@ removes the legacy surface. `tests/pending_recovery.rs` pins the prompt against
 
 **Locked** — byte-identical everywhere, pinned by the tests in `src/lib_tests.rs`: terminal status
 prose, infrastructure error prose, resume error prose, the per-log outcome line, the Installed YAML
-Data block, the per-event progress line, and the Local Ignore recovery decision descriptions.
+Data block, the per-event progress line, the Local Ignore recovery decision descriptions, and the
+launch diagnostic lines.
 
 **Free, and expected to differ** — line ordering and grouping, section headers, colour and emphasis
 mapping, truncation and wrapping, widget choice, collapsibility, and whether a section is shown at
@@ -280,8 +294,9 @@ Two consequences worth naming, because they look like omissions:
 
 ## Dependencies and direction
 
-Depends on `classic-scanlog-core`, `classic-vocabulary`, and `classic-config-core`, one way only.
-`classic-scanlog-core` gains **no** dependency on this crate.
+Depends on `classic-scanlog-core`, `classic-vocabulary`, `classic-config-core`, and
+`classic-scan-launch` (whose diagnostics it renders), one way only. Neither `classic-scanlog-core`
+nor `classic-scan-launch` gains a dependency on this crate.
 
 It is deliberately not a module inside `classic-scanlog-core`: that crate already carries a mutual
 dependency between its `scan_run` engine and its `scan_run::contract`, and presentation placed inside
@@ -335,7 +350,10 @@ Where the seams differ is only in where the field can sit and how each language 
 - **Python** has one envelope like the bridge, so one `display_lines` covers `result` and `error`
   alike, plus one on each of the five resume exceptions.
 
-Events carry it identically on all three.
+Events carry it identically on all three, and so does a launch: the bridge's
+`ScanRunLaunchRequestDto.display_lines`, Node's `ScanRunLaunch.displayLines`, and Python's
+`ScanRunLaunch.display_lines` each hold one line per launch diagnostic, in the same order as the
+typed `diagnostics` beside them.
 
 The recovery prompt rides the same seams and is rendered under the same rule — while the Rust value
 is live — but only for a run whose status is Local Ignore Recovery Required, which is exactly when

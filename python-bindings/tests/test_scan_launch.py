@@ -57,6 +57,23 @@ def test_degraded_user_settings_still_launch_with_their_diagnostics(tmp_path: Pa
     ]
 
 
+def test_non_managed_game_withholds_saved_values_and_renders_why(tmp_path: Path) -> None:
+    root = _root_with_settings(tmp_path, MANAGED_FALLOUT4)
+
+    launch = classic_scanlog.ScanRunLaunch.standard(
+        str(root),
+        classic_scanlog.ScanRunLaunchOverrides(game=classic_shared.GameId.Fallout4VR),
+    )
+
+    assert launch.game_version == "auto"
+    assert [(item.kind, item.code) for item in launch.diagnostics] == [
+        ("game_version_not_applied", "game_version_not_applied")
+    ]
+    assert len(launch.display_lines) == 1
+    assert launch.display_lines[0].severity == "notice"
+    assert "Fallout 4 VR" in [segment.text for segment in launch.display_lines[0].segments]
+
+
 def test_targeted_launch_without_inputs_raises_the_typed_error(tmp_path: Path) -> None:
     root = _root_with_settings(tmp_path, MANAGED_FALLOUT4)
 
