@@ -345,8 +345,10 @@ export async function runCli(
             gameVersion: normalizedGameVersion,
             showFormidValues: showFidValues,
             simplifyLogs,
+            // Rust selects the rows that apply to this game's scan (including the Fallout 4 VR
+            // read rule); an absent game simply has no applicable rows.
             formidDatabasePaths:
-                scanSettings.formidDatabases[options.game] ?? [],
+                scanSettings.scanFormidDatabases[options.game] ?? [],
             unsolvedLogsDestination: scanSettings.unsolvedLogsDestination,
             maxConcurrent: configuredConcurrency,
         };

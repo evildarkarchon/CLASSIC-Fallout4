@@ -265,6 +265,33 @@ fn observe_user_settings(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerR
                 "unchanged": before == fs::read(&settings_path)?,
             }))
         }
+        "tui.settings-scan-projection" => {
+            require_scenarios(
+                obligation,
+                &[
+                    "canonical-current-nested",
+                    "vr-shared-and-legacy-formid-databases",
+                ],
+            )?;
+            // Each launch observes the rows the TUI's Crash Logs scan would pass for the managed game.
+            let observe = |fixture: &str| -> RunnerResult<Value> {
+                fs::copy(&plan.fixtures[fixture], &settings_path)?;
+                let before = fs::read(&settings_path)?;
+                let app = App::new_with_settings_root(root.path(), None);
+                let (game, databases) = app.scan_game_projection();
+                Ok(json!({
+                    "game": game.as_str(),
+                    "formIdDatabasePaths": databases
+                        .iter()
+                        .map(|path| path.to_string_lossy().into_owned())
+                        .collect::<Vec<_>>(),
+                    "unchanged": before == fs::read(&settings_path)?,
+                }))
+            };
+            let mut observation = observe("canonical_current_nested")?;
+            observation["fallout4Vr"] = observe("vr_shared_and_legacy_formid_databases")?;
+            Ok(observation)
+        }
         "tui.settings-explicit-save" => {
             require_scenarios(
                 obligation,

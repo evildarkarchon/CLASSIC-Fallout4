@@ -576,6 +576,24 @@ def _scan_projection(observation: Mapping[str, Any]) -> bool:
     )
 
 
+def _scan_formid_databases_projection(observation: Mapping[str, Any]) -> bool:
+    """Require the game-aware FormID read, including the Fallout 4 VR row selection."""
+
+    view = observation.get("view")
+    rows = view.get("scan_formid_databases") if isinstance(view, Mapping) else None
+    return (
+        isinstance(rows, Mapping)
+        and "Fallout4VR" in rows
+        and all(
+            isinstance(game, str)
+            and isinstance(paths, list)
+            and bool(paths)
+            and all(isinstance(path, str) for path in paths)
+            for game, paths in rows.items()
+        )
+    )
+
+
 def _frontend_projection(observation: Mapping[str, Any]) -> bool:
     """Require complete typed window geometry before covering frontend carriers."""
 
@@ -801,6 +819,14 @@ USER_SETTINGS_COVERAGE_POLICY = FamilyCoveragePolicy(
             "projection",
             ("CrashLogScanSettings",),
             _scan_projection,
+        ),
+        CoveragePredicate(
+            "user-settings.scan-formid-databases",
+            "user-settings.open",
+            "user-settings.open",
+            "projection",
+            ("CrashLogScanSettings", "formid_databases_for_game"),
+            _scan_formid_databases_projection,
         ),
         CoveragePredicate(
             "user-settings.frontend-state",

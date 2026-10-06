@@ -548,7 +548,8 @@
             {
               "id": "cli.settings-scan-projection",
               "scenarioIds": [
-                "canonical-current-nested"
+                "canonical-current-nested",
+                "vr-shared-and-legacy-formid-databases"
               ],
               "expected": {
                 "game": "Fallout4",
@@ -559,7 +560,16 @@
                 ],
                 "classification": "current",
                 "commitEligibility": "eligible",
-                "unchanged": true
+                "unchanged": true,
+                "fallout4Vr": {
+                  "game": "Fallout4VR",
+                  "formIdDatabasePaths": [
+                    "databases/Fallout4 FormIDs.db",
+                    "databases/Shared Extra FormIDs.db",
+                    "databases/Legacy VR FormIDs.db"
+                  ],
+                  "unchanged": true
+                }
               }
             },
             {
@@ -616,7 +626,8 @@
             {
               "id": "gui.settings-scan-projection",
               "scenarioIds": [
-                "canonical-current-nested"
+                "canonical-current-nested",
+                "vr-shared-and-legacy-formid-databases"
               ],
               "expected": {
                 "classification": "current",
@@ -626,7 +637,16 @@
                 "formIdDatabasePaths": [
                   "databases/Fallout4 FormIDs.db"
                 ],
-                "unchanged": true
+                "unchanged": true,
+                "fallout4Vr": {
+                  "game": "Fallout4VR",
+                  "formIdDatabasePaths": [
+                    "databases/Fallout4 FormIDs.db",
+                    "databases/Shared Extra FormIDs.db",
+                    "databases/Legacy VR FormIDs.db"
+                  ],
+                  "unchanged": true
+                }
               }
             },
             {
@@ -678,6 +698,29 @@
             "ui-applications/classic-tui/tests/scan_run_consumer_conformance.rs"
           ],
           "obligations": [
+            {
+              "id": "tui.settings-scan-projection",
+              "scenarioIds": [
+                "canonical-current-nested",
+                "vr-shared-and-legacy-formid-databases"
+              ],
+              "expected": {
+                "game": "Fallout4",
+                "formIdDatabasePaths": [
+                  "databases/Fallout4 FormIDs.db"
+                ],
+                "unchanged": true,
+                "fallout4Vr": {
+                  "game": "Fallout4VR",
+                  "formIdDatabasePaths": [
+                    "databases/Fallout4 FormIDs.db",
+                    "databases/Shared Extra FormIDs.db",
+                    "databases/Legacy VR FormIDs.db"
+                  ],
+                  "unchanged": true
+                }
+              }
+            },
             {
               "id": "tui.settings-startup",
               "scenarioIds": [

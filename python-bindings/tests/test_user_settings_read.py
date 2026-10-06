@@ -270,6 +270,11 @@ def test_user_settings_scan_snapshot_exposes_typed_values_and_alias_policy(
     assert scan.formid_databases == {
         "Fallout4": ["databases/Fallout4 FormIDs.db"]
     }
+    # Fallout 4 VR shares the Fallout 4 rows through the Rust game-aware read.
+    assert scan.scan_formid_databases == {
+        "Fallout4": ["databases/Fallout4 FormIDs.db"],
+        "Fallout4VR": ["databases/Fallout4 FormIDs.db"],
+    }
     assert scan.move_unsolved_logs is True
     assert scan.unsolved_logs_destination is None
     assert scan.custom_scan_input is None
@@ -318,6 +323,7 @@ def test_user_settings_scan_snapshot_exposes_typed_values_and_alias_policy(
     assert invalid_scan.custom_scan_input is None
     assert invalid_scan.custom_scan_input_origin == "degraded_fallback"
     assert invalid_scan.formid_databases == {}
+    assert invalid_scan.scan_formid_databases == {}
     assert invalid_scan.formid_databases_origin == "degraded_fallback"
     assert invalid_scan.max_concurrent_scans == 0
     assert invalid_scan.max_concurrent_scans_origin == "degraded_fallback"
