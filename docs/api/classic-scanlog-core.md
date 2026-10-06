@@ -737,12 +737,11 @@ and binding-local CLIs construct requests and present Rust-owned facts; they do
 not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
 
-`CrashLogScanRunContinuation::abandon` reaches every surface. The TUI depends on
-this crate directly and calls it; CXX exposes it as
+`CrashLogScanRunContinuation::abandon` reaches every surface. CXX exposes it as
 `scan_run_continuation_abandon`, Node as `scanRunAbandon`, and Python as
 `scan_run_abandon`. Each takes a continuation and a cancellation and no
 decision, and returns the same envelope its `resume` sibling does. Every
-frontend that offers the choice — the TUI, the native CLI, and the Qt GUI —
+frontend that offers the choice and has not yet moved to settling (see below)
 routes it through this operation, so none of them writes the
 cancel-then-resume-with-a-placeholder sequence any more. `classic-py-cli` has no
 such choice to route: it treats a recovery-required result as terminal and never
@@ -768,6 +767,20 @@ legacy continuation and its pending recovery with the same bundle, so the old
 resume and abandon surfaces keep working and share the one claim. See
 [classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md)
 and [node-python-contract-map.md](node-python-contract-map.md).
+
+The TUI depends on this crate directly and settles (#279). On `ScanFinished` it
+takes the pending recovery with `classic_scan_presentation::take_pending_recovery`
+before rendering anything; a result with none is terminal. When
+`cancellation_requested()` is already `true` it shows no overlay and settles
+with no decision. Otherwise the non-blocking overlay draws the pending
+recovery's own prompt, and the answer settles once on a spawned shared-runtime
+task: `p` / `r` pass that decision, and `Esc`, `c`, or closing the overlay pass
+none. The completion message `AsyncMessage::ScanSettleFinished` carries the
+decision passed to settling and the `SettledRunResult`, so the TUI has no
+second-recovery or missing-continuation branch left. Its observer returns
+`ObserverDeliveryFailure` when the App's channel is closed, and both execution
+and settling pass `ObserverFailurePolicy::CancelRun`; the TUI tracks no delivery
+failure of its own.
 
 The observer failure policy and the reported delivery failure reach every
 surface (#278). CXX observers return `ScanRunObserverDelivery` from
