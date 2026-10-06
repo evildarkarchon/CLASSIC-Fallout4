@@ -8,6 +8,7 @@
 #include <functional>
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -85,7 +86,8 @@ private:
 /// Explicit native CLI response to a malformed Local Ignore file found by an active scan run.
 ///
 /// `Cancel` is a presentation-only outcome. Rust owns exactly two recovery decisions, so the CLI
-/// expresses dismissal by requesting cancellation before it resumes the retained continuation.
+/// expresses dismissal by settling the pending recovery with no decision, which Rust turns into a
+/// cancelled run that touches no file.
 enum class CliLocalIgnoreRecoveryChoice {
     ProceedWithoutIgnore,
     ResetToDefault,
@@ -132,7 +134,7 @@ struct CliLocalIgnoreRecoveryPresentation {
     std::vector<CliLocalIgnoreRecoveryDecisionOption> decisions;
 };
 
-/// Console decision seam invoked while Rust still retains the single-use recovery continuation.
+/// Console decision seam invoked while the CLI holds the run's unsettled pending recovery.
 ///
 /// The callback receives the run-level recovery presentation and owns printing it, so tests can
 /// assert the offered facts without driving a real terminal.
@@ -146,8 +148,9 @@ inline constexpr int CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS = 3;
 ///
 /// The lines carry retained Installed YAML Data facts and structured diagnostics only; they never
 /// reach an Autoscan Report. Every word of them, and every word of the decision descriptions, comes
-/// from the Rust-rendered prompt on the envelope; the CLI applies no policy of its own beyond what
-/// the run reported.
+/// from Rust: the run's rendered display lines on the envelope, and `prompt`, the Display Content
+/// the pending recovery carries (`scan_run_pending_recovery_prompt`). The CLI applies no policy of
+/// its own beyond what the run reported.
 ///
 /// This takes the whole execution envelope rather than the run result, because the rendered display
 /// lines travel on the envelope. It presents all of them rather than trying to pick the Installed
@@ -158,7 +161,8 @@ inline constexpr int CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS = 3;
 /// Rust's own prompt lines are appended last so the question sits immediately above the menu in a
 /// scrolling terminal, rather than at the top of a block the user has already scrolled past.
 CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
-    const classic::scanner::ScanRunContractExecutionResult& execution);
+    const classic::scanner::ScanRunContractExecutionResult& execution,
+    const classic::scanner::ScanRunRecoveryPrompt& prompt);
 
 /// Reads one explicit recovery choice from an interactive console stream pair.
 ///
@@ -169,13 +173,12 @@ CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
 /// A decision whose `available` is false is neither printed nor accepted: its letter and its long
 /// word are rejected exactly like any other unrecognized answer, and the bracketed letters narrow
 /// to just the offered ones. An option the run has already reported it cannot honor is not an
-/// option, and choosing it would spend the single-use continuation on a guaranteed failure. The
+/// option, and choosing it would spend the single-use pending recovery on a guaranteed failure. The
 /// menu, the bracketed letters, the retry hint, and the accepted answers are all derived from
 /// `decisions`, so none of them can advertise something another withheld.
 ///
 /// Cancel is always offered and is never in `decisions`: Rust models backing out as the *absence*
-/// of a decision, reached through the shared abandon operation, so its letter and its wording stay
-/// this frontend's own.
+/// of a decision, settled with no decision, so its letter and its wording stay this frontend's own.
 ///
 /// Responsiveness caveat: cancellation is re-checked only after the console read returns, so Ctrl+C
 /// pressed while the read is still blocked is honored when the read completes rather than
@@ -185,32 +188,61 @@ CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(
     std::istream& input, std::ostream& output, const CliScanRunCancellation& cancellation,
     const std::vector<CliLocalIgnoreRecoveryDecisionOption>& decisions);
 
-/// Terminal envelope after any Local Ignore recovery decision has been applied.
+/// The native CLI's observer delivery failure policy, passed to both execution and settling.
+///
+/// The CLI has always stopped a run whose progress presentation failed, so it asks Rust to cancel
+/// the run's own control at the first failed delivery. Rust applies the policy and reports the
+/// failure on the envelope; the CLI's observer only reports that a delivery failed.
+inline constexpr classic::scanner::ScanRunObserverFailurePolicy CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY =
+    classic::scanner::ScanRunObserverFailurePolicy::CancelRun;
+
+/// Terminal envelope after any pending Local Ignore recovery has been settled.
 struct CliScanRunExecutionOutcome {
     classic::scanner::ScanRunContractExecutionResult execution;
-    /// True when the retained single-use continuation was consumed by one explicit answer.
+    /// True when the run's pending recovery was settled, with or without a decision.
     ///
-    /// Cancel counts: it is an explicit answer that consumes the continuation with a
-    /// non-destructive decision after cancellation has already been requested.
-    bool local_ignore_continuation_consumed = false;
-    /// Actionable lines for a recovery invariant the CLI could not honor. Empty in every normal run.
-    std::vector<CliScanRunMessage> recovery_diagnostics;
+    /// Cancel counts, and so does a run already cancelled before the question could be asked:
+    /// both settle with no decision. False for a non-interactive run, which reports the paused
+    /// envelope without settling.
+    bool local_ignore_recovery_settled = false;
+    /// The decision the CLI passed to settling; empty when it settled with no decision or did not
+    /// settle at all.
+    std::optional<classic::scanner::ScanRunLocalIgnoreRecoveryDecision> settled_decision;
 };
 
-/// Executes one Crash Log Scan Run and resolves Local Ignore recovery through `prompt`.
+/// Executes one Crash Log Scan Run and settles any pending Local Ignore recovery through `prompt`.
 ///
-/// A `Local Ignore Recovery Required` result is an expected outcome, not a failure: the retained
-/// continuation is consumed exactly once with the chosen decision and resumes the same discovery.
-/// When no prompt is supplied, or the run did not retain a continuation, the initial recovery
-/// envelope is returned unchanged so non-interactive callers never make an implicit choice.
+/// Executes under `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY`, then hands the operation to
+/// `resolve_cli_local_ignore_recovery`. A `Local Ignore Recovery Required` result is an expected
+/// outcome, not a failure.
 CliScanRunExecutionOutcome execute_cli_scan_run(const classic::scanner::ScanRunRequest& request,
                                                 CliScanRunCancellation& cancellation,
                                                 const classic::scanner::ScanRunObserver* observer,
                                                 const CliLocalIgnoreRecoveryPrompt& prompt);
 
+/// Settles the pending recovery of an already executed operation, if it has one.
+///
+/// The recovery flow is: check for a pending recovery; when the pending recovery reports its run
+/// already cancelled, settle with no decision and never call `prompt`; otherwise describe the
+/// pending recovery's prompt, ask `prompt`, and settle with the chosen decision, or with no
+/// decision when the user cancels. The pending recovery is settled exactly once, under
+/// `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY`, and the settled envelope replaces the paused one.
+///
+/// When the operation has no pending recovery its envelope is returned as is. When `prompt` is
+/// empty the paused envelope is returned unsettled, so a non-interactive caller never makes an
+/// implicit choice.
+///
+/// Exposed separately from `execute_cli_scan_run` so a test can cancel the run's control between
+/// the pause and the check, which in production only Ctrl+C can do. `operation` must have been
+/// executed with `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY`.
+CliScanRunExecutionOutcome resolve_cli_local_ignore_recovery(classic::scanner::ScanRunContractExecution& operation,
+                                                             const classic::scanner::ScanRunObserver* observer,
+                                                             const CliLocalIgnoreRecoveryPrompt& prompt);
+
 /// Produces the terminal CLI presentation for one resolved scan-run outcome.
 ///
-/// Recovery invariant diagnostics are reported ahead of the terminal envelope and force the
-/// infrastructure exit code, because a recovery the CLI could not honor is never a usable result.
+/// An observer delivery failure the run reported is printed first, on stderr, as a warning. It
+/// does not change the exit code: Rust already applied the CLI's cancel policy to the run, and
+/// its status already decides the exit code.
 CliScanRunPresentation present_cli_scan_run_outcome(const CliScanRunExecutionOutcome& outcome,
                                                     double duration_seconds);

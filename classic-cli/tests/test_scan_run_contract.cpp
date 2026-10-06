@@ -932,7 +932,8 @@ TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation 
     const auto standard = execute_cli_scan_run(*standard_request, standard_cancellation, nullptr, no_prompt);
 
     REQUIRE(standard.execution.has_result);
-    REQUIRE_FALSE(standard.local_ignore_continuation_consumed);
+    REQUIRE_FALSE(standard.local_ignore_recovery_settled);
+    REQUIRE_FALSE(standard.settled_decision.has_value());
     REQUIRE(standard.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
     REQUIRE(standard.execution.result.discovery.source == scanner::ScanRunContractDiscoverySource::Standard);
     REQUIRE(standard.execution.result.installed_yaml_data.local_ignore_state ==
@@ -960,7 +961,7 @@ TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation 
             fixture::MALFORMED_LOCAL_IGNORE);
 }
 
-TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cli][scan-run][local-ignore]") {
+TEST_CASE("CLI Proceed Without Ignore settles the retained discovery once", "[cli][scan-run][local-ignore]") {
     TemporaryDirectory temporary;
     copy_shared_yaml_tree(temporary.path());
     CliArgs args{};
@@ -980,7 +981,8 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
                                               });
 
     REQUIRE(prompt.invocations() == 1);
-    REQUIRE(outcome.local_ignore_continuation_consumed);
+    REQUIRE(outcome.local_ignore_recovery_settled);
+    REQUIRE(outcome.settled_decision == scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Completed);
     REQUIRE(outcome.execution.result.installed_yaml_data.local_ignore_state ==
@@ -1010,7 +1012,7 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
     }
 }
 
-TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][scan-run][local-ignore]") {
+TEST_CASE("CLI Reset To Default settles with durable backup metadata", "[cli][scan-run][local-ignore]") {
     TemporaryDirectory temporary;
     copy_shared_yaml_tree(temporary.path());
     CliArgs args{};
@@ -1028,6 +1030,7 @@ TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][sc
                                               });
 
     REQUIRE(prompt.invocations() == 1);
+    REQUIRE(outcome.settled_decision == scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
     // End-to-end proof that the described decisions survive the bridge rather than defaulting: this
     // fixture's Main YAML Data does retain a usable default, and the reset below is what proves the
     // availability attached to that decision was true. Both decisions are described whether or not
@@ -1077,7 +1080,10 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
                                               });
 
     REQUIRE(prompt.invocations() == 1);
-    REQUIRE(outcome.local_ignore_continuation_consumed);
+    // Cancel is settled as the absence of a decision, not as a third decision.
+    REQUIRE(outcome.local_ignore_recovery_settled);
+    REQUIRE_FALSE(outcome.settled_decision.has_value());
+    REQUIRE(scanner::scan_run_cancellation_is_cancelled(cancellation.token()));
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Cancelled);
     REQUIRE(outcome.execution.result.logs.size() == 1);
@@ -1088,6 +1094,68 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
     REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
     REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
     REQUIRE(present_cli_scan_run_execution(outcome.execution, 1.0).exit_code == 130);
+}
+
+TEST_CASE("CLI settles a pending recovery whose run was already cancelled without prompting",
+          "[cli][scan-run][local-ignore][settle]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    CliArgs args{};
+    args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
+    const auto root = temporary.path().string();
+    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    malform_local_ignore(temporary.path());
+
+    CliScanRunCancellation cancellation(false);
+    auto operation = scanner::scan_run_contract_execute(*request, cancellation.token(), nullptr,
+                                                        CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY);
+    // Ctrl+C lands after the run paused and before the CLI reads the pause.
+    cancellation.request();
+
+    // A prompt that would reset is the worst case: it must never be asked.
+    RecordingRecoveryPrompt prompt(CliLocalIgnoreRecoveryChoice::ResetToDefault);
+    const auto outcome = resolve_cli_local_ignore_recovery(
+        *operation, nullptr,
+        [&prompt](const CliLocalIgnoreRecoveryPresentation& recovery) { return prompt(recovery); });
+
+    REQUIRE(prompt.invocations() == 0);
+    REQUIRE(outcome.local_ignore_recovery_settled);
+    REQUIRE_FALSE(outcome.settled_decision.has_value());
+    REQUIRE(outcome.execution.has_result);
+    REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
+    REQUIRE(present_cli_scan_run_outcome(outcome, 1.0).exit_code == 130);
+}
+
+TEST_CASE("CLI reports observer delivery failure from the run result under its cancel policy",
+          "[cli][scan-run][observer-failure]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    CliArgs args{};
+    args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
+    const auto root = temporary.path().string();
+    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+
+    // The failing observer never touches cancellation itself; any cancel is Rust applying the
+    // policy the CLI chose.
+    CliScanRunCancellation cancellation(false);
+    const FailingObserver observer;
+    const auto outcome = execute_cli_scan_run(*request, cancellation, &observer, CliLocalIgnoreRecoveryPrompt{});
+
+    REQUIRE(CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY == scanner::ScanRunObserverFailurePolicy::CancelRun);
+    REQUIRE(observer.event_count() == 1);
+    REQUIRE(outcome.execution.has_observer_delivery_failure);
+    REQUIRE(outcome.execution.has_result);
+    REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(scanner::scan_run_cancellation_is_cancelled(cancellation.token()));
+
+    const auto presentation = present_cli_scan_run_outcome(outcome, 1.0);
+    REQUIRE(presentation.exit_code == 130);
+    REQUIRE_FALSE(presentation.messages.empty());
+    REQUIRE(presentation.messages[0].error);
+    REQUIRE(presentation.messages[0].text.find("presentation failed") != std::string::npos);
 }
 
 TEST_CASE("CXX abandonment claims the continuation without deciding or observing",

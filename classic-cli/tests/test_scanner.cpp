@@ -451,13 +451,13 @@ TEST_CASE("CLI Local Ignore recovery description offers retained discovery and d
     execution.result.installed_yaml_data.local_ignore_state =
         scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
     execution.result.installed_yaml_data.local_ignore_reset_available = false;
-    // The bridged prompt this frontend now renders from. Set on the envelope rather than derived,
+    // The pending recovery's prompt this frontend renders from. Built by hand rather than derived,
     // because `describe_cli_local_ignore_recovery` reads a projected copy of the run and cannot
     // re-render it.
-    execution.has_recovery_prompt = true;
-    push_lines(execution.recovery_prompt.lines, {text_line("Rust asks the question here")});
+    scanner::ScanRunRecoveryPrompt prompt{};
+    push_lines(prompt.lines, {text_line("Rust asks the question here")});
 
-    const auto recovery = describe_cli_local_ignore_recovery(execution);
+    const auto recovery = describe_cli_local_ignore_recovery(execution, prompt);
     const auto lines = message_text(recovery.details);
 
     REQUIRE(lines[0] == "why the run paused");
@@ -473,8 +473,8 @@ TEST_CASE("CLI Local Ignore recovery description offers retained discovery and d
 TEST_CASE("CLI Local Ignore recovery description carries every decision Rust described",
           "[scanner][scan-run][local-ignore]") {
     SECTION("each decision arrives labelled, explained, and marked available or not") {
-        auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-        execution.has_recovery_prompt = true;
+        const auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+        scanner::ScanRunRecoveryPrompt prompt{};
         scanner::ScanRunRecoveryDecisionDescription proceed{};
         proceed.decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
         proceed.label = "Proceed Without Ignore";
@@ -485,10 +485,10 @@ TEST_CASE("CLI Local Ignore recovery description carries every decision Rust des
         reset.label = "Reset To Default";
         reset.description.push_back(segment(scanner::ScanRunDisplaySegmentKind::Text, "what resetting does"));
         reset.available = false;
-        execution.recovery_prompt.decisions.push_back(std::move(proceed));
-        execution.recovery_prompt.decisions.push_back(std::move(reset));
+        prompt.decisions.push_back(std::move(proceed));
+        prompt.decisions.push_back(std::move(reset));
 
-        const auto recovery = describe_cli_local_ignore_recovery(execution);
+        const auto recovery = describe_cli_local_ignore_recovery(execution, prompt);
 
         REQUIRE(recovery.decisions.size() == 2);
         REQUIRE(recovery.decisions[0].decision == scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
@@ -501,14 +501,13 @@ TEST_CASE("CLI Local Ignore recovery description carries every decision Rust des
         REQUIRE_FALSE(recovery.decisions[1].available);
     }
 
-    SECTION("an envelope carrying no prompt offers nothing rather than guessing") {
-        // A recovery-required envelope always carries a prompt, so this is a broken contract rather
+    SECTION("a prompt describing no decision offers nothing rather than guessing") {
+        // A pending recovery always describes both decisions, so this is a broken contract rather
         // than a user-visible state. Failing closed leaves Cancel as the only answer, which is the
         // one outcome that cannot touch the user's files.
-        auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-        execution.has_recovery_prompt = false;
+        const auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
 
-        REQUIRE(describe_cli_local_ignore_recovery(execution).decisions.empty());
+        REQUIRE(describe_cli_local_ignore_recovery(execution, scanner::ScanRunRecoveryPrompt{}).decisions.empty());
     }
 }
 
@@ -689,34 +688,35 @@ TEST_CASE("CLI scan presentation states a resume failure in Rust's words and kee
     }
 }
 
-TEST_CASE("CLI recovery invariant diagnostics outrank the terminal envelope",
-          "[scanner][scan-run][local-ignore]") {
+TEST_CASE("CLI outcome presentation leads with an observer delivery failure the run reported",
+          "[scanner][scan-run][observer-failure]") {
     CliScanRunExecutionOutcome outcome{};
-    outcome.execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-    push_lines(outcome.execution.display_lines, {text_line("a decision is needed")});
-    outcome.recovery_diagnostics.push_back(
-        {true, "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation."});
+    outcome.execution = execution_with_result(scanner::ScanRunContractStatus::Cancelled);
+    outcome.execution.has_observer_delivery_failure = true;
+    outcome.execution.observer_delivery_failure_message = "the progress view broke";
+    push_lines(outcome.execution.display_lines, {text_line("the run was cancelled")});
 
+    const auto direct = present_cli_scan_run_execution(outcome.execution, 0.5);
     const auto presentation = present_cli_scan_run_outcome(outcome, 0.5);
     const auto lines = message_text(presentation.messages);
 
-    // A recovery the CLI could not honor is an infrastructure failure, not a status worth exit 1.
-    // The diagnostic stays composed here because it reports a broken bridge promise rather than
-    // anything a run said, so there is no Rust-rendered line for it to replace.
-    REQUIRE(presentation.exit_code == 2);
-    REQUIRE(lines[0] ==
-            "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation.");
+    // The fact comes from the run result, not from the CLI's own observer. It is a warning on
+    // stderr ahead of the run's own account, and it leaves the exit code to the run's status.
+    REQUIRE(presentation.exit_code == direct.exit_code);
+    REQUIRE(presentation.messages.size() == direct.messages.size() + 1);
     REQUIRE(presentation.messages[0].error);
-    REQUIRE(lines.back() == "a decision is needed");
+    REQUIRE(lines[0].find("scan progress presentation failed") != std::string::npos);
+    REQUIRE(lines.back() == "the run was cancelled");
 }
 
-TEST_CASE("CLI outcome presentation is unchanged without recovery diagnostics",
+TEST_CASE("CLI outcome presentation is unchanged when every event was delivered",
           "[scanner][scan-run][local-ignore]") {
     CliScanRunExecutionOutcome outcome{};
     outcome.execution = execution_with_result(scanner::ScanRunContractStatus::Completed);
     outcome.execution.result.total = 1;
     outcome.execution.result.succeeded = 1;
-    outcome.local_ignore_continuation_consumed = true;
+    outcome.local_ignore_recovery_settled = true;
+    outcome.settled_decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
 
     const auto direct = present_cli_scan_run_execution(outcome.execution, 1.0);
     const auto via_outcome = present_cli_scan_run_outcome(outcome, 1.0);

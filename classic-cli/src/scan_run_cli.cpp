@@ -543,7 +543,10 @@ public:
 #endif
     }
 
-    /// Makes the monotonic request exactly once even if Ctrl+C and adapter failure race.
+    /// Makes the monotonic request exactly once even if the Ctrl+C monitor and a direct caller race.
+    ///
+    /// The scan observer no longer calls this: Rust cancels on a failed delivery under the CLI's
+    /// observer failure policy.
     void request() {
         if (!requested_.exchange(true, std::memory_order_acq_rel)) {
             scanner::scan_run_cancellation_cancel(*token_);
@@ -577,7 +580,7 @@ const scanner::ScanRunCancellation& CliScanRunCancellation::token() const noexce
 }
 
 CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
-    const scanner::ScanRunContractExecutionResult& execution) {
+    const scanner::ScanRunContractExecutionResult& execution, const scanner::ScanRunRecoveryPrompt& prompt) {
     const auto& result = execution.result;
     CliLocalIgnoreRecoveryPresentation recovery;
     // The rendered run opens with why it paused and carries the Installed YAML Data block that says
@@ -597,10 +600,10 @@ CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
     // block the user has already scrolled past. This is where the CLI used to resolve absent
     // Installed YAML Data into an availability flag for itself, next to the GUI and the TUI each
     // resolving it for themselves; `render_local_ignore_recovery` takes that `Option` so the rule
-    // is written once. Both vectors are empty when the envelope carries no prompt, which leaves
-    // Cancel as the only offered answer — the safe reading of a contract violation.
-    append_display_lines(execution.recovery_prompt.lines, recovery.details);
-    for (const auto& description : execution.recovery_prompt.decisions) {
+    // is written once. A prompt describing no decision leaves Cancel as the only offered answer —
+    // the safe reading of a contract violation.
+    append_display_lines(prompt.lines, recovery.details);
+    for (const auto& description : prompt.decisions) {
         recovery.decisions.push_back({description.decision, to_std_string(description.label),
                                       render_cli_display_segments(description.description),
                                       description.available});
@@ -672,87 +675,83 @@ CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& r
                                                 CliScanRunCancellation& cancellation,
                                                 const scanner::ScanRunObserver* observer,
                                                 const CliLocalIgnoreRecoveryPrompt& prompt) {
-    CliScanRunExecutionOutcome outcome{};
-    // The CLI has always stopped a run whose progress presentation failed, so it asks Rust to.
     auto operation = scanner::scan_run_contract_execute(request, cancellation.token(), observer,
-                                                        scanner::ScanRunObserverFailurePolicy::CancelRun);
-    const bool has_continuation = scanner::scan_run_contract_execution_has_continuation(*operation);
-    outcome.execution = scanner::scan_run_contract_execution_take_result(*operation);
+                                                        CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY);
+    return resolve_cli_local_ignore_recovery(*operation, observer, prompt);
+}
 
-    const bool recovery_required =
-        outcome.execution.has_result &&
-        outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired;
-    if (!recovery_required) {
-        return outcome;
-    }
-    if (!has_continuation) {
-        // Rust always retains a continuation with this status, so its absence is a broken contract
-        // rather than a user decision. Say so instead of presenting an unanswerable question.
-        outcome.recovery_diagnostics.push_back(
-            {true, "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation."});
-        return outcome;
-    }
-    if (!prompt) {
-        // Expected for a non-interactive invocation: report the typed outcome and make no choice.
+CliScanRunExecutionOutcome resolve_cli_local_ignore_recovery(scanner::ScanRunContractExecution& operation,
+                                                             const scanner::ScanRunObserver* observer,
+                                                             const CliLocalIgnoreRecoveryPrompt& prompt) {
+    CliScanRunExecutionOutcome outcome{};
+    const bool has_pending_recovery = scanner::scan_run_contract_execution_has_pending_recovery(operation);
+    outcome.execution = scanner::scan_run_contract_execution_take_result(operation);
+    if (!has_pending_recovery || !prompt) {
+        // No pending recovery means nothing to settle; Rust owns every other outcome, including
+        // abandoning a recovery whose run already failed to deliver an event. An empty prompt is
+        // the non-interactive path: report the paused envelope and make no choice.
         return outcome;
     }
 
-    // The continuation must be taken before the prompt runs so a decision can never observe a
-    // half-owned operation, and so a prompt that throws cannot leave the run resumable.
-    auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
-    const auto choice = prompt(describe_cli_local_ignore_recovery(outcome.execution));
+    // Taken before the prompt runs so a decision can never observe a half-owned operation, and so a
+    // prompt that throws cannot leave the run resumable.
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(operation);
 
-    // Cancel maps to *no decision*, which is exactly what the shared abandon operation takes. The
-    // switch stays exhaustive so a choice added later trips `-Wswitch` here rather than silently
-    // resolving to Proceed Without Ignore. The same `optional`-shaped mapping is what the Node and
-    // Python bindings use, for the same reason: `LocalIgnoreRecoveryDecision` deliberately has no
-    // abandonment variant, so absence is how abandonment is spelled everywhere.
-    const auto decision = [&]() -> std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> {
+    std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> decision;
+    // Ctrl+C observed between the pause and this check already decided the run, so the question is
+    // never printed: settling with no decision is the only answer a cancelled run can take.
+    if (!scanner::scan_run_pending_recovery_cancellation_requested(*pending)) {
+        const auto choice = prompt(
+            describe_cli_local_ignore_recovery(outcome.execution, scanner::scan_run_pending_recovery_prompt(*pending)));
+
+        // Cancel maps to *no decision*, which is how settling spells abandonment. The switch stays
+        // exhaustive so a choice added later trips `-Wswitch` here rather than silently resolving
+        // to Proceed Without Ignore. The same `optional`-shaped mapping is what the Node and Python
+        // bindings use, for the same reason: `LocalIgnoreRecoveryDecision` deliberately has no
+        // abandonment variant, so absence is how abandonment is spelled everywhere.
         switch (choice) {
         case CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
-            return scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+            decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+            break;
         case CliLocalIgnoreRecoveryChoice::ResetToDefault:
-            return scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+            decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+            break;
         case CliLocalIgnoreRecoveryChoice::Cancel:
-            return std::nullopt;
+            // Leaves `decision` empty. So does a value this build does not recognize, since no case
+            // assigns it: abandonment is the one outcome that cannot touch the user's files.
+            break;
         }
-        // Unreachable for a valid enumerator. Abandonment is the safe resolution for a value this
-        // build does not recognize: it is the one outcome that cannot touch the user's files.
-        return std::nullopt;
-    }();
-
-    // `scan_run_continuation_abandon` performs the cancel-then-resume-with-a-placeholder sequence
-    // that used to live here, so the CLI cannot reorder it, cannot pick a different placeholder,
-    // and cannot drift from what the Qt GUI and the TUI do. It cancels the shared control itself,
-    // which is why nothing here asks for cancellation first — and deliberately not through
-    // `cancellation.request()`, whose one-shot guard exists to stop the Ctrl+C monitor and an
-    // adapter failure from racing. Rust's control is monotonic, so a later `request()` is inert
-    // rather than a second cancel.
-    auto resumed = decision ? scanner::scan_run_continuation_resume(*continuation, *decision,
-                                                                    cancellation.token(), observer)
-                            : scanner::scan_run_continuation_abandon(*continuation, cancellation.token(), observer);
-    outcome.execution = scanner::scan_run_contract_execution_take_result(*resumed);
-    outcome.local_ignore_continuation_consumed = true;
-
-    if (outcome.execution.has_result &&
-        outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired) {
-        // The continuation is single-use, so a resumed run can never ask again. Refuse to present a
-        // second question the CLI has no continuation left to answer.
-        outcome.recovery_diagnostics.push_back(
-            {true, "Fatal: Crash Log Scan recovery returned an unexpected second recovery request."});
     }
+
+    // Settling with no decision cancels the run's own control, the one handed to execute, so
+    // nothing here asks for cancellation first — and deliberately not through
+    // `CliScanRunCancellation::request()`, whose one-shot guard belongs to the Ctrl+C monitor.
+    // Rust's control is monotonic, so a later `request()` is inert rather than a second cancel. The settled envelope cannot carry another pending
+    // recovery, so a second recovery request is unrepresentable rather than checked for.
+    scanner::ScanRunLocalIgnoreRecoverySettlement settlement{};
+    settlement.has_decision = decision.has_value();
+    // `decision` is read only beside `has_decision`; the placeholder is never applied.
+    settlement.decision = decision.value_or(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
+    outcome.execution =
+        scanner::scan_run_pending_recovery_settle(*pending, settlement, observer, CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY);
+    outcome.local_ignore_recovery_settled = true;
+    outcome.settled_decision = decision;
     return outcome;
 }
 
 CliScanRunPresentation present_cli_scan_run_outcome(const CliScanRunExecutionOutcome& outcome,
                                                     double duration_seconds) {
     auto presentation = present_cli_scan_run_execution(outcome.execution, duration_seconds);
-    if (outcome.recovery_diagnostics.empty()) {
+    if (!outcome.execution.has_observer_delivery_failure) {
         return presentation;
     }
 
-    presentation.messages.insert(presentation.messages.begin(), outcome.recovery_diagnostics.begin(),
-                                 outcome.recovery_diagnostics.end());
-    presentation.exit_code = 2;
+    // Read from the run result rather than from the CLI's own observer: Rust stops delivering after
+    // the first failure and has already applied the CLI's policy, so the envelope is the one place
+    // that knows a failure happened. The sentence stays this frontend's own because Rust renders no
+    // line for it; the exit code stays the run's.
+    presentation.messages.insert(
+        presentation.messages.begin(),
+        CliScanRunMessage{true, "Warning: scan progress presentation failed; safe cancellation was requested."});
     return presentation;
 }
