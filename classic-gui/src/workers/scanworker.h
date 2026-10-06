@@ -5,7 +5,6 @@
 #include <QStringList>
 
 #include "classic_cxx_bridge/scanner.h"
-#include "core/guiusersettings.h"
 #include "rust/cxx.h"
 #include "workers/scanrunpresentation.h"
 
@@ -17,17 +16,26 @@ public:
     /// Creates a worker that can synchronously obtain an explicit GUI recovery choice.
     ScanWorker(classic::gui::ScanRunLocalIgnoreRecoveryPrompt localIgnoreRecoveryPrompt, QObject* parent = nullptr);
 
-    /// Executes one Rust-owned Crash Log Scan Run from immutable, revision-approved GUI settings.
+    /// Launches and executes one Rust-owned Crash Log Scan Run from the Installation Root.
     ///
-    /// Discovery, scheduling, durable finalization, and terminal ordering remain inside Rust. This
-    /// synchronous worker-thread call only projects the tagged request and presents events/results.
-    void doScan(const QString& installationRoot, const classic::gui::CrashLogScanLaunchSettings& settings,
-                const QString& baseDirectory, const QString& setupXseLogPath, const QStringList& targetedInputs);
+    /// Rust's Crash Log Scan Launch reads the saved User Settings and builds the request: an empty
+    /// `targetedInputs` list is a Standard scan whose base folder is `installationRoot`, a non-empty
+    /// one a Targeted scan of exactly those inputs. Discovery, FCX setup validation, scheduling,
+    /// durable finalization, and terminal ordering remain inside Rust. This synchronous
+    /// worker-thread call only chooses the intent and presents launch diagnostics, events, and
+    /// results. A typed launch error ends the scan through `error` before any run starts.
+    void doScan(const QString& installationRoot, const QStringList& targetedInputs);
 
 public slots:
     void requestCancel();
 
 signals:
+    /// Publishes the launch's diagnostics, rendered by Rust as Display Content, before the run.
+    ///
+    /// Emitted at most once per scan and only when the launch reported something, such as a
+    /// degraded User Settings document the request was built from defaults for. The run still
+    /// goes ahead; these are facts about how it was launched, not failures.
+    void launchWarning(const QString& richText);
     void progress(float percent, const QString& status);
     void progressDetailed(float percent, const QString& status, int completed, int total);
     void discoveryCompleted(int totalLogs, const QString& rejectionWarning, const QStringList& reportDirectories);

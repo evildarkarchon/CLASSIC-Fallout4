@@ -2,19 +2,19 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use classic_resource_core::BackupType;
+use classic_scan_launch::{
+    CrashLogScanIntent, CrashLogScanLaunchError, CrashLogScanLaunchOverrides,
+    CrashLogScanLaunchRequest, prepare_launch,
+};
 use classic_scan_presentation::{
     DisplaySeverity, PendingRecoveryWithPrompt, take_pending_recovery,
 };
 use classic_scanlog_core::scan_run::contract::{
-    self as scan_run_contract, Cancellation, Configuration, Event as ScanRunEvent,
-    InfrastructureError, LocalIgnoreRecoveryDecision, ObserverDeliveryFailure,
-    ObserverFailurePolicy, Options, ResumeError, RunResult, SettledRunResult,
+    self as scan_run_contract, Cancellation, Event as ScanRunEvent, InfrastructureError,
+    LocalIgnoreRecoveryDecision, ObserverDeliveryFailure, ObserverFailurePolicy, ResumeError,
+    RunResult, SettledRunResult,
 };
 use classic_scanlog_core::validate_custom_scan_path;
-use classic_scanlog_core::{
-    CrashLogScanFacts, CrashLogScanSetupContext, StandardCrashLogScanSource,
-    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
-};
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
 use classic_user_settings_core::{
@@ -33,9 +33,8 @@ mod update_workflow;
 
 use crate::results_markdown::MarkdownLink;
 use crate::scan_run::{
-    LocalIgnoreRecoveryPrompt, PresentedLine, ScanRunIntent, build_request,
-    describe_local_ignore_recovery, format_error, format_event, format_result, format_resume_error,
-    join_presented,
+    LocalIgnoreRecoveryPrompt, PresentedLine, describe_local_ignore_recovery, format_error,
+    format_event, format_launch_diagnostics, format_result, format_resume_error, join_presented,
 };
 use crate::state::{
     InstallationRootNotFound, legacy_tui_state_file_path, locate_installation_root,
@@ -408,6 +407,13 @@ pub struct App {
     pub async_rx: mpsc::UnboundedReceiver<AsyncMessage>,
     pub scan_cancellation: Option<Cancellation>,
     pub last_scan_run: Option<LastScanRun>,
+    /// Launch diagnostics of the run currently in flight, already laid out as display lines.
+    ///
+    /// Held apart from [`Self::last_scan_launch_diagnostics`] until the run reports back, so the
+    /// Last Scan overlay never pairs a new launch's diagnostics with the previous run's result.
+    scan_launch_diagnostics: Vec<PresentedLine>,
+    /// Launch diagnostics of the run [`Self::last_scan_run`] retains, shown above its result.
+    last_scan_launch_diagnostics: Vec<PresentedLine>,
     /// Pending-recovery-owning state for a run paused on Local Ignore recovery, if any.
     pub pending_local_ignore_recovery: Option<PendingLocalIgnoreRecovery>,
 
@@ -525,6 +531,8 @@ impl App {
             async_rx: rx,
             scan_cancellation: None,
             last_scan_run: None,
+            scan_launch_diagnostics: Vec::new(),
+            last_scan_launch_diagnostics: Vec::new(),
             pending_local_ignore_recovery: None,
             url_opener,
             clipboard_writer,
@@ -597,6 +605,10 @@ impl App {
                 // A paused run settles under the control its pending recovery carries, so the
                 // App's own handle on this run is done either way.
                 self.scan_cancellation = None;
+                // The run whose launch produced these diagnostics is the one being retained now.
+                // A settled run keeps them, because settling continues the same launch.
+                self.last_scan_launch_diagnostics =
+                    std::mem::take(&mut self.scan_launch_diagnostics);
                 match *outcome {
                     // The pending recovery is taken before anything renders: rendering borrows
                     // the result, and the presentation crate makes that ordering a contract so no
@@ -842,23 +854,37 @@ impl App {
             Some(staging.to_string())
         };
 
-        let custom = self.custom_scan_input.value.trim();
-        let custom_scan_input = if custom.is_empty() {
-            None
-        } else {
-            let custom_path = PathBuf::from(custom);
-            validate_custom_scan_path(&custom_path).map_err(|err| err.to_string())?;
-
-            if self.is_inside_crash_logs(&custom_path) {
-                return Err("Custom Scan Folder cannot be inside Crash Logs".to_string());
-            }
-            Some(custom.to_string())
-        };
+        let custom_scan_input = self
+            .validated_custom_scan_input()?
+            .map(|path| path.to_string_lossy().into_owned());
 
         let update = UserSettingsUpdate::new()
             .with_mods_folder(mods_folder)
             .with_custom_scan_input(custom_scan_input);
         self.commit_settings_update(update)
+    }
+
+    /// Returns the typed custom scan folder, or `None` when the input is blank.
+    ///
+    /// Shared by the explicit path save and by scan start, so a folder one of them rejects the
+    /// other rejects too.
+    ///
+    /// # Errors
+    ///
+    /// Returns the status-line message for a folder that is not a usable directory, is a
+    /// restricted location, or sits inside this installation's `Crash Logs` folder.
+    fn validated_custom_scan_input(&self) -> Result<Option<PathBuf>, String> {
+        let custom = self.custom_scan_input.value.trim();
+        if custom.is_empty() {
+            return Ok(None);
+        }
+        let custom_path = PathBuf::from(custom);
+        validate_custom_scan_path(&custom_path).map_err(|err| err.to_string())?;
+
+        if self.is_inside_crash_logs(&custom_path) {
+            return Err("Custom Scan Folder cannot be inside Crash Logs".to_string());
+        }
+        Ok(Some(custom_path))
     }
 
     /// Validates and commits one explicit all-or-nothing update to the shared settings store.
@@ -1014,10 +1040,11 @@ impl App {
         lines.join("\n\n")
     }
 
-    /// Starts a crash-log scan from one cohesive User Settings snapshot, or cancels the active scan.
+    /// Starts a Standard Crash Log Scan through Crash Log Scan Launch, or cancels the active scan.
     ///
-    /// All scan and setup inputs are projected before spawning work so concurrent settings changes
-    /// cannot produce a request assembled from multiple revisions.
+    /// The typed custom scan folder applies to this run only and is never saved here: saving the
+    /// path inputs is its own explicit User Settings Update. A typed folder the explicit save
+    /// would reject stops the scan before it starts, with the same message.
     pub fn start_or_cancel_crash_scan(&mut self) {
         if self.scan_in_progress {
             if let Some(cancellation) = &self.scan_cancellation {
@@ -1028,7 +1055,7 @@ impl App {
             return;
         }
 
-        if let Err(error) = self.save_paths_from_inputs() {
+        if let Err(error) = self.validated_custom_scan_input() {
             self.scan_status = error;
             self.status_clear_at = None;
             return;
@@ -1049,64 +1076,65 @@ impl App {
         self.start_crash_scan(Some(inputs));
     }
 
-    /// Projects one settings revision and launches it through the shared Rust runtime.
+    /// Prepares the Crash Log Scan Launch a scan started now would execute, without running it.
+    ///
+    /// `None` asks for a Standard scan and `Some` for a Targeted scan of exactly those inputs.
+    /// Launch opens User Settings read-only under the Installation Root, so a document that needs
+    /// migration or is untrusted still produces a request, plus diagnostics. The typed custom scan
+    /// folder is passed as a per-run override for a Standard scan; it is passed as typed, and
+    /// [`Self::start_or_cancel_crash_scan`] is what refuses a folder the TUI rejects.
+    ///
+    /// A blank custom scan input supplies no override, so a saved custom scan folder still
+    /// applies: launch overrides can replace a saved folder but cannot withhold one. The typed
+    /// mods folder shapes no Crash Log Scan Run request, so it is not passed at all.
+    ///
+    /// Public so the consumer conformance runner observes the exact request a scan would run.
+    ///
+    /// # Errors
+    ///
+    /// Returns the typed [`CrashLogScanLaunchError`] when Launch cannot form a request.
+    pub fn prepare_crash_scan_launch(
+        &self,
+        targeted_inputs: Option<Vec<PathBuf>>,
+    ) -> Result<CrashLogScanLaunchRequest, CrashLogScanLaunchError> {
+        let mut overrides = CrashLogScanLaunchOverrides::new();
+        let intent = match targeted_inputs {
+            Some(inputs) => CrashLogScanIntent::Targeted(inputs),
+            None => {
+                let typed = self.custom_scan_input.value.trim();
+                if !typed.is_empty() {
+                    overrides = overrides.with_scan_path(typed);
+                }
+                CrashLogScanIntent::Standard
+            }
+        };
+        prepare_launch(&self.classic_root, intent, &overrides)
+    }
+
+    /// Launches one Crash Log Scan through Crash Log Scan Launch on the shared Rust runtime.
+    ///
+    /// The request is prepared before any work is spawned, from one read of User Settings, so
+    /// concurrent settings changes cannot produce a request assembled from multiple revisions.
     fn start_crash_scan(&mut self, targeted_inputs: Option<Vec<PathBuf>>) {
+        let launch = match self.prepare_crash_scan_launch(targeted_inputs) {
+            Ok(launch) => launch,
+            Err(error) => {
+                // Launch errors are caller input or operational failures it cannot decide past;
+                // the message is Rust's own, and it stays until the user acts on it.
+                self.scan_status = format!("Crash Log Scan could not start: {error}");
+                self.status_clear_at = None;
+                return;
+            }
+        };
+        let (request, diagnostics) = launch.into_parts();
+        self.scan_launch_diagnostics = format_launch_diagnostics(&diagnostics);
+
         self.scan_in_progress = true;
         self.scan_progress = -1.0;
         self.scan_status = "Discovering crash logs...".to_string();
         self.status_clear_at = None;
 
         let tx = self.async_tx.clone();
-        let scan = self.settings.crash_log_scan_settings();
-        let setup = self.settings.game_setup_settings();
-        let (managed_game, formid_database_paths) = self.scan_game_projection();
-        let custom_folder = scan.custom_scan_input().map(PathBuf::from);
-        let selected_game_version = scan.game_version_selection().as_str().to_string();
-        let setup_game_root = setup.game_root().map(PathBuf::from);
-        let configured_docs_root = setup.documents_root().map(PathBuf::from);
-        let game_exe_path = setup.game_executable().map(PathBuf::from);
-        let show_formid_values = scan.formid_value_lookup();
-        let fcx_mode = scan.fcx_mode();
-        let simplify_logs = scan.simplify_logs();
-        let unsolved_logs_destination = scan.unsolved_logs_destination().map(PathBuf::from);
-        let max_concurrent = usize::try_from(scan.max_concurrent_scans())
-            .ok()
-            .filter(|value| *value > 0);
-        let installation_root = self.classic_root.clone();
-        let base_folder = installation_root.clone();
-        let configuration = Configuration {
-            installation_root,
-            game: managed_game,
-            game_version: selected_game_version,
-            options: Options::new(show_formid_values, simplify_logs),
-            scan_facts: CrashLogScanFacts {
-                formid_database_paths,
-                unsolved_logs_destination,
-            },
-            max_concurrent,
-        };
-        let intent = match targeted_inputs {
-            Some(inputs) => ScanRunIntent::Targeted(TargetedCrashLogScanSource { inputs }),
-            None => ScanRunIntent::Standard {
-                source: StandardCrashLogScanSource {
-                    base_directory: base_folder,
-                    custom_scan_directory: custom_folder,
-                    configured_documents_root: configured_docs_root.clone(),
-                },
-                unsolved_logs: if scan.move_unsolved_logs() {
-                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
-                } else {
-                    StandardUnsolvedLogsIntent::LeaveInPlace
-                },
-            },
-        };
-        let setup_context = fcx_mode.then_some(CrashLogScanSetupContext {
-            game_root: setup_game_root,
-            docs_root: configured_docs_root,
-            game_exe_path,
-            xse_log_path: None,
-        });
-        let request = build_request(configuration, intent, setup_context);
         let cancellation = Cancellation::new();
         self.scan_cancellation = Some(cancellation.clone());
 
@@ -1290,23 +1318,6 @@ impl App {
         custom == crash || custom.starts_with(&crash)
     }
 
-    /// Projects the canonical managed game and the FormID databases its Crash Log Scan reads.
-    ///
-    /// Row selection, including the Fallout 4 VR read rule, belongs to User Settings; the TUI
-    /// only converts the selected rows into paths. Public so the consumer conformance runner can
-    /// observe the exact rows a scan launch would use.
-    pub fn scan_game_projection(&self) -> (classic_shared_core::GameId, Vec<PathBuf>) {
-        let managed_game = self.settings.game_setup_settings().managed_game();
-        let databases = self
-            .settings
-            .crash_log_scan_settings()
-            .formid_databases_for_game(managed_game)
-            .into_iter()
-            .map(PathBuf::from)
-            .collect();
-        (managed_game, databases)
-    }
-
     /// Sets the status row from a core-rendered presentation, keeping its severity beside it.
     fn set_scan_status(&mut self, status: String, severity: DisplaySeverity) {
         self.scan_status_severity = Some((status.clone(), severity));
@@ -1330,17 +1341,27 @@ impl App {
     /// Rendered on demand from the retained typed result rather than stored as text, so the overlay
     /// always reflects what core says about that run today. The result's continuation was already
     /// taken out before it was retained, so nothing here can be borrowing across a move.
+    ///
+    /// The launch diagnostics of that run come first, as core rendered them: they describe the
+    /// settings the run was launched from, which is context for everything the result says.
     pub fn scan_run_summary_lines(&self) -> Vec<PresentedLine> {
-        match self.last_scan_run.as_ref() {
+        let run_lines = match self.last_scan_run.as_ref() {
             Some(LastScanRun::Run(result)) => format_result(result).details,
             Some(LastScanRun::Failed(error)) => format_error(error).details,
             Some(LastScanRun::RecoveryFailed(error)) => format_resume_error(error).details,
             // Not a statement about a run, so there is nothing for core to own here.
-            None => vec![PresentedLine {
-                severity: classic_scan_presentation::DisplaySeverity::Info,
-                text: "No Crash Log Scan Run has completed yet.".to_string(),
-            }],
-        }
+            None => {
+                return vec![PresentedLine {
+                    severity: classic_scan_presentation::DisplaySeverity::Info,
+                    text: "No Crash Log Scan Run has completed yet.".to_string(),
+                }];
+            }
+        };
+        self.last_scan_launch_diagnostics
+            .iter()
+            .cloned()
+            .chain(run_lines)
+            .collect()
     }
 
     /// Returns [`Self::scan_run_summary_lines`] as plain text, for callers that draw no styling.

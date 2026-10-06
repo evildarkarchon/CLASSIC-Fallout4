@@ -4,7 +4,6 @@
 #include <QString>
 #include <QStringList>
 
-#include "core/guiusersettings.h"
 #include "workers/scanrunpresentation.h"
 
 class SignalHub;
@@ -20,13 +19,13 @@ public:
     /// Installs the GUI-thread prompt used to choose how a paused Local Ignore recovery continues.
     void setLocalIgnoreRecoveryPrompt(classic::gui::ScanRunLocalIgnoreRecoveryPrompt prompt);
 
-    /// Starts one scan from an immutable, revision-approved typed settings value object.
+    /// Starts one scan of the Installation Root through Rust's Crash Log Scan Launch.
     ///
-    /// `setupXseLogPath` and `targetedInputs` are runtime-only hints. The value object is copied
-    /// into the worker-thread callback, where Rust owns discovery and the remaining lifecycle, so
-    /// no User Settings read or GUI-side source resolution occurs after launch begins.
-    void startScan(const QString& installationRoot, const classic::gui::CrashLogScanLaunchSettings& settings,
-                   const QString& setupXseLogPath = {}, const QStringList& targetedInputs = {});
+    /// An empty `targetedInputs` list is a Standard scan whose base folder is `installationRoot`; a
+    /// non-empty one is a Targeted scan of exactly those inputs. The worker thread launches the
+    /// request, so Rust reads the saved User Settings, the FCX setup context, and the XSE log
+    /// itself; the GUI resolves none of them for a Crash Log Scan.
+    void startScan(const QString& installationRoot, const QStringList& targetedInputs = {});
     void cancelScan();
     bool isScanning() const;
 

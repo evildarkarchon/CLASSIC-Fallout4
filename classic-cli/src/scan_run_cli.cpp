@@ -1,4 +1,7 @@
 #include "scan_run_cli.h"
+#include "user_settings_action.h"
+
+#include "classic_cxx_bridge/shared.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -10,6 +13,7 @@
 #include <atomic>
 #include <cctype>
 #include <chrono>
+#include <cstdint>
 #include <fmt/format.h>
 #include <istream>
 #include <optional>
@@ -179,35 +183,6 @@ void append_setup_messages(const scanner::ScanRunContractRunResult& result, std:
     }
 }
 
-/// Projects typed User Settings into the shared final-contract configuration DTO.
-scanner::ScanRunConfigurationDto make_configuration(const PreparedScanUserSettings& settings,
-                                                     const std::string& installation_root) {
-    scanner::ScanRunConfigurationDto configuration{};
-    configuration.installation_root = installation_root;
-    if (settings.game == "Fallout4") {
-        configuration.game = scanner::ScanRunGameId::Fallout4;
-    } else if (settings.game == "Fallout4VR") {
-        configuration.game = scanner::ScanRunGameId::Fallout4VR;
-    } else if (settings.game == "Skyrim") {
-        configuration.game = scanner::ScanRunGameId::Skyrim;
-    } else if (settings.game == "Starfield") {
-        configuration.game = scanner::ScanRunGameId::Starfield;
-    } else {
-        throw std::invalid_argument(fmt::format("unsupported Crash Log Scan game: {}", settings.game));
-    }
-    configuration.game_version = settings.game_version;
-    configuration.show_formid_values = settings.show_formid_values;
-    configuration.simplify_logs = settings.simplify_logs;
-    for (const auto& path : settings.formid_database_paths) {
-        configuration.formid_database_paths.push_back(path);
-    }
-    configuration.has_configured_unsolved_logs_destination = !settings.unsolved_logs_destination.empty();
-    configuration.configured_unsolved_logs_destination = settings.unsolved_logs_destination;
-    configuration.has_max_concurrent = settings.max_concurrent > 0;
-    configuration.max_concurrent = settings.max_concurrent;
-    return configuration;
-}
-
 /// Trims surrounding whitespace and lowercases one console answer for choice matching.
 std::string normalize_console_answer(const std::string& answer) {
     const auto first = answer.find_first_not_of(" \t\r\n");
@@ -314,20 +289,6 @@ bool match_recovery_choice(std::string_view answer,
     return false;
 }
 
-/// Projects optional typed setup paths into explicit presence/value pairs for FCX requests.
-scanner::ScanRunSetupContextDto make_setup_context(const PreparedScanUserSettings& settings) {
-    scanner::ScanRunSetupContextDto setup{};
-    setup.has_game_root = !settings.setup_game_root.empty();
-    setup.game_root = settings.setup_game_root;
-    setup.has_docs_root = !settings.setup_docs_root.empty();
-    setup.docs_root = settings.setup_docs_root;
-    setup.has_game_exe_path = !settings.setup_game_exe_path.empty();
-    setup.game_exe_path = settings.setup_game_exe_path;
-    setup.has_xse_log_path = !settings.setup_xse_log_path.empty();
-    setup.xse_log_path = settings.setup_xse_log_path;
-    return setup;
-}
-
 /// Renders one segment as plain text, reading only the field its kind selects.
 ///
 /// The bridge flattens Rust's six-variant segment into a kind tag plus a text, a path, and a count
@@ -374,34 +335,76 @@ std::string render_cli_display_line(const scanner::ScanRunDisplayLine& line) {
     return render_cli_display_segments(line.segments);
 }
 
-rust::Box<scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
-                                                              const PreparedScanUserSettings& settings,
-                                                              const std::string& installation_root,
-                                                              const std::string& base_directory) {
-    const auto configuration = make_configuration(settings, installation_root);
-    const auto setup = make_setup_context(settings);
+scanner::ScanRunLaunchOverridesDto make_cli_scan_run_launch_overrides(const CliArgs& args) {
+    scanner::ScanRunLaunchOverridesDto overrides{};
+    if (args.game_was_explicit) {
+        // `--game` admits only `Fallout4` (cli_args.cpp rejects anything else at parse time), so an
+        // explicit flag can only ever name that game. Widening the flag is a separate CLI decision;
+        // which saved values then apply to the named game is Crash Log Scan Launch's game-differs
+        // rule, not something decided here.
+        overrides.has_game = true;
+        overrides.game = scanner::ScanRunGameId::Fallout4;
+    }
+    if (args.game_version_was_explicit) {
+        overrides.has_game_version = true;
+        overrides.game_version = args.game_version;
+    }
+    if (!args.scan_path.empty()) {
+        overrides.has_scan_path = true;
+        overrides.scan_path = args.scan_path;
+    }
+    if (args.max_concurrent_was_explicit) {
+        // Zero is passed through rather than dropped: Rust reads it as the explicit adaptive
+        // override, which is how `--max-concurrent 0` beats a saved limit.
+        overrides.has_max_concurrent = true;
+        overrides.max_concurrent = args.max_concurrent;
+    }
+    overrides.show_formid_values = args.show_fid_values;
+    overrides.simplify_logs = args.simplify_logs;
+    overrides.fcx_mode = args.fcx_mode;
+    return overrides;
+}
 
-    if (!args.input_paths.empty()) {
-        scanner::ScanRunTargetedSourceDto source{};
-        for (const auto& input : args.input_paths) {
-            source.inputs.push_back(input);
-        }
-        return settings.fcx_mode ? scanner::scan_run_request_targeted_with_fcx(configuration, source, setup)
-                                 : scanner::scan_run_request_targeted(configuration, source);
+std::optional<rust::Box<scanner::ScanRunLaunch>> launch_cli_scan_run(const CliArgs& args,
+                                                                      const std::string& installation_root) {
+    // The one User Settings write the CLI makes, deliberately ahead of the launch: Crash Log Scan
+    // Launch only reads User Settings, so this ordering is what lets the scan use the destination
+    // the user just asked to save.
+    if (!persist_unsolved_logs_destination_option(args, installation_root)) {
+        return std::nullopt;
     }
 
-    scanner::ScanRunStandardSourceDto source{};
-    source.base_directory = base_directory;
-    source.has_custom_scan_directory = !settings.custom_scan_directory.empty();
-    source.custom_scan_directory = settings.custom_scan_directory;
-    source.has_configured_documents_root = !settings.configured_documents_root.empty();
-    source.configured_documents_root = settings.configured_documents_root;
+    const auto overrides = make_cli_scan_run_launch_overrides(args);
+    if (args.input_paths.empty()) {
+        return scanner::scan_run_launch_standard(installation_root, overrides);
+    }
+    rust::Vec<rust::String> inputs;
+    for (const auto& input : args.input_paths) {
+        inputs.push_back(input);
+    }
+    return scanner::scan_run_launch_targeted(installation_root, inputs, overrides);
+}
 
-    const auto unsolved_logs = settings.move_unsolved_logs
-                                   ? scanner::scan_run_unsolved_logs_move_to_configured_or_default()
-                                   : scanner::scan_run_unsolved_logs_leave_in_place();
-    return settings.fcx_mode ? scanner::scan_run_request_standard_with_fcx(configuration, source, *unsolved_logs, setup)
-                             : scanner::scan_run_request_standard(configuration, source, *unsolved_logs);
+std::vector<CliScanRunMessage> describe_cli_scan_run_launch(const scanner::ScanRunLaunchRequestDto& view) {
+    std::vector<CliScanRunMessage> messages;
+    append_display_lines(view.display_lines, messages);
+    return messages;
+}
+
+std::string cli_scan_run_game_token(scanner::ScanRunGameId game) {
+    // CXX bridge modules cannot share an enum, so the scanner and shared bridges each mirror
+    // `classic_shared_core::GameId`. These checks make a drift between the two mirrors a compile
+    // error instead of a mislabelled game.
+    static_assert(static_cast<std::uint8_t>(scanner::ScanRunGameId::Fallout4) ==
+                  static_cast<std::uint8_t>(classic::shared::GameId::Fallout4));
+    static_assert(static_cast<std::uint8_t>(scanner::ScanRunGameId::Fallout4VR) ==
+                  static_cast<std::uint8_t>(classic::shared::GameId::Fallout4VR));
+    static_assert(static_cast<std::uint8_t>(scanner::ScanRunGameId::Skyrim) ==
+                  static_cast<std::uint8_t>(classic::shared::GameId::Skyrim));
+    static_assert(static_cast<std::uint8_t>(scanner::ScanRunGameId::Starfield) ==
+                  static_cast<std::uint8_t>(classic::shared::GameId::Starfield));
+    return to_std_string(
+        classic::shared::game_id_as_str(static_cast<classic::shared::GameId>(static_cast<std::uint8_t>(game))));
 }
 
 std::vector<CliScanRunMessage> describe_cli_scan_run_event(const scanner::ScanRunContractEvent& event) {

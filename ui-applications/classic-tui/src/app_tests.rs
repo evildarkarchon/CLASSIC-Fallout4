@@ -311,25 +311,154 @@ fn active_scan_cancellation_uses_the_opaque_contract_control() {
     );
 }
 
+/// Opens a filesystem-backed TUI over an Installation Root that can actually run a scan.
+///
+/// The root carries the tracked scan-run YAML corpus under `CLASSIC Data`, so a launched Standard
+/// scan reaches a real terminal result instead of failing at YAML intake.
+///
+/// The root lives under the working directory rather than the system temp folder because the
+/// temp folder is a restricted custom scan location, which would mask the Crash Logs nesting rule.
+fn app_with_installation(settings_yaml: &str) -> (tempfile::TempDir, App) {
+    let root = tempfile::tempdir_in(std::env::current_dir().unwrap()).unwrap();
+    let corpus = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/crash_log_scan_run/CLASSIC Data");
+    for relative in [
+        "CLASSIC Ignore.yaml",
+        "databases/CLASSIC Main.yaml",
+        "databases/CLASSIC Fallout4.yaml",
+    ] {
+        let destination = root.path().join("CLASSIC Data").join(relative);
+        std::fs::create_dir_all(destination.parent().unwrap()).unwrap();
+        std::fs::copy(corpus.join(relative), destination).unwrap();
+    }
+    std::fs::write(root.path().join("CLASSIC Settings.yaml"), settings_yaml).unwrap();
+    let app = App::new_with_settings_root(root.path(), None);
+    (root, app)
+}
+
+/// Drains the App's background messages until the launched run reports its outcome.
+fn pump_until_scan_finished(app: &mut App) {
+    loop {
+        let message = classic_shared_core::get_runtime()
+            .block_on(async {
+                tokio::time::timeout(Duration::from_secs(30), app.async_rx.recv()).await
+            })
+            .expect("the launched scan should finish within 30 seconds")
+            .expect("the App channel should stay open while a scan runs");
+        let finished = matches!(message, AsyncMessage::ScanFinished(_));
+        app.handle_async_message(message);
+        if finished {
+            return;
+        }
+    }
+}
+
+/// A User Settings document the shared core classifies as needing migration: a flat
+/// `CLASSIC_Settings` table without the canonical schema version.
+const SETTINGS_NEEDING_MIGRATION: &str = "CLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  Max Concurrent Scans: 2\n";
+
 #[test]
-fn crash_scan_saves_edited_paths_before_projecting_settings() {
-    let (root, mut app) = app_with_settings_yaml(
-        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  SCAN Custom Path: null\n",
+fn standard_scan_runs_from_settings_needing_migration_and_shows_their_diagnostics() {
+    let (root, mut app) = app_with_installation(SETTINGS_NEEDING_MIGRATION);
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let before = std::fs::read(&settings_path).unwrap();
+    let opened = classic_user_settings_core::UserSettings::open(root.path());
+    assert_eq!(
+        opened.commit_eligibility(),
+        classic_user_settings_core::CommitEligibility::RequiresMigration,
+        "the fixture must be a document that needs migration"
     );
+
+    app.start_or_cancel_crash_scan();
+    assert!(
+        app.scan_in_progress,
+        "a pending migration must not block the scan: {}",
+        app.scan_status
+    );
+    pump_until_scan_finished(&mut app);
+
+    let Some(LastScanRun::Run(result)) = app.last_scan_run.as_ref() else {
+        panic!("the scan should reach a terminal run result");
+    };
+    assert_eq!(result.status, CrashLogScanRunStatus::Completed);
+    let summary = app.scan_run_summary_text();
+    for diagnostic in opened.diagnostics() {
+        assert!(
+            summary.contains(diagnostic.message()),
+            "the Last Scan overlay must show the User Settings diagnostic {:?}: {summary}",
+            diagnostic.code()
+        );
+    }
+    assert_eq!(
+        std::fs::read(&settings_path).unwrap(),
+        before,
+        "starting a scan must not rewrite User Settings"
+    );
+}
+
+#[test]
+fn starting_a_scan_applies_typed_paths_for_that_run_without_saving_them() {
+    // Auto-switching to Results persists the remembered tab, which is its own explicit update;
+    // turning it off keeps this test about what starting a scan writes.
+    let (root, mut app) = app_with_installation(
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  SCAN Custom Path: null\n  MODS Folder Path: null\nUI:\n  preferences:\n    auto_switch_after_scan: false\n",
+    );
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let before = std::fs::read(&settings_path).unwrap();
+    // Temp folders can be restricted scan locations, so the typed folder lives under the
+    // working directory like the other custom-path tests here.
     let custom_root = tempfile::tempdir_in(std::env::current_dir().unwrap()).unwrap();
-    let custom_scan = custom_root.path().join("Edited Custom Scan");
+    let custom_scan = custom_root.path().join("One-off Custom Scan");
     std::fs::create_dir_all(&custom_scan).unwrap();
     app.custom_scan_input
         .set_value(custom_scan.to_string_lossy().to_string());
+    let mods = root.path().join("Typed Mods");
+    std::fs::create_dir_all(&mods).unwrap();
+    app.staging_mods_input
+        .set_value(mods.to_string_lossy().to_string());
 
-    app.start_or_cancel_crash_scan();
-
-    let reopened = classic_user_settings_core::UserSettings::open(root.path());
+    let launch = app
+        .prepare_crash_scan_launch(None)
+        .expect("a Standard launch should be prepared");
+    let classic_scanlog_core::scan_run::contract::Request::Standard(request) = launch.request()
+    else {
+        panic!("a Standard scan must launch a Standard request");
+    };
     assert_eq!(
-        reopened.crash_log_scan_settings().custom_scan_input(),
-        Some(custom_scan.to_string_lossy().as_ref())
+        request.source().custom_scan_directory.as_deref(),
+        Some(custom_scan.as_path()),
+        "the typed custom scan folder must apply to the run it starts"
     );
+
     app.start_or_cancel_crash_scan();
+    pump_until_scan_finished(&mut app);
+
+    assert_eq!(
+        std::fs::read(&settings_path).unwrap(),
+        before,
+        "starting a scan must leave User Settings unchanged; saving paths is its own action"
+    );
+}
+
+#[test]
+fn a_rejected_custom_scan_folder_stops_the_scan_before_it_starts() {
+    let (root, mut app) = app_with_installation("schema_version: \"1.0\"\n");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let before = std::fs::read(&settings_path).unwrap();
+    let nested = root.path().join("Crash Logs").join("nested");
+    std::fs::create_dir_all(&nested).unwrap();
+    app.custom_scan_input
+        .set_value(nested.to_string_lossy().to_string());
+
+    app.start_or_cancel_crash_scan();
+
+    assert!(!app.scan_in_progress);
+    assert!(app.scan_cancellation.is_none());
+    assert_eq!(
+        app.scan_status,
+        "Custom Scan Folder cannot be inside Crash Logs"
+    );
+    assert_eq!(std::fs::read(&settings_path).unwrap(), before);
 }
 
 #[test]

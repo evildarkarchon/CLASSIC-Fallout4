@@ -16,47 +16,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CLI_SRC = REPO_ROOT / "python-bindings" / "classic-py-cli" / "src"
 
 
-def _install_user_settings_fake(
-        monkeypatch: pytest.MonkeyPatch,
-        *,
-        fcx_mode: bool = False,
-) -> None:
-    """Install typed shared-game and User Settings projections for scan CLI tests."""
-
-    class GameId:
-        Fallout4 = object()
-        Fallout4VR = object()
-        Skyrim = object()
-        Starfield = object()
-
-    shared = types.ModuleType("classic_shared")
-    shared.GameId = GameId
-    monkeypatch.setitem(sys.modules, "classic_shared", shared)
-
-    scan = types.SimpleNamespace(
-        fcx_mode=fcx_mode,
-        simplify_logs=True,
-        formid_value_lookup=True,
-        # Only the Rust-selected scan rows are faked; a raw-map read would fail loudly.
-        scan_formid_databases={"Fallout4": ["formids.db"]},
-        unsolved_logs_destination="Unsolved Logs",
-        game_version_selection="1.10.984",
-        max_concurrent_scans=3,
-    )
-    setup = types.SimpleNamespace(
-        managed_game="Fallout4",
-        game_root="game-root",
-        documents_root="documents-root",
-        game_executable="Fallout4.exe",
-    )
-    module = types.ModuleType("classic_user_settings")
-    module.open_user_settings = lambda _root: types.SimpleNamespace(
-        crash_log_scan_settings=scan,
-        game_setup_settings=setup,
-    )
-    monkeypatch.setitem(sys.modules, "classic_user_settings", module)
-
-
 def _installation_root(tmp_path: Path) -> Path:
     """Create an explicit Installation Root for scan tests to pass with ``--installation-root``.
 
@@ -145,24 +104,21 @@ def _install_final_scan_run_fake(
         message: str | None = None,
         recovery_prompt: object | None = None,
 ) -> None:
-    """Attach a selectable final request/execution result to a fake scanlog module."""
+    """Attach a fake Crash Log Scan Launch and a selectable final execution result to a fake scanlog module.
 
-    class ScanRunConfiguration:
-        def __init__(self, **values: object) -> None:
-            self.values = values
+    ``make_logs`` receives what the CLI handed the launch -- ``{"installation_root", "overrides"}``
+    -- and the Targeted inputs, because those are the only request facts the CLI still owns.
+    """
 
-    class ScanRunTargetedSource:
-        def __init__(self, *, inputs: list[str]) -> None:
-            self.inputs = inputs
-
-    class ScanRunRequest:
+    class ScanRunLaunch:
         @staticmethod
-        def targeted(configuration: object, source: object) -> object:
-            return types.SimpleNamespace(
+        def targeted(installation_root: str, inputs: list[str], overrides: object | None = None) -> object:
+            request = types.SimpleNamespace(
                 intent="targeted",
-                configuration=configuration,
-                source=source,
+                launched={"installation_root": installation_root, "overrides": overrides},
+                inputs=list(inputs),
             )
+            return types.SimpleNamespace(request=lambda: request, display_lines=[], diagnostics=[])
 
     class ScanRunCancellation:
         pass
@@ -176,7 +132,7 @@ def _install_final_scan_run_fake(
         assert getattr(request, "intent") == "targeted"
         assert isinstance(cancellation, ScanRunCancellation)
         assert callable(make_logs)
-        logs = make_logs(request.configuration.values, request.source.inputs)
+        logs = make_logs(request.launched, request.inputs)
         succeeded = sum(item.disposition == "succeeded" for item in logs)
         cancelled = sum(item.disposition == "cancelled_before_start" for item in logs)
         result = types.SimpleNamespace(
@@ -197,9 +153,7 @@ def _install_final_scan_run_fake(
             recovery_prompt=recovery_prompt,
         )
 
-    fake.ScanRunConfiguration = ScanRunConfiguration
-    fake.ScanRunTargetedSource = ScanRunTargetedSource
-    fake.ScanRunRequest = ScanRunRequest
+    fake.ScanRunLaunch = ScanRunLaunch
     fake.ScanRunCancellation = ScanRunCancellation
     fake.scan_run_execute = scan_run_execute
 
@@ -373,7 +327,6 @@ def test_scan_logs_stops_with_classic_data_not_found(monkeypatch: pytest.MonkeyP
     fake.__version__ = "test"
     _install_final_scan_run_fake(fake, _scan_must_not_run)
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
     working_dir = tmp_path / "work"
     working_dir.mkdir()
     # Search from an empty folder; the real `classic_config` locator does the looking.
@@ -405,7 +358,6 @@ def test_explicit_installation_root_without_classic_data_is_not_found(
     fake.__version__ = "test"
     _install_final_scan_run_fake(fake, _scan_must_not_run)
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
     not_an_installation = tmp_path / "not-an-installation"
     not_an_installation.mkdir()
 
@@ -445,7 +397,6 @@ def test_scan_logs_locates_the_installation_root_through_config(
     fake.__version__ = "test"
     _install_final_scan_run_fake(fake, make_logs)
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
     monkeypatch.chdir(working_dir)
 
     code = main(["--json", "scan", "logs", "--path", str(working_dir)])
@@ -519,7 +470,6 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
             paths: list[str],
     ) -> list[types.SimpleNamespace]:
         assert configuration["installation_root"] == str(installation_root.resolve())
-        assert configuration["game"] is sys.modules["classic_shared"].GameId.Fallout4
         assert paths == [str(scan_dir)]
         return [
             types.SimpleNamespace(
@@ -536,7 +486,6 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
 
     _install_final_scan_run_fake(fake, make_logs)
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
 
     code = main(["--json", "--installation-root", str(installation_root), "scan", "logs", "--path", str(scan_dir)])
     payload = json.loads(capsys.readouterr().out)
@@ -582,7 +531,6 @@ def test_scan_logs_reports_unsuccessful_terminal_statuses(
         message=f"terminal {status}",
     )
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
 
     code = main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
@@ -629,7 +577,6 @@ def test_scan_logs_states_a_paused_run_in_rusts_words(
         recovery_prompt=_fake_recovery_prompt(reset_available=reset_available),
     )
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
 
     code = main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
@@ -669,7 +616,13 @@ def test_scan_logs_consumes_final_result_and_event_contract(
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """The binding-local CLI constructs a Targeted request and reads final events/results."""
+    """The CLI launches a Targeted scan through Crash Log Scan Launch and reads final events/results.
+
+    What the request carries (game, saved options, FormID rows, FCX setup context) is the
+    launch's to decide and is pinned by the ``crash-log-scan-launch`` conformance pack; this
+    CLI owns only the Installation Root and the Targeted input it hands the launch, and it
+    must execute the launch's request unchanged.
+    """
 
     sys.path.insert(0, str(CLI_SRC))
     from classic_py_cli.app import main
@@ -679,37 +632,13 @@ def test_scan_logs_consumes_final_result_and_event_contract(
     observed: dict[str, object] = {}
     fake = types.ModuleType("classic_scanlog")
     fake.__version__ = "test"
+    launched_request = object()
 
-    class ScanRunConfiguration:
-        def __init__(self, **values: object) -> None:
-            observed["configuration"] = values
-
-    class ScanRunTargetedSource:
-        def __init__(self, *, inputs: list[str]) -> None:
-            self.inputs = inputs
-
-    class ScanRunRequest:
+    class ScanRunLaunch:
         @staticmethod
-        def targeted(
-                configuration: ScanRunConfiguration,
-                source: ScanRunTargetedSource,
-        ) -> object:
-            observed["targetedInputs"] = source.inputs
-            return types.SimpleNamespace(intent="targeted")
-
-        @staticmethod
-        def targeted_with_fcx(
-                configuration: ScanRunConfiguration,
-                source: ScanRunTargetedSource,
-                setup_context: object,
-        ) -> object:
-            observed["targetedInputs"] = source.inputs
-            observed["setupContext"] = setup_context
-            return types.SimpleNamespace(intent="targeted")
-
-    class ScanRunSetupContext:
-        def __init__(self, **values: object) -> None:
-            self.values = values
+        def targeted(installation_root: str, inputs: list[str], overrides: object | None = None) -> object:
+            observed["launch"] = (installation_root, list(inputs), overrides)
+            return types.SimpleNamespace(request=lambda: launched_request, display_lines=[], diagnostics=[])
 
     class ScanRunCancellation:
         pass
@@ -720,7 +649,7 @@ def test_scan_logs_consumes_final_result_and_event_contract(
             observer: object | None = None,
             cancel_on_observer_error: bool = False,
     ) -> object:
-        assert getattr(request, "intent") == "targeted"
+        assert request is launched_request
         assert isinstance(cancellation, ScanRunCancellation)
         assert cancel_on_observer_error is True
         assert callable(observer)
@@ -810,35 +739,18 @@ def test_scan_logs_consumes_final_result_and_event_contract(
             observer_error=None,
         )
 
-    fake.ScanRunConfiguration = ScanRunConfiguration
-    fake.ScanRunTargetedSource = ScanRunTargetedSource
-    fake.ScanRunRequest = ScanRunRequest
-    fake.ScanRunSetupContext = ScanRunSetupContext
+    fake.ScanRunLaunch = ScanRunLaunch
     fake.ScanRunCancellation = ScanRunCancellation
     fake.scan_run_execute = scan_run_execute
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch, fcx_mode=True)
 
     code = main(["--json", "scan", "logs", "--path", str(crash_log), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
 
     assert code == 0
-    assert observed["targetedInputs"] == [str(crash_log)]
-    assert observed["configuration"] == {
-        "installation_root": str(_installation_root(tmp_path).resolve()),
-        "game": sys.modules["classic_shared"].GameId.Fallout4,
-        "game_version": "1.10.984",
-        "show_formid_values": True,
-        "simplify_logs": True,
-        "formid_database_paths": ["formids.db"],
-        "unsolved_logs_destination": "Unsolved Logs",
-        "max_concurrent": 3,
-    }
-    assert observed["setupContext"].values == {
-        "game_root": "game-root",
-        "docs_root": "documents-root",
-        "game_exe_path": "Fallout4.exe",
-    }
+    # No overrides: `scan logs` has no per-run flags, so every saved value is the launch's.
+    assert observed["launch"] == (str(_installation_root(tmp_path).resolve()), [str(crash_log)], None)
+    assert payload["data"]["launchDiagnostics"] == []
     assert payload["data"]["status"] == "completed"
     assert payload["data"]["effectiveConcurrency"] == 1
     assert payload["data"]["result"]["installedYamlData"] == {
@@ -898,6 +810,107 @@ def test_scan_logs_consumes_final_result_and_event_contract(
     ]
 
 
+def test_scan_logs_shows_launch_diagnostics_in_rusts_words(
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Launch diagnostics reach the text stream as the launch rendered them, ahead of the run's lines.
+
+    The JSON payload carries the typed kind, code and message instead, so a consumer matches
+    on tokens rather than on prose.
+    """
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(fake, lambda _launched, _paths: [])
+    launch_line = _line(_segment("text", text="a value the launch withheld"), severity="notice")
+    launch_diagnostic = types.SimpleNamespace(
+        kind="game_version_not_applied", code="game_version_not_applied", message="withheld")
+    plain_targeted = fake.ScanRunLaunch.targeted
+
+    def targeted_with_diagnostic(*args: object, **kwargs: object) -> object:
+        launch = plain_targeted(*args, **kwargs)
+        launch.display_lines = [launch_line]
+        launch.diagnostics = [launch_diagnostic]
+        return launch
+
+    monkeypatch.setattr(fake.ScanRunLaunch, "targeted", staticmethod(targeted_with_diagnostic))
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    root = str(_installation_root(tmp_path))
+
+    assert main(["scan", "logs", "--path", str(tmp_path), "--installation-root", root]) == 0
+    printed = capsys.readouterr().out.splitlines()
+    assert main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", root]) == 0
+    payload = json.loads(capsys.readouterr().out)
+
+    assert printed == ["a value the launch withheld", "Crash Log Scan Run completed", "2 logs scanned"]
+    # The summary still states the run's outcome, not the launch's diagnostic.
+    assert payload["summary"] == "Crash Log Scan Run completed"
+    assert payload["data"]["launchDiagnostics"] == [
+        {"kind": "game_version_not_applied", "code": "game_version_not_applied", "message": "withheld"}
+    ]
+
+
+def test_scan_logs_reads_fallout4_vr_formid_rows_through_the_launch(
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+) -> None:
+    """With Fallout 4 VR managed, the CLI's request carries the rows every native frontend reads.
+
+    Uses the real ``classic_scanlog`` launch: the shared ``Fallout4`` rows first, then the
+    legacy ``Fallout4VR`` rows not already listed. The CLI used to look rows up by the managed
+    game's own key, which missed the shared rows entirely.
+    """
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    scanlog = pytest.importorskip("classic_scanlog")
+    root = _installation_root(tmp_path)
+    (root / "CLASSIC Settings.yaml").write_text(
+        'schema_version: "1.0"\n'
+        "CLASSIC_Settings:\n"
+        "  Managed Game: Fallout 4 VR\n"
+        "  Game Version: VR\n"
+        "  FormID Databases:\n"
+        "    Fallout4:\n"
+        "      - databases/Fallout4 FormIDs.db\n"
+        "      - databases/Shared Extra FormIDs.db\n"
+        "    Fallout4VR:\n"
+        "      - databases/Fallout4 FormIDs.db\n"
+        "      - databases/Legacy VR FormIDs.db\n",
+        encoding="utf-8",
+    )
+    launches: list[object] = []
+    real_launch = scanlog.ScanRunLaunch
+
+    class RecordingLaunch:
+        """Delegates to the real launch and keeps what it built."""
+
+        @staticmethod
+        def targeted(*args: object, **kwargs: object) -> object:
+            launch = real_launch.targeted(*args, **kwargs)
+            launches.append(launch)
+            return launch
+
+    monkeypatch.setattr(scanlog, "ScanRunLaunch", RecordingLaunch)
+
+    main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(root)])
+    capsys.readouterr()
+
+    assert len(launches) == 1
+    assert launches[0].formid_database_paths == [
+        "databases/Fallout4 FormIDs.db",
+        "databases/Shared Extra FormIDs.db",
+        "databases/Legacy VR FormIDs.db",
+    ]
+
+
 def test_catalog_validation() -> None:
     """Every scenario carries the metadata required by reports and listing."""
 
@@ -941,7 +954,6 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
             paths: list[str],
     ) -> list[types.SimpleNamespace]:
         assert configuration["installation_root"] == str(fixture_root)
-        assert configuration["game"] is sys.modules["classic_shared"].GameId.Fallout4
         assert paths == [str(scan_fixture)]
         assert "Addictol v1.3.1" in scan_fixture.read_text(encoding="utf-8")
         report_path = tmp_path / "addictol-AUTOSCAN.md"
@@ -1228,7 +1240,6 @@ def test_scan_logs_prints_the_runs_lines_and_composes_no_summary(
     fake.__version__ = "test"
     _install_final_scan_run_fake(fake, lambda _configuration, _paths: [])
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
 
     code = main(["scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     printed = capsys.readouterr().out.splitlines()
@@ -1280,7 +1291,6 @@ def test_scan_logs_states_an_infrastructure_failure_in_rusts_words(
 
     fake.scan_run_execute = failing_execute
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
 
     code = main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)
@@ -1342,7 +1352,6 @@ def test_scan_logs_json_output_carries_no_display_content(
     _install_final_scan_run_fake(fake, lambda _configuration, _paths: [])
     fake.scan_run_execute = observing_execute
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
-    _install_user_settings_fake(monkeypatch)
 
     code = main(["--json", "scan", "logs", "--path", str(tmp_path), "--installation-root", str(_installation_root(tmp_path))])
     payload = json.loads(capsys.readouterr().out)

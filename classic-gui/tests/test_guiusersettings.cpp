@@ -97,11 +97,6 @@ void GuiUserSettingsTests::open_returns_every_gui_group_from_one_revision()
              QStringList{QStringLiteral("databases/original.db")});
     QCOMPARE(snapshot.gameSetup.gameRoot.value(), QStringLiteral("C:/Games/Fallout4"));
     QVERIFY(snapshot.revision.startsWith(QStringLiteral("sha256:")));
-
-    const auto launch = snapshot.scanLaunchSettings(QStringLiteral("Fallout4"));
-    QCOMPARE(launch.formIdDatabasePaths, QStringList{QStringLiteral("databases/original.db")});
-    QCOMPARE(launch.maxConcurrentScans, 2);
-    QCOMPARE(launch.customScanDirectory, QStringLiteral("D:/Crash Logs"));
 }
 
 void GuiUserSettingsTests::accepted_changes_commit_as_one_preservation_aware_update()

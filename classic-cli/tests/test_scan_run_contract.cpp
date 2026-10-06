@@ -264,12 +264,16 @@ private:
     mutable bool triggered_ = false;
 };
 
-/// Returns the smallest typed User Settings the CLI request builder accepts.
-PreparedScanUserSettings cli_settings() {
-    PreparedScanUserSettings settings{};
-    settings.game = "Fallout4";
-    settings.game_version = "auto";
-    return settings;
+/// Launches `args` through the CLI's Crash Log Scan Launch seam and returns the executable request.
+///
+/// The fixture roots carry no User Settings document, so the launch uses Rust's defaults: managed
+/// Fallout 4, automatic game version, and no FCX Mode.
+rust::Box<scanner::ScanRunRequest> cli_launch_request(const CliArgs& args, const std::string& root) {
+    auto launch = launch_cli_scan_run(args, root);
+    if (!launch.has_value() || scanner::scan_run_launch_error(**launch).has_error) {
+        throw std::runtime_error("CLI could not launch the fixture Crash Log Scan Run");
+    }
+    return scanner::scan_run_launch_request(**launch);
 }
 
 /// Flattens CLI presentation lines so tests can assert on retained text and its order.
@@ -931,7 +935,7 @@ TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation 
     const CliLocalIgnoreRecoveryPrompt no_prompt;
 
     const CliArgs standard_args{};
-    const auto standard_request = build_cli_scan_run_request(standard_args, cli_settings(), root, root);
+    const auto standard_request = cli_launch_request(standard_args, root);
     CliScanRunCancellation standard_cancellation(false);
     const auto standard = execute_cli_scan_run(*standard_request, standard_cancellation, nullptr, no_prompt);
 
@@ -945,7 +949,7 @@ TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation 
 
     CliArgs targeted_args{};
     targeted_args.input_paths.push_back(targeted_log.string());
-    const auto targeted_request = build_cli_scan_run_request(targeted_args, cli_settings(), root, root);
+    const auto targeted_request = cli_launch_request(targeted_args, root);
     CliScanRunCancellation targeted_cancellation(false);
     const auto targeted = execute_cli_scan_run(*targeted_request, targeted_cancellation, nullptr, no_prompt);
 
@@ -973,7 +977,7 @@ TEST_CASE("CLI Proceed Without Ignore settles the retained discovery once", "[cl
         args.input_paths.push_back(copy_shared_log(temporary.path(), accepted).string());
     }
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
@@ -1022,7 +1026,7 @@ TEST_CASE("CLI Reset To Default settles with durable backup metadata", "[cli][sc
     CliArgs args{};
     args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
@@ -1072,7 +1076,7 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
     CliArgs args{};
     args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
@@ -1107,7 +1111,7 @@ TEST_CASE("CLI settles a pending recovery whose run was already cancelled withou
     CliArgs args{};
     args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
@@ -1140,7 +1144,7 @@ TEST_CASE("CLI reports observer delivery failure from the run result under its c
     CliArgs args{};
     args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
 
     // The failing observer never touches cancellation itself; any cancel is Rust applying the
     // policy the CLI chose.
@@ -1168,7 +1172,7 @@ TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "
     CliArgs args{};
     args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 

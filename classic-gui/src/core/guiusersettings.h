@@ -36,7 +36,8 @@ struct GuiCrashLogScanSettings {
     /// Rust-selected FormID rows that apply to each game's Crash Log Scan.
     ///
     /// Already carries the Fallout 4 VR read rule (shared Fallout4 rows, then legacy
-    /// Fallout4VR rows, de-duplicated). Scan launch reads only this projection.
+    /// Fallout4VR rows, de-duplicated). The Settings dialog lists this projection; a Crash Log
+    /// Scan does not read it, because Crash Log Scan Launch selects the same rows in Rust.
     QMap<QString, QStringList> scanFormIdDatabases;
     bool moveUnsolvedLogs{};
     std::optional<QString> unsolvedLogsDestination;
@@ -77,23 +78,6 @@ struct GuiFrontendPreferences {
     QMap<GuiWindow, GuiWindowGeometry> windowGeometry;
 };
 
-/// Revision-approved values passed from the GUI settings snapshot into one Crash Log Scan launch.
-struct CrashLogScanLaunchSettings {
-    QString game;
-    QString gameVersion;
-    bool formIdValueLookup = false;
-    bool fcxMode = false;
-    bool simplifyLogs = false;
-    bool moveUnsolvedLogs{};
-    QString unsolvedLogsDestination;
-    int maxConcurrentScans{};
-    QString customScanDirectory;
-    QStringList formIdDatabasePaths;
-    QString setupGameRoot;
-    QString setupDocumentsRoot;
-    QString setupGameExecutable;
-};
-
 /// One revision-cohesive projection of every User Settings group used by the native GUI.
 struct GuiUserSettingsSnapshot {
     GuiUpdatePreferences update;
@@ -104,12 +88,6 @@ struct GuiUserSettingsSnapshot {
     QString revision;
     QString commitEligibility;
     std::vector<GuiUserSettingsDiagnostic> diagnostics;
-
-    /// Builds an immutable scan-launch value object from this accepted typed snapshot.
-    ///
-    /// `game` selects the Rust-projected scan FormID database rows for that game (including the
-    /// Fallout 4 VR read rule) without rereading User Settings.
-    CrashLogScanLaunchSettings scanLaunchSettings(const QString& game) const;
 };
 
 /// One selected optional-string update; a selected null value explicitly clears the field.

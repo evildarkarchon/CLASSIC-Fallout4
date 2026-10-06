@@ -1002,5 +1002,15 @@
       }
     }
   ],
-  "consumerObligations": []
+  "consumerObligations": [
+    {
+      "id": "cli.scan-launch"
+    },
+    {
+      "id": "gui.scan-launch"
+    },
+    {
+      "id": "tui.scan-launch"
+    }
+  ]
 }
