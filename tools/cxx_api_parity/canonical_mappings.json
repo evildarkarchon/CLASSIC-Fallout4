@@ -782,6 +782,15 @@
       "coreRustSymbol": "persist_game_local_paths"
     },
     {
+      "id": "4765e6757b4a3133",
+      "rustSymbol": "locate_installation_root",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "locate_installation_root"
+    },
+    {
       "id": "7a1d4610ddf2ed0c",
       "rustSymbol": "settings_cache_clear",
       "kind": "function",

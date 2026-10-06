@@ -885,6 +885,30 @@ def persist_game_local_paths(
     """
 
 
+def locate_installation_root(
+        executable_dir: str | Path | None = None,
+        working_dir: str | Path | None = None,
+) -> str | None:
+    """Locate the Installation Root from an executable folder and a working directory.
+
+    Checks, in order: the executable folder, the working directory, the
+    executable folder's parent and grandparent, the ``install`` folder beside
+    the executable folder, and the working directory's ``install`` folder.
+    Only directory metadata is inspected; nothing is created or written.
+
+    Args:
+        executable_dir: Folder of the running executable; ``None`` skips the
+            candidates derived from it.
+        working_dir: Process working directory; ``None`` skips the candidates
+            derived from it.
+
+    Returns:
+        The first candidate containing a ``CLASSIC Data`` directory, built from
+        the given input, or ``None`` when no candidate does. There is no
+        fallback; the caller reports "CLASSIC Data not found".
+    """
+
+
 def set_application_dir(path: str | Path) -> None:
     """Override the directory used by independent application-local YAML helpers.
 

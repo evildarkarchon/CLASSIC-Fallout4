@@ -8,7 +8,7 @@ import {observeUpdateDecisions} from "./update_decisions_conformance.js";
 import {observeUpdateServices} from "./update_services_conformance.js";
 import {observeSharedRegistry} from "./shared_registry_conformance.js";
 import {observeAuxOperations} from "./aux_operations_conformance.js";
-import {observeInstallationPaths} from "./installation_paths_conformance.js";
+import {observeInstallationPaths, observeInstallationRoot} from "./installation_paths_conformance.js";
 import {observeXseOperations} from "./xse_operations_conformance.js";
 import {observeXseLog} from "./xse_folder_conformance.js";
 import {observeSharedIdentity} from "./shared_identity_conformance.js";
@@ -109,7 +109,7 @@ async function loadPlan(path: string): Promise<JsonObject> {
             "xse-operations": ["xse-operations.inspect"],
             // Node binds only the XSE log operation; folder derivation/composition stay Rust/CXX.
             "xse-folder": ["xse-folder.log"],
-            "installation-paths": ["installation-paths.inspect"],
+            "installation-paths": ["installation-paths.inspect", "installation-paths.locate"],
             "game-identity": ["game-identity.observe", "game-identity.metadata"],
             "runtime-access": ["runtime-access.observe"],
             "file-fingerprint": ["file-fingerprint.inspect"],
@@ -350,7 +350,10 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
     if (["game-version-parse", "game-version-distance", "fallout4-identity"].includes(plan.familyId)) return observeVersionValues(plan.familyId, fixture);
     if (plan.familyId === "settings-cached-docs") return observeSettingsExtended(plan.familyId, fixture);
     if (["settings-load", "settings-yaml", "settings-yaml-batch"].includes(plan.familyId)) return observeSettingsLoad(fixture);
-    if (plan.familyId === "installation-paths") return observeInstallationPaths(fixture);
+    if (plan.familyId === "installation-paths") {
+        if (scenario.action === "installation-paths.locate") return observeInstallationRoot(fixture);
+        return observeInstallationPaths(fixture);
+    }
     if (plan.familyId === "xse-operations") return observeXseOperations(fixture);
     if (plan.familyId === "xse-folder") return observeXseLog(fixture);
     if (["game-identity", "runtime-access"].includes(plan.familyId)) return observeSharedIdentity(plan.familyId, fixture);

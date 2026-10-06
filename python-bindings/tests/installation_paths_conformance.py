@@ -6,6 +6,45 @@ import tempfile
 from pathlib import Path
 
 
+def observe_installation_root(fixture):
+    """Locate the Installation Root inside an owned tree and prove nothing was written.
+
+    The fixed search starts keep every derived candidate inside the temporary
+    root, so the observation is the root relative to it (or ``None``) plus the
+    complete directory tree.
+    """
+    import classic_config
+
+    if (
+            fixture.get("operation") != "locate"
+            or fixture.get("executableDir") != "tree/build/bin"
+            or fixture.get("workingDir") != "tree/work"
+            or not isinstance(fixture.get("classicDataIn"), list)
+    ):
+        raise ValueError("unsupported installation root fixture")
+    with tempfile.TemporaryDirectory(
+            prefix="classic-installation-root-conformance-"
+    ) as directory:
+        root = Path(directory)
+        executable_dir = root / fixture["executableDir"]
+        working_dir = root / fixture["workingDir"]
+        executable_dir.mkdir(parents=True)
+        working_dir.mkdir(parents=True)
+        for location in fixture["classicDataIn"]:
+            (root / location / "CLASSIC Data").mkdir(parents=True, exist_ok=True)
+        located = classic_config.locate_installation_root(executable_dir, working_dir)
+        return {
+            "installationRoot": None
+            if located is None
+            else Path(located).relative_to(root).as_posix(),
+            "directories": sorted(
+                path.relative_to(root).as_posix()
+                for path in root.rglob("*")
+                if path.is_dir()
+            ),
+        }
+
+
 def observe_installation_paths(fixture):
     """Execute native public methods with valid caches, restoring cwd before cleanup."""
     import classic_path

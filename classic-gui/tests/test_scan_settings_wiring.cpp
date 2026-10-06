@@ -20,6 +20,8 @@ private slots:
     void mainwindow_bootstraps_missing_settings_when_saving_remembered_paths();
     /// Verifies that detected and manual paths reach one final consent-gated commit.
     void mainwindow_defers_setup_commit_until_manual_completion();
+    /// Verifies that the GUI keeps no Installation Root candidate search of its own.
+    void mainwindow_locates_installation_root_through_config();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
     void update_worker_declares_not_published_classification();
     void mainwindow_handles_not_published_without_error_dialog();
@@ -276,6 +278,30 @@ void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_mig
              "MainWindow should offer explicit restoration through the retained migration receipt");
     QVERIFY2(!sourceText.contains(QStringLiteral("QFile::rename")) && !sourceText.contains(QStringLiteral("QSaveFile")),
              "MainWindow should not implement migration publication itself");
+}
+
+void ScanSettingsWiringTests::mainwindow_locates_installation_root_through_config()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString source = QString::fromUtf8(file.readAll());
+    // findDataRoot() stays as the GUI adapter seam; mainwindow_defers_setup_commit_until_manual_completion
+    // also uses its signature as the end anchor of checkFirstRunPaths().
+    const qsizetype start = source.indexOf(QStringLiteral("\nQString MainWindow::findDataRoot() const"));
+    const qsizetype end = source.indexOf(QStringLiteral("\n}\n"), start);
+    QVERIFY2(start >= 0 && end > start, "findDataRoot should be readable as one function body");
+    const QString body = source.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("classic::config::locate_installation_root(")),
+             "The Installation Root must come from config's one shared locator");
+    QVERIFY2(body.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
+             "The GUI supplies its executable folder as the locator's first input");
+    QVERIFY2(!body.contains(QStringLiteral("\"install\"")) && !body.contains(QStringLiteral("parent_path")) &&
+                 !body.contains(QStringLiteral("\"CLASSIC Data\"")),
+             "The GUI must not keep a private Installation Root candidate search");
 }
 
 void ScanSettingsWiringTests::update_worker_declares_not_published_classification()

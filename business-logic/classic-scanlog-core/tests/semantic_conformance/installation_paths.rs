@@ -31,8 +31,60 @@ fn inventory(
     Ok(())
 }
 
+/// Dispatch one installation-paths scenario by its trusted action.
+pub(super) fn execute(action: &str, fixture: &Value) -> RunnerResult<Value> {
+    match action {
+        "installation-paths.inspect" => execute_inspect(fixture),
+        "installation-paths.locate" => execute_locate(fixture),
+        _ => Err(invalid("unsupported installation-paths action").into()),
+    }
+}
+
+/// Locate the Installation Root inside an owned tree and prove the search wrote nothing.
+///
+/// The fixed search starts keep every derived candidate (parent, grandparent, both `install`
+/// folders) inside the temporary root, so no host folder can satisfy the lookup.
+fn execute_locate(fixture: &Value) -> RunnerResult<Value> {
+    if fixture["operation"] != "locate"
+        || fixture["executableDir"] != "tree/build/bin"
+        || fixture["workingDir"] != "tree/work"
+    {
+        return Err(invalid("unsupported installation root fixture").into());
+    }
+    let temporary = tempfile::tempdir()?;
+    let root = temporary.path();
+    let executable_dir = root.join(text(&fixture["executableDir"])?);
+    let working_dir = root.join(text(&fixture["workingDir"])?);
+    fs::create_dir_all(&executable_dir)?;
+    fs::create_dir_all(&working_dir)?;
+    for location in fixture["classicDataIn"]
+        .as_array()
+        .ok_or_else(|| invalid("classicDataIn must be an array"))?
+    {
+        fs::create_dir_all(root.join(text(location)?).join("CLASSIC Data"))?;
+    }
+    let located =
+        classic_config_core::locate_installation_root(Some(&executable_dir), Some(&working_dir));
+    let installation_root = match located {
+        Some(path) => Value::String(
+            path.strip_prefix(root)?
+                .to_string_lossy()
+                .replace('\\', "/"),
+        ),
+        None => Value::Null,
+    };
+    let mut files = Vec::new();
+    let mut directories = Vec::new();
+    inventory(root, root, &mut files, &mut directories)?;
+    if !files.is_empty() {
+        return Err(invalid("the Installation Root search wrote a file").into());
+    }
+    directories.sort();
+    Ok(json!({"installationRoot": installation_root, "directories": directories}))
+}
+
 /// Execute only valid cached lookups; platform fallback is never an expected outcome.
-pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
+fn execute_inspect(fixture: &Value) -> RunnerResult<Value> {
     let game = text(&fixture["gamePath"])?;
     let docs = text(&fixture["docsPath"])?;
     if !matches!(

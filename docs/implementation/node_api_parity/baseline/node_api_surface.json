@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T10:02:41.840671+00:00",
+  "generated_at_utc": "2026-10-06T10:55:29.350090+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -3452,6 +3452,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function localIgnoreYamlDataStateLabel(state: JsLocalIgnoreYamlDataState): string",
       "arity": 1
+    },
+    {
+      "export": "locateInstallationRoot",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function locateInstallationRoot(executableDir?: string | undefined | null, workingDir?: string | undefined | null): string | null",
+      "arity": 2
     },
     {
       "export": "matchVersion",
