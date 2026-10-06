@@ -79,6 +79,7 @@
         "with_show_statistics",
         "with_formid_value_lookup",
         "with_formid_databases",
+        "with_formid_databases_for_game",
         "with_move_unsolved_logs",
         "with_unsolved_logs_destination",
         "with_custom_scan_input",
@@ -1868,6 +1869,115 @@
       },
       "normalization": {
         "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "commit-fallout4-vr-formid-save-removes-legacy-key",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "vr_shared_and_legacy_formid_databases"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "vr_shared_and_legacy_formid_databases",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/FormID Databases/Fallout4VR": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Shared Extra FormIDs.db",
+            "databases/Legacy VR FormIDs.db",
+            "D:/Added/VR Extra.db"
+          ]
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "commit_fallout4_vr_formid_save_removes_legacy_key"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "commit-other-game-formid-save-preserves-every-other-game",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "vr_shared_and_legacy_formid_databases"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "vr_shared_and_legacy_formid_databases",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/FormID Databases/Skyrim": [
+            "databases/Skyrim FormIDs.db",
+            "D:/Added/Skyrim Extra.db"
+          ]
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "commit_other_game_formid_save_preserves_every_other_game"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "preview-fallout4-formid-save-keeps-legacy-vr-rows",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "vr_legacy_formid_databases"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "vr_legacy_formid_databases",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/FormID Databases/Fallout4": [
+            "D:/Fallout4.db"
+          ]
+        },
+        "commit": false,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "preview_fallout4_formid_save_keeps_legacy_vr_rows"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
         "unorderedPaths": [],
         "excludedPaths": []
       }

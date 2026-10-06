@@ -76,6 +76,62 @@ def setter_predicates():
     )
 
 
+FORMID_DATABASES_POINTER = "/CLASSIC_Settings/FormID Databases"
+# A request selector below the mapping names a game-aware save for that game.
+FORMID_DATABASE_SAVE_PREFIX = FORMID_DATABASES_POINTER + "/"
+LEGACY_FORMID_KEY_REMOVED = "legacy_formid_databases_key_removed"
+
+
+def accepted_formid_database_save(observation):
+    """Require the Fallout 4 VR save rule: shared-key mapping plus the legacy-key notice.
+
+    Only ``with_formid_databases_for_game`` can produce an accepted preview whose
+    published mapping drops ``Fallout4VR`` while reporting the removal, so a
+    whole-mapping write can never earn this credit.
+    """
+    preview = observation.get("preview", {})
+    if preview.get("status") != "accepted":
+        return False
+    fields = [
+        field
+        for field in preview.get("acceptedFields", [])
+        if isinstance(field, Mapping) and field.get("fieldPath") == FORMID_DATABASES_POINTER
+    ]
+    diagnostics = preview.get("diagnostics")
+    commit = observation.get("commit", {})
+    return (
+        len(fields) == 1
+        and isinstance(fields[0].get("value"), Mapping)
+        and "Fallout4" in fields[0]["value"]
+        and "Fallout4VR" not in fields[0]["value"]
+        and isinstance(diagnostics, list)
+        and [
+            diagnostic.get("code")
+            for diagnostic in diagnostics
+            if isinstance(diagnostic, Mapping)
+        ]
+        == [LEGACY_FORMID_KEY_REMOVED]
+        and isinstance(commit, Mapping)
+        and commit.get("status") == "committed"
+        and commit.get("diagnostics") == diagnostics
+    )
+
+
+FORMID_DATABASE_SAVE_PREDICATE = CoveragePredicate(
+    "user-settings.setter.formid-databases-for-game",
+    "user-settings.update",
+    "user-settings.update",
+    "projection",
+    ("with_formid_databases_for_game",),
+    accepted_formid_database_save,
+    runtime_operations=(
+        None,
+        "UserSettingsUpdate.set_formid_databases_for_game",
+        "set_formid_databases_for_game",
+    ),
+)
+
+
 GROUPED_FIELDS = (
     "/UI/window_geometry/main_tab/maximized",
     "/UI/window_geometry/main_tab/width",
