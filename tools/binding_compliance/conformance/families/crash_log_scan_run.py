@@ -985,6 +985,91 @@ def _observer_failure_cancellation_requested(
     ) == {"requested": True}
 
 
+def _observer_failure_continue_run(observation: Mapping[str, Any]) -> bool:
+    """Recognize the continue-run policy finishing the run after a reported failure.
+
+    Delivery stops at the refused discovery event, yet the log is analyzed and its report
+    written, nothing requested cancellation, and the result still reports the failure.
+    """
+
+    path = "Lifecycle/crash-observer-continue.log"
+    report = "Lifecycle/crash-observer-continue-AUTOSCAN.md"
+    return (
+        observation.get("run")
+        == {
+            "status": "completed",
+            "message": None,
+            "total": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+        }
+        and _discovery_paths(observation) == [path]
+        and observation.get("logs")
+        == [
+            {
+                "discoveryIndex": 0,
+                "crashLog": {"path": path},
+                "autoscanReport": {"path": report},
+                "disposition": "succeeded",
+                "failures": [],
+                "message": None,
+                "movedToUnsolvedLogs": False,
+            }
+        ]
+        and observation.get("events")
+        == {"run": ["discovery_completed"], "logs": [{"discoveryIndex": 0, "trace": []}]}
+        and _observer_failure_observed(observation)
+        and observation.get("pendingRecovery") is False
+        and observation.get("cancellation") == {"requested": False}
+        and observation.get("durableEffects")
+        == {
+            "reports": [{"path": report, "exists": True, "nonEmpty": True}],
+            "forbidden": [{"path": "Unsolved Logs", "exists": False}],
+        }
+    )
+
+
+def _observer_failure_before_pending_recovery(observation: Mapping[str, Any]) -> bool:
+    """Recognize Rust abandoning a recovery whose run already failed a delivery.
+
+    The run would have paused on the malformed Local Ignore; instead it finishes cancelled after
+    discovery, offers no pending recovery, and leaves no backup, report, or movement behind.
+    """
+
+    path = "Lifecycle/crash-observer-before-recovery.log"
+    return (
+        _observer_failure_status(observation)
+        and _discovery_paths(observation) == [path]
+        and observation.get("events")
+        == {"run": ["discovery_completed"], "logs": [{"discoveryIndex": 0, "trace": []}]}
+        and _observer_failure_observed(observation)
+        and observation.get("pendingRecovery") is False
+        and observation.get("cancellation") == {"requested": True}
+        and observation.get("durableEffects")
+        == {
+            "reports": [],
+            "forbidden": [
+                {"path": "CLASSIC Data/CLASSIC Ignore.yaml.prev", "exists": False},
+                {
+                    "path": "Lifecycle/crash-observer-before-recovery-AUTOSCAN.md",
+                    "exists": False,
+                },
+                {"path": "Unsolved Logs", "exists": False},
+            ],
+        }
+    )
+
+
+def _discovery_paths(observation: Mapping[str, Any]) -> list[str | None]:
+    """Returns the accepted Crash Log paths of a lifecycle observation's discovery."""
+
+    discovery = _mapping(observation.get("discovery"))
+    accepted = _sequence(discovery.get("acceptedLogs")) if discovery else None
+    return [_path(log) for log in accepted] if accepted is not None else []
+
+
 def _observer_failure_forbidden_effects(observation: Mapping[str, Any]) -> bool:
     """Recognize observer failure prevents reports and movement artifacts."""
 
@@ -2229,6 +2314,25 @@ _OBSERVER_FAILURE_PREDICATES = (
     ),
 )
 
+_OBSERVER_FAILURE_POLICY_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.observer-failure.continue-run",
+        "scan-run.execute",
+        "scan-run.execute",
+        "observer-failure",
+        ("Observer", "ObserverFailurePolicy", "ObserverDeliveryFailure", "RunResult"),
+        _observer_failure_continue_run,
+    ),
+    CoveragePredicate(
+        "scan-run.observer-failure.before-pending-recovery",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("Observer", "ObserverDeliveryFailure", "PendingRecovery", "take_pending_recovery"),
+        _observer_failure_before_pending_recovery,
+    ),
+)
+
 _STRUCTURED_FAILURE_PREDICATES = (
     CoveragePredicate(
         "scan-run.failure.request-validation",
@@ -2791,6 +2895,28 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
     "observer-delivery-failure": tuple(
         sorted(predicate.id for predicate in _OBSERVER_FAILURE_PREDICATES)
     ),
+    # A finished one-log run has the generated-Ignore scenario's terminal status as well.
+    "observer-delivery-failure-continue-run": tuple(
+        sorted(
+            {
+                "scan-run.generated.status",
+                "scan-run.observer-failure.structured-observation",
+                "scan-run.observer-failure.continue-run",
+            }
+        )
+    ),
+    # The abandoned run is the same cancelled-after-discovery result the cancel-run policy
+    # produces, so those status, observation, and cancellation facts hold here as well.
+    "observer-delivery-failure-before-pending-recovery": tuple(
+        sorted(
+            {
+                "scan-run.observer-failure.status",
+                "scan-run.observer-failure.structured-observation",
+                "scan-run.observer-failure.cancellation",
+                "scan-run.observer-failure.before-pending-recovery",
+            }
+        )
+    ),
     "request-validation-failure": ("scan-run.failure.request-validation",),
     "discovery-failure": ("scan-run.failure.discovery",),
     "intake-failure": ("scan-run.failure.intake",),
@@ -2936,6 +3062,7 @@ CRASH_LOG_SCAN_RUN_COVERAGE_POLICY = FamilyCoveragePolicy(
         + _QUEUED_CANCELLATION_PREDICATES
         + _ADMITTED_CANCELLATION_PREDICATES
         + _OBSERVER_FAILURE_PREDICATES
+        + _OBSERVER_FAILURE_POLICY_PREDICATES
         + _STRUCTURED_FAILURE_PREDICATES
         + _RUN_STATUS_PREDICATES
         + _GENERATED_PREDICATES
