@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-10-06T03:59:08.659691+00:00",
+  "generated_at_utc": "2026-10-06T09:57:49.950847+00:00",
   "summary": {
-    "tier1_contract_total": 1225,
-    "tier1_matched": 1223,
+    "tier1_contract_total": 1226,
+    "tier1_matched": 1224,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -3659,6 +3659,22 @@
       "actual_python_kind": "function",
       "expected_python_arity": 3,
       "actual_python_arity": 3
+    },
+    {
+      "id": "config.installation_root.locate_installation_root",
+      "tier": "tier1",
+      "owner_module": "config",
+      "rust_crate": "classic-config-core",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "locate_installation_root",
+      "python_module": "classic_config",
+      "python_export": "locate_installation_root",
+      "python_export_path": "locate_installation_root",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 2,
+      "actual_python_arity": 2
     },
     {
       "id": "config.installed_yaml_data.installed_yaml_data_provenance_label",

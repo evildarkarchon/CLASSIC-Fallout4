@@ -1,4 +1,4 @@
-"""Cached installation paths and read-only documents checks from public results."""
+"""Cached installation paths, read-only documents checks and Installation Root location."""
 
 import json
 from functools import partial
@@ -7,6 +7,62 @@ from ..coverage import CoveragePredicate, FamilyCoveragePolicy
 from .file_operations import _files
 
 REGISTRY_YAML = 'Version_Registry:\n  versions:\n    - id: FO4_OG\n      game: Fallout4\n      version: "1.10.163"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: Fallout4\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: "0.6.23"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: "1.2.3"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: FO4_VR\n      game: Fallout4\n      version: "1.2.72.0"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n      xse:\n        acronym: F4SEVR\n        full_name: Fixture VR Extender\n        compatible_version: "0.6.23"\n        loader: f4sevr_loader.exe\n        file_count: 0\n        script_hashes: {}\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: FO4_OG\n'
+
+
+# Installation Root location (#275). The executable folder and working directory
+# are fixed so every candidate the locator derives (parent, grandparent and both
+# `install` folders) stays inside the runner-owned temporary tree; no host folder
+# can ever satisfy a lookup.
+LOCATE_EXECUTABLE_DIR = "tree/build/bin"
+LOCATE_WORKING_DIR = "tree/work"
+# The six candidates in the documented search order.
+LOCATE_CANDIDATES = (
+    LOCATE_EXECUTABLE_DIR,
+    LOCATE_WORKING_DIR,
+    "tree/build",
+    "tree",
+    "tree/build/install",
+    "tree/work/install",
+)
+
+
+def _locate_directories(classic_data_in):
+    """Return the complete directory tree a locate runner creates and must leave unchanged."""
+    found = set()
+    for path in (
+            LOCATE_EXECUTABLE_DIR,
+            LOCATE_WORKING_DIR,
+            *(location + "/CLASSIC Data" for location in classic_data_in),
+    ):
+        parts = path.split("/")
+        found.update("/".join(parts[:index]) for index in range(1, len(parts) + 1))
+    return sorted(found)
+
+
+def _located(observation):
+    """Require a candidate-relative root (or null) and a read-only, runner-shaped tree."""
+    if set(observation) != {"installationRoot", "directories"}:
+        return False
+    located, directories = observation["installationRoot"], observation["directories"]
+    if located is not None and located not in LOCATE_CANDIDATES:
+        return False
+    if not isinstance(directories, list) or directories != sorted(set(directories)):
+        return False
+    if not all(isinstance(path, str) for path in directories):
+        return False
+    # Every CLASSIC Data folder must sit in a candidate, and the root must hold one.
+    holders = {
+        path[: -len("/CLASSIC Data")]
+        for path in directories
+        if path.endswith("/CLASSIC Data")
+    }
+    if not holders <= set(LOCATE_CANDIDATES):
+        return False
+    if directories != _locate_directories(sorted(holders)):
+        return False
+    # The first candidate holding CLASSIC Data wins; none means no Installation Root.
+    expected = next((c for c in LOCATE_CANDIDATES if c in holders), None)
+    return located == expected
 
 
 def _observed(operation, observation):
@@ -196,8 +252,51 @@ INSTALLATION_PATHS_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "PathValidator.is_valid_path",
             ),
         ),
+    )
+    # Installation Root location is owned by classic-config-core (#275). Its
+    # own scenarios observe only the located root and the untouched tree.
+    + (
+        CoveragePredicate(
+            id="installation-paths.locate",
+            capability_id="installation-paths.locate",
+            action="installation-paths.locate",
+            observation_family="installation-root",
+            rust_symbols=("locate_installation_root",),
+            matches=_located,
+            runtime_operations=(
+                "locate_installation_root",
+                "locateInstallationRoot",
+            ),
+        ),
     ),
 )
+
+
+def _validate_locate_case(case, fixture):
+    """Reject locate inputs that could reach outside the runner-owned tree."""
+    if set(fixture) != {"operation", "executableDir", "workingDir", "classicDataIn"}:
+        raise ValueError("unsupported installation root fixture")
+    if fixture["operation"] != "locate" or case["capabilityIds"] != [
+        "installation-paths.locate"
+    ]:
+        raise ValueError("installation root fixture disagrees with its action")
+    if (fixture["executableDir"], fixture["workingDir"]) != (
+            LOCATE_EXECUTABLE_DIR,
+            LOCATE_WORKING_DIR,
+    ):
+        raise ValueError("installation root search must start inside the owned tree")
+    classic_data_in = fixture["classicDataIn"]
+    if (
+            not isinstance(classic_data_in, list)
+            or len(set(classic_data_in)) != len(classic_data_in)
+            or not set(classic_data_in) <= set(LOCATE_CANDIDATES)
+    ):
+        raise ValueError("CLASSIC Data may only be placed in a locator candidate")
+    expected = case["expected"]
+    if not _located(expected) or expected["directories"] != _locate_directories(
+            classic_data_in
+    ):
+        raise ValueError("installation root requires complete public observations")
 
 
 def validate_installation_paths_pack(document, root):
@@ -209,13 +308,18 @@ def validate_installation_paths_pack(document, root):
         if (
             case["input"] != {"fixtureRef": reference}
             or case["fixtureRefs"] != [reference]
-            or case["action"] != "installation-paths.inspect"
+            or case["action"]
+            not in {"installation-paths.inspect", "installation-paths.locate"}
         ):
             raise ValueError("installation paths requires one declared input")
         path = (fixture_root / document["fixtures"][reference]).resolve()
         if not path.is_relative_to(fixture_root):
             raise ValueError("installation paths fixture escapes root")
         fixture = json.loads(path.read_text(encoding="utf-8"))
+        if case["action"] == "installation-paths.locate":
+            _validate_locate_case(case, fixture)
+            paths.append(path)
+            continue
         if set(fixture) != {"gamePath", "docsPath", "registryYaml", "files"}:
             raise ValueError("unsupported installation paths fixture")
         if (fixture["gamePath"], fixture["docsPath"]) not in {

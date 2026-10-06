@@ -32,6 +32,7 @@ import {
     JsLocalIgnoreYamlDataState,
     loadExplicitYamlData,
     loadInstalledYamlData,
+    locateInstallationRoot,
     persistGameLocalPaths,
     registryClear,
     resetHashCacheStats,
@@ -1580,5 +1581,33 @@ describe("config: game setup path detection helpers (Plan 3 promotion)", () => {
         const result = gameSetupNeedsPathDetection();
         expect(typeof result.needsGamePath).toBe("boolean");
         expect(typeof result.needsDocsPath).toBe("boolean");
+    });
+});
+
+describe("config: locateInstallationRoot", () => {
+    test("returns the first candidate holding CLASSIC Data, or null without a fallback", () => {
+        const root = mkdtempSync(join(tmpdir(), "classic-node-installation-root-"));
+        try {
+            const executableDir = join(root, "build", "bin");
+            const workingDir = join(root, "work");
+            mkdirSync(executableDir, {recursive: true});
+            mkdirSync(workingDir, {recursive: true});
+
+            expect(locateInstallationRoot(executableDir, workingDir)).toBeNull();
+
+            // The executable grandparent is where a development build output folder finds the repository root.
+            mkdirSync(join(root, "CLASSIC Data"));
+            expect(locateInstallationRoot(executableDir, workingDir)).toBe(root);
+
+            // The working directory is candidate 2, ahead of the grandparent (candidate 4).
+            mkdirSync(join(workingDir, "CLASSIC Data"));
+            expect(locateInstallationRoot(executableDir, workingDir)).toBe(workingDir);
+
+            // An omitted executable folder skips every executable-derived candidate.
+            expect(locateInstallationRoot(null, workingDir)).toBe(workingDir);
+            expect(locateInstallationRoot(executableDir)).toBe(root);
+        } finally {
+            rmSync(root, {recursive: true, force: true});
+        }
     });
 });

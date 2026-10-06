@@ -186,7 +186,10 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             "settings-cached-docs": {"settings-cached-docs.observe"},
             "version-registry-details": {"version-registry-details.execute"},
             "xse-operations": {"xse-operations.inspect"},
-            "installation-paths": {"installation-paths.inspect"},
+            "installation-paths": {
+                "installation-paths.inspect",
+                "installation-paths.locate",
+            },
             "game-identity": {
                 "game-identity.observe",
                 "game-identity.metadata",
@@ -667,8 +670,13 @@ def _execute_scenario(
 
         return observe_settings_load(fixture)
     if plan["familyId"] == "installation-paths":
-        from installation_paths_conformance import observe_installation_paths
+        from installation_paths_conformance import (
+            observe_installation_paths,
+            observe_installation_root,
+        )
 
+        if scenario["action"] == "installation-paths.locate":
+            return observe_installation_root(fixture)
         return observe_installation_paths(fixture)
     if plan["familyId"] == "xse-operations":
         from xse_operations_conformance import observe_xse_operations

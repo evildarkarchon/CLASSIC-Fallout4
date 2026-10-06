@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T02:23:32.887012+00:00`
-- Tier-1 contract rows: **937**
-- Tier-1 matched: **920**
+- Generated: `2026-10-06T10:00:21.941646+00:00`
+- Tier-1 contract rows: **938**
+- Tier-1 matched: **921**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -201,6 +201,7 @@
 | `config-create-yamldata-content` | `config` | `classic-config-core` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
 | `config-clear-yaml-cache` | `config` | `classic-shared-core` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
 | `config.game_local.persistGameLocalPaths` | `config` | `classic-config-core` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
+| `config.installation_root.locateInstallationRoot` | `config` | `classic-config-core` | `locate_installation_root` | `locateInstallationRoot` | `matched` |
 | `config.installed_yaml_data.installedYamlDataProvenanceLabel` | `config` | `classic-config-core` | `InstalledYamlDataProvenance` | `installedYamlDataProvenanceLabel` | `matched` |
 | `config.installed_yaml_data.installedYamlDataDiagnosticKindLabel` | `config` | `classic-config-core` | `InstalledYamlDataDiagnosticKind` | `installedYamlDataDiagnosticKindLabel` | `matched` |
 | `config.installed_yaml_data.localIgnoreYamlDataStateLabel` | `config` | `classic-config-core` | `LocalIgnoreYamlDataState` | `localIgnoreYamlDataStateLabel` | `matched` |

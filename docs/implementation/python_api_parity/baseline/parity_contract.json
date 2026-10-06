@@ -2397,6 +2397,17 @@
       "pythonArity": 3
     },
     {
+      "id": "config.installation_root.locate_installation_root",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "locate_installation_root",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "locate_installation_root",
+      "pythonKind": "function",
+      "pythonArity": 2
+    },
+    {
       "id": "config.installed_yaml_data.installed_yaml_data_provenance_label",
       "tier": "tier1",
       "ownerModule": "config",

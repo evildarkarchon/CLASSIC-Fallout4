@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T03:59:08.385749+00:00",
+  "generated_at_utc": "2026-10-06T09:57:49.513672+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -1757,6 +1757,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_config/__init__.pyi",
       "signature": "def local_ignore_yaml_data_state_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_config",
+      "export": "locate_installation_root",
+      "export_path": "locate_installation_root",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_config/__init__.pyi",
+      "signature": "def locate_installation_root( executable_dir: str | Path | None = None, working_dir: str | Path | None = None, ) -> str | None:"
     },
     {
       "module": "classic_config",

@@ -6,12 +6,14 @@
 //!    configuration data (mod databases, suspect patterns, ignore lists, etc.)
 //!
 //! 2. **Free functions**: `createYamlDataFromContent()`,
-//!    `persistGameLocalPaths()`, `clearYamlCache()`, convenience accessors.
+//!    `persistGameLocalPaths()`, `locateInstallationRoot()`, `clearYamlCache()`,
+//!    convenience accessors.
 
 use classic_config_core::{
     ConfigError, MainYamlVersionError, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
     SuspectErrorRule, SuspectStackRule, YamlDataCore, YamlSource as CoreYamlSource,
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
+    locate_installation_root as core_locate_installation_root,
     persist_game_local_paths as core_persist_game_local_paths,
 };
 use classic_shared_core::get_runtime;
@@ -237,6 +239,29 @@ pub async fn persist_game_local_paths(
         .await
         .map_err(|err| napi::Error::from_reason(format!("runtime join error: {err}")))?;
     result.map_err(runtime_to_napi_err)
+}
+
+/// Locate the Installation Root from an executable folder and a working directory.
+///
+/// Delegates to config's one shared candidate search (executable folder, working
+/// directory, executable parent, executable grandparent, the executable parent's
+/// `install` folder, the working directory's `install` folder) and returns the
+/// first candidate holding `CLASSIC Data`. Synchronous because it only inspects
+/// directory metadata.
+///
+/// @param executableDir - Folder of the running executable; omitted/`null` skips its candidates.
+/// @param workingDir - Process working directory; omitted/`null` skips its candidates.
+/// @returns The matching root built from the given input, or `null` when none holds
+///   `CLASSIC Data` (there is no fallback; the caller reports "CLASSIC Data not found").
+#[napi]
+pub fn locate_installation_root(
+    executable_dir: Option<String>,
+    working_dir: Option<String>,
+) -> Option<String> {
+    let executable_dir = executable_dir.map(PathBuf::from);
+    let working_dir = working_dir.map(PathBuf::from);
+    core_locate_installation_root(executable_dir.as_deref(), working_dir.as_deref())
+        .map(|root| root.to_string_lossy().into_owned())
 }
 
 // ============================================================================

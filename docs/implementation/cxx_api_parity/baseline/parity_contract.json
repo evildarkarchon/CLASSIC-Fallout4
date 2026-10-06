@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T01:36:23Z",
+  "generated_at_utc": "2026-10-06T09:57:02Z",
   "schema_version": 2,
   "entries": [
     {
@@ -1480,6 +1480,30 @@
       "ownerModule": "config",
       "rustCrate": "classic-config-core",
       "coreRustSymbol": "LocalIgnoreYamlDataState"
+    },
+    {
+      "id": "4765e6757b4a3133",
+      "rustSymbol": "locate_installation_root",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "executable_dir",
+            "type": "&str"
+          },
+          {
+            "name": "working_dir",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "locate_installation_root"
     },
     {
       "id": "583bb255b5c8b9ef",

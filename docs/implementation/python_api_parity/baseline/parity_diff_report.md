@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T03:59:08.659691+00:00`
-- Tier-1 contract rows: **1225**
-- Tier-1 matched: **1223**
+- Generated: `2026-10-06T09:57:49.950847+00:00`
+- Tier-1 contract rows: **1226**
+- Tier-1 matched: **1224**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -241,6 +241,7 @@
 | `config.yamldata.SuspectStackRule@rust` | `config` | `classic-config-core` | `SuspectStackRule` | `classic_config.YamlData` | `matched` |
 | `config.yamldata.YamlData.__repr__` | `config` | `classic-config-core` | `YamlDataCore` | `classic_config.YamlData.__repr__` | `matched` |
 | `config.game_local.persist_game_local_paths` | `config` | `classic-config-core` | `persist_game_local_paths` | `classic_config.persist_game_local_paths` | `matched` |
+| `config.installation_root.locate_installation_root` | `config` | `classic-config-core` | `locate_installation_root` | `classic_config.locate_installation_root` | `matched` |
 | `config.installed_yaml_data.installed_yaml_data_provenance_label` | `config` | `classic-config-core` | `InstalledYamlDataProvenance` | `classic_config.installed_yaml_data_provenance_label` | `matched` |
 | `config.installed_yaml_data.installed_yaml_data_diagnostic_kind_label` | `config` | `classic-config-core` | `InstalledYamlDataDiagnosticKind` | `classic_config.installed_yaml_data_diagnostic_kind_label` | `matched` |
 | `config.installed_yaml_data.local_ignore_yaml_data_state_label` | `config` | `classic-config-core` | `LocalIgnoreYamlDataState` | `classic_config.local_ignore_yaml_data_state_label` | `matched` |

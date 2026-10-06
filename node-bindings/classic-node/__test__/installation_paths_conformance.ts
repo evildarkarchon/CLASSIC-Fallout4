@@ -1,6 +1,6 @@
 import {chmod, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join, relative, sep} from "node:path";
 import * as classic from "../index.js";
 import {DocsPathFinder, DocumentsChecker, GamePathFinder} from "../index.js";
 
@@ -22,6 +22,29 @@ async function inventory(root: string, prefix = ""): Promise<{ files: JsonObject
     }
     files.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
     return {files, directories: directories.sort()};
+}
+
+/**
+ * Locate the Installation Root inside an owned tree and prove the search wrote nothing.
+ *
+ * The fixed search starts keep every derived candidate inside the temporary root, so the
+ * observation is the located root relative to it (or null) plus the complete directory tree.
+ */
+export async function observeInstallationRoot(fixture: JsonObject): Promise<JsonObject> {
+    if (fixture.operation !== "locate" || fixture.executableDir !== "tree/build/bin" || fixture.workingDir !== "tree/work" || !Array.isArray(fixture.classicDataIn)) {
+        throw new Error("unsupported installation root fixture");
+    }
+    const root = await mkdtemp(join(tmpdir(), "classic-installation-root-conformance-"));
+    try {
+        await mkdir(join(root, fixture.executableDir), {recursive: true});
+        await mkdir(join(root, fixture.workingDir), {recursive: true});
+        for (const location of fixture.classicDataIn) await mkdir(join(root, location, "CLASSIC Data"), {recursive: true});
+        const located = classic.locateInstallationRoot(join(root, fixture.executableDir), join(root, fixture.workingDir));
+        const installationRoot = located === null ? null : relative(root, located).split(sep).join("/");
+        return {installationRoot, directories: (await inventory(root)).directories};
+    } finally {
+        await rm(root, {recursive: true, force: true});
+    }
 }
 
 /** Execute each native public operation on validated owned caches before any OS fallback. */
