@@ -130,7 +130,11 @@ public:
         , cancellation_(cancellation) {}
 
     /// Renders one event without allowing presentation failures to cross CXX.
-    void on_scan_run_event(const classic::scanner::ScanRunContractEvent& event) const noexcept override {
+    ///
+    /// A presentation failure is returned as a failed delivery; Rust applies the cancel-run
+    /// policy `execute_cli_scan_run` passes and reports the failure in the envelope.
+    classic::scanner::ScanRunObserverDelivery on_scan_run_event(
+        const classic::scanner::ScanRunContractEvent& event) const noexcept override {
         try {
             if (event.kind == classic::scanner::ScanRunContractEventKind::DiscoveryCompleted) {
                 progress_ = std::make_unique<ProgressDisplay>(
@@ -147,7 +151,7 @@ public:
             }
 
             if (!progress_) {
-                return;
+                return {};
             }
 
             const std::string key = std::to_string(event.discovery_index);
@@ -169,9 +173,11 @@ public:
                 break;
             }
             progress_->render();
+            return {};
         } catch (...) {
             delivery_failed_ = true;
             cancellation_.request();
+            return {true, "scan progress presentation failed"};
         }
     }
 

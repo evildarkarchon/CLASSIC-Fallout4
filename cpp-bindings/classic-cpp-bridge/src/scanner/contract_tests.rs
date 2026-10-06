@@ -469,6 +469,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         cancelled: 0,
         logs: vec![log],
         continuation: None,
+        observer_delivery_failure: None,
     });
 
     assert!(dto.has_discovery);
@@ -506,6 +507,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
         message: "database unavailable".to_string(),
         path: Some(PathBuf::from("database-é.db")),
+        observer_delivery_failure: None,
     });
     assert_eq!(
         error.stage,
@@ -635,6 +637,7 @@ fn shared_failure_fixture_maps_every_cxx_failure_field() {
             stage: core_stage,
             message: expected["message"].as_str().unwrap().to_string(),
             path: expected["path"].as_str().map(PathBuf::from),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, cxx_stage);
         assert_eq!(mapped.message, expected["message"].as_str().unwrap());
@@ -719,7 +722,7 @@ fn execute_without_observer_returns_targeted_rejections_as_a_terminal_result() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation =
-        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run") };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_result);
@@ -782,7 +785,7 @@ fn explicit_zero_concurrency_reaches_typed_request_validation_error() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
@@ -824,7 +827,7 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut no_logs_operation =
-        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run") };
     let no_logs = scan_run_contract_execution_take_result(&mut no_logs_operation);
     assert!(no_logs.has_result, "{}", no_logs.error.message);
     assert_eq!(
@@ -843,7 +846,7 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
     scan_run_cancellation_cancel(&cancelled);
     // SAFETY: null is the documented representation of an omitted observer.
     let mut cancelled_operation =
-        unsafe { scan_run_contract_execute(&request, &cancelled, std::ptr::null()) };
+        unsafe { scan_run_contract_execute(&request, &cancelled, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run") };
     let cancelled_result = scan_run_contract_execution_take_result(&mut cancelled_operation);
     assert_eq!(
         cancelled_result.result.status,
@@ -947,7 +950,7 @@ fn execute_retains_structured_setup_result_data() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
@@ -1019,7 +1022,7 @@ fn execute_projects_generated_local_ignore_metadata_and_diagnostic_at_the_final_
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
@@ -1070,7 +1073,7 @@ fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_fai
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut initial_operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     assert!(scan_run_contract_execution_has_continuation(
         &initial_operation
@@ -1219,7 +1222,7 @@ fn cxx_continuation_abandons_retained_recovery_without_touching_disk() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut initial_operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let initial = scan_run_contract_execution_take_result(&mut initial_operation);
     assert_eq!(
@@ -1398,7 +1401,7 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
@@ -1739,6 +1742,7 @@ fn an_infrastructure_error_envelope_carries_the_lines_core_rendered() {
         stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
         message: "database unavailable".to_string(),
         path: Some(PathBuf::from("database.db")),
+        observer_delivery_failure: None,
     };
     let expected = display_lines_to_dto(&render_infrastructure_error(&build()));
     let envelope = infrastructure_execution_result_dto(build());
@@ -1895,6 +1899,7 @@ fn a_recovery_required_envelope_carries_the_prompt_core_rendered() {
         cancelled: 0,
         logs: Vec::new(),
         continuation: None,
+        observer_delivery_failure: None,
     };
     let expected = recovery_prompt_to_dto(&render_local_ignore_recovery(None));
     let envelope = success_execution_result_dto(build());
@@ -1920,6 +1925,7 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
         cancelled: 0,
         logs: Vec::new(),
         continuation: None,
+        observer_delivery_failure: None,
     });
 
     assert!(!result.has_recovery_prompt);
@@ -1930,6 +1936,7 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
         stage: contract::InfrastructureErrorStage::Discovery,
         message: "discovery failed".to_string(),
         path: None,
+        observer_delivery_failure: None,
     });
     assert!(!failed.has_recovery_prompt);
     assert!(!empty_execution_result_dto().has_recovery_prompt);
@@ -2111,7 +2118,7 @@ fn paused_cxx_run(log_name: &str) -> PausedCxxRun {
     let cancellation = scan_run_cancellation_new();
     // SAFETY: null is the documented representation of an omitted observer.
     let mut execution =
-        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run") };
     let initial = scan_run_contract_execution_take_result(&mut execution);
     assert_eq!(
         initial.result.status,
@@ -2146,7 +2153,7 @@ fn settle(
     decision: Option<ffi::ScanRunLocalIgnoreRecoveryDecision>,
 ) -> ffi::ScanRunContractExecutionResult {
     // SAFETY: null is the documented representation of an omitted observer.
-    unsafe { scan_run_pending_recovery_settle(pending, settlement(decision), std::ptr::null()) }
+    unsafe { scan_run_pending_recovery_settle(pending, settlement(decision), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun) }
         .expect("an in-range settlement should reach an envelope")
 }
 
@@ -2216,7 +2223,7 @@ fn cxx_execution_without_a_pause_offers_no_pending_recovery() {
         .expect("valid request should be constructible");
     // SAFETY: null is the documented representation of an omitted observer.
     let mut execution = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
 
     assert!(!scan_run_contract_execution_has_pending_recovery(&execution));
@@ -2357,7 +2364,7 @@ fn cxx_settling_rejects_an_out_of_range_decision_without_claiming() {
     };
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let error = unsafe { scan_run_pending_recovery_settle(&pending, invalid, std::ptr::null()) }
+    let error = unsafe { scan_run_pending_recovery_settle(&pending, invalid, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun) }
         .err()
         .expect("an unknown recovery decision must be rejected");
     assert!(error.contains("unsupported ScanRunLocalIgnoreRecoveryDecision discriminant"));
@@ -2368,7 +2375,119 @@ fn cxx_settling_rejects_an_out_of_range_decision_without_claiming() {
         decision: ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX },
     };
     // SAFETY: null is the documented representation of an omitted observer.
-    let settled = unsafe { scan_run_pending_recovery_settle(&pending, ignored, std::ptr::null()) }
+    let settled = unsafe { scan_run_pending_recovery_settle(&pending, ignored, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun) }
         .expect("no decision has nothing out of range to reject");
+    assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
+}
+
+// --- Observer delivery failure ---------------------------------------------------------
+//
+// `ScanRunObserver` is a C++ virtual class Rust cannot implement, so the C++ suites own the
+// end-to-end delivery tests. These pin the envelope projection and the policy mapping.
+
+#[test]
+/// A delivery failure Rust reports crosses on the envelope, whatever its payload.
+fn the_envelope_reports_a_delivery_failure_from_a_result_or_an_infrastructure_error() {
+    let failure = || Some(contract::ObserverDeliveryFailure::new("progress view lost"));
+    let completed = success_execution_result_dto(contract::RunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        effective_concurrency: None,
+        message: None,
+        total: 0,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+        continuation: None,
+        observer_delivery_failure: failure(),
+    });
+    assert!(completed.has_observer_delivery_failure);
+    assert_eq!(
+        completed.observer_delivery_failure_message,
+        "progress view lost"
+    );
+
+    let failed = infrastructure_execution_result_dto(contract::InfrastructureError {
+        stage: contract::InfrastructureErrorStage::Intake,
+        message: "intake failed".to_string(),
+        path: None,
+        observer_delivery_failure: failure(),
+    });
+    assert!(failed.has_observer_delivery_failure);
+    assert_eq!(failed.observer_delivery_failure_message, "progress view lost");
+
+    let empty = empty_execution_result_dto();
+    assert!(!empty.has_observer_delivery_failure);
+    assert!(empty.observer_delivery_failure_message.is_empty());
+}
+
+#[test]
+/// An envelope whose run delivered every event reports no delivery failure.
+fn the_envelope_reports_no_delivery_failure_when_none_happened() {
+    let request = scan_run_request_targeted(&sample_configuration(), &sample_targeted_source())
+        .expect("sample request should be constructible");
+    let cancellation = scan_run_cancellation_new();
+    scan_run_cancellation_cancel(&cancellation);
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut operation = unsafe {
+        scan_run_contract_execute(
+            &request,
+            &cancellation,
+            std::ptr::null(),
+            ffi::ScanRunObserverFailurePolicy::CancelRun,
+        )
+    }
+    .expect("a valid policy should run");
+    let envelope = scan_run_contract_execution_take_result(&mut operation);
+    assert!(!envelope.has_observer_delivery_failure);
+    assert!(envelope.observer_delivery_failure_message.is_empty());
+}
+
+#[test]
+/// An out-of-range policy is rejected before the run starts or the pending recovery is spent.
+fn an_out_of_range_observer_failure_policy_is_rejected_before_anything_runs() {
+    let request = scan_run_request_targeted(&sample_configuration(), &sample_targeted_source())
+        .expect("sample request should be constructible");
+    let invalid = ffi::ScanRunObserverFailurePolicy { repr: u8::MAX };
+    // SAFETY: null is the documented representation of an omitted observer.
+    let error = unsafe {
+        scan_run_contract_execute(
+            &request,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+            invalid,
+        )
+    }
+    .err()
+    .expect("an unknown policy must be rejected");
+    assert!(error.contains("unsupported ScanRunObserverFailurePolicy discriminant"));
+
+    let mut paused = paused_cxx_run("crash-bridge-settle-invalid-policy.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+    let no_decision = || ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: false,
+        decision: ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+    };
+    // SAFETY: null is the documented representation of an omitted observer.
+    let rejected =
+        unsafe { scan_run_pending_recovery_settle(&pending, no_decision(), std::ptr::null(), invalid) }
+            .err()
+            .expect("an unknown policy must be rejected when settling");
+    assert!(rejected.contains("unsupported ScanRunObserverFailurePolicy discriminant"));
+    // Nothing was claimed, so the pending recovery still settles.
+    // SAFETY: null is the documented representation of an omitted observer.
+    let settled = unsafe {
+        scan_run_pending_recovery_settle(
+            &pending,
+            no_decision(),
+            std::ptr::null(),
+            ffi::ScanRunObserverFailurePolicy::ContinueRun,
+        )
+    }
+    .expect("a valid policy should settle");
     assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
 }

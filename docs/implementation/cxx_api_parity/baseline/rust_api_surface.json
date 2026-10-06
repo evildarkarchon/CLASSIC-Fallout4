@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T11:10:28Z",
+  "generated_at_utc": "2026-10-06T12:25:35Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -7377,6 +7377,21 @@
       "coreRustSymbol": "LocalIgnoreRunState"
     },
     {
+      "id": "656ed53c286370a4",
+      "rustSymbol": "ScanRunObserverFailurePolicy",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "ContinueRun",
+        "CancelRun"
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ObserverFailurePolicy"
+    },
+    {
       "id": "792f70658ed4adf9",
       "rustSymbol": "classify_crash_pattern",
       "kind": "function",
@@ -7813,7 +7828,7 @@
             "type": "&ScanRunContractEvent"
           }
         ],
-        "returnType": null
+        "returnType": "ScanRunObserverDelivery"
       },
       "unmappedReason": "Foreign C++ ScanRunObserver callback declaration used only to transport serialized Rust events across CXX; it is not a Rust core symbol."
     },
@@ -8136,9 +8151,13 @@
           {
             "name": "observer",
             "type": "*const ScanRunObserver"
+          },
+          {
+            "name": "observer_failure_policy",
+            "type": "ScanRunObserverFailurePolicy"
           }
         ],
-        "returnType": "Box<ScanRunContractExecution>"
+        "returnType": "Result<Box<ScanRunContractExecution>>"
       },
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
@@ -8444,6 +8463,10 @@
           {
             "name": "observer",
             "type": "*const ScanRunObserver"
+          },
+          {
+            "name": "observer_failure_policy",
+            "type": "ScanRunObserverFailurePolicy"
           }
         ],
         "returnType": "Result<ScanRunContractExecutionResult>"
@@ -10451,6 +10474,14 @@
         {
           "name": "recovery_prompt",
           "type": "ScanRunRecoveryPrompt"
+        },
+        {
+          "name": "has_observer_delivery_failure",
+          "type": "bool"
+        },
+        {
+          "name": "observer_delivery_failure_message",
+          "type": "String"
         }
       ],
       "ownerModule": "scanlog",
@@ -11030,6 +11061,27 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "LocalIgnoreResetRunData"
+    },
+    {
+      "id": "82e5222be05096af",
+      "rustSymbol": "ScanRunObserverDelivery",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "failed",
+          "type": "bool"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ObserverDeliveryFailure"
     },
     {
       "id": "92ccebfd8d784717",

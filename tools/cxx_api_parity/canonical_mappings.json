@@ -5944,6 +5944,24 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "PendingRecovery"
+    },
+    {
+      "id": "656ed53c286370a4",
+      "rustSymbol": "ScanRunObserverFailurePolicy",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ObserverFailurePolicy"
+    },
+    {
+      "id": "82e5222be05096af",
+      "rustSymbol": "ScanRunObserverDelivery",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ObserverDeliveryFailure"
     }
   ]
 }

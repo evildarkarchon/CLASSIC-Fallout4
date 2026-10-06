@@ -673,7 +673,9 @@ CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& r
                                                 const scanner::ScanRunObserver* observer,
                                                 const CliLocalIgnoreRecoveryPrompt& prompt) {
     CliScanRunExecutionOutcome outcome{};
-    auto operation = scanner::scan_run_contract_execute(request, cancellation.token(), observer);
+    // The CLI has always stopped a run whose progress presentation failed, so it asks Rust to.
+    auto operation = scanner::scan_run_contract_execute(request, cancellation.token(), observer,
+                                                        scanner::ScanRunObserverFailurePolicy::CancelRun);
     const bool has_continuation = scanner::scan_run_contract_execution_has_continuation(*operation);
     outcome.execution = scanner::scan_run_contract_execution_take_result(*operation);
 
