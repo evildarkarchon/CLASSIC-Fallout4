@@ -1338,7 +1338,9 @@ fn update_preview_to_py(preview: UserSettingsUpdatePreview) -> PyUserSettingsUpd
 }
 
 /// Converts ordered core update diagnostics, rejecting or not, into Python values.
-fn update_diagnostics_to_py(diagnostics: &[UpdateDiagnostic]) -> Vec<PyUserSettingsUpdateDiagnostic> {
+fn update_diagnostics_to_py(
+    diagnostics: &[UpdateDiagnostic],
+) -> Vec<PyUserSettingsUpdateDiagnostic> {
     diagnostics
         .iter()
         .map(|diagnostic| PyUserSettingsUpdateDiagnostic {
