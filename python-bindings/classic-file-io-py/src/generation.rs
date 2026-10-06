@@ -1,7 +1,7 @@
 //! Python bindings for file generation
 
+use classic_config_core::generation::{FileGenerator, FileGeneratorConfig};
 use classic_file_io_core::FileIOError;
-use classic_file_io_core::generation::{FileGenerator, FileGeneratorConfig};
 use pyo3::exceptions::{PyIOError, PyPermissionError, PyRuntimeError};
 use pyo3::prelude::*;
 use std::path::PathBuf;
@@ -196,7 +196,7 @@ pub fn generate_ignore_file_async<'py>(
     content: String,
 ) -> PyResult<Bound<'py, PyAny>> {
     pyo3_async_runtimes::tokio::future_into_py(py, async move {
-        classic_file_io_core::generation::generate_ignore_file(content)
+        classic_config_core::generation::generate_ignore_file(content)
             .await
             .map_err(convert_file_io_error)
     })
@@ -229,7 +229,7 @@ pub fn generate_local_yaml_async<'py>(
     game_name: String,
 ) -> PyResult<Bound<'py, PyAny>> {
     pyo3_async_runtimes::tokio::future_into_py(py, async move {
-        classic_file_io_core::generation::generate_local_yaml(content, game_name)
+        classic_config_core::generation::generate_local_yaml(content, game_name)
             .await
             .map_err(convert_file_io_error)
     })

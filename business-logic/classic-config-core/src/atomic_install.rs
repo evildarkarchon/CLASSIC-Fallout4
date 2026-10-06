@@ -7,6 +7,17 @@
 //! via an atomic rename while the previous copy is preserved as `<target>.prev`
 //! for one-step rollback.
 //!
+//! # Ownership
+//!
+//! YAML Data install, rollback, and self-heal policy belongs to config, which
+//! also owns the YAML cache location these operations write into and the
+//! shippable loader that self-heals on every read (#248). The module moved
+//! here from `classic-file-io-core`; `classic_file_io_core::install_atomic`
+//! and its siblings no longer exist, and file I/O does not re-export them
+//! because config depends on file I/O and the re-export would close a cycle.
+//! The error type stays [`FileIOError`] so the published error codes and
+//! every binding's projection of them are unchanged by the move.
+//!
 //! # Flow
 //!
 //! [`install_atomic`] validates what only this module can know, then hands the
@@ -21,8 +32,8 @@
 //!    lock, verifies the digest case-insensitively, deletes `source_tmp` and
 //!    aborts on mismatch, synchronizes the staged bytes, rotates `<target>` to
 //!    `<target>.prev`, and moves `source_tmp` onto `target`.
-//! 3. Map the neutral publication failure back onto this crate's published
-//!    error codes, which are unchanged by that move.
+//! 3. Map the neutral publication failure back onto the published
+//!    [`FileIOError`] codes, which are unchanged by that move.
 //!
 //! The rollback generation is the shared module's, not this module's: `.prev`
 //! is reachable only through `install_verified`, which is what keeps ADR-0006's
@@ -64,8 +75,8 @@
 //! gets it from the [`LockPolicy`] it passes in; rollback and self-heal publish
 //! nothing but move the same files, so they acquire the same policy directly.
 
-use crate::error::FileIOError;
 use classic_durable_publication::{self as durable_publication, LockPolicy, PublicationLock};
+use classic_file_io_core::FileIOError;
 use std::path::{Path, PathBuf};
 
 /// Outcome of a successful [`install_atomic`] call.
@@ -154,7 +165,7 @@ fn acquire_install_lock(target: &Path) -> Result<PublicationLock, FileIOError> {
         })
 }
 
-/// Map a neutral durable-publication failure onto this crate's published codes.
+/// Map a neutral durable-publication failure onto the published [`FileIOError`] codes.
 ///
 /// The published error surface of [`install_atomic`] is unchanged by moving
 /// onto the shared module, so this is a translation of an existing contract
@@ -267,7 +278,7 @@ pub fn install_atomic(
     // one-shot install must not perturb the process-global hash cache that
     // dedicated cache tests assert on — and it now holds structurally rather
     // than by remembering to call the uncached entry point: the shared module
-    // knows nothing about this crate's cache and streams the digest itself.
+    // knows nothing about file I/O's hash cache and streams the digest itself.
     let install = durable_publication::install_verified(
         target,
         source_tmp,

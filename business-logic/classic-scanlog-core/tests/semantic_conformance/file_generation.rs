@@ -2,7 +2,7 @@
 
 use super::file_operations::{destination, files};
 use super::{RunnerResult, invalid, text};
-use classic_file_io_core::generation::{
+use classic_config_core::generation::{
     FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
 };
 use serde_json::{Value, json};

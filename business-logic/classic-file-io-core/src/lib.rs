@@ -12,20 +12,23 @@
 //! - Multi-level caching
 //! - Encoding detection
 //! - SHA256 file hashing with caching
-//! - Configuration file generation (Phase 5)
+//!
+//! Ignore/Local YAML generation and the YAML Data install, rollback, and
+//! self-heal operations are owned by `classic-config-core` (#248).
 
-pub mod atomic_install;
 pub mod core;
 pub mod dds;
 pub mod encoding;
 pub mod error;
-pub mod generation;
 pub mod hash;
 pub mod similarity;
 
-pub use atomic_install::{
-    InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal,
-};
+// YAML Data install/rollback/self-heal (`install_atomic`, `rollback`,
+// `self_heal`, and their outcomes) and Ignore/Local YAML generation
+// (`FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file`,
+// `generate_local_yaml`) are owned by classic-config-core (#248). No re-export
+// here: config depends on file I/O, so a re-export would close a dependency
+// cycle.
 // The game-target backup (`BackupManager`, `BackupType`, `BackupInfo`) and
 // game-file operations (`GameFilesManager`, `FileOperation`,
 // `FileOperationResult`) are owned by classic-resource-core (#250). No
@@ -38,9 +41,6 @@ pub use dds::DDSHeader;
 // file I/O, so a re-export would close a dependency cycle.
 pub use encoding::EncodingDetector;
 pub use error::FileIOError;
-pub use generation::{
-    FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
-};
 pub use hash::{FileHashScope, FileHasher};
 // Crash Log collection and Targeted input resolution are owned by
 // classic-scanlog-core (#254). No re-export here: scanlog depends on file I/O,

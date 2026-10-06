@@ -2164,7 +2164,7 @@
       "rustSymbol": "generate_local_yaml",
       "nodeExport": "generateLocalYaml",
       "nodeKind": "function",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-settings-cache-stats-interface",
@@ -2982,7 +2982,7 @@
       "rustSymbol": "FileGenerator",
       "nodeExport": "JsFileGenerator",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "aux-phase4a-js-file-i-o",
@@ -3135,7 +3135,7 @@
       "rustSymbol": "generate_ignore_file",
       "nodeExport": "generateIgnoreFile",
       "nodeKind": "function",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "aux-phase4a-get-metrics-summary",
@@ -5991,7 +5991,7 @@
       "id": "file_io.FileGeneratorConfig@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "FileGeneratorConfig@rust",
       "rustKind": "reexport"
     },
@@ -6087,7 +6087,7 @@
       "id": "file_io.generate_local_yaml@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "generate_local_yaml@rust",
       "rustKind": "reexport"
     },
@@ -6095,7 +6095,7 @@
       "id": "file_io.generation@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "generation@rust",
       "rustKind": "module"
     },

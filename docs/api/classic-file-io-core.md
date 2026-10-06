@@ -7,7 +7,9 @@ Crate metadata:
 - Crate: `classic-file-io-core`
 - Description: `Pure Rust file I/O operations for CLASSIC (no PyO3)`
 
-This crate is the shared Rust file-system utility layer for CLASSIC business-logic crates. It combines async text and byte I/O, directory walking, DDS header parsing, hash utilities, and config-file generation helpers in one crate.
+This crate is the shared Rust file-system utility layer for CLASSIC business-logic crates. It combines async text and byte I/O, directory walking, DDS header parsing, and hash utilities in one crate.
+
+YAML Data install, rollback, and self-heal (`install_atomic`, `rollback`, `self_heal`, `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome`) and Ignore/Local YAML generation (`FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file`, `generate_local_yaml`) moved to [`classic-config-core`](classic-config-core.md#yaml-data-install-rollback-self-heal-and-generation) (#248). The old `classic_file_io_core::atomic_install` and `classic_file_io_core::generation` modules and their root re-exports are gone, with no forwarding re-export: config depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_config_core` (root, `atomic_install`, or `generation` module). The moved APIs still return this crate's `FileIOError`, so error codes and binding projections are unchanged. With that path gone, this crate no longer depends on `classic-durable-publication`.
 
 The game-target backup (`BackupManager`, `BackupType`, `BackupInfo`) and game-file operations (`GameFilesManager`, `FileOperation`, `FileOperationResult`) moved to [`classic-resource-core`](classic-resource-core.md#game-target-backup-and-game-file-operations) (#250). The old `classic_file_io_core::backup` and `classic_file_io_core::game_files` modules and their root re-exports are gone, with no forwarding re-export: resource depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_resource_core`. The moved APIs still report failures as this crate's `FileIOError`.
 
@@ -29,7 +31,7 @@ Use this crate when you need to:
 - batch-read or batch-write files with bounded async concurrency
 - walk directories or normalize cached path values
 - parse DDS headers (game-target DDS validation is owned by `classic-resource-core`)
-- hash files, compare file similarity, or generate default CLASSIC support files
+- hash files or compare file similarity
 
 Do not use this crate for:
 
@@ -37,6 +39,7 @@ Do not use this crate for:
 - YAML schema parsing or config modeling
 - scanlog analysis logic
 - Crash Log collection or Targeted input resolution (owned by `classic-scanlog-core`)
+- YAML Data install/rollback/self-heal or Ignore/Local YAML generation (owned by `classic-config-core`)
 - game-target backup or game-file backup/restore/remove operations (owned by `classic-resource-core`)
 - database lookup logic
 - binding-specific wrapper APIs
@@ -62,17 +65,6 @@ Shared file-I/O error model.
 - `FileIOError` - typed error enum used by most crate APIs
 - `error::Result<T>` - module-local alias for `Result<T, FileIOError>`
 
-### `atomic_install`
-
-YAML Data Update Channel install, rollback, and self-heal over a `<target>.prev` rollback generation.
-
-- `install_atomic` - digest-verified install of an already-downloaded file, preserving the replaced copy as `<target>.prev`
-- `rollback` - swap `<target>` with `<target>.prev`, or promote `.prev` when the target is missing
-- `self_heal` - strict subset of `rollback` that only promotes `.prev` when the target is missing; the shape every-read callers must use
-- `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome` - the returned outcomes
-
-The durability sequence underneath `install_atomic` is not implemented here. It comes from [`classic-durable-publication`](classic-durable-publication.md)'s `install_verified`, which owns the digest verification, the staged-file synchronization, the `.prev` rotation, and the install lock. This module keeps what only it can know: that the staged file lives in the target's own directory, and how a neutral publication failure maps onto `FileIOError`. `rollback` and `self_heal` publish nothing, but take the same lock through the same module so they cannot interleave with an install.
-
 ### `encoding`
 
 Text decoding support.
@@ -94,13 +86,6 @@ File hashing helpers.
 - `FileHasher` - SHA256 hashing with a process default cache and Rayon batch helpers
 - `FileHashScope` - opaque handle to one hash-cache store and its statistics, for callers that need their own cache
 
-### `generation`
-
-Default CLASSIC file generation.
-
-- `FileGeneratorConfig` and `FileGenerator`
-- `generate_ignore_file()`
-- `generate_local_yaml()`
 
 ### `similarity`
 
@@ -288,34 +273,9 @@ cannot change `classic_file_io`'s or `classic_scangame`'s caches or statistics;
 a Python facade that later needs hash-cache controls must select its own
 isolated scope rather than expose the default one.
 
-## File generation and similarity helpers
+## Similarity helpers
 
-`FileGeneratorConfig` has three public fields:
-
-- `ignore_file_content`
-- `local_yaml_content`
-- `game_name`
-
-`FileGenerator` methods:
-
-- `FileGenerator::new(config)`
-- `generate_ignore_file_async() -> Result<bool, FileIOError>`
-- `generate_local_yaml_async() -> Result<bool, FileIOError>`
-- `generate_all_files_async() -> Result<(bool, bool), FileIOError>`
-- `ignore_file_path()`
-- `local_yaml_path()`
-- `config()`
-
-Standalone helpers:
-
-- `generate_ignore_file(content)`
-- `generate_local_yaml(content, game_name)`
-
-Semantics visible in source:
-
-- these helpers write to the current working directory
-- returning `false` means the target file already existed and was left unchanged
-- `generate_all_files_async()` uses `tokio::try_join!`, so one generation error fails the combined call
+Ignore/Local YAML generation is documented in [`classic-config-core`](classic-config-core.md#yaml-data-install-rollback-self-heal-and-generation).
 
 Similarity helpers:
 
@@ -377,10 +337,9 @@ The crate uses a few different error styles depending on API family.
 Most operational APIs use `FileIOError`, including:
 
 - `FileIOCore`
-- `FileGenerator` and the standalone generation helpers
 - `FileHasher`
 
-`FileIOError` is also the error type of APIs that moved out of this crate and kept it so binding error projections stay unchanged: scanlog core's Crash Log collection and resource core's `BackupManager` and `GameFilesManager`.
+`FileIOError` is also the error type of APIs that moved out of this crate and kept it so binding error projections stay unchanged: scanlog core's Crash Log collection, resource core's `BackupManager` and `GameFilesManager`, and config core's YAML Data install/rollback/self-heal and Ignore/Local YAML generation.
 
 ## Fail-soft APIs
 
@@ -403,7 +362,7 @@ That split matters for contributors: this crate mixes strict top-level I/O error
 
 This crate exposes async APIs but does not create its own runtime.
 
-- async entry points include most of `FileIOCore` and all generation helpers
+- async entry points include most of `FileIOCore`
 - synchronous helpers still exist where they fit better, including `walk_directory()`, `stream_lines_sync()`, `FileHasher`, `DDSHeader::from_bytes()`, and similarity helpers
 - the crate depends on Tokio but does not construct or export a runtime, and it no longer depends on `classic-operation-context`: scoped discovery cancellation moved with Crash Log collection to `classic-scanlog-core`
 - that matches the repo rule that runtime ownership stays outside low-level crates and should remain compatible with the shared CLASSIC runtime model
@@ -426,7 +385,6 @@ Contributor rule: keep runtime ownership outside this crate. If you add new asyn
 
 Important direct dependencies:
 
-- [`classic-durable-publication`](classic-durable-publication.md) - unpublished **Durable Publication** module that owns the `atomic_install` durability sequence, the `.prev` rollback generation, and the one cross-process install lock; `atomic_install` is its only user here (the game-file policy that moved to resource core in #250 never used it)
 - `tokio` and `futures` - async file operations and bounded batch concurrency
 - `memmap2` - large-file memory-mapped reads
 - `quick_cache`, `dashmap`, `parking_lot`, and `lru` - caching and shared-state primitives
@@ -441,14 +399,14 @@ Related CLASSIC crates:
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer of `FileIOCore` for reading crash logs and writing `-AUTOSCAN.md` reports, and owner of Crash Log collection and Targeted input resolution
 - [`classic-resource-core`](classic-resource-core.md) - downstream owner of game-target DDS rules applied to this crate's `DDSHeader`
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - downstream consumer of file I/O helpers for game-file checks
-- [`classic-config-core`](../../business-logic/classic-config-core) - neighboring loader crate; both participate in file-backed business logic but at different layers
+- [`classic-config-core`](classic-config-core.md) - downstream owner of YAML Data install/rollback/self-heal and Ignore/Local YAML generation, which return this crate's `FileIOError`
 - [`classic-resource-core`](classic-resource-core.md) - downstream owner of the game-target backup and game-file operations, which return this crate's `FileIOError`
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that depend on stable higher-level behavior built on top of these helpers
 
 Source-observed notes:
 
 - `Cargo.toml` declares a dependency on [`classic-shared-core`](../../foundation/classic-shared-core), but the current `src/` files do not visibly expose or call shared-runtime APIs directly.
-- The crate has no `classic-xse-core` or `classic-operation-context` dependency; `tests/dependency_boundary.rs` guards that inward boundary.
+- The crate has no `classic-xse-core`, `classic-operation-context`, or `classic-durable-publication` dependency; `tests/dependency_boundary.rs` guards that inward boundary.
 
 ---
 
@@ -504,4 +462,3 @@ If you extend this crate, update this document when you change:
 - cache invalidation or freshness rules
 - file-read decoding behavior or mmap thresholds
 - batch ordering or concurrency behavior
-- generated-file paths

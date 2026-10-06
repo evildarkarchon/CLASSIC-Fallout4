@@ -20,7 +20,9 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # App-notification cache location
 classic-path-core = { path = "../classic-path-core" }
 # YAML update delivery dependencies. Config owns the per-user YAML cache
-# location, the shippable schema ranges, and Installed YAML Data inspection.
+# location, the shippable schema ranges, Installed YAML Data inspection, and
+# the verified install / one-step rollback operations (#248). File I/O
+# supplies only `FileIOError`, the typed error those operations return.
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-config-core = { path = "../classic-config-core" }
 
