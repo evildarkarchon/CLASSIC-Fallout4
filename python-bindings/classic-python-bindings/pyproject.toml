@@ -1,0 +1,38 @@
+[build-system]
+requires = ["maturin>=1.15.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "classic-python-bindings"
+description = "CLASSIC Python bindings: one native extension behind the 18 classic_* direct-import modules"
+requires-python = ">=3.12"
+dynamic = ["version"]
+
+[tool.maturin]
+# One native extension, private to the wheel. Its 18 submodules are the
+# canonical home of every native class, function, and exception.
+module-name = "_classic_native._native"
+python-source = "python"
+# The 18 direct-import facades. Each re-exports its names from
+# `_classic_native._native.<facade>`; each carries its maintained stub
+# (`__init__.pyi`) and a `py.typed` marker.
+python-packages = [
+    "classic_config",
+    "classic_database",
+    "classic_file_io",
+    "classic_message",
+    "classic_path",
+    "classic_perf",
+    "classic_registry",
+    "classic_resource",
+    "classic_scangame",
+    "classic_scanlog",
+    "classic_settings",
+    "classic_shared",
+    "classic_update",
+    "classic_user_settings",
+    "classic_version",
+    "classic_version_registry",
+    "classic_web",
+    "classic_xse",
+]
