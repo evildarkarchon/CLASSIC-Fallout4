@@ -9,9 +9,9 @@
 //!   (see [`fetch_yaml_manifest`]).
 //! - Downloading each advertised YAML file to the per-user yaml-cache
 //!   directory and installing it atomically via
-//!   [`classic_file_io_core::install_atomic`].
+//!   [`classic_config_core::install_atomic`].
 //! - Rolling back one installed generation via
-//!   [`classic_file_io_core::rollback`].
+//!   [`classic_config_core::rollback`].
 //!
 //! # No client credentials
 //!
@@ -57,8 +57,9 @@ use classic_config_core::{
     InstalledYamlDataInspection, InstalledYamlDataInspectionRequest, client_schemas,
     inspect_installed_yaml_data, inspect_installed_yaml_data_with_env,
 };
+use classic_config_core::{RollbackOutcome as FsRollbackOutcome, install_atomic};
 use classic_config_core::{ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env};
-use classic_file_io_core::{FileIOError, RollbackOutcome as FsRollbackOutcome, install_atomic};
+use classic_file_io_core::FileIOError;
 use classic_shared_core::GameId;
 use classic_shared_core::path_core::{PathError, non_empty_env_var};
 use classic_shared_core::yaml::{
@@ -2131,7 +2132,7 @@ pub fn rollback_yaml_update(file_name: &str) -> Result<RollbackOutcome> {
     let target = cache_dir.join(file_name);
     ensure_path_in_cache(&cache_dir, &target)?;
 
-    match classic_file_io_core::rollback(&target).map_err(|e| {
+    match classic_config_core::rollback(&target).map_err(|e| {
         UpdateError::Generic(format!("rollback failed for {}: {e}", target.display()))
     })? {
         FsRollbackOutcome::RolledBack { .. } => Ok(RollbackOutcome::RolledBack {
