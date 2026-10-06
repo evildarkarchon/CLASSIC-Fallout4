@@ -11,7 +11,7 @@
 //! - DDS texture validation
 //!
 //! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
-//! For Python bindings, see `classic-scangame-py`.
+//! For Python bindings, see the `classic_scangame` module of `classic-python-bindings`.
 
 use std::fmt::Write as _;
 

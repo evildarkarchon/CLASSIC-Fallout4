@@ -146,19 +146,19 @@ Current shape notes:
 
 ## Python
 
-The active Python public contract is split across per-module binding crates under [`python-bindings/`](../../python-bindings/).
+The active Python public contract is split across the 18 direct-import facades of the one adapter crate [`python-bindings/classic-python-bindings`](../../python-bindings/classic-python-bindings/) (see [`python-bindings-adapter.md`](python-bindings-adapter.md)).
 
 The first contract files to treat as public-facing are:
 
-- [`python-bindings/`](../../python-bindings/) - module root; one `classic-*-py` crate per Python extension module
-- matching `classic_*.pyi` stub files such as [`python-bindings/classic-path-py/classic_path.pyi`](../../python-bindings/classic-path-py/classic_path.pyi) and [`python-bindings/classic-scanlog-py/classic_scanlog.pyi`](../../python-bindings/classic-scanlog-py/classic_scanlog.pyi) - fastest contributor view of exported Python names and signatures
-- matching Rust wrapper sources such as [`python-bindings/classic-path-py/src/lib.rs`](../../python-bindings/classic-path-py/src/lib.rs) and [`python-bindings/classic-scanlog-py/src/lib.rs`](../../python-bindings/classic-scanlog-py/src/lib.rs)
+- [`python-bindings/classic-python-bindings/python/`](../../python-bindings/classic-python-bindings/python/) - one facade package per direct import (`classic_<name>/__init__.py`, whose literal `__all__` names its exports), all re-exporting the one native extension
+- matching `classic_<name>/__init__.pyi` stub files such as [`python-bindings/classic-python-bindings/python/classic_path/__init__.pyi`](../../python-bindings/classic-python-bindings/python/classic_path/__init__.pyi) and [`python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi`](../../python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi) - fastest contributor view of exported Python names and signatures
+- matching Rust wrapper sources such as [`python-bindings/classic-python-bindings/src/classic_path/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_path/mod.rs) and [`python-bindings/classic-python-bindings/src/classic_scanlog/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_scanlog/mod.rs)
 
 Current shape notes:
 
 - Python has no single package-level contract file comparable to Node's `index.d.ts`
-- most Python public surface is crate-shaped: `classic_path`, `classic_scanlog`, `classic_scangame`, `classic_version_registry`, and so on
-- typed User Settings inspection lives in the dedicated `classic_user_settings` module; its contract is [`classic_user_settings.pyi`](../../python-bindings/classic-user-settings-py/classic_user_settings.pyi) and its adapter is [`src/lib.rs`](../../python-bindings/classic-user-settings-py/src/lib.rs). `UserSettingsSnapshot` exposes Update Preferences, Crash Log Scan settings, Game Setup settings, and namespaced Frontend State. `user_settings_published_defaults()` returns that same shape from the Rust registry without requiring a root path or filesystem access. `snapshot.preview_update(UserSettingsUpdate)` returns a non-persisting all-or-nothing ordinary preview, while `snapshot.preview_bootstrap(UserSettingsUpdate)` is the explicit missing-document seam. An accepted preview retains the exact revision-anchored core artifact and exposes `commit(classic_root) -> UserSettingsCommitOutcome`; stale revisions return `status == "conflict"`, while operational publication failures raise `UserSettingsCommitError`
+- most Python public surface is facade-shaped: `classic_path`, `classic_scanlog`, `classic_scangame`, `classic_version_registry`, and so on, each backed by `src/classic_<name>/` in the adapter crate
+- typed User Settings inspection lives in the dedicated `classic_user_settings` module; its contract is [`classic_user_settings.pyi`](../../python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi) and its adapter is [`src/classic_user_settings/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_user_settings/mod.rs). `UserSettingsSnapshot` exposes Update Preferences, Crash Log Scan settings, Game Setup settings, and namespaced Frontend State. `user_settings_published_defaults()` returns that same shape from the Rust registry without requiring a root path or filesystem access. `snapshot.preview_update(UserSettingsUpdate)` returns a non-persisting all-or-nothing ordinary preview, while `snapshot.preview_bootstrap(UserSettingsUpdate)` is the explicit missing-document seam. An accepted preview retains the exact revision-anchored core artifact and exposes `commit(classic_root) -> UserSettingsCommitOutcome`; stale revisions return `status == "conflict"`, while operational publication failures raise `UserSettingsCommitError`
 - `UserSettingsSnapshot.plan_migration()` exposes the same pure planning status, optional immutable plan, explicit major/minor and location endpoints, ordered review changes, exact original/proposed `bytes`, and structured unsupported diagnostics; planning itself never persists
 - `UserSettingsMigrationPlan.reverse_in_memory()` exposes the same exact inverse review operation without reopening the source; `plan.apply(classic_root)` explicitly invokes the retained core plan and returns an applied receipt or conflict outcome
 - `UserSettingsMigrationReceipt` retains the opaque core restore credential while exposing the attested source, destination, backup, endpoints, and revisions; `receipt.restore(classic_root)` returns restored/conflict data, while operational failures raise `UserSettingsMigrationError`
@@ -297,7 +297,7 @@ Check these in order:
 
 1. the matching `.pyi` stub under the relevant `classic-*-py/` crate
 2. the matching `src/lib.rs` for the module-level `#[pymodule]` registration and the primary exported classes/functions
-3. adjacent `src/*.rs` files when a large module is split across multiple wrappers, such as [`python-bindings/classic-scangame-py/src/`](../../python-bindings/classic-scangame-py/src/) or [`python-bindings/classic-scanlog-py/src/`](../../python-bindings/classic-scanlog-py/src/)
+3. adjacent `src/*.rs` files when a large module is split across multiple wrappers, such as [`python-bindings/classic-python-bindings/src/classic_scangame/`](../../python-bindings/classic-python-bindings/src/classic_scangame/) or [`python-bindings/classic-python-bindings/src/classic_scanlog/`](../../python-bindings/classic-python-bindings/src/classic_scanlog/)
 4. the underlying Rust core crate only after you have confirmed the Python wrapper intends to expose that behavior
 
 Useful follow-up artifacts:
@@ -342,7 +342,7 @@ See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate ref
 
 - missing or renamed Node export: start in [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts)
 - wrong Node DTO shape or async/sync behavior: check the owning file in [`node-bindings/classic-node/src/`](../../node-bindings/classic-node/src/)
-- suspect-rule contract questions: start with `classic-node/src/config.rs`, `classic-config-py/src/lib.rs`, and the final scan-run adapter because bindings reshape supplied rule data but do not own scan execution
+- suspect-rule contract questions: start with `classic-node/src/config.rs`, `classic-python-bindings/src/classic_config/mod.rs`, and the final scan-run adapter because bindings reshape supplied rule data but do not own scan execution
 - missing or renamed Python export: start in the module's `.pyi` file
 - Python runtime exports do not match the stub: check the module's `src/lib.rs`, then `stub_validation_report.json`
 - parity gate or coverage report changed unexpectedly: inspect the binding-local `parity-artifacts/` first, then the matching `docs/implementation/*_api_parity/` baseline docs

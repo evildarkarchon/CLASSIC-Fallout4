@@ -270,7 +270,7 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 | CXX bridge first-party helpers (`yaml_data_check_update`, `yaml_data_apply_update`, `yaml_data_rollback_update`) and generic compatibility helpers (`yaml_check_update`, `yaml_apply_update`, `yaml_rollback_update`) | [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) |
 | Typed CXX/Qt User Settings policy snapshot and atomic GUI edit seam | [`cpp-bindings/classic-cpp-bridge/src/settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs), [`classic-gui/src/core/guiusersettings.cpp`](../../classic-gui/src/core/guiusersettings.cpp) |
 | Node bindings first-party helpers (`checkYamlDataUpdate`, `applyYamlDataUpdateWithDecision`, `rollbackYamlDataUpdate`) plus single-file `rollbackYamlUpdate` | [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) |
-| Python bindings (`check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update`) | [`python-bindings/classic-update-py/src/yaml_update.rs`](../../python-bindings/classic-update-py/src/yaml_update.rs) |
+| Python bindings (`check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update`) | [`python-bindings/classic-python-bindings/src/classic_update/yaml_update.rs`](../../python-bindings/classic-python-bindings/src/classic_update/yaml_update.rs) |
 | Publish workflow | [`.github/workflows/publish-yaml-data.yml`](../../.github/workflows/publish-yaml-data.yml) |
 | Publish tooling | [`tools/publish_yaml_data/`](../../tools/publish_yaml_data) |
 | Drift guard | [`tools/schema_version_gate.py`](../../tools/schema_version_gate.py) |

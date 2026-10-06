@@ -8,7 +8,7 @@
 //! # Architecture
 //!
 //! This is the **-core** layer containing pure Rust business logic with NO PyO3 dependencies.
-//! Python bindings are provided separately in `classic-shared-py`.
+//! Python bindings are provided separately by the `classic-python-bindings` adapter crate.
 //!
 //! # The ONE RUNTIME RULE
 //!

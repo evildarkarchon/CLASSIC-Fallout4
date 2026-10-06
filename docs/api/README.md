@@ -40,6 +40,7 @@ Use this directory in this order:
 28. [`binding-parity-overview.md`](binding-parity-overview.md) - complete C++ bridge, Node, and Python binding surface reference for all shared Rust crates
 29. [`cxx-parity-gate.md`](cxx-parity-gate.md) - contributor guide for the CXX parity gate that enumerates the bridge surface from `build.rs` and detects drift against a committed baseline
 30. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
+30a. [`python-bindings-adapter.md`](python-bindings-adapter.md) - the one PyO3 adapter crate and wheel behind the 18 `classic_*` direct imports: layout, canonical identity and pickle contract, per-facade state scopes, shared runtime, install/upgrade hygiene, and parity/stub tooling
 31. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
 32. [`binding-compliance-suite.md`](binding-compliance-suite.md) - canonical umbrella binding gate that maps policy requirements to executable checks and gap reporting
 33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - Crash Log collection, Targeted input resolution, custom-scan folder policy, and crash-log analysis built on top of loaded config data and optional DB lookups

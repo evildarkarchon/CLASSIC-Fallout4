@@ -301,7 +301,7 @@ Important direct dependencies:
 
 Related crates in this repository:
 
-- [`python-bindings/classic-web-py`](../../python-bindings/classic-web-py) - Python wrapper over this crate's public surface
+- [`python-bindings/classic-python-bindings/src/classic_web/`](../../python-bindings/classic-python-bindings/src/classic_web/) - Python wrapper over this crate's public surface
 - [`node-bindings/classic-node/src/web.rs`](../../node-bindings/classic-node/src/web.rs) - Node/N-API wrapper over this crate's public surface
 - [`classic-shared-core`](../../foundation/classic-shared-core) - upstream enum definitions for supported games
 

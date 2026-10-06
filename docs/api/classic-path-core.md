@@ -397,7 +397,7 @@ Related CLASSIC crates and consumers:
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - owns the custom-scan folder policy and composes `validate_game_and_documents_paths()` into its combined `validate_settings_paths()`
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder` and the documents checker for C++ interop
 - [`classic-update-core`](../../business-logic/classic-update-core) - consumes the app-notification cache directory (the YAML Data cache directory is config-owned since issue #246)
-- [`classic-node`](../../node-bindings/classic-node) and [`classic-path-py`](../../python-bindings/classic-path-py) - binding surfaces over this crate's APIs
+- [`classic-node`](../../node-bindings/classic-node) and [`classic_path` adapter module](../../python-bindings/classic-python-bindings/src/classic_path/) - binding surfaces over this crate's APIs
 - [`classic-tui`](../../ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
 
 In practice, `classic-path-core` sits between config-driven path settings and higher-level scan/setup orchestration.

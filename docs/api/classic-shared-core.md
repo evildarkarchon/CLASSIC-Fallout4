@@ -354,13 +354,13 @@ The root holds no `CLASSIC/...` subdirectory policy; each cache owner joins its 
 
 ## `PerformanceMetrics`, `Timer`, and helpers
 
-`performance_core` is the single, constant-memory timing implementation. C++, Node, and both Python performance views (`classic_perf` through `classic-perf-py`, and `classic_shared.RustPerformanceMonitor`) all record into it.
+`performance_core` is the single, constant-memory timing implementation. C++, Node, and both Python performance views (`classic_perf` and `classic_shared.RustPerformanceMonitor`, both in the one Python adapter) all record into it.
 
 The former `classic-perf-core` crate, a seconds-view re-export facade over this module, was retired in issue #256. Its `classic_perf_core::*` import paths end with no forwarding shim; Rust callers import `classic_shared_core::performance_core` directly. The CXX, Node, and Python parity contracts name `classic-shared-core` as the owning Rust crate for every timing row; do not restore `classic-perf-core` as an owner during a baseline refresh.
 
 ### Default store
 
-There is **one default observable store per linked library image**: `get_global_metrics()`, the seconds/milliseconds free functions, and `Timer` all read and clear the same timing and byte state. A `PerformanceMetrics::new()` value owns independent state that the default store never sees. The C++ bridge and Node addon each link their own image and therefore their own default. Today `classic_perf` and `classic_shared` are separate Python extension images with separate stores; the single-wheel adapter (issue #259) puts them in one image.
+There is **one default observable store per linked library image**: `get_global_metrics()`, the seconds/milliseconds free functions, and `Timer` all read and clear the same timing and byte state. A `PerformanceMetrics::new()` value owns independent state that the default store never sees. The C++ bridge and Node addon each link their own image and therefore their own default. The one Python adapter (issue #259) links `classic_perf` and `classic_shared` into one image, so they share its default store: a timing recorded through either facade appears in the other's view (`classic_perf` in seconds, `RustPerformanceMonitor` in milliseconds and bytes), and clearing through either clears timing and byte state for both. Probes: `python-bindings/tests/test_one_wheel_facades.py`.
 
 ### Sample contract
 
@@ -378,7 +378,7 @@ There is **one default observable store per linked library image**: `get_global_
 |---|---|---|---|
 | [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) (`classic::perf`) | `perf_record_timing -> Result<()>`, `perf_get_summary`, `perf_clear_metrics`, `perf_get_operation_count`, `perf_get_operation_average` | seconds | `rust::Error`, message begins with the stable token |
 | [`classic-node`](../../node-bindings/classic-node/src/shared.rs) | `recordTimingMetric`, `getMetricsSummary`, `clearAllMetrics` | milliseconds | `Error` with `code === "InvalidArg"`, message begins with the stable token |
-| [`classic-perf-py`](../../python-bindings/classic-perf-py/src/lib.rs) (`classic_perf`) | `record_timing`, `get_summary`, `clear_metrics`, `reset_metrics`, `Timer`, `start_timer`, `MetricsSummary` | seconds | `ValueError`, message begins with the stable token |
+| [`classic_perf` adapter module](../../python-bindings/classic-python-bindings/src/classic_perf/mod.rs) (`classic_perf`) | `record_timing`, `get_summary`, `clear_metrics`, `reset_metrics`, `Timer`, `start_timer`, `MetricsSummary` | seconds | `ValueError`, message begins with the stable token |
 
 Missing operations keep their existing projections: absent from summary maps, and `0` / `0.0` from the CXX numeric accessors.
 
@@ -521,7 +521,7 @@ Source-observed limitation:
 
 `classic_shared_core::yaml` is the single owner of CLASSIC's domain-neutral YAML rules. The generic rules and logical-key cache moved here from `classic-settings-core` in issue #239, and `YamlOperations` with its path/mtime-aware YAML-file cache followed in issue #240.
 
-The former `classic-settings-core` crate, a re-export facade over this module, was retired in issue #257. Its `classic_settings_core::*` import paths, including `classic_settings_core::validators::*`, end with no forwarding shim; Rust callers import `classic_shared_core::yaml` directly (for example `classic_shared_core::yaml::validators::SettingType`). The CXX, Node, and Python parity contracts name `classic-shared-core` as the owning Rust crate for every generic YAML, `YamlOperations`, YAML-file cache, and validator row, including the Rust-only `settings.*@rust` / `yaml.*@rust` proxy rows; do not restore `classic-settings-core` as an owner during a baseline refresh. The `classic-settings-py` Python package and the Node/CXX `settings` modules keep their published names and call this module directly.
+The former `classic-settings-core` crate, a re-export facade over this module, was retired in issue #257. Its `classic_settings_core::*` import paths, including `classic_settings_core::validators::*`, end with no forwarding shim; Rust callers import `classic_shared_core::yaml` directly (for example `classic_shared_core::yaml::validators::SettingType`). The CXX, Node, and Python parity contracts name `classic-shared-core` as the owning Rust crate for every generic YAML, `YamlOperations`, YAML-file cache, and validator row, including the Rust-only `settings.*@rust` / `yaml.*@rust` proxy rows; do not restore `classic-settings-core` as an owner during a baseline refresh. The `classic_settings` Python facade and the Node/CXX `settings` modules keep their published names and call this module directly.
 
 Everything is reached through the module path, for example `classic_shared_core::yaml::load_yaml_sync` or `classic_shared_core::yaml::validators::SettingType`. Nothing from `yaml` is re-exported at the crate root, which keeps `yaml::Result` from colliding with other crate-root names.
 
@@ -652,7 +652,7 @@ Both caches keep their state behind an opaque, cheaply cloneable scope handle: `
 - Clones of a handle name the same store; `==` compares store identity (not contents). `Debug` reports only whether the handle is the default scope and its entry count.
 - Scopes are never selected from thread-local or task-local state. A caller passes the handle explicitly (or moves a clone into an `async` block), so async work keeps its scope regardless of which runtime thread resumes it.
 
-Why scopes exist: today each of the 18 Python extension modules links its own copy of this crate, so each facade's caches are implicitly separate. When those facades merge into one native extension, the Python adapter preserves that separation by selecting a scope per former facade:
+Why scopes exist: the 18 Python facades once were separate extension images, each linking its own copy of this crate, so each facade's caches were implicitly separate. Now that they share one native extension (issue #259), the Python adapter preserves that separation by selecting a scope per former facade:
 
 - `classic_settings` uses its own isolated `LogicalKeyCacheScope` and `YamlFileCacheScope`. Its cache functions, every `classic_settings.YamlOperations` object, and its `clear_global_yaml_cache` / `reset_yaml_cache_stats` / `yaml_cache_stats` helpers affect only those stores.
 - `classic_config.clear_yaml_cache()` clears the default `YamlFileCacheScope`, which is the store config-core's own `YamlOperations::new()` loaders fill. It never evicts `classic_settings` entries.
@@ -1013,7 +1013,7 @@ Related CLASSIC crates and consumers:
 - [`classic-config-core`](../../business-logic/classic-config-core) - re-exports `get_runtime` and depends on the shared-runtime rule
 - [`classic-file-io-core`](../../business-logic/classic-file-io-core), [`classic-database-core`](../../business-logic/classic-database-core), and [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - async business-logic crates expected to run on the shared runtime
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that call into async Rust using the shared runtime
-- [`classic-shared-py`](../../foundation/classic-shared-py) - PyO3 wrapper over this crate's runtime/error/path/performance/string helpers
+- [`classic_shared` adapter module](../../python-bindings/classic-python-bindings/src/classic_shared/) - PyO3 wrapper over this crate's runtime/error/path/performance/string helpers
 - [`classic-gui`](../../classic-gui) and Rust UI crates such as [`ui-applications/classic-tui`](../../ui-applications/classic-tui) - UI surfaces that depend on the same runtime policy; Slint-style bridging is feature-gated here
 
 Source-observed note:

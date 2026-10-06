@@ -11,7 +11,7 @@
 //! - Report generation
 //!
 //! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
-//! For Python bindings, see `classic-scanlog-py`.
+//! For Python bindings, see the `classic_scanlog` module of `classic-python-bindings`.
 //!
 //! # Optional Features
 //!

@@ -11,7 +11,7 @@ The active Cargo workspace is rooted at the repository root.
 |- Cargo.toml           workspace manifest
 |- foundation/          shared runtime, error, and support crates
 |- business-logic/      pure Rust product logic (`*-core`)
-|- python-bindings/     PyO3 binding crates (`*-py`)
+|- python-bindings/     the one PyO3 adapter crate (`classic-python-bindings`) and tooling
 |- node-bindings/       Node/NAPI bindings
 |- cpp-bindings/        C++ bridge crates
 |- ui-applications/     Rust-hosted UI/TUI applications
@@ -34,7 +34,7 @@ The active Cargo workspace is rooted at the repository root.
 
 ### Binding layers
 
-- Python bindings live under `python-bindings/*-py`
+- Python bindings live in one adapter crate, `python-bindings/classic-python-bindings`: one native extension and wheel behind the 18 `classic_*` direct-import facades (see `docs/api/python-bindings-adapter.md`)
 - Node bindings live under `node-bindings/`
 - C++ bindings live under `cpp-bindings/`
 - These layers should stay thin and delegate real logic to Rust core crates
@@ -42,15 +42,15 @@ The active Cargo workspace is rooted at the repository root.
 ## Naming conventions
 
 - Rust core crates: `classic-{name}-core`
-- Python binding crates: `classic-{name}-py`
-- Python import names: `classic_{name}`
+- Python adapter modules: `python-bindings/classic-python-bindings/src/classic_{name}/`
+- Python import names: `classic_{name}` (facade packages under `python-bindings/classic-python-bindings/python/`)
 
 Examples:
 
 - `business-logic/classic-config-core`
-- `python-bindings/classic-config-py`
+- `python-bindings/classic-python-bindings/src/classic_config/`
 - `business-logic/classic-scanlog-core`
-- `python-bindings/classic-scanlog-py`
+- `python-bindings/classic-python-bindings/src/classic_scanlog/`
 
 ## Dependency direction
 
@@ -84,9 +84,9 @@ cargo test --workspace
 
 ```powershell
 # python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
-# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+# --inexact is load-bearing: it keeps uv from pruning the maturin-built classic-python-bindings wheel.
 uv sync --project python-bindings --inexact
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
 uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 

@@ -103,7 +103,7 @@ jobs:
 
       # `uv sync` creates `python-bindings/.venv` and installs the locked
       # tooling set (`maturin`, `pytest`). `--inexact` guards against the
-      # maturin-built `classic-*-py` wheels being pruned on any re-sync.
+      # maturin-built `classic-python-bindings` wheel being pruned on any re-sync.
       # `--locked` fails the job if the committed uv.lock drifts from
       # pyproject.toml — catches silent lock/manifest divergence.
       - name: Install Python bindings tooling

@@ -2,7 +2,7 @@
 //!
 //! This crate provides the core file I/O operations for CLASSIC without any PyO3 dependencies.
 //! It can be used directly by Rust applications (CLI/TUI) or through the Python bindings
-//! in classic-file-io-py.
+//! in the classic-python-bindings adapter crate.
 //!
 //! ## Features
 //! - Async file operations with Tokio
