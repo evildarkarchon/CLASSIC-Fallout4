@@ -279,7 +279,11 @@ Launch (ADR-0009, [`classic-scan-launch.md`](classic-scan-launch.md)): saved
 values for the managed game, explicit-value and supplied-as-on overrides, the
 adaptive-concurrency override beating a saved limit, the Fallout 4 VR FormID row
 rule, malformed, newer and needs-migration User Settings launching with their
-diagnostics, Targeted inputs, and the typed Targeted-without-inputs error. Its
+diagnostics, Targeted inputs, the typed Targeted-without-inputs error, and the
+game-differs rule (a non-managed game withholding the saved game version, FCX
+Mode, custom scan folder and setup folders with one typed diagnostic each,
+explicit overrides still winning, and the managed game named explicitly
+reporting nothing). Its
 User Settings documents live in `tests/fixtures/crash_log_scan_launch_conformance/`;
 each runner copies one into a fresh Installation Root, launches through its own
 binding, and reports root-relative paths, Vocabulary tokens, diagnostic codes
