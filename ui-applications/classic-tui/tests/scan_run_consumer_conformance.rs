@@ -40,9 +40,10 @@ const RUNNER_ID: &str = "classic-tui-scan-run-consumer";
 
 const DISPLAY_SCENARIOS: &[&str] = &["standard-happy-path"];
 const RECOVERY_SCENARIOS: &[&str] = &[
-    "proceed-without-ignore-recovery",
-    "reset-to-default-recovery",
-    "abandon-local-ignore-recovery",
+    "settle-proceed-without-ignore",
+    "settle-reset-to-default",
+    "settle-without-decision",
+    "settle-already-cancelled",
 ];
 const CANCELLATION_SCENARIOS: &[&str] = &[
     "pre-discovery-cancelled",
@@ -415,7 +416,7 @@ fn observe_styling_categories(plan: &RunPlan, obligation: &ObligationPlan) -> Ru
     let standard_lines = standard_app.scan_run_summary_lines();
 
     let (recovery, initial_log, late_log) =
-        materialize_recovery(plan, "proceed-without-ignore-recovery")?;
+        materialize_recovery(plan, "settle-proceed-without-ignore")?;
     let cancellation = Cancellation::new();
     let paused = get_runtime().block_on(contract::execute(
         targeted_request(&recovery.root, vec![initial_log, late_log], 1),
@@ -538,7 +539,7 @@ fn find_rendered_line_color(buffer: &Buffer, text: &str) -> RunnerResult<Color> 
     Err(invalid_data(format!("rendered overlay omitted expected line {text:?}")).into())
 }
 
-/// Drives Proceed, Reset, and explicit abandonment through the ordinary TUI key path.
+/// Drives Proceed, Reset, Dismiss, and an already-cancelled pause through the ordinary TUI paths.
 fn observe_recovery_interactions(
     plan: &RunPlan,
     obligation: &ObligationPlan,
@@ -577,28 +578,29 @@ fn observe_recovery_interaction(plan: &RunPlan, scenario_id: &str) -> RunnerResu
     )?;
     copy_fixture_at(&plan.fixtures, "validCrashLog", &late_log)?;
 
+    let key = recovery_key(scenario_id)?;
+    if key.is_none() {
+        // The pack's `before-pending-recovery` boundary: the user cancelled after the run paused
+        // but before the TUI took its pending recovery, so the TUI must not ask at all.
+        cancellation.cancel();
+    }
     let mut app = App::new_for_testing();
     app.scan_cancellation = Some(cancellation);
     app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(paused))));
+    let overlay_shown = app.active_overlay == Some(Overlay::LocalIgnoreRecovery);
     let offered_decisions = [
-        (
-            LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            "proceed-without-ignore",
-        ),
-        (
-            LocalIgnoreRecoveryDecision::ResetToDefault,
-            "reset-to-default",
-        ),
+        LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        LocalIgnoreRecoveryDecision::ResetToDefault,
     ]
     .into_iter()
-    .filter_map(|(decision, token)| {
-        app.local_ignore_decision_available(decision)
-            .then_some(token)
-    })
+    .filter(|decision| app.local_ignore_decision_available(*decision))
+    .map(decision_token)
     .collect::<Vec<_>>();
-    let (key, key_token) = recovery_key(scenario_id)?;
-    press(&mut app, key);
-    pump_until_resume_finished(&mut app)?;
+    let key_token = key.map(|(code, token)| {
+        press(&mut app, code);
+        token
+    });
+    let settled_decision = pump_until_settled(&mut app)?;
     let terminal_status = terminal_result(&app)?.status.as_str();
     let overlay = match app.active_overlay {
         None => "none",
@@ -609,10 +611,20 @@ fn observe_recovery_interaction(plan: &RunPlan, scenario_id: &str) -> RunnerResu
         "scenarioId": scenario_id,
         "key": key_token,
         "offeredDecisions": offered_decisions,
+        "overlayShown": overlay_shown,
+        "settledDecision": settled_decision.map(decision_token),
         "terminalStatus": terminal_status,
         "overlayAfterSelection": overlay,
-        "remainingContinuationCount": usize::from(app.pending_local_ignore_recovery.is_some()),
+        "remainingPendingRecoveryCount": usize::from(app.pending_local_ignore_recovery.is_some()),
     }))
+}
+
+/// Returns the obligation token for one Local Ignore Recovery Decision.
+const fn decision_token(decision: LocalIgnoreRecoveryDecision) -> &'static str {
+    match decision {
+        LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => "proceed-without-ignore",
+        LocalIgnoreRecoveryDecision::ResetToDefault => "reset-to-default",
+    }
 }
 
 /// Drives each lifecycle boundary through the TUI cancellation control.
@@ -722,9 +734,10 @@ fn materialize_recovery(
     scenario_id: &str,
 ) -> RunnerResult<(MaterializedScenario, PathBuf, PathBuf)> {
     let stem = match scenario_id {
-        "proceed-without-ignore-recovery" => "proceed",
-        "reset-to-default-recovery" => "reset",
-        "abandon-local-ignore-recovery" => "abandon",
+        "settle-proceed-without-ignore" => "proceed",
+        "settle-reset-to-default" => "reset",
+        "settle-without-decision" => "settle-abandon",
+        "settle-already-cancelled" => "settle-cancelled",
         _ => return Err(invalid_data(format!("unknown recovery scenario {scenario_id}")).into()),
     };
     let scenario = materialize_common(plan, "malformedLocalIgnoreYaml")?;
@@ -912,11 +925,15 @@ fn color_token(color: ratatui::style::Color) -> String {
 }
 
 /// Resolves a recovery scenario to its ordinary terminal key.
-fn recovery_key(scenario_id: &str) -> RunnerResult<(KeyCode, &'static str)> {
+///
+/// `None` for the already-cancelled pause, where the TUI must not show the overlay, so there is
+/// no key to press.
+fn recovery_key(scenario_id: &str) -> RunnerResult<Option<(KeyCode, &'static str)>> {
     match scenario_id {
-        "proceed-without-ignore-recovery" => Ok((KeyCode::Char('p'), "p")),
-        "reset-to-default-recovery" => Ok((KeyCode::Char('r'), "r")),
-        "abandon-local-ignore-recovery" => Ok((KeyCode::Esc, "escape")),
+        "settle-proceed-without-ignore" => Ok(Some((KeyCode::Char('p'), "p"))),
+        "settle-reset-to-default" => Ok(Some((KeyCode::Char('r'), "r"))),
+        "settle-without-decision" => Ok(Some((KeyCode::Esc, "escape"))),
+        "settle-already-cancelled" => Ok(None),
         _ => Err(invalid_data(format!("unknown recovery scenario {scenario_id}")).into()),
     }
 }
@@ -926,8 +943,11 @@ fn press(app: &mut App, code: KeyCode) {
     app.handle_event(TerminalEvent::Key(KeyEvent::new(code, KeyModifiers::NONE)));
 }
 
-/// Drains background messages until a resumed or abandoned continuation finishes.
-fn pump_until_resume_finished(app: &mut App) -> RunnerResult<()> {
+/// Drains background messages until the TUI's settle worker finishes.
+///
+/// Returns the decision the worker passed to settling, read from its completion message before
+/// the App applies it: that message is the TUI's own record of what it settled with.
+fn pump_until_settled(app: &mut App) -> RunnerResult<Option<LocalIgnoreRecoveryDecision>> {
     loop {
         let message = get_runtime()
             .block_on(async {
@@ -935,10 +955,13 @@ fn pump_until_resume_finished(app: &mut App) -> RunnerResult<()> {
             })
             .map_err(|_| invalid_data("TUI recovery worker did not finish within 30 seconds"))?
             .ok_or_else(|| invalid_data("TUI async channel closed before recovery finished"))?;
-        let finished = matches!(message, AsyncMessage::ScanResumeFinished(_));
+        let settled = match &message {
+            AsyncMessage::ScanSettleFinished { decision, .. } => Some(*decision),
+            _ => None,
+        };
         app.handle_async_message(message);
-        if finished {
-            return Ok(());
+        if let Some(decision) = settled {
+            return Ok(decision);
         }
     }
 }

@@ -778,6 +778,14 @@ fn every_terminal_run_status_renders_its_display_label() {
 // Still this frontend's prose: the recovery prompt renderer lands with the gated recovery phase.
 // ---------------------------------------------------------------------------
 
+/// Renders the prompt a pending recovery for `result` would carry.
+///
+/// A pending recovery cannot be fabricated, so these layout tests render its prompt the way the
+/// presentation crate does when it bundles one: from the paused run's Installed YAML Data.
+fn recovery_prompt_for(result: &RunResult) -> classic_scan_presentation::RecoveryPrompt {
+    render_local_ignore_recovery(result.installed_yaml_data.as_ref())
+}
+
 /// Builds a paused-run projection carrying retained discovery but no fabricated continuation.
 fn paused_recovery_result(message: Option<&str>) -> RunResult {
     RunResult {
@@ -815,7 +823,7 @@ fn paused_recovery_result(message: Option<&str>) -> RunResult {
 fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
     let result = paused_recovery_result(Some("Local Ignore recovery is required"));
 
-    let prompt = describe_local_ignore_recovery(&result);
+    let prompt = describe_local_ignore_recovery(&result, &recovery_prompt_for(&result));
     let text = join_presented(&prompt.overlay_lines());
 
     assert_eq!(prompt.retained_logs, 2);
@@ -858,7 +866,7 @@ fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
 #[test]
 fn recovery_prompt_carries_the_run_as_core_describes_it() {
     let result = paused_recovery_result(Some("Local Ignore recovery is required"));
-    let prompt = describe_local_ignore_recovery(&result);
+    let prompt = describe_local_ignore_recovery(&result, &recovery_prompt_for(&result));
 
     assert_renders_core_lines(&prompt.run_detail, &render_run_result(&result));
     assert_renders_core_lines(
@@ -938,7 +946,7 @@ fn recovery_prompt_omits_reset_when_the_contract_says_it_cannot_succeed() {
 #[test]
 fn recovery_prompt_explains_a_paused_run_that_carried_no_message() {
     let result = paused_recovery_result(None);
-    let prompt = describe_local_ignore_recovery(&result);
+    let prompt = describe_local_ignore_recovery(&result, &recovery_prompt_for(&result));
 
     assert_eq!(prompt.message, None);
     let status = prompt.status_line();
@@ -963,7 +971,7 @@ fn recovery_prompt_explains_a_paused_run_that_carried_no_message() {
 #[test]
 fn recovery_prompt_does_not_restate_the_run_message_above_the_choices() {
     let result = paused_recovery_result(Some("Local Ignore recovery is required"));
-    let prompt = describe_local_ignore_recovery(&result);
+    let prompt = describe_local_ignore_recovery(&result, &recovery_prompt_for(&result));
     let lines = prompt.overlay_lines();
 
     let core = render_local_ignore_recovery(result.installed_yaml_data.as_ref());
