@@ -246,13 +246,14 @@ struct ContinuationFlowInput {
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 enum CancellationBoundaryInput {
-    BeforeResume,
+    /// Cancel the run's control after its pending recovery was read but before it is settled.
+    BeforeSettle,
     AfterResetCriticalSection,
     /// Cancel the run's control after it paused but before its pending recovery is read.
     BeforePendingRecovery,
 }
 
-/// One public continuation operation and its decision when the operation is Resume.
+/// One public continuation operation and its optional decision.
 #[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ContinuationActionInput {
@@ -261,11 +262,12 @@ struct ContinuationActionInput {
 }
 
 /// Public operations admitted for a retained scan-run continuation.
+///
+/// Settling is the only one: the separate resume and abandon entry points were removed, and
+/// a pack scenario naming either fails to deserialize rather than being silently skipped.
 #[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 enum ContinuationOperationInput {
-    Resume,
-    Abandon,
     /// Settle the pending recovery, with the action's decision or with none.
     Settle,
 }
@@ -553,7 +555,7 @@ fn execute_scenario(
         ObservationProfile::LocalIgnore => project_local_ignore_observation(
             scenario_root.path(),
             &scenario.input,
-            &result,
+            &mut result,
             &events,
         ),
         ObservationProfile::Lifecycle => {
@@ -593,7 +595,7 @@ fn project_observer_failure(
     }))
 }
 
-/// Claims one paused continuation, applies after-pause mutations, then proves one-shot replay.
+/// Settles one paused run, applies after-pause mutations, then proves one-shot replay.
 fn execute_continuation_flow(
     fixtures: &BTreeMap<String, PathBuf>,
     input: &ScenarioInput,
@@ -608,47 +610,23 @@ fn execute_continuation_flow(
             invalid_data("continuationFlow requires the local-ignore observation profile").into(),
         );
     }
-    validate_continuation_action(flow.action)?;
-    for replay in &flow.replays {
-        validate_continuation_action(*replay)?;
-    }
-    let settles = matches!(flow.action.operation, ContinuationOperationInput::Settle);
     if flow.cancellation == Some(CancellationBoundaryInput::BeforePendingRecovery) {
-        if !settles {
-            return Err(invalid_data(
-                "before-pending-recovery cancellation requires a settle continuation action",
-            )
-            .into());
-        }
         cancellation.cancel();
     }
     let prompt = render_local_ignore_recovery(initial_result.installed_yaml_data.as_ref());
-    let mut initial = project_local_ignore_phase(
-        root,
-        initial_result,
-        initial_events,
-        initial_result.continuation.is_some(),
-        Some(&prompt),
-    )?;
-    // A settle flow reaches the paused run only through its pending recovery, exactly as a
-    // frontend does; resume and abandon flows keep claiming the bare continuation.
-    let target = if settles {
-        let pending = take_pending_recovery(initial_result).ok_or_else(|| {
-            invalid_data("continuationFlow initial result has no pending recovery")
-        })?;
-        initial["pendingRecovery"] = json!({
-            "cancellationRequested": pending.cancellation_requested(),
-            "prompt": project_recovery_prompt(root, pending.prompt())?,
-        });
-        ClaimTarget::Pending(Box::new(pending))
-    } else {
-        ClaimTarget::Continuation(Box::new(initial_result.continuation.take().ok_or_else(
-            || invalid_data("continuationFlow initial result has no continuation"),
-        )?))
-    };
+    // The flow reaches the paused run only through its pending recovery, exactly as a frontend
+    // does. It is taken before projecting so the projection can report whether one existed.
+    let pending = take_pending_recovery(initial_result)
+        .ok_or_else(|| invalid_data("continuationFlow initial result has no pending recovery"))?;
+    let mut initial =
+        project_local_ignore_phase(root, initial_result, initial_events, true, Some(&prompt))?;
+    initial["pendingRecovery"] = json!({
+        "cancellationRequested": pending.cancellation_requested(),
+        "prompt": project_recovery_prompt(root, pending.prompt())?,
+    });
     materialize_placements(fixtures, &flow.post_pause_data, root)?;
 
-    if flow.cancellation == Some(CancellationBoundaryInput::BeforeResume) {
+    if flow.cancellation == Some(CancellationBoundaryInput::BeforeSettle) {
         cancellation.cancel();
     }
     let cancellation_worker =
@@ -660,9 +638,8 @@ fn execute_continuation_flow(
     let cancelled_before_terminal = cancellation.is_cancelled();
     let mut terminal_events = Vec::new();
     let terminal_outcome = get_runtime().block_on(run_continuation_action(
-        &target,
+        &pending,
         flow.action,
-        cancellation,
         Some(&mut |event| terminal_events.push(event)),
     ));
     if let Some(worker) = cancellation_worker {
@@ -690,17 +667,12 @@ fn execute_continuation_flow(
         ),
     };
 
-    let replays = flow
-        .replays
+    let replay_actions = &flow.replays;
+    let replays = replay_actions
         .iter()
         .copied()
         .map(|action| {
-            match get_runtime().block_on(run_continuation_action(
-                &target,
-                action,
-                cancellation,
-                None,
-            )) {
+            match get_runtime().block_on(run_continuation_action(&pending, action, None)) {
                 Ok(_) => Err(
                     invalid_data("a replayed continuation action unexpectedly succeeded").into(),
                 ),
@@ -742,86 +714,24 @@ fn cancel_after_reset_entry(
     })
 }
 
-/// Rejects structurally invalid operation/decision pairs before spending a continuation.
-fn validate_continuation_action(action: ContinuationActionInput) -> RunnerResult<()> {
-    match (action.operation, action.decision) {
-        (ContinuationOperationInput::Resume, Some(_))
-        | (ContinuationOperationInput::Abandon, None)
-        | (ContinuationOperationInput::Settle, _) => Ok(()),
-        (ContinuationOperationInput::Resume, None) => {
-            Err(invalid_data("Resume continuation action has no recovery decision").into())
-        }
-        (ContinuationOperationInput::Abandon, Some(_)) => Err(invalid_data(
-            "Abandon continuation action must not have a recovery decision",
-        )
-        .into()),
-    }
-}
-
-/// What a continuation flow claims: a bare continuation, or the pending recovery bundling one.
+/// Settles the pending recovery for one action without inferring intent from a scenario id.
 ///
-/// Both variants are boxed because the retained continuation is a few kilobytes and the bundle
-/// adds its rendered prompt on top, so neither belongs inline in an enum.
-enum ClaimTarget {
-    /// Taken straight from the paused result, as resume and abandon flows always have.
-    Continuation(Box<contract::CrashLogScanRunContinuation>),
-    /// Taken through the presentation crate, as a settling frontend receives it.
-    Pending(Box<PendingRecoveryWithPrompt>),
-}
-
-impl ClaimTarget {
-    /// Returns the one continuation every operation on this target claims.
-    fn continuation(&self) -> &contract::CrashLogScanRunContinuation {
-        match self {
-            Self::Continuation(continuation) => continuation,
-            Self::Pending(pending) => pending.recovery().continuation(),
-        }
-    }
-}
-
-/// Invokes one public continuation action without inferring intent from a scenario identifier.
-///
-/// A settled result is widened back into a run result here only so both shapes share one
-/// projection; it never carries a continuation.
+/// The settled result is widened back into a run result here only so the terminal and replay
+/// paths share one projection; it never carries a continuation.
 async fn run_continuation_action(
-    target: &ClaimTarget,
+    pending: &PendingRecoveryWithPrompt,
     action: ContinuationActionInput,
-    cancellation: &contract::Cancellation,
     observer: Option<&mut dyn contract::Observer>,
 ) -> Result<contract::RunResult, contract::ResumeError> {
-    if matches!(action.operation, ContinuationOperationInput::Settle) {
-        let ClaimTarget::Pending(pending) = target else {
-            panic!("a settle action requires a pending recovery; the flow validated this");
-        };
-        return pending
+    match action.operation {
+        ContinuationOperationInput::Settle => pending
             .settle(
                 action.decision.map(Into::into),
                 observer,
                 contract::ObserverFailurePolicy::ContinueRun,
             )
             .await
-            .map(contract::RunResult::from);
-    }
-    let continuation = target.continuation();
-    match action.operation {
-        ContinuationOperationInput::Resume => {
-            let decision = action
-                .decision
-                .expect("continuation action was validated before execution");
-            continuation
-                .resume(
-                    decision.into(),
-                    cancellation,
-                    observer,
-                    contract::ObserverFailurePolicy::ContinueRun,
-                )
-                .await
-        }
-        ContinuationOperationInput::Abandon => {
-            debug_assert!(action.decision.is_none());
-            continuation.abandon(cancellation, observer).await
-        }
-        ContinuationOperationInput::Settle => unreachable!("settle returned above"),
+            .map(contract::RunResult::from),
     }
 }
 
@@ -1417,11 +1327,15 @@ fn project_lifecycle_effects(
 fn project_local_ignore_observation(
     root: &Path,
     input: &ScenarioInput,
-    result: &contract::RunResult,
+    result: &mut contract::RunResult,
     events: &[contract::Event],
 ) -> RunnerResult<Value> {
+    // A scenario without a continuation flow never settles, so taking (and dropping) the
+    // pending recovery is only how this observation learns whether the run offered one.
+    let continuation_available = result.take_pending_recovery().is_some();
+    let result = &*result;
     let mut observation =
-        project_local_ignore_phase(root, result, events, result.continuation.is_some(), None)?;
+        project_local_ignore_phase(root, result, events, continuation_available, None)?;
     observation
         .as_object_mut()
         .ok_or_else(|| invalid_data("Local Ignore phase projection is not an object"))?
@@ -1508,8 +1422,6 @@ fn project_replay_error(
 ) -> RunnerResult<Value> {
     Ok(json!({
         "operation": match action.operation {
-            ContinuationOperationInput::Resume => "resume",
-            ContinuationOperationInput::Abandon => "abandon",
             ContinuationOperationInput::Settle => "settle",
         },
         "decision": action.decision.map(|decision| contract::LocalIgnoreRecoveryDecision::from(decision).as_str()),

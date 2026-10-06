@@ -83,7 +83,6 @@ EXPECTED_SCENARIO_IDS = [
     "reset-operational-failure",
     "reset-pre-cancelled",
     "reset-post-critical-cancelled",
-    "abandon-local-ignore-recovery",
     "settle-proceed-without-ignore",
     "settle-reset-to-default",
     "settle-without-decision",
@@ -884,30 +883,55 @@ def test_post_critical_cancellation_facts_fail_closed_on_semantic_mutation() -> 
     )
 
 
-def test_abandonment_facts_fail_closed_on_semantic_mutation() -> None:
-    """Abandon coverage requires cancellation, shared replay, and zero durable effects."""
+def test_settling_without_a_decision_facts_fail_closed_on_semantic_mutation() -> None:
+    """Abandonment, now settling with no decision, requires cancellation, replay, no effects."""
 
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
     _assert_semantic_mutations_lose_facts(
         pack,
-        "abandon-local-ignore-recovery",
+        "settle-without-decision",
         {
-            "scan-run.recovery.abandon-initial": lambda value: value["initial"][
-                "recoveryPrompt"
-            ]["decisions"][0].__setitem__("available", False),
-            "scan-run.recovery.abandon-terminal": lambda value: value["terminal"][
-                "run"
-            ].__setitem__("status", "completed"),
-            "scan-run.recovery.abandon-cancellation": lambda value: value[
+            "scan-run.recovery.settle-pending-recovery": lambda value: value["initial"][
+                "pendingRecovery"
+            ].__setitem__("cancellationRequested", True),
+            "scan-run.recovery.settle-without-decision": lambda value: value[
                 "cancellation"
             ].__setitem__("afterTerminal", False),
-            "scan-run.recovery.abandon-shared-replay": lambda value: value[
+            "scan-run.recovery.settle-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
+            "scan-run.recovery.settle-replay-rejects-every-decision": lambda value: value[
                 "replays"
             ].pop(),
-            "scan-run.recovery.abandon-forbidden-effects": lambda value: value[
-                "durableEffects"
-            ]["forbidden"][0].__setitem__("exists", True),
         },
+    )
+
+
+def test_no_recovery_scenario_uses_a_removed_continuation_entry_point() -> None:
+    """Every recovery scenario settles; separate resume and abandon are gone (ADR-0009)."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    flows = [
+        scenario
+        for scenario in pack["scenarios"]
+        if "continuationFlow" in scenario["input"]
+    ]
+    assert flows
+    for scenario in flows:
+        flow = scenario["input"]["continuationFlow"]
+        actions = [flow["action"], *flow.get("replays", [])]
+        assert {action["operation"] for action in actions} == {"settle"}, scenario["id"]
+        assert flow.get("cancellation") != "before-resume", scenario["id"]
+        assert {
+            replay["operation"] for replay in scenario["expected"].get("replays", [])
+        } <= {"settle"}, scenario["id"]
+    execute = next(
+        capability
+        for capability in pack["capabilities"]
+        if capability["id"] == "scan-run.execute"
+    )
+    assert not {"CrashLogScanRunContinuation", "resume", "abandon"} & set(
+        execute["rustSymbols"]
     )
 
 
@@ -1323,10 +1347,17 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     assert '"classic_cxx_bridge/scanner.h"' in runner
     assert "ScanRunObserver" in runner
     assert "scan_run_contract_execute" in runner
-    assert "scan_run_contract_execution_has_continuation" in runner
-    assert "scan_run_contract_execution_take_continuation" in runner
-    assert "scan_run_continuation_resume" in runner
-    assert "scan_run_continuation_abandon" in runner
+    # The separate resume and abandon entry points and the continuation accessors were
+    # removed on every surface (ADR-0009); the runner settles instead.
+    for removed in (
+        "scan_run_contract_execution_has_continuation",
+        "scan_run_contract_execution_take_continuation",
+        "scan_run_continuation_resume",
+        "scan_run_continuation_abandon",
+        '"before-resume"',
+    ):
+        assert removed not in runner
+    assert '"before-settle"' in runner
     assert "scan_run_contract_execution_take_pending_recovery" in runner
     assert "scan_run_pending_recovery_prompt" in runner
     assert "scan_run_pending_recovery_cancellation_requested" in runner
@@ -1392,18 +1423,17 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
 
 
 def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None:
-    """Private adapters stay oracle-blind across execute, resume, and abandon."""
+    """Private adapters stay oracle-blind across execute and settle, with no removed seam."""
 
     seam_markers = {
         "rust": (
             "contract::execute",
             "render_run_result",
             "run_continuation_action",
-            "ContinuationOperationInput::Resume",
-            "ContinuationOperationInput::Abandon",
             "ContinuationOperationInput::Settle",
             "take_pending_recovery",
             "CancellationBoundaryInput::BeforePendingRecovery",
+            "CancellationBoundaryInput::BeforeSettle",
             "flow.post_pause_data",
             "flow.replays",
             "project_terminal_error",
@@ -1416,11 +1446,10 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
         ),
         "node": (
             "scanRunExecute",
-            "scanRunResume",
-            "scanRunAbandon",
             "scanRunSettle",
             "pendingRecovery",
             '"before-pending-recovery"',
+            '"before-settle"',
             'from "../index.js"',
             "flow.postPauseData",
             "flow.replays",
@@ -1433,11 +1462,10 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
         ),
         "python": (
             "scan_run_execute",
-            "scan_run_resume",
-            "scan_run_abandon",
             "scan_run_settle",
             "pending_recovery",
             '"before-pending-recovery"',
+            '"before-settle"',
             "import classic_scanlog",
             'flow.get("postPauseData"',
             'flow.get("replays"',
@@ -1449,11 +1477,27 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "execution.pending_recovery is not None",
         ),
     }
+    # Seams removed by ADR-0009; a runner still naming one would be exercising a surface the
+    # parity gates assert is gone.
+    removed_markers = {
+        "rust": (
+            "ContinuationOperationInput::Resume",
+            "ContinuationOperationInput::Abandon",
+            ".continuation.take()",
+            ".continuation.is_some()",
+            "BeforeResume",
+        ),
+        "node": ("scanRunResume", "scanRunAbandon", '"before-resume"'),
+        "python": ("scan_run_resume", "scan_run_abandon", '"before-resume"'),
+    }
     for participant_id, source_paths in PARTICIPANT_SOURCES.items():
         source = source_paths[0].read_text(encoding="utf-8")
         assert "manifest.json" not in source
         assert "tests/conformance/packs" not in source.replace("\\", "/")
         assert all(marker in source for marker in seam_markers[participant_id])
+        assert not [
+            marker for marker in removed_markers[participant_id] if marker in source
+        ], participant_id
 
 
 def test_launcher_records_spawn_failures_as_structured_diagnostics(
