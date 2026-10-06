@@ -8,8 +8,8 @@ Contributor-facing API documentation for [`business-logic/classic-scanlog-core/`
 - the single complete Crash Log Scan Run use-case boundary in `scan_run::contract`
 
 A new run always enters through `scan_run::contract::execute`. A run paused for
-Local Ignore recovery resumes only through its returned
-`CrashLogScanRunContinuation`. Discovery,
+Local Ignore recovery is answered only by settling its `PendingRecovery`
+(`RunResult::take_pending_recovery`, then `PendingRecovery::settle`). Discovery,
 setup, intake, scheduling, analysis, Autoscan Report persistence, failed-log
 accounting, and Standard-run Unsolved Logs finalization are internal parts of
 that operation. They are not public lifecycle building blocks.
@@ -37,8 +37,8 @@ metadata only from the supplied
 [`VersionRegistryScope`](classic-version-registry-core.md#version-registry-scopes):
 Standard XSE Folder discovery, FCX setup, Installed YAML Data metadata, the
 analysis configuration, and per-log crashgen and plugin-limit analysis. A
-continuation returned for Local Ignore recovery keeps the scope, so `resume`
-reads it too. `execute` uses the process default scope. This variant still
+pending recovery returned for Local Ignore recovery keeps the scope, so
+`settle` reads it too. `execute` uses the process default scope. This variant still
 hashes FCX setup inputs through the process default `FileHashScope`.
 
 `scan_run::contract::execute_in_scopes(request, version_registry, file_hash,
@@ -51,7 +51,7 @@ entries and hit/miss counters land only in `file_hash`. Standard discovery
 reads the installation's Game Local document (to derive the XSE Folder)
 through `classic_scangame_core::resolve_xse_folder_for_scan_in_scopes`, so its
 path/mtime YAML-file cache entries and counters land only in `yaml_file_cache`
-(issue #234). A Local Ignore continuation keeps every scope. `execute` and
+(issue #234). A Local Ignore pending recovery keeps every scope. `execute` and
 `execute_in_version_registry_scope` pass the process default hash and
 YAML-file cache scopes, so unscoped Rust, CXX, and Node scan runs keep hashing
 and reading exactly as before. The Python `classic_scanlog` facade runs every
@@ -63,29 +63,22 @@ Game Local reads. Public-interface probes: `tests/file_hash_scope.rs`,
 `tests/yaml_file_cache_scope.rs`, and `tests/version_registry_scope.rs`.
 
 Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
-That result owns an opaque `CrashLogScanRunContinuation`; callers explicitly
-choose `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore` or
-`LocalIgnoreRecoveryDecision::ResetToDefault`. Calling
-`continuation.resume(decision, cancellation, observer, observer_failure_policy).await` consumes the
-retained work once and returns `Result<RunResult, ResumeError>`.
-
-A caller that wants to back out instead of deciding calls
-`continuation.abandon(cancellation, observer).await`. It requests cancellation
-on the supplied control and then claims the continuation with a decision the
-run never acts on, so no recovery is applied, nothing on disk is touched, and
-the caller receives the ordinary post-discovery `Cancelled` result described
-under [Cancellation contract](#cancellation-contract). `LocalIgnoreRecoveryDecision`
-deliberately has no abandonment variant — adding one reshapes a type crossing
-five binding surfaces — so `abandon` is the single shared implementation of a
-sequence every frontend would otherwise write for itself. It shares `resume`'s
-one-shot claim: whichever of the two runs first spends the continuation, and
-every later `abandon` or `resume` returns `ResumeError::ContinuationConsumed`.
+That result privately retains a single-use continuation; callers reach it only
+as a pending recovery and explicitly choose
+`LocalIgnoreRecoveryDecision::ProceedWithoutIgnore` or
+`LocalIgnoreRecoveryDecision::ResetToDefault`, or settle with no decision to
+back out.
 
 #### Pending and settled recovery (ADR-0009)
 
-`resume` and `abandon` are being replaced by settling a pending recovery. Both
-shapes exist while frontends migrate; #282 removes `resume`, `abandon`, and the
-`RunResult::continuation` field.
+Settling a pending recovery is the only way to answer a paused run. The
+separate `resume` and `abandon` entry points, the public
+`CrashLogScanRunContinuation` type, the `RunResult::continuation` field, and
+`PendingRecovery::continuation()` were removed (#282) with no deprecated
+aliases; the parity gates and the Scan Run contract manifest's
+`forbiddenExports` assert their absence on every surface. `RunResult` has no
+public continuation field (a compile-fail doctest pins it), so code outside this
+crate builds a `RunResult` with `RunResult::from(SettledRunResult { .. })`.
 
 - `RunResult::take_pending_recovery(&mut self) -> Option<PendingRecovery>` takes
   the continuation out of a paused result and returns `Some` exactly when the run
@@ -100,16 +93,18 @@ shapes exist while frontends migrate; #282 removes `resume`, `abandon`, and the
 - `settle(decision: Option<LocalIgnoreRecoveryDecision>, observer,
   observer_failure_policy).await` returns `Result<SettledRunResult, ResumeError>`. `Some(decision)` resumes the
   same discovered Crash Logs without rediscovery; Reset To Default is still the
-  non-interruptible transaction. `None` is abandonment with `abandon`'s
-  semantics: it cancels the run's control, then finishes cancelled after
-  discovery with no filesystem work. Abandonment is still not a third decision.
-  `settle` borrows, so a replay is the typed `ResumeError::ContinuationConsumed`.
+  non-interruptible transaction. `None` is abandonment: it cancels the run's
+  control, then claims the continuation with a decision the run never acts on,
+  so no recovery is applied, nothing on disk is touched, and the caller receives
+  the ordinary post-discovery `Cancelled` result described under
+  [Cancellation contract](#cancellation-contract). `LocalIgnoreRecoveryDecision`
+  deliberately has no abandonment variant — adding one reshapes a type crossing
+  five binding surfaces — so abandonment is not a third decision. `settle`
+  borrows, so a sequential or concurrent replay, with or without a decision, is
+  the typed `ResumeError::ContinuationConsumed`.
 - `SettledRunResult` has `RunResult`'s fields minus the continuation, so a
   settled run cannot ask for a second recovery. Compile-fail doctests pin that.
   `From<SettledRunResult> for RunResult` lets an adapter reuse one projection.
-- `PendingRecovery::continuation()` exposes the same continuation to the legacy
-  resume and abandon binding surfaces, so they share the one claim with `settle`.
-  It goes away with them.
 
 The recovery prompt is Display Content and is not part of `PendingRecovery`:
 `classic-scan-presentation` bundles it as `PendingRecoveryWithPrompt` (see
@@ -165,12 +160,10 @@ Cancellation is cooperative at Rust-owned safe seams:
 - cancellation before discovery completes returns `CancelledBeforeDiscovery`
   and no discovery result
 - once discovery completes, the complete discovery result is retained
-- cancellation already requested before recovery resume consumes the
-  continuation and returns the normal post-discovery `Cancelled` result;
-  `CrashLogScanRunContinuation::abandon` is that behaviour named, requesting
-  cancellation itself and leaving the control cancelled afterwards, and
-  `PendingRecovery::settle(None, ..)` is the same operation on the settled
-  surface
+- cancellation already requested before settling consumes the continuation and
+  returns the normal post-discovery `Cancelled` result whatever the decision;
+  `PendingRecovery::settle(None, ..)` is that behaviour named, requesting
+  cancellation itself and leaving the control cancelled afterwards
 - a pending recovery reports cancellation already requested on the run's own
   control, so a frontend can skip the prompt
 - queued logs do not start after cancellation is observed
@@ -224,9 +217,8 @@ left cancelled, and nothing on disk is touched — the continuation is never
 dropped un-abandoned. With `CancelRun` the cancellation usually lands before
 intake, so the run never pauses in the first place.
 
-`CrashLogScanRunContinuation::resume` takes the policy as well while it exists;
-`abandon` takes none, because cancellation short-circuits it ahead of every
-event.
+`settle(None, ..)` accepts the policy for symmetry, but it is moot there:
+cancellation short-circuits abandonment ahead of every event.
 
 ### Terminal result and ordering
 
@@ -252,10 +244,11 @@ expected lifecycle data. They are not run-wide exceptions.
 
 `LocalIgnoreRecoveryRequired` also retains completed discovery, setup data,
 the exact selected Main/game snapshot, malformed Local Ignore identity and
-diagnostics, and an opaque process-local continuation. The continuation is not
-cloneable or serializable. Its state is atomically consumed, so sequential or
-concurrent replay returns `ResumeError::ContinuationConsumed` with stable kind
-`scan_run_continuation_consumed`. Resume never emits a second
+diagnostics, and a private, process-local continuation offered only as a
+`PendingRecovery`. The continuation is not cloneable or serializable. Its state
+is atomically consumed, so sequential or concurrent replay of `settle` returns
+`ResumeError::ContinuationConsumed` with stable kind
+`scan_run_continuation_consumed`. A settled run never emits a second
 `DiscoveryCompleted` event.
 
 ### Installed YAML Data intake
@@ -272,7 +265,7 @@ Local Ignore paths after accepting that snapshot.
 Main/game schema, provenance and exact-byte identity, Local Ignore state and
 identity, and structured fallback, validation, or generation
 diagnostics. It is absent when initial execution did not reach intake. A
-pre-resume cancellation also intentionally returns the ordinary
+pre-settle cancellation also intentionally returns the ordinary
 cancelled-after-discovery shape without recovery metadata, because the recovery
 decision was never applied. These diagnostics are operational metadata and
 never enter Autoscan Report text; equivalent accepted data therefore preserves
@@ -692,7 +685,7 @@ settings and preflight results, plugins, FormIDs, named records, suspects,
 run-scoped FCX facts, and final guidance. Full scan persistence belongs
 exclusively to the Rust-owned execution flow started by
 `scan_run::contract::execute` and, after an expected recovery pause, completed
-by `CrashLogScanRunContinuation::resume`.
+by `PendingRecovery::settle`.
 
 Successful runs over identical Crash Log, YAML Data, scan facts, and options
 must persist byte-identical Autoscan Reports. The public-seam regression test
@@ -737,34 +730,30 @@ and binding-local CLIs construct requests and present Rust-owned facts; they do
 not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
 
-`CrashLogScanRunContinuation::abandon` reaches every surface. CXX exposes it as
-`scan_run_continuation_abandon`, Node as `scanRunAbandon`, and Python as
-`scan_run_abandon`. Each takes a continuation and a cancellation and no
-decision, and returns the same envelope its `resume` sibling does. No
-frontend calls it any more: the TUI, the native CLI, and the Qt GUI each settle
-the pending recovery instead (below), so none of them writes the
-cancel-then-resume-with-a-placeholder sequence. `classic-py-cli` has no
-such choice to route: it treats a recovery-required result as terminal and never
-resumes.
-
-A binding consumer should prefer it over cancelling and then resuming with a
-placeholder decision. The two are equivalent only when cancellation is requested
-strictly before the claim; reversing that order spends the one-shot continuation
-on a real recovery attempt, which is the failure this operation exists to make
-unwritable.
-
-The pending recovery and settling reach every surface too, as one object bundling
+The pending recovery and settling reach every surface, as one object bundling
 the continuation, the rendered prompt, and whether cancellation was already
-requested. CXX exposes `ScanRunPendingRecovery` with
+requested. Settling is the only way to answer a paused run on every surface:
+the separate resume and abandon entry points (CXX
+`scan_run_continuation_resume` / `scan_run_continuation_abandon`, Node
+`scanRunResume` / `scanRunAbandon`, Python `scan_run_resume` /
+`scan_run_abandon`), the continuation accessors
+(`scan_run_contract_execution_has_continuation` /
+`scan_run_contract_execution_take_continuation`), the opaque continuation
+classes, and the optional `continuation` field on the run result were removed
+with no deprecated aliases (#282). The Scan Run contract manifest's
+`forbiddenExports` lists them for each owner's source and parity baselines, so
+the gate fails if any reappears. Backing out is settling with no decision, so
+no frontend writes a cancel-then-resume-with-a-placeholder sequence.
+`classic-py-cli` and the Node CLI have no such choice to route: they treat a
+recovery-required result as terminal and never settle it. CXX exposes
+`ScanRunPendingRecovery` with
 `scan_run_contract_execution_has_pending_recovery` /
 `scan_run_contract_execution_take_pending_recovery`,
 `scan_run_pending_recovery_prompt`,
 `scan_run_pending_recovery_cancellation_requested`, and a synchronous
 `scan_run_pending_recovery_settle` (no callback crosses the bridge). Node exposes
 `JsScanRunSuccess.pendingRecovery` and `scanRunSettle`; Python exposes
-`ScanRunExecution.pending_recovery` and `scan_run_settle`. Each binding backs its
-legacy continuation and its pending recovery with the same bundle, so the old
-resume and abandon surfaces keep working and share the one claim. See
+`ScanRunExecution.pending_recovery` and `scan_run_settle`. See
 [classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md)
 and [node-python-contract-map.md](node-python-contract-map.md).
 
@@ -787,8 +776,7 @@ same flow: execute, check for a pending recovery, and when its run is already
 cancelled settle with no decision without printing anything; otherwise print the
 pending recovery's prompt lines, then settle with the chosen decision, or with no
 decision when the user cancels. A non-interactive run reports the paused
-envelope unsettled. It no longer calls has-continuation, take-continuation,
-resume, or abandon, and its "second recovery request" and "recovery without a
+envelope unsettled. Its "second recovery request" and "recovery without a
 continuation" fatal branches are gone: the settled envelope cannot carry another
 recovery. Its `cli.recovery-interaction` consumer obligation records the
 decision passed to settling as `settledDecision`.
@@ -805,8 +793,7 @@ the execution envelope carries `has_observer_delivery_failure` /
 `observer_delivery_failure_message`. Node's `cancelOnObserverError` and
 Python's `cancel_on_observer_error` are the policy (`true` is `CancelRun`), and
 their `observerError` / `observer_error` is the Rust-reported failure; neither
-binding tracks delivery failure itself. The legacy CXX
-`scan_run_continuation_resume` takes no policy and continues the run. The
+binding tracks delivery failure itself. The
 native CLI passes `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY` (`CancelRun`) to both
 execute and settle, its observer only returns the failed delivery, and it warns
 about the failure from the envelope's `has_observer_delivery_failure` rather

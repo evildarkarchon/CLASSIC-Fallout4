@@ -33,6 +33,7 @@ use classic_scanlog_core::scan_run::contract::{
     LocalIgnoreResetConflictError, LocalIgnoreResetDurabilityUnknownError, LocalIgnoreResetFailure,
     LocalIgnoreResetFailureStage, LocalIgnoreResetRunData, LocalIgnoreRunState, LogDisposition,
     LogEvent, LogFailure, LogFailureStage, LogResult, ResumeError, RunResult, RunStatus,
+    SettledRunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRejectedInput,
@@ -70,12 +71,11 @@ fn registered_noun(noun: &str) -> Option<CountedNoun> {
 
 /// Builds an otherwise-empty run result carrying one terminal status.
 fn run_result(status: RunStatus) -> RunResult {
-    RunResult {
+    RunResult::from(SettledRunResult {
         status,
         discovery: None,
         setup: None,
         installed_yaml_data: None,
-        continuation: None,
         effective_concurrency: None,
         message: None,
         total: 0,
@@ -84,7 +84,7 @@ fn run_result(status: RunStatus) -> RunResult {
         cancelled: 0,
         logs: Vec::new(),
         observer_delivery_failure: None,
-    }
+    })
 }
 
 /// Builds a per-log result with the given disposition and no failures.

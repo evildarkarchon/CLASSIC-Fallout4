@@ -14,7 +14,7 @@ use classic_scanlog_core::scan_run::contract::{
     LocalIgnoreRecoveryDecision, LocalIgnoreResetConflictError,
     LocalIgnoreResetDurabilityUnknownError, LocalIgnoreResetFailure, LocalIgnoreResetFailureStage,
     LogDisposition, LogEvent, LogFailure, LogFailureStage, LogResult, Options, Request,
-    ResumeError, RunResult,
+    ResumeError, RunResult, SettledRunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
@@ -129,7 +129,7 @@ fn mixed_outcome_result() -> RunResult {
     ];
     let cancelled = log_result(2, "third.log", LogDisposition::CancelledBeforeStart);
 
-    RunResult {
+    RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: Some(CrashLogScanDiscoveryResult {
             source: CrashLogScanDiscoverySource::Targeted,
@@ -153,9 +153,8 @@ fn mixed_outcome_result() -> RunResult {
         failed: 1,
         cancelled: 1,
         logs: vec![succeeded, failed, cancelled],
-        continuation: None,
         observer_delivery_failure: None,
-    }
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -288,12 +287,12 @@ fn an_event_renders_cores_lines_in_cores_order() {
 /// with its arguments the wrong way round — fails one half or the other.
 #[test]
 fn a_count_prints_the_noun_core_resolved_for_its_value() {
-    let one = RunResult {
-        logs: vec![log_result(0, "only.log", LogDisposition::Succeeded)],
-        total: 1,
-        succeeded: 1,
-        ..mixed_outcome_result()
-    };
+    // Assigned rather than struct-updated: a run result's continuation is private, so no
+    // literal outside the core crate can name or copy it.
+    let mut one = mixed_outcome_result();
+    one.logs = vec![log_result(0, "only.log", LogDisposition::Succeeded)];
+    one.total = 1;
+    one.succeeded = 1;
     let singular = details_of(&format_result(&one));
     assert!(
         singular.contains("1 log") && !singular.contains("1 logs"),
@@ -512,7 +511,7 @@ fn a_terminal_result_reports_completed_work_as_its_percentage() {
         (2.0_f64 / 3.0) * 100.0
     );
 
-    let empty = RunResult {
+    let empty = RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
         discovery: None,
         setup: None,
@@ -524,9 +523,8 @@ fn a_terminal_result_reports_completed_work_as_its_percentage() {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
-        continuation: None,
         observer_delivery_failure: None,
-    };
+    });
     assert_eq!(format_result(&empty).percent, 0.0);
     assert_eq!(format_error(&intake_error()).percent, 0.0);
     assert_eq!(
@@ -656,10 +654,8 @@ fn every_terminal_run_status_renders_its_display_label() {
         .iter()
         .copied()
     {
-        let result = RunResult {
-            status,
-            ..mixed_outcome_result()
-        };
+        let mut result = mixed_outcome_result();
+        result.status = status;
         let presentation = format_result(&result);
         let details = details_of(&presentation);
 
@@ -701,7 +697,7 @@ fn recovery_prompt_for(result: &RunResult) -> classic_scan_presentation::Recover
 
 /// Builds a paused-run projection carrying retained discovery but no fabricated continuation.
 fn paused_recovery_result(message: Option<&str>) -> RunResult {
-    RunResult {
+    RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
         discovery: Some(CrashLogScanDiscoveryResult {
             source: CrashLogScanDiscoverySource::Standard,
@@ -714,7 +710,6 @@ fn paused_recovery_result(message: Option<&str>) -> RunResult {
         }),
         setup: None,
         installed_yaml_data: None,
-        continuation: None,
         effective_concurrency: None,
         message: message.map(str::to_string),
         total: 2,
@@ -723,7 +718,7 @@ fn paused_recovery_result(message: Option<&str>) -> RunResult {
         cancelled: 0,
         logs: Vec::new(),
         observer_delivery_failure: None,
-    }
+    })
 }
 
 /// Verifies the recovery overlay offers both Rust-defined decisions and a non-mutating cancel.

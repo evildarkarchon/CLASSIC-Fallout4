@@ -442,8 +442,8 @@ export async function runCli(
         }
 
         // Terminal for this CLI. The run paused before analysing anything and handed back a
-        // one-shot continuation that only an interactive caller can answer; this command never
-        // resumes it. Falling through to the generic summary below reported a clean exit 0 with
+        // one-shot pending recovery that only an interactive caller can answer; this command never
+        // settles it. Falling through to the generic summary below reported a clean exit 0 with
         // "0 logs" — indistinguishable from a healthy scan of an empty folder — while the real
         // cause was a malformed CLASSIC Ignore.yaml that nothing had told the user about.
         if (scanResult.status === "local_ignore_recovery_required") {

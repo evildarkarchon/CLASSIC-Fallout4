@@ -312,12 +312,11 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
         .iter()
         .copied()
     {
-        let mapped = run_result_to_js(RunResult {
+        let mapped = run_result_to_js(RunResult::from(SettledRunResult {
             status,
             discovery: None,
             setup: None,
             installed_yaml_data: None,
-            continuation: None,
             effective_concurrency: Some(2),
             message: Some("terminal message".to_string()),
             total: 1,
@@ -326,7 +325,7 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
             cancelled: 0,
             logs: vec![],
             observer_delivery_failure: None,
-        });
+        }));
         assert_eq!(mapped.status, status.as_str());
         assert_eq!(mapped.effective_concurrency, Some(2));
         assert_eq!(mapped.message.as_deref(), Some("terminal message"));
@@ -676,12 +675,11 @@ fn assert_display_lines_match(actual: &[JsScanRunDisplayLine], expected: &[JsSca
 /// that compares a projection against a fresh render has to build the value
 /// twice rather than reuse it.
 fn completed_run_result() -> RunResult {
-    RunResult {
+    RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: None,
         setup: None,
         installed_yaml_data: None,
-        continuation: None,
         effective_concurrency: Some(2),
         message: Some("terminal message".to_string()),
         total: 1,
@@ -690,7 +688,7 @@ fn completed_run_result() -> RunResult {
         cancelled: 0,
         logs: vec![],
         observer_delivery_failure: None,
-    }
+    })
 }
 
 #[test]
@@ -865,7 +863,7 @@ fn a_discovery_with_rejections_states_them_separately() {
 
 /// Builds one resume failure of every kind, so no variant rejects untested.
 ///
-/// `Infrastructure` is deliberately absent: `ScanRunClaimTask::compute` routes it
+/// `Infrastructure` is deliberately absent: `ScanRunSettleTask::compute` routes it
 /// into the failure envelope rather than into a rejection, and
 /// [`the_failure_envelope_carries_the_failures_display_lines`] covers that path.
 fn every_resume_failure() -> Vec<contract::ResumeError> {
@@ -964,12 +962,11 @@ fn the_replay_rejection_keeps_its_published_code_and_message() {
 /// Built twice for the reason [`completed_run_result`] is: `RunResult` retains a
 /// one-shot continuation and is not `Clone`.
 fn recovery_required_run_result() -> RunResult {
-    RunResult {
+    RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
         discovery: None,
         setup: None,
         installed_yaml_data: None,
-        continuation: None,
         effective_concurrency: None,
         message: Some("Local Ignore requires a recovery decision".to_string()),
         total: 0,
@@ -978,7 +975,7 @@ fn recovery_required_run_result() -> RunResult {
         cancelled: 0,
         logs: vec![],
         observer_delivery_failure: None,
-    }
+    })
 }
 
 #[test]
@@ -1065,7 +1062,6 @@ fn a_settled_envelope_states_the_settled_run_and_carries_no_continuation() {
 
     assert_eq!(envelope.result.status, "completed");
     assert_eq!(envelope.result.message.as_deref(), Some("settled message"));
-    assert!(envelope.result.continuation.is_none());
     assert_eq!(envelope.observer_error.as_deref(), Some("observer failed"));
     assert_display_lines_match(&envelope.display_lines, &expected);
 }
@@ -1194,10 +1190,11 @@ fn every_recovery_decision_maps_to_its_own_javascript_twin() {
 fn observer_error_is_read_from_the_rust_result_not_tracked_by_the_binding() {
     let reported = || Some(ObserverDeliveryFailure::new("callback threw"));
 
-    let success = success_envelope(RunResult {
-        observer_delivery_failure: reported(),
-        ..completed_run_result()
-    });
+    // Assigned rather than struct-updated: a run result's continuation is private, so no
+    // literal outside the core crate can name or copy it.
+    let mut observed = completed_run_result();
+    observed.observer_delivery_failure = reported();
+    let success = success_envelope(observed);
     assert_eq!(success.observer_error.as_deref(), Some("callback threw"));
     assert!(
         success_envelope(completed_run_result())

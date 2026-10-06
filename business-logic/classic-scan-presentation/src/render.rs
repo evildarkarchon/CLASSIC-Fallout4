@@ -26,19 +26,19 @@ use DisplaySeverity::{Failure, Info, Notice, Success, Warning};
 
 /// Renders a terminal Crash Log Scan Run Result.
 ///
-/// # Continuation ordering
+/// # Pending recovery ordering
 ///
-/// This takes a reference because a [`RunResult`] is not clonable — it retains a one-shot
-/// Crash Log Scan Run Continuation. Take the continuation out of the result **before**
-/// rendering:
+/// This takes a reference because a [`RunResult`] is not clonable — a paused run privately
+/// retains a one-shot Crash Log Scan Run Continuation. Take the pending recovery out of the
+/// result **before** rendering:
 ///
 /// ```ignore
-/// let continuation = result.continuation.take();
+/// let pending = classic_scan_presentation::take_pending_recovery(&mut result);
 /// let lines = render_run_result(&result);
 /// ```
 ///
-/// Rendering first and moving the continuation afterwards borrows the result across the
-/// move and will not compile. All three native frontends already sequence it this way; this
+/// Rendering first and taking the pending recovery afterwards borrows the result across the
+/// mutation and will not compile. All three native frontends already sequence it this way; this
 /// note makes the ordering a contract rather than a coincidence.
 ///
 /// # What is not rendered

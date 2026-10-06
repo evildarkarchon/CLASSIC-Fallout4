@@ -4,10 +4,9 @@
 //! Scan Run. A run paused on Local Ignore recovery offers a [`PendingRecovery`]
 //! through [`RunResult::take_pending_recovery`], and [`PendingRecovery::settle`]
 //! completes the retained work once, returning a [`SettledRunResult`] that has
-//! no continuation. [`CrashLogScanRunContinuation::resume`] and
-//! [`CrashLogScanRunContinuation::abandon`] are the older entry points to the
-//! same continuation and stay until every frontend settles instead (ADR-0009).
-//! Discovery, setup, scheduling, durable finalization, cancellation, events,
+//! no continuation. Settling is the only way to answer a paused run: there is
+//! no separate resume or abandon entry point and no public continuation
+//! (ADR-0009). Discovery, setup, scheduling, durable finalization, cancellation, events,
 //! results, and typed infrastructure failures cross this boundary.
 
 #[cfg(test)]
@@ -633,7 +632,7 @@ pub struct LocalIgnoreResetDurabilityUnknownError {
     pub message: String,
 }
 
-/// Typed failure returned by [`CrashLogScanRunContinuation::resume`].
+/// Typed failure returned by [`PendingRecovery::settle`].
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ResumeError {
     /// The continuation was already consumed by a sequential or concurrent caller.
@@ -781,12 +780,13 @@ fn project_local_ignore_reset_error(error: LocalIgnoreResetError) -> ResumeError
 }
 
 /// Opaque, process-local, non-cloneable continuation for one paused scan run.
-pub struct CrashLogScanRunContinuation {
+///
+/// Crate-private: the only way to answer a paused run is [`PendingRecovery::settle`], which owns
+/// one of these. The separate resume and abandon entry points and the optional continuation field
+/// that once exposed it were removed on every surface (ADR-0009).
+pub(crate) struct CrashLogScanRunContinuation {
     state: Mutex<Option<PreparedCrashLogScanRunContinuation>>,
-    /// The control of the run this continuation paused, which [`PendingRecovery`] settles on.
-    ///
-    /// [`Self::resume`] and [`Self::abandon`] still take a caller-chosen control and ignore this
-    /// one, exactly as before it existed; only the settled surface reads it.
+    /// The control of the run this continuation paused, which every claim runs under.
     run_cancellation: Cancellation,
 }
 
@@ -821,11 +821,12 @@ impl CrashLogScanRunContinuation {
 
     /// Atomically claims this continuation and resumes the retained run once.
     ///
-    /// Cancellation is checked after the one-shot claim but before the recovery plan is consumed,
-    /// so a cancelled resume returns the normal cancelled-after-discovery result without analysis.
-    /// Reset To Default then runs as one synchronous non-interruptible transaction; cancellation
-    /// observed after that transaction returns the same normal cancelled result after preserving
-    /// its durable backup and replacement.
+    /// Runs under the paused run's own control. Cancellation is checked after the one-shot claim
+    /// but before the recovery plan is consumed, so a cancelled resume returns the normal
+    /// cancelled-after-discovery result without analysis. Reset To Default then runs as one
+    /// synchronous non-interruptible transaction; cancellation observed after that transaction
+    /// returns the same normal cancelled result after preserving its durable backup and
+    /// replacement.
     ///
     /// `observer_failure_policy` decides whether a failed observer delivery cancels the resumed
     /// run; the result reports the first failed delivery either way.
@@ -835,13 +836,13 @@ impl CrashLogScanRunContinuation {
     /// Returns [`ResumeError::ContinuationConsumed`] for sequential or concurrent replay, a typed
     /// Local Ignore reset conflict/backup/replacement failure, or [`ResumeError::Infrastructure`]
     /// when the resumed run cannot produce a terminal result.
-    pub async fn resume(
+    async fn resume(
         &self,
         decision: LocalIgnoreRecoveryDecision,
-        cancellation: &Cancellation,
         observer: Option<&mut dyn Observer>,
         observer_failure_policy: ObserverFailurePolicy,
     ) -> Result<RunResult, ResumeError> {
+        let cancellation = &self.run_cancellation;
         let state = self
             .state
             .lock()
@@ -960,46 +961,37 @@ impl CrashLogScanRunContinuation {
 
     /// Abandons this paused Crash Log Scan Run without performing any recovery.
     ///
-    /// Requests cancellation on `cancellation`, then claims the continuation with a decision the
-    /// run never acts on. [`Self::resume`] inspects cancellation immediately after the one-shot
-    /// claim and before the retained recovery plan is consumed, so neither Proceed Without Ignore
-    /// nor Reset To Default is ever applied: no backup is taken, nothing is published, and the
-    /// malformed Local Ignore file is left exactly as it was. The caller receives the ordinary
-    /// post-discovery [`RunStatus::Cancelled`] result, and the continuation is spent, so any later
-    /// `abandon` or [`Self::resume`] reports [`ResumeError::ContinuationConsumed`].
+    /// Requests cancellation on the run's own control, then claims the continuation with a
+    /// decision the run never acts on. [`Self::resume`] inspects cancellation immediately after
+    /// the one-shot claim and before the retained recovery plan is consumed, so neither Proceed
+    /// Without Ignore nor Reset To Default is ever applied: no backup is taken, nothing is
+    /// published, and the malformed Local Ignore file is left exactly as it was. The caller
+    /// receives the ordinary post-discovery [`RunStatus::Cancelled`] result, and the continuation
+    /// is spent, so any later claim reports [`ResumeError::ContinuationConsumed`].
     ///
     /// [`LocalIgnoreRecoveryDecision`] deliberately carries no abandonment variant — adding one
     /// reshapes a type crossing five binding surfaces — so this operation encapsulates the
-    /// cancel-then-resume-with-a-placeholder sequence that the native CLI, the Qt GUI, and the TUI
-    /// each wrote for themselves. The placeholder is `ProceedWithoutIgnore` rather than
-    /// `ResetToDefault` purely defensively: the decision is unreachable, and if that ever stopped
-    /// being true, the non-durable variant is the one that cannot touch the user's files.
+    /// cancel-then-resume-with-a-placeholder sequence. The placeholder is `ProceedWithoutIgnore`
+    /// rather than `ResetToDefault` purely defensively: the decision is unreachable, and if that
+    /// ever stopped being true, the non-durable variant is the one that cannot touch the user's
+    /// files.
     ///
-    /// `cancellation` is the run's own monotonic control and stays cancelled afterwards. That is
-    /// intended: abandoning the run *is* cancelling it, and every hand-written copy of this
-    /// sequence already cancelled the same control before resuming. The request is made *before*
-    /// the claim is attempted, so a call that goes on to report a consumed continuation has still
-    /// cancelled the control. That is inert for the intended use — the control belongs to the run
-    /// this continuation came from, and that run has already finished — but a caller that reuses
-    /// one control across runs would be cancelling the wrong one, which it would be doing at
-    /// [`Self::resume`] too.
+    /// The run's control stays cancelled afterwards. That is intended: abandoning the run *is*
+    /// cancelling it. The request is made *before* the claim is attempted, so a call that goes on
+    /// to report a consumed continuation has still cancelled the control, which is inert because
+    /// that run has already finished.
     ///
     /// # Errors
     ///
-    /// Returns [`ResumeError::ContinuationConsumed`] when this continuation was already claimed by
-    /// an earlier `abandon` or [`Self::resume`], sequentially or concurrently. The recovery-plan
-    /// and infrastructure failures [`Self::resume`] can report are unreachable here, because
-    /// cancellation short-circuits ahead of every stage that produces them.
-    pub async fn abandon(
-        &self,
-        cancellation: &Cancellation,
-        observer: Option<&mut dyn Observer>,
-    ) -> Result<RunResult, ResumeError> {
-        cancellation.cancel();
+    /// Returns [`ResumeError::ContinuationConsumed`] when this continuation was already claimed,
+    /// sequentially or concurrently. The recovery-plan and infrastructure failures
+    /// [`Self::resume`] can report are unreachable here, because cancellation short-circuits ahead
+    /// of every stage that produces them.
+    async fn abandon(&self, observer: Option<&mut dyn Observer>) -> Result<RunResult, ResumeError> {
+        self.run_cancellation.cancel();
         // The policy is moot: cancellation short-circuits resume before any event is delivered.
         self.resume(
             LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            cancellation,
             observer,
             ObserverFailurePolicy::ContinueRun,
         )
@@ -1010,7 +1002,7 @@ impl CrashLogScanRunContinuation {
 /// A Crash Log Scan Run paused on a malformed Local Ignore, waiting to be settled exactly once.
 ///
 /// Taken from a [`RunResult`] with [`RunResult::take_pending_recovery`]. It bundles the run's
-/// single-use [`CrashLogScanRunContinuation`], the run's own [`Cancellation`] control, and the
+/// single-use, crate-private continuation, the run's own [`Cancellation`] control, and the
 /// typed recovery facts a prompt is rendered from. It exists only for a run that paused, so a
 /// recovery status without a continuation to answer it cannot be represented here.
 ///
@@ -1065,22 +1057,10 @@ impl PendingRecovery {
         &self.installed_yaml_data
     }
 
-    /// Returns the single-use continuation this pending recovery settles.
-    ///
-    /// Present only so the resume and abandon binding surfaces that predate settling can claim
-    /// the same continuation while frontends migrate; it goes away with them. A claim made
-    /// through it spends this pending recovery too, and [`Self::settle`] then reports
-    /// [`ResumeError::ContinuationConsumed`].
-    #[must_use]
-    pub const fn continuation(&self) -> &CrashLogScanRunContinuation {
-        &self.continuation
-    }
-
     /// Settles the paused run once, with a Local Ignore Recovery Decision or with none.
     ///
-    /// `Some(decision)` resumes the same discovered Crash Logs without rediscovery, exactly as
-    /// [`CrashLogScanRunContinuation::resume`] does, with Reset To Default still one
-    /// non-interruptible transaction. `None` abandons the run: it cancels the run's own control,
+    /// `Some(decision)` resumes the same discovered Crash Logs without rediscovery, with Reset To
+    /// Default still one non-interruptible transaction. `None` abandons the run: it cancels the run's own control,
     /// then finishes as cancelled after discovery with no filesystem work. That is the one
     /// abandonment operation, not a third decision. If cancellation was already requested,
     /// either form finishes cancelled after discovery.
@@ -1094,24 +1074,23 @@ impl PendingRecovery {
     ///
     /// # Errors
     ///
-    /// Returns [`ResumeError::ContinuationConsumed`] when this pending recovery (or the
-    /// continuation inside it) was already settled, sequentially or concurrently; a typed Local
-    /// Ignore reset conflict or failure for Reset To Default; or [`ResumeError::Infrastructure`]
-    /// when the resumed run cannot produce a terminal result.
+    /// Returns [`ResumeError::ContinuationConsumed`] when this pending recovery was already
+    /// settled, sequentially or concurrently; a typed Local Ignore reset conflict or failure for
+    /// Reset To Default; or [`ResumeError::Infrastructure`] when the resumed run cannot produce a
+    /// terminal result.
     pub async fn settle(
         &self,
         decision: Option<LocalIgnoreRecoveryDecision>,
         observer: Option<&mut dyn Observer>,
         observer_failure_policy: ObserverFailurePolicy,
     ) -> Result<SettledRunResult, ResumeError> {
-        let cancellation = &self.continuation.run_cancellation;
         let result = match decision {
             Some(decision) => {
                 self.continuation
-                    .resume(decision, cancellation, observer, observer_failure_policy)
+                    .resume(decision, observer, observer_failure_policy)
                     .await?
             }
-            None => self.continuation.abandon(cancellation, observer).await?,
+            None => self.continuation.abandon(observer).await?,
         };
         SettledRunResult::from_resumed(result)
     }
@@ -2009,6 +1988,19 @@ impl InstalledYamlDataRunData {
 }
 
 /// Terminal result of the final Crash Log Scan Run operation.
+///
+/// A run paused on Local Ignore recovery retains its continuation privately; the only way to
+/// reach it is [`Self::take_pending_recovery`]. There is no public continuation field, so no
+/// adapter can claim the continuation outside [`PendingRecovery::settle`] (ADR-0009).
+///
+/// ```compile_fail
+/// # use classic_scanlog_core::scan_run::contract::RunResult;
+/// # let result: RunResult = unimplemented!();
+/// let _ = result.continuation;
+/// ```
+///
+/// Values outside this crate are built from a [`SettledRunResult`], which converts losslessly
+/// and never carries a continuation.
 #[derive(Debug)]
 pub struct RunResult {
     /// Expected lifecycle status for the run as a whole.
@@ -2019,8 +2011,6 @@ pub struct RunResult {
     pub setup: Option<CrashLogScanSetupResult>,
     /// Installed YAML Data selected after discovery, absent when intake was not reached.
     pub installed_yaml_data: Option<InstalledYamlDataRunData>,
-    /// Opaque one-shot continuation present only for Local Ignore Recovery Required.
-    pub continuation: Option<CrashLogScanRunContinuation>,
     /// Rust-selected concurrency, once scheduling was reached.
     pub effective_concurrency: Option<usize>,
     /// Optional concise run-level message.
@@ -2037,10 +2027,14 @@ pub struct RunResult {
     pub logs: Vec<LogResult>,
     /// First observer delivery failure of this run, if any; reported under every policy.
     pub observer_delivery_failure: Option<ObserverDeliveryFailure>,
+    /// Opaque one-shot continuation present only for Local Ignore Recovery Required.
+    ///
+    /// Private on purpose; [`Self::take_pending_recovery`] is the one way out.
+    continuation: Option<CrashLogScanRunContinuation>,
 }
 
 impl RunResult {
-    /// Takes the pending recovery a paused run offers, leaving `continuation` empty.
+    /// Takes the pending recovery a paused run offers, leaving none behind.
     ///
     /// Returns `Some` exactly when this result retains a continuation, which only a run paused
     /// on Local Ignore recovery does. The rest of the result stays readable, so an adapter can
@@ -2212,9 +2206,9 @@ pub async fn execute(
 ///
 /// Every registry-backed stage of the run reads that scope: Standard XSE
 /// Folder discovery, FCX setup, Installed YAML Data metadata, analysis
-/// configuration, and per-log analysis. A continuation returned for Local
-/// Ignore recovery keeps the scope, so [`CrashLogScanRunContinuation::resume`]
-/// reads it too. No other snapshot, including the process default, is read.
+/// configuration, and per-log analysis. A pending recovery returned for Local
+/// Ignore recovery keeps the scope, so [`PendingRecovery::settle`] reads it
+/// too. No other snapshot, including the process default, is read.
 /// This lets a binding facade keep its own snapshot. FCX setup still hashes
 /// through the process default [`FileHashScope`], and Standard discovery reads
 /// the Game Local document through the process default [`YamlFileCacheScope`];
@@ -2371,7 +2365,7 @@ async fn execute_inner(
     if result.observer_delivery_failure.is_some()
         && let Some(continuation) = result.continuation.take()
     {
-        return abandon_after_delivery_failure(continuation, cancellation, result).await;
+        return abandon_after_delivery_failure(continuation, result).await;
     }
     Ok(result)
 }
@@ -2385,11 +2379,10 @@ async fn execute_inner(
 /// [`ObserverFailurePolicy`]. `paused` supplies the failure to carry into the cancelled result.
 async fn abandon_after_delivery_failure(
     continuation: CrashLogScanRunContinuation,
-    cancellation: &Cancellation,
     paused: RunResult,
 ) -> Result<RunResult, InfrastructureError> {
     let mut abandoned = continuation
-        .abandon(cancellation, None)
+        .abandon(None)
         .await
         .map_err(|error| InfrastructureError {
             // A freshly paused continuation cannot already be claimed, and abandonment

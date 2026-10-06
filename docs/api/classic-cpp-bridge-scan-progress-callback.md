@@ -14,25 +14,18 @@ auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
 `operation` is Rust-owned because a recovery-required result may also retain a
-non-cloneable `ScanRunContinuation`. Call
-`scan_run_contract_execution_has_continuation`, then
-`scan_run_contract_execution_take_continuation`; resume it exactly once with
-`scan_run_continuation_resume(...)` and either `ProceedWithoutIgnore` or
-`ResetToDefault`, then take that
-operation's result envelope. Resume emits post-discovery events only.
+non-cloneable `ScanRunPendingRecovery`. Take it with
+`scan_run_contract_execution_take_pending_recovery` and settle it exactly once
+with `scan_run_pending_recovery_settle(pending, settlement, observer, policy)`
+(see `classic-cpp-bridge-data-entrypoints.md`); that is the only way to answer
+the paused run.
 
-`scan_run_continuation_abandon(...)` claims the same continuation without a
-decision, for a user who backs out. It takes an observer for signature symmetry
-with resume — so one adapter can be wired to both — but emits **nothing**:
-cancellation short-circuits ahead of every stage that produces an event, which
-is also why nothing on disk is touched. A frontend must therefore not treat
-"observed no event" as a delivery failure on this path.
-
-`scan_run_pending_recovery_settle(pending, settlement, observer, policy)` is the settled
-form of the same two calls (see `classic-cpp-bridge-data-entrypoints.md`). With
-a decision it emits post-discovery events only, like resume; with no decision it
-emits nothing, like abandon. The observer is the only callback involved; the
-recovery decision itself never crosses the bridge as a callback.
+With a decision, settling emits post-discovery events only. With no decision —
+a user who backs out — it emits **nothing**: cancellation short-circuits ahead
+of every stage that produces an event, which is also why nothing on disk is
+touched. A frontend must therefore not treat "observed no event" as a delivery
+failure on that path. The observer is the only callback involved; the recovery
+decision itself never crosses the bridge as a callback.
 
 There is no CXX batch-scan callback, orchestration object, prepared-run entry
 point, resettable scan token, or direct report-writing operation. Native
@@ -76,9 +69,8 @@ first failure on the envelope as `has_observer_delivery_failure` and
 `observer_delivery_failure_message` (a failure with an empty message gets a
 generic one). A failure before the run pauses for Local Ignore recovery makes
 Rust abandon the recovery, so the envelope comes back cancelled with no pending
-recovery or continuation and nothing written. An out-of-range policy throws
-before the run starts. The legacy `scan_run_continuation_resume` takes no
-policy and continues the run.
+recovery and nothing written. An out-of-range policy throws before the run
+starts.
 
 ---
 
@@ -190,7 +182,7 @@ aggregate counts, and discovery-ordered log results. Installed metadata records
 the independently selected Main/game provenance and identity, Local Ignore
 state and identity, and structured fallback/generation diagnostics from the
 single immutable run snapshot. Recovery-required results retain completed
-discovery plus `RecoveryRequired` metadata beside the opaque continuation.
+discovery plus `RecoveryRequired` metadata beside the opaque pending recovery.
 Proceed Without Ignore reuses that exact snapshot and projects
 `ProceedWithoutIgnore` without reopening files or mutating the malformed
 Ignore. Reset To Default reuses the same retained selection, publishes the

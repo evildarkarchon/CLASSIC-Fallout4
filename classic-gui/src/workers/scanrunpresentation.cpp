@@ -490,9 +490,8 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
 {
     ScanRunTerminalPresentation presentation;
 
-    // One rendered block covers all three payloads. `scan_run_contract_execute`,
-    // `scan_run_pending_recovery_settle`, and `scan_run_continuation_resume` return the same
-    // envelope, and `display_lines` describes
+    // One rendered block covers all three payloads. `scan_run_contract_execute` and
+    // `scan_run_pending_recovery_settle` return the same envelope, and `display_lines` describes
     // whichever of the result, the infrastructure error, or the resume error the presence flags
     // below select — so it is projected once, before anything branches on them.
     presentation.displayLines = presentScanRunDisplayLines(execution.display_lines);

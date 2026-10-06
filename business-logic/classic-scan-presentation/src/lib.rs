@@ -23,14 +23,14 @@
 //! translation from being a rewrite later, though CLASSIC stays single-language and this
 //! crate builds no message catalogue, locale plumbing, or runtime language selection.
 //!
-//! # Take the continuation out first
+//! # Take the pending recovery out first
 //!
 //! Every entry point borrows, because a [`RunResult`](classic_scanlog_core::scan_run::contract::RunResult)
-//! is not clonable — it retains a one-shot Crash Log Scan Run Continuation. Take the
-//! continuation out of the result **before** rendering; see [`render_run_result`].
-//! [`take_pending_recovery`] is the way to take it: it returns a [`PendingRecoveryWithPrompt`]
-//! that bundles the continuation with the recovery prompt this crate renders, which is the one
-//! pending-recovery object every binding hands its frontends.
+//! is not clonable — a paused run privately retains a one-shot Crash Log Scan Run
+//! Continuation. Take the pending recovery out of the result **before** rendering; see
+//! [`render_run_result`]. [`take_pending_recovery`] is the way to take it: it returns a
+//! [`PendingRecoveryWithPrompt`] that bundles the pending recovery with the recovery prompt this
+//! crate renders, which is the one pending-recovery object every binding hands its frontends.
 //!
 //! # Rules an adapter must follow
 //!

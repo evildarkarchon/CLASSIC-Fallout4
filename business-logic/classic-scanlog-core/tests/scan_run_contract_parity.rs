@@ -499,18 +499,18 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
         contract::RunStatus::LocalIgnoreRecoveryRequired
     );
     assert_installed_yaml_data(&recovery, &fixture.expected_recovery_required);
-    let continuation = recovery
-        .continuation
-        .take()
-        .expect("recovery-required fixture should retain an opaque continuation");
-    let proceeded = get_runtime()
-        .block_on(continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            &contract::Cancellation::new(),
-            None,
-            contract::ObserverFailurePolicy::ContinueRun,
-        ))
-        .expect("Proceed Without Ignore should complete the retained shared run");
+    let pending = recovery
+        .take_pending_recovery()
+        .expect("recovery-required fixture should offer a pending recovery");
+    let proceeded = contract::RunResult::from(
+        get_runtime()
+            .block_on(pending.settle(
+                Some(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+                None,
+                contract::ObserverFailurePolicy::ContinueRun,
+            ))
+            .expect("Proceed Without Ignore should complete the retained shared run"),
+    );
     assert_installed_yaml_data(&proceeded, &fixture.expected_proceed_without_ignore);
     let proceeded_report = std::fs::read(
         proceeded.logs[0]
@@ -536,18 +536,18 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
             contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("shared malformed Local Ignore should pause again for reset coverage");
-    let reset_continuation = reset_recovery
-        .continuation
-        .take()
-        .expect("shared reset fixture should retain its continuation");
-    let reset = get_runtime()
-        .block_on(reset_continuation.resume(
-            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
-            &contract::Cancellation::new(),
-            None,
-            contract::ObserverFailurePolicy::ContinueRun,
-        ))
-        .expect("shared Reset To Default fixture should complete");
+    let reset_pending = reset_recovery
+        .take_pending_recovery()
+        .expect("shared reset fixture should offer a pending recovery");
+    let reset = contract::RunResult::from(
+        get_runtime()
+            .block_on(reset_pending.settle(
+                Some(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
+                None,
+                contract::ObserverFailurePolicy::ContinueRun,
+            ))
+            .expect("shared Reset To Default fixture should complete"),
+    );
     assert_installed_yaml_data(&reset, &fixture.expected_reset_to_default);
     let reset_metadata = reset
         .installed_yaml_data

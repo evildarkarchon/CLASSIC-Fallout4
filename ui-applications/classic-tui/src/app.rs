@@ -687,12 +687,12 @@ impl App {
     ///
     /// Shared by an initial run and a settled one so both present identical Rust-owned facts.
     fn apply_terminal_run_result(&mut self, mut result: RunResult) {
-        // The continuation comes out before anything renders. A terminal result carries none in
-        // practice, but the ordering is the presentation crate's documented contract rather than a
-        // property of this call site: rendering borrows the result, so a later `take()` would
-        // borrow it across the move. Dropping it also keeps the retained `LastScanRun` free of a
-        // resumable handle no terminal outcome will ever claim.
-        drop(result.continuation.take());
+        // The pending recovery comes out before anything renders. A terminal result carries none
+        // in practice, but the ordering is the presentation crate's documented contract rather
+        // than a property of this call site: rendering borrows the result, so a later take would
+        // borrow it across the mutation. Dropping it also keeps the retained `LastScanRun` free of
+        // a resumable handle no terminal outcome will ever claim.
+        drop(result.take_pending_recovery());
         let presentation = format_result(&result);
         self.scan_progress = presentation.percent;
         self.set_scan_status(presentation.status, presentation.severity);

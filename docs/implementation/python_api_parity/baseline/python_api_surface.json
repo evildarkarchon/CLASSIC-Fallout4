@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T12:50:00.969345+00:00",
+  "generated_at_utc": "2026-10-06T14:54:45.616952+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -9839,16 +9839,6 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "ScanRunContinuation",
-      "export_path": "ScanRunContinuation",
-      "kind": "class",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "class ScanRunContinuation:"
-    },
-    {
-      "module": "classic_scanlog",
       "export": "ScanRunContinuationConsumedError",
       "export_path": "ScanRunContinuationConsumedError",
       "kind": "class",
@@ -10537,17 +10527,6 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "scan_run_abandon",
-      "export_path": "scan_run_abandon",
-      "kind": "function",
-      "arity": 4,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "def scan_run_abandon( continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
-    },
-    {
-      "module": "classic_scanlog",
       "export": "scan_run_execute",
       "export_path": "scan_run_execute",
       "kind": "function",
@@ -10622,17 +10601,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
       "signature": "def scan_run_log_failure_stage_label(token: str) -> str:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "scan_run_resume",
-      "export_path": "scan_run_resume",
-      "kind": "function",
-      "arity": 5,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "def scan_run_resume( continuation: ScanRunContinuation, decision: ScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
     },
     {
       "module": "classic_scanlog",

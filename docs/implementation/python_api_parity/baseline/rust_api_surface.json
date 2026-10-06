@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T13:35:35.676120+00:00",
+  "generated_at_utc": "2026-10-06T14:54:45.581401+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -10790,15 +10790,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "CrashLogScanRunContinuation",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub struct CrashLogScanRunContinuation",
-      "tier": "tier1"
-    },
-    {
       "symbol": "CrashLogScanRunStatus",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -12338,16 +12329,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "abandon",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub async fn abandon(\n        &self,\n        cancellation: &Cancellation,\n        observer: Option<&mut dyn Observer>,\n    )",
-      "tier": "tier1"
-    },
-    {
       "symbol": "add_pattern",
       "kind": "function",
       "arity": 3,
@@ -12824,16 +12805,6 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use record_scanner::{ RecordScanner, contains_record, scan_records_batch, try_scan_records_batch, };",
       "source_expr": "record_scanner::contains_record",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "continuation",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub const fn continuation(&self)",
       "tier": "tier1"
     },
     {
@@ -14044,16 +14015,6 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::resolve_targeted_inputs",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "resume",
-      "kind": "function",
-      "arity": 5,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub async fn resume(\n        &self,\n        decision: LocalIgnoreRecoveryDecision,\n        cancellation: &Cancellation,\n        observer: Option<&mut dyn Observer>,\n        observer_failure_policy: ObserverFailurePolicy,\n    )",
       "tier": "tier1"
     },
     {

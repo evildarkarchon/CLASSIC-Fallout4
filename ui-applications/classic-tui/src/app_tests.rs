@@ -3,7 +3,7 @@ use crate::widgets::path_input::PathValidationState;
 use classic_scanlog_core::CrashLogScanRunStatus;
 use classic_scanlog_core::scan_run::contract::{
     Cancellation, Event as ScanRunEvent, LocalIgnoreRecoveryDecision, LogDisposition, LogEvent,
-    ResumeError, RunResult,
+    ResumeError, RunResult, SettledRunResult,
 };
 use std::path::PathBuf;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -154,21 +154,22 @@ fn path_validation_and_result_discovery_use_the_apps_canonical_root() {
 #[test]
 fn scan_complete_with_errors_updates_status_message() {
     let mut app = App::new_for_testing();
-    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult {
-        status: CrashLogScanRunStatus::Completed,
-        discovery: None,
-        setup: None,
-        installed_yaml_data: None,
-        effective_concurrency: Some(2),
-        message: None,
-        total: 3,
-        succeeded: 2,
-        failed: 1,
-        cancelled: 0,
-        logs: Vec::new(),
-        continuation: None,
-        observer_delivery_failure: None,
-    }))));
+    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult::from(
+        SettledRunResult {
+            status: CrashLogScanRunStatus::Completed,
+            discovery: None,
+            setup: None,
+            installed_yaml_data: None,
+            effective_concurrency: Some(2),
+            message: None,
+            total: 3,
+            succeeded: 2,
+            failed: 1,
+            cancelled: 0,
+            logs: Vec::new(),
+            observer_delivery_failure: None,
+        },
+    )))));
 
     // Derived from the core Display Label rather than restated: the sentence is core's now, and a
     // literal here would be the fourth copy of it this consolidation exists to delete. Compared
@@ -467,21 +468,22 @@ fn scan_complete_switches_to_results_when_enabled() {
     );
     app.active_tab = TabIndex::MainOptions;
 
-    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult {
-        status: CrashLogScanRunStatus::Completed,
-        discovery: None,
-        setup: None,
-        installed_yaml_data: None,
-        effective_concurrency: Some(1),
-        message: None,
-        total: 1,
-        succeeded: 1,
-        failed: 0,
-        cancelled: 0,
-        logs: Vec::new(),
-        continuation: None,
-        observer_delivery_failure: None,
-    }))));
+    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult::from(
+        SettledRunResult {
+            status: CrashLogScanRunStatus::Completed,
+            discovery: None,
+            setup: None,
+            installed_yaml_data: None,
+            effective_concurrency: Some(1),
+            message: None,
+            total: 1,
+            succeeded: 1,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+            observer_delivery_failure: None,
+        },
+    )))));
 
     assert!(matches!(app.active_tab, TabIndex::Results));
 }

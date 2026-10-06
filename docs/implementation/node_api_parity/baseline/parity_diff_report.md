@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T12:00:00.211676+00:00`
-- Tier-1 contract rows: **945**
-- Tier-1 matched: **927**
+- Generated: `2026-10-06T14:45:34.575406+00:00`
+- Tier-1 contract rows: **942**
+- Tier-1 matched: **924**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -920,11 +920,8 @@
 | `scanlog.scan_run.ScanRunRequest` | `scanlog` | `classic-scanlog-core` | `Request` | `ScanRunRequest` | `matched` |
 | `scanlog.scan_run.ScanRunUnsolvedLogs` | `scanlog` | `classic-scanlog-core` | `StandardUnsolvedLogsIntent` | `ScanRunUnsolvedLogs` | `matched` |
 | `scanlog.scan_run.ScanRunCancellation` | `scanlog` | `classic-scanlog-core` | `Cancellation` | `ScanRunCancellation` | `matched` |
-| `scanlog.scan_run.ScanRunContinuation` | `scanlog` | `classic-scanlog-core` | `CrashLogScanRunContinuation` | `ScanRunContinuation` | `matched` |
 | `scanlog.scan_run.ScanRunPendingRecovery` | `scanlog` | `classic-scanlog-core` | `PendingRecovery` | `ScanRunPendingRecovery` | `matched` |
 | `scanlog.scan_run.scanRunExecute` | `scanlog` | `classic-scanlog-core` | `execute` | `scanRunExecute` | `matched` |
-| `scanlog.scan_run.scanRunResume` | `scanlog` | `classic-scanlog-core` | `resume` | `scanRunResume` | `matched` |
-| `scanlog.scan_run.scanRunAbandon` | `scanlog` | `classic-scanlog-core` | `abandon` | `scanRunAbandon` | `matched` |
 | `scanlog.scan_run.scanRunSettle` | `scanlog` | `classic-scanlog-core` | `settle` | `scanRunSettle` | `matched` |
 | `scanlog.scan_run.JsScanRunConfiguration` | `scanlog` | `classic-scanlog-core` | `Configuration` | `JsScanRunConfiguration` | `matched` |
 | `scanlog.scan_run.JsScanRunStandardSource` | `scanlog` | `classic-scanlog-core` | `StandardCrashLogScanSource` | `JsScanRunStandardSource` | `matched` |
