@@ -8,7 +8,8 @@
   "fixtureRoot": "tests/fixtures/game_setup_intake",
   "fixtures": {
     "explicit": "explicit.json",
-    "normalize": "normalize.json"
+    "normalize": "normalize.json",
+    "proposal": "proposal.json"
   },
   "capabilities": [
     {
@@ -57,6 +58,56 @@
         "actionCount": 0,
         "pathUpdateCount": 0,
         "pathUpdates": [],
+        "gameRoot": "Game",
+        "docsRoot": "Docs",
+        "gameExecutable": "Game/Starfield.exe",
+        "reportFlags": {
+          "gameNamed": true,
+          "metadataUnsupported": true,
+          "versionWarning": true,
+          "documentsPassed": true,
+          "loaderFailed": true
+        },
+        "files": [
+          "CLASSIC Settings.yaml",
+          "Docs/Starfield.ini",
+          "Docs/StarfieldCustom.ini",
+          "Docs/StarfieldPrefs.ini",
+          "Game/Starfield.exe"
+        ],
+        "unchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "proposal",
+      "action": "game-setup-intake.run",
+      "capabilityIds": [
+        "game-setup-intake.run"
+      ],
+      "fixtureRefs": [
+        "proposal"
+      ],
+      "input": {
+        "fixtureRef": "proposal"
+      },
+      "expected": {
+        "status": "ready",
+        "hasErrors": true,
+        "totalChecks": 11,
+        "failedChecks": 1,
+        "actionCount": 0,
+        "pathUpdateCount": 1,
+        "pathUpdates": [
+          {
+            "kind": "game_root",
+            "path": "Game"
+          }
+        ],
         "gameRoot": "Game",
         "docsRoot": "Docs",
         "gameExecutable": "Game/Starfield.exe",
