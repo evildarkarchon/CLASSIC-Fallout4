@@ -21,11 +21,16 @@ _REQUEST_FIELDS = frozenset(
         "unsolvedLogs",
         "targetedInputs",
         "fcxEnabled",
+        "setupContext",
     }
 )
 _OBSERVATION_FIELDS = frozenset(
     {"outcome", "errorKind", "request", "diagnostics", "settingsUnchanged"}
 )
+#: The four FCX setup facts a Crash Log Scan Setup Context carries (#286).
+_SETUP_CONTEXT_FIELDS = frozenset({"gameRoot", "docsRoot", "gameExePath", "xseLogPath"})
+#: Frozen launch error tokens: invalid caller input, and the operational XSE log failure.
+_ERROR_KINDS = frozenset({"targeted_without_inputs", "xse_log_inspect"})
 
 
 #: The game-differs rule's diagnostic kinds. Each one's code is its own kind token.
@@ -62,6 +67,18 @@ def _withheld_for_another_game(observation):
     )
 
 
+def _setup_context_is_consistent(request):
+    """FCX on carries exactly the four setup facts; FCX off carries no setup context."""
+    context = request["setupContext"]
+    if request["fcxEnabled"] is not True:
+        return context is None
+    return (
+        isinstance(context, dict)
+        and set(context) == _SETUP_CONTEXT_FIELDS
+        and all(value is None or isinstance(value, str) for value in context.values())
+    )
+
+
 def _launched(observation):
     """A launch that produced a request, never wrote User Settings, and typed its diagnostics."""
     return (
@@ -70,6 +87,7 @@ def _launched(observation):
         and observation["errorKind"] is None
         and isinstance(observation["request"], dict)
         and set(observation["request"]) == _REQUEST_FIELDS
+        and _setup_context_is_consistent(observation["request"])
         and observation["settingsUnchanged"] is True
         and _diagnostics_are_typed(observation)
     )
@@ -80,7 +98,7 @@ def _typed_error(observation):
     return (
         set(observation) == _OBSERVATION_FIELDS
         and observation["outcome"] == "error"
-        and observation["errorKind"] == "targeted_without_inputs"
+        and observation["errorKind"] in _ERROR_KINDS
         and observation["request"] is None
         and observation["diagnostics"] == []
         and observation["settingsUnchanged"] is True

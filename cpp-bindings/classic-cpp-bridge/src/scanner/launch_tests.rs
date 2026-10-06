@@ -13,6 +13,7 @@ fn no_overrides() -> ffi::ScanRunLaunchOverridesDto {
         max_concurrent: 0,
         show_formid_values: false,
         simplify_logs: false,
+        fcx_mode: false,
     }
 }
 
@@ -106,6 +107,62 @@ fn targeted_launch_view_lists_its_inputs() {
     let view = scan_run_launch_view(&launch).unwrap();
     assert_eq!(view.intent, ffi::ScanRunLaunchIntent::Targeted);
     assert_eq!(view.targeted_source.inputs, inputs);
+}
+
+/// Creates an Installation Root for Fallout 4 VR whose saved documents folder is `documents`.
+fn vr_root_with_documents(documents: &str) -> tempfile::TempDir {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        format!(
+            "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4 VR\n  \
+             Game Version: VR\n  Documents Folder Path: {documents}\n"
+        ),
+    )
+    .unwrap();
+    root
+}
+
+#[test]
+fn fcx_mode_override_carries_the_setup_context_with_the_vr_xse_log() {
+    let documents = tempfile::tempdir().unwrap();
+    let xse_folder = documents.path().join("F4SE");
+    std::fs::create_dir_all(&xse_folder).unwrap();
+    std::fs::write(xse_folder.join("f4se.log"), b"").unwrap();
+    std::fs::write(xse_folder.join("f4sevr.log"), b"").unwrap();
+    let root = vr_root_with_documents(&format!("'{}'", documents.path().display()));
+    let overrides = ffi::ScanRunLaunchOverridesDto {
+        fcx_mode: true,
+        ..no_overrides()
+    };
+
+    let launch = scan_run_launch_standard(&root.path().to_string_lossy(), &overrides).unwrap();
+
+    let view = scan_run_launch_view(&launch).unwrap();
+    assert!(view.fcx_enabled);
+    assert!(view.setup_context.has_docs_root);
+    assert!(view.setup_context.has_xse_log_path);
+    assert_eq!(
+        view.setup_context.xse_log_path,
+        xse_folder.join("f4sevr.log").to_string_lossy()
+    );
+}
+
+#[test]
+fn uninspectable_xse_log_is_the_typed_launch_error() {
+    // The YAML `\0` escape saves a documents folder no platform can inspect.
+    let root = vr_root_with_documents("\"/bad\\0docs\"");
+    let overrides = ffi::ScanRunLaunchOverridesDto {
+        fcx_mode: true,
+        ..no_overrides()
+    };
+
+    let launch = scan_run_launch_standard(&root.path().to_string_lossy(), &overrides).unwrap();
+
+    let error = scan_run_launch_error(&launch);
+    assert!(error.has_error);
+    assert_eq!(error.kind, ffi::ScanRunLaunchErrorKind::XseLogInspect);
+    assert!(scan_run_launch_view(&launch).is_err());
 }
 
 #[test]

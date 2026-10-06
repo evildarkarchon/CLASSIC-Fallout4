@@ -214,7 +214,7 @@ A scan context flag that enables local installation checks and affects Autoscan 
 _Avoid_: FCX finding, FCX contribution
 
 **Crash Log Scan Setup Context**:
-The explicit game setup facts supplied to a Crash Log Scan Run when FCX Mode is enabled. It is built by adapters from saved User Settings or current frontend state; scanlog core uses it for setup validation but does not load or persist User Settings.
+The explicit game setup facts supplied to a Crash Log Scan Run when FCX Mode is enabled: the game folder, the documents folder, the game executable, and the XSE log. Crash Log Scan Launch builds it from saved User Settings, resolving the XSE log through XSE Folder rules; missing folders are left for setup validation to report. Scanlog core uses it for setup validation but does not load or persist User Settings.
 _Avoid_: scan config, hidden config load, FCX globals input
 
 **Crash Log Scan Setup Result**:

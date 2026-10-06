@@ -309,3 +309,75 @@ fn targeted_scan_for_a_non_managed_game_drops_saved_fcx_mode_and_its_setup_folde
         ]
     );
 }
+
+#[test]
+fn fcx_override_for_a_non_managed_game_builds_a_setup_context_without_saved_folders() {
+    let saved = saved_fallout4();
+
+    let launch = launch_vr(
+        saved.root.path(),
+        CrashLogScanIntent::Targeted(vec![saved.root.path().join("crash.log")]),
+        CrashLogScanLaunchOverrides::new().with_fcx_mode(),
+    );
+
+    // The override turns FCX Mode on for the non-managed game, but the saved folders belong
+    // to the managed game, so none of them reaches the setup context. With no game folder
+    // and no saved executable there is no executable to name either. The XSE log is not
+    // asserted: with no documents folder its lookup falls through to the host's own
+    // documents discovery.
+    assert!(matches!(launch.request(), Request::Targeted(request) if request.fcx_enabled()));
+    let context = launch
+        .setup_context()
+        .expect("the FCX Mode override carries a setup context");
+    assert_eq!(context.game_root, None);
+    assert_eq!(context.docs_root, None);
+    assert_eq!(context.game_exe_path, None);
+    // Saved FCX Mode is not reported: the override, not the game difference, decided FCX
+    // Mode. The setup folders are reported, because the same FCX launch against the managed
+    // game would have used them.
+    let values: Vec<_> = not_applied(&launch)
+        .into_iter()
+        .map(|(value, _, _)| value)
+        .collect();
+    assert_eq!(
+        values,
+        [
+            SavedGameSpecificValue::GameVersion,
+            SavedGameSpecificValue::SetupFolders,
+        ]
+    );
+}
+
+#[test]
+fn fcx_override_reports_saved_setup_folders_a_non_managed_targeted_launch_withheld() {
+    let root = tempfile::tempdir().unwrap();
+    let documents = root.path().join("Documents");
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        format!(
+            "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  \
+             FCX Mode: false\n  Documents Folder Path: {}\n",
+            yaml_path(&documents),
+        ),
+    )
+    .unwrap();
+
+    let launch = launch_vr(
+        root.path(),
+        CrashLogScanIntent::Targeted(vec![root.path().join("crash.log")]),
+        CrashLogScanLaunchOverrides::new().with_fcx_mode(),
+    );
+
+    // Saved FCX Mode is off, so a Targeted launch reads the setup folders only because of
+    // the override; the managed-game launch with that override would have used the saved
+    // documents folder, so withholding it is reported.
+    let context = launch
+        .setup_context()
+        .expect("the FCX Mode override carries a setup context");
+    assert_eq!(context.docs_root, None);
+    let values: Vec<_> = not_applied(&launch)
+        .into_iter()
+        .map(|(value, _, _)| value)
+        .collect();
+    assert_eq!(values, [SavedGameSpecificValue::SetupFolders]);
+}

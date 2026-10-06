@@ -576,13 +576,17 @@ class ScanRunLaunchTargetedWithoutInputsError(ScanRunLaunchError):
     """A Targeted Crash Log Scan Launch named no inputs."""
 
 
+class ScanRunLaunchXseLogInspectError(ScanRunLaunchError):
+    """FCX Mode is on and the XSE log location could not be inspected (not mere absence)."""
+
+
 class ScanRunLaunchOverrides:
     """Optional per-run values that win over saved User Settings for one launch.
 
     ``game_version`` takes a User Settings game-version token. ``max_concurrent=0``
     explicitly requests adaptive concurrency, overriding a saved limit.
-    ``show_formid_values`` and ``simplify_logs`` are supplied-as-on: ``True`` turns the
-    option on for this run, ``False`` keeps the saved value.
+    ``show_formid_values``, ``simplify_logs`` and ``fcx_mode`` are supplied-as-on:
+    ``True`` turns the option on for this run, ``False`` keeps the saved value.
     """
 
     def __init__(
@@ -593,6 +597,7 @@ class ScanRunLaunchOverrides:
             max_concurrent: int | None = None,
             show_formid_values: bool = False,
             simplify_logs: bool = False,
+            fcx_mode: bool = False,
     ) -> None: ...
 
 
@@ -617,7 +622,10 @@ class ScanRunLaunch:
     base folder is always the Installation Root. Degraded User Settings still produce a
     launch, with their diagnostics. Scanning a game other than the managed game withholds
     the managed game's saved game version, FCX Mode, custom scan folder and setup folders,
-    reporting each one withheld.
+    reporting each one withheld. With FCX Mode on, ``setup_context`` carries the game
+    folder, documents folder, game executable and XSE log; missing folders are not an
+    error. Every launch raises :class:`ScanRunLaunchXseLogInspectError` when FCX Mode is
+    on and the XSE log location cannot be inspected.
     """
 
     intent: Literal["standard", "targeted"]

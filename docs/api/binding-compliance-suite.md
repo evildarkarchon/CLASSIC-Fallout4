@@ -283,11 +283,17 @@ diagnostics, Targeted inputs, the typed Targeted-without-inputs error, and the
 game-differs rule (a non-managed game withholding the saved game version, FCX
 Mode, custom scan folder and setup folders with one typed diagnostic each,
 explicit overrides still winning, and the managed game named explicitly
-reporting nothing). Its
+reporting nothing), and the FCX setup context (#286): saved setup for the
+managed game, the Fallout 4 VR XSE log, missing folders still launching, the
+FCX Mode override giving a Targeted intent its context, and the typed
+`xse_log_inspect` error. Its
 User Settings documents live in `tests/fixtures/crash_log_scan_launch_conformance/`;
-each runner copies one into a fresh Installation Root, launches through its own
-binding, and reports root-relative paths, Vocabulary tokens, diagnostic codes
-(never prose), and whether the document stayed byte-identical. The shared
+each runner copies one into a fresh Installation Root (replacing the
+`{{installationRoot}}` placeholder with that root, `/`-separated), creates the
+scenario's empty `files` beneath it, launches through its own binding, and
+reports root-relative paths (including the `setupContext` facts), Vocabulary
+tokens, diagnostic codes (never prose), and whether the document stayed
+byte-identical. The shared
 scan-run launcher selects a launch-specific runner per adapter
 (`classic-scan-launch/tests/launch_conformance.rs`,
 `__test__/scan_launch_conformance_runner.ts` via `bun run conformance:scan-launch`,

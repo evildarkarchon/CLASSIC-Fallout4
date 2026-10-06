@@ -137,6 +137,9 @@ fn overrides_to_core(
     if value.simplify_logs {
         overrides = overrides.with_simplify_logs();
     }
+    if value.fcx_mode {
+        overrides = overrides.with_fcx_mode();
+    }
     Ok(overrides)
 }
 
@@ -301,6 +304,7 @@ fn map_error_kind(kind: CrashLogScanLaunchErrorKind) -> ffi::ScanRunLaunchErrorK
         CrashLogScanLaunchErrorKind::TargetedWithoutInputs => {
             ffi::ScanRunLaunchErrorKind::TargetedWithoutInputs
         }
+        CrashLogScanLaunchErrorKind::XseLogInspect => ffi::ScanRunLaunchErrorKind::XseLogInspect,
     }
 }
 

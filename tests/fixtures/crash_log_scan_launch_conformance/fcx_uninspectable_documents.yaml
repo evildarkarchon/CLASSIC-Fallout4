@@ -1,0 +1,10 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4
+  Game Version: NextGen
+  FCX Mode: true
+  Simplify Logs: false
+  Show FormID Values: false
+  Move Unsolved Logs: false
+  Max Concurrent Scans: 2
+  Documents Folder Path: "/bad\0docs"

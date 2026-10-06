@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T13:11:24.268884+00:00",
+  "generated_at_utc": "2026-10-06T13:35:35.676120+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -7173,7 +7173,7 @@
       "crate": "classic-scan-launch",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/lib.rs",
-      "source_decl": "pub use launch::{CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch};",
+      "source_decl": "pub use launch::{ CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch, prepare_launch_in_scopes, };",
       "source_expr": "launch::CrashLogScanIntent",
       "tier": "tier1"
     },
@@ -7278,7 +7278,7 @@
       "crate": "classic-scan-launch",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/lib.rs",
-      "source_decl": "pub use launch::{CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch};",
+      "source_decl": "pub use launch::{ CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch, prepare_launch_in_scopes, };",
       "source_expr": "launch::CrashLogScanLaunchRequest",
       "tier": "tier1"
     },
@@ -7357,6 +7357,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/launch.rs",
       "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fcx_mode",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub const fn fcx_mode(&self)",
       "tier": "tier1"
     },
     {
@@ -7495,8 +7505,28 @@
       "crate": "classic-scan-launch",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/lib.rs",
-      "source_decl": "pub use launch::{CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch};",
+      "source_decl": "pub use launch::{ CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch, prepare_launch_in_scopes, };",
       "source_expr": "launch::prepare_launch",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "prepare_launch_in_scopes",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub fn prepare_launch_in_scopes(\n    installation_root: impl AsRef<Path>,\n    intent: CrashLogScanIntent,\n    overrides: &CrashLogScanLaunchOverrides,\n    version_registry: &VersionRegistryScope,\n    yaml_file_cache: &YamlFileCacheScope,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "prepare_launch_in_scopes",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use launch::{ CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch, prepare_launch_in_scopes, };",
+      "source_expr": "launch::prepare_launch_in_scopes",
       "tier": "tier1"
     },
     {
@@ -7547,6 +7577,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
       "source_decl": "pub const fn simplify_logs(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_fcx_mode",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn with_fcx_mode(mut self)",
       "tier": "tier1"
     },
     {

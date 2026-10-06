@@ -44,7 +44,7 @@ fn non_managed_game_exposes_withheld_values_and_their_display_lines() {
     )
     .unwrap();
     let launched = PyScanRunLaunch {
-        inner: prepare_launch(
+        inner: classic_scan_launch::prepare_launch(
             root.path(),
             CrashLogScanIntent::Standard,
             &CrashLogScanLaunchOverrides::new()

@@ -32,8 +32,8 @@ use std::path::{Path, PathBuf};
 /// Every field is optional. `gameVersion` takes a User Settings game-version token
 /// (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`). `maxConcurrent` zero
 /// explicitly requests adaptive concurrency, which overrides a saved limit.
-/// `showFormidValues` and `simplifyLogs` are supplied-as-on: `true` turns the option on for
-/// this run; `false` or absence keeps the saved value.
+/// `showFormidValues`, `simplifyLogs` and `fcxMode` are supplied-as-on: `true` turns the
+/// option on for this run; `false` or absence keeps the saved value.
 #[napi(object)]
 #[derive(Default)]
 pub struct JsScanRunLaunchOverrides {
@@ -43,6 +43,7 @@ pub struct JsScanRunLaunchOverrides {
     pub max_concurrent: Option<u32>,
     pub show_formid_values: Option<bool>,
     pub simplify_logs: Option<bool>,
+    pub fcx_mode: Option<bool>,
 }
 
 /// One non-fatal launch diagnostic; the launch still produced a scannable request.
@@ -76,7 +77,10 @@ impl ScanRunLaunch {
     /// Opens User Settings under `installationRoot` read-only and never writes them; the
     /// Standard base folder is always `installationRoot`. Degraded User Settings still
     /// produce a launch, with their diagnostics. Throws `InvalidArg` for an unrepresentable
-    /// input (a blank root or scan path, or an unknown game-version token).
+    /// input (a blank root or scan path, or an unknown game-version token). With FCX Mode
+    /// on, `setupContext` carries the game folder, documents folder, game executable and
+    /// XSE log; when the XSE log location cannot be inspected (not mere absence) it throws
+    /// the typed launch error whose `code` and `kind` are `xse_log_inspect`.
     #[napi(factory)]
     pub fn standard(
         env: Env,
@@ -264,6 +268,9 @@ fn overrides_to_core(value: JsScanRunLaunchOverrides) -> napi::Result<CrashLogSc
     }
     if value.simplify_logs == Some(true) {
         overrides = overrides.with_simplify_logs();
+    }
+    if value.fcx_mode == Some(true) {
+        overrides = overrides.with_fcx_mode();
     }
     Ok(overrides)
 }

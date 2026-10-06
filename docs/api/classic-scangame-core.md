@@ -328,6 +328,7 @@ Callers:
 
 - the GUI's setup-detection hint, FCX crash-log scan and game-files scan, through the C++ bridge's `classic::xse::resolve_xse_log_for_scan` (empty string = no log; operational failure raises `rust::Error`, which the GUI logs and treats as no hint). No frontend names XSE log files any more.
 - Node `resolveXseLogForScan` (`string | null`, throws on operational failure) and Python `classic_xse.resolve_xse_log_for_scan` (`str | None`, raises `OSError`)
+- Crash Log Scan Launch (`classic-scan-launch`, #286), which calls `resolve_xse_log_for_scan_in_scopes` for the FCX setup context and reports an operational failure as the typed `XseLogInspect` launch error ([`classic-scan-launch.md`](classic-scan-launch.md))
 - the `xse-folder` family's `xse-folder.log` capability, which runs on the Rust, CXX, Node and Python adapters
 
 ## Loose-file and archive scanning APIs

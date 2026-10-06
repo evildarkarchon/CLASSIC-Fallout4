@@ -709,8 +709,8 @@ mod ffi {
     /// Each `has_*` flag says whether its value was supplied. `game_version` takes a User
     /// Settings game-version token (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`).
     /// `max_concurrent` zero explicitly requests adaptive concurrency, which overrides a saved
-    /// limit. `show_formid_values` and `simplify_logs` are supplied-as-on: `true` turns the
-    /// option on for this run, `false` keeps the saved value.
+    /// limit. `show_formid_values`, `simplify_logs` and `fcx_mode` are supplied-as-on: `true`
+    /// turns the option on for this run, `false` keeps the saved value.
     struct ScanRunLaunchOverridesDto {
         has_game: bool,
         game: ScanRunGameId,
@@ -722,6 +722,7 @@ mod ffi {
         max_concurrent: usize,
         show_formid_values: bool,
         simplify_logs: bool,
+        fcx_mode: bool,
     }
 
     /// Which Crash Logs a launched request scans.
@@ -771,6 +772,8 @@ mod ffi {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunLaunchErrorKind {
         TargetedWithoutInputs = 0,
+        /// FCX Mode is on and the XSE log location could not be inspected (not mere absence).
+        XseLogInspect = 1,
     }
 
     /// Typed launch error. `has_error` is authoritative; the other fields are placeholders
@@ -1557,7 +1560,10 @@ mod ffi {
         /// produce a request, with their diagnostics. Throws a CXX exception only when an input
         /// cannot be represented (an empty root or path, an unknown game-version token, or an
         /// out-of-range game discriminant); typed launch errors are read through
-        /// `scan_run_launch_error`.
+        /// `scan_run_launch_error`. With FCX Mode on (saved or `fcx_mode`), the view's
+        /// `setup_context` carries the game folder, documents folder, game executable and
+        /// XSE log; an XSE log location that cannot be inspected is the typed
+        /// `XseLogInspect` launch error.
         fn scan_run_launch_standard(
             installation_root: &str,
             overrides: &ScanRunLaunchOverridesDto,
