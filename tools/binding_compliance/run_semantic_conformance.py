@@ -108,7 +108,6 @@ _COMMON_SOURCES = (
     REPO_ROOT / "business-logic/classic-registry-core/src",
     REPO_ROOT / "business-logic/classic-web-core/src",
     REPO_ROOT / "business-logic/classic-resource-core/src",
-    REPO_ROOT / "business-logic/classic-version-core/src",
     REPO_ROOT / "business-logic/classic-update-core/src",
     Path(__file__).resolve(),
     REPO_ROOT / "tools/binding_compliance/run_scan_run_conformance.py",

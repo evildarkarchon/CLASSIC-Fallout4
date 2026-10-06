@@ -634,7 +634,6 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                 in {
                     "classic-web-core",
                     "classic-resource-core",
-                    "classic-version-core",
                 }
                 or (
                     # The loose version and PE helpers moved here from

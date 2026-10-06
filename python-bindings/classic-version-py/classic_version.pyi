@@ -6,7 +6,8 @@ handling utilities including parsing, comparison, extraction, and validation.
 Architecture:
     - classic-shared-core (``version`` module): Business logic (loose version
       parsing, comparison, extraction, formatting, PE version extraction)
-    - classic-version-core: Known-version queries (Version Registry policy)
+    - classic-version-registry-core: Known-version queries (Version Registry
+      policy owner)
     - classic-version-py: Python bindings (this module - PyO3 adapters)
 
 Features:

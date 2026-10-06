@@ -1321,15 +1321,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-version-core"
-version = "9.1.0"
-dependencies = [
- "classic-shared-core",
- "classic-version-registry-core",
- "semver",
-]
-
-[[package]]
 name = "classic-version-py"
 version = "9.1.0"
 dependencies = [

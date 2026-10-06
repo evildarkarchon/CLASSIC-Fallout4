@@ -22,7 +22,6 @@ Representative maintained crates include:
 - `classic-scanlog-core`
 - `classic-settings-core`
 - `classic-update-core`
-- `classic-version-core`
 - `classic-version-registry-core`
 - `classic-web-core`
 - `classic-xse-core`

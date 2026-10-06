@@ -19,9 +19,10 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_rust_target_crates_count_matches_repo_root_inventory() -> None:
-    # 18 after #256 retired the classic-perf-core facade crate.
-    assert len(RUST_TARGET_CRATES) == 18, (
-        f"Expected 18 RUST_TARGET_CRATES in the repo-root inventory, "
+    # 18 after #256 retired the classic-perf-core facade crate; 17 after
+    # #258 retired the classic-version-core facade crate.
+    assert len(RUST_TARGET_CRATES) == 17, (
+        f"Expected 17 RUST_TARGET_CRATES in the repo-root inventory, "
         f"got {len(RUST_TARGET_CRATES)}"
     )
 
@@ -30,6 +31,15 @@ def test_retired_classic_perf_core_is_not_tracked() -> None:
     """#256 retired classic-perf-core; timing rows are owned by classic-shared-core."""
     assert "classic-perf-core" not in RUST_TARGET_CRATES
     assert "classic-perf-core" not in RUST_OWNER_BY_CRATE
+
+
+def test_retired_classic_version_core_is_not_tracked() -> None:
+    """#258 retired the classic-version-core facade; loose version and PE rows
+    are owned by classic-shared-core and known-version rows by
+    classic-version-registry-core.
+    """
+    assert "classic-version-core" not in RUST_TARGET_CRATES
+    assert "classic-version-core" not in RUST_OWNER_BY_CRATE
 
 
 def test_classic_shared_py_is_in_rust_target_crates() -> None:

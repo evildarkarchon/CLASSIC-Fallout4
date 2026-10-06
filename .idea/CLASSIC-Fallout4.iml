@@ -50,7 +50,6 @@
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-scanlog-core/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-settings-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-update-core/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-version-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-version-registry-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-web-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-xse-core/src" isTestSource="false" />
@@ -103,7 +102,6 @@
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-settings-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-settings-core/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-update-core/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-version-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-version-registry-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-web-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-xse-core/src" isTestSource="false" />
