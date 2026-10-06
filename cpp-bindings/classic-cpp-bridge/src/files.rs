@@ -1,16 +1,17 @@
 //! File operations bridge for CXX FFI.
 //!
-//! Bridges `classic_file_io_core` for backup management, game files,
-//! file similarity, and encoding-aware file I/O, plus
+//! Bridges `classic_file_io_core` for file similarity and encoding-aware
+//! file I/O, `classic_resource_core` for the game-target backup and
+//! game-file operations (moved from file I/O in #250), plus
 //! `classic_scanlog_core::log_collection` for Crash Log collection and
 //! Targeted input resolution (moved from file I/O in #254).
 
 use crate::runtime_support::{block_on, block_on_result};
 use classic_file_io_core::FileIOCore;
-use classic_file_io_core::backup::{BackupManager, BackupType};
-use classic_file_io_core::game_files::GameFilesManager;
 use classic_file_io_core::hash::FileHasher;
 use classic_file_io_core::similarity::calculate_similarity;
+use classic_resource_core::backup::{BackupManager, BackupType};
+use classic_resource_core::game_files::GameFilesManager;
 use classic_scanlog_core::log_collection::LogCollector;
 use std::path::{Path, PathBuf};
 
