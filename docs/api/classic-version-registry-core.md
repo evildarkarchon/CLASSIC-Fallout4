@@ -256,8 +256,8 @@ Snapshot rules:
 Scoped entry points in downstream owners take either a snapshot (`&VersionRegistry`, the `*_in` helpers) for pure lookups or a `&VersionRegistryScope` for workflows, so a workflow that never needs registry data never takes the snapshot:
 
 - [`classic-config-core`](classic-config-core.md): `resolve_registry_version_info_in()`, `YamlDataCore::from_yaml_content_in_version_registry_scope()`, `load_installed_yaml_data_in_version_registry_scope()`, `load_explicit_yaml_data_in_version_registry_scope()`
-- [`classic-xse-core`](classic-xse-core.md): `resolve_xse_folder_for_scan_in_version_registry_scope()`
-- [`classic-scangame-core`](classic-scangame-core.md): `AddressLibInfo::*_in()`, `XseChecker::with_version_registry_scope()`, `GameSetupIntake::run_in_scopes()`, `GameScanOrchestrator::with_version_registry_scope()`
+- [`classic-xse-core`](classic-xse-core.md): `resolve_xse_folder_from_game_local_facts_in_version_registry_scope()`
+- [`classic-scangame-core`](classic-scangame-core.md): `resolve_xse_folder_for_scan_in_version_registry_scope()`, `AddressLibInfo::*_in()`, `XseChecker::with_version_registry_scope()`, `GameSetupIntake::run_in_scopes()`, `GameScanOrchestrator::with_version_registry_scope()`
 - [`classic-scanlog-core`](classic-scanlog-core.md): `PluginAnalyzer::with_version_registry_scope()`, `scan_run::contract::execute_in_version_registry_scope()`
 
 Rust, CXX, and Node callers keep using the unscoped paths and therefore the default scope. The Python `classic_version_registry`, `classic_version`, `classic_config`, `classic_scangame`, and `classic_scanlog` facades each hold their own isolated scope and pass it at facade entry or object construction, so once the facades share one native library (#259) each keeps the snapshot of its own first use.

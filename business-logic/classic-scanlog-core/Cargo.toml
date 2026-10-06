@@ -28,8 +28,9 @@ classic-scangame-core = { path = "../classic-scangame-core" }
 classic-database-core = { path = "../classic-database-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 # Standard discovery resolves the XSE Folder through the run's own Version
-# Registry scope rather than file I/O's unscoped convenience constructor.
-classic-xse-core = { path = "../classic-xse-core" }
+# Registry scope via scangame's `resolve_xse_folder_for_scan_in_version_registry_scope`,
+# which composes config's Game Local facts with XSE's derivation (#252), so
+# scanlog no longer needs a direct XSE edge outside its tests.
 
 # Workspace-internal Vocabulary naming contract: the Crash Log Scan Run
 # contract's two twin enums implement it by delegating to the configuration
@@ -100,6 +101,9 @@ classic-web-core = { path = "../classic-web-core" }
 classic-resource-core = { path = "../classic-resource-core" }
 classic-update-core = { path = "../classic-update-core" }
 classic-message-core = { path = "../classic-message-core" }
+# The xse-operations semantic conformance runner exercises XSE loader probes
+# directly.
+classic-xse-core = { path = "../classic-xse-core" }
 tempfile = { workspace = true }
 criterion = { version = "0.6.0", features = ["html_reports"] }
 sqlx = { workspace = true }

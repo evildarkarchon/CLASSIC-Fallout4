@@ -381,7 +381,7 @@ re-export from `classic_file_io_core`; import these names from
 Construction and accessors:
 
 - `LogCollector::new(base_folder, xse_folder, custom_folder)`
-- `LogCollector::new_for_scan(base_folder, yaml_dir_data, game, selected_game_version, configured_docs_root, custom_folder)` - resolves the XSE Folder through `classic_xse_core::resolve_xse_folder_for_scan` (process default Version Registry snapshot) and keeps the custom folder additive
+- `LogCollector::new_for_scan(base_folder, yaml_dir_data, game, selected_game_version, configured_docs_root, custom_folder)` - resolves the XSE Folder through `classic_scangame_core::resolve_xse_folder_for_scan` (config's Game Local facts plus XSE derivation, process default Version Registry snapshot) and keeps the custom folder additive
 - `with_current_dir(xse_folder, custom_folder)`
 - `crash_logs_dir()` (`<base>/Crash Logs`) and `pastebin_dir()` (`<base>/Crash Logs/Pastebin`)
 
@@ -409,7 +409,7 @@ Behavior worth knowing:
 
 The Crash Log Scan Run does not call `new_for_scan`: it derives the XSE Folder
 from the run's own Version Registry scope with
-`resolve_xse_folder_for_scan_in_version_registry_scope` and passes it to
+`classic_scangame_core::resolve_xse_folder_for_scan_in_version_registry_scope` and passes it to
 `LogCollector::new`.
 
 ### `resolve_targeted_inputs`

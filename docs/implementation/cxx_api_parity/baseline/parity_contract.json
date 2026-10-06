@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T01:23:31Z",
+  "generated_at_utc": "2026-10-06T01:36:23Z",
   "schema_version": 2,
   "entries": [
     {
@@ -15456,8 +15456,8 @@
         ],
         "returnType": "String"
       },
-      "ownerModule": "xse",
-      "rustCrate": "classic-xse-core",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
       "coreRustSymbol": "resolve_xse_folder_for_scan"
     },
     {

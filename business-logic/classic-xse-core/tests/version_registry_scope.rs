@@ -9,7 +9,8 @@ use std::path::Path;
 
 use classic_version_registry_core::{VersionRegistryScope, get_version_registry};
 use classic_xse_core::{
-    resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_version_registry_scope,
+    XseGameLocalFacts, resolve_xse_folder_from_game_local_facts,
+    resolve_xse_folder_from_game_local_facts_in_version_registry_scope,
 };
 
 /// Restores the original working directory on drop, even if the probe panics.
@@ -46,22 +47,21 @@ fn xse_folder_derives_from_the_supplied_scope_only() {
     // cannot be the one that initializes it from that root.
     let _ = get_version_registry();
     let registry_root = tempfile::tempdir().expect("registry root");
-    let yaml_dir_data = tempfile::tempdir().expect("yaml dir without Local.yaml");
     let docs_root = tempfile::tempdir().expect("configured docs root");
     write_custom_root(registry_root.path());
 
     let scope = VersionRegistryScope::new_isolated();
     std::env::set_current_dir(registry_root.path()).expect("enter registry root");
 
-    let scoped = resolve_xse_folder_for_scan_in_version_registry_scope(
-        yaml_dir_data.path(),
+    let scoped = resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
+        &XseGameLocalFacts::default(),
         "Fallout4",
         "Original",
         Some(docs_root.path()),
         &scope,
     );
-    let unscoped = resolve_xse_folder_for_scan(
-        yaml_dir_data.path(),
+    let unscoped = resolve_xse_folder_from_game_local_facts(
+        &XseGameLocalFacts::default(),
         "Fallout4",
         "Original",
         Some(docs_root.path()),

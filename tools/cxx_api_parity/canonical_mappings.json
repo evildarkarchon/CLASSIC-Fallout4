@@ -5797,8 +5797,8 @@
       "rustSymbol": "resolve_xse_folder_for_scan",
       "kind": "function",
       "bridgeModule": "xse",
-      "ownerModule": "xse",
-      "rustCrate": "classic-xse-core",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
       "coreRustSymbol": "resolve_xse_folder_for_scan"
     },
     {
