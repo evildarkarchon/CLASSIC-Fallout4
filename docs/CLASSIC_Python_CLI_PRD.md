@@ -215,7 +215,7 @@ The implemented flag name is `--tracebacks` to make Python-boundary behavior exp
 
 | Command | Purpose |
 | --- | --- |
-| `classic-py scan logs` | Run fail-soft crash-log scanning through `classic_scanlog` and report the complete terminal run result, including Installed YAML Data metadata and per-log failures, in structured output. |
+| `classic-py scan logs` | Run fail-soft crash-log scanning through `classic_scanlog`, with the Targeted request built by Crash Log Scan Launch (`ScanRunLaunch.targeted`) from saved User Settings, and report the complete terminal run result, including Installed YAML Data metadata and per-log failures, in structured output. |
 | `classic-py scan game` | Run game setup checks through `classic_scangame` and related bindings. |
 | `classic-py config inspect` | Open and summarize typed User Settings at an explicit CLASSIC root through `classic_user_settings`. |
 | `classic-py config main-version` | Read the schema-gated main YAML version through the binding contract. |
