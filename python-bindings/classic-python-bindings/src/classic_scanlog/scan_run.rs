@@ -2051,6 +2051,7 @@ pub fn scan_run_execute(
             request,
             crate::classic_scanlog::SCANLOG_VERSION_REGISTRY_SCOPE.clone(),
             crate::classic_scanlog::SCANLOG_HASH_SCOPE.clone(),
+            crate::classic_scanlog::SCANLOG_YAML_FILE_SCOPE.clone(),
             &cancellation,
             observer
                 .as_mut()

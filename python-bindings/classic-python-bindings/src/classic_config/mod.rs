@@ -794,14 +794,18 @@ pub fn persist_game_local_paths(
     .map_err(runtime_to_pyerr)
 }
 
-/// Clear the global YAML cache
+/// Clear the default path/mtime YAML-file cache scope.
 ///
-/// This function clears all cached YAML data. It's primarily useful for
-/// testing to ensure clean state between test runs.
+/// Evicts every entry in the process default `YamlFileCacheScope` without
+/// resetting its hit/miss counters. It's primarily useful for testing to
+/// ensure clean state between test runs.
 ///
-/// The config facade owns the default (unscoped) YAML-file cache scope, the
-/// one config-core's own `YamlOperations::new()` loaders fill. It never
-/// touches `classic_settings`' separately scoped YAML caches.
+/// It does not clear every YAML cache in the process: the facades share one
+/// native library, and `classic_settings` (both of its caches) and
+/// `classic_scanlog` (Game Local reads during Standard scan-run discovery)
+/// keep their own isolated scopes, which this never evicts or resets. Parsed
+/// YAML Data documents are not cached here, so this does not change what a
+/// later YAML Data load reads.
 #[pyfunction]
 pub fn clear_yaml_cache() {
     classic_shared_core::yaml::clear_global_yaml_cache();

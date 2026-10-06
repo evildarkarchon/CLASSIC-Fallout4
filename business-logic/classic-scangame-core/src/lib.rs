@@ -67,7 +67,8 @@ pub use unpacked::{UnpackedError, UnpackedIssues, UnpackedScanner};
 pub use wrye::{WryeBashParser, WryeError, WryeIssue, WryeSeverity};
 pub use xse::{AddressLibInfo, GameVersion, ValidationResult, XseChecker, XseError};
 pub use xse_folder::{
-    resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_version_registry_scope,
+    resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes,
+    resolve_xse_folder_for_scan_in_version_registry_scope,
 };
 
 /// Version of the classic-scangame-core crate

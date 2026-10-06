@@ -79,6 +79,7 @@ Game Local facts and independent persistence for runtime-discovered paths in a G
 
 - `GameLocalFacts` - the recorded `Game_Info` folders (`root_folder_game`, `root_folder_docs`, `docs_folder_xse`) as plain trimmed `Option<PathBuf>` values
 - `read_game_local_facts(yaml_dir_data, game)` - fail-soft reader for `<yaml_dir_data>/CLASSIC {game} Local.yaml`
+- `read_game_local_facts_in_yaml_file_cache_scope(yaml_dir_data, game, &YamlFileCacheScope)` - the same reader through a caller-selected YAML-file cache scope
 - `game_local_yaml_path(yaml_dir_data, game)` - the Game Local document path
 - `persist_game_local_paths(path, game_root, docs_root)` - root-reexported writer that updates supplied Game Local path keys without opening User Settings
 
@@ -251,7 +252,7 @@ The Game Local document (`CLASSIC Data/CLASSIC {game} Local.yaml`, `YamlSource::
 | `root_folder_docs` | `Game_Info.Root_Folder_Docs` | the game's documents folder |
 | `docs_folder_xse` | `Game_Info.Docs_Folder_XSE` | explicit XSE Folder override |
 
-Each value is trimmed; an absent, non-string, or blank value is `None`. The reader is fail-soft: a missing, unreadable, or malformed document returns `GameLocalFacts::default()`, because these facts only refine path discovery. It reads through the default-scope path/mtime YAML-file cache (`YamlOperations::new()`). `GameLocalFacts::from_yaml(&Yaml)` extracts the same facts from an already-loaded document.
+Each value is trimmed; an absent, non-string, or blank value is `None`. The reader is fail-soft: a missing, unreadable, or malformed document returns `GameLocalFacts::default()`, because these facts only refine path discovery. It reads through the default-scope path/mtime YAML-file cache (`YamlOperations::new()`). `read_game_local_facts_in_yaml_file_cache_scope(..., &YamlFileCacheScope)` reads, fills, and counts only the caller's [scope](classic-shared-core.md#cache-scopes) instead; the Python `classic_scanlog` facade reaches it through its scan runs so `classic_config.clear_yaml_cache()` cannot evict its entries (#234). `GameLocalFacts::from_yaml(&Yaml)` extracts the same facts from an already-loaded document.
 
 `GameLocalFacts` carries no YAML and no policy, so crates that must not depend on config consume its plain paths. The XSE Folder resolver takes them as `classic_xse_core::XseGameLocalFacts` through `resolve_xse_folder_from_game_local_facts[_in_version_registry_scope]`; [`classic_scangame_core::resolve_xse_folder_for_scan[_in_version_registry_scope]`](classic-scangame-core.md#xse-folder-from-the-game-local-document) is the composing caller: it reads the facts here and copies `docs_folder_xse` and `root_folder_docs` across, and every setup, scan, and C++ bridge caller resolves through it (#252). There is no XSE-to-config Cargo edge, and XSE no longer reads Local.yaml itself.
 

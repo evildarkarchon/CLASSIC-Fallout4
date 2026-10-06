@@ -41,19 +41,25 @@ reads it too. `execute` uses the process default scope. This variant still
 hashes FCX setup inputs through the process default `FileHashScope`.
 
 `scan_run::contract::execute_in_scopes(request, version_registry, file_hash,
-cancellation, observer)` additionally carries an opaque
-[`FileHashScope`](classic-file-io-core.md#file-hash-scopes): the FCX Game Setup
+yaml_file_cache, cancellation, observer)` additionally carries an opaque
+[`FileHashScope`](classic-file-io-core.md#file-hash-scopes) and an opaque
+[`YamlFileCacheScope`](classic-shared-core.md#cache-scopes). The FCX Game Setup
 Intake step hashes the game executable and XSE scripts through
 `GameSetupIntake::run_in_scopes(&file_hash, &version_registry)`, so those cache
-entries and hit/miss counters land only in `file_hash`. A Local Ignore
-continuation keeps both scopes. `execute` and
-`execute_in_version_registry_scope` pass the process default hash scope, so
-unscoped Rust, CXX, and Node scan runs keep hashing exactly as before. The
-Python `classic_scanlog` facade runs every scan through `execute_in_scopes`
-with its own isolated Version Registry scope and its own isolated
-`FileHashScope`, chosen at facade entry, so its FCX hashing never reaches the
-`classic_file_io` or `classic_scangame` caches or statistics. Public-interface
-probes: `tests/file_hash_scope.rs` and `tests/version_registry_scope.rs`.
+entries and hit/miss counters land only in `file_hash`. Standard discovery
+reads the installation's Game Local document (to derive the XSE Folder)
+through `classic_scangame_core::resolve_xse_folder_for_scan_in_scopes`, so its
+path/mtime YAML-file cache entries and counters land only in `yaml_file_cache`
+(issue #234). A Local Ignore continuation keeps every scope. `execute` and
+`execute_in_version_registry_scope` pass the process default hash and
+YAML-file cache scopes, so unscoped Rust, CXX, and Node scan runs keep hashing
+and reading exactly as before. The Python `classic_scanlog` facade runs every
+scan through `execute_in_scopes` with its own isolated Version Registry scope,
+`FileHashScope`, and `YamlFileCacheScope`, chosen at facade entry, so its FCX
+hashing never reaches the `classic_file_io` or `classic_scangame` caches or
+statistics, and `classic_config.clear_yaml_cache()` cannot evict its cached
+Game Local reads. Public-interface probes: `tests/file_hash_scope.rs`,
+`tests/yaml_file_cache_scope.rs`, and `tests/version_registry_scope.rs`.
 
 Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
 That result owns an opaque `CrashLogScanRunContinuation`; callers explicitly
