@@ -87,7 +87,7 @@ this state, so object results and returned duplicate maps now agree.
 - `GameSetupIntake`, `GameSetupIntakeResult`, `GameSetupCheck`, `game_setup_needs_path_detection()`
 - `GameIntegrityChecker`, `IntegrityConfig`
 - `XseChecker`, `GameVersion`, `ValidationResult`
-- `resolve_xse_folder_for_scan()`, `resolve_xse_folder_for_scan_in_version_registry_scope()`
+- `resolve_xse_folder_for_scan()`, `resolve_xse_folder_for_scan_in_version_registry_scope()`, `resolve_xse_folder_for_scan_in_scopes()`
 - `CrashgenChecker`, `TomlConfigIssue`
 - `ModIniScanner`, `ModIniScanResult`
 - `UnpackedScanner`, `UnpackedIssues`
@@ -305,13 +305,13 @@ Neither owner can do this alone: config owns the Game Local document and XSE own
 1. `classic_config_core::read_game_local_facts(yaml_dir_data, game)` reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` fail-soft (missing, malformed, or blank values become absent facts).
 2. The `docs_folder_xse` and `root_folder_docs` facts are passed as `classic_xse_core::XseGameLocalFacts` to [`resolve_xse_folder_from_game_local_facts`](classic-xse-core.md#xse-folder-from-game-local-facts), which applies the precedence (explicit folder, recorded documents root, `configured_docs_root`, documents discovery) and the Fallout 4 VR `F4SE` folder convention.
 
-`resolve_xse_folder_for_scan_in_version_registry_scope(..., &VersionRegistryScope)` reads Version Registry metadata only from the caller's scope. `None` means "no XSE Folder"; the function never errors.
+`resolve_xse_folder_for_scan_in_version_registry_scope(..., &VersionRegistryScope)` reads Version Registry metadata only from the caller's scope. `resolve_xse_folder_for_scan_in_scopes(..., &VersionRegistryScope, &YamlFileCacheScope)` also reads the Game Local document only through the caller's [YAML-file cache scope](classic-shared-core.md#cache-scopes) (via `read_game_local_facts_in_yaml_file_cache_scope`); Crash Log Scan Run Standard discovery uses it so a binding facade's scope reaches the read (#234). The other two forms pass the process default YAML-file cache scope. `None` means "no XSE Folder"; the function never errors.
 
 Callers:
 
 - Crash Log collection: `classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery (with the run's Version Registry scope)
 - the C++ bridge's `classic::xse::resolve_xse_folder_for_scan`, which the GUI uses for its setup-detection XSE log hint, and `classic::files::log_collector_new_for_scan`
-- the `xse-folder` Binding Compliance Suite family (Rust and CXX participants), whose `domainOwner` is this crate
+- the `xse-folder` Binding Compliance Suite family's `xse-folder.resolve` capability (Rust and CXX participants), which credits this Local.yaml composition to this crate; the family's `domainOwner` is `classic-xse-core`, which owns the derivation (`xse-folder.derive`)
 
 ## Loose-file and archive scanning APIs
 

@@ -209,7 +209,7 @@ pub fn to_py_err(err: ClassicError) -> PyErr {
 /// # Examples
 ///
 /// ```rust,ignore
-/// use classic_shared_py::without_gil;
+/// use crate::support::without_gil;
 /// use pyo3::prelude::*;
 ///
 /// pub fn expensive_operation(py: Python<'_>, data: Vec<u8>) -> PyResult<String> {

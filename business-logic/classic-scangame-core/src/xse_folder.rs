@@ -6,7 +6,8 @@
 //! plain paths. Setup (the GUI's setup-detection hint), Crash Log collection
 //! (`classic-scanlog-core`), and the C++ bridge all resolve through here.
 
-use classic_config_core::{GameLocalFacts, read_game_local_facts};
+use classic_config_core::{GameLocalFacts, read_game_local_facts_in_yaml_file_cache_scope};
+use classic_shared_core::yaml::YamlFileCacheScope;
 use classic_version_registry_core::VersionRegistryScope;
 use classic_xse_core::{
     XseGameLocalFacts, resolve_xse_folder_from_game_local_facts_in_version_registry_scope,
@@ -51,7 +52,39 @@ pub fn resolve_xse_folder_for_scan_in_version_registry_scope(
     configured_docs_root: Option<&Path>,
     version_registry: &VersionRegistryScope,
 ) -> Option<PathBuf> {
-    let facts = read_game_local_facts(yaml_dir_data.as_ref(), game);
+    resolve_xse_folder_for_scan_in_scopes(
+        yaml_dir_data,
+        game,
+        selected_game_version,
+        configured_docs_root,
+        version_registry,
+        &YamlFileCacheScope::default_scope(),
+    )
+}
+
+/// Resolve the XSE Folder like
+/// [`resolve_xse_folder_for_scan_in_version_registry_scope`], and also read
+/// the Game Local document only through `yaml_file_cache`.
+///
+/// The document read fills, hits, and counts only that path/mtime YAML-file
+/// cache scope, so a binding facade that passes its own opaque scope keeps its
+/// Game Local entries out of every other facade's cache (and out of reach of
+/// their clears). Unscoped callers use the functions above, which pass the
+/// process default scope.
+#[must_use]
+pub fn resolve_xse_folder_for_scan_in_scopes(
+    yaml_dir_data: impl AsRef<Path>,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+    version_registry: &VersionRegistryScope,
+    yaml_file_cache: &YamlFileCacheScope,
+) -> Option<PathBuf> {
+    let facts = read_game_local_facts_in_yaml_file_cache_scope(
+        yaml_dir_data.as_ref(),
+        game,
+        yaml_file_cache,
+    );
     resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
         &xse_game_local_facts(facts),
         game,

@@ -90,3 +90,53 @@ fn facade_version_registry_scope_is_not_the_process_default() {
 fn facade_file_hash_scope_is_not_the_process_default() {
     assert_ne!(*SCANLOG_HASH_SCOPE, FileHashScope::default_scope());
 }
+
+/// Standard discovery inside scan runs started through this facade reads the
+/// Game Local document through its own YAML-file cache scope, never the
+/// process default that unscoped Rust, CXX, and Node runs use (#234).
+#[test]
+fn facade_yaml_file_cache_scope_is_not_the_process_default() {
+    use classic_shared_core::yaml::YamlFileCacheScope;
+
+    assert_ne!(
+        *SCANLOG_YAML_FILE_SCOPE,
+        YamlFileCacheScope::default_scope()
+    );
+}
+
+/// `classic_config.clear_yaml_cache()` clears only the default YAML-file
+/// scope, so this facade's cached Game Local entries and counters survive it,
+/// while this facade's own scope can still be cleared (#234).
+#[test]
+#[serial]
+fn config_clear_leaves_facade_yaml_entries_and_counters() {
+    use classic_shared_core::yaml::YamlOperations;
+
+    let temp_dir = tempdir().expect("temp dir should be created");
+    let local = temp_dir.path().join("CLASSIC Fallout4 Local.yaml");
+    fs::write(&local, "Game_Info:\n  Docs_Folder_XSE: probe-xse\n").expect("Local.yaml");
+    let scope = &*SCANLOG_YAML_FILE_SCOPE;
+    scope.clear();
+    scope.reset_stats();
+    let ops = YamlOperations::with_cache_scope(scope.clone());
+    ops.load_yaml_file(&local).expect("first load");
+    ops.load_yaml_file(&local).expect("cached load");
+    let filled = scope.stats();
+    assert_eq!((filled.hits, filled.misses, filled.size), (1, 1, 1));
+
+    crate::classic_config::clear_yaml_cache();
+
+    let after_config_clear = scope.stats();
+    assert_eq!(
+        (
+            after_config_clear.hits,
+            after_config_clear.misses,
+            after_config_clear.size
+        ),
+        (1, 1, 1),
+        "the config facade's clear must not evict or reset scanlog's scope"
+    );
+
+    scope.clear();
+    assert_eq!(scope.stats().size, 0, "the facade's own scope still clears");
+}

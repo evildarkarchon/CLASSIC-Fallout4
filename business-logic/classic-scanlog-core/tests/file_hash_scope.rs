@@ -14,6 +14,7 @@ use classic_file_io_core::FileHashScope;
 use classic_scanlog_core::CrashLogScanFacts;
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::scan_run::{CrashLogScanSetupContext, TargetedCrashLogScanSource};
+use classic_shared_core::yaml::YamlFileCacheScope;
 use classic_shared_core::{GameId, get_runtime};
 use classic_version_registry_core::VersionRegistryScope;
 use tempfile::{TempDir, tempdir};
@@ -123,6 +124,7 @@ fn scoped_fcx_setup_hashes_only_in_the_supplied_scope() {
             installation.request(),
             VersionRegistryScope::default_scope(),
             facade_scope.clone(),
+            YamlFileCacheScope::default_scope(),
             &contract::Cancellation::new(),
             None,
         ))
@@ -152,6 +154,7 @@ fn scoped_fcx_setup_hashes_only_in_the_supplied_scope() {
             installation.request(),
             VersionRegistryScope::default_scope(),
             facade_scope.clone(),
+            YamlFileCacheScope::default_scope(),
             &contract::Cancellation::new(),
             None,
         ))

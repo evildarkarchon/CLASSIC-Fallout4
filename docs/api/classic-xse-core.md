@@ -195,6 +195,8 @@ Behavior worth knowing:
 
 Callers that start from an installation's `CLASSIC Data` directory use [`classic_scangame_core::resolve_xse_folder_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document) (and its `_in_version_registry_scope` form), which reads the facts with `classic_config_core::read_game_local_facts` and calls this function. The GUI's setup-detection hint and the C++ bridge's `classic::xse::resolve_xse_folder_for_scan` go through it, and so does Crash Log collection (`classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery, which passes the run's scope). Standard crash scans keep custom folders additive to XSE Folder collection.
 
+This crate is the `domainOwner` of the `xse-folder` Binding Compliance Suite family. Its `xse-folder.derive` capability exercises `resolve_xse_folder_from_game_local_facts` directly with supplied facts (Rust only; no binding exposes the facts resolver). The Local.yaml composition is credited separately to `classic-scangame-core` as `xse-folder.resolve`.
+
 ## Version helpers
 
 The crate does not re-export version helpers. When a caller wants to compare a detected XSE version with version strings resolved elsewhere, it uses `parse_version()` and `compare_versions()` from [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) directly. `classic-xse-core` does not currently expose its own higher-level compatibility-check function.

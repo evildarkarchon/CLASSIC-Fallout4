@@ -345,9 +345,11 @@ class YamlSource:
 
 
 def clear_yaml_cache() -> None:
-    """Clear the global YAML configuration cache.
+    """Clear the default path/mtime YAML-file cache scope.
 
-    Forces the next YamlData initialization to reload from disk.
+    Evicts its entries without resetting its hit/miss counters. The
+    ``classic_settings`` and ``classic_scanlog`` facades keep their own
+    YAML-file cache scopes, which this never evicts or resets.
     """
 
 

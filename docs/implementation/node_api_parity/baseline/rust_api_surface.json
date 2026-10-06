@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T04:38:42.479785+00:00",
+  "generated_at_utc": "2026-10-06T06:16:02.802497+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -411,7 +411,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, };",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, read_game_local_facts_in_yaml_file_cache_scope, };",
       "source_expr": "game_local::GameLocalFacts",
       "tier": "tier1"
     },
@@ -1660,7 +1660,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, };",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, read_game_local_facts_in_yaml_file_cache_scope, };",
       "source_expr": "game_local::game_local_yaml_path",
       "tier": "tier1"
     },
@@ -2318,7 +2318,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, };",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, read_game_local_facts_in_yaml_file_cache_scope, };",
       "source_expr": "game_local::persist_game_local_paths",
       "tier": "tier1"
     },
@@ -2358,8 +2358,28 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, };",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, read_game_local_facts_in_yaml_file_cache_scope, };",
       "source_expr": "game_local::read_game_local_facts",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "read_game_local_facts_in_yaml_file_cache_scope",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/game_local.rs",
+      "source_decl": "pub fn read_game_local_facts_in_yaml_file_cache_scope(\n    yaml_dir_data: &Path,\n    game: &str,\n    yaml_file_cache: &YamlFileCacheScope,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "read_game_local_facts_in_yaml_file_cache_scope",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use game_local::{ GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts, read_game_local_facts_in_yaml_file_cache_scope, };",
+      "source_expr": "game_local::read_game_local_facts_in_yaml_file_cache_scope",
       "tier": "tier1"
     },
     {
@@ -9688,8 +9708,28 @@
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_version_registry_scope, };",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, };",
       "source_expr": "xse_folder::resolve_xse_folder_for_scan",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_folder_for_scan_in_scopes",
+      "kind": "function",
+      "arity": 6,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/xse_folder.rs",
+      "source_decl": "pub fn resolve_xse_folder_for_scan_in_scopes(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n    version_registry: &VersionRegistryScope,\n    yaml_file_cache: &YamlFileCacheScope,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_folder_for_scan_in_scopes",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, };",
+      "source_expr": "xse_folder::resolve_xse_folder_for_scan_in_scopes",
       "tier": "tier1"
     },
     {
@@ -9708,7 +9748,7 @@
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_version_registry_scope, };",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes, resolve_xse_folder_for_scan_in_version_registry_scope, };",
       "source_expr": "xse_folder::resolve_xse_folder_for_scan_in_version_registry_scope",
       "tier": "tier1"
     },
@@ -12542,11 +12582,11 @@
     {
       "symbol": "execute_in_scopes",
       "kind": "function",
-      "arity": 5,
+      "arity": 6,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
-      "source_decl": "pub async fn execute_in_scopes(\n    request: Request,\n    version_registry: VersionRegistryScope,\n    file_hash: FileHashScope,\n    cancellation: &Cancellation,\n    observer: Option<&mut dyn Observer>,\n)",
+      "source_decl": "pub async fn execute_in_scopes(\n    request: Request,\n    version_registry: VersionRegistryScope,\n    file_hash: FileHashScope,\n    yaml_file_cache: YamlFileCacheScope,\n    cancellation: &Cancellation,\n    observer: Option<&mut dyn Observer>,\n)",
       "tier": "tier1"
     },
     {

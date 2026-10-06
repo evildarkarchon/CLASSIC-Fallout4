@@ -46,6 +46,7 @@ pub use explicit_yaml_data::{
 
 pub use game_local::{
     GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts,
+    read_game_local_facts_in_yaml_file_cache_scope,
 };
 // Ignore/Local YAML first-run generation (#248).
 pub use generation::{

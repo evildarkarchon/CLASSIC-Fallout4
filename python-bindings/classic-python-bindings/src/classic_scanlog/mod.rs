@@ -66,6 +66,7 @@
 use crate::support::{define_exceptions, register_exceptions};
 use classic_file_io_core::FileHashScope;
 use classic_registry_core::RegistryScope;
+use classic_shared_core::yaml::YamlFileCacheScope;
 use classic_version_registry_core::VersionRegistryScope;
 use pyo3::prelude::*;
 use std::sync::LazyLock;
@@ -222,6 +223,18 @@ pub(crate) static SCANLOG_VERSION_REGISTRY_SCOPE: LazyLock<VersionRegistryScope>
 /// controls, so nothing else reads this scope.
 pub(crate) static SCANLOG_HASH_SCOPE: LazyLock<FileHashScope> =
     LazyLock::new(FileHashScope::new_isolated);
+
+/// `classic_scanlog`'s path/mtime YAML-file cache scope.
+///
+/// Standard discovery in every Crash Log Scan Run started through this facade
+/// reads the installation's Game Local document (to derive the XSE Folder)
+/// only through this scope. Before #259 each facade was its own extension
+/// image with its own default YAML-file cache; now that the facades share one
+/// native library, this keeps scanlog's entries and counters out of the
+/// process default scope, so `classic_config.clear_yaml_cache()` cannot evict
+/// them. The facade exposes no YAML-cache controls, so nothing else reads it.
+pub(crate) static SCANLOG_YAML_FILE_SCOPE: LazyLock<YamlFileCacheScope> =
+    LazyLock::new(YamlFileCacheScope::new_isolated);
 
 /// Register the executed script's directory as this facade's application
 /// directory unless one is already set in its own registry scope.

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers testing patterns, fixtures, and coverage requirements for CLASSIC's Rust crates. The Rust components follow a three-layer architecture with pure business logic (`-core` crates), Python bindings (`-py` crates), and applications.
+This guide covers testing patterns, fixtures, and coverage requirements for CLASSIC's Rust crates. The Rust components follow a three-layer architecture with pure business logic (`-core` crates), Python bindings (the one `classic-python-bindings` adapter crate), and applications.
 
 ## Rust Test Structure
 
@@ -24,7 +24,7 @@ This guide covers testing patterns, fixtures, and coverage requirements for CLAS
 │   └── ... (other -core crates)
 │
 ├── python-bindings/
-│   └── classic-*-py/                 # Tested via Python integration
+│   └── classic-python-bindings/      # Tested via Python integration
 │
 └── ui-applications/
     └── classic-tui/
@@ -192,7 +192,7 @@ fn test_concurrent_access() {
 
 - **Business logic crates (`-core`)**: 60%+ line coverage
 - **Foundation crates**: 80%+ line coverage
-- **Python binding crates (`-py`)**: Excluded (tested via Python)
+- **Python binding adapter (`classic-python-bindings`)**: Excluded (tested via Python)
 
 ### Per-Crate Requirements
 
@@ -209,9 +209,11 @@ fn test_concurrent_access() {
 | Crate | Line Coverage |
 |-------|---------------|
 | classic-message-core | 100% |
-| classic-perf-core | 98-100% |
-| classic-pybridge-core | 100% |
-| classic-constants-core | 89% |
+| classic-shared-core `performance_core` (timing; formerly reached through the `classic-perf-core` facade, retired in #256) | 98-100% |
+
+Historical rows: `classic-pybridge-core` (100%) and `classic-constants-core`
+(89%) were measured before those crates left the workspace; they are kept only
+as a record and no longer name maintained crates.
 
 ### Running Coverage Locally
 
@@ -229,26 +231,10 @@ cargo llvm-cov --workspace --html
 start target/llvm-cov/html/index.html  # Windows
 open target/llvm-cov/html/index.html   # macOS
 
-# Exclude Python binding crates (not tested via Rust)
-cargo llvm-cov --workspace \
-  --exclude classic-yaml-py \
-  --exclude classic-database-py \
-  --exclude classic-file-io-py \
-  --exclude classic-scanlog-py \
-  --exclude classic-config-py \
-  --exclude classic-scangame-py \
-  --exclude classic-registry-py \
-  --exclude classic-perf-py \
-  --exclude classic-settings-py \
-  --exclude classic-message-py \
-  --exclude classic-path-py \
-  --exclude classic-constants-py \
-  --exclude classic-version-py \
-  --exclude classic-resource-py \
-  --exclude classic-xse-py \
-  --exclude classic-web-py \
-  --exclude classic-update-py \
-  --exclude classic-shared-py
+# Exclude the Python binding adapter (tested via Python). Since issue #259
+# there is one PyO3 adapter crate behind all 18 classic_* facades; the former
+# per-module classic-*-py crates no longer exist.
+cargo llvm-cov --workspace --exclude classic-python-bindings
 ```
 
 ## Test Fixtures and Helpers
@@ -402,7 +388,7 @@ fn test_increment() {
 
 ## Integration with Python Tests
 
-Python binding crates (`-py` crates) are tested via binding smoke tests in `python-bindings/tests/`. These tests verify:
+The Python binding adapter (`classic-python-bindings`, behind all 18 `classic_*` facades) is tested via binding smoke tests in `python-bindings/tests/`. These tests verify:
 
 1. PyO3 bindings work correctly
 2. Error handling propagates properly
@@ -439,12 +425,12 @@ The GitHub Actions CI workflow includes dedicated Rust jobs that run independent
    - Output captured (`--nocapture`)
 
 5. **Python Bindings** (30 min timeout)
-   - Maturin builds for all `-py` crates
+   - Maturin builds the one `classic-python-bindings` wheel
    - Depends on Rust Build job
 
 6. **Coverage** (future)
    - `cargo llvm-cov` with 55% minimum threshold
-   - Exclude `-py` crates from coverage requirements
+   - Exclude `classic-python-bindings` from coverage requirements
 
 ## Writing New Tests
 

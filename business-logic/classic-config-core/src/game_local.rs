@@ -7,8 +7,8 @@
 //! plain paths in it) from a composing caller instead of reading the YAML.
 
 use anyhow::{Context, Result};
-use classic_shared_core::yaml::YamlOperations;
 use classic_shared_core::yaml::load_yaml_merged_async;
+use classic_shared_core::yaml::{YamlFileCacheScope, YamlOperations};
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use yaml_rust2::Yaml;
@@ -72,7 +72,27 @@ pub fn game_local_yaml_path(yaml_dir_data: &Path, game: &str) -> PathBuf {
 /// (`YamlOperations::new()`), so repeat reads of an unchanged file are cheap.
 #[must_use]
 pub fn read_game_local_facts(yaml_dir_data: &Path, game: &str) -> GameLocalFacts {
-    YamlOperations::new()
+    read_game_local_facts_in_yaml_file_cache_scope(
+        yaml_dir_data,
+        game,
+        &YamlFileCacheScope::default_scope(),
+    )
+}
+
+/// Reads the Game Local facts like [`read_game_local_facts`], but through the
+/// caller-selected path/mtime YAML-file cache `yaml_file_cache`.
+///
+/// The read fills, hits, and counts only that scope; no other scope,
+/// including the process default, is read or changed. A binding facade passes
+/// its own opaque scope so another facade's YAML cache clear cannot evict its
+/// entries. Fail-soft exactly like [`read_game_local_facts`].
+#[must_use]
+pub fn read_game_local_facts_in_yaml_file_cache_scope(
+    yaml_dir_data: &Path,
+    game: &str,
+    yaml_file_cache: &YamlFileCacheScope,
+) -> GameLocalFacts {
+    YamlOperations::with_cache_scope(yaml_file_cache.clone())
         .load_yaml_file(&game_local_yaml_path(yaml_dir_data, game))
         .map(|yaml| GameLocalFacts::from_yaml(&yaml))
         .unwrap_or_default()

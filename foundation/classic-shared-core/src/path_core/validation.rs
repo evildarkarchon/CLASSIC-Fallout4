@@ -472,6 +472,26 @@ pub fn has_write_permission(path: &Path) -> bool {
 /// ```
 #[cfg(target_os = "windows")]
 pub fn remove_readonly_attribute(path: &Path) -> PathResult<()> {
+    clear_readonly_flag(path, |_| {})
+}
+
+/// Shared Windows body of [`remove_readonly_attribute`] and [`remove_readonly`].
+///
+/// Clears the read-only flag when it is set. `on_set_failure` runs with the
+/// raw I/O error from `set_permissions` before it is wrapped in
+/// [`PathError::PermissionDenied`]; it exists so `remove_readonly` can keep
+/// its stderr warning text (which embeds that raw error) without a second
+/// copy of this body.
+///
+/// # Errors
+///
+/// - [`PathError::IoError`] when the path's metadata cannot be read.
+/// - [`PathError::PermissionDenied`] when the permissions cannot be updated.
+#[cfg(target_os = "windows")]
+fn clear_readonly_flag(
+    path: &Path,
+    on_set_failure: impl FnOnce(&std::io::Error),
+) -> PathResult<()> {
     use std::fs;
 
     let metadata = fs::metadata(path).map_err(|e| PathError::IoError {
@@ -484,6 +504,7 @@ pub fn remove_readonly_attribute(path: &Path) -> PathResult<()> {
         #[allow(clippy::permissions_set_readonly_false)]
         permissions.set_readonly(false);
         fs::set_permissions(path, permissions).map_err(|e| {
+            on_set_failure(&e);
             PathError::PermissionDenied(format!(
                 "Failed to remove read-only attribute from {}: {}",
                 path.display(),
@@ -511,7 +532,8 @@ pub fn remove_readonly_attribute(_path: &Path) -> PathResult<()> {
 ///
 /// Unlike [`remove_readonly_attribute`], this writes that stderr warning; the
 /// Node and Python `remove_readonly` exports rely on the existing behavior, so
-/// the two helpers are kept distinct.
+/// the two public helpers are kept distinct even though they share one
+/// implementation.
 ///
 /// # Arguments
 ///
@@ -538,40 +560,15 @@ pub fn remove_readonly_attribute(_path: &Path) -> PathResult<()> {
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[cfg(target_os = "windows")]
-#[allow(clippy::permissions_set_readonly_false)]
 pub fn remove_readonly(file_path: &Path) -> PathResult<()> {
-    use std::fs;
-
-    // Get current permissions
-    let metadata = fs::metadata(file_path).map_err(|e| PathError::IoError {
-        path: file_path.to_path_buf(),
-        source: e,
-    })?;
-
-    let mut permissions = metadata.permissions();
-
-    // Check if read-only bit is set
-    if permissions.readonly() {
-        // Clear the read-only flag
-        permissions.set_readonly(false);
-
-        // Apply the modified permissions
-        fs::set_permissions(file_path, permissions).map_err(|e| {
-            // Log warning to stderr - this is best-effort
-            eprintln!(
-                "Warning: Could not remove read-only attribute from {}: {}",
-                file_path.display(),
-                e
-            );
-            PathError::PermissionDenied(format!(
-                "Failed to remove read-only attribute from {}: {}",
-                file_path.display(),
-                e
-            ))
-        })?;
-    }
-
-    Ok(())
+    clear_readonly_flag(file_path, |e| {
+        // Log warning to stderr - this is best-effort
+        eprintln!(
+            "Warning: Could not remove read-only attribute from {}: {}",
+            file_path.display(),
+            e
+        );
+    })
 }
 
 #[cfg(test)]
