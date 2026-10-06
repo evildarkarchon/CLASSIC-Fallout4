@@ -14,6 +14,10 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum ValidationError {
     /// Path is restricted for custom scans.
+    ///
+    /// Reported by the custom-scan folder policy owned by
+    /// `classic_scanlog_core::custom_scan`; the variant stays in this shared
+    /// validation vocabulary so its type and message are unchanged for callers.
     #[error("Path is restricted for custom scans: {0}")]
     RestrictedPath(PathBuf),
 

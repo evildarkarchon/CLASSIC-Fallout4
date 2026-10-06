@@ -11,6 +11,9 @@
 //! - **BA2 Archive Support**: Access resources in BA2 archives
 //! - **Resource Enumeration**: List and filter resources
 //! - **Resource Validation**: Check resource integrity and format
+//! - **Game-Target DDS Rules**: Validate parsed DDS texture headers against
+//!   Fallout 4 / Skyrim SE requirements ([`dds::DDSAnalyzer`]); neutral header
+//!   parsing stays in `classic-file-io-core`
 //! - **Version-Labelled Backup**: Copy a configuration file under a sanitized version label
 //!   ([`VersionBackupManager`], [`XseVersion`]); distinct from the game-target backup
 //!
@@ -35,8 +38,10 @@ use walkdir::WalkDir;
 
 use classic_shared_core::path_core::PathError;
 
+pub mod dds;
 mod version_backup;
 
+pub use dds::{DDSAnalyzer, DDSIssue, GameTarget};
 pub use version_backup::{
     VersionBackupError, VersionBackupManager, VersionBackupResult, XseVersion,
 };

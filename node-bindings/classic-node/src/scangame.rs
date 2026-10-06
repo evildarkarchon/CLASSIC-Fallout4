@@ -1086,10 +1086,10 @@ pub fn check_xse_plugins(plugins_path: String, game_version: String) -> Result<S
 // ============================================================================
 
 /// Convert a JS game target string to the core DDS GameTarget enum.
-fn parse_game_target_for_scan(s: &str) -> classic_file_io_core::dds::GameTarget {
+fn parse_game_target_for_scan(s: &str) -> classic_resource_core::dds::GameTarget {
     match s {
-        "SkyrimSE" | "SkyrimSe" => classic_file_io_core::dds::GameTarget::SkyrimSE,
-        _ => classic_file_io_core::dds::GameTarget::Fallout4,
+        "SkyrimSE" | "SkyrimSe" => classic_resource_core::dds::GameTarget::SkyrimSE,
+        _ => classic_resource_core::dds::GameTarget::Fallout4,
     }
 }
 

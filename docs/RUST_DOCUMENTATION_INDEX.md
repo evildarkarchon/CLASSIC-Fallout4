@@ -48,7 +48,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`docs/api/game-setup-workflow.md`](api/game-setup-workflow.md) — cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
 - [`docs/api/formid-settings-boundary.md`](api/formid-settings-boundary.md) — current split between config serialization and scan-time FormID DB path loading
 - [`docs/api/classic-file-io-core.md`](api/classic-file-io-core.md) — shared file I/O, directory walking, hashing, and log helpers
-- [`docs/api/classic-resource-core.md`](api/classic-resource-core.md) — lightweight resource classification, enumeration, per-file validation, and version-labelled backup helpers
+- [`docs/api/classic-resource-core.md`](api/classic-resource-core.md) — lightweight resource classification, enumeration, and per-file validation helpers, plus game-target DDS rules and the version-labelled backup
 - [`docs/api/classic-database-core.md`](api/classic-database-core.md) — async SQLite/FormID lookup pool and helpers
 - [`docs/api/formid-sqlite-conventions.md`](api/formid-sqlite-conventions.md) — current FormID fixture/schema/path conventions from source and tests
 - [`docs/api/classic-scangame-core.md`](api/classic-scangame-core.md) — game-installation, archive, loose-file, and setup validation workflows

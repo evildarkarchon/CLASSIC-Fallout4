@@ -7,7 +7,7 @@ Crate metadata:
 - Crate: `classic-resource-core`
 - Description: `Resource management for game files (no PyO3)`
 
-This crate is the small Rust resource-discovery layer for CLASSIC. It detects resource types from file extensions, enumerates supported files under a directory tree, provides a lightweight `ResourceInfo` struct, and validates that an individual resource path exists and points to a file.
+This crate is the small Rust resource-discovery layer for CLASSIC. It detects resource types from file extensions, enumerates supported files under a directory tree, provides a lightweight `ResourceInfo` struct, validates that an individual resource path exists and points to a file, and owns the game-target DDS texture rules applied to parsed DDS headers.
 
 It is a synchronous business-logic crate. It does not parse Bethesda file formats, mount BA2 archives, or own a runtime.
 
@@ -24,11 +24,12 @@ Use this crate when you need to:
 - count supported resources by detected type
 - attach basic metadata (`path`, detected type, file size) to resource entries
 - validate that a candidate resource path exists and is a readable file
+- check DDS textures against game-target rules (Fallout 4 / Skyrim SE)
 - copy a configuration file into a version-labelled backup directory ([Version-labelled backup](#version-labelled-backup))
 
 Do not use this crate for:
 
-- parsing plugin, BA2, NIF, DDS, or INI contents
+- parsing plugin, BA2, NIF, DDS, or INI contents (neutral DDS header parsing is `classic-file-io-core`'s `DDSHeader`)
 - resolving game-install or documents paths
 - validating archive internals or mod compatibility rules
 - async I/O, shared runtime ownership, or UI/binding-specific behavior
@@ -39,7 +40,7 @@ Those concerns live in related crates such as [`classic-path-core`](../../busine
 
 ## Module And API Map
 
-The contributor-facing API is all at the crate root. Resource discovery lives in `src/lib.rs`; the version-labelled backup lives in the private `src/version_backup.rs` module and is re-exported from the root.
+The resource-discovery API lives at the crate root in `src/lib.rs`. The public `dds` module holds the game-target DDS rules, also re-exported at the root. The version-labelled backup lives in the private `src/version_backup.rs` module and is re-exported from the root.
 
 ## Root-level types and aliases
 
@@ -47,8 +48,6 @@ The contributor-facing API is all at the crate root. Resource discovery lives in
 - `ResourceInfo` - small struct holding a path, detected type, and size
 - `ResourceError` - crate-specific error enum for validation/enumeration paths
 - `ResourceResult<T>` - `Result<T, ResourceError>`
-- `VersionBackupManager`, `XseVersion` - version-labelled backup (see below)
-- `VersionBackupError`, `VersionBackupResult<T>` - its error enum and result alias
 
 ## Root-level free functions
 
@@ -60,7 +59,10 @@ The contributor-facing API is all at the crate root. Resource discovery lives in
 
 ## Root-level re-exports
 
-None. The former `PathError` / `PathResult` re-exports from `classic-path-core` ended in #245: the generic path error is owned by `classic_shared_core::path_core`, which callers import directly. `ResourceError::PathError` wraps that shared-core type, and the crate's native result alias is `ResourceResult<T>`.
+- `DDSAnalyzer`, `DDSIssue`, `GameTarget` from `dds` (see [Game-Target DDS Rules](#game-target-dds-rules-dds))
+- `VersionBackupManager`, `XseVersion`, `VersionBackupError`, `VersionBackupResult<T>` from the private `version_backup` module (see [Version-labelled backup](#version-labelled-backup))
+
+The former `PathError` / `PathResult` re-exports from `classic-path-core` ended in #245: the generic path error is owned by `classic_shared_core::path_core`, which callers import directly. `ResourceError::PathError` wraps that shared-core type, and the crate's native result alias is `ResourceResult<T>`.
 
 ---
 
@@ -229,6 +231,39 @@ Behavior worth knowing:
 - `ArchiveError` is part of the public API surface, but the current `src/lib.rs` implementation does not construct it anywhere
 - `PathError` conversion wraps `classic_shared_core::path_core::PathError`, but current root-level functions do not call the shared-core path validators directly
 
+## Game-Target DDS Rules (`dds`)
+
+`classic_resource_core::dds` owns the game-specific decisions applied to DDS textures (#249). It moved here from `classic-file-io-core`, which keeps neutral header parsing (`DDSHeader`, `FileIOCore::read_dds_header()`); this module consumes those parsed headers. File I/O never depends back on resource core, so the old `classic_file_io_core::{DDSAnalyzer, DDSIssue, GameTarget}` paths ended without a forwarding re-export.
+
+Types:
+
+- `GameTarget` - `Fallout4` or `SkyrimSE`
+- `DDSIssue` - one human-readable issue (`message`); `Display` writes the message
+- `DDSAnalyzer` - validator bound to one `GameTarget`; `Default` is `Fallout4`
+
+`DDSAnalyzer` methods:
+
+- `DDSAnalyzer::new(game)`
+- `validate_file(path) -> Vec<DDSIssue>`
+- `validate_header(&DDSHeader) -> Vec<DDSIssue>`
+- `DDSAnalyzer::validate_dimensions(width, height) -> Vec<DDSIssue>` (associated; even-dimension and >4096 fallback checks)
+- `validate_batch(paths) -> Vec<(PathBuf, Vec<DDSIssue>)>` (Rayon-parallel)
+
+Rules applied by `validate_header()`:
+
+- universal: unusual size (outside 1..=16384), BC-compressed with dimensions not a multiple of 4, non-power-of-2 dimensions with mipmaps, and no mipmaps
+- `Fallout4`: larger than 4096 on either side, and uncompressed textures over 1024x1024 pixels
+- `SkyrimSE`: larger than 4096 on either side
+
+Valid, missing, and malformed resources:
+
+- a readable, well-formed texture returns only the rule issues above (an empty list means valid)
+- a missing or unreadable file returns exactly `Unable to read DDS file`
+- a readable file that is not a parseable DDS (too small, wrong magic, or rejected by `ddsfile`) returns exactly `Unable to read DDS header`
+- `validate_batch()` omits files with zero issues and never fails the whole batch
+
+Consumers: `classic-scangame-core` validates loose `.dds` files from unpacked mod scans with `DDSAnalyzer::new(config.game_target)`. Node (`JsDdsAnalyzer` / `JsDDSAnalyzer`, `JsDdsIssue`) and Python (`classic_file_io.DDSAnalyzer`) keep their existing export names and module locations; only their Rust owner changed.
+
 ## Version-labelled backup
 
 `VersionBackupManager` and `XseVersion` copy one caller-chosen file into a directory named after a version label. They moved here from `classic-path-core` in #251, where they were `BackupManager`, `XseVersion`, `BackupError`, and `BackupResult<T>`; see the [old-to-new import table](classic-path-core.md#moved-version-labelled-backup). Path core keeps game/documents discovery and validation and does not re-export this backup.
@@ -316,6 +351,8 @@ Important direct dependencies:
 - `serde` - serialization/deserialization for `ResourceType`
 - `thiserror` - `ResourceError`
 - `classic-shared-core` - `path_core::PathError` wrapped by `ResourceError::PathError`
+- `classic-file-io-core` - neutral `DDSHeader` parsing consumed by the `dds` rules (inward edge only)
+- `rayon` - parallel `DDSAnalyzer::validate_batch()`
 - `regex` - version-label extraction from XSE logs
 
 Declared dependency with no visible use in current `src/lib.rs`:
@@ -325,7 +362,7 @@ Declared dependency with no visible use in current `src/lib.rs`:
 Related CLASSIC crates and wrappers:
 
 - [`classic-path-core`](../../business-logic/classic-path-core) - neighboring game/documents path layer (this crate no longer depends on it)
-- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it handles real scan orchestration rather than reusing this crate directly in current source
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it uses this crate's `dds` rules for loose-texture checks and handles scan orchestration itself
 - [`classic-resource-py`](../../python-bindings/classic-resource-py) - Python wrapper for this crate's public API
 - [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers
 - [`classic-path-py`](../../python-bindings/classic-path-py), `classic-node`'s `path` module, and the CXX bridge's `classic::path` backup helpers - wrap `VersionBackupManager` / `XseVersion` under their existing `BackupManager` / `XseVersion` / `backup_*` export names
@@ -372,7 +409,7 @@ If the caller needs stricter directory validation before enumeration, validate t
 
 ## Contributor Notes And Known Limits
 
-- the public surface is re-exported from `src/lib.rs`; any new `pub` item or `pub use` there changes the crate API directly
+- the public surface lives in `src/lib.rs`, the `dds` module, and the root re-exports of `version_backup`; any new `pub` item or `pub use` there changes the crate API directly
 - `ResourceType` is extension-based only; it does not inspect file headers or contents
 - `ResourceType::from_str()` is intentionally permissive and maps unknown strings to `Other`
 - `enumerate_resources()` is best-effort because `WalkDir` entry errors are dropped

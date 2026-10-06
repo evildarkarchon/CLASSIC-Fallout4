@@ -4,6 +4,8 @@
 //! to JavaScript/TypeScript. Windows registry access gated behind cfg.
 //! The generic existence, permission, drive, and read-only checks delegate
 //! to `classic_shared_core::path_core`, which owns those neutral primitives.
+//! The custom-scan folder policy (`isRestrictedPath`, `validateCustomScanPath`,
+//! `validateSettingsPaths`) delegates to `classic_scanlog_core::custom_scan`.
 //! The `BackupManager` / `XseVersion` classes keep their JavaScript names but
 //! wrap the version-labelled backup owned by `classic_resource_core`
 //! (`VersionBackupManager`); they are unrelated to the game-target
@@ -145,7 +147,7 @@ pub fn is_valid_path(path: String) -> bool {
 /// @returns `true` if the path is restricted, `false` if safe for custom scans.
 #[napi]
 pub fn is_restricted_path(path: String) -> bool {
-    classic_path_core::is_restricted_path(&PathBuf::from(path))
+    classic_scanlog_core::is_restricted_path(&PathBuf::from(path))
 }
 
 /// Check if a path points to a valid executable file.
@@ -168,7 +170,7 @@ pub fn is_valid_executable_path(path: String) -> bool {
 /// @throws if the path is invalid or restricted.
 #[napi]
 pub fn validate_custom_scan_path(path: String) -> Result<()> {
-    classic_path_core::validate_custom_scan_path(&PathBuf::from(path)).map_err(to_napi_err)
+    classic_scanlog_core::validate_custom_scan_path(&PathBuf::from(path)).map_err(to_napi_err)
 }
 
 /// Validate that required files exist in a directory.
@@ -220,7 +222,7 @@ pub fn validate_settings_paths(
     let docs_path_buf = PathBuf::from(docs_path);
     let custom_scan_path_buf = custom_scan_path.map(PathBuf::from);
 
-    classic_path_core::validate_settings_paths(
+    classic_scanlog_core::validate_settings_paths(
         &game_path_buf,
         &docs_path_buf,
         custom_scan_path_buf.as_deref(),

@@ -3,7 +3,7 @@
 //! Wraps the async game scan orchestrator for Python consumption,
 //! using `get_runtime().block_on()` with GIL release for sync API.
 
-use classic_file_io_core::dds::GameTarget;
+use classic_resource_core::dds::GameTarget;
 use classic_scangame_core::orchestrator::{
     GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult,
 };

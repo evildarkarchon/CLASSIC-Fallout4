@@ -6,6 +6,8 @@
 //! and kind checks (`is_valid_path`, `path_validate_exists`,
 //! `path_validate_is_directory`, `path_validate_is_file`) delegate to
 //! `classic_shared_core::path_core`, which owns those neutral primitives.
+//! The custom-scan folder policy (`is_restricted_path`, `check_restricted_path`,
+//! `path_validate_custom_scan`) delegates to `classic_scanlog_core::custom_scan`.
 //!
 //! # Architecture
 //!
@@ -32,11 +34,15 @@
 
 use classic_path_core::{
     DocsPathFinder, DocumentsChecker, GamePathFinder, IniCheckResult as CoreIniCheckResult,
-    is_restricted_path as core_is_restricted_path, parse_xse_log as core_parse_xse_log,
-    validate_custom_scan_path as core_validate_custom_scan_path,
-    validate_required_files as core_validate_required_files,
+    parse_xse_log as core_parse_xse_log, validate_required_files as core_validate_required_files,
 };
 use classic_resource_core::{VersionBackupManager, XseVersion};
+// The custom-scan folder policy is owned by scanlog core (#254 follow-up);
+// the bridge names and the `classic::path` namespace are unchanged.
+use classic_scanlog_core::{
+    is_restricted_path as core_is_restricted_path,
+    validate_custom_scan_path as core_validate_custom_scan_path,
+};
 use classic_shared_core::path_core::{
     is_valid_path as core_is_valid_path, validate_is_directory as core_validate_is_directory,
     validate_is_file as core_validate_is_file, validate_path_exists as core_validate_path_exists,

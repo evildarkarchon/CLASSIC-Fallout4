@@ -330,11 +330,11 @@ Important boundary:
 
 ### `check_restricted_path(path) -> bool`
 
-Forwards to `classic_path_core::is_restricted_path()`.
+Forwards to `classic_scanlog_core::is_restricted_path()` (the custom-scan folder policy moved from `classic-path-core` to scanlog core in the #254 follow-up; the bridge name and namespace are unchanged).
 
 Important boundary:
 
-- this is the custom-scan restriction heuristic from `classic-path-core`
+- this is the custom-scan restriction heuristic owned by `classic-scanlog-core`
 - it is substring- and depth-based, not a canonicalized Windows policy check
 
 ---
@@ -450,7 +450,7 @@ When `run_game_setup_intake_from_user_settings()` output looks wrong:
 - `src/path.rs::detect_fallout4_game_path()` constructs `GamePathFinder` without an XSE loader, so it can accept a Fallout 4 root that lacks `f4se_loader.exe`
 - `src/path.rs` exposes no document validation beyond discovery
 - `src/game.rs::validate_path()` is only `Path::exists()` through `classic_shared_core::path_core::is_valid_path()`
-- `src/game.rs::check_restricted_path()` reflects the current heuristic `classic-path-core` restriction rules, including shallow-path rejection
+- `src/game.rs::check_restricted_path()` reflects the current heuristic `classic-scanlog-core` custom-scan restriction rules, including shallow-path rejection
 - `src/game.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
 - `src/game.rs` stringifies many failures as `""`; C++ callers cannot recover typed causes without adding new bridge surface
 - `src/game.rs::version_registry_get_xse_config()` drops `script_hashes`, so callers cannot build script-hash validation from this DTO alone

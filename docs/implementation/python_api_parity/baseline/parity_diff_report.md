@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-05T23:59:35.729069+00:00`
+- Generated: `2026-10-06T00:52:20.073927+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -374,7 +374,7 @@
 | `file_io.core.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.FileOperationResult@rust` | `file_io` | `classic-file-io-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.GameFilesManager@rust` | `file_io` | `classic-file-io-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.GameTarget@rust` | `file_io` | `classic-file-io-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.backup@rust` | `file_io` | `classic-file-io-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
@@ -382,7 +382,7 @@
 | `file_io.core.core@rust` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `classic-scanlog-core` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.similarity_ratio` | `file_io` | `classic-file-io-core` | `similarity_ratio` | `classic_file_io.similarity_ratio` | `matched` |
-| `file_io.dds.DDSAnalyzer@rust` | `file_io` | `classic-file-io-core` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.DDSAnalyzer@rust` | `file_io` | `classic-resource-core` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.DDSHeader` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.DDSHeader.from_bytes` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.from_bytes` | `matched` |
 | `file_io.dds.DDSHeader.has_mipmaps` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.has_mipmaps` | `matched` |
@@ -390,7 +390,7 @@
 | `file_io.dds.DDSHeader.has_valid_bc_dimensions` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.has_valid_bc_dimensions` | `matched` |
 | `file_io.dds.DDSHeader.is_bc_compressed` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.is_bc_compressed` | `matched` |
 | `file_io.dds.DDSHeader.is_reasonable_size` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.is_reasonable_size` | `matched` |
-| `file_io.dds.DDSIssue@rust` | `file_io` | `classic-file-io-core` | `DDSIssue` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.DDSIssue@rust` | `file_io` | `classic-resource-core` | `DDSIssue` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.dds@rust` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.encoding.EncodingDetector` | `file_io` | `classic-file-io-core` | `EncodingDetector` | `classic_file_io.EncodingDetector` | `matched` |
 | `file_io.encoding.EncodingDetector.__init__` | `file_io` | `classic-file-io-core` | `EncodingDetector` | `classic_file_io.EncodingDetector.__init__` | `matched` |
@@ -522,14 +522,14 @@
 | `path.lib.PathValidator.check_drive_exists` | `path` | `classic-shared-core` | `check_drive_exists` | `classic_path.PathValidator.check_drive_exists` | `matched` |
 | `path.lib.PathValidator.check_read_permissions` | `path` | `classic-shared-core` | `check_read_permissions` | `classic_path.PathValidator.check_read_permissions` | `matched` |
 | `path.lib.PathValidator.check_write_permissions` | `path` | `classic-shared-core` | `check_write_permissions` | `classic_path.PathValidator.check_write_permissions` | `matched` |
-| `path.lib.PathValidator.is_restricted_path` | `path` | `classic-path-core` | `is_restricted_path` | `classic_path.PathValidator.is_restricted_path` | `matched` |
+| `path.lib.PathValidator.is_restricted_path` | `path` | `classic-scanlog-core` | `is_restricted_path` | `classic_path.PathValidator.is_restricted_path` | `matched` |
 | `path.lib.PathValidator.is_valid_executable_path` | `path` | `classic-shared-core` | `is_executable_file_path` | `classic_path.PathValidator.is_valid_executable_path` | `matched` |
 | `path.lib.PathValidator.is_valid_path` | `path` | `classic-shared-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
-| `path.lib.PathValidator.validate_custom_scan_path` | `path` | `classic-path-core` | `validate_custom_scan_path` | `classic_path.PathValidator.validate_custom_scan_path` | `matched` |
+| `path.lib.PathValidator.validate_custom_scan_path` | `path` | `classic-scanlog-core` | `validate_custom_scan_path` | `classic_path.PathValidator.validate_custom_scan_path` | `matched` |
 | `path.lib.PathValidator.validate_path_with_permissions` | `path` | `classic-shared-core` | `validate_path_with_permissions` | `classic_path.PathValidator.validate_path_with_permissions` | `matched` |
 | `path.lib.PathValidator.validate_required_files` | `path` | `classic-path-core` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.PathValidator.validate_settings_path` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.PathValidator.validate_settings_path` | `matched` |
-| `path.lib.PathValidator.validate_settings_paths` | `path` | `classic-path-core` | `validate_settings_paths` | `classic_path.PathValidator.validate_settings_paths` | `matched` |
+| `path.lib.PathValidator.validate_settings_paths` | `path` | `classic-scanlog-core` | `validate_settings_paths` | `classic_path.PathValidator.validate_settings_paths` | `matched` |
 | `path.lib.ValidationError@rust` | `path` | `classic-path-core` | `ValidationError` | `classic_path.BackupManager` | `matched` |
 | `path.lib.XseVersion` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion` | `matched` |
 | `path.lib.XseVersion.__init__` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion.__init__` | `matched` |
@@ -541,21 +541,21 @@
 | `path.lib.get_system_documents_path@rust` | `path` | `classic-path-core` | `get_system_documents_path` | `classic_path.BackupManager` | `matched` |
 | `path.lib.has_read_permission@rust` | `path` | `classic-shared-core` | `has_read_permission` | `classic_path.BackupManager` | `matched` |
 | `path.lib.has_write_permission@rust` | `path` | `classic-shared-core` | `has_write_permission` | `classic_path.BackupManager` | `matched` |
-| `path.lib.is_restricted_path@rust` | `path` | `classic-path-core` | `is_restricted_path` | `classic_path.BackupManager` | `matched` |
+| `path.lib.is_restricted_path@rust` | `path` | `classic-scanlog-core` | `is_restricted_path` | `classic_path.BackupManager` | `matched` |
 | `path.lib.is_valid_path@rust` | `path` | `classic-shared-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
 | `path.lib.parse_steam_library@rust` | `path` | `classic-path-core` | `parse_steam_library` | `classic_path.BackupManager` | `matched` |
 | `path.lib.parse_xse_log@rust` | `path` | `classic-path-core` | `parse_xse_log` | `classic_path.BackupManager` | `matched` |
 | `path.lib.query_game_registry@rust` | `path` | `classic-path-core` | `query_game_registry` | `classic_path.BackupManager` | `matched` |
 | `path.lib.remove_readonly` | `path` | `classic-shared-core` | `remove_readonly` | `classic_path.remove_readonly` | `matched` |
 | `path.lib.remove_readonly_attribute@rust` | `path` | `classic-shared-core` | `remove_readonly_attribute` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_custom_scan_path@rust` | `path` | `classic-path-core` | `validate_custom_scan_path` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_custom_scan_path@rust` | `path` | `classic-scanlog-core` | `validate_custom_scan_path` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_is_directory@rust` | `path` | `classic-shared-core` | `validate_is_directory` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_is_file@rust` | `path` | `classic-shared-core` | `validate_is_file` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_path_exists@rust` | `path` | `classic-shared-core` | `validate_path_exists` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_path_with_permissions@rust` | `path` | `classic-shared-core` | `validate_path_with_permissions` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_required_files@rust` | `path` | `classic-path-core` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_settings_paths@rust` | `path` | `classic-scanlog-core` | `validate_settings_paths` | `classic_path.BackupManager` | `matched` |
 | `perf.lib.MetricsSummary` | `perf` | `classic-shared-core` | `MetricsSummary` | `classic_perf.MetricsSummary` | `matched` |
 | `perf.lib.Timer` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer` | `matched` |
 | `perf.lib.Timer.__init__` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer.__init__` | `matched` |

@@ -1,9 +1,9 @@
 //! PyO3 bindings for DDSAnalyzer (G-08 DDS Pipeline)
 //!
-//! Wraps the game-specific DDS texture validation from classic-file-io-core
+//! Wraps the game-target DDS texture rules owned by classic-resource-core (#249)
 //! for Python consumption.
 
-use classic_file_io_core::dds::{DDSAnalyzer, GameTarget};
+use classic_resource_core::dds::{DDSAnalyzer, GameTarget};
 use classic_shared::without_gil;
 use pyo3::prelude::*;
 use std::path::PathBuf;

@@ -1,27 +1,6 @@
 use super::*;
 use std::fs;
-use std::path::PathBuf;
 use tempfile::TempDir;
-
-#[test]
-fn test_is_restricted_path() {
-    // System directories should be restricted
-    assert!(is_restricted_path(&PathBuf::from("C:\\Windows")));
-    assert!(is_restricted_path(&PathBuf::from("C:\\Program Files")));
-    assert!(is_restricted_path(&PathBuf::from(
-        "C:\\Program Files (x86)"
-    )));
-
-    // Root directories should be restricted
-    assert!(is_restricted_path(&PathBuf::from("C:\\")));
-    assert!(is_restricted_path(&PathBuf::from("/")));
-
-    // User directories should not be restricted
-    assert!(!is_restricted_path(&PathBuf::from(
-        "C:\\Users\\Name\\Downloads"
-    )));
-    assert!(!is_restricted_path(&PathBuf::from("/home/user/downloads")));
-}
 
 #[test]
 fn test_validate_required_files() {
@@ -49,51 +28,6 @@ fn test_validate_required_files() {
 }
 
 #[test]
-fn test_validate_custom_scan_path() {
-    let temp_dir = TempDir::new().unwrap();
-    // Create a subdirectory to ensure enough path depth
-    let nested_dir = temp_dir.path().join("safe").join("mods");
-    fs::create_dir_all(&nested_dir).unwrap();
-
-    // Check if temp directory itself is restricted (e.g., in AppData)
-    let result = validate_custom_scan_path(&nested_dir);
-    match result {
-        Ok(_) => {
-            // Path validated successfully - good!
-        }
-        Err(ValidationError::RestrictedPath(_)) => {
-            // Temp dir is restricted (e.g., in AppData) - this is expected on some systems
-            eprintln!(
-                "Note: Temp directory is in a restricted location: {}",
-                nested_dir.display()
-            );
-        }
-        Err(e) => {
-            panic!("Unexpected error for unrestricted path: {:?}", e);
-        }
-    }
-
-    // Restricted paths should definitely fail
-    let restricted_paths = vec![
-        PathBuf::from("C:\\Windows"),
-        PathBuf::from("C:\\Program Files"),
-    ];
-
-    for restricted in restricted_paths {
-        let result = validate_custom_scan_path(&restricted);
-        // Should either be restricted or not exist
-        match result {
-            Err(ValidationError::RestrictedPath(_)) | Err(ValidationError::PathError(_)) => {}
-            Ok(_) => panic!(
-                "Should have failed for restricted path: {}",
-                restricted.display()
-            ),
-            Err(_) => panic!("Unexpected error type"),
-        }
-    }
-}
-
-#[test]
 fn test_validate_settings_path() {
     let temp_dir = TempDir::new().unwrap();
     let dir_path = temp_dir.path();
@@ -112,7 +46,7 @@ fn test_validate_settings_path() {
 }
 
 #[test]
-fn test_validate_settings_paths() {
+fn test_validate_game_and_documents_paths() {
     let temp_dir = TempDir::new().unwrap();
     let game_dir = temp_dir.path().join("game");
     let docs_dir = temp_dir.path().join("docs");
@@ -122,12 +56,21 @@ fn test_validate_settings_paths() {
     fs::write(game_dir.join("Fallout4.exe"), "test").unwrap();
 
     // Should succeed with valid paths
-    let result = validate_settings_paths(&game_dir, &docs_dir, None, "Fallout4.exe");
+    let result = validate_game_and_documents_paths(&game_dir, &docs_dir, "Fallout4.exe");
     assert!(result.is_ok());
 
     // Should fail with missing executable
     let invalid_game = temp_dir.path().join("invalid");
     fs::create_dir(&invalid_game).unwrap();
-    let result = validate_settings_paths(&invalid_game, &docs_dir, None, "Missing.exe");
+    let result = validate_game_and_documents_paths(&invalid_game, &docs_dir, "Missing.exe");
     assert!(result.is_err());
+
+    // A missing documents folder is reported under its setting name
+    let missing_docs = temp_dir.path().join("missing-docs");
+    match validate_game_and_documents_paths(&game_dir, &missing_docs, "Fallout4.exe") {
+        Err(ValidationError::ValidationFailed { setting, .. }) => {
+            assert_eq!(setting, "Documents Path");
+        }
+        other => panic!("expected Documents Path failure, got {other:?}"),
+    }
 }

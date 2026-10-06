@@ -4,7 +4,9 @@
 //! including game path detection, documents path management, path validation,
 //! backup operations, and configuration checking. The generic existence, kind,
 //! permission, drive, and read-only checks exposed here delegate to
-//! `classic_shared_core::path_core`, which owns those neutral primitives.
+//! `classic_shared_core::path_core`, which owns those neutral primitives. The
+//! custom-scan folder policy (`is_restricted_path`, `validate_custom_scan_path`,
+//! `validate_settings_paths`) delegates to `classic_scanlog_core::custom_scan`.
 //! The `BackupManager` / `XseVersion` classes keep their Python names but wrap
 //! the version-labelled backup owned by `classic_resource_core`
 //! (`VersionBackupManager`).
@@ -313,7 +315,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn is_restricted_path(path: String) -> bool {
-        classic_path_core::is_restricted_path(&PathBuf::from(path))
+        classic_scanlog_core::is_restricted_path(&PathBuf::from(path))
     }
 
     /// Validate a custom scan path.
@@ -342,7 +344,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn validate_custom_scan_path(path: String) -> PyResult<()> {
-        classic_path_core::validate_custom_scan_path(&PathBuf::from(path))
+        classic_scanlog_core::validate_custom_scan_path(&PathBuf::from(path))
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))
     }
 
@@ -458,7 +460,7 @@ impl PathValidator {
         let docs_path_buf = PathBuf::from(docs_path);
         let custom_scan_path_buf = custom_scan_path.map(PathBuf::from);
 
-        classic_path_core::validate_settings_paths(
+        classic_scanlog_core::validate_settings_paths(
             &game_path_buf,
             &docs_path_buf,
             custom_scan_path_buf.as_deref(),

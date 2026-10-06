@@ -130,7 +130,7 @@ Behavior worth knowing from the source:
 - per-task failures are collected into `GameScanResult.errors`; one failed sub-check does not abort the whole `run_game_checks()` call
 - the read-only config-issue portion of `run_game_checks()` now shares the public `detect_config_issues(game_path, game_name)` helper
 - `run_mod_scans()` returns a soft failure payload when `mods_path` is missing or nonexistent instead of throwing an orchestrator error
-- loose-file DDS dimension validation is delegated to [`classic-file-io-core`](../../business-logic/classic-file-io-core) `DDSAnalyzer`
+- loose-file DDS dimension validation is delegated to [`classic-resource-core`](classic-resource-core.md#game-target-dds-rules-dds) `DDSAnalyzer`
 - BA2 archive findings are converted into the same category map used by `ScanReportBuilder`
 
 ## `detect_config_issues()`
@@ -489,7 +489,7 @@ The main contributor-facing full-scan flow is:
 6. `run_mod_scans()` concurrently performs:
    - loose-file scan via `UnpackedScanner`
    - BA2 archive scan via `BA2Scanner`
-7. Loose `.dds` files from the unpacked scan are validated afterward with [`classic-file-io-core`](../../business-logic/classic-file-io-core) `DDSAnalyzer`.
+7. Loose `.dds` files from the unpacked scan are validated afterward with [`classic-resource-core`](classic-resource-core.md#game-target-dds-rules-dds) `DDSAnalyzer`.
 8. `ScanReportBuilder` formats unpacked/archive issue maps into the final mod-scan report text.
 
 Crashgen TOML flow in more detail:
@@ -575,7 +575,7 @@ Concurrency/performance patterns visible in source:
 
 Important direct dependencies:
 
-- `classic-file-io-core` - DDS validation helpers used during loose-file scans
+- `classic-resource-core` - game-target DDS rules (`DDSAnalyzer`, `GameTarget`) used during loose-file scans
 - `classic-config-core` - optional rule-evaluation path for crashgen TOML checks via the absorbed crashgen rule model (`classic_config_core::crashgen_rules::*`, formerly a separate crate)
 - `classic-path-core` - path resolution and documents-folder checks used by Game Setup Intake
 - `classic-version-registry-core` - setup expectation metadata, Address Library metadata, and Fallout 4 version descriptions
@@ -590,7 +590,8 @@ Related CLASSIC crates:
 
 - [`classic-config-core`](../../business-logic/classic-config-core) - upstream source for paths, game-version decisions, optional `CrashgenSettingsRules`, AND the shared rule model reused for TOML validation (see the "Crashgen rule model" section in [classic-config-core.md](classic-config-core.md#crashgen-rule-model))
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream crash-log analysis layer that complements setup/game scanning rather than replacing it
-- [`classic-file-io-core`](../../business-logic/classic-file-io-core) - shared DDS and file helpers used here
+- [`classic-file-io-core`](../../business-logic/classic-file-io-core) - shared file helpers used here
+- [`classic-resource-core`](classic-resource-core.md) - game-target DDS rules used here
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - registry-backed Fallout 4 version and Address Library metadata
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared runtime policy; currently a dependency without visible direct runtime calls in this crate's source
 
@@ -601,7 +602,7 @@ Related CLASSIC crates:
 This example follows the real public API and shows the main contributor path: assemble `GameScanConfig`, then run the orchestrator.
 
 ```rust
-use classic_file_io_core::dds::GameTarget;
+use classic_resource_core::dds::GameTarget;
 use classic_scangame_core::{GameScanConfig, GameScanOrchestrator, GameVersion};
 use std::collections::HashMap;
 use std::path::PathBuf;

@@ -2278,7 +2278,7 @@
       "id": "config-validate-settings-paths",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "validate_settings_paths",
       "nodeExport": "validateSettingsPaths",
       "nodeKind": "function"
@@ -3198,7 +3198,7 @@
       "rustSymbol": "is_restricted_path",
       "nodeExport": "isRestrictedPath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "aux-phase4a-is-runtime-available",
@@ -3378,7 +3378,7 @@
       "rustSymbol": "validate_custom_scan_path",
       "nodeExport": "validateCustomScanPath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "aux-phase4a-validate-path-with-permissions",
@@ -4134,7 +4134,7 @@
       "rustSymbol": "DDSAnalyzer",
       "nodeExport": "JsDDSAnalyzer",
       "nodeKind": "type",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4c-js-dds-analyzer-class",
@@ -4143,7 +4143,7 @@
       "rustSymbol": "DDSAnalyzer",
       "nodeExport": "JsDdsAnalyzer",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4c-js-dds-batch-result",
@@ -4152,7 +4152,7 @@
       "rustSymbol": null,
       "nodeExport": "JsDdsBatchResult",
       "nodeKind": "interface",
-      "unmappedReason": "Node batch DTO combines a path with file-I/O validation issues."
+      "unmappedReason": "Node batch DTO combines a path with resource-owned DDS validation issues."
     },
     {
       "id": "aux-phase4c-js-dds-issue",
@@ -4161,7 +4161,7 @@
       "rustSymbol": "DDSIssue",
       "nodeExport": "JsDdsIssue",
       "nodeKind": "interface",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4c-js-game-id",
@@ -5975,7 +5975,7 @@
       "id": "file_io.DDSAnalyzer@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "DDSAnalyzer@rust",
       "rustKind": "reexport"
     },
@@ -5991,7 +5991,7 @@
       "id": "file_io.DDSIssue@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "DDSIssue@rust",
       "rustKind": "reexport"
     },
@@ -6023,7 +6023,7 @@
       "id": "file_io.GameTarget@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "GameTarget@rust",
       "rustKind": "reexport"
     },
@@ -6415,7 +6415,7 @@
       "id": "path.validate_settings_paths@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "validate_settings_paths@rust",
       "rustKind": "reexport"
     },
