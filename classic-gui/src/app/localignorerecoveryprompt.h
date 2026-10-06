@@ -9,7 +9,7 @@ namespace classic::gui {
 /// Presents the ways a paused Local Ignore recovery can continue and returns the typed answer.
 ///
 /// Rust defines exactly two recovery decisions; `Cancel` is a GUI-only outcome that the caller
-/// projects by requesting cancellation before it resumes the retained continuation. The dialog
+/// projects by settling the pending recovery with no decision, which abandons the run. The dialog
 /// therefore makes no default destructive choice: both the default and the escape button are
 /// Cancel, so pressing Return, pressing Escape, or closing the window all leave the malformed file
 /// untouched and prevent analysis.

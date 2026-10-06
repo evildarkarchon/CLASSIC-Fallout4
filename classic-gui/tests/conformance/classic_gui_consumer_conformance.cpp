@@ -15,10 +15,12 @@
 #include "core/guiusersettings.h"
 #include "workers/scanprogressmodel.h"
 #include "workers/scanrunpresentation.h"
+#include "workers/scanworker.h"
 
 #include <cmath>
 #include <exception>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -262,6 +264,146 @@ observeRecoveryDispatch(const classic::gui::ScanRunLocalIgnoreRecoveryPresentati
     observation.promptDeliveredOnGuiThread = promptThread == guiThread;
     observation.delivered = std::move(delivered);
     return observation;
+}
+
+/// Maps one settle scenario identity onto the answer the GUI-thread prompt gives in this profile.
+classic::gui::ScanRunLocalIgnoreRecoveryChoice settlementChoice(const QString& scenarioId)
+{
+    using Choice = classic::gui::ScanRunLocalIgnoreRecoveryChoice;
+    if (scenarioId == QStringLiteral("settle-proceed-without-ignore")) {
+        return Choice::ProceedWithoutIgnore;
+    }
+    if (scenarioId == QStringLiteral("settle-reset-to-default")) {
+        return Choice::ResetToDefault;
+    }
+    if (scenarioId == QStringLiteral("settle-without-decision")) {
+        return Choice::Cancel;
+    }
+    throw RunnerError(QStringLiteral("unsupported GUI recovery settlement scenario: %1").arg(scenarioId).toStdString());
+}
+
+/// Returns the decision Rust applied when it settled the run, read from the settled Local Ignore state.
+///
+/// The settled run reports which recovery it carried out, so this is what the worker passed to
+/// settling as Rust saw it, not what the prompt claims it returned. A run settled with no decision
+/// still reports the recovery as required, which reads back as JSON null.
+QJsonValue settledDecisionToken(const classic::gui::ScanRunInstalledYamlDataPresentation& settled)
+{
+    using State = scanner::ScanRunLocalIgnoreYamlDataState;
+    switch (settled.localIgnoreState) {
+    case State::ProceedWithoutIgnore:
+        return QStringLiteral("proceed-without-ignore");
+    case State::ResetToDefault:
+        return QStringLiteral("reset-to-default");
+    case State::RecoveryRequired:
+        return QJsonValue::Null;
+    case State::Existing:
+    case State::Generated:
+        break;
+    }
+    // A malformed Local Ignore file is never Existing or Generated, so this is a profile failure.
+    throw RunnerError("GUI recovery settlement reported a Local Ignore state no settlement produces");
+}
+
+/// Copies one launcher-declared crash-log-scan-run fixture into an isolated installation root.
+void copyPlanFixture(const QJsonObject& plan, const QString& fixtureRef, const QString& destination)
+{
+    const auto fixtures = requiredObject(plan, QStringLiteral("fixtures"));
+    const QString source = fixtures.value(fixtureRef).toString();
+    if (source.isEmpty() || !QDir().mkpath(QFileInfo(destination).absolutePath()) ||
+        !QFile::copy(source, destination)) {
+        throw RunnerError(QStringLiteral("GUI recovery profile cannot stage fixture %1").arg(fixtureRef).toStdString());
+    }
+}
+
+/// Runs one real paused scan on a worker thread and observes how the GUI settles it.
+///
+/// The `ScanWorker` executes on its own thread and is handed the controller's marshalled prompt, so
+/// the answer is chosen on the GUI thread through the shipped `BlockingQueuedConnection` and the
+/// settlement happens back on the worker thread, exactly as a user-driven scan does.
+QJsonObject observeRecoverySettlement(const QJsonObject& plan, const QString& scenarioId)
+{
+    QTemporaryDir root;
+    if (!root.isValid()) {
+        throw RunnerError("cannot create GUI recovery installation root");
+    }
+    copyPlanFixture(plan, QStringLiteral("mainYaml"),
+                    root.filePath(QStringLiteral("CLASSIC Data/databases/CLASSIC Main.yaml")));
+    copyPlanFixture(plan, QStringLiteral("gameYaml"),
+                    root.filePath(QStringLiteral("CLASSIC Data/databases/CLASSIC Fallout4.yaml")));
+    copyPlanFixture(plan, QStringLiteral("malformedLocalIgnoreYaml"),
+                    root.filePath(QStringLiteral("CLASSIC Data/CLASSIC Ignore.yaml")));
+    const QString crashLog = root.filePath(scenarioId + QStringLiteral(".log"));
+    copyPlanFixture(plan, QStringLiteral("validCrashLog"), crashLog);
+
+    const auto choice = settlementChoice(scenarioId);
+    ScanController controller(nullptr, nullptr);
+    QThread* const guiThread = QThread::currentThread();
+    QThread* promptThread = nullptr;
+    classic::gui::ScanRunLocalIgnoreRecoveryChoice selected = classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel;
+    controller.setLocalIgnoreRecoveryPrompt(
+        [&promptThread, &selected, choice](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation&) {
+            promptThread = QThread::currentThread();
+            selected = choice;
+            return choice;
+        });
+    const auto prompt = controller.makeLocalIgnoreRecoveryPrompt();
+
+    classic::gui::CrashLogScanLaunchSettings settings;
+    settings.game = QStringLiteral("Fallout4");
+    settings.gameVersion = QStringLiteral("auto");
+
+    // Everything below is written on the worker thread and read here only after it has finished.
+    std::optional<classic::gui::ScanRunInstalledYamlDataPresentation> settled;
+    QString terminal = QStringLiteral("none");
+    QThread workerThread;
+    QObject context;
+    context.moveToThread(&workerThread);
+    QObject::connect(&workerThread, &QThread::started, &context, [&]() {
+        // Constructed on the worker thread so the worker and its signals never change affinity.
+        ScanWorker worker(prompt);
+        QObject::connect(
+            &worker, &ScanWorker::installedYamlDataResolved,
+            [&settled](const classic::gui::ScanRunInstalledYamlDataPresentation& installed) { settled = installed; });
+        QObject::connect(&worker, &ScanWorker::finished,
+                         [&terminal](int, int, int, const QString&) { terminal = QStringLiteral("completed"); });
+        QObject::connect(&worker, &ScanWorker::cancelled,
+                         [&terminal](const QString&) { terminal = QStringLiteral("cancelled"); });
+        QObject::connect(&worker, &ScanWorker::noLogsFound,
+                         [&terminal](const QString&) { terminal = QStringLiteral("no-crash-logs-found"); });
+        QObject::connect(&worker, &ScanWorker::error,
+                         [&terminal](const QString&) { terminal = QStringLiteral("error"); });
+        worker.doScan(root.path(), settings, root.path(), {}, {crashLog});
+        workerThread.quit();
+    });
+    workerThread.start();
+    // The launcher owns the outer timeout; keep pumping so the blocking prompt invoke can return.
+    while (!workerThread.wait(10)) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    }
+
+    if (!settled.has_value()) {
+        throw RunnerError("GUI recovery settlement published no Installed YAML Data");
+    }
+    return {
+        {QStringLiteral("scenarioId"), scenarioId},
+        {QStringLiteral("selected"), recoveryChoiceToken(selected)},
+        {QStringLiteral("promptThread"),
+         promptThread == nullptr ? QStringLiteral("none")
+                                 : (promptThread == guiThread ? QStringLiteral("gui") : QStringLiteral("worker"))},
+        {QStringLiteral("settledDecision"), settledDecisionToken(*settled)},
+        {QStringLiteral("terminal"), terminal},
+    };
+}
+
+/// Observes one real settlement per scenario the recovery obligation names, in catalog order.
+QJsonArray observeRecoverySettlements(const QJsonObject& plan, const QJsonArray& scenarioIds)
+{
+    QJsonArray settlements;
+    for (const auto& scenarioId : scenarioIds) {
+        settlements.append(observeRecoverySettlement(plan, scenarioId.toString()));
+    }
+    return settlements;
 }
 
 /// Creates one serialized lifecycle event consumed by BatchProgressModel.
@@ -515,11 +657,17 @@ QJsonObject obligationReceipt(const QJsonObject& plan, const QJsonObject& obliga
         throw RunnerError("consumer obligation must have an id and at least one scenario");
     }
     try {
+        QJsonObject observation = plan.value(QStringLiteral("familyId")) == QStringLiteral("user-settings")
+                                      ? settingsObservation(plan, obligation)
+                                      : obligationObservation(id, observations);
+        if (id == QStringLiteral("gui.recovery-interaction")) {
+            // The prompt choice is observed where it lands: in a real run the worker settles.
+            observation.insert(QStringLiteral("settlements"), observeRecoverySettlements(plan, scenarioIds));
+        }
         return {
             {QStringLiteral("id"), id},
             {QStringLiteral("executionStatus"), QStringLiteral("completed")},
-            {QStringLiteral("observation"), plan.value(QStringLiteral("familyId")) == QStringLiteral("user-settings")
-                ? settingsObservation(plan, obligation) : obligationObservation(id, observations)},
+            {QStringLiteral("observation"), observation},
             {QStringLiteral("failure"), QJsonValue::Null},
         };
     } catch (const std::exception& error) {

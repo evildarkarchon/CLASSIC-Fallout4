@@ -23,10 +23,14 @@ private slots:
     void malformed_local_ignore_recovery_resumes_or_cancels_retained_scan_run_data();
     /// Verifies every GUI choice consumes the retained continuation with the promised mutation semantics.
     void malformed_local_ignore_recovery_resumes_or_cancels_retained_scan_run();
-    /// Verifies a worker with no configured prompt reports the invariant instead of choosing for the user.
-    void recovery_without_a_configured_prompt_reports_the_invariant_without_mutating();
+    /// Verifies a worker with no configured prompt settles with no decision instead of choosing for the user.
+    void recovery_without_a_configured_prompt_settles_without_a_decision();
     /// Verifies a prompt that throws cannot leave the run resumable or mutate Local Ignore.
     void a_throwing_prompt_fails_the_run_without_mutating();
+    /// Verifies a run cancelled while it is paused is settled with no decision and never prompts.
+    void a_run_cancelled_at_the_pause_is_settled_without_prompting();
+    /// Verifies a failed progress view ends the run through Rust's policy, abandoning the recovery.
+    void a_failed_progress_view_ends_the_run_without_prompting_or_mutating();
 
 private:
     /// Builds an installation root whose Local Ignore YAML Data is malformed, returning its path.
@@ -300,7 +304,7 @@ void ScanWorkerCancellationTests::malformed_local_ignore_recovery_resumes_or_can
     }
 }
 
-void ScanWorkerCancellationTests::recovery_without_a_configured_prompt_reports_the_invariant_without_mutating()
+void ScanWorkerCancellationTests::recovery_without_a_configured_prompt_settles_without_a_decision()
 {
     QTemporaryDir root;
     QVERIFY(root.isValid());
@@ -314,7 +318,8 @@ void ScanWorkerCancellationTests::recovery_without_a_configured_prompt_reports_t
     settings.gameVersion = QStringLiteral("auto");
 
     // The default-constructed worker has no prompt, which is what a non-interactive caller looks
-    // like. It must refuse to decide rather than silently proceeding or resetting.
+    // like. It must refuse to decide rather than silently proceeding or resetting — which is what
+    // settling with no decision is — so the run ends exactly as a dismissed prompt would end it.
     ScanWorker worker;
     QSignalSpy errorSpy(&worker, &ScanWorker::error);
     QSignalSpy finishedSpy(&worker, &ScanWorker::finished);
@@ -322,10 +327,9 @@ void ScanWorkerCancellationTests::recovery_without_a_configured_prompt_reports_t
 
     worker.doScan(root.path(), settings, root.path(), {}, {crashLog});
 
-    QCOMPARE(errorSpy.count(), 1);
-    QVERIFY(errorSpy.at(0).at(0).toString().contains(QStringLiteral("recovery prompt")));
+    QCOMPARE(errorSpy.count(), 0);
     QCOMPARE(finishedSpy.count(), 0);
-    QCOMPARE(cancelledSpy.count(), 0);
+    QCOMPARE(cancelledSpy.count(), 1);
 
     QFile ignoreFile(ignorePath);
     QVERIFY(ignoreFile.open(QIODevice::ReadOnly));
@@ -347,8 +351,8 @@ void ScanWorkerCancellationTests::a_throwing_prompt_fails_the_run_without_mutati
     settings.game = QStringLiteral("Fallout4");
     settings.gameVersion = QStringLiteral("auto");
 
-    // The worker takes the continuation before asking, so an exception from the prompt drops it and
-    // the run can never be resumed with an answer the user never gave.
+    // The worker takes the pending recovery before asking, so an exception from the prompt is no
+    // answer: the run is settled with no decision and can never act on an answer the user never gave.
     ScanWorker worker([](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation&)
                           -> classic::gui::ScanRunLocalIgnoreRecoveryChoice {
         throw std::runtime_error("recovery prompt failed");
@@ -360,6 +364,95 @@ void ScanWorkerCancellationTests::a_throwing_prompt_fails_the_run_without_mutati
 
     QCOMPARE(errorSpy.count(), 1);
     QVERIFY(errorSpy.at(0).at(0).toString().contains(QStringLiteral("recovery prompt failed")));
+    QCOMPARE(finishedSpy.count(), 0);
+
+    QFile ignoreFile(ignorePath);
+    QVERIFY(ignoreFile.open(QIODevice::ReadOnly));
+    QCOMPARE(ignoreFile.readAll(), malformedIgnore);
+    const QDir backupDirectory(root.filePath(QStringLiteral("CLASSIC Backup/YAML Data/Local Ignore")));
+    QVERIFY(!backupDirectory.exists() || backupDirectory.entryList(QDir::Files | QDir::NoDotAndDotDot).isEmpty());
+}
+
+void ScanWorkerCancellationTests::a_run_cancelled_at_the_pause_is_settled_without_prompting()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    const QByteArray malformedIgnore("CLASSIC_Ignore_Fallout4: [unterminated");
+    QString crashLog;
+    const QString ignorePath = buildMalformedIgnoreRoot(root, malformedIgnore, &crashLog);
+    QVERIFY(!ignorePath.isEmpty());
+
+    classic::gui::CrashLogScanLaunchSettings settings;
+    settings.game = QStringLiteral("Fallout4");
+    settings.gameVersion = QStringLiteral("auto");
+
+    bool promptCalled = false;
+    ScanWorker worker([&promptCalled](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation&) {
+        promptCalled = true;
+        return classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault;
+    });
+    // The worker publishes the paused run's Installed YAML Data before it asks anything. Cancelling
+    // from that signal is the user pressing Cancel while the run sits at the pause: the run already
+    // stopped for recovery, so only the pending recovery's cancellation fact can keep the dialog
+    // from appearing for a scan the user has walked away from.
+    bool cancelRequested = false;
+    connect(&worker, &ScanWorker::installedYamlDataResolved, this,
+            [&worker, &cancelRequested](const classic::gui::ScanRunInstalledYamlDataPresentation&) {
+                if (!cancelRequested) {
+                    cancelRequested = true;
+                    worker.requestCancel();
+                }
+            });
+    QSignalSpy errorSpy(&worker, &ScanWorker::error);
+    QSignalSpy finishedSpy(&worker, &ScanWorker::finished);
+    QSignalSpy cancelledSpy(&worker, &ScanWorker::cancelled);
+
+    worker.doScan(root.path(), settings, root.path(), {}, {crashLog});
+
+    QVERIFY(cancelRequested);
+    QVERIFY2(!promptCalled, "a run cancelled at the pause must not ask a recovery question");
+    QCOMPARE(errorSpy.count(), 0);
+    QCOMPARE(finishedSpy.count(), 0);
+    QCOMPARE(cancelledSpy.count(), 1);
+
+    QFile ignoreFile(ignorePath);
+    QVERIFY(ignoreFile.open(QIODevice::ReadOnly));
+    QCOMPARE(ignoreFile.readAll(), malformedIgnore);
+    const QDir backupDirectory(root.filePath(QStringLiteral("CLASSIC Backup/YAML Data/Local Ignore")));
+    QVERIFY(!backupDirectory.exists() || backupDirectory.entryList(QDir::Files | QDir::NoDotAndDotDot).isEmpty());
+}
+
+void ScanWorkerCancellationTests::a_failed_progress_view_ends_the_run_without_prompting_or_mutating()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    const QByteArray malformedIgnore("CLASSIC_Ignore_Fallout4: [unterminated");
+    QString crashLog;
+    const QString ignorePath = buildMalformedIgnoreRoot(root, malformedIgnore, &crashLog);
+    QVERIFY(!ignorePath.isEmpty());
+
+    classic::gui::CrashLogScanLaunchSettings settings;
+    settings.game = QStringLiteral("Fallout4");
+    settings.gameVersion = QStringLiteral("auto");
+
+    bool promptCalled = false;
+    ScanWorker worker([&promptCalled](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation&) {
+        promptCalled = true;
+        return classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault;
+    });
+    // A directly connected view that throws while presenting discovery is a progress view failing
+    // mid-scan. The worker's observer reports that delivery as failed; the cancel-run policy then
+    // makes Rust abandon the recovery the run would otherwise have paused for.
+    connect(&worker, &ScanWorker::discoveryCompleted, this,
+            [](int, const QString&, const QStringList&) { throw std::runtime_error("progress view failed"); });
+    QSignalSpy errorSpy(&worker, &ScanWorker::error);
+    QSignalSpy finishedSpy(&worker, &ScanWorker::finished);
+
+    worker.doScan(root.path(), settings, root.path(), {}, {crashLog});
+
+    QVERIFY2(!promptCalled, "an abandoned recovery must not ask a recovery question");
+    QCOMPARE(errorSpy.count(), 1);
+    QVERIFY(errorSpy.at(0).at(0).toString().contains(QStringLiteral("progress delivery failed")));
     QCOMPARE(finishedSpy.count(), 0);
 
     QFile ignoreFile(ignorePath);
