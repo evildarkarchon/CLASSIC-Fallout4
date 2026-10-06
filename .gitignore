@@ -38,6 +38,8 @@ _internal/
 *.log
 *.db
 !tests/fixtures/autoscan_report_goldens/formids.db
+!tests/fixtures/autoscan_report_goldens/formids-malformed-reply.db
+!tests/fixtures/crash_log_scan_run/unreadable-formid-database.db
 *Local.yaml
 CLASSIC Backup/
 CLASSIC GFS Report.md

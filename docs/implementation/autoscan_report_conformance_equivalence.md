@@ -22,6 +22,18 @@ SHA-256, byte length, and returned report path.
 | `cases/empty/expected.md` | `empty-findings` | Completed run; one successful log; FormID/plugin/suspect counts `0/1/0`; explicit no-match output and empty-findings section placement |
 | `cases/populated/expected.md` | `populated-findings` | Counts `4/4/4`; Crashgen placements and disabled setting notice; Crash Suspect sources; all four Mod Guidance groups; Plugin Evidence, Named Records, resolved/unresolved FormIDs, and lookup hit/miss text |
 | `cases/fcx/expected.md` | `fcx-mode` | FCX request with Anniversary Edition configuration; retained setup result; counts `0/1/0`; complete canonical setup text in the persisted report |
+| `cases/populated/expected-without-values.md` | `populated-findings-values-disabled` | Populated inputs with `formids.db` installed but FormID values not requested: lookup is disabled, the run succeeds with counts `4/4/4`, and every resolved FormID keeps its identifier and count without a value; the database bytes are unchanged |
+| `cases/populated/expected-without-values.md` | `populated-findings-database-absent` | FormID values requested with no FormID database installed: lookups complete as misses rather than failures, so the run and report match the values-disabled bytes |
+| `cases/populated/expected-without-values.md` | `populated-findings-malformed-reply` | FormID values requested against `formids-malformed-reply.db`, whose only row is a blank value: strict lookup rejects the malformed reply and the Rust collector retries FormID Finding with lookup disabled, so the log still succeeds and no blank or partial value reaches the report |
+
+The three FormID enrichment scenarios (#255) share one independently authored
+oracle: the populated report with its single lookup-hit value removed, because
+disabled, missing, and malformed-fallback lookups all render the same
+identifier/count line. They prove that optional FormID enrichment never changes
+which findings are reported. An unreadable database is a different contract —
+the run fails at the `formid_database_access` infrastructure stage before
+analysis — and is covered by the `crash-log-scan-run` family's
+`formid-database-access-failure` scenario.
 
 Every scenario also compares semantic request inputs, terminal status and
 counts, structured log outcomes, and ordered typed Display Content. The
@@ -29,8 +41,9 @@ populated input deliberately retains Unicode, multiline guidance, and
 authored trailing spaces. Exact bytes pin separators, ordering, and the final
 newline as well as text.
 
-The prebuilt `formids.db` input contains the populated manifest's database rows.
-Each adapter copies it to the normal scan-owned Main FormID database location;
+The prebuilt `formids.db` input contains the populated manifest's database rows,
+and `formids-malformed-reply.db` contains the malformed-reply case's rows.
+Each adapter copies the scenario's database to the normal scan-owned Main FormID database location;
 the Rust core performs lookup. The original owner golden test continues to
 build the equivalent database from the manifest.
 
@@ -63,7 +76,7 @@ pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters
 ```
 
 Every applicable adapter must produce a fresh authenticated receipt covering
-all three scenarios. CXX requires both `windows-msvc` and `windows-clang-cl`
+all six scenarios. CXX requires both `windows-msvc` and `windows-clang-cl`
 execution instances through the approved CLI test wrapper. Receipt identities
 must match their invocation, input-only plan, expectation digest, and current
 source revision. Repository-wide aggregation requires same-revision evidence

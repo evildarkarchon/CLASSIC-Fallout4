@@ -44,8 +44,12 @@ CRASH_LOG_SCAN_RUN_VARIANT_TARGETS = MappingProxyType(
         "event.log_phase": _runtime("standard-happy-path", "scan-run.events"),
         "event.log_finished": _runtime("standard-happy-path", "scan-run.events"),
         "run_status.completed": _runtime("standard-happy-path", "scan-run.status"),
-        "run_status.no_crash_logs_found": _retained(_CONTRACT),
-        "run_status.setup_failed": _retained(_CONTRACT),
+        "run_status.no_crash_logs_found": _runtime(
+            "standard-no-crash-logs-found", "scan-run.status.no-crash-logs-found"
+        ),
+        "run_status.setup_failed": _runtime(
+            "fcx-setup-failed", "scan-run.status.setup-failed"
+        ),
         "run_status.cancelled_before_discovery": _runtime(
             "pre-discovery-cancelled", "scan-run.lifecycle.pre-discovery-status"
         ),
@@ -88,8 +92,9 @@ CRASH_LOG_SCAN_RUN_VARIANT_TARGETS = MappingProxyType(
         "infrastructure_error_stage.intake": _runtime(
             "intake-failure", "scan-run.failure.intake"
         ),
-        "infrastructure_error_stage.formid_database_access": _retained(
-            _FAILURE_INTERNAL
+        "infrastructure_error_stage.formid_database_access": _runtime(
+            "formid-database-access-failure",
+            "scan-run.failure.formid-database-access",
         ),
         "infrastructure_error_stage.initialization": _retained(_FAILURE_INTERNAL),
         "infrastructure_error_stage.internal_invariant": _retained(_FAILURE_INTERNAL),
@@ -100,7 +105,9 @@ CRASH_LOG_SCAN_RUN_VARIANT_TARGETS = MappingProxyType(
             "unsolved-logs-finalization-failure",
             "scan-run.failure.unsolved-logs-finalization",
         ),
-        "unsolved_logs_intent.move_to_custom": _retained(_CONTRACT),
+        "unsolved_logs_intent.move_to_custom": _runtime(
+            "custom-unsolved-logs-moved", "scan-run.movement.custom-moved"
+        ),
         "progress_phase.setup": _runtime("standard-happy-path", "scan-run.events"),
         "progress_phase.parse": _runtime("standard-happy-path", "scan-run.events"),
         "progress_phase.analyze": _runtime("standard-happy-path", "scan-run.events"),

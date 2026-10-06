@@ -43,10 +43,25 @@ class ParticipantCommand:
     source_paths: tuple[Path, ...]
 
 
+# A Crash Log Scan Run's observations depend on every owner it composes, not
+# only the contract module: scanlog's run engine, Standard/Targeted collection
+# and custom-scan policy (#254) and report assembly; config's Installed YAML Data
+# and Local Ignore recovery (#247); scangame's read-only Game Setup Intake (#253)
+# and XSE Folder derivation (#252); database's FormID Value Lookup; and the
+# presentation crate's Display Content. Binding all of them into source identity
+# keeps a receipt from certifying an owner whose current bytes it never ran.
 _COMMON_CORE_SOURCES = (
     Path(__file__).resolve(),
-    REPO_ROOT / "business-logic" / "classic-scanlog-core" / "src" / "scan_run",
-    REPO_ROOT / "business-logic" / "classic-scan-presentation" / "src",
+    *(
+        REPO_ROOT / "business-logic" / crate / "src"
+        for crate in (
+            "classic-scanlog-core",
+            "classic-config-core",
+            "classic-database-core",
+            "classic-scangame-core",
+            "classic-scan-presentation",
+        )
+    ),
 )
 PARTICIPANT_COMMANDS = {
     "rust": ParticipantCommand(
@@ -249,22 +264,9 @@ def run_participant(
 
     command = command or PARTICIPANT_COMMANDS[participant_id]
     pack = load_and_validate_pack(REPO_ROOT, pack_path)
-    if pack.document()["familyId"] == "autoscan-report":
-        # Report bytes depend on contribution assembly, database lookups and FCX
-        # setup as well as scan orchestration; bind those owners into freshness.
-        command = replace(
-            command,
-            source_paths=command.source_paths
-                         + tuple(
-                REPO_ROOT / "business-logic" / crate / "src"
-                for crate in (
-                    "classic-scanlog-core",
-                    "classic-config-core",
-                    "classic-database-core",
-                    "classic-scangame-core",
-                )
-            ),
-        )
+    # Autoscan Report bytes depend on contribution assembly, database lookups and
+    # FCX setup as well as scan orchestration; _COMMON_CORE_SOURCES already binds
+    # those owners into freshness for both scan-run families.
     if pack.document()["familyId"] in {"update-services", "yaml-update-operations"}:
         command = replace(
             command,

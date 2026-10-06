@@ -86,6 +86,10 @@ EXPECTED_SCENARIO_IDS = [
     "targeted-fcx-request-validation",
     "configured-unsolved-logs-finalization-failure",
     "config-issue-construction",
+    "standard-no-crash-logs-found",
+    "fcx-setup-failed",
+    "custom-unsolved-logs-moved",
+    "formid-database-access-failure",
 ]
 EXPECTED_OBSERVATION_FAMILIES = {
     "config-issue-values",
@@ -126,6 +130,7 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
         "gameYaml",
         "localIgnoreYaml",
         "malformedLocalIgnoreYaml",
+        "unreadableFormidDatabase",
     }
     assert "manifest.json" not in str(pack_document)
     assert [scenario["id"] for scenario in pack_document["scenarios"]] == (

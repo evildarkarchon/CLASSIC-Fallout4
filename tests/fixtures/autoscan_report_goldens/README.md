@@ -14,6 +14,12 @@ The scenarios cover:
   and miss rows, and Named Record matches.
 - `fcx`: a successful FCX-enabled full run with its public setup result and
   canonical setup text retained in the persisted report.
+- FormID enrichment variants of `populated`, all compared against
+  `cases/populated/expected-without-values.md` (the populated oracle without its
+  one lookup-hit value): FormID values disabled with `formids.db` installed,
+  values requested with no database installed, and values requested against
+  `formids-malformed-reply.db`, whose blank reply makes the scan fall back to
+  disabled lookup. Optional enrichment must never change which findings appear.
 
 The populated YAML deliberately includes multiline guidance, Unicode, and
 authored trailing spaces. Exact byte comparison also pins section separators,
@@ -35,7 +41,9 @@ generate or refresh the oracle.
 `formids.db` is a prebuilt SQLite input fixture containing the populated case's
 `formidDatabaseEntries` from `manifest.json`, in the `Fallout4` table with
 `formid`, `plugin`, and `entry` columns and a `(formid, plugin)` primary key.
-Adapters copy it to `CLASSIC Data/databases/Fallout4 FormIDs Main.db`; they do
+`formids-malformed-reply.db` has the same schema and holds the
+`populated-findings-malformed-reply` case's single whitespace-only row.
+Adapters copy the scenario's database to `CLASSIC Data/databases/Fallout4 FormIDs Main.db`; they do
 not reproduce database setup or lookup policy. The original Rust golden test
 continues to construct its database from the manifest rows.
 
