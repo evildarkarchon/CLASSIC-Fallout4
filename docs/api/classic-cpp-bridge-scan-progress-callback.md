@@ -8,7 +8,8 @@ and projected by
 The CXX bridge exposes one complete scan operation:
 
 ```cpp
-auto operation = scan_run_contract_execute(request, cancellation, observer);
+auto operation = scan_run_contract_execute(request, cancellation, observer,
+                                           ScanRunObserverFailurePolicy::CancelRun);
 auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
@@ -27,7 +28,7 @@ cancellation short-circuits ahead of every stage that produces an event, which
 is also why nothing on disk is touched. A frontend must therefore not treat
 "observed no event" as a delivery failure on this path.
 
-`scan_run_pending_recovery_settle(pending, settlement, observer)` is the settled
+`scan_run_pending_recovery_settle(pending, settlement, observer, policy)` is the settled
 form of the same two calls (see `classic-cpp-bridge-data-entrypoints.md`). With
 a decision it emits post-discovery events only, like resume; with no decision it
 emits nothing, like abandon. The observer is the only callback involved; the
@@ -46,8 +47,13 @@ as every other adapter.
 class ScanRunObserver {
 public:
     virtual ~ScanRunObserver() = default;
-    virtual void on_scan_run_event(
+    virtual ScanRunObserverDelivery on_scan_run_event(
         const ScanRunContractEvent& event) const noexcept = 0;
+};
+
+struct ScanRunObserverDelivery {  // shared CXX struct
+    bool failed;
+    rust::String message;
 };
 ```
 
@@ -55,11 +61,24 @@ Pass `nullptr` when observation is not needed. A non-null observer must remain
 alive for the synchronous CXX call. Rust serializes observer calls in execution
 order; worker tasks do not call C++ concurrently.
 
-The callback is `noexcept`. Presentation or transport failure remains an
-adapter concern and must not cross the CXX boundary or become a core scan
-failure. An adapter that cannot continue presenting events may record the
-failure and call `scan_run_cancellation_cancel(...)` to request cancellation at
-the next safe seam.
+The callback is `noexcept`; no exception may cross the CXX boundary. It reports
+the outcome of each delivery by value instead: return `{}` when the event was
+delivered and `{true, "why"}` when presentation or transport failed. Rust then
+applies the `ScanRunObserverFailurePolicy` the caller passed to
+`scan_run_contract_execute` or `scan_run_pending_recovery_settle`:
+
+- `ContinueRun` lets the run finish
+- `CancelRun` requests cancellation on the run's own control at the next safe
+  seam
+
+Either way Rust delivers no further events to that observer and reports the
+first failure on the envelope as `has_observer_delivery_failure` and
+`observer_delivery_failure_message` (a failure with an empty message gets a
+generic one). A failure before the run pauses for Local Ignore recovery makes
+Rust abandon the recovery, so the envelope comes back cancelled with no pending
+recovery or continuation and nothing written. An out-of-range policy throws
+before the run starts. The legacy `scan_run_continuation_resume` takes no
+policy and continues the run.
 
 ---
 
