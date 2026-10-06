@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T13:35:34Z",
+  "generated_at_utc": "2026-10-06T14:37:52Z",
   "schema_version": 2,
   "entries": [
     {
@@ -8137,66 +8137,6 @@
       "coreRustSymbol": "Cancellation"
     },
     {
-      "id": "3e200e21dc680fbe",
-      "rustSymbol": "scan_run_continuation_abandon",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "continuation",
-            "type": "&ScanRunContinuation"
-          },
-          {
-            "name": "cancellation",
-            "type": "&ScanRunCancellation"
-          },
-          {
-            "name": "observer",
-            "type": "*const ScanRunObserver"
-          }
-        ],
-        "returnType": "Box<ScanRunContractExecution>"
-      },
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
-      "id": "1473c74ad462f005",
-      "rustSymbol": "scan_run_continuation_resume",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "continuation",
-            "type": "&ScanRunContinuation"
-          },
-          {
-            "name": "decision",
-            "type": "ScanRunLocalIgnoreRecoveryDecision"
-          },
-          {
-            "name": "cancellation",
-            "type": "&ScanRunCancellation"
-          },
-          {
-            "name": "observer",
-            "type": "*const ScanRunObserver"
-          }
-        ],
-        "returnType": "Result<Box<ScanRunContractExecution>>"
-      },
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
       "id": "f1a23f880846dde0",
       "rustSymbol": "scan_run_contract_execute",
       "kind": "function",
@@ -8229,26 +8169,6 @@
       "coreRustSymbol": "execute"
     },
     {
-      "id": "8b7e216f62dd5d3b",
-      "rustSymbol": "scan_run_contract_execution_has_continuation",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "execution",
-            "type": "&ScanRunContractExecution"
-          }
-        ],
-        "returnType": "bool"
-      },
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
       "id": "87c18c84692a0b8f",
       "rustSymbol": "scan_run_contract_execution_has_pending_recovery",
       "kind": "function",
@@ -8267,26 +8187,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "PendingRecovery"
-    },
-    {
-      "id": "bcba7f5d14da68c4",
-      "rustSymbol": "scan_run_contract_execution_take_continuation",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "execution",
-            "type": "&mut ScanRunContractExecution"
-          }
-        ],
-        "returnType": "Result<Box<ScanRunContinuation>>"
-      },
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "fa07ea60a0e724d3",
@@ -8901,17 +8801,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "Cancellation"
-    },
-    {
-      "id": "841c557115efd105",
-      "rustSymbol": "ScanRunContinuation",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "20927c22fed83137",

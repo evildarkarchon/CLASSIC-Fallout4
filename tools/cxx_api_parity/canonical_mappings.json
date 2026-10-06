@@ -3468,24 +3468,6 @@
       "coreRustSymbol": "Cancellation"
     },
     {
-      "id": "3e200e21dc680fbe",
-      "rustSymbol": "scan_run_continuation_abandon",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
-      "id": "1473c74ad462f005",
-      "rustSymbol": "scan_run_continuation_resume",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
       "id": "f1a23f880846dde0",
       "rustSymbol": "scan_run_contract_execute",
       "kind": "function",
@@ -3493,24 +3475,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "execute"
-    },
-    {
-      "id": "8b7e216f62dd5d3b",
-      "rustSymbol": "scan_run_contract_execution_has_continuation",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
-      "id": "bcba7f5d14da68c4",
-      "rustSymbol": "scan_run_contract_execution_take_continuation",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "db795bbb11e180e8",
@@ -3718,15 +3682,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "Cancellation"
-    },
-    {
-      "id": "841c557115efd105",
-      "rustSymbol": "ScanRunContinuation",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "20927c22fed83137",

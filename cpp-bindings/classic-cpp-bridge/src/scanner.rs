@@ -26,12 +26,10 @@ pub(crate) use analyzer::{
     plugin_evidence_analyzer_construction_result, plugin_evidence_analyzer_new,
 };
 pub(crate) use contract::{
-    ScanRunCancellation, ScanRunContinuation, ScanRunContractExecution, ScanRunPendingRecovery,
-    ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
-    scan_run_cancellation_is_cancelled, scan_run_cancellation_new, scan_run_continuation_abandon,
-    scan_run_continuation_resume, scan_run_contract_execute,
-    scan_run_contract_execution_has_continuation, scan_run_contract_execution_has_pending_recovery,
-    scan_run_contract_execution_take_continuation,
+    ScanRunCancellation, ScanRunContractExecution, ScanRunPendingRecovery, ScanRunRequest,
+    ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
+    scan_run_cancellation_new, scan_run_contract_execute,
+    scan_run_contract_execution_has_pending_recovery,
     scan_run_contract_execution_take_pending_recovery, scan_run_contract_execution_take_result,
     scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_installed_yaml_data_provenance_label, scan_run_local_ignore_reset_failure_stage_label,
@@ -1057,7 +1055,7 @@ mod ffi {
     /// attempt spends the one-shot continuation, so the user is left with no scan and no
     /// second attempt.
     struct ScanRunRecoveryDecisionDescription {
-        /// The decision to hand back to `scan_run_continuation_resume`.
+        /// The decision to hand back to `scan_run_pending_recovery_settle`.
         decision: ScanRunLocalIgnoreRecoveryDecision,
         /// The decision's Display Label.
         label: String,
@@ -1076,8 +1074,8 @@ mod ffi {
     /// The descriptions themselves are not.
     ///
     /// Backing out appears nowhere here. `ScanRunLocalIgnoreRecoveryDecision` has exactly two
-    /// variants by design, and abandonment is spelled as the absence of a decision through
-    /// `scan_run_continuation_abandon`.
+    /// variants by design, and abandonment is spelled as the absence of a decision when
+    /// settling through `scan_run_pending_recovery_settle`.
     struct ScanRunRecoveryPrompt {
         lines: Vec<ScanRunDisplayLine>,
         decisions: Vec<ScanRunRecoveryDecisionDescription>,
@@ -1134,9 +1132,9 @@ mod ffi {
 
     /// Exactly one of `result`, `error`, or `resume_error`, identified by presence flags.
     ///
-    /// Both `scan_run_contract_execute` and `scan_run_continuation_resume` return this
+    /// Both `scan_run_contract_execute` and `scan_run_pending_recovery_settle` return this
     /// one envelope, so a single `display_lines` field covers the initial run and the
-    /// continuation resume alike.
+    /// settled run alike.
     struct ScanRunContractExecutionResult {
         has_result: bool,
         result: ScanRunContractRunResult,
@@ -1158,7 +1156,7 @@ mod ffi {
         /// Whether `recovery_prompt` below describes a decision this run is waiting on.
         ///
         /// True only when `result.status` is `LocalIgnoreRecoveryRequired`, which is also
-        /// exactly when the execution retains an opaque continuation.
+        /// exactly when the execution offers a pending recovery.
         has_recovery_prompt: bool,
         /// What to ask the user, and which answers this run can honor.
         ///
@@ -1259,7 +1257,6 @@ mod ffi {
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
         type ScanRunContractExecution;
-        type ScanRunContinuation;
         type ScanRunLaunch;
         type ScanRunPendingRecovery;
 
@@ -1427,52 +1424,14 @@ mod ffi {
         fn scan_run_contract_execution_take_result(
             execution: &mut ScanRunContractExecution,
         ) -> ScanRunContractExecutionResult;
-        /// Returns whether an initial recovery result retained an opaque continuation.
-        fn scan_run_contract_execution_has_continuation(
-            execution: &ScanRunContractExecution,
-        ) -> bool;
-        /// Moves the opaque single-use continuation out of its execution operation.
-        fn scan_run_contract_execution_take_continuation(
-            execution: &mut ScanRunContractExecution,
-        ) -> Result<Box<ScanRunContinuation>>;
-        /// Resumes retained work with an explicit Local Ignore recovery decision.
-        ///
-        /// `observer` may be null and receives only post-discovery lifecycle events. This legacy
-        /// entry point takes no observer failure policy: a failed delivery is reported in the
-        /// envelope and never cancels. `scan_run_pending_recovery_settle` takes the policy.
-        unsafe fn scan_run_continuation_resume(
-            continuation: &ScanRunContinuation,
-            decision: ScanRunLocalIgnoreRecoveryDecision,
-            cancellation: &ScanRunCancellation,
-            observer: *const ScanRunObserver,
-        ) -> Result<Box<ScanRunContractExecution>>;
-        /// Abandons retained work without applying either Local Ignore recovery decision.
-        ///
-        /// Requests cancellation on `cancellation` and then claims the one-shot continuation,
-        /// returning the ordinary post-discovery cancelled envelope. No backup is taken, nothing
-        /// is published, and the malformed Local Ignore file is left exactly as it was. Prefer
-        /// this over cancelling and then resuming with a placeholder decision: that sequence is
-        /// what this replaces, and getting its ordering wrong spends the continuation on a real
-        /// recovery attempt.
-        ///
-        /// `cancellation` is left cancelled afterwards, which is what abandoning the run means.
-        /// A second call reports the same consumed-continuation envelope `resume` does; unlike
-        /// `resume` this never throws, because it takes no decision that could be out of range.
-        ///
-        /// `observer` may be null and observes nothing, since no post-discovery work runs.
-        unsafe fn scan_run_continuation_abandon(
-            continuation: &ScanRunContinuation,
-            cancellation: &ScanRunCancellation,
-            observer: *const ScanRunObserver,
-        ) -> Box<ScanRunContractExecution>;
         /// Returns whether a paused run still offers its pending recovery.
         fn scan_run_contract_execution_has_pending_recovery(
             execution: &ScanRunContractExecution,
         ) -> bool;
         /// Moves the pending recovery out of its execution operation.
         ///
-        /// Throws when the run did not pause or the pending recovery was already taken. It shares
-        /// one single-use claim with the legacy continuation the same execution offers.
+        /// Throws when the run did not pause or the pending recovery was already taken. Settling
+        /// it is the only way to answer a paused run (ADR-0009).
         fn scan_run_contract_execution_take_pending_recovery(
             execution: &mut ScanRunContractExecution,
         ) -> Result<Box<ScanRunPendingRecovery>>;
