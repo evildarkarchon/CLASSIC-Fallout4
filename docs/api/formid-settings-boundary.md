@@ -42,7 +42,7 @@ The typed read path retains relative strings exactly; Crash Log Scan preparation
 
 - **Fallout 4 VR** shares the Fallout 4 corpus, as it already does for the Main database and YAML Data. Reading for `Fallout4VR` returns the `Fallout4` rows followed by any legacy `Fallout4VR` rows, de-duplicated with the first occurrence kept. Older documents that saved VR rows under `Fallout4VR` keep working.
 - **Every other game** (`Fallout4`, `Skyrim`, `Starfield`) reads exactly the rows saved under its own key, with no de-duplication. A Fallout 4 (non-VR) scan never reads `Fallout4VR` rows, so it sees exactly the rows it saw before this rule.
-- The raw keyed map stays readable through `formid_databases()`, and the stored document shape is unchanged. The write side (where the Settings dialog saves VR rows) is separate.
+- The raw keyed map stays readable through `formid_databases()`, and the stored document shape is unchanged. The write side is the game-aware save below.
 
 Bindings expose the same rule as a precomputed per-game projection taken from one snapshot, so it cannot drift from the raw map:
 
@@ -53,6 +53,22 @@ Bindings expose the same rule as a precomputed per-game projection taken from on
 | Python | `CrashLogScanSettings.scan_formid_databases` | `dict[str, list[str]]` keyed by game token |
 
 Games whose scan reads no rows are absent from all three. The `user-settings` conformance pack pins the rule with the `canonical-current-nested` (Fallout4 rows only), `vr-shared-and-legacy-formid-databases` (both keys, with a duplicate), and `vr-legacy-formid-databases` (legacy VR rows only) scenarios through the `scan_formid_databases` observation field.
+
+### Game-aware save (the VR save rule)
+
+`UserSettingsUpdate::with_formid_databases_for_game(game, paths)` is the only way a frontend saves one game's rows; none rewrites the raw map by its own game key.
+
+- **Fallout 4 VR**: the rows are stored under `Fallout4` and a legacy `Fallout4VR` key is removed. The removal is never silent: it is reported as `legacy_formid_databases_key_removed` (field `/CLASSIC_Settings/FormID Databases`) on `AcceptedUserSettingsUpdate::diagnostics()` before commit, and again on `UserSettingsCommitOutcome::Committed { diagnostics, .. }`.
+- **Every other game** replaces only its own key; every other game's rows, including legacy `Fallout4VR` rows, are preserved.
+- The save publishes the complete resulting mapping as the one accepted `FormID Databases` field, anchored to the preview revision, so the stored document shape is unchanged.
+
+| Surface | Save request | Effect diagnostics |
+| --- | --- | --- |
+| CXX | `UserSettingsUpdateDto::has_formid_database_save`, `formid_database_save_game`, `formid_database_save_paths` | `UserSettingsUpdatePreviewDto::diagnostics` when accepted; `UserSettingsCommitResultDto::diagnostics` when committed |
+| Node | `JsUserSettingsUpdate.formidDatabasesForGame: { game: JsGameId, paths }` | `JsUserSettingsUpdatePreview.diagnostics` when accepted; `JsUserSettingsCommitResult.diagnostics` when committed |
+| Python | `UserSettingsUpdate.set_formid_databases_for_game(game, paths)` | `UserSettingsUpdatePreview.diagnostics` when accepted; `UserSettingsCommitOutcome.diagnostics` when committed |
+
+The GUI Settings dialog lists `GuiCrashLogScanSettings::scanFormIdDatabases` for the managed game (so a VR user with legacy rows sees the merged list), saves through `GuiUserSettingsChanges::formIdDatabaseSave`, and shows any committed effect diagnostics in an information box. The `user-settings` conformance pack pins the rule with `commit-fallout4-vr-formid-save-removes-legacy-key`, `commit-other-game-formid-save-preserves-every-other-game`, and `preview-fallout4-formid-save-keeps-legacy-vr-rows`; a requested selector `/CLASSIC_Settings/FormID Databases/<game>` names the save.
 
 ## Scan-startup intake representation
 
@@ -138,7 +154,7 @@ The CLI, GUI, and TUI `*.settings-scan-projection` consumer obligations in `test
 
 ## Native GUI typed edit and scan-launch surface
 
-[`classic-gui/src/core/guiusersettings.cpp`](../../classic-gui/src/core/guiusersettings.cpp) is the Qt-facing adapter for the cohesive CXX snapshot. [`classic-gui/src/app/settingsdialog.cpp`](../../classic-gui/src/app/settingsdialog.cpp) loads the additional-database list from that typed snapshot and submits the full per-game map through the revision-aware User Settings Update seam.
+[`classic-gui/src/core/guiusersettings.cpp`](../../classic-gui/src/core/guiusersettings.cpp) is the Qt-facing adapter for the cohesive CXX snapshot. [`classic-gui/src/app/settingsdialog.cpp`](../../classic-gui/src/app/settingsdialog.cpp) loads the additional-database list from the snapshot's Rust-selected `scanFormIdDatabases` rows for the managed game and submits the edited list as one game-aware save (`formIdDatabaseSave`) through the revision-aware User Settings Update seam; it never reads or writes the raw map by the managed game's key.
 
 Contributor-visible GUI details:
 
@@ -147,6 +163,7 @@ Contributor-visible GUI details:
 - accepting the dialog previews and commits FormID rows with every other selected setting as one atomic update
 - cancel performs no update; rejection writes nothing; a stale revision reports a conflict and preserves the newer document
 - the preservation-aware Rust patch retains unknown keys, unrelated known-invalid values, and other games' FormID lists
+- a committed save that removed a legacy `Fallout4VR` key shows the `legacy_formid_databases_key_removed` diagnostic in a `Settings Saved` information box
 
 [`classic-gui/src/workers/scanrequestbuilder.cpp`](../../classic-gui/src/workers/scanrequestbuilder.cpp) is the GUI's separate scan-request boundary. `MainWindow` derives `CrashLogScanLaunchSettings` from the accepted cached snapshot, and the controller and worker forward that immutable value. Scan launch neither reopens User Settings nor reads `CLASSIC_Settings.FormID Databases.{game}` through generic YAML operations.
 
