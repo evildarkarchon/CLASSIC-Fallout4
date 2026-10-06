@@ -109,6 +109,29 @@ fn test_resolve_xse_folder_for_scan_bridges_configured_docs_root() {
 }
 
 #[test]
+fn test_resolve_xse_folder_for_scan_bridges_recorded_game_local_facts() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let data = temp.path().join("CLASSIC Data");
+    std::fs::create_dir_all(&data).expect("create data dir");
+    std::fs::write(
+        data.join("CLASSIC Fallout4 Local.yaml"),
+        "Game_Info:\n  Docs_Folder_XSE: \" D:/Custom/XSE \"\n",
+    )
+    .expect("write Local.yaml");
+
+    // The recorded explicit folder (trimmed) wins over the configured root.
+    assert_eq!(
+        resolve_xse_folder_for_scan(
+            &data.to_string_lossy(),
+            "Fallout4",
+            "auto",
+            r"C:\Users\Test\Documents\My Games\Fallout4",
+        ),
+        "D:/Custom/XSE"
+    );
+}
+
+#[test]
 fn test_resolve_xse_folder_for_scan_returns_empty_for_missing_inputs() {
     let temp = tempfile::tempdir().expect("tempdir");
     let data = temp.path().join("CLASSIC Data");

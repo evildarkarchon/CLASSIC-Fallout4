@@ -34,6 +34,7 @@ pub mod game_setup_intake;
 pub mod mod_ini; // ModIniScanner orchestrator (G-04) - IMPLEMENTED
 pub mod orchestrator; // GameScanOrchestrator (G-01/G-02) - IMPLEMENTED
 pub mod wrye; // WryeBashParser (G-05) - IMPLEMENTED
+pub mod xse_folder; // XSE Folder from config-owned Game Local facts (#252)
 
 // Re-export key types for convenience
 pub use ba2::{BA2Error, BA2Issues, BA2Scanner};
@@ -65,6 +66,9 @@ pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};
 pub use unpacked::{UnpackedError, UnpackedIssues, UnpackedScanner};
 pub use wrye::{WryeBashParser, WryeError, WryeIssue, WryeSeverity};
 pub use xse::{AddressLibInfo, GameVersion, ValidationResult, XseChecker, XseError};
+pub use xse_folder::{
+    resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_version_registry_scope,
+};
 
 /// Version of the classic-scangame-core crate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
