@@ -27,5 +27,7 @@ mod overrides;
 pub use classic_user_settings_core::GameVersionSelection;
 pub use diagnostic::{CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind};
 pub use error::{CrashLogScanLaunchError, CrashLogScanLaunchErrorKind};
-pub use launch::{CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch};
+pub use launch::{
+    CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch, prepare_launch_in_scopes,
+};
 pub use overrides::{CrashLogScanLaunchOverrides, MaxConcurrency};

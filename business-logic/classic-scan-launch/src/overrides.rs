@@ -42,9 +42,9 @@ impl MaxConcurrency {
 /// Every override is optional. Two styles exist:
 /// - **Explicit value wins** (game, game version, scan path, max concurrency): a supplied
 ///   value replaces the saved one.
-/// - **Supplied as on** (FormID values, simplify logs): supplying the override turns the
-///   option on for this run; not supplying it keeps the saved value. There is no way to
-///   turn a saved option off for one run, matching the CLI flags these model.
+/// - **Supplied as on** (FormID values, simplify logs, FCX Mode): supplying the override
+///   turns the option on for this run; not supplying it keeps the saved value. There is no
+///   way to turn a saved option off for one run, matching the CLI flags these model.
 ///
 /// Built with the `with_*` methods so later overrides can be added without breaking callers.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -55,6 +55,7 @@ pub struct CrashLogScanLaunchOverrides {
     max_concurrency: Option<MaxConcurrency>,
     show_formid_values: bool,
     simplify_logs: bool,
+    fcx_mode: bool,
 }
 
 impl CrashLogScanLaunchOverrides {
@@ -108,6 +109,16 @@ impl CrashLogScanLaunchOverrides {
         self
     }
 
+    /// Turns FCX Mode on for this run, whatever the saved value.
+    ///
+    /// The launched request then carries its Crash Log Scan Setup Context, for a Standard
+    /// or a Targeted intent alike.
+    #[must_use]
+    pub fn with_fcx_mode(mut self) -> Self {
+        self.fcx_mode = true;
+        self
+    }
+
     /// Returns the supplied game, if any.
     #[must_use]
     pub const fn game(&self) -> Option<GameId> {
@@ -142,5 +153,11 @@ impl CrashLogScanLaunchOverrides {
     #[must_use]
     pub const fn simplify_logs(&self) -> bool {
         self.simplify_logs
+    }
+
+    /// Returns whether FCX Mode was supplied as on.
+    #[must_use]
+    pub const fn fcx_mode(&self) -> bool {
+        self.fcx_mode
     }
 }

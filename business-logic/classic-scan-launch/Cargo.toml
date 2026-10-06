@@ -21,6 +21,13 @@ crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
 classic-scanlog-core = { path = "../classic-scanlog-core" }
 classic-user-settings-core = { path = "../classic-user-settings-core" }
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
+# FCX setup facts (#286): scangame owns the one XSE log lookup, config resolves the
+# selected version's Version Registry entry that names the game executable, and the
+# registry crate provides the scope a binding facade passes to keep its own snapshot.
+# All three already sit below scanlog core, so these edges add no cycle.
+classic-scangame-core = { path = "../classic-scangame-core" }
+classic-config-core = { path = "../classic-config-core" }
+classic-version-registry-core = { path = "../classic-version-registry-core" }
 # Frozen tokens and Display Labels for this crate's own diagnostic and error kinds,
 # so the three bindings project them instead of each keeping a table.
 classic-vocabulary = { path = "../../foundation/classic-vocabulary" }

@@ -3,13 +3,20 @@
 use crate::diagnostic::CrashLogScanLaunchDiagnostic;
 use crate::error::CrashLogScanLaunchError;
 use crate::overrides::{CrashLogScanLaunchOverrides, MaxConcurrency};
+use classic_config_core::resolve_registry_version_info_in;
+use classic_scangame_core::resolve_xse_log_for_scan_in_scopes;
 use classic_scanlog_core::scan_run::contract::{Configuration, Options, Request};
 use classic_scanlog_core::{
     CrashLogScanFacts, CrashLogScanSetupContext, StandardCrashLogScanSource,
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
-use classic_user_settings_core::{CrashLogScanSettings, GameSetupSettings, UserSettings};
-use std::path::{Path, PathBuf};
+use classic_shared_core::GameId;
+use classic_shared_core::yaml::YamlFileCacheScope;
+use classic_user_settings_core::{
+    CrashLogScanSettings, GameSetupSettings, GameVersionSelection, UserSettings,
+};
+use classic_version_registry_core::VersionRegistryScope;
+use std::path::{Component, Path, PathBuf};
 
 /// Which Crash Logs a launch scans.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -83,14 +90,52 @@ impl CrashLogScanLaunchRequest {
 ///   request is built from the values User Settings projected for that document, and its
 ///   diagnostics are reported as [`CrashLogScanLaunchDiagnostic::UserSettings`].
 ///
+/// - When FCX Mode is on, by saved setting or by override, the request carries its Crash
+///   Log Scan Setup Context for either intent: the saved game and documents folders, the
+///   game executable, and the XSE log located through
+///   [`classic_scangame_core::resolve_xse_log_for_scan_in_scopes`]. Missing folders are
+///   not an error; FCX setup validation reports them.
+///
+/// Version Registry metadata and the Game Local document are read through the process
+/// default scopes; see [`prepare_launch_in_scopes`] for caller-owned scopes.
+///
 /// # Errors
 ///
 /// Returns [`CrashLogScanLaunchError::TargetedWithoutInputs`] for a Targeted intent with
-/// no inputs. User Settings are not opened in that case.
+/// no inputs. User Settings are not opened in that case. Returns
+/// [`CrashLogScanLaunchError::XseLogInspect`] when FCX Mode is on and the XSE log location
+/// cannot be inspected for a reason other than absence.
 pub fn prepare_launch(
     installation_root: impl AsRef<Path>,
     intent: CrashLogScanIntent,
     overrides: &CrashLogScanLaunchOverrides,
+) -> Result<CrashLogScanLaunchRequest, CrashLogScanLaunchError> {
+    prepare_launch_in_scopes(
+        installation_root,
+        intent,
+        overrides,
+        &VersionRegistryScope::default_scope(),
+        &YamlFileCacheScope::default_scope(),
+    )
+}
+
+/// Builds the Crash Log Scan Run request like [`prepare_launch`], reading Version
+/// Registry metadata only from `version_registry` and the Game Local document only through
+/// `yaml_file_cache`.
+///
+/// A binding facade that executes its runs in its own scopes passes them here, so the FCX
+/// setup facts it launches with come from the same snapshot its run reads. The scopes are
+/// read only when FCX Mode is on.
+///
+/// # Errors
+///
+/// The same as [`prepare_launch`].
+pub fn prepare_launch_in_scopes(
+    installation_root: impl AsRef<Path>,
+    intent: CrashLogScanIntent,
+    overrides: &CrashLogScanLaunchOverrides,
+    version_registry: &VersionRegistryScope,
+    yaml_file_cache: &YamlFileCacheScope,
 ) -> Result<CrashLogScanLaunchRequest, CrashLogScanLaunchError> {
     if matches!(&intent, CrashLogScanIntent::Targeted(inputs) if inputs.is_empty()) {
         return Err(CrashLogScanLaunchError::TargetedWithoutInputs);
@@ -101,7 +146,17 @@ pub fn prepare_launch(
     let setup = settings.game_setup_settings();
 
     let configuration = configuration(installation_root, scan, setup, overrides);
-    let setup_context = scan.fcx_mode().then(|| setup_context(setup));
+    let setup_context = if scan.fcx_mode() || overrides.fcx_mode() {
+        Some(setup_context(
+            installation_root,
+            setup,
+            &configuration,
+            version_registry,
+            yaml_file_cache,
+        )?)
+    } else {
+        None
+    };
     let request = match intent {
         CrashLogScanIntent::Standard => {
             let source = StandardCrashLogScanSource {
@@ -180,16 +235,113 @@ fn configuration(
     }
 }
 
-/// Projects the saved setup folders into the run-scoped FCX setup facts.
+/// Projects the saved setup folders into the run-scoped FCX setup facts for the scanned
+/// game and selected version.
 ///
-/// Missing folders stay `None`: FCX setup validation reports them in the Crash Log Scan
-/// Setup Result rather than the launch refusing to start. The XSE log is not resolved here
-/// yet, so it is left for setup validation to discover.
-fn setup_context(setup: &GameSetupSettings) -> CrashLogScanSetupContext {
-    CrashLogScanSetupContext {
-        game_root: setup.game_root().map(PathBuf::from),
-        docs_root: setup.documents_root().map(PathBuf::from),
-        game_exe_path: setup.game_executable().map(PathBuf::from),
-        xse_log_path: None,
+/// Missing folders are not refused here: unsaved folders stay `None`, and saved folders
+/// that do not exist are passed through, so FCX setup validation reports both in the Crash
+/// Log Scan Setup Result rather than the launch refusing to start. A missing XSE log
+/// likewise leaves `xse_log_path` empty.
+///
+/// # Errors
+///
+/// Returns [`CrashLogScanLaunchError::XseLogInspect`] when the XSE log location cannot be
+/// inspected for a reason other than absence.
+fn setup_context(
+    installation_root: &Path,
+    setup: &GameSetupSettings,
+    configuration: &Configuration,
+    version_registry: &VersionRegistryScope,
+    yaml_file_cache: &YamlFileCacheScope,
+) -> Result<CrashLogScanSetupContext, CrashLogScanLaunchError> {
+    let game_root = saved_path(setup.game_root());
+    let docs_root = saved_path(setup.documents_root());
+    let game_exe_path = game_executable(
+        saved_path(setup.game_executable()),
+        game_root.as_deref(),
+        &executable_name(configuration, version_registry),
+    );
+    let xse_log_path = resolve_xse_log_for_scan_in_scopes(
+        installation_root.join("CLASSIC Data"),
+        configuration.game.as_str(),
+        &configuration.game_version,
+        docs_root.as_deref(),
+        version_registry,
+        yaml_file_cache,
+    )
+    .map_err(CrashLogScanLaunchError::from_xse_log_error)?;
+    Ok(CrashLogScanSetupContext {
+        game_root,
+        docs_root,
+        game_exe_path,
+        xse_log_path,
+    })
+}
+
+/// Reads one saved setup path, trimmed; blank text means no path.
+fn saved_path(value: Option<&str>) -> Option<PathBuf> {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+}
+
+/// Returns the game executable fact, by the rule the GUI applied before launch moved here.
+///
+/// A saved executable is kept only when it exists directly inside the game folder;
+/// otherwise the selected version's executable under the game folder applies. Without a
+/// game folder the saved executable, if any, passes through unchanged.
+fn game_executable(
+    saved: Option<PathBuf>,
+    game_root: Option<&Path>,
+    executable_name: &str,
+) -> Option<PathBuf> {
+    let Some(game_root) = game_root else {
+        return saved;
+    };
+    if let Some(saved) = saved
+        && saved.exists()
+        && saved
+            .parent()
+            .is_some_and(|parent| same_folder(parent, game_root))
+    {
+        return Some(saved);
     }
+    Some(game_root.join(executable_name))
+}
+
+/// Compares two folders case-insensitively and separator-agnostically, ignoring `.`
+/// components and trailing separators, as the GUI's cleaned-path comparison did.
+fn same_folder(left: &Path, right: &Path) -> bool {
+    fn parts(path: &Path) -> Vec<String> {
+        path.components()
+            .filter(|component| !matches!(component, Component::CurDir))
+            .map(|component| component.as_os_str().to_string_lossy().to_lowercase())
+            .collect()
+    }
+    parts(left) == parts(right)
+}
+
+/// Returns the selected version's executable file name, `<docs_name>.exe` from its
+/// Version Registry entry, defaulting to `Fallout4.exe` like the GUI did.
+///
+/// The Fallout 4 registry root is used for every game, as the GUI did. The one addition is
+/// Fallout 4 VR on `auto`: its version is VR, so it names `Fallout4VR.exe` rather than the
+/// flat-screen default the GUI's `auto` lookup fell back to.
+fn executable_name(
+    configuration: &Configuration,
+    version_registry: &VersionRegistryScope,
+) -> String {
+    let selected_version = if configuration.game == GameId::Fallout4VR
+        && configuration.game_version == GameVersionSelection::Auto.as_str()
+    {
+        GameVersionSelection::Vr.as_str()
+    } else {
+        configuration.game_version.as_str()
+    };
+    resolve_registry_version_info_in(version_registry.registry(), "Fallout4", selected_version)
+        .map_or_else(
+            || "Fallout4.exe".to_string(),
+            |info| format!("{}.exe", info.docs_name),
+        )
 }

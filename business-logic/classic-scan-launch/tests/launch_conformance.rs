@@ -24,6 +24,7 @@ const RUN_PLAN_ENV: &str = "CLASSIC_CONFORMANCE_RUN_PLAN";
 const OUTPUT_ENV: &str = "CLASSIC_CONFORMANCE_OUTPUT";
 const FAMILY_ID: &str = "crash-log-scan-launch";
 const SETTINGS_FILE: &str = "CLASSIC Settings.yaml";
+const INSTALLATION_ROOT_PLACEHOLDER: &str = "{{installationRoot}}";
 
 /// Publishes one receipt for the centrally materialized input-only run plan.
 #[test]
@@ -109,8 +110,19 @@ fn observe(fixtures: &Value, scenario: &Value) -> RunnerResult<Value> {
     let reference = string(&input["settingsFixtureRef"], "settingsFixtureRef")?;
     let source = string(&fixtures[reference], "settings fixture path")?;
     let settings_path = root_path.join(SETTINGS_FILE);
-    fs::copy(source, &settings_path)?;
+    fs::write(
+        &settings_path,
+        installation_root_fixture(&fs::read_to_string(source)?, &root_path)?,
+    )?;
     let before = fs::read(&settings_path)?;
+    // Scenario files (game executables, XSE logs) are empty files beneath the root.
+    if let Some(files) = input.get("files") {
+        for file in array(files, "files")? {
+            let path = root_path.join(relative(string(file, "file")?)?);
+            fs::create_dir_all(path.parent().ok_or_else(|| invalid("file has no parent"))?)?;
+            fs::write(path, b"")?;
+        }
+    }
 
     let intent = match string(&input["intent"], "intent")? {
         "standard" => CrashLogScanIntent::Standard,
@@ -185,7 +197,22 @@ fn overrides(value: &Value, root: &Path) -> RunnerResult<CrashLogScanLaunchOverr
     if value.get("simplifyLogs") == Some(&Value::Bool(true)) {
         overrides = overrides.with_simplify_logs();
     }
+    if value.get("fcxMode") == Some(&Value::Bool(true)) {
+        overrides = overrides.with_fcx_mode();
+    }
     Ok(overrides)
+}
+
+/// Replaces the fixture's `{{installationRoot}}` placeholder with this run's root.
+///
+/// The root is written with `/` separators so it reads the same inside any YAML quoting;
+/// both separators name the same folders on Windows.
+fn installation_root_fixture(fixture: &str, root: &Path) -> RunnerResult<String> {
+    let root = root
+        .to_str()
+        .ok_or_else(|| invalid("Installation Root is not valid UTF-8"))?
+        .replace('\\', "/");
+    Ok(fixture.replace(INSTALLATION_ROOT_PLACEHOLDER, &root))
 }
 
 /// Projects the launched request; paths become Installation Root-relative.
@@ -252,6 +279,17 @@ fn request_view(launch: &CrashLogScanLaunchRequest, root: &Path) -> RunnerResult
         "unsolvedLogs": unsolved,
         "targetedInputs": targeted,
         "fcxEnabled": fcx,
+        "setupContext": launch
+            .setup_context()
+            .map(|context| -> RunnerResult<Value> {
+                Ok(json!({
+                    "gameRoot": optional(context.game_root.as_deref())?,
+                    "docsRoot": optional(context.docs_root.as_deref())?,
+                    "gameExePath": optional(context.game_exe_path.as_deref())?,
+                    "xseLogPath": optional(context.xse_log_path.as_deref())?,
+                }))
+            })
+            .transpose()?,
     }))
 }
 
