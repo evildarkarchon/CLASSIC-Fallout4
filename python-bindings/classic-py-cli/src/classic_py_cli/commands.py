@@ -987,7 +987,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         # A paused run is terminal for this CLI, but terminal is not the same as
         # unexplained: Rust states why it paused and what each decision would do, and
         # a user reading CI output needs both to know what to run next. Nothing here
-        # claims the continuation, so no file is touched and there is nothing to
+        # settles the pending recovery, so no file is touched and there is nothing to
         # abandon -- the run is simply left where Rust left it.
         recovery_prompt = _scan_recovery_prompt(execution)
         terminal_lines = launch_lines + display_lines

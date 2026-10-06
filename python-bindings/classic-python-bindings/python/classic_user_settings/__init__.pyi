@@ -398,7 +398,12 @@ class UserSettingsCommitOutcome:
     def actual_revision(self) -> str | None: ...
 
     @property
-    def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]: ...
+    def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]:
+        """Non-blocking effect diagnostics carried over from the accepted preview.
+
+        For example ``legacy_formid_databases_key_removed``. Empty for ``conflict`` and
+        for ordinary updates.
+        """
 
 
 class UserSettingsFrontendTransitionOutcome:

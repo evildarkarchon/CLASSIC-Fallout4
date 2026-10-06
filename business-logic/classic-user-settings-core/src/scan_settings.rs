@@ -147,13 +147,14 @@ impl CrashLogScanSettings {
                 .flatten()
                 .map(String::as_str)
         };
-        if game != GameId::Fallout4VR {
+        let shared = formid_databases_key(game);
+        if shared == game {
             return rows_for(game).collect();
         }
         // Legacy documents saved VR rows under their own key before the corpus was shared, so
         // those rows stay readable after the shared ones; repeats across both keys collapse.
         let mut rows: Vec<&str> = Vec::new();
-        for row in rows_for(GameId::Fallout4).chain(rows_for(GameId::Fallout4VR)) {
+        for row in rows_for(shared).chain(rows_for(game)) {
             if !rows.contains(&row) {
                 rows.push(row);
             }
@@ -592,6 +593,19 @@ fn formid_databases_preference(
             "CLASSIC_Settings.FormID Databases game names and path strings must not be empty",
         ));
         Preference::new(BTreeMap::new(), PreferenceOrigin::DegradedFallback)
+    }
+}
+
+/// Returns the FormID Databases key that holds `game`'s shared rows.
+///
+/// Fallout 4 VR shares the Fallout 4 corpus, so its rows are read from and saved under
+/// `Fallout4`; every other game uses its own key. This is the one statement of that rule for
+/// both the scan read ([`CrashLogScanSettings::formid_databases_for_game`]) and the
+/// game-aware save, so the two cannot disagree about where VR rows live.
+pub(crate) fn formid_databases_key(game: GameId) -> GameId {
+    match game {
+        GameId::Fallout4VR => GameId::Fallout4,
+        other => other,
     }
 }
 

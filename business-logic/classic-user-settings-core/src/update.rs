@@ -1,6 +1,6 @@
 use crate::game_setup_settings::parse_managed_game;
 use crate::preference::is_absolute_user_path;
-use crate::scan_settings::valid_formid_databases;
+use crate::scan_settings::{formid_databases_key, valid_formid_databases};
 use crate::{CommitEligibility, GameVersionSelection, Revision, UpdateSource, UserSettings};
 use classic_shared_core::GameId;
 use std::collections::BTreeMap;
@@ -838,13 +838,10 @@ fn save_formid_databases_for_game(
     }
     let game = game.filter(|_| !save.paths.iter().any(String::is_empty))?;
 
-    let storage_game = if game == GameId::Fallout4VR {
-        GameId::Fallout4
-    } else {
-        game
-    };
+    let storage_game = formid_databases_key(game);
     databases.insert(storage_game.as_str().to_string(), save.paths);
-    if game == GameId::Fallout4VR && databases.remove(GameId::Fallout4VR.as_str()).is_some() {
+    // A game whose rows live under another game's key (Fallout 4 VR) drops its own legacy key.
+    if storage_game != game && databases.remove(game.as_str()).is_some() {
         notices.push(UpdateDiagnostic::for_field(
             FORMID_DATABASES.pointer_path,
             "legacy_formid_databases_key_removed",
