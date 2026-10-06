@@ -45,7 +45,6 @@ RUST_TARGET_CRATES: dict[str, str] = {
     # (yaml-core was absorbed into settings-core in v9.1.0 Phase 1.
     # The former crashgen rules crate was absorbed into classic-config-core
     # in v9.1.0 Phase 2 — rule model now lives in config-core::crashgen_rules.)
-    "classic-version-core": "business-logic/classic-version-core/src/lib.rs",
     "classic-web-core": "business-logic/classic-web-core/src/lib.rs",
     "classic-update-core": "business-logic/classic-update-core/src/lib.rs",
     "classic-xse-core": "business-logic/classic-xse-core/src/lib.rs",
@@ -79,7 +78,6 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-shared-core": "shared",
     # Phase 4 expansion — each new crate gets its own distinct owner label.
     # (yaml owner was absorbed into settings in v9.1.0 Phase 1.)
-    "classic-version-core": "version",
     "classic-web-core": "web",
     "classic-update-core": "update",
     "classic-xse-core": "xse",
