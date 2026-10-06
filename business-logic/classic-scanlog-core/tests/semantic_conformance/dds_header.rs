@@ -48,7 +48,7 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
                 json!({"dimensions":dimensions,"batch":batch,"missingError":missing_error,"bytes":std::fs::read(path)?}),
             );
         }
-        use classic_file_io_core::dds::{DDSAnalyzer, GameTarget};
+        use classic_resource_core::dds::{DDSAnalyzer, GameTarget};
         let analyzer = DDSAnalyzer::new(GameTarget::Fallout4);
         let issues = analyzer
             .validate_file(&path)

@@ -11,6 +11,8 @@ This crate is the shared Rust file-system utility layer for CLASSIC business-log
 
 Crash Log collection (`LogCollector`, `CRASH_LOG_PATTERN`, `CRASH_AUTOSCAN_PATTERN`) and Targeted input resolution (`resolve_targeted_inputs`, `TargetedResolution`, `RejectedInput`) moved to [`classic-scanlog-core`](classic-scanlog-core.md#crash-log-collection-and-targeted-input-resolution) (#254). The old `classic_file_io_core::log_collection` module and its root re-exports are gone, with no forwarding re-export: scanlog depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_scanlog_core`. The moved APIs still report filesystem failures as this crate's `FileIOError`.
 
+Game-target DDS rules (`DDSAnalyzer`, `DDSIssue`, `GameTarget`) moved to [`classic-resource-core`](classic-resource-core.md#game-target-dds-rules-dds) (#249). This crate keeps only neutral DDS header parsing (`DDSHeader` and `FileIOCore`'s cached header readers). The old `classic_file_io_core::dds::{DDSAnalyzer, DDSIssue, GameTarget}` paths and their root re-exports are gone, with no forwarding re-export: resource core depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_resource_core` (root or `dds` module); values, issue messages, and the `Fallout4` default are unchanged.
+
 It is a pure Rust business-logic crate. It does not own a UI surface, binding layer, or Tokio runtime.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
@@ -24,7 +26,7 @@ Use this crate when you need to:
 - read or write text and bytes with CLASSIC's shared file-I/O helpers
 - batch-read or batch-write files with bounded async concurrency
 - walk directories or normalize cached path values
-- parse DDS headers or validate DDS files for supported game targets
+- parse DDS headers (game-target DDS validation is owned by `classic-resource-core`)
 - hash files, compare file similarity, or generate default CLASSIC support files
 - back up, restore, or remove game-adjacent files through shared Rust utilities
 
@@ -77,12 +79,11 @@ Text decoding support.
 
 ### `dds`
 
-Texture header parsing and validation.
+Neutral texture header parsing.
 
 - `DDSHeader` - parsed header summary
-- `DDSAnalyzer` - validation helper for game-specific DDS rules
-- `DDSIssue` - human-readable validation issue
-- `GameTarget` - `Fallout4` or `SkyrimSE`
+
+Game-target validation (`DDSAnalyzer`, `DDSIssue`, `GameTarget`) lives in `classic_resource_core::dds`.
 
 ### `hash`
 
@@ -233,19 +234,12 @@ Key helpers:
 - `has_mipmaps()`
 - `is_bc_compressed()`
 
-`DDSAnalyzer` adds higher-level validation:
-
-- `DDSAnalyzer::new(game)` and `Default` (`Fallout4`)
-- `validate_file(path) -> Vec<DDSIssue>`
-- `validate_header(header) -> Vec<DDSIssue>`
-- `validate_dimensions(width, height) -> Vec<DDSIssue>`
-- `validate_batch(paths) -> Vec<(PathBuf, Vec<DDSIssue>)>`
+Game-target validation over a parsed `DDSHeader` (`DDSAnalyzer`, `DDSIssue`, `GameTarget`) is documented in [`classic-resource-core`](classic-resource-core.md#game-target-dds-rules-dds).
 
 Contributor notes:
 
 - `DDSHeader::from_bytes()` returns `Ok(None)` for files that are too small, have the wrong magic, or fail DDS parsing; it does not treat every invalid DDS as a hard error.
 - `FileIOCore::read_dds_header()` caches only successful header parses.
-- `validate_batch()` omits files with zero issues.
 
 ## `FileHasher`
 
@@ -450,7 +444,6 @@ Several APIs intentionally avoid failing the entire batch:
 
 - `FileHasher::hash_files_parallel()` returns `None` for files that fail to hash
 - `FileIOCore::read_dds_headers_batch()` maps per-file failures to `None`
-- `DDSAnalyzer::validate_file()` returns an issue list instead of an error enum
 - `GameFilesManager` stores per-entry failures in `FileOperationResult.errors`
 - `walk_directory()` skips per-entry traversal errors instead of surfacing them
 
@@ -468,7 +461,7 @@ That split matters for contributors: this crate mixes strict top-level I/O error
 This crate exposes async APIs but does not create its own runtime.
 
 - async entry points include most of `FileIOCore`, all of `BackupManager`, all of `GameFilesManager`, and all generation helpers
-- synchronous helpers still exist where they fit better, including `walk_directory()`, `stream_lines_sync()`, `FileHasher`, DDS validation helpers, and similarity helpers
+- synchronous helpers still exist where they fit better, including `walk_directory()`, `stream_lines_sync()`, `FileHasher`, `DDSHeader::from_bytes()`, and similarity helpers
 - the crate depends on Tokio but does not construct or export a runtime, and it no longer depends on `classic-operation-context`: scoped discovery cancellation moved with Crash Log collection to `classic-scanlog-core`
 - that matches the repo rule that runtime ownership stays outside low-level crates and should remain compatible with the shared CLASSIC runtime model
 
@@ -479,7 +472,7 @@ Concurrency and caching patterns visible in source:
 - metadata and path caches use `DashMap`
 - DDS headers use an async `RwLock<LruCache<...>>`
 - `read_multiple_files()` and `write_multiple_files()` use adaptive `buffer_unordered()` concurrency
-- DDS batch validation and hash batch operations use Rayon
+- DDS header batch reads and hash batch operations use Rayon
 - `FileHasher` uses the process default `FileHashScope`; isolated scopes and `FileIOCore` caches are per-handle but shared across clones because the internals live behind `Arc`
 
 Contributor rule: keep runtime ownership outside this crate. If you add new async work here, do not introduce a second independent Tokio runtime.
@@ -497,13 +490,14 @@ Important direct dependencies:
 - `walkdir` - directory traversal
 - `encoding_rs` - UTF-8 and Windows-1252 decoding
 - `ddsfile` - DDS header parsing
-- `rayon` - parallel hashing and DDS batch validation
+- `rayon` - parallel hashing and DDS header batch reads
 - `sha2` - SHA256 hashing
 
 Related CLASSIC crates:
 
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer of `FileIOCore` for reading crash logs and writing `-AUTOSCAN.md` reports, and owner of Crash Log collection and Targeted input resolution
-- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - downstream consumer of `DDSAnalyzer` for texture and game-file checks
+- [`classic-resource-core`](classic-resource-core.md) - downstream owner of game-target DDS rules applied to this crate's `DDSHeader`
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - downstream consumer of file I/O helpers for game-file checks
 - [`classic-config-core`](../../business-logic/classic-config-core) - neighboring loader crate; both participate in file-backed business logic but at different layers
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that depend on stable higher-level behavior built on top of these helpers
 

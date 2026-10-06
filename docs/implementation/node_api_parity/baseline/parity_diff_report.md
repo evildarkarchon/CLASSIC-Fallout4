@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-05T23:38:53.968500+00:00`
+- Generated: `2026-10-05T23:55:33.947636+00:00`
 - Tier-1 contract rows: **947**
 - Tier-1 matched: **930**
 - Tier-1 missing Rust: **0**
@@ -435,10 +435,10 @@
 | `aux-phase4b-xse-type-name` | `aux` | `classic-xse-core` | `XseType` | `xseTypeName` | `matched` |
 | `aux-phase4c-crash-autoscan-pattern` | `aux` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN` | `CRASH_AUTOSCAN_PATTERN` | `matched` |
 | `version-registry-phase4c-js-compatible-range` | `version_registry` | `classic-version-registry-core` | `CompatibleRange` | `JsCompatibleRange` | `matched` |
-| `aux-phase4c-js-dds-analyzer-alias` | `aux` | `classic-file-io-core` | `DDSAnalyzer` | `JsDDSAnalyzer` | `matched` |
-| `aux-phase4c-js-dds-analyzer-class` | `aux` | `classic-file-io-core` | `DDSAnalyzer` | `JsDdsAnalyzer` | `matched` |
+| `aux-phase4c-js-dds-analyzer-alias` | `aux` | `classic-resource-core` | `DDSAnalyzer` | `JsDDSAnalyzer` | `matched` |
+| `aux-phase4c-js-dds-analyzer-class` | `aux` | `classic-resource-core` | `DDSAnalyzer` | `JsDdsAnalyzer` | `matched` |
 | `aux-phase4c-js-dds-batch-result` | `aux` | `-` | `None` | `JsDdsBatchResult` | `unmapped` |
-| `aux-phase4c-js-dds-issue` | `aux` | `classic-file-io-core` | `DDSIssue` | `JsDdsIssue` | `matched` |
+| `aux-phase4c-js-dds-issue` | `aux` | `classic-resource-core` | `DDSIssue` | `JsDdsIssue` | `matched` |
 | `aux-phase4c-js-game-id` | `aux` | `classic-shared-core` | `GameId` | `JsGameId` | `matched` |
 | `aux-phase4c-js-ini-check-result` | `aux` | `classic-path-core` | `IniCheckResult` | `JsIniCheckResult` | `matched` |
 | `version-registry-phase4c-js-match-result` | `version_registry` | `classic-version-registry-core` | `MatchResult` | `JsMatchResult` | `matched` |
@@ -643,13 +643,13 @@
 | `database.PoolStatistics@rust` | `database` | `classic-database-core` | `PoolStatistics@rust` | `None` | `matched` |
 | `file_io.BackupType@rust` | `file_io` | `classic-file-io-core` | `BackupType@rust` | `None` | `matched` |
 | `file_io.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN@rust` | `None` | `matched` |
-| `file_io.DDSAnalyzer@rust` | `file_io` | `classic-file-io-core` | `DDSAnalyzer@rust` | `None` | `matched` |
+| `file_io.DDSAnalyzer@rust` | `file_io` | `classic-resource-core` | `DDSAnalyzer@rust` | `None` | `matched` |
 | `file_io.DDSHeader@rust` | `file_io` | `classic-file-io-core` | `DDSHeader@rust` | `None` | `matched` |
-| `file_io.DDSIssue@rust` | `file_io` | `classic-file-io-core` | `DDSIssue@rust` | `None` | `matched` |
+| `file_io.DDSIssue@rust` | `file_io` | `classic-resource-core` | `DDSIssue@rust` | `None` | `matched` |
 | `file_io.FileGeneratorConfig@rust` | `file_io` | `classic-file-io-core` | `FileGeneratorConfig@rust` | `None` | `matched` |
 | `file_io.FileIOError@rust` | `file_io` | `classic-file-io-core` | `FileIOError@rust` | `None` | `matched` |
 | `file_io.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation@rust` | `None` | `matched` |
-| `file_io.GameTarget@rust` | `file_io` | `classic-file-io-core` | `GameTarget@rust` | `None` | `matched` |
+| `file_io.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget@rust` | `None` | `matched` |
 | `file_io.LogCollector@rust` | `file_io` | `classic-scanlog-core` | `LogCollector@rust` | `None` | `matched` |
 | `file_io.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput@rust` | `None` | `matched` |
 | `file_io.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution@rust` | `None` | `matched` |
