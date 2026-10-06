@@ -19,14 +19,19 @@ and Python. Replacement-publication and post-replacement durability-unknown
 receipts remain blocking internal fault-projection evidence because no portable
 public filesystem condition can trigger them deterministically across adapters.
 
-The executable v1 pack also drives five deterministic public failure seams:
+The executable v1 pack also drives six deterministic public failure seams:
 request validation, Standard discovery, Installed YAML Data intake, Autoscan
-Report persistence, and Unsolved Logs finalization. Receipts compare stable
-stage, nonempty-message contract, relevant path, disposition, movement, and
-ordered artifact types. Synthetic analysis, FormID database access,
-initialization, and internal-invariant mappings stay under the named
+Report persistence, Unsolved Logs finalization, and FormID database access
+(`unreadable-formid-database.db` is installed as the Main FormID database while
+FormID values are requested). Receipts compare stable stage, nonempty-message
+contract, relevant path, disposition, movement, and ordered artifact types.
+The same failure profile proves the `no_crash_logs_found` and `setup_failed`
+run statuses and a successful move to a custom Unsolved Logs folder. Synthetic
+analysis, initialization, and internal-invariant mappings stay under the named
 `scan-run-structured-failure-internal-faults` analyzer and grant no adapter
-runtime coverage.
+runtime coverage: FormID lookup failures during analysis fall back to disabled
+lookup by contract, so they never produce an analysis-stage failure, and their
+byte-exact report evidence lives in the `autoscan-report` family.
 
 `malformed-local-ignore.yaml` is the input-only malformed file used by the
 executable conformance pack. The pack observes the paused result, applies declared

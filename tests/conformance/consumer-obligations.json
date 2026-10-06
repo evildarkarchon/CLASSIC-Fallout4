@@ -11,8 +11,11 @@
             "windows-msvc"
           ],
           "sourcePaths": [
+            "business-logic/classic-config-core/src",
+            "business-logic/classic-database-core/src",
             "business-logic/classic-scan-presentation/src",
-            "business-logic/classic-scanlog-core/src/scan_run",
+            "business-logic/classic-scangame-core/src",
+            "business-logic/classic-scanlog-core/src",
             "classic-cli/CMakeLists.txt",
             "classic-cli/build_cli.ps1",
             "classic-cli/src/scan_run_cli.cpp",
@@ -205,8 +208,11 @@
             "windows-msvc"
           ],
           "sourcePaths": [
+            "business-logic/classic-config-core/src",
+            "business-logic/classic-database-core/src",
             "business-logic/classic-scan-presentation/src",
-            "business-logic/classic-scanlog-core/src/scan_run",
+            "business-logic/classic-scangame-core/src",
+            "business-logic/classic-scanlog-core/src",
             "classic-gui/build_gui.ps1",
             "classic-gui/src/controllers/scancontroller.cpp",
             "classic-gui/src/controllers/scancontroller.h",
@@ -324,8 +330,11 @@
             "tui"
           ],
           "sourcePaths": [
+            "business-logic/classic-config-core/src",
+            "business-logic/classic-database-core/src",
             "business-logic/classic-scan-presentation/src",
-            "business-logic/classic-scanlog-core/src/scan_run",
+            "business-logic/classic-scangame-core/src",
+            "business-logic/classic-scanlog-core/src",
             "tools/binding_compliance/run_scan_run_consumer_conformance.py",
             "ui-applications/classic-tui/Cargo.toml",
             "ui-applications/classic-tui/src/app.rs",

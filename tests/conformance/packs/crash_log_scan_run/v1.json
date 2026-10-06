@@ -11,7 +11,8 @@
     "mainYaml": "CLASSIC Data/databases/CLASSIC Main.yaml",
     "gameYaml": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
     "localIgnoreYaml": "CLASSIC Data/CLASSIC Ignore.yaml",
-    "malformedLocalIgnoreYaml": "malformed-local-ignore.yaml"
+    "malformedLocalIgnoreYaml": "malformed-local-ignore.yaml",
+    "unreadableFormidDatabase": "unreadable-formid-database.db"
   },
   "capabilities": [
     {
@@ -6922,6 +6923,395 @@
             "recommended_value": "true",
             "description": "Enable the plugin",
             "severity": "info"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "standard-no-crash-logs-found",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "standard",
+        "logInputs": [],
+        "observedPaths": [
+          {
+            "path": "Empty Standard"
+          },
+          {
+            "path": "Unsolved Logs"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Empty Standard"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Empty Documents"
+          }
+        },
+        "unsolvedLogs": "leave-in-place"
+      },
+      "expected": {
+        "status": "no_crash_logs_found",
+        "logs": [],
+        "durableEffects": [
+          {
+            "path": "Empty Standard",
+            "kind": "directory"
+          },
+          {
+            "path": "Unsolved Logs",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "fcx-setup-failed",
+      "action": "scan-run.targeted-fcx-request",
+      "capabilityIds": [
+        "scan-run.targeted-fcx-request"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "FCX Setup Game/Fallout4.exe"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Setup Failure/crash-setup.log"
+          }
+        ],
+        "directoryInputs": [
+          {
+            "path": "FCX Setup Documents"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Setup Failure/crash-setup.log"
+          },
+          {
+            "path": "Setup Failure/crash-setup-AUTOSCAN.md"
+          },
+          {
+            "path": "FCX Setup Game/Fallout4.exe"
+          },
+          {
+            "path": "Unsolved Logs"
+          }
+        ],
+        "setupContext": {
+          "gameRoot": {
+            "path": "FCX Setup Game"
+          },
+          "documentsRoot": {
+            "path": "FCX Setup Documents"
+          },
+          "executable": {
+            "path": "FCX Setup Game/Fallout4.exe"
+          }
+        }
+      },
+      "expected": {
+        "status": "setup_failed",
+        "logs": [],
+        "durableEffects": [
+          {
+            "path": "Setup Failure/crash-setup.log",
+            "kind": "file"
+          },
+          {
+            "path": "Setup Failure/crash-setup-AUTOSCAN.md",
+            "kind": "missing"
+          },
+          {
+            "path": "FCX Setup Game/Fallout4.exe",
+            "kind": "file"
+          },
+          {
+            "path": "Unsolved Logs",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "custom-unsolved-logs-moved",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Custom Standard/Crash Logs/crash-custom-move.log"
+          }
+        ],
+        "directoryInputs": [
+          {
+            "path": "Custom Standard/Crash Logs/crash-custom-move-AUTOSCAN.md"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Custom Standard/Crash Logs/crash-custom-move.log"
+          },
+          {
+            "path": "Custom Standard/Crash Logs/crash-custom-move-AUTOSCAN.md"
+          },
+          {
+            "path": "Custom Unsolved Logs/crash-custom-move.log"
+          },
+          {
+            "path": "Custom Unsolved Logs/crash-custom-move-AUTOSCAN.md"
+          },
+          {
+            "path": "Unsolved Logs"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Custom Standard"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Custom Documents"
+          }
+        },
+        "unsolvedLogs": "move-to-custom",
+        "unsolvedLogsPath": {
+          "path": "Custom Unsolved Logs"
+        }
+      },
+      "expected": {
+        "status": "completed",
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Custom Standard/Crash Logs/crash-custom-move.log"
+            },
+            "autoscanReport": null,
+            "disposition": "failed",
+            "failures": [
+              {
+                "stage": "report_write",
+                "messageNonEmpty": true
+              }
+            ],
+            "messageNonEmpty": true,
+            "movedToUnsolvedLogs": true
+          }
+        ],
+        "durableEffects": [
+          {
+            "path": "Custom Standard/Crash Logs/crash-custom-move.log",
+            "kind": "missing"
+          },
+          {
+            "path": "Custom Standard/Crash Logs/crash-custom-move-AUTOSCAN.md",
+            "kind": "directory"
+          },
+          {
+            "path": "Custom Unsolved Logs/crash-custom-move.log",
+            "kind": "file"
+          },
+          {
+            "path": "Custom Unsolved Logs/crash-custom-move-AUTOSCAN.md",
+            "kind": "missing"
+          },
+          {
+            "path": "Unsolved Logs",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "formid-database-access-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml",
+        "unreadableFormidDatabase"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          {
+            "fixtureRef": "unreadableFormidDatabase",
+            "path": "CLASSIC Data/databases/Fallout4 FormIDs Main.db"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": true,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "FormID Failure/crash-formid-access.log"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "FormID Failure/crash-formid-access.log"
+          },
+          {
+            "path": "FormID Failure/crash-formid-access-AUTOSCAN.md"
+          },
+          {
+            "path": "CLASSIC Data/databases/Fallout4 FormIDs Main.db"
+          }
+        ]
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "formid_database_access",
+          "messageNonEmpty": true,
+          "path": {
+            "path": "CLASSIC Data/databases/Fallout4 FormIDs Main.db"
+          }
+        },
+        "durableEffects": [
+          {
+            "path": "FormID Failure/crash-formid-access.log",
+            "kind": "file"
+          },
+          {
+            "path": "FormID Failure/crash-formid-access-AUTOSCAN.md",
+            "kind": "missing"
+          },
+          {
+            "path": "CLASSIC Data/databases/Fallout4 FormIDs Main.db",
+            "kind": "file"
           }
         ]
       },

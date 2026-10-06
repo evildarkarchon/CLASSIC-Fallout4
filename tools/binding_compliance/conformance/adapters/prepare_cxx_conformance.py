@@ -200,6 +200,22 @@ def _cxx_source_paths(
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_path_operations_conformance.h",
         )
+    else:
+        # The Crash Log Scan Run composes owners outside scanlog's contract
+        # module: its run engine, collection and custom-scan policy (#254),
+        # config's Installed YAML Data and Local Ignore recovery (#247),
+        # scangame's Game Setup Intake (#253) and XSE Folder (#252), and FormID
+        # Value Lookup. Fingerprint all of them so a stale receipt cannot
+        # certify an owner whose current bytes it never ran.
+        paths += tuple(
+            repo_root / "business-logic" / crate / "src"
+            for crate in (
+                "classic-scanlog-core",
+                "classic-config-core",
+                "classic-database-core",
+                "classic-scangame-core",
+            )
+        )
     return paths
 
 

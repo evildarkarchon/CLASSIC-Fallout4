@@ -1802,6 +1802,81 @@ def _unsolved_logs_finalization_failure(observation: Mapping[str, Any]) -> bool:
     )
 
 
+_FORMID_DATABASE_PATH = "CLASSIC Data/databases/Fallout4 FormIDs Main.db"
+
+
+def _formid_database_access_failure(observation: Mapping[str, Any]) -> bool:
+    """Recognize requested FormID enrichment failing to open its installed database.
+
+    The run fails at its own infrastructure stage, names the main FormID database,
+    and leaves the database bytes in place without writing any Autoscan Report.
+    """
+
+    return _infrastructure_failure_matches(
+        observation,
+        stage="formid_database_access",
+        path=_FORMID_DATABASE_PATH,
+        effects=(
+            ("FormID Failure/crash-formid-access.log", "file"),
+            ("FormID Failure/crash-formid-access-AUTOSCAN.md", "missing"),
+            (_FORMID_DATABASE_PATH, "file"),
+        ),
+    )
+
+
+def _no_crash_logs_found_status(observation: Mapping[str, Any]) -> bool:
+    """Recognize empty Standard discovery terminating before intake and analysis."""
+
+    return (
+        observation.get("status") == "no_crash_logs_found"
+        and observation.get("logs") == []
+        and _observed_effects_match(
+            observation,
+            (("Empty Standard", "directory"), ("Unsolved Logs", "missing")),
+        )
+    )
+
+
+def _setup_failed_status(observation: Mapping[str, Any]) -> bool:
+    """Recognize FCX setup requiring action before any log is analyzed.
+
+    Game Setup Intake is read-only, so the caller-supplied executable survives
+    unchanged and no Autoscan Report or Unsolved Logs folder appears.
+    """
+
+    return (
+        observation.get("status") == "setup_failed"
+        and observation.get("logs") == []
+        and _observed_effects_match(
+            observation,
+            (
+                ("Setup Failure/crash-setup.log", "file"),
+                ("Setup Failure/crash-setup-AUTOSCAN.md", "missing"),
+                ("FCX Setup Game/Fallout4.exe", "file"),
+                ("Unsolved Logs", "missing"),
+            ),
+        )
+    )
+
+
+def _custom_unsolved_logs_moved(observation: Mapping[str, Any]) -> bool:
+    """Recognize a failed Standard log relocated to its custom Unsolved Logs folder."""
+
+    return _per_log_failure_matches(
+        observation,
+        crash_log="Custom Standard/Crash Logs/crash-custom-move.log",
+        failure_stages=("report_write",),
+        moved=True,
+        effects=(
+            ("Custom Standard/Crash Logs/crash-custom-move.log", "missing"),
+            ("Custom Standard/Crash Logs/crash-custom-move-AUTOSCAN.md", "directory"),
+            ("Custom Unsolved Logs/crash-custom-move.log", "file"),
+            ("Custom Unsolved Logs/crash-custom-move-AUTOSCAN.md", "missing"),
+            ("Unsolved Logs", "missing"),
+        ),
+    )
+
+
 _BASE_PREDICATE_FACTS = (
     (
         "scan-run.status",
@@ -2074,6 +2149,25 @@ _STRUCTURED_FAILURE_PREDICATES = (
         "structured-failure",
         ("LogResult", "LogFailure", "LogFailureStage", "LogDisposition"),
         _unsolved_logs_finalization_failure,
+    ),
+    CoveragePredicate(
+        "scan-run.failure.formid-database-access",
+        "scan-run.execute",
+        "scan-run.execute",
+        "structured-failure",
+        ("InfrastructureError", "InfrastructureErrorStage"),
+        _formid_database_access_failure,
+    ),
+)
+
+_RUN_STATUS_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.status.no-crash-logs-found",
+        "scan-run.execute",
+        "scan-run.execute",
+        "run-status",
+        ("RunResult",),
+        _no_crash_logs_found_status,
     ),
 )
 
@@ -2372,6 +2466,18 @@ _MOVEMENT_PREDICATES = (
             "scan_run_unsolved_logs_move_to_custom",
         ),
     ),
+    CoveragePredicate(
+        "scan-run.movement.custom-moved",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("StandardUnsolvedLogsIntent",),
+        _custom_unsolved_logs_moved,
+        runtime_operations=(
+            "ScanRunUnsolvedLogs.move_to_custom",
+            "scan_run_unsolved_logs_move_to_custom",
+        ),
+    ),
 )
 
 
@@ -2438,6 +2544,20 @@ _FACTORY_PREDICATES = tuple(
             "severity",
         ),
     ),
+    # Unlike the validation cases above, this FCX request reaches read-only Game
+    # Setup Intake and proves the setup_failed run status.
+    CoveragePredicate(
+        "scan-run.status.setup-failed",
+        "scan-run.targeted-fcx-request",
+        "scan-run.targeted-fcx-request",
+        "structured-failure",
+        ("Request", "targeted_with_fcx"),
+        _setup_failed_status,
+        runtime_operations=(
+            "ScanRunRequest.targeted_with_fcx",
+            "scan_run_request_targeted_with_fcx",
+        ),
+    ),
     CoveragePredicate(
         "scan-run.fcx-context",
         "scan-run.standard-fcx-request",
@@ -2500,6 +2620,10 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
         "scan-run.failure.unsolved-logs-finalization",
         "scan-run.movement.custom",
     ),
+    "standard-no-crash-logs-found": ("scan-run.status.no-crash-logs-found",),
+    "fcx-setup-failed": ("scan-run.status.setup-failed",),
+    "custom-unsolved-logs-moved": ("scan-run.movement.custom-moved",),
+    "formid-database-access-failure": ("scan-run.failure.formid-database-access",),
     "generated-local-ignore": tuple(
         sorted(predicate.id for predicate in _GENERATED_PREDICATES)
     ),
@@ -2586,6 +2710,7 @@ CRASH_LOG_SCAN_RUN_COVERAGE_POLICY = FamilyCoveragePolicy(
         + _ADMITTED_CANCELLATION_PREDICATES
         + _OBSERVER_FAILURE_PREDICATES
         + _STRUCTURED_FAILURE_PREDICATES
+        + _RUN_STATUS_PREDICATES
         + _GENERATED_PREDICATES
         + _RESUME_PREDICATES
         + _ABANDON_PREDICATES

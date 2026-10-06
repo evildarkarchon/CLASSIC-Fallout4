@@ -215,7 +215,12 @@ python tools/binding_compliance/run_scan_run_consumer_conformance.py --participa
 ```
 
 Each invocation creates a fresh input-only `run_plan.json` and calls only the
-selected adapter's public scan-run seam. Rust, Node, and Python publish
+selected adapter's public scan-run seam. Its source identity binds the whole
+`src` tree of every owner a run composes — scanlog (run engine, collection,
+custom-scan policy), config (Installed YAML Data and Local Ignore recovery),
+scangame (Game Setup Intake, XSE Folder), database (FormID Value Lookup), and
+scan presentation — for semantic, CXX, and CLI/GUI/TUI consumer plans alike, so
+a receipt cannot certify an owner whose current bytes it never ran. Rust, Node, and Python publish
 `receipt.json`, `attempt.json`, and `conformance_report.json` beneath
 `tools/binding_compliance/artifacts/<participant>/<instance>/<invocation>/`.
 The CXX launcher hosts its bridge-only target through the approved CLI wrapper,
@@ -243,7 +248,9 @@ when execution or validation fails.
 ## Autoscan Report Blocking Execution
 
 `tests/conformance/packs/autoscan_report/v1.json` selects the original empty,
-populated, and FCX golden cases. The central validator reads their immutable
+populated, and FCX golden cases plus three FormID enrichment variants of the
+populated case (values disabled, no database installed, malformed database
+reply) that must all persist the same values-free report. The central validator reads their immutable
 expected Markdown; adapters receive only inputs and return actual persisted
 bytes, digest, length, typed Display Content, and durable effects. Neither
 adapter output nor a generated replacement oracle can establish expectations.
@@ -256,7 +263,7 @@ pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family autoscan-report -Compiler clang-cl
 ```
 
-Run each adapter's retained build prerequisites first. All three scenarios and
+Run each adapter's retained build prerequisites first. All six scenarios and
 both CXX compiler instances require fresh same-revision receipts; missing or
 failed evidence remains blocking alongside existing gates. Only FCX path
 tokens expand on the expectation side; actual report bytes remain exact. The
@@ -445,13 +452,15 @@ an explicit retained disposition and grants no semantic receipt credit.
 `tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
-independently authored nineteen-scenario blocking oracle: Standard and Targeted
+independently authored twenty-seven-scenario blocking oracle: Standard and Targeted
 happy paths, generated Local Ignore, pre-discovery cancellation,
 post-discovery queued cancellation, admitted/durable cancellation, observer
 delivery failure, public request-validation, discovery, intake, report-write,
-and Unsolved Logs finalization failures, both recovery decisions, intervening-change conflict,
-portable backup failure, both reset cancellation boundaries, replay, and
-abandonment. Its
+FormID database access, and Unsolved Logs finalization failures (default and
+configured destinations), a successful custom Unsolved Logs move, the
+`no_crash_logs_found` and `setup_failed` run statuses, both recovery decisions, intervening-change conflict,
+portable backup failure, both reset cancellation boundaries, replay,
+abandonment, both FCX request factories, and `ConfigIssue` construction. Its
 materialized plans contain only declared inputs and normalization policy; the
 Rust, Node, Python, and CXX runners cannot read its expected observations. The pack
 compares ordered discovery, setup absence, effective concurrency, Installed

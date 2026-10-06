@@ -12,6 +12,7 @@
     "empty": "empty.json",
     "invalid-prefix": "invalid-prefix.json",
     "lookup-failure": "lookup-failure.json",
+    "malformed-reply": "malformed-reply.json",
     "sqlite-missing": "sqlite-missing.json"
   },
   "capabilities": [
@@ -209,6 +210,32 @@
         "error": {
           "code": "operational_failure",
           "message": "FormID Value Lookup failed for 000001:Example.esp: fixture offline"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "malformed-reply",
+      "action": "formid-finding.analyze",
+      "capabilityIds": [
+        "formid-finding.analyze"
+      ],
+      "fixtureRefs": [
+        "malformed-reply"
+      ],
+      "input": {
+        "fixtureRef": "malformed-reply"
+      },
+      "expected": {
+        "mode": "in-memory",
+        "findings": null,
+        "error": {
+          "code": "malformed_result",
+          "message": "FormID Value Lookup returned a blank value for 000001:Example.esp"
         }
       },
       "normalization": {
