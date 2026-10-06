@@ -13,7 +13,7 @@ param(
     [ValidateSet("msvc", "clang-cl")]
     [string]$Compiler = "msvc",
     [switch]$TestOnly,
-    [ValidateSet("crash-log-scan-run", "user-settings")]
+    [ValidateSet("crash-log-scan-run", "user-settings", "crash-log-scan-launch")]
     [string]$Family = "crash-log-scan-run",
     [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
 )
@@ -64,6 +64,8 @@ try {
     $PreparationScript = Join-Path $RepoRoot "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py"
     $PackPath = if ($Family -eq "user-settings") {
         "tests/conformance/packs/user_settings/v1.json"
+    } elseif ($Family -eq "crash-log-scan-launch") {
+        "tests/conformance/packs/crash_log_scan_launch/v1.json"
     } else {
         "tests/conformance/packs/crash_log_scan_run/v1.json"
     }

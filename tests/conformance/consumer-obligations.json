@@ -588,10 +588,13 @@
             "windows-msvc"
           ],
           "sourcePaths": [
+            "business-logic/classic-scan-launch/src",
             "business-logic/classic-user-settings-core/src",
             "classic-cli/CMakeLists.txt",
             "classic-cli/build_cli.ps1",
             "classic-cli/src/cli_args.h",
+            "classic-cli/src/scan_run_cli.cpp",
+            "classic-cli/src/scan_run_cli.h",
             "classic-cli/src/user_settings_action.cpp",
             "classic-cli/src/user_settings_action.h",
             "classic-cli/tests/conformance/classic_cli_consumer_conformance.cpp",
@@ -613,8 +616,7 @@
                 "formIdDatabasePaths": [
                   "databases/Fallout4 FormIDs.db"
                 ],
-                "classification": "current",
-                "commitEligibility": "eligible",
+                "launchDiagnosticCodes": [],
                 "unchanged": true,
                 "fallout4Vr": {
                   "game": "Fallout4VR",
@@ -634,12 +636,9 @@
                 "commit-one-canonical-field-without-losing-unknowns"
               ],
               "expected": {
-                "bootstrapSucceeded": true,
-                "bootstrapClassification": "current",
+                "bootstrapLaunchDiagnosticCodes": [],
                 "destination": "D:/Receipt/Unsolved",
-                "saveSucceeded": true,
                 "savedDestination": "D:/Receipt/Unsolved",
-                "resetSucceeded": true,
                 "resetDestination": "",
                 "unknownRetained": true
               }
@@ -650,9 +649,11 @@
                 "reject-update-malformed"
               ],
               "expected": {
-                "classification": "malformed",
-                "commitEligibility": "blocked_untrusted",
-                "saved": false,
+                "launchDiagnosticCodes": [
+                  "malformed_document",
+                  "commit_blocked_untrusted_document"
+                ],
+                "launchedAfterRejectedSave": false,
                 "unchanged": true
               }
             }
@@ -824,6 +825,138 @@
     {
       "familyId": "crash-log-scan-launch",
       "consumers": [
+        {
+          "id": "cli",
+          "executionInstanceIds": [
+            "windows-clang-cl",
+            "windows-msvc"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-scan-launch/src",
+            "business-logic/classic-scan-presentation/src",
+            "business-logic/classic-user-settings-core/src",
+            "classic-cli/CMakeLists.txt",
+            "classic-cli/build_cli.ps1",
+            "classic-cli/src/cli_args.cpp",
+            "classic-cli/src/cli_args.h",
+            "classic-cli/src/scan_run_cli.cpp",
+            "classic-cli/src/scan_run_cli.h",
+            "classic-cli/src/user_settings_action.cpp",
+            "classic-cli/src/user_settings_action.h",
+            "classic-cli/tests/conformance/classic_cli_consumer_conformance.cpp",
+            "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+            "cpp-bindings/classic-cpp-bridge/src/scanner/launch.rs",
+            "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py",
+            "tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1"
+          ],
+          "obligations": [
+            {
+              "id": "cli.scan-launch",
+              "scenarioIds": [
+                "managed-game-saved-values",
+                "explicit-value-overrides-win",
+                "supplied-as-on-overrides",
+                "adaptive-concurrency-override-beats-saved-limit",
+                "managed-game-named-explicitly-is-not-a-game-difference"
+              ],
+              "expected": {
+                "cases": [
+                  {
+                    "scenarioId": "managed-game-saved-values",
+                    "flags": [],
+                    "intent": "standard",
+                    "game": "Fallout4",
+                    "gameVersion": "NextGen",
+                    "showFormidValues": true,
+                    "simplifyLogs": true,
+                    "maxConcurrent": 3,
+                    "customScanDirectory": null,
+                    "baseDirectoryIsInstallationRoot": true,
+                    "fcxEnabled": false,
+                    "diagnosticCodes": [],
+                    "settingsUnchanged": true
+                  },
+                  {
+                    "scenarioId": "explicit-value-overrides-win",
+                    "flags": [
+                      "--game-version",
+                      "AE",
+                      "--scan-path",
+                      "One-off Logs",
+                      "--max-concurrent",
+                      "7"
+                    ],
+                    "intent": "standard",
+                    "game": "Fallout4",
+                    "gameVersion": "AnniversaryEdition",
+                    "showFormidValues": true,
+                    "simplifyLogs": true,
+                    "maxConcurrent": 7,
+                    "customScanDirectory": "One-off Logs",
+                    "baseDirectoryIsInstallationRoot": true,
+                    "fcxEnabled": false,
+                    "diagnosticCodes": [],
+                    "settingsUnchanged": true
+                  },
+                  {
+                    "scenarioId": "supplied-as-on-overrides",
+                    "flags": [
+                      "--show-fid-values",
+                      "--simplify-logs"
+                    ],
+                    "intent": "standard",
+                    "game": "Fallout4",
+                    "gameVersion": "auto",
+                    "showFormidValues": true,
+                    "simplifyLogs": true,
+                    "maxConcurrent": null,
+                    "customScanDirectory": null,
+                    "baseDirectoryIsInstallationRoot": true,
+                    "fcxEnabled": false,
+                    "diagnosticCodes": [],
+                    "settingsUnchanged": true
+                  },
+                  {
+                    "scenarioId": "adaptive-concurrency-override-beats-saved-limit",
+                    "flags": [
+                      "--max-concurrent",
+                      "0"
+                    ],
+                    "intent": "standard",
+                    "game": "Fallout4",
+                    "gameVersion": "NextGen",
+                    "showFormidValues": true,
+                    "simplifyLogs": true,
+                    "maxConcurrent": null,
+                    "customScanDirectory": null,
+                    "baseDirectoryIsInstallationRoot": true,
+                    "fcxEnabled": false,
+                    "diagnosticCodes": [],
+                    "settingsUnchanged": true
+                  },
+                  {
+                    "scenarioId": "managed-game-named-explicitly-is-not-a-game-difference",
+                    "flags": [
+                      "--game",
+                      "Fallout4"
+                    ],
+                    "intent": "standard",
+                    "game": "Fallout4",
+                    "gameVersion": "NextGen",
+                    "showFormidValues": true,
+                    "simplifyLogs": true,
+                    "maxConcurrent": 3,
+                    "customScanDirectory": null,
+                    "baseDirectoryIsInstallationRoot": true,
+                    "fcxEnabled": false,
+                    "diagnosticCodes": [],
+                    "settingsUnchanged": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
         {
           "id": "gui",
           "executionInstanceIds": [

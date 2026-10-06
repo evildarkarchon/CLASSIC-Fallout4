@@ -49,7 +49,8 @@ SCENARIOS = [
         "Scan an Addictol crash log newer than the configured floor and prove it remains valid.",
         "classic_scanlog",
         [
-            "ScanRunRequest.targeted",
+            "ScanRunLaunch.targeted",
+            "ScanRunLaunch.request",
             "ScanRunCancellation",
             "scan_run_execute",
             "ScanRunLogResult.autoscan_report",

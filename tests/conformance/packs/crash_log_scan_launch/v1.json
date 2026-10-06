@@ -1004,6 +1004,9 @@
   ],
   "consumerObligations": [
     {
+      "id": "cli.scan-launch"
+    },
+    {
       "id": "gui.scan-launch"
     }
   ]

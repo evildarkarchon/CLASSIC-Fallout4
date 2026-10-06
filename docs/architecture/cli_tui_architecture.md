@@ -24,14 +24,19 @@ The native CLI is the supported non-interactive scanner. The TUI is a native Rus
 
 The native CLI is rooted at `classic-cli/src/main.cpp`. CLI11 parsing in `cli_args.cpp` produces explicit command options, and `scanner.cpp` coordinates scan requests through CXX.
 
-Before scanning, `user_settings_action.cpp` opens typed projections through:
+The CLI launches every scan through Crash Log Scan Launch (`scan_run_launch_standard` / `scan_run_launch_targeted`, ADR-0009). `scan_run_cli.cpp` maps the documented flags onto per-run overrides and nothing more:
 
-- `user_settings_open_crash_log_scan_settings()`
-- `user_settings_open_game_setup_settings()`
+| Flag | Override |
+|---|---|
+| `--game`, `--game-version`, `--scan-path` | explicit value wins |
+| `--max-concurrent` | explicit value wins; `0` is the adaptive-concurrency override |
+| `--show-fid-values`, `--simplify-logs`, `--fcx-mode` | turn the option on for this run |
 
-Only explicitly supplied CLI options override typed saved values. Persistence is an explicit User Settings preview/commit action; ordinary scan preparation is read-only. The CLI never interprets raw `CLASSIC_Settings` paths and never bootstraps from `CLASSIC_Info.default_settings`.
+Rust reads saved User Settings read-only, applies the game-differs rule, and builds the request and its FCX setup context; the CLI keeps no settings-merge logic and no game-name table. A Standard scan looks for Crash Logs under the Installation Root (located by `installation_root.cpp`), never under the current working directory; `--scan-path` is the explicit way to scan elsewhere. Launch diagnostics are printed from their Rust-rendered Display Content lines.
 
-The scanner projects those explicit facts into the tagged Standard or Targeted CXX request constructors and calls `scan_run_contract_execute(...)` once. Rust owns Crash Log discovery, effective-concurrency selection, run-scoped FCX setup, analysis, Autoscan Report persistence, Unsolved Logs finalization, and discovery-order terminal results. The CLI owns only event/result presentation and a scoped Ctrl+C monitor that requests cooperative cancellation through the opaque run control.
+`--unsolved-logs-destination` and `--reset-unsolved-logs-destination` stay an explicit User Settings preview/commit action in `user_settings_action.cpp`, run before the launch so the scan reads the saved destination. The CLI never interprets raw `CLASSIC_Settings` paths and never bootstraps from `CLASSIC_Info.default_settings`.
+
+The scanner executes the launched request with `scan_run_contract_execute(...)` once. Rust owns Crash Log discovery, effective-concurrency selection, run-scoped FCX setup, analysis, Autoscan Report persistence, Unsolved Logs finalization, and discovery-order terminal results. The CLI owns only event/result presentation and a scoped Ctrl+C monitor that requests cooperative cancellation through the opaque run control.
 
 ## Rust TUI flow
 

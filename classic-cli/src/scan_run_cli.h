@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cli_args.h"
-#include "user_settings_action.h"
 
 #include "classic_cxx_bridge/scanner.h"
 
@@ -36,14 +35,44 @@ struct CliScanRunPresentation {
     std::vector<CliScanRunMessage> messages;
 };
 
-/// Projects CLI arguments and typed User Settings into one invariant-preserving C++ request.
+/// Maps the documented CLI flags onto Crash Log Scan Launch per-run overrides.
 ///
-/// Standard intent carries Rust-owned discovery facts and Unsolved Logs policy. Targeted intent
-/// carries only the explicit candidate paths, so it cannot express Unsolved Logs movement.
-rust::Box<classic::scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
-                                                                       const PreparedScanUserSettings& settings,
-                                                                       const std::string& installation_root,
-                                                                       const std::string& base_directory);
+/// This is the whole of the CLI's say over the request; every merge rule against saved User
+/// Settings, including the game-differs rule, is Crash Log Scan Launch's:
+///
+/// - `--game`, `--game-version`, `--scan-path`: supplied only when given, and then they win.
+///   CLI11 fills in defaults for absent flags, so presence is read from the `*_was_explicit`
+///   facts rather than from the values.
+/// - `--max-concurrent`: supplied only when given; `0` is the explicit adaptive-concurrency
+///   override, which beats a saved limit.
+/// - `--show-fid-values`, `--simplify-logs`, `--fcx-mode`: turn the option on for this run;
+///   absent, the saved value stands.
+classic::scanner::ScanRunLaunchOverridesDto make_cli_scan_run_launch_overrides(const CliArgs& args);
+
+/// Saves any requested Unsolved Logs Destination, then launches one Crash Log Scan Run.
+///
+/// The destination flags stay an explicit User Settings Update that runs before the launch, so
+/// the launch reads what was just committed. Returns `std::nullopt`, after printing why, when that
+/// update cannot complete; the scan is then not started. Otherwise returns the launch, which may
+/// still carry a typed launch error (`scan_run_launch_error`).
+///
+/// Positional `input_paths` select a Targeted scan of exactly those inputs; without them the scan
+/// is Standard, and Crash Log Scan Launch looks for Crash Logs under `installation_root` — never
+/// under the process's current working directory.
+std::optional<rust::Box<classic::scanner::ScanRunLaunch>> launch_cli_scan_run(const CliArgs& args,
+                                                                               const std::string& installation_root);
+
+/// Produces the CLI lines for a launch's diagnostics, one per Rust-rendered display line.
+///
+/// The words are Rust's (`display_lines` on the launch view); the CLI only routes each line by
+/// its severity, the same way it routes a run's lines.
+std::vector<CliScanRunMessage> describe_cli_scan_run_launch(const classic::scanner::ScanRunLaunchRequestDto& view);
+
+/// Returns Rust's stable game token (`Fallout4`, `Fallout4VR`, ...) for a launched game.
+///
+/// Used only to label the CLI header and progress display; the token comes from
+/// `classic_shared_core::GameId::as_str`, so the CLI keeps no game-name table of its own.
+std::string cli_scan_run_game_token(classic::scanner::ScanRunGameId game);
 
 /// Produces user-facing lines for one serialized Crash Log Scan Run lifecycle event.
 ///

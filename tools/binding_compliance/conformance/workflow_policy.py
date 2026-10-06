@@ -370,6 +370,23 @@ _EXECUTION_POLICIES += tuple(
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}
 )
+# The native CLI launches through Crash Log Scan Launch (#289) and proves it with
+# its own consumer receipt, on the same compiler matrix as its other families.
+_EXECUTION_POLICIES += tuple(
+    replace(
+        policy,
+        family_id="crash-log-scan-launch",
+        launcher_marker=(
+            "run_cli_consumer_conformance.ps1 -Family crash-log-scan-launch"
+            " -Compiler ${{ matrix.compiler }}"
+        ),
+        artifact_marker=(
+            "name: cli-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}"
+        ),
+    )
+    for policy in _EXECUTION_POLICIES[:7]
+    if policy.participant_id == "cli"
+)
 # The GUI launches every Crash Log Scan through Crash Log Scan Launch (#288), so
 # its launch receipt is a blocking step of the GUI job with its own artifact,
 # after the build that step reuses.
