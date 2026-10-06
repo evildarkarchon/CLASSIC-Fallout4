@@ -36,6 +36,9 @@ YAML_SOURCE_VALUES_COVERAGE_POLICY = FamilyCoveragePolicy(
             "values",
             ("YamlSource",),
             matches_sources,
+            # The pack capability is operation-scoped: `YamlSource` also backs
+            # the `YamlFile` projections (#246), whose token/description
+            # operations belong to the yaml-file-values family.
             runtime_operations=(
                 None,
                 "path",

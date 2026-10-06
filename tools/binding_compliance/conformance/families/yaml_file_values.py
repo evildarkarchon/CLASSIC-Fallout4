@@ -33,14 +33,21 @@ YAML_FILE_VALUES_COVERAGE_POLICY = FamilyCoveragePolicy(
             observation_family="values",
             rust_symbols=("YamlSource", "as_str", "description"),
             matches=_observed,
+            # The file identity is config's `YamlSource` (#246), which the
+            # yaml-source-values family also covers. Python `YamlFile` methods
+            # therefore surface under their full export path (their class name
+            # differs from the Rust symbol); naming them, not bare `__eq__` or
+            # `as_str`, keeps this family from crediting `classic_config.
+            # YamlSource` methods it never executes. Node and CXX keep their
+            # distinct export names.
             runtime_operations=(
                 None,
-                "as_str",
-                "description",
-                "__repr__",
-                "__str__",
-                "__eq__",
-                "__hash__",
+                "YamlFile.as_str",
+                "YamlFile.description",
+                "YamlFile.__repr__",
+                "YamlFile.__str__",
+                "YamlFile.__eq__",
+                "YamlFile.__hash__",
                 "yaml_file_as_str",
                 "yaml_file_description",
                 "getAllYamlFiles",
