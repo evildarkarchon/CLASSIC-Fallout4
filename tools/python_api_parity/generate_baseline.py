@@ -169,9 +169,10 @@ PYTHON_PHASE3_ROUTE_FAMILIES: dict[str, dict[str, str]] = {
         "idPrefix": "shared.lib.",
         "anchorExport": "GameId",
     },
+    # `classic_settings.YamlFile` projects the config-owned `YamlSource`.
     "YamlFile": {
         "ownerModule": "settings",
-        "rustCrate": "classic-settings-core",
+        "rustCrate": "classic-config-core",
         "pythonModule": "classic_settings",
         "idPrefix": "settings.lib.",
         "anchorExport": "YamlFile",

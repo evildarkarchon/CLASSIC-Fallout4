@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T00:57:11.156710+00:00`
-- Tier-1 contract rows: **947**
-- Tier-1 matched: **930**
+- Generated: `2026-10-06T01:06:08.786119+00:00`
+- Tier-1 contract rows: **946**
+- Tier-1 matched: **929**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -215,9 +215,9 @@
 | `config-yaml-source-display-name` | `config` | `classic-config-core` | `YamlSource` | `getYamlSourceDisplayName` | `matched` |
 | `config-yaml-source-display-name-with-game` | `config` | `classic-config-core` | `YamlSource` | `getYamlSourceDisplayNameWithGame` | `matched` |
 | `config-fileio-config-interface` | `config` | `-` | `None` | `FileIoConfig` | `unmapped` |
-| `config-yaml-file-enum` | `config` | `classic-settings-core` | `YamlFile` | `JsYamlFile` | `matched` |
-| `config-get-all-yaml-files` | `config` | `classic-settings-core` | `YamlFile` | `getAllYamlFiles` | `matched` |
-| `config-get-yaml-file-description` | `config` | `classic-settings-core` | `YamlFile` | `getYamlFileDescription` | `matched` |
+| `config-yaml-file-enum` | `config` | `classic-config-core` | `YamlSource` | `JsYamlFile` | `matched` |
+| `config-get-all-yaml-files` | `config` | `classic-config-core` | `YamlSource` | `getAllYamlFiles` | `matched` |
+| `config-get-yaml-file-description` | `config` | `classic-config-core` | `YamlSource` | `getYamlFileDescription` | `matched` |
 | `config-default-cache-ttl-const` | `config` | `classic-database-core` | `DEFAULT_CACHE_TTL_SECS` | `DEFAULT_CACHE_TTL` | `matched` |
 | `config-batch-cache-ttl-const` | `config` | `classic-database-core` | `BATCH_CACHE_TTL_SECS` | `BATCH_CACHE_TTL` | `matched` |
 | `config-max-cache-ttl-const` | `config` | `classic-database-core` | `MAX_CACHE_TTL_SECS` | `MAX_CACHE_TTL` | `matched` |
@@ -587,7 +587,6 @@
 | `version_registry.Fallout4Version@rust` | `version_registry` | `classic-version-registry-core` | `Fallout4Version@rust` | `None` | `matched` |
 | `shared.GameId@rust` | `shared` | `classic-shared-core` | `GameId@rust` | `None` | `matched` |
 | `version_registry.NULL_VERSION@rust` | `version_registry` | `classic-version-registry-core` | `NULL_VERSION@rust` | `None` | `matched` |
-| `settings.YamlFile@rust` | `settings` | `classic-settings-core` | `YamlFile@rust` | `None` | `matched` |
 | `version_registry.display_name@rust` | `version_registry` | `classic-version-registry-core` | `display_name@rust` | `None` | `matched` |
 | `version_registry.display_name_string@rust` | `version_registry` | `classic-version-registry-core` | `display_name_string@rust` | `None` | `matched` |
 | `version_registry.game_version@rust` | `version_registry` | `classic-version-registry-core` | `game_version@rust` | `None` | `matched` |

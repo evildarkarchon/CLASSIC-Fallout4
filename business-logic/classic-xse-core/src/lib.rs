@@ -524,27 +524,106 @@ pub fn resolve_xse_folder_for_scan_in_version_registry_scope(
     configured_docs_root: Option<&Path>,
     version_registry: &VersionRegistryScope,
 ) -> Option<PathBuf> {
-    let version_info = resolve_version_info(game, selected_game_version, version_registry);
     let local_yaml_path = yaml_dir_data
         .as_ref()
         .join(format!("CLASSIC {game} Local.yaml"));
 
     let yaml_ops = YamlOperations::new();
-    let local_yaml = yaml_ops.load_yaml_file(&local_yaml_path).ok();
+    let game_local = yaml_ops
+        .load_yaml_file(&local_yaml_path)
+        .map(|yaml| XseGameLocalFacts {
+            docs_folder_xse: clean_path_value(&yaml_ops.get_string_value(
+                &yaml,
+                "Game_Info.Docs_Folder_XSE",
+                "",
+            )),
+            root_folder_docs: clean_path_value(&yaml_ops.get_string_value(
+                &yaml,
+                "Game_Info.Root_Folder_Docs",
+                "",
+            )),
+        })
+        .unwrap_or_default();
 
-    if let Some(yaml) = local_yaml.as_ref() {
-        if let Some(path) =
-            clean_path_value(&yaml_ops.get_string_value(yaml, "Game_Info.Docs_Folder_XSE", ""))
-        {
-            return Some(path);
-        }
+    resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
+        &game_local,
+        game,
+        selected_game_version,
+        configured_docs_root,
+        version_registry,
+    )
+}
 
-        if let Some(docs_root) =
-            clean_path_value(&yaml_ops.get_string_value(yaml, "Game_Info.Root_Folder_Docs", ""))
-            && let Some(path) = xse_folder_from_docs_root(&docs_root, version_info)
-        {
-            return Some(path);
-        }
+/// The Game Local facts the XSE Folder resolver consumes.
+///
+/// This is XSE's narrow input for config-owned Game Local data: a composing
+/// caller reads the facts through `classic-config-core` (its `GameLocalFacts`
+/// carries the same two fields) and passes the plain paths here, so this crate
+/// never depends on config or parses the Game Local YAML for that caller.
+/// Empty paths are treated as absent.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct XseGameLocalFacts {
+    /// `Game_Info.Docs_Folder_XSE`: an explicit XSE Folder, used as-is.
+    pub docs_folder_xse: Option<PathBuf>,
+    /// `Game_Info.Root_Folder_Docs`: the recorded documents folder the XSE
+    /// Folder is derived from.
+    pub root_folder_docs: Option<PathBuf>,
+}
+
+/// Resolve the XSE Folder from caller-supplied Game Local facts, reading
+/// Version Registry metadata from the default snapshot.
+///
+/// Precedence and fail-soft behavior match [`resolve_xse_folder_for_scan`]:
+/// the explicit `docs_folder_xse`, then the folder derived from
+/// `root_folder_docs`, then the folder derived from `configured_docs_root`,
+/// then platform documents discovery. Returns `None` rather than an error when
+/// nothing resolves.
+#[must_use]
+pub fn resolve_xse_folder_from_game_local_facts(
+    game_local: &XseGameLocalFacts,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+) -> Option<PathBuf> {
+    resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
+        game_local,
+        game,
+        selected_game_version,
+        configured_docs_root,
+        &VersionRegistryScope::default_scope(),
+    )
+}
+
+/// Resolve the XSE Folder like [`resolve_xse_folder_from_game_local_facts`],
+/// reading Version Registry metadata only from `version_registry`.
+#[must_use]
+pub fn resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
+    game_local: &XseGameLocalFacts,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+    version_registry: &VersionRegistryScope,
+) -> Option<PathBuf> {
+    // Resolve the registry entry before the explicit-folder check, as the
+    // YAML-reading resolver always has, so a scope's lazy first-use snapshot
+    // is taken at the same point either way.
+    let version_info = resolve_version_info(game, selected_game_version, version_registry);
+
+    if let Some(path) = game_local
+        .docs_folder_xse
+        .as_deref()
+        .and_then(non_empty_path)
+    {
+        return Some(path.to_path_buf());
+    }
+
+    if let Some(docs_root) = game_local
+        .root_folder_docs
+        .as_deref()
+        .and_then(non_empty_path)
+        && let Some(path) = xse_folder_from_docs_root(docs_root, version_info)
+    {
+        return Some(path);
     }
 
     if let Some(docs_root) = configured_docs_root.and_then(non_empty_path)

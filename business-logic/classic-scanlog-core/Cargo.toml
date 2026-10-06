@@ -100,8 +100,6 @@ classic-web-core = { path = "../classic-web-core" }
 classic-resource-core = { path = "../classic-resource-core" }
 classic-update-core = { path = "../classic-update-core" }
 classic-message-core = { path = "../classic-message-core" }
-# YAML file identity conformance still reads YamlFile from its current owner.
-classic-settings-core = { path = "../classic-settings-core" }
 tempfile = { workspace = true }
 criterion = { version = "0.6.0", features = ["html_reports"] }
 sqlx = { workspace = true }

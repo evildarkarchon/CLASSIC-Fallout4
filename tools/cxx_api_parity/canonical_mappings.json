@@ -52,11 +52,6 @@
       "libRs": "business-logic/classic-scanlog-core/src/lib.rs"
     },
     {
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "libRs": "business-logic/classic-settings-core/src/lib.rs"
-    },
-    {
       "ownerModule": "shared",
       "rustCrate": "classic-shared-core",
       "libRs": "foundation/classic-shared-core/src/lib.rs"
@@ -4442,9 +4437,9 @@
       "rustSymbol": "YamlFile",
       "kind": "enum",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "coreRustSymbol": "YamlFile"
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlSource"
     },
     {
       "id": "0b5a4ad5368e8a02",
@@ -4739,8 +4734,8 @@
       "rustSymbol": "yaml_file_as_str",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "coreRustSymbol": "as_str"
     },
     {
@@ -4748,8 +4743,8 @@
       "rustSymbol": "yaml_file_description",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "coreRustSymbol": "description"
     },
     {

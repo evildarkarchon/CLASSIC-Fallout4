@@ -4,7 +4,7 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "CLASSIC YAML settings facade over classic-shared-core generic YAML and YAML operations, plus YamlFile"
+description = "CLASSIC YAML settings facade over classic-shared-core generic YAML and YAML operations"
 license = "MIT"
 
 [dependencies]
@@ -12,13 +12,9 @@ license = "MIT"
 # crate re-exports
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
-# YamlFile serialization
-serde = { workspace = true }
-
 [dev-dependencies]
 serial_test = "3.2"
 tempfile = "3.14"
-serde_json = { workspace = true }
 tokio = { workspace = true }
 
 [lints.rust]
