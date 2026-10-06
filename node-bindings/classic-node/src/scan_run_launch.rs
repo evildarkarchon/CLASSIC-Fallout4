@@ -186,12 +186,7 @@ impl ScanRunLaunch {
         match self.inner.request() {
             Request::Standard(_) => None,
             Request::Targeted(request) => Some(JsScanRunTargetedSource {
-                inputs: request
-                    .source()
-                    .inputs
-                    .iter()
-                    .map(|path| path_to_string(path))
-                    .collect(),
+                inputs: request.source().inputs.iter().map(path_to_string).collect(),
             }),
         }
     }
@@ -331,7 +326,7 @@ fn configuration_to_js(configuration: &Configuration) -> JsScanRunConfiguration 
             .scan_facts
             .formid_database_paths
             .iter()
-            .map(|path| path_to_string(path))
+            .map(path_to_string)
             .collect(),
         unsolved_logs_destination: configuration
             .scan_facts

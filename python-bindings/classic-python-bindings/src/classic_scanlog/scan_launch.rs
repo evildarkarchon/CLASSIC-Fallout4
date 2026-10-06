@@ -239,7 +239,7 @@ impl PyScanRunLaunch {
             .scan_facts
             .formid_database_paths
             .iter()
-            .map(|path| path_to_string(path))
+            .map(path_to_string)
             .collect()
     }
 
@@ -306,14 +306,9 @@ impl PyScanRunLaunch {
     pub fn targeted_inputs(&self) -> Option<Vec<String>> {
         match self.inner.request() {
             Request::Standard(_) => None,
-            Request::Targeted(request) => Some(
-                request
-                    .source()
-                    .inputs
-                    .iter()
-                    .map(|path| path_to_string(path))
-                    .collect(),
-            ),
+            Request::Targeted(request) => {
+                Some(request.source().inputs.iter().map(path_to_string).collect())
+            }
         }
     }
 
