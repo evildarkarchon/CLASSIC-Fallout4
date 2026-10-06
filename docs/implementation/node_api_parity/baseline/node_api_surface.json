@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T11:59:59.840035+00:00",
+  "generated_at_utc": "2026-10-06T14:45:34.366390+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -2189,14 +2189,6 @@
       "signature": "export declare class ScanRunCancellation {"
     },
     {
-      "export": "ScanRunContinuation",
-      "kind": "class",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare class ScanRunContinuation {"
-    },
-    {
       "export": "ScanRunLaunch",
       "kind": "class",
       "owner_module": "scanlog",
@@ -3889,15 +3881,6 @@
       "arity": 2
     },
     {
-      "export": "scanRunAbandon",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunAbandon(continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
-      "arity": 4
-    },
-    {
       "export": "scanRunExecute",
       "kind": "function",
       "owner_module": "scanlog",
@@ -3959,15 +3942,6 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanRunLogFailureStageLabel(token: string): string",
       "arity": 1
-    },
-    {
-      "export": "scanRunResume",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
-      "arity": 5
     },
     {
       "export": "scanRunSettle",

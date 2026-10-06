@@ -8259,16 +8259,6 @@
       "rustKind": "struct"
     },
     {
-      "id": "scanlog.scan_run.ScanRunContinuation",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "CrashLogScanRunContinuation",
-      "nodeExport": "ScanRunContinuation",
-      "nodeKind": "class",
-      "rustCrate": "classic-scanlog-core",
-      "rustKind": "struct"
-    },
-    {
       "id": "scanlog.scan_run.ScanRunPendingRecovery",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -8284,28 +8274,6 @@
       "ownerModule": "scanlog",
       "rustSymbol": "execute",
       "nodeExport": "scanRunExecute",
-      "nodeKind": "function",
-      "rustCrate": "classic-scanlog-core",
-      "rustKind": "function",
-      "nodeArity": 4
-    },
-    {
-      "id": "scanlog.scan_run.scanRunResume",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "resume",
-      "nodeExport": "scanRunResume",
-      "nodeKind": "function",
-      "rustCrate": "classic-scanlog-core",
-      "rustKind": "function",
-      "nodeArity": 5
-    },
-    {
-      "id": "scanlog.scan_run.scanRunAbandon",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "abandon",
-      "nodeExport": "scanRunAbandon",
       "nodeKind": "function",
       "rustCrate": "classic-scanlog-core",
       "rustKind": "function",
