@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T03:59:08.385749+00:00",
+  "generated_at_utc": "2026-10-06T10:40:16.784892+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -10028,6 +10028,16 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "ScanRunPendingRecovery",
+      "export_path": "ScanRunPendingRecovery",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunPendingRecovery:"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "ScanRunRecoveryDecisionDescription",
       "export_path": "ScanRunRecoveryDecisionDescription",
       "kind": "class",
@@ -10123,6 +10133,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
       "signature": "class ScanRunResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunSettledExecution",
+      "export_path": "ScanRunSettledExecution",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunSettledExecution:"
     },
     {
       "module": "classic_scanlog",
@@ -10494,6 +10514,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
       "signature": "def scan_run_resume( continuation: ScanRunContinuation, decision: ScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_settle",
+      "export_path": "scan_run_settle",
+      "kind": "function",
+      "arity": 4,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def scan_run_settle( pending_recovery: ScanRunPendingRecovery, decision: ScanRunLocalIgnoreRecoveryDecision | None = None, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunSettledExecution:"
     },
     {
       "module": "classic_scanlog",
