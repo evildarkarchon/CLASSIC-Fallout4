@@ -28,16 +28,37 @@ _OBSERVATION_FIELDS = frozenset(
 )
 
 
+#: The game-differs rule's diagnostic kinds. Each one's code is its own kind token.
+_GAME_DIFFERS_KINDS = frozenset(
+    {
+        "game_version_not_applied",
+        "fcx_mode_not_applied",
+        "custom_scan_folder_not_applied",
+        "setup_folders_not_applied",
+    }
+)
+
+
 def _diagnostics_are_typed(observation):
     """Require each diagnostic to carry a frozen kind token and a stable code."""
     diagnostics = observation["diagnostics"]
     return isinstance(diagnostics, list) and all(
         isinstance(item, dict)
         and set(item) == {"kind", "code"}
-        and item["kind"] == "user_settings"
+        and (
+            item["kind"] == "user_settings"
+            or (item["kind"] in _GAME_DIFFERS_KINDS and item["code"] == item["kind"])
+        )
         and isinstance(item["code"], str)
         and bool(item["code"])
         for item in diagnostics
+    )
+
+
+def _withheld_for_another_game(observation):
+    """A launch for a non-managed game that reported at least one withheld saved value."""
+    return _launched(observation) and any(
+        item["kind"] in _GAME_DIFFERS_KINDS for item in observation["diagnostics"]
     )
 
 
@@ -85,6 +106,19 @@ CRASH_LOG_SCAN_LAUNCH_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "CrashLogScanLaunchDiagnosticKind",
             ),
             matches=_launched,
+        ),
+        CoveragePredicate(
+            id="crash-log-scan-launch.game-differs",
+            capability_id=_ACTION,
+            action=_ACTION,
+            observation_family="launch-request",
+            rust_symbols=_SHARED_SYMBOLS
+            + (
+                "CrashLogScanLaunchDiagnostic",
+                "CrashLogScanLaunchDiagnosticKind",
+                "SavedGameSpecificValue",
+            ),
+            matches=_withheld_for_another_game,
         ),
         CoveragePredicate(
             id="crash-log-scan-launch.typed-error",

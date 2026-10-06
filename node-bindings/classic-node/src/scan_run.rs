@@ -1878,7 +1878,7 @@ fn observer_error_to_js(failure: Option<contract::ObserverDeliveryFailure>) -> O
 /// idiomatic JavaScript and worse parity — a consumer reading two bindings would
 /// read the same segment two ways, and the taxonomy is frozen precisely so that
 /// cannot happen.
-fn display_lines_to_js(lines: &[DisplayLine]) -> Vec<JsScanRunDisplayLine> {
+pub(crate) fn display_lines_to_js(lines: &[DisplayLine]) -> Vec<JsScanRunDisplayLine> {
     lines
         .iter()
         .map(|line| JsScanRunDisplayLine {

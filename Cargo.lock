@@ -972,6 +972,7 @@ name = "classic-scan-presentation"
 version = "9.1.0"
 dependencies = [
  "classic-config-core",
+ "classic-scan-launch",
  "classic-scanlog-core",
  "classic-shared-core",
  "classic-vocabulary",

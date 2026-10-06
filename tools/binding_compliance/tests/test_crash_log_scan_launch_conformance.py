@@ -76,6 +76,24 @@ def test_a_launch_that_wrote_user_settings_earns_no_credit() -> None:
     assert not _predicate("crash-log-scan-launch.launched").matches(observation)
 
 
+def test_only_a_withheld_saved_value_credits_the_game_differs_rule() -> None:
+    """The game-differs fact needs a typed withheld-value diagnostic whose code is its kind."""
+    observation = _launched_observation()
+    game_differs = _predicate("crash-log-scan-launch.game-differs")
+    assert not game_differs.matches(observation)
+
+    observation["diagnostics"] = [
+        {"kind": "fcx_mode_not_applied", "code": "fcx_mode_not_applied"}
+    ]
+    assert game_differs.matches(observation)
+
+    observation["diagnostics"] = [
+        {"kind": "fcx_mode_not_applied", "code": "game_version_not_applied"}
+    ]
+    assert not game_differs.matches(observation)
+    assert not _predicate("crash-log-scan-launch.launched").matches(observation)
+
+
 def test_diagnostics_must_carry_codes_not_prose() -> None:
     """A diagnostic with a message field would make prose part of the contract."""
     observation = _launched_observation()
