@@ -1238,6 +1238,17 @@
       "pythonArity": 1
     },
     {
+      "id": "user_settings.update_with_formid_databases_for_game",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_formid_databases_for_game",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_formid_databases_for_game",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
       "id": "user_settings.update_with_move_unsolved_logs",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -12638,6 +12649,56 @@
       "rustSymbol": "FormIdValueLookupInMemoryReply",
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "FormIDFindingLookupReplyKind",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunch",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "CrashLogScanLaunchRequest",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunch",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunch.standard",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "prepare_launch",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunch.standard",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunch.targeted",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "prepare_launch",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunch.targeted",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunchOverrides",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "CrashLogScanLaunchOverrides",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunchOverrides",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_launch.ScanRunLaunchDiagnostic",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scan-launch",
+      "rustSymbol": "CrashLogScanLaunchDiagnostic",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLaunchDiagnostic",
       "pythonKind": "class"
     }
   ]

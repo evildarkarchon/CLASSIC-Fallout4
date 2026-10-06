@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T11:11:36.684529+00:00`
-- Tier-1 contract rows: **942**
-- Tier-1 matched: **924**
+- Generated: `2026-10-06T12:00:00.211676+00:00`
+- Tier-1 contract rows: **945**
+- Tier-1 matched: **927**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -955,6 +955,9 @@
 | `scanlog.scan_run.JsScanRunSuccess` | `scanlog` | `-` | `None` | `JsScanRunSuccess` | `unmapped` |
 | `scanlog.scan_run.JsScanRunSettledSuccess` | `scanlog` | `-` | `None` | `JsScanRunSettledSuccess` | `unmapped` |
 | `scanlog.scan_run.JsScanRunFailure` | `scanlog` | `-` | `None` | `JsScanRunFailure` | `unmapped` |
+| `scanlog.scan_run_launch.ScanRunLaunch` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchRequest` | `ScanRunLaunch` | `matched` |
+| `scanlog.scan_run_launch.JsScanRunLaunchOverrides` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchOverrides` | `JsScanRunLaunchOverrides` | `matched` |
+| `scanlog.scan_run_launch.JsScanRunLaunchDiagnostic` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchDiagnostic` | `JsScanRunLaunchDiagnostic` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

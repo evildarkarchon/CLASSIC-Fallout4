@@ -103,7 +103,7 @@ def _normalize_global_options(argv: list[str]) -> list[str]:
     """Allow documented global options before or after subcommands."""
 
     flags = {"--json", "--no-color", "--verbose", "--tracebacks"}
-    valued = {"--output", "--repo-root", "--fixture-root"}
+    valued = {"--output", "--repo-root", "--fixture-root", "--installation-root"}
     globals_out: list[str] = []
     rest: list[str] = []
     index = 0

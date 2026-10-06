@@ -1,8 +1,9 @@
 {
-  "generated_at_utc": "2026-10-06T12:25:59.736875+00:00",
+  "generated_at_utc": "2026-10-06T12:50:13.177731+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
+      "classic-scan-launch",
       "classic-config-core",
       "classic-user-settings-core",
       "classic-version-registry-core",
@@ -20,6 +21,7 @@
     ],
     "source_files": [
       "business-logic/classic-scanlog-core/src/lib.rs",
+      "business-logic/classic-scan-launch/src/lib.rs",
       "business-logic/classic-config-core/src/lib.rs",
       "business-logic/classic-user-settings-core/src/lib.rs",
       "business-logic/classic-version-registry-core/src/lib.rs",
@@ -7154,6 +7156,428 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/lib.rs",
       "source_decl": "pub fn with_size(path: PathBuf, size: u64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanIntent",
+      "kind": "enum",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub enum CrashLogScanIntent",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanIntent",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use launch::{CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch};",
+      "source_expr": "launch::CrashLogScanIntent",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchDiagnostic",
+      "kind": "enum",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/diagnostic.rs",
+      "source_decl": "pub enum CrashLogScanLaunchDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchDiagnostic",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use diagnostic::{CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind};",
+      "source_expr": "diagnostic::CrashLogScanLaunchDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchDiagnosticKind",
+      "kind": "enum",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/diagnostic.rs",
+      "source_decl": "pub enum CrashLogScanLaunchDiagnosticKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchDiagnosticKind",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use diagnostic::{CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind};",
+      "source_expr": "diagnostic::CrashLogScanLaunchDiagnosticKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchError",
+      "kind": "enum",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/error.rs",
+      "source_decl": "pub enum CrashLogScanLaunchError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchError",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use error::{CrashLogScanLaunchError, CrashLogScanLaunchErrorKind};",
+      "source_expr": "error::CrashLogScanLaunchError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchErrorKind",
+      "kind": "enum",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/error.rs",
+      "source_decl": "pub enum CrashLogScanLaunchErrorKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchErrorKind",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use error::{CrashLogScanLaunchError, CrashLogScanLaunchErrorKind};",
+      "source_expr": "error::CrashLogScanLaunchErrorKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchOverrides",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use overrides::{CrashLogScanLaunchOverrides, MaxConcurrency};",
+      "source_expr": "overrides::CrashLogScanLaunchOverrides",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchOverrides",
+      "kind": "struct",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub struct CrashLogScanLaunchOverrides",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchRequest",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use launch::{CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch};",
+      "source_expr": "launch::CrashLogScanLaunchRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanLaunchRequest",
+      "kind": "struct",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub struct CrashLogScanLaunchRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameVersionSelection",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use classic_user_settings_core::GameVersionSelection;",
+      "source_expr": "classic_user_settings_core::GameVersionSelection",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MaxConcurrency",
+      "kind": "enum",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub enum MaxConcurrency",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MaxConcurrency",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use overrides::{CrashLogScanLaunchOverrides, MaxConcurrency};",
+      "source_expr": "overrides::MaxConcurrency",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "code",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/diagnostic.rs",
+      "source_decl": "pub fn code(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "diagnostics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "from_count",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn from_count(count: usize)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub const fn game(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_version",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub const fn game_version(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "into_parts",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub fn into_parts(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "into_request",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub fn into_request(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "kind",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/diagnostic.rs",
+      "source_decl": "pub const fn kind(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "kind",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/error.rs",
+      "source_decl": "pub const fn kind(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "limit",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub const fn limit(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "max_concurrency",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub const fn max_concurrency(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/diagnostic.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "prepare_launch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub fn prepare_launch(\n    installation_root: impl AsRef<Path>,\n    intent: CrashLogScanIntent,\n    overrides: &CrashLogScanLaunchOverrides,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "prepare_launch",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use launch::{CrashLogScanIntent, CrashLogScanLaunchRequest, prepare_launch};",
+      "source_expr": "launch::prepare_launch",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "request",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub const fn request(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "scan_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn scan_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "setup_context",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/launch.rs",
+      "source_decl": "pub const fn setup_context(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "show_formid_values",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub const fn show_formid_values(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "simplify_logs",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub const fn simplify_logs(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_game",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn with_game(mut self, game: GameId)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_game_version",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn with_game_version(mut self, game_version: GameVersionSelection)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_max_concurrency",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn with_max_concurrency(mut self, max_concurrency: MaxConcurrency)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_scan_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn with_scan_path(mut self, scan_path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_show_formid_values",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn with_show_formid_values(mut self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_simplify_logs",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn with_simplify_logs(mut self)",
       "tier": "tier1"
     },
     {
@@ -19340,6 +19764,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "diagnostics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "documents_root",
       "kind": "function",
       "arity": 1,
@@ -20487,6 +20921,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn with_formid_databases(mut self, value: BTreeMap<String, Vec<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_formid_databases_for_game",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_formid_databases_for_game(\n        mut self,\n        game: impl Into<String>,\n        paths: Vec<String>,\n    )",
       "tier": "tier1"
     },
     {

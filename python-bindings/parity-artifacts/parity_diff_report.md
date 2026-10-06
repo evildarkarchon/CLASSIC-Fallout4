@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T10:55:27.897007+00:00`
-- Tier-1 contract rows: **1227**
-- Tier-1 matched: **1225**
+- Generated: `2026-10-06T12:00:53.970796+00:00`
+- Tier-1 contract rows: **1233**
+- Tier-1 matched: **1231**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -128,6 +128,7 @@
 | `user_settings.update_with_show_statistics` | `user_settings` | `classic-user-settings-core` | `with_show_statistics` | `classic_user_settings.UserSettingsUpdate.set_show_statistics` | `matched` |
 | `user_settings.update_with_formid_value_lookup` | `user_settings` | `classic-user-settings-core` | `with_formid_value_lookup` | `classic_user_settings.UserSettingsUpdate.set_formid_value_lookup` | `matched` |
 | `user_settings.update_with_formid_databases` | `user_settings` | `classic-user-settings-core` | `with_formid_databases` | `classic_user_settings.UserSettingsUpdate.set_formid_databases` | `matched` |
+| `user_settings.update_with_formid_databases_for_game` | `user_settings` | `classic-user-settings-core` | `with_formid_databases_for_game` | `classic_user_settings.UserSettingsUpdate.set_formid_databases_for_game` | `matched` |
 | `user_settings.update_with_move_unsolved_logs` | `user_settings` | `classic-user-settings-core` | `with_move_unsolved_logs` | `classic_user_settings.UserSettingsUpdate.set_move_unsolved_logs` | `matched` |
 | `user_settings.update_with_unsolved_logs_destination` | `user_settings` | `classic-user-settings-core` | `with_unsolved_logs_destination` | `classic_user_settings.UserSettingsUpdate.set_unsolved_logs_destination` | `matched` |
 | `user_settings.update_with_custom_scan_input` | `user_settings` | `classic-user-settings-core` | `with_custom_scan_input` | `classic_user_settings.UserSettingsUpdate.set_custom_scan_input` | `matched` |
@@ -1240,6 +1241,11 @@
 | `scanlog.formid_finding_analyzer.FormIDFindingLookupEntry` | `scanlog` | `classic-database-core` | `FormIdValueLookupEntry` | `classic_scanlog.FormIDFindingLookupEntry` | `matched` |
 | `scanlog.formid_finding_analyzer.FormIDFindingLookupEntry.__init__` | `scanlog` | `classic-database-core` | `FormIdValueLookupEntry` | `classic_scanlog.FormIDFindingLookupEntry.__init__` | `matched` |
 | `scanlog.formid_finding_analyzer.FormIDFindingLookupReplyKind` | `scanlog` | `classic-database-core` | `FormIdValueLookupInMemoryReply` | `classic_scanlog.FormIDFindingLookupReplyKind` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunch` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchRequest` | `classic_scanlog.ScanRunLaunch` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunch.standard` | `scanlog` | `classic-scan-launch` | `prepare_launch` | `classic_scanlog.ScanRunLaunch.standard` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunch.targeted` | `scanlog` | `classic-scan-launch` | `prepare_launch` | `classic_scanlog.ScanRunLaunch.targeted` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunchOverrides` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchOverrides` | `classic_scanlog.ScanRunLaunchOverrides` | `matched` |
+| `scanlog.scan_launch.ScanRunLaunchDiagnostic` | `scanlog` | `classic-scan-launch` | `CrashLogScanLaunchDiagnostic` | `classic_scanlog.ScanRunLaunchDiagnostic` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

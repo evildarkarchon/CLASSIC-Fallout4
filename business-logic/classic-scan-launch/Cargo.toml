@@ -1,0 +1,39 @@
+[package]
+name = "classic-scan-launch"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+publish = false
+authors = ["CLASSIC Development Team"]
+description = "Crash Log Scan Launch: read-only projection of User Settings and per-run overrides into a Crash Log Scan Run request"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
+
+[dependencies]
+# One-way edges only (ADR-0009). This crate sits above both owners it composes:
+# scanlog core owns the Crash Log Scan Run request, and User Settings owns the saved
+# values and which FormID database rows apply to a game. `classic-scanlog-core` must
+# never gain a normal dependency on `classic-user-settings-core`; the Crash Log Scan
+# Setup Context definition keeps User Settings loading out of scanlog core, and
+# `tests/dependency_boundary.rs` enforces it.
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+classic-user-settings-core = { path = "../classic-user-settings-core" }
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+# Frozen tokens and Display Labels for this crate's own diagnostic and error kinds,
+# so the three bindings project them instead of each keeping a table.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
+[dev-dependencies]
+# Temp-dir Installation Roots holding User Settings fixtures.
+tempfile = { workspace = true }
+# The conformance runner reads input-only run plans and publishes JSON receipts.
+serde_json = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

@@ -730,6 +730,7 @@ dependencies = [
  "classic-path-core",
  "classic-registry-core",
  "classic-resource-core",
+ "classic-scan-launch",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
@@ -833,6 +834,7 @@ dependencies = [
  "classic-path-core",
  "classic-registry-core",
  "classic-resource-core",
+ "classic-scan-launch",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
@@ -851,6 +853,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.21",
  "tokio",
  "walkdir",
@@ -893,6 +896,7 @@ dependencies = [
  "classic-path-core",
  "classic-registry-core",
  "classic-resource-core",
+ "classic-scan-launch",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
@@ -949,6 +953,18 @@ dependencies = [
  "tokio",
  "tracing",
  "walkdir",
+]
+
+[[package]]
+name = "classic-scan-launch"
+version = "9.1.0"
+dependencies = [
+ "classic-scanlog-core",
+ "classic-shared-core",
+ "classic-user-settings-core",
+ "classic-vocabulary",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]

@@ -8608,6 +8608,36 @@
       "nodeExport": "JsScanRunFailure",
       "nodeKind": "interface",
       "unmappedReason": "Binding-owned result envelope combining core outcome, rendered presentation, and adapter observer failure; no single Rust core counterpart."
+    },
+    {
+      "id": "scanlog.scan_run_launch.ScanRunLaunch",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanLaunchRequest",
+      "nodeExport": "ScanRunLaunch",
+      "nodeKind": "class",
+      "rustCrate": "classic-scan-launch",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run_launch.JsScanRunLaunchOverrides",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanLaunchOverrides",
+      "nodeExport": "JsScanRunLaunchOverrides",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scan-launch",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run_launch.JsScanRunLaunchDiagnostic",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanLaunchDiagnostic",
+      "nodeExport": "JsScanRunLaunchDiagnostic",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scan-launch",
+      "rustKind": "enum"
     }
   ]
 }

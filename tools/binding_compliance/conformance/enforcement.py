@@ -23,6 +23,7 @@ FAMILY_ENFORCEMENT = MappingProxyType(
         "papyrus-monitor": "blocking",
         "crash-log-scan-run": "blocking",
         "autoscan-report": "blocking",
+        "crash-log-scan-launch": "blocking",
         "user-settings": "blocking",
         "installed-yaml-data": "blocking",
         "crash-suspect": "blocking",

@@ -127,8 +127,8 @@ void GuiUserSettingsTests::accepted_changes_commit_as_one_preservation_aware_upd
     changes.gameExecutable = {true, QStringLiteral("E:/Games/Fallout4/Fallout4.exe")};
     changes.documentsRoot = {true, QStringLiteral("E:/Documents/Fallout4")};
     changes.iniFolder = {true, QStringLiteral("E:/Documents/Fallout4")};
-    changes.formIdDatabases = before.scan.formIdDatabases;
-    changes.formIdDatabases->insert(QStringLiteral("Fallout4"), {QStringLiteral("databases/replacement.db")});
+    changes.formIdDatabaseSave =
+        classic::gui::GuiFormIdDatabaseSave{QStringLiteral("Fallout4"), {QStringLiteral("databases/replacement.db")}};
 
     const auto outcome = classic::gui::GuiUserSettings::commit(root.path(), before.revision, changes);
 

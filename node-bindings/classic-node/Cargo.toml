@@ -47,6 +47,9 @@ classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 # over as mirrored data, exactly as the C++ bridge does. The edge is one-way:
 # nothing here renders back into Rust.
 classic-scan-presentation = { path = "../../business-logic/classic-scan-presentation" }
+# Crash Log Scan Launch (ADR-0009), exposed beside the scan-run surface in
+# `src/scan_run_launch.rs`; it builds the requests that surface executes.
+classic-scan-launch = { path = "../../business-logic/classic-scan-launch" }
 
 # Wave 3: File I/O & Data
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
@@ -67,6 +70,10 @@ classic-update-core = { path = "../../business-logic/classic-update-core" }
 
 [build-dependencies]
 napi-build = "2"
+
+[dev-dependencies]
+# Temp-dir Installation Roots for the Crash Log Scan Launch unit tests.
+tempfile = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

@@ -71,6 +71,8 @@ constexpr auto AUDITED_SOURCES = std::to_array<std::string_view>({
     "src/app_update.h",
     "src/cli_args.cpp",
     "src/cli_args.h",
+    "src/installation_root.cpp",
+    "src/installation_root.h",
     "src/main.cpp",
     "src/progress.cpp",
     "src/progress.h",

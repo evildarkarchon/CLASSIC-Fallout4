@@ -1,0 +1,14 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4 VR
+  Game Version: VR
+  FormID Databases:
+    Fallout4:
+      - databases/Fallout4 FormIDs.db
+      - databases/Shared Extra FormIDs.db
+    Fallout4VR:
+      - databases/Fallout4 FormIDs.db
+      - databases/Legacy VR FormIDs.db
+    Skyrim:
+      - databases/Skyrim FormIDs.db
+      - D:/Added/Skyrim Extra.db

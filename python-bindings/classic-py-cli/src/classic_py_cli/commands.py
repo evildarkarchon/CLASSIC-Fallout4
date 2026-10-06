@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -80,6 +80,55 @@ class _OptionalPathCommandArgs:
     """Synthetic args for catalog-dispatched commands with optional paths."""
 
     path: str | None = None
+
+
+class _InstallationRootNotFound(Exception):
+    """No Installation Root was found; ``str()`` is the user-facing "CLASSIC Data not found" text."""
+
+
+def _installation_root(context: CommandContext) -> Path:
+    """Return the Installation Root a command reads ``CLASSIC Data`` and User Settings from.
+
+    An explicit ``--installation-root`` is used as given and must itself hold ``CLASSIC Data``.
+    Otherwise the whole search is Config's shared locator
+    (``classic_config.locate_installation_root``), started from this CLI's package folder and
+    the working directory -- the same search the GUI, TUI, C++ CLI and Node CLI use. There is
+    deliberately no repository, fixture, or working-directory fallback.
+
+    Raises:
+        _InstallationRootNotFound: no explicit root holds ``CLASSIC Data``, or the locator found
+            no candidate that does.
+        ImportError: the ``classic_config`` binding is unavailable.
+    """
+
+    if context.installation_root is not None:
+        if (context.installation_root / "CLASSIC Data").is_dir():
+            return context.installation_root
+        raise _InstallationRootNotFound(
+            f"CLASSIC Data not found in --installation-root {context.installation_root}"
+        )
+    # The Python interpreter's own folder says nothing about the CLASSIC installation, so this
+    # package's folder stands in for the executable folder, as the Node CLI uses its script folder.
+    executable_dir = Path(__file__).resolve().parent
+    working_dir = Path.cwd()
+    located = require_binding("classic_config").locate_installation_root(str(executable_dir), str(working_dir))
+    if located is None:
+        raise _InstallationRootNotFound(
+            "CLASSIC Data not found. Run classic-py from the CLASSIC installation folder, or pass "
+            f"--installation-root. (CLI folder: {executable_dir}; working directory: {working_dir})"
+        )
+    return Path(located)
+
+
+def _installation_root_not_found(command: str, exc: _InstallationRootNotFound) -> CommandResult:
+    """Report a missing Installation Root as a configuration failure before any command work."""
+
+    return failure(
+        command,
+        str(exc),
+        int(ExitCode.USAGE),
+        error={"classification": "installation-root-not-found", "message": str(exc)},
+    )
 
 
 def _relative_or_absolute(path: Path, root: Path) -> str:
@@ -332,11 +381,14 @@ def version_parse(args: _VersionParseArgs, context: CommandContext) -> CommandRe
 
 
 def config_main_version(args: object, context: CommandContext) -> CommandResult:
-    """Load the main CLASSIC YAML version through classic_config."""
+    """Load the main CLASSIC YAML version from the Installation Root through classic_config."""
 
     try:
+        installation_root = _installation_root(context)
         module = require_binding("classic_config")
-        version = module.load_main_yaml_version(str(context.repo_root / "CLASSIC Data" / "databases"))
+        version = module.load_main_yaml_version(str(installation_root / "CLASSIC Data" / "databases"))
+    except _InstallationRootNotFound as exc:
+        return _installation_root_not_found("config main-version", exc)
     except ImportError as exc:
         return failure("config main-version", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
@@ -814,25 +866,6 @@ def _scan_event_summary(event: object) -> dict[str, Any]:
     return summary
 
 
-def _path_is_relative_to(path: Path, root: Path) -> bool:
-    """Return whether path is under root without requiring either to exist."""
-
-    try:
-        path.resolve().relative_to(root.resolve())
-    except ValueError:
-        return False
-    return True
-
-
-def _fixture_yaml_root(scan_path: Path, context: CommandContext) -> Path | None:
-    """Find a fixture-local YAML root for deterministic compliance scans."""
-
-    for root in (context.fixture_root, context.repo_root / "python-bindings" / "tests" / "fixtures"):
-        if _path_is_relative_to(scan_path, root) and (root / "CLASSIC Data").exists():
-            return root.resolve()
-    return None
-
-
 def _typed_scan_game(shared_module: object, game_name: str) -> object:
     """Map a User Settings game token to the shared binding's typed identity."""
 
@@ -867,8 +900,10 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     scan_path = Path(args.path or context.fixture_root)
     if not scan_path.is_absolute():
         scan_path = context.repo_root / scan_path
-    installation_root = _fixture_yaml_root(scan_path, context) or context.repo_root
     try:
+        # Resolved before any binding work, so a run from the wrong folder stops here rather
+        # than opening User Settings or scanning under a folder that is not an installation.
+        installation_root = _installation_root(context)
         module = require_binding("classic_scanlog")
         shared_module = require_binding("classic_shared")
         settings_module = require_binding("classic_user_settings")
@@ -914,6 +949,8 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
                 lambda event: events.append(_scan_event_summary(event)),
                 cancel_on_observer_error=True,
             )
+    except _InstallationRootNotFound as exc:
+        return _installation_root_not_found("scan logs", exc)
     except ImportError as exc:
         return failure("scan logs", str(exc), int(ExitCode.BINDING_IMPORT))
     except AttributeError:
@@ -1031,8 +1068,23 @@ def scan_game(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
 
 
 def dispatch_scenario_command(command: list[str], context: CommandContext) -> CommandResult:
-    """Dispatch catalog scenario commands directly to user-facing handlers."""
+    """Dispatch catalog scenario commands directly to user-facing handlers.
 
+    A scenario names its Installation Root the way a user does, with ``--installation-root``
+    anywhere in the command; a relative root resolves against the repository root, like
+    ``--path``.
+    """
+
+    if "--installation-root" in command:
+        root_index = command.index("--installation-root")
+        if root_index + 1 >= len(command):
+            return failure(" ".join(command), "Scenario command is missing an --installation-root value",
+                           int(ExitCode.USAGE))
+        installation_root = Path(command[root_index + 1])
+        if not installation_root.is_absolute():
+            installation_root = context.repo_root / installation_root
+        context = replace(context, installation_root=installation_root.resolve())
+        command = command[:root_index] + command[root_index + 2:]
     if command[:2] == ["bindings", "list"]:
         return bindings_list(object(), context)
     if command[:2] == ["version", "parse"]:

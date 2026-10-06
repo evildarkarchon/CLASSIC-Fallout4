@@ -1,4 +1,3 @@
-import {existsSync} from "node:fs";
 import {basename, dirname, join} from "node:path";
 import type {
     JsGameId,
@@ -32,24 +31,32 @@ export function resolvePackageRoot(cliDir: string): string {
     return basename(parent) === "dist" ? dirname(parent) : parent;
 }
 
-function findDataRoot(
+/**
+ * Locates the Installation Root through Config's shared locator.
+ *
+ * The CLI's own folder stands in for the executable folder: the Node executable lives
+ * wherever Node was installed, which says nothing about the CLASSIC installation. The
+ * locator's parent and grandparent candidates then cover the package root from both
+ * `cli/` and `dist/cli/`. There is deliberately no fallback, so a run from the wrong
+ * folder never scans it as if it were the installation.
+ *
+ * @throws Error whose message starts with "CLASSIC Data not found" and names both
+ *   search starts, when no candidate holds `CLASSIC Data`.
+ */
+function locateDataRoot(
+    classicNode: ClassicNodeModule,
     currentWorkingDirectory: string,
     cliDir: string,
 ): CliPaths {
-    const packageRoot = resolvePackageRoot(cliDir);
-    const cwdDataDir = join(currentWorkingDirectory, "CLASSIC Data");
-    if (existsSync(cwdDataDir)) {
-        return {root: currentWorkingDirectory, data: cwdDataDir};
+    const root = classicNode.locateInstallationRoot(cliDir, currentWorkingDirectory);
+    if (root === null) {
+        throw new Error(
+            "CLASSIC Data not found. Run the CLI from the CLASSIC installation folder, " +
+            "or place it next to the CLASSIC Data folder. " +
+            `(CLI folder: ${cliDir}; working directory: ${currentWorkingDirectory})`,
+        );
     }
-
-    const packageDataDir = join(packageRoot, "CLASSIC Data");
-    if (existsSync(packageDataDir)) {
-        return {root: packageRoot, data: packageDataDir};
-    }
-
-    throw new Error(
-        `Unable to resolve CLASSIC Data from ${currentWorkingDirectory} or ${packageRoot}`,
-    );
+    return {root, data: join(root, "CLASSIC Data")};
 }
 
 function toCliGameVersion(shortName: string): string | undefined {
@@ -301,7 +308,7 @@ export async function runCli(
             return {exitCode: 0};
         }
 
-        const paths = findDataRoot(process.cwd(), cliDir);
+        const paths = locateDataRoot(classicNode, process.cwd(), cliDir);
         const userSettings = classicNode.openUserSettings(paths.root);
         const scanSettings = userSettings.crashLogScanSettings;
         const normalizedGameVersion = normalizeSupportedGameVersion(

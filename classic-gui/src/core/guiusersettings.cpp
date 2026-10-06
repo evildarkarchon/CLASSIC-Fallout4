@@ -66,18 +66,13 @@ void applySelection(const SelectedGuiOptionalString& selection, bool& hasField, 
     value = toStdString(selection.value.value_or(QString{}));
 }
 
-/// Flattens one GUI-authored FormID database mapping into the CXX update representation.
-void applyFormIdDatabases(const QMap<QString, QStringList>& databases, classic::settings::UserSettingsUpdateDto& update)
+/// Forwards one game's FormID rows to the Rust game-aware save without choosing a stored key.
+void applyFormIdDatabaseSave(const GuiFormIdDatabaseSave& save, classic::settings::UserSettingsUpdateDto& update)
 {
-    update.has_formid_databases = true;
-    for (auto game = databases.cbegin(); game != databases.cend(); ++game) {
-        update.formid_database_games.push_back(toStdString(game.key()));
-        for (const auto& path : game.value()) {
-            classic::settings::FormIdDatabasePathDto entry{};
-            entry.game = toStdString(game.key());
-            entry.path = toStdString(path);
-            update.formid_database_paths.push_back(std::move(entry));
-        }
+    update.has_formid_database_save = true;
+    update.formid_database_save_game = toStdString(save.game);
+    for (const auto& path : save.paths) {
+        update.formid_database_save_paths.push_back(toStdString(path));
     }
 }
 
@@ -174,8 +169,8 @@ classic::settings::UserSettingsUpdateDto updateFrom(const GuiUserSettingsChanges
         update.has_formid_value_lookup = true;
         update.formid_value_lookup = *changes.formIdValueLookup;
     }
-    if (changes.formIdDatabases.has_value()) {
-        applyFormIdDatabases(*changes.formIdDatabases, update);
+    if (changes.formIdDatabaseSave.has_value()) {
+        applyFormIdDatabaseSave(*changes.formIdDatabaseSave, update);
     }
     if (changes.moveUnsolvedLogs.has_value()) {
         update.has_move_unsolved_logs = true;

@@ -22,6 +22,9 @@ pub enum UserSettingsCommitOutcome {
     Committed {
         /// SHA-256 revision of the newly published document.
         revision: Revision,
+        /// Non-rejecting effect diagnostics carried over from the accepted preview, such as the
+        /// removal of a legacy `Fallout4VR` FormID Databases key; empty for ordinary updates.
+        diagnostics: Vec<UpdateDiagnostic>,
     },
     /// The document changed after preview, so the newer bytes were left untouched.
     Conflict {
@@ -148,7 +151,7 @@ fn commit_frontend_transition_attempt(
         }
     };
     match accepted.commit(classic_root)? {
-        UserSettingsCommitOutcome::Committed { revision } => {
+        UserSettingsCommitOutcome::Committed { revision, .. } => {
             Ok(UserSettingsFrontendTransitionOutcome::Committed { revision })
         }
         UserSettingsCommitOutcome::Conflict {
@@ -220,8 +223,11 @@ impl AcceptedUserSettingsUpdate {
 
         publisher.publish(&target, bytes)?;
 
+        // The preview computed these effects against `base_revision`, and publication only
+        // happens when the locked reopen still matches it, so they describe this commit exactly.
         Ok(UserSettingsCommitOutcome::Committed {
             revision: Revision::ContentSha256(Sha256::digest(bytes).into()),
+            diagnostics: self.diagnostics().to_vec(),
         })
     }
 }

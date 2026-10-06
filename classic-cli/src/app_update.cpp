@@ -9,17 +9,7 @@
 
 #include <fmt/core.h>
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#endif
-
-#include <filesystem>
-#include <optional>
 #include <string>
-
-namespace fs = std::filesystem;
 
 namespace {
 
@@ -38,42 +28,14 @@ constexpr const char* kClassificationUnknown = "unknown";
 constexpr const char* kClassificationNotPublished = "not_published";
 constexpr const char* kClassificationError = "error";
 
-/// Resolve the install root without interpreting User Settings in C++.
-///
-/// The selected path is passed explicitly to the Rust-owned User Settings module.
-std::optional<fs::path> resolve_classic_root() {
-    std::error_code ec;
-
-#ifdef _WIN32
-    wchar_t buffer[MAX_PATH];
-    const DWORD length = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
-    if (length > 0 && length < MAX_PATH) {
-        const fs::path executable_root = fs::path(buffer).parent_path();
-        if (fs::is_directory(executable_root / "CLASSIC Data", ec)) {
-            return executable_root;
-        }
-        ec.clear();
-    }
-#endif
-
-    const fs::path current_root = fs::current_path(ec);
-    if (ec) {
-        return std::nullopt;
-    }
-    if (fs::is_directory(current_root / "CLASSIC Data", ec)) {
-        return current_root;
-    }
-    return std::nullopt;
-}
-
 /// Open the typed Rust group and enforce its already safety-adjusted policy.
 ///
-/// Returns `false` before the runtime, cache, or network notification pipeline
-/// is touched when Rust disables the check or applies a degraded fallback.
-bool update_check_enabled_for_root(const fs::path& classic_root) {
-    const std::string root = classic_root.string();
+/// The Installation Root is passed explicitly to the Rust-owned User Settings module, so C++
+/// never interprets User Settings itself. Returns `false` before the runtime, cache, or network
+/// notification pipeline is touched when Rust disables the check or applies a degraded fallback.
+bool update_check_enabled_for_root(const std::string& classic_root) {
     const auto preferences =
-        classic::settings::user_settings_open_update_preferences(root);
+        classic::settings::user_settings_open_update_preferences(classic_root);
 
     for (const auto& diagnostic : preferences.diagnostics) {
         fmt::print(
@@ -185,14 +147,16 @@ bool init_runtime_for_app_update() {
 
 } // namespace
 
-int run_check_app_update(const CliArgs& /*args*/) {
-    const auto classic_root = resolve_classic_root();
+int run_check_app_update(const CliArgs& args) {
+    return run_check_app_update(args, current_cli_process_location());
+}
+
+int run_check_app_update(const CliArgs& /*args*/, const CliProcessLocation& location) {
+    // No Installation Root means no User Settings to honor. That is a failed run, not a
+    // policy-disabled check, so it exits non-zero before any settings, runtime or network work.
+    const auto classic_root = require_cli_installation_root(location);
     if (!classic_root) {
-        fmt::print(stderr,
-                   "User Settings warning [classic_root_unavailable]: could not resolve the "
-                   "CLASSIC root.\n");
-        fmt::print("App update check is disabled because User Settings could not be trusted.\n");
-        return 0;
+        return kCliInstallationRootNotFoundExitCode;
     }
 
     if (!update_check_enabled_for_root(*classic_root)) {

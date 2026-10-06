@@ -424,7 +424,7 @@ fn import_with_publisher(
         .commit(classic_root)
         .map_err(map_settings_commit_error)?;
     let published_settings_revision = match outcome {
-        UserSettingsCommitOutcome::Committed { revision } => revision,
+        UserSettingsCommitOutcome::Committed { revision, .. } => revision,
         UserSettingsCommitOutcome::Conflict {
             expected_revision,
             actual_revision,
