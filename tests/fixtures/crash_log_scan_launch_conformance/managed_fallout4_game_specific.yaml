@@ -1,0 +1,10 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4
+  Game Version: NextGen
+  FCX Mode: true
+  Move Unsolved Logs: false
+  SCAN Custom Path: 'C:/Saved Custom Logs'
+  Game Folder Path: 'C:/Games/Fallout 4'
+  Documents Folder Path: 'C:/Users/Player/Documents/My Games/Fallout4'
+  Game EXE Path: 'C:/Games/Fallout 4/Fallout4.exe'
