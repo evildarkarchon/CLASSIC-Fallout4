@@ -51,7 +51,7 @@ classic::gui::ScanRunLocalIgnoreRecoveryPrompt ScanController::makeLocalIgnoreRe
         }
 
         Choice choice = Choice::Cancel;
-        // Keep the Rust continuation and observer on the worker stack while the GUI owns the modal
+        // Keep the Rust pending recovery and observer on the worker stack while the GUI owns the modal
         // prompt. The payload is captured by value and carries only Qt-owned copies — no
         // continuation and no `rust::Box` — which is what makes copying it across the hop safe.
         // No metatype registration is needed because this is the functor overload of
