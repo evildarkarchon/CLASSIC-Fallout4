@@ -15,7 +15,8 @@
       "operationScoped": true,
       "rustSymbols": [
         "Fallout4Version",
-        "game_version"
+        "game_version",
+        "game_version_in"
       ],
       "observationFamilies": [
         "value-results"

@@ -135,6 +135,7 @@ def test_version_value_receipts_cover_only_applicable_rows(
                 "display_name",
                 "from_str",
                 "short_name",
+                "version",
                 "xse_acronym",
             },
         }.get(family, set())
