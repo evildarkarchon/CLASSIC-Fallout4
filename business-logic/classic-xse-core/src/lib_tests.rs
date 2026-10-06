@@ -210,3 +210,161 @@ fn xse_folder_from_facts_falls_back_to_the_configured_docs_root() {
         ))
     );
 }
+
+// ---------------------------------------------------------------------------
+// XSE log from caller-supplied Game Local facts
+// ---------------------------------------------------------------------------
+
+/// Creates `<root>/<relative>` as an empty file, creating its parent folders.
+fn touch(root: &Path, relative: &str) -> PathBuf {
+    let path = root.join(relative);
+    std::fs::create_dir_all(path.parent().expect("log has a parent")).expect("create folder");
+    std::fs::write(&path, b"").expect("write log");
+    path
+}
+
+#[test]
+fn xse_log_from_facts_locates_the_fallout4_log() {
+    let docs = tempfile::tempdir().expect("tempdir");
+    let log = touch(docs.path(), "F4SE/f4se.log");
+
+    let located = resolve_xse_log_from_game_local_facts(
+        &XseGameLocalFacts::default(),
+        "Fallout4",
+        "Original",
+        Some(docs.path()),
+    )
+    .expect("probe succeeds");
+
+    assert_eq!(located, Some(log));
+}
+
+#[test]
+fn xse_log_from_facts_gives_fallout4_vr_its_own_log_in_the_shared_folder() {
+    let docs = tempfile::tempdir().expect("tempdir");
+    touch(docs.path(), "F4SE/f4se.log");
+    let vr_log = touch(docs.path(), "F4SE/f4sevr.log");
+
+    for (game, version) in [("Fallout4VR", "auto"), ("Fallout4", "VR")] {
+        let located = resolve_xse_log_from_game_local_facts(
+            &XseGameLocalFacts::default(),
+            game,
+            version,
+            Some(docs.path()),
+        )
+        .expect("probe succeeds");
+
+        assert_eq!(located, Some(vr_log.clone()), "{game} {version}");
+    }
+}
+
+#[test]
+fn xse_log_from_facts_never_borrows_the_other_editions_log() {
+    let docs = tempfile::tempdir().expect("tempdir");
+    touch(docs.path(), "F4SE/f4sevr.log");
+
+    let located = resolve_xse_log_from_game_local_facts(
+        &XseGameLocalFacts::default(),
+        "Fallout4",
+        "Original",
+        Some(docs.path()),
+    )
+    .expect("probe succeeds");
+
+    assert_eq!(located, None);
+}
+
+#[test]
+fn xse_log_from_facts_keeps_xse_folder_precedence() {
+    let root = tempfile::tempdir().expect("tempdir");
+    let explicit_log = touch(root.path(), "explicit/f4se.log");
+    touch(root.path(), "recorded/F4SE/f4se.log");
+    touch(root.path(), "configured/F4SE/f4se.log");
+    let facts = XseGameLocalFacts {
+        docs_folder_xse: Some(root.path().join("explicit")),
+        root_folder_docs: Some(root.path().join("recorded")),
+    };
+    let configured = root.path().join("configured");
+
+    let located =
+        resolve_xse_log_from_game_local_facts(&facts, "Fallout4", "Original", Some(&configured))
+            .expect("probe succeeds");
+    assert_eq!(located, Some(explicit_log));
+
+    // The log is looked for only in the XSE Folder precedence selects; a
+    // log in a lower-precedence folder is never used instead.
+    std::fs::remove_file(root.path().join("explicit/f4se.log")).expect("remove log");
+    let located =
+        resolve_xse_log_from_game_local_facts(&facts, "Fallout4", "Original", Some(&configured))
+            .expect("probe succeeds");
+    assert_eq!(located, None);
+
+    let located = resolve_xse_log_from_game_local_facts(
+        &XseGameLocalFacts {
+            docs_folder_xse: None,
+            ..facts
+        },
+        "Fallout4",
+        "Original",
+        Some(&configured),
+    )
+    .expect("probe succeeds");
+    assert_eq!(located, Some(root.path().join("recorded/F4SE/f4se.log")));
+}
+
+#[test]
+fn xse_log_from_facts_returns_nothing_for_a_missing_folder_or_log() {
+    let root = tempfile::tempdir().expect("tempdir");
+    std::fs::create_dir_all(root.path().join("present/F4SE")).expect("create folder");
+    // A directory named like the log is not a log.
+    std::fs::create_dir_all(root.path().join("dir-log/F4SE/f4se.log")).expect("create folder");
+
+    for docs in ["missing", "present", "dir-log"] {
+        let located = resolve_xse_log_from_game_local_facts(
+            &XseGameLocalFacts::default(),
+            "Fallout4",
+            "Original",
+            Some(&root.path().join(docs)),
+        )
+        .expect("absence is not a failure");
+
+        assert_eq!(located, None, "{docs}");
+    }
+}
+
+#[test]
+fn xse_log_from_facts_returns_nothing_without_xse_metadata() {
+    // An explicit folder resolves for an unknown game, but without Version
+    // Registry XSE metadata there is no log name to look for.
+    let root = tempfile::tempdir().expect("tempdir");
+    touch(root.path(), "explicit/f4se.log");
+    let facts = XseGameLocalFacts {
+        docs_folder_xse: Some(root.path().join("explicit")),
+        root_folder_docs: None,
+    };
+
+    let located = resolve_xse_log_from_game_local_facts(&facts, "Unknown", "auto", None)
+        .expect("probe succeeds");
+
+    assert_eq!(located, None);
+}
+
+#[test]
+fn xse_log_from_facts_reports_an_uninspectable_log_as_a_typed_error() {
+    // A NUL byte makes every platform's metadata probe fail with an error
+    // other than "not found", standing in for any operational I/O failure.
+    let facts = XseGameLocalFacts {
+        docs_folder_xse: Some(PathBuf::from("bad\0xse")),
+        root_folder_docs: None,
+    };
+
+    let error = resolve_xse_log_from_game_local_facts(&facts, "Fallout4", "Original", None)
+        .expect_err("an uninspectable log is an operational failure");
+
+    let XseLogError::Inspect { path, .. } = &error;
+    assert_eq!(path, &PathBuf::from("bad\0xse").join("f4se.log"));
+    assert!(
+        error.to_string().starts_with("cannot inspect XSE log "),
+        "{error}"
+    );
+}

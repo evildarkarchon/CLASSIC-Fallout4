@@ -73,6 +73,25 @@ pub enum XseError {
 /// Result type for XSE operations.
 pub type XseResult<T> = Result<T, XseError>;
 
+/// Operational failure while locating an XSE log.
+///
+/// Absence is never an error: a missing XSE Folder or log is reported as
+/// `Ok(None)` by the XSE log resolvers. This error means the candidate log
+/// could not be inspected at all (for example, access was denied or the path
+/// is not a valid file name), so the caller cannot tell whether it exists.
+#[derive(Error, Debug)]
+pub enum XseLogError {
+    /// Inspecting the candidate log failed for a reason other than absence.
+    #[error("cannot inspect XSE log {}: {source}", path.display())]
+    Inspect {
+        /// The candidate log path that could not be inspected.
+        path: PathBuf,
+        /// The underlying I/O error.
+        #[source]
+        source: std::io::Error,
+    },
+}
+
 /// Script Extender type enumeration.
 ///
 /// Represents the various script extenders for different Bethesda games.
@@ -550,7 +569,106 @@ pub fn resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
     // former Local.yaml-reading resolver always did, so a scope's lazy
     // first-use snapshot is taken at the same point it always was.
     let version_info = resolve_version_info(game, selected_game_version, version_registry);
+    xse_folder_for_version(game_local, configured_docs_root, version_info)
+}
 
+/// Locate the XSE log for `game` and `selected_game_version` from
+/// caller-supplied Game Local facts, reading Version Registry metadata from
+/// the default snapshot.
+///
+/// The log is looked for only in the XSE Folder that
+/// [`resolve_xse_folder_from_game_local_facts`] selects (same precedence; a
+/// log in a lower-precedence folder is never used instead). Its file name is
+/// the selected version's Version Registry XSE acronym, lower-cased, plus
+/// `.log`, so Fallout 4 VR's F4SEVR has its own `f4sevr.log` inside the shared
+/// `F4SE` folder and an edition never borrows the other edition's log.
+///
+/// Returns `Ok(Some(path))` for an existing log file and `Ok(None)` when no
+/// XSE Folder resolves, the version has no XSE metadata, or the folder or log
+/// does not exist (a directory named like the log is not a log).
+///
+/// # Errors
+///
+/// Returns [`XseLogError::Inspect`] when the candidate log cannot be
+/// inspected for a reason other than absence.
+pub fn resolve_xse_log_from_game_local_facts(
+    game_local: &XseGameLocalFacts,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+) -> Result<Option<PathBuf>, XseLogError> {
+    resolve_xse_log_from_game_local_facts_in_version_registry_scope(
+        game_local,
+        game,
+        selected_game_version,
+        configured_docs_root,
+        &VersionRegistryScope::default_scope(),
+    )
+}
+
+/// Locate the XSE log like [`resolve_xse_log_from_game_local_facts`], reading
+/// Version Registry metadata only from `version_registry`.
+///
+/// # Errors
+///
+/// Returns [`XseLogError::Inspect`] when the candidate log cannot be
+/// inspected for a reason other than absence.
+pub fn resolve_xse_log_from_game_local_facts_in_version_registry_scope(
+    game_local: &XseGameLocalFacts,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+    version_registry: &VersionRegistryScope,
+) -> Result<Option<PathBuf>, XseLogError> {
+    let version_info = resolve_version_info(game, selected_game_version, version_registry);
+    let Some(folder) = xse_folder_for_version(game_local, configured_docs_root, version_info)
+    else {
+        return Ok(None);
+    };
+    let Some(log_name) = version_info
+        .and_then(|info| info.xse.as_ref())
+        .and_then(|xse| xse_log_file_name(&xse.acronym))
+    else {
+        return Ok(None);
+    };
+    probe_xse_log(folder.join(log_name))
+}
+
+/// The XSE log file name for a Version Registry XSE acronym: the trimmed
+/// acronym lower-cased plus `.log` (`F4SE` -> `f4se.log`, `F4SEVR` ->
+/// `f4sevr.log`), or `None` for an empty acronym.
+fn xse_log_file_name(acronym: &str) -> Option<String> {
+    let acronym = acronym.trim();
+    (!acronym.is_empty()).then(|| format!("{}.log", acronym.to_ascii_lowercase()))
+}
+
+/// Report whether `path` is an existing log file, treating any kind of
+/// absence as `None` and every other inspection failure as an error.
+fn probe_xse_log(path: PathBuf) -> Result<Option<PathBuf>, XseLogError> {
+    match std::fs::metadata(&path) {
+        Ok(metadata) if metadata.is_file() => Ok(Some(path)),
+        // A directory (or other non-file) named like the log is not a log.
+        Ok(_) => Ok(None),
+        // `NotADirectory` is how Unix reports a folder component that is a
+        // file; it means the log cannot exist there, not that probing failed.
+        Err(error)
+            if matches!(
+                error.kind(),
+                std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
+            ) =>
+        {
+            Ok(None)
+        }
+        Err(source) => Err(XseLogError::Inspect { path, source }),
+    }
+}
+
+/// Apply XSE Folder precedence for an already-resolved registry entry.
+fn xse_folder_for_version(
+    game_local: &XseGameLocalFacts,
+    configured_docs_root: Option<&Path>,
+    version_info: Option<&VersionInfo>,
+) -> Option<PathBuf> {
     if let Some(path) = game_local
         .docs_folder_xse
         .as_deref()
