@@ -24,10 +24,12 @@ import type {
     JsScanRunLogResult,
     JsScanRunRecoveryPrompt,
     JsScanRunResult,
+    JsScanRunSettledSuccess,
     JsScanRunSetupContext,
     JsScanRunSuccess,
     ScanRunCancellation,
     ScanRunContinuation,
+    ScanRunPendingRecovery,
 } from "../index.js";
 
 const RUN_PLAN_ENV = "CLASSIC_CONFORMANCE_RUN_PLAN" as const;
@@ -101,18 +103,34 @@ interface ObserverFailureInput {
 /** Input-only instructions for one terminal continuation claim and its replays. */
 interface ContinuationFlowInput {
     action: ContinuationActionInput;
-    cancellation?: "before-resume" | "after-reset-critical-section";
+    cancellation?:
+        | "before-resume"
+        | "after-reset-critical-section"
+        | "before-pending-recovery";
     postPauseData: FixturePathInput[];
     replays: ContinuationActionInput[];
 }
 
-/** One public continuation operation and its decision when resuming. */
+/** One public continuation operation and its decision when resuming or settling. */
 type ContinuationActionInput =
     | {
     operation: "resume";
     decision: "proceed-without-ignore" | "reset-to-default";
 }
-    | { operation: "abandon"; decision?: never };
+    | { operation: "abandon"; decision?: never }
+    | {
+    operation: "settle";
+    decision?: "proceed-without-ignore" | "reset-to-default";
+};
+
+/** What a continuation flow claims: the legacy continuation, and for settle flows the pending recovery. */
+interface ClaimTarget {
+    continuation: ScanRunContinuation;
+    pendingRecovery?: ScanRunPendingRecovery;
+}
+
+/** Either successful envelope a continuation action resolves with. */
+type ContinuationSuccess = JsScanRunSuccess | JsScanRunSettledSuccess;
 
 /** The frozen Standard scenario input. */
 interface StandardScenarioInput extends CommonScenarioInput {
@@ -1223,10 +1241,10 @@ async function localIgnoreDurableEffects(
 }
 
 /** Reject adapter infrastructure or observer failures and return the public success envelope. */
-function requireSuccessfulExecution(
-    execution: JsScanRunSuccess | JsScanRunFailure,
+function requireSuccessfulExecution<T extends ContinuationSuccess>(
+    execution: T | JsScanRunFailure,
     label: string,
-): JsScanRunSuccess {
+): T {
     if (execution.observerError !== undefined) {
         throw new RunnerContractError(
             `${label} observer delivery failed: ${execution.observerError}`,
@@ -1263,7 +1281,7 @@ function compactRecoveryPrompt(prompt: JsScanRunRecoveryPrompt, root: string): J
 
 /** Project one initial or terminal Local Ignore phase without reading durable effects. */
 async function localIgnorePhase(
-    execution: JsScanRunSuccess | JsScanRunFailure,
+    execution: ContinuationSuccess | JsScanRunFailure,
     callbacks: JsScanRunEvent[],
     root: string,
     continuationAvailable: boolean,
@@ -1310,11 +1328,11 @@ async function localIgnorePhase(
 /** Invoke exactly one public continuation operation without deriving it from scenario names. */
 async function runContinuationAction(
     classic: typeof import("../index.js"),
-    continuation: ScanRunContinuation,
+    target: ClaimTarget,
     action: ContinuationActionInput,
     cancellation: ScanRunCancellation,
     callbacks?: JsScanRunEvent[],
-): Promise<JsScanRunSuccess | JsScanRunFailure> {
+): Promise<ContinuationSuccess | JsScanRunFailure> {
     const observer =
         callbacks === undefined
             ? undefined
@@ -1322,14 +1340,27 @@ async function runContinuationAction(
                 callbacks.push(event);
             };
     if (action.operation === "abandon") {
-        return await classic.scanRunAbandon(continuation, cancellation, observer);
+        return await classic.scanRunAbandon(target.continuation, cancellation, observer);
     }
     const decision =
-        action.decision === "proceed-without-ignore"
-            ? classic.JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore
-            : classic.JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault;
+        action.decision === undefined
+            ? undefined
+            : action.decision === "proceed-without-ignore"
+                ? classic.JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore
+                : classic.JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault;
+    if (action.operation === "settle") {
+        if (target.pendingRecovery === undefined) {
+            throw new RunnerContractError("a settle action requires a pending recovery");
+        }
+        // Settling runs on the paused run's own control, which the pending recovery
+        // retains; no cancellation is handed over again.
+        return await classic.scanRunSettle(target.pendingRecovery, decision, observer);
+    }
+    if (decision === undefined) {
+        throw new RunnerContractError("Resume continuation action has no recovery decision");
+    }
     return await classic.scanRunResume(
-        continuation,
+        target.continuation,
         decision,
         cancellation,
         observer,
@@ -1470,7 +1501,7 @@ function replayError(
     return {
         operation: action.operation,
         decision:
-            action.operation === "resume" ? normalizedToken(action.decision) : null,
+            action.decision === undefined ? null : normalizedToken(action.decision),
         error: {
             kind,
             message:
@@ -1510,6 +1541,26 @@ async function continuationObservation(
             "continuationFlow initial result has no recovery prompt",
         );
     }
+    if (
+        flow.cancellation !== undefined &&
+        flow.cancellation !== "before-resume" &&
+        flow.cancellation !== "after-reset-critical-section" &&
+        flow.cancellation !== "before-pending-recovery"
+    ) {
+        throw new RunnerContractError(
+            "continuationFlow.cancellation is not a supported cancellation seam",
+        );
+    }
+    const settles = flow.action.operation === "settle";
+    if (flow.cancellation === "before-pending-recovery") {
+        if (!settles) {
+            throw new RunnerContractError(
+                "before-pending-recovery cancellation requires a settle continuation action",
+            );
+        }
+        // The run already paused; cancel it before the frontend reads its pending recovery.
+        cancellation.cancel();
+    }
     const initial = await localIgnorePhase(
         initialSuccess,
         initialCallbacks,
@@ -1517,23 +1568,29 @@ async function continuationObservation(
         true,
         initialSuccess.recoveryPrompt,
     );
+    const target: ClaimTarget = {continuation};
+    if (settles) {
+        // A settling frontend reaches the paused run only through its pending recovery.
+        const pendingRecovery = initialSuccess.pendingRecovery;
+        if (pendingRecovery === undefined) {
+            throw new RunnerContractError(
+                "continuationFlow initial result has no pending recovery",
+            );
+        }
+        target.pendingRecovery = pendingRecovery;
+        initial.pendingRecovery = {
+            cancellationRequested: pendingRecovery.cancellationRequested,
+            prompt: compactRecoveryPrompt(pendingRecovery.prompt, root),
+        };
+    }
     await materializePostPauseData(plan, scenario, flow.postPauseData, root);
 
-    if (
-        flow.cancellation !== undefined &&
-        flow.cancellation !== "before-resume" &&
-        flow.cancellation !== "after-reset-critical-section"
-    ) {
-        throw new RunnerContractError(
-            "continuationFlow.cancellation is not a supported cancellation seam",
-        );
-    }
     if (flow.cancellation === "before-resume") {
         cancellation.cancel();
     }
     const cancelledBeforeTerminal = cancellation.isCancelled;
     const terminalCallbacks: JsScanRunEvent[] = [];
-    let terminalExecution: JsScanRunSuccess | JsScanRunFailure | null = null;
+    let terminalExecution: ContinuationSuccess | JsScanRunFailure | null = null;
     let terminalError: JsonObject | null = null;
     if (flow.cancellation === "after-reset-critical-section") {
         if (
@@ -1546,7 +1603,7 @@ async function continuationObservation(
         }
         const pending = runContinuationAction(
             classic,
-            continuation,
+            target,
             flow.action,
             cancellation,
             terminalCallbacks,
@@ -1576,7 +1633,7 @@ async function continuationObservation(
         try {
             terminalExecution = await runContinuationAction(
                 classic,
-                continuation,
+                target,
                 flow.action,
                 cancellation,
                 terminalCallbacks,
@@ -1586,7 +1643,7 @@ async function continuationObservation(
         }
     }
 
-    let terminalSuccess: JsScanRunSuccess | null = null;
+    let terminalSuccess: ContinuationSuccess | null = null;
     let terminal: JsonObject | null = null;
     if (terminalExecution !== null) {
         terminalSuccess = requireSuccessfulExecution(
@@ -1606,7 +1663,7 @@ async function continuationObservation(
     const replays: JsonObject[] = [];
     for (const action of flow.replays) {
         try {
-            await runContinuationAction(classic, continuation, action, cancellation);
+            await runContinuationAction(classic, target, action, cancellation);
             throw new RunnerContractError(
                 "a replayed continuation action unexpectedly succeeded",
             );

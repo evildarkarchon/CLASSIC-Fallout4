@@ -6,6 +6,7 @@ use classic_config_core::{
 use classic_scan_presentation::{
     DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, RecoveryPrompt,
     render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -32,7 +33,7 @@ use super::{
     scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
     scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_resume_error_to_py,
-    setup_to_py, success_execution,
+    settled_execution, setup_to_py, success_execution,
 };
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
@@ -1205,5 +1206,113 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
             None,
         );
         assert!(failed.recovery_prompt().is_none());
+        assert!(failed.pending_recovery(py).is_none());
+    });
+}
+
+#[test]
+/// Only a run that retains a continuation offers a pending recovery to settle.
+///
+/// A hand-built result cannot carry a continuation (core alone constructs one), so this pins
+/// the absent side; the Python contract tests drive a real paused run for the present side.
+fn an_envelope_without_a_retained_continuation_offers_no_pending_recovery() {
+    Python::attach(|py| {
+        let execution = success_execution(
+            py,
+            contract::RunResult {
+                status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+                discovery: None,
+                setup: None,
+                installed_yaml_data: None,
+                continuation: None,
+                effective_concurrency: None,
+                message: None,
+                total: 0,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 0,
+                logs: Vec::new(),
+            },
+            None,
+        )
+        .expect("envelope should build");
+
+        assert!(execution.pending_recovery(py).is_none());
+    });
+}
+
+#[test]
+/// A settled envelope states the settled run and carries nothing that could ask again.
+fn a_settled_envelope_projects_the_settled_result_and_its_lines() {
+    Python::attach(|py| {
+        let settled = contract::SettledRunResult {
+            status: CrashLogScanRunStatus::Cancelled,
+            discovery: Some(discovery()),
+            setup: None,
+            installed_yaml_data: None,
+            effective_concurrency: None,
+            message: Some("Cancelled after crash log discovery".to_string()),
+            total: 1,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 1,
+            logs: Vec::new(),
+        };
+        let expected_lines = render_run_result(&contract::RunResult::from(
+            contract::SettledRunResult {
+                status: CrashLogScanRunStatus::Cancelled,
+                discovery: Some(discovery()),
+                setup: None,
+                installed_yaml_data: None,
+                effective_concurrency: None,
+                message: Some("Cancelled after crash log discovery".to_string()),
+                total: 1,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 1,
+                logs: Vec::new(),
+            },
+        ));
+
+        let execution =
+            settled_execution(py, Ok(settled), Some("observer failed".to_string()))
+                .expect("settled envelope should build");
+
+        let result = execution
+            .result(py)
+            .expect("a settled run carries its result");
+        let result = result.borrow(py);
+        assert_eq!(result.status(), "cancelled");
+        assert!(result.continuation(py).is_none());
+        assert!(execution.error().is_none());
+        assert_eq!(execution.observer_error().as_deref(), Some("observer failed"));
+        assert_eq!(
+            execution.display_lines().len(),
+            display_lines_to_py(&expected_lines).len()
+        );
+    });
+}
+
+#[test]
+/// A settled run that failed run-wide resolves as the infrastructure half of the envelope.
+fn a_settled_infrastructure_failure_resolves_as_the_error_half() {
+    Python::attach(|py| {
+        let execution = settled_execution(
+            py,
+            Err(contract::InfrastructureError {
+                stage: contract::InfrastructureErrorStage::Intake,
+                message: "intake failed".to_string(),
+                path: None,
+            }),
+            None,
+        )
+        .expect("settled envelope should build");
+
+        assert!(execution.result(py).is_none());
+        assert_eq!(
+            execution.error().expect("the failure is carried").stage,
+            "intake"
+        );
+        assert!(!execution.display_lines().is_empty());
     });
 }

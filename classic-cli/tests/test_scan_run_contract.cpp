@@ -18,6 +18,8 @@
 #include <fstream>
 #include <functional>
 #include <iterator>
+#include <memory>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -1167,4 +1169,135 @@ TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "
         REQUIRE(message.error);
     }
     REQUIRE(read_file_bytes(ignore_path) == "CLASSIC_Ignore_Fallout4: []\n");
+}
+
+namespace {
+
+/// One paused targeted run, the control it was started under, and its initial envelope.
+struct PausedSettleRun {
+    std::unique_ptr<TemporaryDirectory> temporary;
+    fs::path ignore_path;
+    rust::Box<scanner::ScanRunCancellation> cancellation;
+    rust::Box<scanner::ScanRunContractExecution> operation;
+    scanner::ScanRunContractExecutionResult initial;
+};
+
+/// Pauses one targeted run on the shared malformed Local Ignore fixture.
+PausedSettleRun paused_settle_run() {
+    auto temporary = std::make_unique<TemporaryDirectory>();
+    copy_shared_yaml_tree(temporary->path());
+    const auto log = copy_shared_log(temporary->path(), fixture::INSTALLED_YAML_INPUT);
+    malform_local_ignore(temporary->path());
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary->path()), source);
+    auto cancellation = scanner::scan_run_cancellation_new();
+    auto operation = scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
+    auto initial = scanner::scan_run_contract_execution_take_result(*operation);
+    REQUIRE(initial.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    auto ignore_path = temporary->path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    return PausedSettleRun{std::move(temporary), std::move(ignore_path), std::move(cancellation),
+                           std::move(operation), std::move(initial)};
+}
+
+/// Builds the bridge's optional-decision settlement; `decision` is read only with `has_decision`.
+scanner::ScanRunLocalIgnoreRecoverySettlement settlement_of(
+    std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> decision) {
+    scanner::ScanRunLocalIgnoreRecoverySettlement settlement{};
+    settlement.has_decision = decision.has_value();
+    settlement.decision = decision.value_or(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
+    return settlement;
+}
+
+}  // namespace
+
+TEST_CASE("CXX pending recovery carries the rendered prompt and settles each decision",
+          "[bridge][scan-run][local-ignore][settle]") {
+    for (const auto decision : {scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                                scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault}) {
+        auto paused = paused_settle_run();
+        REQUIRE(scanner::scan_run_contract_execution_has_pending_recovery(*paused.operation));
+        auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+        REQUIRE_FALSE(scanner::scan_run_contract_execution_has_pending_recovery(*paused.operation));
+
+        // The pending recovery's prompt is the one the paused envelope already carries.
+        const auto prompt = scanner::scan_run_pending_recovery_prompt(*pending);
+        REQUIRE(prompt.lines.size() == paused.initial.recovery_prompt.lines.size());
+        REQUIRE(prompt.decisions.size() == paused.initial.recovery_prompt.decisions.size());
+        for (std::size_t index = 0; index < prompt.decisions.size(); ++index) {
+            REQUIRE(prompt.decisions[index].decision == paused.initial.recovery_prompt.decisions[index].decision);
+            REQUIRE(prompt.decisions[index].available == paused.initial.recovery_prompt.decisions[index].available);
+        }
+        REQUIRE_FALSE(scanner::scan_run_pending_recovery_cancellation_requested(*pending));
+
+        const RecordingObserver observer;
+        const auto settled = scanner::scan_run_pending_recovery_settle(*pending, settlement_of(decision), &observer);
+        REQUIRE(settled.has_result);
+        REQUIRE(settled.result.status == scanner::ScanRunContractStatus::Completed);
+        REQUIRE(std::string(settled.result.discovery.accepted_logs[0]) ==
+                std::string(paused.initial.result.discovery.accepted_logs[0]));
+        // Settling resumes the same discovery; it never rediscovers.
+        REQUIRE_FALSE(observer.kinds().contains(scanner::ScanRunContractEventKind::DiscoveryCompleted));
+        REQUIRE_FALSE(settled.has_recovery_prompt);
+        REQUIRE_FALSE(scanner::scan_run_cancellation_is_cancelled(*paused.cancellation));
+    }
+}
+
+TEST_CASE("CXX settling without a decision abandons the run and touches nothing",
+          "[bridge][scan-run][local-ignore][settle]") {
+    auto paused = paused_settle_run();
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+
+    const RecordingObserver observer;
+    const auto settled = scanner::scan_run_pending_recovery_settle(*pending, settlement_of(std::nullopt), &observer);
+
+    REQUIRE(settled.has_result);
+    REQUIRE(settled.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(settled.result.logs[0].disposition == scanner::ScanRunContractLogDisposition::CancelledBeforeStart);
+    REQUIRE(observer.count() == 0);
+    // The run's own control, the one handed to execute, is what no decision cancels.
+    REQUIRE(scanner::scan_run_cancellation_is_cancelled(*paused.cancellation));
+    REQUIRE(read_file_bytes(paused.ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(paused.temporary->path() / "CLASSIC Backup"));
+}
+
+TEST_CASE("CXX pending recovery reports a run already cancelled and settles inert",
+          "[bridge][scan-run][local-ignore][settle]") {
+    auto paused = paused_settle_run();
+    scanner::scan_run_cancellation_cancel(*paused.cancellation);
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+
+    REQUIRE(scanner::scan_run_pending_recovery_cancellation_requested(*pending));
+    // Reset To Default is the one decision that could write; cancellation still wins.
+    const auto settled = scanner::scan_run_pending_recovery_settle(
+        *pending, settlement_of(scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault), nullptr);
+
+    REQUIRE(settled.has_result);
+    REQUIRE(settled.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(read_file_bytes(paused.ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(paused.temporary->path() / "CLASSIC Backup"));
+}
+
+TEST_CASE("CXX settling replays and legacy claims share one consumed continuation",
+          "[bridge][scan-run][local-ignore][settle]") {
+    auto paused = paused_settle_run();
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+    auto continuation = scanner::scan_run_contract_execution_take_continuation(*paused.operation);
+
+    const auto settled = scanner::scan_run_pending_recovery_settle(
+        *pending, settlement_of(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore), nullptr);
+    REQUIRE(settled.has_result);
+
+    const auto replay = scanner::scan_run_pending_recovery_settle(*pending, settlement_of(std::nullopt), nullptr);
+    REQUIRE(replay.has_resume_error);
+    REQUIRE(replay.resume_error.kind == scanner::ScanRunContractResumeErrorKind::ContinuationConsumed);
+    REQUIRE(std::string(replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+
+    auto legacy_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto legacy = scanner::scan_run_contract_execution_take_result(*legacy_operation);
+    REQUIRE(legacy.has_resume_error);
+    REQUIRE(std::string(legacy.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+    REQUIRE_FALSE(fs::exists(paused.temporary->path() / "CLASSIC Backup"));
 }

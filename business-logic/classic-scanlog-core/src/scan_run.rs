@@ -275,11 +275,13 @@ where
             let result_discovery = prepared.discovery.clone();
             let result_setup = prepared.setup.as_deref().cloned();
             let result_installed_yaml_data = prepared.installed_yaml_data.clone();
-            let continuation =
-                contract::CrashLogScanRunContinuation::new(PreparedCrashLogScanRunContinuation {
+            let continuation = contract::CrashLogScanRunContinuation::new(
+                PreparedCrashLogScanRunContinuation {
                     recovery_plan,
                     prepared,
-                });
+                },
+                contract::Cancellation::from_engine_flag(request.cancellation.clone()),
+            );
             Ok(CrashLogScanRunResult::local_ignore_recovery_required(
                 result_discovery,
                 result_setup,

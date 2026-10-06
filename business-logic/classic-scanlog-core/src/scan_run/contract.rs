@@ -1,9 +1,14 @@
 //! Final language-neutral Crash Log Scan Run contract.
 //!
 //! [`execute`] starts the only public execution flow for a complete Crash Log
-//! Scan Run, while [`CrashLogScanRunContinuation::resume`] completes retained
-//! Local Ignore recovery work. Discovery, setup, scheduling, durable finalization,
-//! cancellation, events, results, and typed infrastructure failures cross this boundary.
+//! Scan Run. A run paused on Local Ignore recovery offers a [`PendingRecovery`]
+//! through [`RunResult::take_pending_recovery`], and [`PendingRecovery::settle`]
+//! completes the retained work once, returning a [`SettledRunResult`] that has
+//! no continuation. [`CrashLogScanRunContinuation::resume`] and
+//! [`CrashLogScanRunContinuation::abandon`] are the older entry points to the
+//! same continuation and stay until every frontend settles instead (ADR-0009).
+//! Discovery, setup, scheduling, durable finalization, cancellation, events,
+//! results, and typed infrastructure failures cross this boundary.
 
 #[cfg(test)]
 #[path = "contract_tests.rs"]
@@ -405,6 +410,17 @@ impl Cancellation {
     fn engine_flag(&self) -> Arc<AtomicBool> {
         Arc::clone(&self.requested)
     }
+
+    /// Rewraps the engine's view of a run's control so a paused run can keep answering it.
+    ///
+    /// The engine only ever sees the shared flag, so this is how a continuation built there
+    /// retains the *same* control the caller passed to [`execute`] rather than a fresh one: a
+    /// cancellation requested on the caller's handle is then visible through
+    /// [`PendingRecovery::cancellation_requested`]. A run started without a control gets a new,
+    /// uncancelled one, which nothing else can cancel.
+    pub(super) fn from_engine_flag(flag: Option<Arc<AtomicBool>>) -> Self {
+        flag.map_or_else(Self::new, |requested| Self { requested })
+    }
 }
 
 /// Explicit recovery choices supported by this continuation contract.
@@ -767,6 +783,11 @@ fn project_local_ignore_reset_error(error: LocalIgnoreResetError) -> ResumeError
 /// Opaque, process-local, non-cloneable continuation for one paused scan run.
 pub struct CrashLogScanRunContinuation {
     state: Mutex<Option<PreparedCrashLogScanRunContinuation>>,
+    /// The control of the run this continuation paused, which [`PendingRecovery`] settles on.
+    ///
+    /// [`Self::resume`] and [`Self::abandon`] still take a caller-chosen control and ignore this
+    /// one, exactly as before it existed; only the settled surface reads it.
+    run_cancellation: Cancellation,
 }
 
 impl fmt::Debug for CrashLogScanRunContinuation {
@@ -785,9 +806,16 @@ impl fmt::Debug for CrashLogScanRunContinuation {
 
 impl CrashLogScanRunContinuation {
     /// Wraps prepared Rust-owned state without exposing reconstructable fields.
-    pub(super) fn new(state: PreparedCrashLogScanRunContinuation) -> Self {
+    ///
+    /// `run_cancellation` is the paused run's own control, retained so a [`PendingRecovery`]
+    /// can report and settle on it without the caller handing it over a second time.
+    pub(super) fn new(
+        state: PreparedCrashLogScanRunContinuation,
+        run_cancellation: Cancellation,
+    ) -> Self {
         Self {
             state: Mutex::new(Some(state)),
+            run_cancellation,
         }
     }
 
@@ -962,6 +990,235 @@ impl CrashLogScanRunContinuation {
             observer,
         )
         .await
+    }
+}
+
+/// A Crash Log Scan Run paused on a malformed Local Ignore, waiting to be settled exactly once.
+///
+/// Taken from a [`RunResult`] with [`RunResult::take_pending_recovery`]. It bundles the run's
+/// single-use [`CrashLogScanRunContinuation`], the run's own [`Cancellation`] control, and the
+/// typed recovery facts a prompt is rendered from. It exists only for a run that paused, so a
+/// recovery status without a continuation to answer it cannot be represented here.
+///
+/// The recovery prompt itself is not here. It is Display Content, which the
+/// `classic-scan-presentation` crate owns, and this crate must never depend on that one; that
+/// crate bundles this value with its rendered prompt for every adapter.
+///
+/// [`Self::settle`] borrows rather than consumes, so an adapter can share one pending recovery
+/// across threads and a replay still reports the typed [`ResumeError::ContinuationConsumed`]
+/// rather than becoming impossible to express on a binding surface.
+pub struct PendingRecovery {
+    continuation: CrashLogScanRunContinuation,
+    installed_yaml_data: InstalledYamlDataRunData,
+}
+
+impl fmt::Debug for PendingRecovery {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("PendingRecovery")
+            .field("continuation", &self.continuation)
+            .field("cancellation_requested", &self.cancellation_requested())
+            .finish_non_exhaustive()
+    }
+}
+
+impl PendingRecovery {
+    /// Returns whether cancellation of the paused run was already requested.
+    ///
+    /// Read live from the run's own control, so a cancellation requested on the handle the
+    /// caller gave [`execute`] — before or after the run paused — is visible here. When this is
+    /// `true` a frontend must not prompt: every settlement now finishes cancelled after discovery
+    /// with no filesystem work, so the honest move is to settle with no decision.
+    #[must_use]
+    pub fn cancellation_requested(&self) -> bool {
+        self.continuation.run_cancellation.is_cancelled()
+    }
+
+    /// Returns the paused run's own cancellation control.
+    ///
+    /// The same control the caller passed to [`execute`]. An adapter whose observer can fail
+    /// needs it to request safe cancellation of the settled run.
+    #[must_use]
+    pub const fn cancellation(&self) -> &Cancellation {
+        &self.continuation.run_cancellation
+    }
+
+    /// Returns the Installed YAML Data facts the recovery prompt is rendered from.
+    ///
+    /// Its `local_ignore_reset_available` decides whether Reset To Default can be offered.
+    #[must_use]
+    pub const fn installed_yaml_data(&self) -> &InstalledYamlDataRunData {
+        &self.installed_yaml_data
+    }
+
+    /// Returns the single-use continuation this pending recovery settles.
+    ///
+    /// Present only so the resume and abandon binding surfaces that predate settling can claim
+    /// the same continuation while frontends migrate; it goes away with them. A claim made
+    /// through it spends this pending recovery too, and [`Self::settle`] then reports
+    /// [`ResumeError::ContinuationConsumed`].
+    #[must_use]
+    pub const fn continuation(&self) -> &CrashLogScanRunContinuation {
+        &self.continuation
+    }
+
+    /// Settles the paused run once, with a Local Ignore Recovery Decision or with none.
+    ///
+    /// `Some(decision)` resumes the same discovered Crash Logs without rediscovery, exactly as
+    /// [`CrashLogScanRunContinuation::resume`] does, with Reset To Default still one
+    /// non-interruptible transaction. `None` abandons the run: it cancels the run's own control,
+    /// then finishes as cancelled after discovery with no filesystem work. That is the one
+    /// abandonment operation, not a third decision. If cancellation was already requested,
+    /// either form finishes cancelled after discovery.
+    ///
+    /// The result is a [`SettledRunResult`], which has no continuation, so a settled run can
+    /// never ask for a second recovery.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ResumeError::ContinuationConsumed`] when this pending recovery (or the
+    /// continuation inside it) was already settled, sequentially or concurrently; a typed Local
+    /// Ignore reset conflict or failure for Reset To Default; or [`ResumeError::Infrastructure`]
+    /// when the resumed run cannot produce a terminal result.
+    pub async fn settle(
+        &self,
+        decision: Option<LocalIgnoreRecoveryDecision>,
+        observer: Option<&mut dyn Observer>,
+    ) -> Result<SettledRunResult, ResumeError> {
+        let cancellation = &self.continuation.run_cancellation;
+        let result = match decision {
+            Some(decision) => {
+                self.continuation
+                    .resume(decision, cancellation, observer)
+                    .await?
+            }
+            None => self.continuation.abandon(cancellation, observer).await?,
+        };
+        SettledRunResult::from_resumed(result)
+    }
+}
+
+/// Terminal result of settling a [`PendingRecovery`].
+///
+/// The fields mirror [`RunResult`] minus its continuation. Leaving that field out is the whole
+/// point: a settled run cannot carry a continuation, so a second recovery request is
+/// unrepresentable rather than an invariant each adapter has to check.
+///
+/// ```compile_fail
+/// # use classic_scanlog_core::scan_run::contract::SettledRunResult;
+/// # let settled: SettledRunResult = unimplemented!();
+/// let _ = settled.continuation;
+/// ```
+///
+/// ```compile_fail
+/// # use classic_scanlog_core::scan_run::contract::SettledRunResult;
+/// # let mut settled: SettledRunResult = unimplemented!();
+/// let _ = settled.take_pending_recovery();
+/// ```
+#[derive(Debug)]
+pub struct SettledRunResult {
+    /// Expected lifecycle status for the settled run as a whole.
+    pub status: RunStatus,
+    /// The discovery completed before the run paused, never rediscovered.
+    pub discovery: Option<CrashLogScanDiscoveryResult>,
+    /// FCX setup data when FCX Mode was enabled.
+    pub setup: Option<CrashLogScanSetupResult>,
+    /// Installed YAML Data the settled run used, absent when settling cancelled before intake.
+    pub installed_yaml_data: Option<InstalledYamlDataRunData>,
+    /// Rust-selected concurrency, once scheduling was reached.
+    pub effective_concurrency: Option<usize>,
+    /// Optional concise run-level message.
+    pub message: Option<String>,
+    /// Total discovered Crash Logs.
+    pub total: usize,
+    /// Number of successful Crash Logs.
+    pub succeeded: usize,
+    /// Number of failed Crash Logs.
+    pub failed: usize,
+    /// Number of discovered Crash Logs cancelled before start.
+    pub cancelled: usize,
+    /// Per-log results in discovery order.
+    pub logs: Vec<LogResult>,
+}
+
+impl SettledRunResult {
+    /// Drops the continuation slot of a resumed run, which resume never fills.
+    ///
+    /// A resumed run reaches only terminal engine constructors, none of which retain a
+    /// continuation. Should that ever stop being true, this reports an internal invariant
+    /// failure instead of silently discarding a second recovery request.
+    fn from_resumed(result: RunResult) -> Result<Self, ResumeError> {
+        let RunResult {
+            status,
+            discovery,
+            setup,
+            installed_yaml_data,
+            continuation,
+            effective_concurrency,
+            message,
+            total,
+            succeeded,
+            failed,
+            cancelled,
+            logs,
+        } = result;
+        if continuation.is_some() {
+            return Err(ResumeError::Infrastructure(InfrastructureError {
+                stage: InfrastructureErrorStage::InternalInvariant,
+                message: "a settled Crash Log Scan Run requested a second recovery".to_string(),
+                path: None,
+            }));
+        }
+        Ok(Self {
+            status,
+            discovery,
+            setup,
+            installed_yaml_data,
+            effective_concurrency,
+            message,
+            total,
+            succeeded,
+            failed,
+            cancelled,
+            logs,
+        })
+    }
+}
+
+/// Widens a settled result back into the run result shape, with no continuation.
+///
+/// For adapters whose result projection, Display Content rendering, and DTOs are written once
+/// against [`RunResult`]: the settled value converts losslessly, and the continuation slot is
+/// always `None`.
+impl From<SettledRunResult> for RunResult {
+    fn from(value: SettledRunResult) -> Self {
+        let SettledRunResult {
+            status,
+            discovery,
+            setup,
+            installed_yaml_data,
+            effective_concurrency,
+            message,
+            total,
+            succeeded,
+            failed,
+            cancelled,
+            logs,
+        } = value;
+        Self {
+            status,
+            discovery,
+            setup,
+            installed_yaml_data,
+            continuation: None,
+            effective_concurrency,
+            message,
+            total,
+            succeeded,
+            failed,
+            cancelled,
+            logs,
+        }
     }
 }
 
@@ -1625,6 +1882,28 @@ pub struct RunResult {
     pub cancelled: usize,
     /// Per-log results in discovery order.
     pub logs: Vec<LogResult>,
+}
+
+impl RunResult {
+    /// Takes the pending recovery a paused run offers, leaving `continuation` empty.
+    ///
+    /// Returns `Some` exactly when this result retains a continuation, which only a run paused
+    /// on Local Ignore recovery does. The rest of the result stays readable, so an adapter can
+    /// still render the paused run after taking its pending recovery. Taking it twice returns
+    /// `None` the second time.
+    pub fn take_pending_recovery(&mut self) -> Option<PendingRecovery> {
+        // Facts first, so a result that somehow lacks them keeps its continuation rather than
+        // losing it to a half-built pending recovery.
+        let installed_yaml_data = self
+            .continuation
+            .as_ref()
+            .and(self.installed_yaml_data.clone())?;
+        let continuation = self.continuation.take()?;
+        Some(PendingRecovery {
+            continuation,
+            installed_yaml_data,
+        })
+    }
 }
 
 /// Stable stage for a run-wide infrastructure failure.

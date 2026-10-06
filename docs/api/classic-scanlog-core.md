@@ -80,6 +80,41 @@ sequence every frontend would otherwise write for itself. It shares `resume`'s
 one-shot claim: whichever of the two runs first spends the continuation, and
 every later `abandon` or `resume` returns `ResumeError::ContinuationConsumed`.
 
+#### Pending and settled recovery (ADR-0009)
+
+`resume` and `abandon` are being replaced by settling a pending recovery. Both
+shapes exist while frontends migrate; #282 removes `resume`, `abandon`, and the
+`RunResult::continuation` field.
+
+- `RunResult::take_pending_recovery(&mut self) -> Option<PendingRecovery>` takes
+  the continuation out of a paused result and returns `Some` exactly when the run
+  paused. The rest of the result stays readable for rendering the pause.
+- `PendingRecovery` bundles the single-use continuation, the paused run's own
+  `Cancellation` (the control the caller passed to `execute`), and the typed
+  recovery facts (`installed_yaml_data()`, whose `local_ignore_reset_available`
+  decides whether Reset To Default can be offered). A recovery status with no
+  continuation cannot be represented.
+- `cancellation_requested()` reads that control live. When it is `true`, a
+  frontend does not prompt: it settles with no decision.
+- `settle(decision: Option<LocalIgnoreRecoveryDecision>, observer).await`
+  returns `Result<SettledRunResult, ResumeError>`. `Some(decision)` resumes the
+  same discovered Crash Logs without rediscovery; Reset To Default is still the
+  non-interruptible transaction. `None` is abandonment with `abandon`'s
+  semantics: it cancels the run's control, then finishes cancelled after
+  discovery with no filesystem work. Abandonment is still not a third decision.
+  `settle` borrows, so a replay is the typed `ResumeError::ContinuationConsumed`.
+- `SettledRunResult` has `RunResult`'s fields minus the continuation, so a
+  settled run cannot ask for a second recovery. Compile-fail doctests pin that.
+  `From<SettledRunResult> for RunResult` lets an adapter reuse one projection.
+- `PendingRecovery::continuation()` exposes the same continuation to the legacy
+  resume and abandon binding surfaces, so they share the one claim with `settle`.
+  It goes away with them.
+
+The recovery prompt is Display Content and is not part of `PendingRecovery`:
+`classic-scan-presentation` bundles it as `PendingRecoveryWithPrompt` (see
+[classic-scan-presentation.md](classic-scan-presentation.md)), keeping this
+crate free of any dependency on the presentation crate.
+
 There is no public prepared-run, orchestration, batch-lifecycle, direct
 Autoscan Report writer, concurrency-policy helper, or process-global FCX
 control. Callers that need a complete scan must not assemble those stages
@@ -132,7 +167,11 @@ Cancellation is cooperative at Rust-owned safe seams:
 - cancellation already requested before recovery resume consumes the
   continuation and returns the normal post-discovery `Cancelled` result;
   `CrashLogScanRunContinuation::abandon` is that behaviour named, requesting
-  cancellation itself and leaving the control cancelled afterwards
+  cancellation itself and leaving the control cancelled afterwards, and
+  `PendingRecovery::settle(None, ..)` is the same operation on the settled
+  surface
+- a pending recovery reports cancellation already requested on the run's own
+  control, so a frontend can skip the prompt
 - queued logs do not start after cancellation is observed
 - an admitted log finishes analysis, report persistence, and applicable
   Unsolved Logs finalization before its terminal outcome is published
@@ -684,6 +723,21 @@ placeholder decision. The two are equivalent only when cancellation is requested
 strictly before the claim; reversing that order spends the one-shot continuation
 on a real recovery attempt, which is the failure this operation exists to make
 unwritable.
+
+The pending recovery and settling reach every surface too, as one object bundling
+the continuation, the rendered prompt, and whether cancellation was already
+requested. CXX exposes `ScanRunPendingRecovery` with
+`scan_run_contract_execution_has_pending_recovery` /
+`scan_run_contract_execution_take_pending_recovery`,
+`scan_run_pending_recovery_prompt`,
+`scan_run_pending_recovery_cancellation_requested`, and a synchronous
+`scan_run_pending_recovery_settle` (no callback crosses the bridge). Node exposes
+`JsScanRunSuccess.pendingRecovery` and `scanRunSettle`; Python exposes
+`ScanRunExecution.pending_recovery` and `scan_run_settle`. Each binding backs its
+legacy continuation and its pending recovery with the same bundle, so the old
+resume and abandon surfaces keep working and share the one claim. See
+[classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md)
+and [node-python-contract-map.md](node-python-contract-map.md).
 
 The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
 and Python. Retired report primitives and fragment-producing methods have no

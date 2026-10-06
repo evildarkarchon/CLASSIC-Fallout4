@@ -27,6 +27,12 @@ cancellation short-circuits ahead of every stage that produces an event, which
 is also why nothing on disk is touched. A frontend must therefore not treat
 "observed no event" as a delivery failure on this path.
 
+`scan_run_pending_recovery_settle(pending, settlement, observer)` is the settled
+form of the same two calls (see `classic-cpp-bridge-data-entrypoints.md`). With
+a decision it emits post-discovery events only, like resume; with no decision it
+emits nothing, like abandon. The observer is the only callback involved; the
+recovery decision itself never crosses the bridge as a callback.
+
 There is no CXX batch-scan callback, orchestration object, prepared-run entry
 point, resettable scan token, or direct report-writing operation. Native
 frontends construct a tagged request and consume the same Rust-owned lifecycle
