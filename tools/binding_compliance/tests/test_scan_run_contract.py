@@ -37,7 +37,8 @@ def test_forbidden_export_inventory_keeps_live_sources_after_metadata_retirement
     assert {
                "node-bindings/classic-node/index.d.ts",
                "docs/implementation/node_api_parity/baseline/parity_contract.json",
-               "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+               "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+               "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.py",
                "docs/implementation/python_api_parity/baseline/parity_contract.json",
            } <= paths
 

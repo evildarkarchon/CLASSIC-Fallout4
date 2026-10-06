@@ -114,11 +114,10 @@ PARTICIPANT_COMMANDS = {
         working_directory=REPO_ROOT,
         source_paths=(
             REPO_ROOT / "python-bindings" / "tests" / "scan_run_conformance_runner.py",
-            REPO_ROOT
-            / "python-bindings"
-            / "classic-scanlog-py"
-            / "src"
-            / "scan_run.rs",
+            # The one Python adapter crate builds one native extension for every
+            # facade, so the whole adapter (Rust and Python facades) is participant input.
+            REPO_ROOT / "python-bindings/classic-python-bindings/src",
+            REPO_ROOT / "python-bindings/classic-python-bindings/python",
             *_COMMON_CORE_SOURCES,
         ),
     ),

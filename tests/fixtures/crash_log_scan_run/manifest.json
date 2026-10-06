@@ -536,21 +536,28 @@
     ],
     "python": [
       {
-        "path": "python-bindings/classic-config-py/src/lib.rs",
+        "path": "python-bindings/classic-python-bindings/src/classic_config/mod.rs",
         "symbols": [
           "create_yamldata",
           "yaml_dirs"
         ]
       },
       {
-        "path": "python-bindings/classic-config-py/classic_config.pyi",
+        "path": "python-bindings/classic-python-bindings/python/classic_config/__init__.pyi",
         "symbols": [
           "create_yamldata",
           "yaml_dirs"
         ]
       },
       {
-        "path": "python-bindings/classic-scanlog-py/src/lib.rs",
+        "path": "python-bindings/classic-python-bindings/python/classic_config/__init__.py",
+        "symbols": [
+          "create_yamldata",
+          "yaml_dirs"
+        ]
+      },
+      {
+        "path": "python-bindings/classic-python-bindings/src/classic_scanlog/mod.rs",
         "symbols": [
           "PyRustOrchestrator",
           "PyCancellationToken",
@@ -559,7 +566,7 @@
         ]
       },
       {
-        "path": "python-bindings/classic-scanlog-py/src/orchestrator.rs",
+        "path": "python-bindings/classic-python-bindings/src/classic_scanlog/orchestrator.rs",
         "symbols": [
           "pub struct PyRustOrchestrator",
           "pub struct PyCancellationToken",
@@ -570,7 +577,22 @@
         "optional": true
       },
       {
-        "path": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+        "path": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+        "symbols": [
+          "AnalysisConfig",
+          "AnalysisResult",
+          "CancellationToken",
+          "Orchestrator",
+          "FcxModeHandler",
+          "FcxResetError",
+          "process_log",
+          "process_logs_parallel",
+          "process_logs_batch",
+          "write_reports_batch"
+        ]
+      },
+      {
+        "path": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.py",
         "symbols": [
           "AnalysisConfig",
           "AnalysisResult",

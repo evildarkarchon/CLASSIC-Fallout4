@@ -250,7 +250,7 @@ class StubValidator:
                 directories[:] = [
                     name
                     for name in directories
-                    if name not in {".venv", "target", "tests", "__pycache__"}
+                    if name not in {".venv", ".maturin-temp", "target", "tests", "__pycache__"}
                 ]
                 current_path = Path(current)
                 if current_path.name in module_names and "__init__.py" in files:
@@ -689,7 +689,12 @@ class StubValidator:
                 continue
             facade_source = source_paths[0] if source_paths else None
             crate = stub_path.parent
-            if self.crate_name_to_stub_module(crate.name) == module_name:
+            # A legacy direct PyO3 crate keeps its stub beside its Cargo.toml;
+            # facade stubs of the one adapter (python/<module>/__init__.pyi) do not.
+            if (
+                self.crate_name_to_stub_module(crate.name) == module_name
+                and (crate / "Cargo.toml").is_file()
+            ):
                 errors, warnings = self.validate_crate(
                     crate,
                     expected_names=expected_names,

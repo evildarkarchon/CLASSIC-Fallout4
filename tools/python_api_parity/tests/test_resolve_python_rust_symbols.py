@@ -678,3 +678,80 @@ def test_resolve_all_uses_a_provided_rust_manifest(tmp_path: Path) -> None:
     )
     assert rps.source_backed_crate(resolution) == "classic-scanlog-core"
     assert rps.source_backed_symbol(resolution) == "parse_log"
+
+
+def _write_submodule_adapter(tmp_path: Path) -> Path:
+    """One adapter whose two facades each declare a class named ``Issue``."""
+    crate = tmp_path / "python-bindings" / "classic-python-bindings"
+    crate.mkdir(parents=True)
+    (crate / "Cargo.toml").write_text(
+        '[package]\nname = "classic-python-bindings"\n[lib]\nname = "_native"\n',
+        encoding="utf-8",
+    )
+    for facade, core in (("classic_alpha", "classic_alpha_core"), ("classic_beta", "classic_beta_core")):
+        source = crate / "src" / facade / "mod.rs"
+        source.parent.mkdir(parents=True)
+        source.write_text(
+            '#[pyclass(name = "Issue")]\n'
+            f"pub struct PyIssue {{\n    inner: {core}::Issue,\n}}\n"
+            f'create_exception!({facade}, AlphaError, PyException);\n'
+            'fn register_facade(m: &Bound<PyModule>) { '
+            'm.add("AlphaError", m.py().get_type::<AlphaError>()); }\n',
+            encoding="utf-8",
+        )
+        facade_init = crate / "python" / facade / "__init__.py"
+        facade_init.parent.mkdir(parents=True)
+        facade_init.write_text(
+            f"from _classic_native._native.{facade} import (\n"
+            "    AlphaError,\n    Issue,\n    __version__,\n)\n"
+            '__all__ = ["AlphaError", "Issue", "__version__"]\n',
+            encoding="utf-8",
+        )
+    return crate
+
+
+def test_submodule_routes_keep_same_named_facade_classes_distinct(tmp_path: Path) -> None:
+    """Each facade's import resolves to its own declaration and core owner."""
+    _write_submodule_adapter(tmp_path)
+    manifest = {
+        "symbols": [
+            {"symbol": "Issue", "kind": "struct", "crate": "classic-alpha-core"},
+            {"symbol": "Issue", "kind": "struct", "crate": "classic-beta-core"},
+        ]
+    }
+
+    resolutions = rps.resolve_all(tmp_path, manifest)
+
+    assert rps.source_backed_crate(resolutions["classic_alpha.Issue"]) == "classic-alpha-core"
+    assert rps.source_backed_crate(resolutions["classic_beta.Issue"]) == "classic-beta-core"
+    # Registered exceptions and module dunders are native attributes with no
+    # wrapper to resolve; they neither claim an owner nor fail the route.
+    assert "classic_alpha.AlphaError" not in resolutions
+    assert "classic_alpha.__version__" not in resolutions
+
+
+def test_flat_import_of_a_name_two_facades_declare_is_ambiguous(tmp_path: Path) -> None:
+    """A flat native import cannot borrow another facade's same-named owner."""
+    crate = _write_submodule_adapter(tmp_path)
+    (crate / "python" / "classic_alpha" / "__init__.py").write_text(
+        "from _classic_native._native import Issue\n__all__ = [\"Issue\"]\n",
+        encoding="utf-8",
+    )
+
+    resolutions = rps.resolve_all(tmp_path, {"symbols": []})
+
+    assert "ambiguous" in (resolutions["classic_alpha.Issue"].route_error or "")
+
+
+def test_submodule_route_to_a_missing_name_is_unresolved(tmp_path: Path) -> None:
+    """A facade import of a name its own native submodule lacks fails closed."""
+    crate = _write_submodule_adapter(tmp_path)
+    (crate / "python" / "classic_beta" / "__init__.py").write_text(
+        "from _classic_native._native.classic_beta import Missing\n"
+        '__all__ = ["Missing"]\n',
+        encoding="utf-8",
+    )
+
+    resolutions = rps.resolve_all(tmp_path, {"symbols": []})
+
+    assert "Missing" in (resolutions["classic_beta.Missing"].route_error or "")

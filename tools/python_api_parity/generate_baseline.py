@@ -46,13 +46,14 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-xse-core": "business-logic/classic-xse-core/src/lib.rs",
     "classic-web-core": "business-logic/classic-web-core/src/lib.rs",
     "classic-update-core": "business-logic/classic-update-core/src/lib.rs",
-    # Foundation crates (Phase 3 adds GameId in shared-core while parity still
-    # tracks Python-visible wrappers from classic-shared-py).
+    # Foundation owner. The former classic-shared-py binding library retired
+    # into the one Python adapter crate (#259); adapter plumbing is not a core
+    # owner, so it is not a parity target.
     "classic-shared-core": "foundation/classic-shared-core/src/lib.rs",
-    "classic-shared-py": "foundation/classic-shared-py/src/lib.rs",
     # NOTE: classic-crashgen-settings-core is INTENTIONALLY EXCLUDED -- its symbols
-    # flow through classic-config-py / classic-scanlog-py / classic-scangame-py
-    # wrappers (see .planning/phases/03-python-tier-collapse/03-RESEARCH.md A5).
+    # flow through the classic_config / classic_scanlog / classic_scangame
+    # facade modules of the Python adapter
+    # (see .planning/phases/03-python-tier-collapse/03-RESEARCH.md A5).
 }
 
 RUST_OWNER_BY_CRATE: dict[str, str] = {
@@ -71,28 +72,27 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-web-core": "web",
     "classic-update-core": "update",
     "classic-shared-core": "shared",
-    "classic-shared-py": "shared",
 }
 
 PYTHON_TARGET_MODULES: dict[str, str] = {
-    "classic_scanlog": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-    "classic_config": "python-bindings/classic-config-py/classic_config.pyi",
-    "classic_user_settings": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
-    "classic_version_registry": "python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-    "classic_database": "python-bindings/classic-database-py/classic_database.pyi",
-    "classic_file_io": "python-bindings/classic-file-io-py/classic_file_io.pyi",
-    "classic_scangame": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-    "classic_registry": "python-bindings/classic-registry-py/classic_registry.pyi",
-    "classic_perf": "python-bindings/classic-perf-py/classic_perf.pyi",
-    "classic_settings": "python-bindings/classic-settings-py/classic_settings.pyi",
-    "classic_message": "python-bindings/classic-message-py/classic_message.pyi",
-    "classic_path": "python-bindings/classic-path-py/classic_path.pyi",
-    "classic_version": "python-bindings/classic-version-py/classic_version.pyi",
-    "classic_resource": "python-bindings/classic-resource-py/classic_resource.pyi",
-    "classic_xse": "python-bindings/classic-xse-py/classic_xse.pyi",
-    "classic_web": "python-bindings/classic-web-py/classic_web.pyi",
-    "classic_update": "python-bindings/classic-update-py/classic_update.pyi",
-    "classic_shared": "foundation/classic-shared-py/classic_shared.pyi",
+    "classic_scanlog": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+    "classic_config": "python-bindings/classic-python-bindings/python/classic_config/__init__.pyi",
+    "classic_user_settings": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
+    "classic_version_registry": "python-bindings/classic-python-bindings/python/classic_version_registry/__init__.pyi",
+    "classic_database": "python-bindings/classic-python-bindings/python/classic_database/__init__.pyi",
+    "classic_file_io": "python-bindings/classic-python-bindings/python/classic_file_io/__init__.pyi",
+    "classic_scangame": "python-bindings/classic-python-bindings/python/classic_scangame/__init__.pyi",
+    "classic_registry": "python-bindings/classic-python-bindings/python/classic_registry/__init__.pyi",
+    "classic_perf": "python-bindings/classic-python-bindings/python/classic_perf/__init__.pyi",
+    "classic_settings": "python-bindings/classic-python-bindings/python/classic_settings/__init__.pyi",
+    "classic_message": "python-bindings/classic-python-bindings/python/classic_message/__init__.pyi",
+    "classic_path": "python-bindings/classic-python-bindings/python/classic_path/__init__.pyi",
+    "classic_version": "python-bindings/classic-python-bindings/python/classic_version/__init__.pyi",
+    "classic_resource": "python-bindings/classic-python-bindings/python/classic_resource/__init__.pyi",
+    "classic_xse": "python-bindings/classic-python-bindings/python/classic_xse/__init__.pyi",
+    "classic_web": "python-bindings/classic-python-bindings/python/classic_web/__init__.pyi",
+    "classic_update": "python-bindings/classic-python-bindings/python/classic_update/__init__.pyi",
+    "classic_shared": "python-bindings/classic-python-bindings/python/classic_shared/__init__.pyi",
 }
 
 PYTHON_OWNER_BY_MODULE: dict[str, str] = {
@@ -137,7 +137,7 @@ SQUAD_BY_OWNER: dict[str, str] = {
     "xse": "Squad E (scangame/xse)",
     "web": "Squad F (perf/message/path/version/web/update)",
     "update": "Squad F (perf/message/path/version/web/update)",
-    "shared": "Squad G (foundation/classic-shared-py)",
+    "shared": "Squad G (foundation/classic-shared-core)",
     # The 'aux' bucket captures owner-less rows such as the file-io
     # FileHasher.cache_size entry tracked outside the primary crate owners.
     "aux": "Squad D (database/file_io/resource)",

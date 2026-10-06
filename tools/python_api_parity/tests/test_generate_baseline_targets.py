@@ -21,9 +21,10 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 def test_rust_target_crates_count_matches_repo_root_inventory() -> None:
     # 18 after #256 retired the classic-perf-core facade crate; 17 after
     # #258 retired the classic-version-core facade crate; 16 after #257
-    # retired the classic-settings-core facade crate.
-    assert len(RUST_TARGET_CRATES) == 16, (
-        f"Expected 16 RUST_TARGET_CRATES in the repo-root inventory, "
+    # retired the classic-settings-core facade crate; 15 after #259 folded
+    # the classic-shared-py binding library into the one Python adapter.
+    assert len(RUST_TARGET_CRATES) == 15, (
+        f"Expected 15 RUST_TARGET_CRATES in the repo-root inventory, "
         f"got {len(RUST_TARGET_CRATES)}"
     )
 
@@ -49,11 +50,13 @@ def test_retired_classic_version_core_is_not_tracked() -> None:
     assert "classic-version-core" not in RUST_OWNER_BY_CRATE
 
 
-def test_classic_shared_py_is_in_rust_target_crates() -> None:
-    assert "classic-shared-py" in RUST_TARGET_CRATES
-    assert RUST_TARGET_CRATES["classic-shared-py"] == (
-        "foundation/classic-shared-py/src/lib.rs"
-    )
+def test_retired_classic_shared_py_is_not_tracked() -> None:
+    """#259 folded classic-shared-py into the one Python adapter crate.
+
+    Adapter plumbing is not a core owner; shared rows name classic-shared-core.
+    """
+    assert "classic-shared-py" not in RUST_TARGET_CRATES
+    assert "classic-shared-py" not in RUST_OWNER_BY_CRATE
 
 
 def test_classic_crashgen_settings_core_is_excluded() -> None:
@@ -156,7 +159,7 @@ def test_python_target_modules_count_matches_repo_root_inventory() -> None:
 def test_classic_shared_pyi_path_is_correct() -> None:
     assert "classic_shared" in PYTHON_TARGET_MODULES
     assert PYTHON_TARGET_MODULES["classic_shared"] == (
-        "foundation/classic-shared-py/classic_shared.pyi"
+        "python-bindings/classic-python-bindings/python/classic_shared/__init__.pyi"
     )
 
 
