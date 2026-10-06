@@ -7,9 +7,9 @@
 
 use classic_config_core::{InspectedYamlDataFile, YamlDataContentIdentity};
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
-    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
-    render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, PendingRecoveryWithPrompt, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result, take_pending_recovery,
 };
 use classic_scanlog_core::CrashLogScanFacts;
 use classic_scanlog_core::scan_run::contract;
@@ -227,6 +227,8 @@ struct ContinuationFlowInput {
 enum CancellationBoundaryInput {
     BeforeResume,
     AfterResetCriticalSection,
+    /// Cancel the run's control after it paused but before its pending recovery is read.
+    BeforePendingRecovery,
 }
 
 /// One public continuation operation and its decision when the operation is Resume.
@@ -243,6 +245,8 @@ struct ContinuationActionInput {
 enum ContinuationOperationInput {
     Resume,
     Abandon,
+    /// Settle the pending recovery, with the action's decision or with none.
+    Settle,
 }
 
 /// Public Local Ignore recovery decisions admitted by the conformance pack.
@@ -539,13 +543,41 @@ fn execute_continuation_flow(
     for replay in &flow.replays {
         validate_continuation_action(*replay)?;
     }
+    let settles = matches!(flow.action.operation, ContinuationOperationInput::Settle);
+    if flow.cancellation == Some(CancellationBoundaryInput::BeforePendingRecovery) {
+        if !settles {
+            return Err(invalid_data(
+                "before-pending-recovery cancellation requires a settle continuation action",
+            )
+            .into());
+        }
+        cancellation.cancel();
+    }
     let prompt = render_local_ignore_recovery(initial_result.installed_yaml_data.as_ref());
-    let initial =
-        project_local_ignore_phase(root, initial_result, initial_events, true, Some(&prompt))?;
-    let continuation = initial_result
-        .continuation
-        .take()
-        .ok_or_else(|| invalid_data("continuationFlow initial result has no continuation"))?;
+    let mut initial = project_local_ignore_phase(
+        root,
+        initial_result,
+        initial_events,
+        initial_result.continuation.is_some(),
+        Some(&prompt),
+    )?;
+    // A settle flow reaches the paused run only through its pending recovery, exactly as a
+    // frontend does; resume and abandon flows keep claiming the bare continuation.
+    let target =
+        if settles {
+            let pending = take_pending_recovery(initial_result).ok_or_else(|| {
+                invalid_data("continuationFlow initial result has no pending recovery")
+            })?;
+            initial["pendingRecovery"] = json!({
+                "cancellationRequested": pending.cancellation_requested(),
+                "prompt": project_recovery_prompt(root, pending.prompt())?,
+            });
+            ClaimTarget::Pending(pending)
+        } else {
+            ClaimTarget::Continuation(initial_result.continuation.take().ok_or_else(|| {
+                invalid_data("continuationFlow initial result has no continuation")
+            })?)
+        };
     materialize_placements(fixtures, &flow.post_pause_data, root)?;
 
     if flow.cancellation == Some(CancellationBoundaryInput::BeforeResume) {
@@ -560,7 +592,7 @@ fn execute_continuation_flow(
     let cancelled_before_terminal = cancellation.is_cancelled();
     let mut terminal_events = Vec::new();
     let terminal_outcome = get_runtime().block_on(run_continuation_action(
-        &continuation,
+        &target,
         flow.action,
         cancellation,
         Some(&mut |event| terminal_events.push(event)),
@@ -596,7 +628,7 @@ fn execute_continuation_flow(
         .copied()
         .map(|action| {
             match get_runtime().block_on(run_continuation_action(
-                &continuation,
+                &target,
                 action,
                 cancellation,
                 None,
@@ -646,7 +678,8 @@ fn cancel_after_reset_entry(
 fn validate_continuation_action(action: ContinuationActionInput) -> RunnerResult<()> {
     match (action.operation, action.decision) {
         (ContinuationOperationInput::Resume, Some(_))
-        | (ContinuationOperationInput::Abandon, None) => Ok(()),
+        | (ContinuationOperationInput::Abandon, None)
+        | (ContinuationOperationInput::Settle, _) => Ok(()),
         (ContinuationOperationInput::Resume, None) => {
             Err(invalid_data("Resume continuation action has no recovery decision").into())
         }
@@ -657,13 +690,44 @@ fn validate_continuation_action(action: ContinuationActionInput) -> RunnerResult
     }
 }
 
+/// What a continuation flow claims: a bare continuation, or the pending recovery bundling one.
+enum ClaimTarget {
+    /// Taken straight from the paused result, as resume and abandon flows always have.
+    Continuation(contract::CrashLogScanRunContinuation),
+    /// Taken through the presentation crate, as a settling frontend receives it.
+    Pending(PendingRecoveryWithPrompt),
+}
+
+impl ClaimTarget {
+    /// Returns the one continuation every operation on this target claims.
+    fn continuation(&self) -> &contract::CrashLogScanRunContinuation {
+        match self {
+            Self::Continuation(continuation) => continuation,
+            Self::Pending(pending) => pending.recovery().continuation(),
+        }
+    }
+}
+
 /// Invokes one public continuation action without inferring intent from a scenario identifier.
+///
+/// A settled result is widened back into a run result here only so both shapes share one
+/// projection; it never carries a continuation.
 async fn run_continuation_action(
-    continuation: &contract::CrashLogScanRunContinuation,
+    target: &ClaimTarget,
     action: ContinuationActionInput,
     cancellation: &contract::Cancellation,
     observer: Option<&mut dyn contract::Observer>,
 ) -> Result<contract::RunResult, contract::ResumeError> {
+    if matches!(action.operation, ContinuationOperationInput::Settle) {
+        let ClaimTarget::Pending(pending) = target else {
+            panic!("a settle action requires a pending recovery; the flow validated this");
+        };
+        return pending
+            .settle(action.decision.map(Into::into), observer)
+            .await
+            .map(contract::RunResult::from);
+    }
+    let continuation = target.continuation();
     match action.operation {
         ContinuationOperationInput::Resume => {
             let decision = action
@@ -677,6 +741,7 @@ async fn run_continuation_action(
             debug_assert!(action.decision.is_none());
             continuation.abandon(cancellation, observer).await
         }
+        ContinuationOperationInput::Settle => unreachable!("settle returned above"),
     }
 }
 
@@ -1363,6 +1428,7 @@ fn project_replay_error(
         "operation": match action.operation {
             ContinuationOperationInput::Resume => "resume",
             ContinuationOperationInput::Abandon => "abandon",
+            ContinuationOperationInput::Settle => "settle",
         },
         "decision": action.decision.map(|decision| contract::LocalIgnoreRecoveryDecision::from(decision).as_str()),
         "error": {
