@@ -429,6 +429,42 @@ Behavior worth knowing:
 - no directories are created and no files are moved or copied
 - inside the `classic-operation-context` cancellation scope, resolution yields between recursive entries, discards partial accumulators on cancellation, and returns an empty resolution for the scope-owning scan service to discard
 
+## Custom-Scan Folder Policy
+
+The `custom_scan` module owns which folders a user may configure as the
+custom-scan folder (an extra, additive Crash Log discovery root). It moved here
+from `classic-path-core` (#254 follow-up); path core keeps only Game and
+Documents path behavior and has no re-export. Scanlog depends on path core (path
+core depends only on shared core), so the graph stays acyclic.
+
+Root re-exports: `is_restricted_path`, `validate_custom_scan_path`, and
+`validate_settings_paths`. The fallible functions return
+`classic_path_core::ValidationResult<()>`: they kept path core's typed
+`ValidationError`, so the variants, messages, and every binding error projection
+are unchanged.
+
+- `is_restricted_path(path) -> bool` - heuristic, case-insensitive substring
+  checks against `windows`, `program files`, `program files (x86)`,
+  `programdata`, `system32`, `syswow64`, and `appdata`; roots and very shallow
+  paths (`parent().is_none()` or component count `<= 2`) are also restricted.
+  It is string matching, not a canonicalized allow/deny policy.
+- `validate_custom_scan_path(path)` - `ValidationError::PathError(..)` when the
+  path is missing or not a directory, otherwise
+  `ValidationError::RestrictedPath(path)` (`Path is restricted for custom scans: <path>`)
+  when `is_restricted_path` rejects it.
+- `validate_settings_paths(game_path, docs_path, custom_scan_path, game_exe)` -
+  the combined setup check: path core's
+  `validate_game_and_documents_paths(game_path, docs_path, game_exe)` first,
+  then `validate_custom_scan_path` when a custom-scan folder is given; returns
+  the first `ValidationError`.
+
+These helpers are synchronous and touch the filesystem. The Crash Log Scan Run
+does not call them; frontends (the TUI settings flow) and the CXX
+(`is_restricted_path`, `check_restricted_path`, `path_validate_custom_scan`),
+Node (`isRestrictedPath`, `validateCustomScanPath`, `validateSettingsPaths`),
+and Python (`classic_path.PathValidator.*`) path surfaces delegate to them with
+unchanged export names.
+
 ---
 
 ## Independently Useful Public Utilities

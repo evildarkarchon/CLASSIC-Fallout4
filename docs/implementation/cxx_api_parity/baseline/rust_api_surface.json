@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-05T23:38:53Z",
+  "generated_at_utc": "2026-10-06T00:00:25Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -4495,8 +4495,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "is_restricted_path"
     },
     {
@@ -5285,8 +5285,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "is_restricted_path"
     },
     {
@@ -5445,8 +5445,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "is_restricted_path"
     },
     {
@@ -5505,8 +5505,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "validate_custom_scan_path"
     },
     {

@@ -112,30 +112,47 @@ INSTALLATION_PATHS_COVERAGE_POLICY = FamilyCoveragePolicy(
             (
                 "validators",
                 (
-                    "validate_custom_scan_path",
                     "validate_settings_path",
-                    "validate_settings_paths",
-                    "is_restricted_path",
                     "validate_required_files",
                 ),
                 (
-                    "PathValidator.validate_custom_scan_path",
                     "PathValidator.validate_settings_path",
-                    "PathValidator.validate_settings_paths",
-                    "PathValidator.is_restricted_path",
-                    "validateCustomScanPath",
                     "validateSettingsPath",
-                    "validateSettingsPaths",
-                    "isRestrictedPath",
-                    "check_restricted_path",
-                    "is_restricted_path",
-                    "path_validate_custom_scan",
                     "path_validate_required_files",
                     "validateRequiredFiles",
                     "PathValidator.validate_required_files",
                 ),
             ),
         )
+    )
+    # Custom-scan folder policy (restricted-path rejection, custom-scan and
+    # combined settings-path validation) is owned by classic-scanlog-core
+    # (#254 follow-up). The same scenarios exercise it; a separate capability
+    # keeps each row bound to its actual owner.
+    + (
+        CoveragePredicate(
+            id="installation-paths.custom-scan",
+            capability_id="installation-paths.custom-scan",
+            action="installation-paths.inspect",
+            observation_family="installation-results",
+            rust_symbols=(
+                "validate_custom_scan_path",
+                "validate_settings_paths",
+                "is_restricted_path",
+            ),
+            matches=partial(_observed, "custom-scan"),
+            runtime_operations=(
+                "PathValidator.validate_custom_scan_path",
+                "PathValidator.validate_settings_paths",
+                "PathValidator.is_restricted_path",
+                "validateCustomScanPath",
+                "validateSettingsPaths",
+                "isRestrictedPath",
+                "check_restricted_path",
+                "is_restricted_path",
+                "path_validate_custom_scan",
+            ),
+        ),
     )
     # The generic existence, kind, permission, drive, and read-only checks are
     # classic-shared-core primitives (#245). The same scenarios exercise them,

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-05T23:55:34.941597+00:00",
+  "generated_at_utc": "2026-10-06T00:36:16.846695+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -5695,26 +5695,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "is_restricted_path",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn is_restricted_path(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_restricted_path",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::is_restricted_path",
-      "tier": "tier1"
-    },
-    {
       "symbol": "is_vr",
       "kind": "function",
       "arity": 1,
@@ -6004,26 +5984,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "validate_custom_scan_path",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn validate_custom_scan_path(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_custom_scan_path",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::validate_custom_scan_path",
-      "tier": "tier1"
-    },
-    {
       "symbol": "validate_docs_path",
       "kind": "function",
       "arity": 2,
@@ -6031,6 +5991,26 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/docs_path.rs",
       "source_decl": "pub fn validate_docs_path(&self, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_game_and_documents_paths",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/validator.rs",
+      "source_decl": "pub fn validate_game_and_documents_paths(\n    game_path: &Path,\n    docs_path: &Path,\n    game_exe: &str,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_game_and_documents_paths",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use validator::{ validate_game_and_documents_paths, validate_required_files, validate_settings_path, };",
+      "source_expr": "validator::validate_game_and_documents_paths",
       "tier": "tier1"
     },
     {
@@ -6089,7 +6069,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_decl": "pub use validator::{ validate_game_and_documents_paths, validate_required_files, validate_settings_path, };",
       "source_expr": "validator::validate_required_files",
       "tier": "tier1"
     },
@@ -6119,28 +6099,8 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_decl": "pub use validator::{ validate_game_and_documents_paths, validate_required_files, validate_settings_path, };",
       "source_expr": "validator::validate_settings_path",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_settings_paths",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn validate_settings_paths(\n    game_path: &Path,\n    docs_path: &Path,\n    custom_scan_path: Option<&Path>,\n    game_exe: &str,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_settings_paths",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::validate_settings_paths",
       "tier": "tier1"
     },
     {
@@ -12124,6 +12084,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "custom_scan",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod custom_scan;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "default_entry",
       "kind": "function",
       "arity": 0,
@@ -12586,6 +12555,26 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub fn is_cancelled(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_restricted_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/custom_scan.rs",
+      "source_decl": "pub fn is_restricted_path(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_restricted_path",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use custom_scan::{is_restricted_path, validate_custom_scan_path, validate_settings_paths};",
+      "source_expr": "custom_scan::is_restricted_path",
       "tier": "tier1"
     },
     {
@@ -13428,6 +13417,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "validate_custom_scan_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/custom_scan.rs",
+      "source_decl": "pub fn validate_custom_scan_path(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_custom_scan_path",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use custom_scan::{is_restricted_path, validate_custom_scan_path, validate_settings_paths};",
+      "source_expr": "custom_scan::validate_custom_scan_path",
+      "tier": "tier1"
+    },
+    {
       "symbol": "validate_formids_batch",
       "kind": "function",
       "arity": 1,
@@ -13445,6 +13454,26 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};",
       "source_expr": "formid_analyzer::validate_formids_batch",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_settings_paths",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/custom_scan.rs",
+      "source_decl": "pub fn validate_settings_paths(\n    game_path: &Path,\n    docs_path: &Path,\n    custom_scan_path: Option<&Path>,\n    game_exe: &str,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_settings_paths",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use custom_scan::{is_restricted_path, validate_custom_scan_path, validate_settings_paths};",
+      "source_expr": "custom_scan::validate_settings_paths",
       "tier": "tier1"
     },
     {

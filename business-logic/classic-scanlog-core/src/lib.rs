@@ -6,6 +6,7 @@
 //! - Plugin and record detection
 //! - Mod detection algorithms
 //! - Standard Crash Log collection and Targeted input resolution
+//! - Custom-scan folder policy (restricted-path rejection and validation)
 //! - Rust-owned Crash Log Scan Run execution
 //! - Report generation
 //!
@@ -30,6 +31,7 @@ pub mod crash_pattern;
 pub mod crash_suspect_analyzer;
 pub mod crashgen_registry;
 pub mod crashgen_settings_analyzer;
+pub mod custom_scan;
 pub mod error;
 pub(crate) mod fcx_handler;
 pub mod formid;
@@ -69,6 +71,9 @@ pub use crashgen_settings_analyzer::{
     CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
     CrashgenSettingsAnalyzer, DisabledSettingNotice,
 };
+// Custom-scan folder policy moved here from classic-path-core (#254
+// follow-up); path core keeps no reverse re-export.
+pub use custom_scan::{is_restricted_path, validate_custom_scan_path, validate_settings_paths};
 pub use error::ScanLogError;
 pub use fcx_handler::ConfigIssue;
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};

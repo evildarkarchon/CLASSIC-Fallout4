@@ -97,13 +97,13 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         }
         let scan = Path::new("validation/owned/scan");
         fs::create_dir_all(scan)?;
-        classic_path_core::validate_custom_scan_path(scan)?;
+        classic_scanlog_core::validate_custom_scan_path(scan)?;
         classic_path_core::validate_settings_path(
             Path::new(&game),
             "Game Path",
             Some(&["Fallout4.exe".to_string()]),
         )?;
-        classic_path_core::validate_settings_paths(
+        classic_scanlog_core::validate_settings_paths(
             Path::new(&game),
             Path::new(&docs),
             Some(scan),
@@ -151,8 +151,8 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         classic_shared_core::path_core::validate_path_exists(Path::new(&game))?;
         classic_shared_core::path_core::validate_is_directory(Path::new(&docs))?;
         classic_shared_core::path_core::validate_is_file(&Path::new(&game).join("Fallout4.exe"))?;
-        if classic_path_core::is_restricted_path(scan)
-            || !classic_path_core::is_restricted_path(Path::new("Windows/System32/test"))
+        if classic_scanlog_core::is_restricted_path(scan)
+            || !classic_scanlog_core::is_restricted_path(Path::new("Windows/System32/test"))
         {
             return Err(invalid("restricted-path classification changed").into());
         }
