@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T03:59:08.659691+00:00`
-- Tier-1 contract rows: **1225**
-- Tier-1 matched: **1223**
+- Generated: `2026-10-06T10:08:08.365354+00:00`
+- Tier-1 contract rows: **1226**
+- Tier-1 matched: **1224**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -1179,6 +1179,7 @@
 | `xse.lib.dll_prefix@rust` | `xse` | `classic-xse-core` | `dll_prefix` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.from_game_id@rust` | `xse` | `classic-xse-core` | `from_game_id` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.get_xse_info` | `xse` | `classic-xse-core` | `get_xse_info` | `classic_xse.get_xse_info` | `matched` |
+| `xse.lib.resolve_xse_log_for_scan` | `xse` | `classic-scangame-core` | `resolve_xse_log_for_scan` | `classic_xse.resolve_xse_log_for_scan` | `matched` |
 | `xse.lib.is_xse_installed` | `xse` | `classic-xse-core` | `is_xse_installed` | `classic_xse.is_xse_installed` | `matched` |
 | `xse.lib.loader_name@rust` | `xse` | `classic-xse-core` | `loader_name` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path` | `classic_xse.XseInfo` | `matched` |

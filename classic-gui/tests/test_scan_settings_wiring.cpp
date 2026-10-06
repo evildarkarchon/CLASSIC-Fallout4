@@ -87,13 +87,14 @@ void ScanSettingsWiringTests::scan_pipeline_forwards_existing_xse_log_hint()
              qPrintable(QStringLiteral("Unable to read %1").arg(mainWindowPath)));
     const QString mainWindowSource = QString::fromUtf8(mainWindowFile.readAll());
 
-    QVERIFY2(mainWindowSource.contains(QStringLiteral("classic::xse::resolve_xse_folder_for_scan")),
-             "MainWindow should use the shared XSE folder resolver for the setup hint");
-    QVERIFY2(mainWindowSource.contains(QStringLiteral("QFileInfo(logPath).isFile()")),
-             "MainWindow should forward only an XSE log that actually exists");
-    QVERIFY2(mainWindowSource.contains(QStringLiteral("f4se.log")) &&
-                 mainWindowSource.contains(QStringLiteral("f4sevr.log")),
-             "MainWindow should support Fallout 4 and Fallout 4 VR XSE log conventions");
+    // Which log exists, and its Fallout 4 / Fallout 4 VR names, are pinned by the Rust
+    // resolve_xse_log_for_scan tests and the xse-folder conformance pack; this test only
+    // checks that MainWindow delegates to that operation instead of naming logs itself.
+    QVERIFY2(mainWindowSource.contains(QStringLiteral("classic::xse::resolve_xse_log_for_scan")),
+             "MainWindow should use the Rust XSE log resolver for the setup hint");
+    QVERIFY2(!mainWindowSource.contains(QStringLiteral("f4se.log"), Qt::CaseInsensitive) &&
+                 !mainWindowSource.contains(QStringLiteral("f4sevr.log"), Qt::CaseInsensitive),
+             "MainWindow must not hard-code XSE log file names");
 
     const qsizetype callStart = mainWindowSource.indexOf(QStringLiteral("m_scanController->startScan("));
     QVERIFY2(callStart >= 0, "MainWindow should call ScanController::startScan()");

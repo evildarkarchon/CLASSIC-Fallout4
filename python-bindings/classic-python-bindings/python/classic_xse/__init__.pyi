@@ -228,3 +228,34 @@ def get_xse_info(game_path: str, xse_type: XseType) -> XseInfo:
         ...     print(f"F4SE version: {info.version()}")
 
     """
+
+
+def resolve_xse_log_for_scan(
+    yaml_dir_data: str,
+    game: str,
+    selected_game_version: str,
+    configured_docs_root: str | None = None,
+) -> str | None:
+    r"""Locate the XSE log for a game and game version.
+
+    Rust owns the location: the log is looked for only in the XSE Folder that
+    XSE Folder precedence selects (recorded Game Local facts, then
+    ``configured_docs_root``, then platform discovery), under the selected
+    version's Version Registry XSE log name, so Fallout 4 VR has its own log.
+
+    Args:
+        yaml_dir_data: The installation's ``CLASSIC Data`` directory.
+        game: The game identifier (e.g. ``"Fallout4"``, ``"Fallout4VR"``).
+        selected_game_version: The selected game version (e.g. ``"auto"``, ``"VR"``).
+        configured_docs_root: The configured documents root; ``None`` or empty means none.
+
+    Returns:
+        The existing log path, or ``None`` when the XSE Folder or log is missing.
+
+    Raises:
+        OSError: ``cannot inspect XSE log ...`` when the log cannot be inspected.
+
+    Example:
+        >>> log = resolve_xse_log_for_scan("CLASSIC Data", "Fallout4", "auto", None)
+
+    """

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T02:23:32.887012+00:00`
-- Tier-1 contract rows: **937**
-- Tier-1 matched: **920**
+- Generated: `2026-10-06T10:02:42.090118+00:00`
+- Tier-1 contract rows: **938**
+- Tier-1 matched: **921**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -415,6 +415,7 @@
 | `aux-phase4b-get-user-agent-prefix` | `aux` | `classic-web-core` | `USER_AGENT_PREFIX` | `getUserAgentPrefix` | `matched` |
 | `aux-phase4b-get-user-agent-with-suffix` | `aux` | `classic-web-core` | `get_user_agent_with_suffix` | `getUserAgentWithSuffix` | `matched` |
 | `aux-phase4b-get-xse-info` | `aux` | `classic-xse-core` | `get_xse_info` | `getXseInfo` | `matched` |
+| `aux-xse-resolve-log-for-scan` | `aux` | `classic-scangame-core` | `resolve_xse_log_for_scan` | `resolveXseLogForScan` | `matched` |
 | `aux-phase4b-has-update` | `aux` | `classic-update-core` | `has_update` | `hasUpdate` | `matched` |
 | `aux-phase4b-is-supported-resource` | `aux` | `classic-resource-core` | `is_supported_resource` | `isSupportedResource` | `matched` |
 | `aux-phase4b-is-valid-url` | `aux` | `classic-web-core` | `is_valid_url` | `isValidUrl` | `matched` |

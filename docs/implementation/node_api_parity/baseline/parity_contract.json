@@ -3930,6 +3930,16 @@
       "rustCrate": "classic-xse-core"
     },
     {
+      "id": "aux-xse-resolve-log-for-scan",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "nodeExport": "resolveXseLogForScan",
+      "nodeKind": "function",
+      "nodeArity": 4,
+      "rustCrate": "classic-scangame-core"
+    },
+    {
       "id": "aux-phase4b-has-update",
       "tier": "tier1",
       "ownerModule": "aux",
