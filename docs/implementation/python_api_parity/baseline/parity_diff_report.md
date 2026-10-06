@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T00:00:58.898184+00:00`
+- Generated: `2026-10-06T00:36:17.192776+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -374,7 +374,7 @@
 | `file_io.core.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.FileOperationResult@rust` | `file_io` | `classic-file-io-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.GameFilesManager@rust` | `file_io` | `classic-file-io-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.GameTarget@rust` | `file_io` | `classic-file-io-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.backup@rust` | `file_io` | `classic-file-io-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
@@ -382,7 +382,7 @@
 | `file_io.core.core@rust` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `classic-scanlog-core` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.similarity_ratio` | `file_io` | `classic-file-io-core` | `similarity_ratio` | `classic_file_io.similarity_ratio` | `matched` |
-| `file_io.dds.DDSAnalyzer@rust` | `file_io` | `classic-file-io-core` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.DDSAnalyzer@rust` | `file_io` | `classic-resource-core` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.DDSHeader` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.DDSHeader.from_bytes` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.from_bytes` | `matched` |
 | `file_io.dds.DDSHeader.has_mipmaps` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.has_mipmaps` | `matched` |
@@ -390,7 +390,7 @@
 | `file_io.dds.DDSHeader.has_valid_bc_dimensions` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.has_valid_bc_dimensions` | `matched` |
 | `file_io.dds.DDSHeader.is_bc_compressed` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.is_bc_compressed` | `matched` |
 | `file_io.dds.DDSHeader.is_reasonable_size` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.is_reasonable_size` | `matched` |
-| `file_io.dds.DDSIssue@rust` | `file_io` | `classic-file-io-core` | `DDSIssue` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.DDSIssue@rust` | `file_io` | `classic-resource-core` | `DDSIssue` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.dds@rust` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.encoding.EncodingDetector` | `file_io` | `classic-file-io-core` | `EncodingDetector` | `classic_file_io.EncodingDetector` | `matched` |
 | `file_io.encoding.EncodingDetector.__init__` | `file_io` | `classic-file-io-core` | `EncodingDetector` | `classic_file_io.EncodingDetector.__init__` | `matched` |

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T00:00:58.510657+00:00",
+  "generated_at_utc": "2026-10-06T00:36:16.846695+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -3077,31 +3077,12 @@
       "tier": "tier1"
     },
     {
-      "symbol": "DDSAnalyzer",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
-      "source_expr": "dds::DDSAnalyzer",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "DDSAnalyzer",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/dds.rs",
-      "source_decl": "pub struct DDSAnalyzer",
-      "tier": "tier1"
-    },
-    {
       "symbol": "DDSHeader",
       "kind": "reexport",
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
+      "source_decl": "pub use dds::DDSHeader;",
       "source_expr": "dds::DDSHeader",
       "tier": "tier1"
     },
@@ -3112,25 +3093,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/dds.rs",
       "source_decl": "pub struct DDSHeader",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "DDSIssue",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
-      "source_expr": "dds::DDSIssue",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "DDSIssue",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/dds.rs",
-      "source_decl": "pub struct DDSIssue",
       "tier": "tier1"
     },
     {
@@ -3321,25 +3283,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/game_files.rs",
       "source_decl": "pub struct GameFilesManager",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "GameTarget",
-      "kind": "enum",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/dds.rs",
-      "source_decl": "pub enum GameTarget",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "GameTarget",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
-      "source_expr": "dds::GameTarget",
       "tier": "tier1"
     },
     {
@@ -4032,16 +3975,6 @@
     {
       "symbol": "new",
       "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/dds.rs",
-      "source_decl": "pub fn new(game: GameTarget)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
       "arity": 0,
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
@@ -4306,46 +4239,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/core.rs",
       "source_decl": "pub fn stream_lines_sync(\n        &self,\n        path: &Path,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_batch",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/dds.rs",
-      "source_decl": "pub fn validate_batch(&self, paths: &[PathBuf])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_dimensions",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/dds.rs",
-      "source_decl": "pub fn validate_dimensions(width: u32, height: u32)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_file",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/dds.rs",
-      "source_decl": "pub fn validate_file(&self, path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_header",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/dds.rs",
-      "source_decl": "pub fn validate_header(&self, header: &DDSHeader)",
       "tier": "tier1"
     },
     {
@@ -6871,6 +6764,63 @@
       "tier": "tier1"
     },
     {
+      "symbol": "DDSAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use dds::{DDSAnalyzer, DDSIssue, GameTarget};",
+      "source_expr": "dds::DDSAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DDSAnalyzer",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/dds.rs",
+      "source_decl": "pub struct DDSAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DDSIssue",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use dds::{DDSAnalyzer, DDSIssue, GameTarget};",
+      "source_expr": "dds::DDSIssue",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DDSIssue",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/dds.rs",
+      "source_decl": "pub struct DDSIssue",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameTarget",
+      "kind": "enum",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/dds.rs",
+      "source_decl": "pub enum GameTarget",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameTarget",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use dds::{DDSAnalyzer, DDSIssue, GameTarget};",
+      "source_expr": "dds::GameTarget",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ResourceError",
       "kind": "enum",
       "crate": "classic-resource-core",
@@ -6927,6 +6877,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "dds",
+      "kind": "module",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub mod dds;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "detect_resource_type",
       "kind": "function",
       "arity": 1,
@@ -6974,6 +6933,56 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/lib.rs",
       "source_decl": "pub fn new(path: PathBuf)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/dds.rs",
+      "source_decl": "pub fn new(game: GameTarget)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_batch",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/dds.rs",
+      "source_decl": "pub fn validate_batch(&self, paths: &[PathBuf])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_dimensions",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/dds.rs",
+      "source_decl": "pub fn validate_dimensions(width: u32, height: u32)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_file",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/dds.rs",
+      "source_decl": "pub fn validate_file(&self, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_header",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/dds.rs",
+      "source_decl": "pub fn validate_header(&self, header: &DDSHeader)",
       "tier": "tier1"
     },
     {
