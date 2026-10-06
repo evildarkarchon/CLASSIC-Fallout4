@@ -109,6 +109,46 @@ fn targeted_launch_view_lists_its_inputs() {
 }
 
 #[test]
+fn non_managed_game_reports_withheld_values_with_display_lines() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  \
+         Game Version: NextGen\n  FCX Mode: true\n  Game Folder Path: 'C:/Games/Fallout 4'\n",
+    )
+    .unwrap();
+    let overrides = ffi::ScanRunLaunchOverridesDto {
+        has_game: true,
+        game: ffi::ScanRunGameId::Fallout4VR,
+        ..no_overrides()
+    };
+
+    let launch = scan_run_launch_standard(&root.path().to_string_lossy(), &overrides).unwrap();
+
+    let view = scan_run_launch_view(&launch).unwrap();
+    assert_eq!(view.configuration.game_version, "auto");
+    assert!(!view.fcx_enabled);
+    let kinds: Vec<_> = view.diagnostics.iter().map(|diagnostic| diagnostic.kind).collect();
+    assert_eq!(
+        kinds,
+        [
+            ffi::ScanRunLaunchDiagnosticKind::GameVersionNotApplied,
+            ffi::ScanRunLaunchDiagnosticKind::FcxModeNotApplied,
+            ffi::ScanRunLaunchDiagnosticKind::SetupFoldersNotApplied,
+        ]
+    );
+    assert_eq!(view.diagnostics[0].code, "game_version_not_applied");
+    // One Rust-rendered display line per diagnostic, in the same order.
+    assert_eq!(view.display_lines.len(), view.diagnostics.len());
+    let first = &view.display_lines[0];
+    assert_eq!(first.severity, ffi::ScanRunDisplaySeverity::Notice);
+    assert_eq!(first.segments[0].kind, ffi::ScanRunDisplaySegmentKind::Label);
+    assert_eq!(first.segments[0].text, "saved game version not applied");
+    assert_eq!(first.segments[2].kind, ffi::ScanRunDisplaySegmentKind::Name);
+    assert_eq!(first.segments[2].text, "Fallout 4 VR");
+}
+
+#[test]
 fn unrepresentable_overrides_are_rejected_before_launching() {
     let root = vr_root();
     let root_text = root.path().to_string_lossy().into_owned();

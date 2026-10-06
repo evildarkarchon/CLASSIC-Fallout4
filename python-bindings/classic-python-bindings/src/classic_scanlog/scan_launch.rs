@@ -5,13 +5,15 @@
 //! `ScanRunRequest` copy.
 
 use crate::classic_scanlog::scan_run::{
-    PyScanRunRequest, PyScanRunSetupContext, typed_game_id_to_core,
+    PyScanRunDisplayLine, PyScanRunRequest, PyScanRunSetupContext, display_lines_to_py,
+    typed_game_id_to_core,
 };
 use classic_scan_launch::{
     CrashLogScanIntent, CrashLogScanLaunchDiagnostic, CrashLogScanLaunchError,
     CrashLogScanLaunchOverrides, CrashLogScanLaunchRequest, GameVersionSelection, MaxConcurrency,
     prepare_launch,
 };
+use classic_scan_presentation::render_launch_diagnostics;
 use classic_scanlog_core::StandardUnsolvedLogsIntent;
 use classic_scanlog_core::scan_run::contract::Request;
 use classic_vocabulary::Vocabulary;
@@ -95,10 +97,13 @@ impl PyScanRunLaunchOverrides {
 #[pyclass(name = "ScanRunLaunchDiagnostic", frozen, skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyScanRunLaunchDiagnostic {
-    /// Which launch rule produced it, as a frozen Vocabulary Token (`user_settings`).
+    /// Which launch rule produced it, as a frozen Vocabulary Token: `user_settings`,
+    /// `game_version_not_applied`, `fcx_mode_not_applied`,
+    /// `custom_scan_folder_not_applied`, or `setup_folders_not_applied`.
     #[pyo3(get)]
     kind: &'static str,
-    /// Stable machine-readable code (the User Settings code for `user_settings`).
+    /// Stable machine-readable code (the User Settings code for `user_settings`, the
+    /// kind's token otherwise).
     #[pyo3(get)]
     code: String,
     /// Human-readable context. Prose; branch on `kind` and `code` instead.
@@ -304,6 +309,14 @@ impl PyScanRunLaunch {
             .iter()
             .map(diagnostic_to_py)
             .collect()
+    }
+
+    /// Returns the launch diagnostics rendered as Display Content, one line per
+    /// diagnostic in the same order. Show these rather than phrasing `diagnostics` in
+    /// Python.
+    #[getter]
+    pub fn display_lines(&self) -> Vec<PyScanRunDisplayLine> {
+        display_lines_to_py(&render_launch_diagnostics(self.inner.diagnostics()))
     }
 
     /// Returns an executable copy of the launched request.

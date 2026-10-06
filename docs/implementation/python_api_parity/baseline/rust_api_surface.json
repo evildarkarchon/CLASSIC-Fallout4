@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T12:00:53.560453+00:00",
+  "generated_at_utc": "2026-10-06T12:42:43.897105+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -7192,7 +7192,7 @@
       "crate": "classic-scan-launch",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/lib.rs",
-      "source_decl": "pub use diagnostic::{CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind};",
+      "source_decl": "pub use diagnostic::{ CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind, SavedGameSpecificValue, };",
       "source_expr": "diagnostic::CrashLogScanLaunchDiagnostic",
       "tier": "tier1"
     },
@@ -7211,7 +7211,7 @@
       "crate": "classic-scan-launch",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/lib.rs",
-      "source_decl": "pub use diagnostic::{CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind};",
+      "source_decl": "pub use diagnostic::{ CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind, SavedGameSpecificValue, };",
       "source_expr": "diagnostic::CrashLogScanLaunchDiagnosticKind",
       "tier": "tier1"
     },
@@ -7318,6 +7318,25 @@
       "source_file": "business-logic/classic-scan-launch/src/lib.rs",
       "source_decl": "pub use overrides::{CrashLogScanLaunchOverrides, MaxConcurrency};",
       "source_expr": "overrides::MaxConcurrency",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SavedGameSpecificValue",
+      "kind": "enum",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/diagnostic.rs",
+      "source_decl": "pub enum SavedGameSpecificValue",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SavedGameSpecificValue",
+      "kind": "reexport",
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/lib.rs",
+      "source_decl": "pub use diagnostic::{ CrashLogScanLaunchDiagnostic, CrashLogScanLaunchDiagnosticKind, SavedGameSpecificValue, };",
+      "source_expr": "diagnostic::SavedGameSpecificValue",
       "tier": "tier1"
     },
     {
@@ -7448,6 +7467,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "not_applied_kind",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/diagnostic.rs",
+      "source_decl": "pub const fn not_applied_kind(self)",
       "tier": "tier1"
     },
     {

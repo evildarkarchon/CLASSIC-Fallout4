@@ -723,12 +723,21 @@ mod ffi {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunLaunchDiagnosticKind {
         UserSettings = 0,
+        /// The game-differs rule withheld the managed game's saved game version.
+        GameVersionNotApplied = 1,
+        /// The game-differs rule withheld the managed game's saved FCX Mode.
+        FcxModeNotApplied = 2,
+        /// The game-differs rule withheld the managed game's saved custom scan folder.
+        CustomScanFolderNotApplied = 3,
+        /// The game-differs rule withheld the managed game's saved setup folders.
+        SetupFoldersNotApplied = 4,
     }
 
     /// One non-fatal launch diagnostic; the launch still produced a scannable request.
     struct ScanRunLaunchDiagnosticDto {
         kind: ScanRunLaunchDiagnosticKind,
-        /// Stable machine-readable code (the User Settings code for `UserSettings`).
+        /// Stable machine-readable code (the User Settings code for `UserSettings`, the
+        /// kind's snake_case token otherwise).
         code: String,
         /// Human-readable context. Prose; branch on `kind` and `code` instead.
         message: String,
@@ -765,6 +774,9 @@ mod ffi {
         fcx_enabled: bool,
         setup_context: ScanRunSetupContextDto,
         diagnostics: Vec<ScanRunLaunchDiagnosticDto>,
+        /// The diagnostics rendered as Display Content, one line per diagnostic in the
+        /// same order. Show these rather than phrasing `diagnostics` in C++.
+        display_lines: Vec<ScanRunDisplayLine>,
     }
 
     /// Stable lifecycle status from the final Crash Log Scan Run contract.

@@ -599,7 +599,13 @@ class ScanRunLaunchOverrides:
 class ScanRunLaunchDiagnostic:
     """One non-fatal launch diagnostic; the launch still produced a scannable request."""
 
-    kind: Literal["user_settings"]
+    kind: Literal[
+        "user_settings",
+        "game_version_not_applied",
+        "fcx_mode_not_applied",
+        "custom_scan_folder_not_applied",
+        "setup_folders_not_applied",
+    ]
     code: str
     message: str
 
@@ -609,7 +615,9 @@ class ScanRunLaunch:
 
     Launching opens User Settings read-only and never writes them. A Standard scan's
     base folder is always the Installation Root. Degraded User Settings still produce a
-    launch, with their diagnostics.
+    launch, with their diagnostics. Scanning a game other than the managed game withholds
+    the managed game's saved game version, FCX Mode, custom scan folder and setup folders,
+    reporting each one withheld.
     """
 
     intent: Literal["standard", "targeted"]
@@ -628,6 +636,8 @@ class ScanRunLaunch:
     fcx_enabled: bool
     setup_context: ScanRunSetupContext | None
     diagnostics: list[ScanRunLaunchDiagnostic]
+    display_lines: list[ScanRunDisplayLine]
+    """The diagnostics rendered as Display Content, one line per diagnostic in order."""
 
     @staticmethod
     def standard(

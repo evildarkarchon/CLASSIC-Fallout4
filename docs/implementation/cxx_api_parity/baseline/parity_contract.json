@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T11:54:30Z",
+  "generated_at_utc": "2026-10-06T12:41:28Z",
   "schema_version": 2,
   "entries": [
     {
@@ -7334,7 +7334,11 @@
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "variants": [
-        "UserSettings"
+        "UserSettings",
+        "GameVersionNotApplied",
+        "FcxModeNotApplied",
+        "CustomScanFolderNotApplied",
+        "SetupFoldersNotApplied"
       ],
       "ownerModule": "scan_launch",
       "rustCrate": "classic-scan-launch",
@@ -11306,6 +11310,10 @@
         {
           "name": "diagnostics",
           "type": "Vec<ScanRunLaunchDiagnosticDto>"
+        },
+        {
+          "name": "display_lines",
+          "type": "Vec<ScanRunDisplayLine>"
         }
       ],
       "ownerModule": "scan_launch",

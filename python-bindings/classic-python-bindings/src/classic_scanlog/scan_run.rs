@@ -1001,7 +1001,7 @@ pub struct PyScanRunDisplaySegment {
     /// noun Rust already resolved to agree with `count`, so no consumer re-decides
     /// pluralization and no user reads "1 logs". Empty for `path`.
     #[pyo3(get)]
-    text: String,
+    pub(crate) text: String,
     /// Payload for `path`, whole and untruncated. Truncation is the consumer's
     /// choice. Empty otherwise.
     #[pyo3(get)]
@@ -1023,10 +1023,10 @@ pub struct PyScanRunDisplayLine {
     /// or `success`. Rust names no colour, text attribute, or widget — a plain,
     /// pipeable frontend may map every severity onto nothing at all and stay correct.
     #[pyo3(get)]
-    severity: String,
+    pub(crate) severity: String,
     /// The line's content, in reading order.
     #[pyo3(get)]
-    segments: Vec<PyScanRunDisplaySegment>,
+    pub(crate) segments: Vec<PyScanRunDisplaySegment>,
 }
 
 /// One Local Ignore recovery decision, named and explained, with its availability
@@ -1845,7 +1845,7 @@ fn log_event_to_py(value: contract::LogEvent) -> PyScanRunLogEvent {
 /// idiomatic Python and worse parity — a consumer reading two bindings would read
 /// the same segment two ways, and the taxonomy is frozen precisely so that cannot
 /// happen.
-fn display_lines_to_py(lines: &[DisplayLine]) -> Vec<PyScanRunDisplayLine> {
+pub(crate) fn display_lines_to_py(lines: &[DisplayLine]) -> Vec<PyScanRunDisplayLine> {
     lines
         .iter()
         .map(|line| PyScanRunDisplayLine {
