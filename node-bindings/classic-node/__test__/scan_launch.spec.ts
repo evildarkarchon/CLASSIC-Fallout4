@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, test} from "bun:test";
-import {mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
+import {mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 
@@ -72,6 +72,43 @@ describe("ScanRunLaunch", () => {
 
         expect((caught as { code?: string }).code).toBe("targeted_without_inputs");
         expect((caught as { kind?: string }).kind).toBe("targeted_without_inputs");
+    });
+
+    test("the FCX Mode override gives a Targeted launch its setup context and XSE log", () => {
+        const scratch = rootWithSettings("");
+        const game = join(scratch, "Fallout 4");
+        const documents = join(scratch, "Documents");
+        mkdirSync(join(documents, "F4SE"), {recursive: true});
+        const xseLog = join(documents, "F4SE", "f4se.log");
+        writeFileSync(xseLog, "");
+        const root = rootWithSettings(
+            `${MANAGED_FALLOUT4}  Game Folder Path: '${game}'\n  Documents Folder Path: '${documents}'\n`,
+        );
+
+        const launch = ScanRunLaunch.targeted(root, [join(root, "crash-one.log")], {fcxMode: true});
+
+        expect(launch.fcxEnabled).toBe(true);
+        const context = launch.setupContext;
+        expect(context?.gameRoot).toBe(game);
+        expect(context?.docsRoot).toBe(documents);
+        // Nothing is saved for the executable, so NextGen's own executable under the game folder.
+        expect(context?.gameExePath).toBe(join(game, "Fallout4.exe"));
+        expect(context?.xseLogPath).toBe(xseLog);
+    });
+
+    test("an uninspectable XSE log location throws the typed launch error", () => {
+        // The YAML `\0` escape saves a documents folder no platform can inspect.
+        const root = rootWithSettings(`${MANAGED_FALLOUT4}  FCX Mode: true\n  Documents Folder Path: "/bad\\0docs"\n`);
+
+        let caught: unknown;
+        try {
+            ScanRunLaunch.standard(root);
+        } catch (error) {
+            caught = error;
+        }
+
+        expect((caught as { code?: string }).code).toBe("xse_log_inspect");
+        expect((caught as { kind?: string }).kind).toBe("xse_log_inspect");
     });
 
     test("an unknown game-version override is rejected", () => {

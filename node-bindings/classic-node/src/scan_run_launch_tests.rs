@@ -25,6 +25,23 @@ fn false_supplied_as_on_overrides_keep_the_saved_value() {
 }
 
 #[test]
+fn fcx_mode_override_is_supplied_as_on() {
+    let on = overrides_to_core(JsScanRunLaunchOverrides {
+        fcx_mode: Some(true),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+    let off = overrides_to_core(JsScanRunLaunchOverrides {
+        fcx_mode: Some(false),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+
+    assert!(on.fcx_mode());
+    assert!(!off.fcx_mode());
+}
+
+#[test]
 fn unknown_game_version_override_is_an_invalid_argument() {
     let error = overrides_to_core(JsScanRunLaunchOverrides {
         game_version: Some("Nonsense".to_string()),

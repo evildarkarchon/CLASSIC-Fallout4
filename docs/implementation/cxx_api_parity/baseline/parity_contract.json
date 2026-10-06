@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T11:54:30Z",
+  "generated_at_utc": "2026-10-06T12:46:45Z",
   "schema_version": 2,
   "entries": [
     {
@@ -7348,7 +7348,8 @@
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "variants": [
-        "TargetedWithoutInputs"
+        "TargetedWithoutInputs",
+        "XseLogInspect"
       ],
       "ownerModule": "scan_launch",
       "rustCrate": "classic-scan-launch",
@@ -11256,6 +11257,10 @@
         },
         {
           "name": "simplify_logs",
+          "type": "bool"
+        },
+        {
+          "name": "fcx_mode",
           "type": "bool"
         }
       ],

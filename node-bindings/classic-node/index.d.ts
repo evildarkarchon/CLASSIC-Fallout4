@@ -1377,7 +1377,10 @@ export declare class ScanRunLaunch {
    * Opens User Settings under `installationRoot` read-only and never writes them; the
    * Standard base folder is always `installationRoot`. Degraded User Settings still
    * produce a launch, with their diagnostics. Throws `InvalidArg` for an unrepresentable
-   * input (a blank root or scan path, or an unknown game-version token).
+   * input (a blank root or scan path, or an unknown game-version token). With FCX Mode
+   * on, `setupContext` carries the game folder, documents folder, game executable and
+   * XSE log; when the XSE log location cannot be inspected (not mere absence) it throws
+   * the typed launch error whose `code` and `kind` are `xse_log_inspect`.
    */
   static standard(installationRoot: string, overrides?: JsScanRunLaunchOverrides | undefined | null): ScanRunLaunch
   /**
@@ -4795,8 +4798,8 @@ export interface JsScanRunLaunchDiagnostic {
  * Every field is optional. `gameVersion` takes a User Settings game-version token
  * (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`). `maxConcurrent` zero
  * explicitly requests adaptive concurrency, which overrides a saved limit.
- * `showFormidValues` and `simplifyLogs` are supplied-as-on: `true` turns the option on for
- * this run; `false` or absence keeps the saved value.
+ * `showFormidValues`, `simplifyLogs` and `fcxMode` are supplied-as-on: `true` turns the
+ * option on for this run; `false` or absence keeps the saved value.
  */
 export interface JsScanRunLaunchOverrides {
   game?: JsGameId
@@ -4805,6 +4808,7 @@ export interface JsScanRunLaunchOverrides {
   maxConcurrent?: number
   showFormidValues?: boolean
   simplifyLogs?: boolean
+  fcxMode?: boolean
 }
 
 /** Explicit Local Ignore recovery decisions owned by Rust scan coordination. */

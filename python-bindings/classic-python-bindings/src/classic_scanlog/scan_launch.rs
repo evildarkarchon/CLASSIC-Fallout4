@@ -10,7 +10,7 @@ use crate::classic_scanlog::scan_run::{
 use classic_scan_launch::{
     CrashLogScanIntent, CrashLogScanLaunchDiagnostic, CrashLogScanLaunchError,
     CrashLogScanLaunchOverrides, CrashLogScanLaunchRequest, GameVersionSelection, MaxConcurrency,
-    prepare_launch,
+    prepare_launch_in_scopes,
 };
 use classic_scanlog_core::StandardUnsolvedLogsIntent;
 use classic_scanlog_core::scan_run::contract::Request;
@@ -33,14 +33,20 @@ create_exception!(
     ScanRunLaunchError,
     "A Targeted Crash Log Scan Launch named no inputs."
 );
+create_exception!(
+    classic_scanlog,
+    ScanRunLaunchXseLogInspectError,
+    ScanRunLaunchError,
+    "FCX Mode is on and the XSE log location could not be inspected (not mere absence)."
+);
 
 /// Optional per-run values that win over saved User Settings for one launch.
 ///
 /// `game` must be a `classic_shared.GameId`. `game_version` takes a User Settings
 /// game-version token (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`).
 /// `max_concurrent=0` explicitly requests adaptive concurrency, which overrides a saved
-/// limit. `show_formid_values` and `simplify_logs` are supplied-as-on: `True` turns the
-/// option on for this run; `False` keeps the saved value.
+/// limit. `show_formid_values`, `simplify_logs` and `fcx_mode` are supplied-as-on: `True`
+/// turns the option on for this run; `False` keeps the saved value.
 #[pyclass(name = "ScanRunLaunchOverrides", from_py_object)]
 #[derive(Clone, Default)]
 pub struct PyScanRunLaunchOverrides {
@@ -56,7 +62,7 @@ impl PyScanRunLaunchOverrides {
     /// Raises `TypeError`/`ValueError` for a `game` that is not a `classic_shared.GameId`,
     /// and `ValueError` for an unknown game-version token or a blank `scan_path`.
     #[new]
-    #[pyo3(signature = (game=None, game_version=None, scan_path=None, max_concurrent=None, show_formid_values=false, simplify_logs=false))]
+    #[pyo3(signature = (game=None, game_version=None, scan_path=None, max_concurrent=None, show_formid_values=false, simplify_logs=false, fcx_mode=false))]
     pub fn new(
         game: Option<&Bound<'_, PyAny>>,
         game_version: Option<String>,
@@ -64,6 +70,7 @@ impl PyScanRunLaunchOverrides {
         max_concurrent: Option<usize>,
         show_formid_values: bool,
         simplify_logs: bool,
+        fcx_mode: bool,
     ) -> PyResult<Self> {
         let mut inner = CrashLogScanLaunchOverrides::new();
         if let Some(game) = game {
@@ -86,6 +93,9 @@ impl PyScanRunLaunchOverrides {
         }
         if simplify_logs {
             inner = inner.with_simplify_logs();
+        }
+        if fcx_mode {
+            inner = inner.with_fcx_mode();
         }
         Ok(Self { inner })
     }
@@ -337,9 +347,17 @@ fn launch(
     let overrides = overrides
         .map(|overrides| overrides.inner.clone())
         .unwrap_or_default();
-    prepare_launch(installation_root, intent, &overrides)
-        .map(|inner| PyScanRunLaunch { inner })
-        .map_err(launch_error_to_py)
+    // The facade's own scopes, the same ones `scan_run_execute` runs in, so the FCX setup
+    // facts this launch gathers come from the snapshot its run will read.
+    prepare_launch_in_scopes(
+        installation_root,
+        intent,
+        &overrides,
+        &crate::classic_scanlog::SCANLOG_VERSION_REGISTRY_SCOPE,
+        &crate::classic_scanlog::SCANLOG_YAML_FILE_SCOPE,
+    )
+    .map(|inner| PyScanRunLaunch { inner })
+    .map_err(launch_error_to_py)
 }
 
 /// Raises the typed exception subclass for one launch error.
@@ -348,6 +366,9 @@ fn launch_error_to_py(error: CrashLogScanLaunchError) -> PyErr {
     match error {
         CrashLogScanLaunchError::TargetedWithoutInputs => {
             ScanRunLaunchTargetedWithoutInputsError::new_err(message)
+        }
+        CrashLogScanLaunchError::XseLogInspect { .. } => {
+            ScanRunLaunchXseLogInspectError::new_err(message)
         }
     }
 }
@@ -386,6 +407,10 @@ pub(crate) fn register_scan_launch_exports(m: &Bound<'_, PyModule>) -> PyResult<
     m.add(
         "ScanRunLaunchTargetedWithoutInputsError",
         m.py().get_type::<ScanRunLaunchTargetedWithoutInputsError>(),
+    )?;
+    m.add(
+        "ScanRunLaunchXseLogInspectError",
+        m.py().get_type::<ScanRunLaunchXseLogInspectError>(),
     )?;
     Ok(())
 }

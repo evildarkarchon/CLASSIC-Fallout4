@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T12:00:53.604671+00:00",
+  "generated_at_utc": "2026-10-06T12:50:00.969345+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -10029,11 +10029,11 @@
       "export_path": "ScanRunLaunchOverrides.__init__",
       "parent_class": "ScanRunLaunchOverrides",
       "kind": "method",
-      "arity": 6,
+      "arity": 7,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "def __init__( self, game: GameId | None = None, game_version: str | None = None, scan_path: str | None = None, max_concurrent: int | None = None, show_formid_values: bool = False, simplify_logs: bool = False, ) -> None: ..."
+      "signature": "def __init__( self, game: GameId | None = None, game_version: str | None = None, scan_path: str | None = None, max_concurrent: int | None = None, show_formid_values: bool = False, simplify_logs: bool = False, fcx_mode: bool = False, ) -> None: ..."
     },
     {
       "module": "classic_scanlog",
@@ -10044,6 +10044,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
       "signature": "class ScanRunLaunchTargetedWithoutInputsError(ScanRunLaunchError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchXseLogInspectError",
+      "export_path": "ScanRunLaunchXseLogInspectError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchXseLogInspectError(ScanRunLaunchError):"
     },
     {
       "module": "classic_scanlog",
