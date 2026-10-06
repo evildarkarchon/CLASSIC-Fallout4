@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-05T23:38:53Z",
+  "generated_at_utc": "2026-10-05T23:58:57Z",
   "schema_version": 2,
   "entries": [
     {
@@ -5242,8 +5242,8 @@
         ],
         "returnType": "Result<String>"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "create_backup"
     },
     {
@@ -5266,8 +5266,8 @@
         ],
         "returnType": "Vec<String>"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "list_versions"
     },
     {

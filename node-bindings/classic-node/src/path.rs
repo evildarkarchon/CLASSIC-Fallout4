@@ -4,6 +4,10 @@
 //! to JavaScript/TypeScript. Windows registry access gated behind cfg.
 //! The generic existence, permission, drive, and read-only checks delegate
 //! to `classic_shared_core::path_core`, which owns those neutral primitives.
+//! The `BackupManager` / `XseVersion` classes keep their JavaScript names but
+//! wrap the version-labelled backup owned by `classic_resource_core`
+//! (`VersionBackupManager`); they are unrelated to the game-target
+//! `JsBackupManager` in `fileio.rs`.
 
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;
@@ -389,7 +393,7 @@ impl DocsPathFinder {
 /// Construct with `new BackupManager(backupRoot)`.
 #[napi]
 pub struct BackupManager {
-    inner: classic_path_core::BackupManager,
+    inner: classic_resource_core::VersionBackupManager,
 }
 
 #[napi]
@@ -400,7 +404,7 @@ impl BackupManager {
     #[napi(constructor)]
     pub fn new(backup_root: String) -> Self {
         Self {
-            inner: classic_path_core::BackupManager::new(backup_root),
+            inner: classic_resource_core::VersionBackupManager::new(backup_root),
         }
     }
 
@@ -473,7 +477,7 @@ impl BackupManager {
 /// Construct with `new XseVersion(version)`.
 #[napi]
 pub struct XseVersion {
-    inner: classic_path_core::XseVersion,
+    inner: classic_resource_core::XseVersion,
 }
 
 #[napi]
@@ -484,7 +488,7 @@ impl XseVersion {
     #[napi(constructor)]
     pub fn new(version: String) -> Self {
         Self {
-            inner: classic_path_core::XseVersion::new(version),
+            inner: classic_resource_core::XseVersion::new(version),
         }
     }
 

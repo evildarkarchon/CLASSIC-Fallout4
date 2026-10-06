@@ -5,6 +5,9 @@
 //! backup operations, and configuration checking. The generic existence, kind,
 //! permission, drive, and read-only checks exposed here delegate to
 //! `classic_shared_core::path_core`, which owns those neutral primitives.
+//! The `BackupManager` / `XseVersion` classes keep their Python names but wrap
+//! the version-labelled backup owned by `classic_resource_core`
+//! (`VersionBackupManager`).
 //!
 //! # Python Usage
 //!
@@ -983,7 +986,7 @@ impl DocsPathFinder {
 /// ```
 #[pyclass]
 pub struct BackupManager {
-    inner: classic_path_core::BackupManager,
+    inner: classic_resource_core::VersionBackupManager,
 }
 
 #[pymethods]
@@ -1008,7 +1011,7 @@ impl BackupManager {
     #[new]
     fn new(backup_root: String) -> Self {
         Self {
-            inner: classic_path_core::BackupManager::new(backup_root),
+            inner: classic_resource_core::VersionBackupManager::new(backup_root),
         }
     }
 
@@ -1154,7 +1157,7 @@ impl BackupManager {
 /// ```
 #[pyclass]
 pub struct XseVersion {
-    inner: classic_path_core::XseVersion,
+    inner: classic_resource_core::XseVersion,
 }
 
 #[pymethods]
@@ -1179,7 +1182,7 @@ impl XseVersion {
     #[new]
     fn new(version: String) -> Self {
         Self {
-            inner: classic_path_core::XseVersion::new(version),
+            inner: classic_resource_core::XseVersion::new(version),
         }
     }
 

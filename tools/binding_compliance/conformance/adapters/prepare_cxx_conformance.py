@@ -187,6 +187,8 @@ def _cxx_source_paths(
             repo_root / "business-logic/classic-user-settings-core/src",
             repo_root / "business-logic/classic-file-io-core/src",
             repo_root / "business-logic/classic-path-core/src",
+            # Version-labelled backup behind the path-backups bridge rows (#251).
+            repo_root / "business-logic/classic-resource-core/src",
             repo_root / "foundation/classic-shared-core/src",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_config_operations_conformance.h",

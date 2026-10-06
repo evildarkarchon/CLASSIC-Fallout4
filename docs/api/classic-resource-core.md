@@ -24,6 +24,7 @@ Use this crate when you need to:
 - count supported resources by detected type
 - attach basic metadata (`path`, detected type, file size) to resource entries
 - validate that a candidate resource path exists and is a readable file
+- copy a configuration file into a version-labelled backup directory ([Version-labelled backup](#version-labelled-backup))
 
 Do not use this crate for:
 
@@ -38,7 +39,7 @@ Those concerns live in related crates such as [`classic-path-core`](../../busine
 
 ## Module And API Map
 
-This crate currently exposes a single public file, `src/lib.rs`. There are no public submodules; the contributor-facing API is all at the crate root.
+The contributor-facing API is all at the crate root. Resource discovery lives in `src/lib.rs`; the version-labelled backup lives in the private `src/version_backup.rs` module and is re-exported from the root.
 
 ## Root-level types and aliases
 
@@ -46,6 +47,8 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 - `ResourceInfo` - small struct holding a path, detected type, and size
 - `ResourceError` - crate-specific error enum for validation/enumeration paths
 - `ResourceResult<T>` - `Result<T, ResourceError>`
+- `VersionBackupManager`, `XseVersion` - version-labelled backup (see below)
+- `VersionBackupError`, `VersionBackupResult<T>` - its error enum and result alias
 
 ## Root-level free functions
 
@@ -226,6 +229,45 @@ Behavior worth knowing:
 - `ArchiveError` is part of the public API surface, but the current `src/lib.rs` implementation does not construct it anywhere
 - `PathError` conversion wraps `classic_shared_core::path_core::PathError`, but current root-level functions do not call the shared-core path validators directly
 
+## Version-labelled backup
+
+`VersionBackupManager` and `XseVersion` copy one caller-chosen file into a directory named after a version label. They moved here from `classic-path-core` in #251, where they were `BackupManager`, `XseVersion`, `BackupError`, and `BackupResult<T>`; see the [old-to-new import table](classic-path-core.md#moved-version-labelled-backup). Path core keeps game/documents discovery and validation and does not re-export this backup.
+
+This is one of the two distinct backup operations resource core owns (the other, the game-target backup, moves here from `classic-file-io-core` in #250). It is not the game-target backup of XSE/ReShade/Vulkan/ENB files under a game root: the two differ in destination, conflict, and recovery rules, keep separate Rust owner types, separate conformance packs (`path-backups` and `file-backups`), and separate binding exports.
+
+`XseVersion`:
+
+- `XseVersion::new(version)`
+- `full_version()`
+- `sanitized()` - replaces `.` with `_` for directory names
+
+`VersionBackupManager`:
+
+- `VersionBackupManager::new(backup_root)`
+- `extract_version_from_xse_log(xse_log_path) -> VersionBackupResult<XseVersion>`
+- `create_backup(source_file, version) -> VersionBackupResult<PathBuf>`
+- `backup_root()`
+- `list_versions() -> VersionBackupResult<Vec<String>>`
+- `get_version_path(version) -> PathBuf`
+
+Behavior worth knowing:
+
+- version extraction uses a case-insensitive regex matching either `version = ...` or `runtime version = ...` (`:` is accepted in place of `=`) and returns the first matching line
+- `create_backup()` stores the file at `backup_root/<version_with_underscores>/<filename>`, creating the version directory as needed
+- a second `create_backup()` with the same label overwrites the earlier copy in place; there is no conflict check, timestamping, or extra metadata
+- recovery is by path: `list_versions()` returns the sorted version directory names (files in the root are ignored, and a missing root yields an empty list) and `get_version_path()` returns a label's directory without touching the filesystem
+- the CXX bridge's `backup_create_timestamped` / `backup_list_existing` use the same manager with a `CLASSIC Backups/<game>` root beside the source file and a Unix-seconds label
+
+`VersionBackupError` variants, with display messages unchanged from the former `classic_path_core::BackupError`:
+
+- `XseLogNotFound(PathBuf)`
+- `VersionNotFound`
+- `InvalidVersionFormat(String)` - also returned when the source path has no file name
+- `CreateDirectoryFailed { path, source }`
+- `CopyFileFailed { src, dst, source }`
+- `SourceNotFound(PathBuf)`
+- `PathError(PathError)` and `IoError(std::io::Error)`
+
 ---
 
 ## Resource Discovery And Management Flow
@@ -274,6 +316,7 @@ Important direct dependencies:
 - `serde` - serialization/deserialization for `ResourceType`
 - `thiserror` - `ResourceError`
 - `classic-shared-core` - `path_core::PathError` wrapped by `ResourceError::PathError`
+- `regex` - version-label extraction from XSE logs
 
 Declared dependency with no visible use in current `src/lib.rs`:
 
@@ -285,6 +328,7 @@ Related CLASSIC crates and wrappers:
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it handles real scan orchestration rather than reusing this crate directly in current source
 - [`classic-resource-py`](../../python-bindings/classic-resource-py) - Python wrapper for this crate's public API
 - [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers
+- [`classic-path-py`](../../python-bindings/classic-path-py), `classic-node`'s `path` module, and the CXX bridge's `classic::path` backup helpers - wrap `VersionBackupManager` / `XseVersion` under their existing `BackupManager` / `XseVersion` / `backup_*` export names
 
 Binding collaboration visible in source today:
 
@@ -328,7 +372,7 @@ If the caller needs stricter directory validation before enumeration, validate t
 
 ## Contributor Notes And Known Limits
 
-- the full public surface lives in `src/lib.rs`; any new `pub` item there changes the crate API directly
+- the public surface is re-exported from `src/lib.rs`; any new `pub` item or `pub use` there changes the crate API directly
 - `ResourceType` is extension-based only; it does not inspect file headers or contents
 - `ResourceType::from_str()` is intentionally permissive and maps unknown strings to `Other`
 - `enumerate_resources()` is best-effort because `WalkDir` entry errors are dropped
@@ -344,4 +388,5 @@ If you extend this crate, update this document when you change:
 - enumeration error semantics or traversal policy
 - `ResourceInfo` fields or constructors
 - validation rules in `validate_resource()`
+- version-labelled backup layout, overwrite behavior, or XSE version extraction
 - any future archive/path-resolution APIs that make the crate broader than its current extension-based helper role

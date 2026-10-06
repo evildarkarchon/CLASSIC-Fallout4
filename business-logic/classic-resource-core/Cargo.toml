@@ -21,6 +21,9 @@ anyhow = { workspace = true }
 # File I/O
 walkdir = { workspace = true }
 
+# Version-label extraction from XSE logs (version_backup)
+regex = { workspace = true }
+
 # Serialization
 serde = { workspace = true, features = ["derive"] }
 

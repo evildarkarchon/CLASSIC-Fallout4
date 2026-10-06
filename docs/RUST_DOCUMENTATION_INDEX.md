@@ -43,12 +43,12 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`docs/api/classic-web-core.md`](api/classic-web-core.md) — small URL, user-agent, and mod-site helper layer
 - [`docs/api/classic-update-core.md`](api/classic-update-core.md) — async GitHub release/update-check client and DTO layer
 - [`docs/api/classic-config-core.md`](api/classic-config-core.md) — CLASSIC settings, Main/Game/Ignore YAML loading, AND the absorbed crashgen rule model (formerly its own crate, merged in v9.1.0 Phase 2)
-- [`docs/api/classic-path-core.md`](api/classic-path-core.md) — game-path, documents-path, custom-scan/settings validation, cache-directory, and backup helpers
+- [`docs/api/classic-path-core.md`](api/classic-path-core.md) — game-path, documents-path, custom-scan/settings validation, and cache-directory helpers
 - [`docs/api/classic-xse-core.md`](api/classic-xse-core.md) — XSE loader/version detection helpers used by setup checks and bindings
 - [`docs/api/game-setup-workflow.md`](api/game-setup-workflow.md) — cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
 - [`docs/api/formid-settings-boundary.md`](api/formid-settings-boundary.md) — current split between config serialization and scan-time FormID DB path loading
 - [`docs/api/classic-file-io-core.md`](api/classic-file-io-core.md) — shared file I/O, directory walking, hashing, and log helpers
-- [`docs/api/classic-resource-core.md`](api/classic-resource-core.md) — lightweight resource classification, enumeration, and per-file validation helpers
+- [`docs/api/classic-resource-core.md`](api/classic-resource-core.md) — lightweight resource classification, enumeration, per-file validation, and version-labelled backup helpers
 - [`docs/api/classic-database-core.md`](api/classic-database-core.md) — async SQLite/FormID lookup pool and helpers
 - [`docs/api/formid-sqlite-conventions.md`](api/formid-sqlite-conventions.md) — current FormID fixture/schema/path conventions from source and tests
 - [`docs/api/classic-scangame-core.md`](api/classic-scangame-core.md) — game-installation, archive, loose-file, and setup validation workflows

@@ -5,11 +5,13 @@ Contributor-facing API documentation for [`business-logic/classic-path-core/`](.
 Crate metadata:
 
 - Crate: `classic-path-core`
-- Description: `Core path management for CLASSIC (game paths, documents, validation, backups)`
+- Description: `Core path management for CLASSIC (game paths, documents, validation)`
 
-This crate is the shared Rust path/setup helper layer for CLASSIC. It covers game-install detection, documents-folder detection, custom-scan and settings-path validation, lightweight INI parsing, read-only documents checks, the per-user YAML and app-notification cache directories, and versioned file backups.
+This crate is the shared Rust path/setup helper layer for CLASSIC. It covers game-install detection, documents-folder detection, custom-scan and settings-path validation, lightweight INI parsing, read-only documents checks, and the per-user YAML and app-notification cache directories.
 
 The generic path primitives it builds on - existence, file/directory, permission, drive, and read-only checks, the OS cache root, and the `PathError` they report - are owned by [`classic-shared-core::path_core`](classic-shared-core.md#generic-path-primitives-path_core) (#245). This crate does not re-export them; see [Moved primitives](#moved-primitives) for the old-to-new import map.
+
+The version-labelled backup (`BackupManager`/`XseVersion`) moved to [`classic-resource-core`](classic-resource-core.md#version-labelled-backup) as `VersionBackupManager`/`XseVersion` (#251). It is resource policy rather than path discovery, so this crate neither depends on nor re-exports it; see [Moved version-labelled backup](#moved-version-labelled-backup).
 
 It is a synchronous business-logic crate. It does not own a Tokio runtime, UI surface, or binding layer.
 
@@ -26,11 +28,11 @@ Use this crate when you need to:
 - check common CLASSIC path inputs such as custom-scan folders, settings paths, and required files
 - parse Bethesda-style INI files with case-insensitive section/key lookup
 - run read-only checks over the documents folder before setup or scanning
-- create version-labeled backups using version data extracted from an XSE log
 
 Do not use this crate for:
 
 - generic existence, file/directory, permission, drive, or read-only checks - use `classic_shared_core::path_core`
+- version-labelled file backups - use `classic_resource_core::VersionBackupManager`
 - loading YAML settings or version-registry metadata
 - async file I/O or runtime ownership
 - higher-level game scan orchestration
@@ -72,15 +74,10 @@ Both resolve their root through `classic_shared_core::path_core::user_cache_root
 - `DocumentsCheckResult` / `DocumentsCheckState` - Rust-only rendered documents messages with structured state
 - `IniCheckResult` - structured result for one INI check, also exposed by the Python binding
 
-### Backup APIs
-
-- `BackupManager` - version-aware backup creation/listing
-- `XseVersion` - extracted XSE/runtime version wrapper used in backup paths
-
 ### Error APIs
 
-- `ValidationError`, `GamePathError`, `DocsPathError`, `BackupError`
-- `ValidationResult<T>`, `GamePathResult<T>`, `DocsPathResult<T>`, `BackupResult<T>`
+- `ValidationError`, `GamePathError`, `DocsPathError`
+- `ValidationResult<T>`, `GamePathResult<T>`, `DocsPathResult<T>`
 
 Each domain error wraps the shared-core `PathError` through a `PathError(#[from] classic_shared_core::path_core::PathError)` variant.
 
@@ -102,6 +99,18 @@ These root exports ended in #245; import them from `classic_shared_core::path_co
 | `PathError`, `PathResult` | same names |
 
 The CXX, Node, and Python path adapters keep their existing export names (`is_valid_path`, `isValidExecutablePath`, `PathValidator.is_valid_executable_path`, `removeReadonly`, ...) and delegate to the shared-core owner.
+
+### Moved version-labelled backup
+
+These root exports ended in #251; import them from `classic_resource_core` instead. The owner types were renamed so they cannot share a crate-qualified name with the game-target `BackupManager`, which also moves to resource core (#250). Variants, display messages, destination layout, and overwrite behavior are unchanged.
+
+| Old `classic_path_core::` path | New `classic_resource_core::` path |
+| --- | --- |
+| `BackupManager` | `VersionBackupManager` |
+| `XseVersion` | `XseVersion` |
+| `BackupError`, `BackupResult<T>` | `VersionBackupError`, `VersionBackupResult<T>` |
+
+The CXX (`backup_create_timestamped`, `backup_list_existing`), Node (`BackupManager`, `XseVersion`), and Python (`classic_path.BackupManager`, `classic_path.XseVersion`) adapters keep their export names and delegate to the resource-core owner.
 
 Contributor note:
 
@@ -251,36 +260,9 @@ Behavior worth knowing:
 - for `{Game}Custom.ini`, the checker requires an `[Archive]` section to consider archive invalidation enabled
 - OneDrive detection is a simple case-insensitive substring search over the path string
 
-## `XseVersion` and `BackupManager`
-
-These types provide the crate's backup workflow.
-
-`XseVersion`:
-
-- `XseVersion::new(version)`
-- `full_version()`
-- `sanitized()` - replaces `.` with `_` for directory names
-
-`BackupManager`:
-
-- `BackupManager::new(backup_root)`
-- `extract_version_from_xse_log(xse_log_path) -> BackupResult<XseVersion>`
-- `create_backup(source_file, version) -> BackupResult<PathBuf>`
-- `backup_root()`
-- `list_versions() -> BackupResult<Vec<String>>`
-- `get_version_path(version) -> PathBuf`
-
-Behavior worth knowing:
-
-- version extraction uses a regex matching either `version = ...` or `runtime version = ...`
-- extraction returns the first matching version line in the file
-- `create_backup()` stores files under `backup_root/<version_with_underscores>/<filename>`
-- `create_backup()` copies one file at a time; it does not back up directory trees or store extra metadata beyond the version-based path layout
-- `list_versions()` returns sorted directory names and silently returns an empty list if the backup root does not exist yet
-
 ---
 
-## Path Resolution, Validation, And Backup Flow
+## Path Resolution And Validation Flow
 
 The main source-visible flows are:
 
@@ -312,14 +294,6 @@ The main source-visible flows are:
 2. For user-provided scan targets, call `validate_custom_scan_path()` to reject system or root-like locations.
 3. For combined setup checks, call `validate_settings_paths()` here, or the shared-core `validate_path_with_permissions()` when the caller needs permission checks rather than required-file checks.
 4. For documents-specific checks, build `DocumentsChecker` and call `run_all_checks()`.
-
-## Backup flow
-
-1. Construct `BackupManager` with a backup root.
-2. Call `extract_version_from_xse_log()` to build an `XseVersion` from an XSE log.
-3. Call `create_backup(source_file, &version)`.
-4. The file is copied to `backup_root/<sanitized_version>/<filename>`.
-5. Call `list_versions()` or `get_version_path()` later to inspect the stored backup layout.
 
 ---
 
@@ -374,20 +348,6 @@ Important variants include:
 - `UserCancelled`
 - `PathError(PathError)` and `IoError(std::io::Error)`
 
-## `BackupError`
-
-Used by backup APIs.
-
-Variants:
-
-- `XseLogNotFound(PathBuf)`
-- `VersionNotFound`
-- `InvalidVersionFormat(String)`
-- `CreateDirectoryFailed { path, source }`
-- `CopyFileFailed { src, dst, source }`
-- `SourceNotFound(PathBuf)`
-- `PathError(PathError)` and `IoError(std::io::Error)`
-
 Contributor note:
 
 - `DocumentsChecker` intentionally mixes hard and soft failures: missing/corrupted INIs become `IniCheckResult` issues, while actual I/O/parsing operations still use `DocsPathError`
@@ -413,7 +373,6 @@ Important direct dependencies:
 - `winreg` - Windows registry queries for game and documents paths
 - `dirs` - home-directory discovery on non-Windows builds
 - `configparser` - INI parsing with lowercase-normalized section/key maps
-- `regex` - XSE/runtime version extraction from logs
 - `thiserror` and `anyhow` - error ergonomics
 
 Related CLASSIC crates and consumers:
@@ -421,7 +380,7 @@ Related CLASSIC crates and consumers:
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - uses `DocumentsChecker` in setup-time combined checks
 - [`classic-config-core`](../../business-logic/classic-config-core) - neighboring config loader that supplies path settings but does not replace this crate's validation logic
 - [`classic-xse-core`](../../business-logic/classic-xse-core) - uses `DocsPathFinder` for XSE folder derivation
-- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_restricted_path()`, the documents checker, and backups for C++ interop
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_restricted_path()`, and the documents checker for C++ interop
 - [`classic-update-core`](../../business-logic/classic-update-core) and [`classic-config-core`](../../business-logic/classic-config-core) - consume the YAML and app-notification cache directories
 - [`classic-node`](../../node-bindings/classic-node) and [`classic-path-py`](../../python-bindings/classic-path-py) - binding surfaces over this crate's APIs
 - [`classic-tui`](../../ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
@@ -486,4 +445,3 @@ If you extend this crate, update this document when you change:
 - restricted-path heuristics or permission-probe behavior
 - INI parsing assumptions or case-normalization behavior
 - documents-check message/report rules
-- backup directory layout or XSE version extraction behavior

@@ -11,6 +11,8 @@
 //! - **BA2 Archive Support**: Access resources in BA2 archives
 //! - **Resource Enumeration**: List and filter resources
 //! - **Resource Validation**: Check resource integrity and format
+//! - **Version-Labelled Backup**: Copy a configuration file under a sanitized version label
+//!   ([`VersionBackupManager`], [`XseVersion`]); distinct from the game-target backup
 //!
 //! # Examples
 //!
@@ -32,6 +34,12 @@ use thiserror::Error;
 use walkdir::WalkDir;
 
 use classic_shared_core::path_core::PathError;
+
+mod version_backup;
+
+pub use version_backup::{
+    VersionBackupError, VersionBackupManager, VersionBackupResult, XseVersion,
+};
 
 /// Resource management errors.
 #[derive(Error, Debug)]

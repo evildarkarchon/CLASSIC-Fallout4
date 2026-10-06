@@ -59,7 +59,7 @@ PATH_BACKUPS_COVERAGE_POLICY = FamilyCoveragePolicy(
             "path-backups.versioned",
             "path-backups.versioned",
             "durable-effects",
-            ("BackupManager", "XseVersion"),
+            ("VersionBackupManager", "XseVersion"),
             matches_versioned,
             runtime_operations=(
                 None,

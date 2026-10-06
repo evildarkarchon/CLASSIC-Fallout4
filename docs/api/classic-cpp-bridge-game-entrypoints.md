@@ -49,6 +49,8 @@ This file exposes Fallout 4-specific convenience detection only:
 
 It wraps `classic-path-core` directly and resolves Fallout 4 names from version-registry metadata.
 
+The same file also carries the version-labelled backup helpers `backup_create_timestamped(source_path, game_name)` and `backup_list_existing(source_path, game_name)`. They wrap `classic_resource_core::VersionBackupManager` with a `CLASSIC Backups/<game_name>` root beside the source file and a Unix-seconds label; that backup left `classic-path-core` for resource core in #251, so the bridge names and their `classic::path` namespace are unchanged.
+
 ## `src/game.rs` -> `classic::game`
 
 This file is the broader mixed bridge surface. It exposes:

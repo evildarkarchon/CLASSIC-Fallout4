@@ -745,6 +745,7 @@ dependencies = [
  "classic-message-core",
  "classic-path-core",
  "classic-registry-core",
+ "classic-resource-core",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
@@ -929,7 +930,6 @@ dependencies = [
  "classic-shared-core",
  "configparser",
  "dirs",
- "regex",
  "serde",
  "serde_json",
  "serial_test",
@@ -944,6 +944,7 @@ name = "classic-path-py"
 version = "9.1.0"
 dependencies = [
  "classic-path-core",
+ "classic-resource-core",
  "classic-shared-core",
  "classic-shared-py",
  "pyo3",
@@ -985,6 +986,7 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-shared-core",
+ "regex",
  "serde",
  "tempfile",
  "thiserror 2.0.21",
