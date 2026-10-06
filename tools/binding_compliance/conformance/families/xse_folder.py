@@ -24,9 +24,33 @@ def _matches(folder, observation):
     )
 
 
+#: Resolved-folder facts shared by both capabilities.
+_FOLDER_FACTS = (
+    ("explicit", "explicit-xse"),
+    ("local-docs", "local-docs/F4SE"),
+    ("configured-docs", "configured-docs/F4SE"),
+    ("absent", None),
+)
+
+#: ``xse-folder.derive`` is XSE's own derivation from supplied Game Local facts
+#: (the pack's domain owner, classic-xse-core). ``xse-folder.resolve`` is
+#: scangame's composition that reads those facts from Local.yaml first; its
+#: predicate IDs predate the split and stay stable.
 XSE_FOLDER_COVERAGE_POLICY = FamilyCoveragePolicy(
     "xse-folder",
     tuple(
+        CoveragePredicate(
+            id=f"xse-folder.derive-{name}",
+            capability_id="xse-folder.derive",
+            action="xse-folder.derive",
+            observation_family="values",
+            rust_symbols=("resolve_xse_folder_from_game_local_facts",),
+            runtime_operations=(None, "resolve_xse_folder_from_game_local_facts"),
+            matches=partial(_matches, folder),
+        )
+        for name, folder in _FOLDER_FACTS
+    )
+    + tuple(
         CoveragePredicate(
             id=f"xse-folder.{name}",
             capability_id="xse-folder.resolve",
@@ -36,13 +60,16 @@ XSE_FOLDER_COVERAGE_POLICY = FamilyCoveragePolicy(
             runtime_operations=(None, "resolve_xse_folder_for_scan"),
             matches=partial(_matches, folder),
         )
-        for name, folder in (
-            ("explicit", "explicit-xse"),
-            ("local-docs", "local-docs/F4SE"),
-            ("configured-docs", "configured-docs/F4SE"),
-            ("absent", None),
-        )
+        for name, folder in _FOLDER_FACTS
     ),
+)
+
+#: The only Game Local facts a derivation fixture may supply. Relative,
+#: already-trimmed strings (or absence) keep every case off host folders.
+_CONTROLLED_FACTS = (
+    {"docsFolderXse": "explicit-xse", "rootFolderDocs": "local-docs"},
+    {"docsFolderXse": "", "rootFolderDocs": "local-docs"},
+    {"docsFolderXse": None, "rootFolderDocs": None},
 )
 
 
@@ -62,11 +89,16 @@ def validate_xse_folder_pack(document, root):
         if not path.is_relative_to((root / document["fixtureRoot"]).resolve()):
             raise ValueError("XSE folder fixture escapes root")
         fixture = json.loads(path.read_text(encoding="utf-8"))
+        # Composition cases seed Local.yaml; derivation cases hand XSE the
+        # Game Local facts directly and must never carry a Local.yaml.
+        source_key = (
+            "gameLocalFacts" if case["action"] == "xse-folder.derive" else "localYaml"
+        )
         if set(fixture) != {
             "registryYaml",
             "game",
             "selectedVersion",
-            "localYaml",
+            source_key,
             "configuredDocs",
         }:
             raise ValueError("unsupported XSE folder fixture")
@@ -92,7 +124,10 @@ def validate_xse_folder_pack(document, root):
             ("Unknown", "auto", ""),
         }:
             raise ValueError("XSE folder input could consult host discovery")
-        if fixture["localYaml"] not in {
+        if source_key == "gameLocalFacts":
+            if fixture["gameLocalFacts"] not in _CONTROLLED_FACTS:
+                raise ValueError("XSE folder requires controlled Game Local facts")
+        elif fixture["localYaml"] not in {
             None,
             "[invalid: yaml",
             'Game_Info:\n  Docs_Folder_XSE: " explicit-xse "\n  Root_Folder_Docs: local-docs\n',
@@ -100,7 +135,7 @@ def validate_xse_folder_pack(document, root):
         }:
             raise ValueError("XSE folder requires controlled local paths")
         inventory = [{"path": "CLASSIC Main.yaml", "content": registry}]
-        if fixture["localYaml"] is not None:
+        if fixture.get("localYaml") is not None:
             inventory.append(
                 {
                     "path": f"CLASSIC {fixture['game']} Local.yaml",

@@ -311,7 +311,7 @@ Callers:
 
 - Crash Log collection: `classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery (with the run's Version Registry scope)
 - the C++ bridge's `classic::xse::resolve_xse_folder_for_scan`, which the GUI uses for its setup-detection XSE log hint, and `classic::files::log_collector_new_for_scan`
-- the `xse-folder` Binding Compliance Suite family (Rust and CXX participants), whose `domainOwner` is this crate
+- the `xse-folder` Binding Compliance Suite family's `xse-folder.resolve` capability (Rust and CXX participants), which credits this Local.yaml composition to this crate; the family's `domainOwner` is `classic-xse-core`, which owns the derivation (`xse-folder.derive`)
 
 ## Loose-file and archive scanning APIs
 

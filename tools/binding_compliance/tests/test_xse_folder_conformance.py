@@ -22,7 +22,96 @@ def test_xse_folder_pack_is_blocking_and_has_controlled_precedence_cases():
         "vr-docs",
         "malformed",
         "missing",
+        *DERIVATION_SCENARIOS,
     }
+
+
+#: Local.yaml composition scenarios (scangame's `resolve_xse_folder_for_scan`).
+COMPOSITION_SCENARIOS = {
+    "explicit",
+    "local-docs",
+    "configured-docs",
+    "vr-docs",
+    "malformed",
+    "missing",
+}
+#: Derivation scenarios (XSE's facts-based resolver, supplied facts only).
+DERIVATION_SCENARIOS = {
+    "derive-explicit",
+    "derive-local-docs",
+    "derive-configured-docs",
+    "derive-vr-docs",
+    "derive-absent",
+}
+
+
+def test_xse_folder_credits_derivation_to_xse_and_composition_to_scangame():
+    """XSE owns XSE Folder derivation; scangame owns only the Local.yaml composition.
+
+    The derivation capability defaults to the pack's domain owner and is
+    exercised through XSE's facts-based resolver. The composition keeps its
+    original capability and scenario IDs but names scangame explicitly.
+    """
+    pack = load_and_validate_pack(ROOT, PACK).document()
+    assert pack["domainOwner"] == {"rustCrate": "classic-xse-core"}
+    capabilities = {capability["id"]: capability for capability in pack["capabilities"]}
+    assert set(capabilities) == {"xse-folder.derive", "xse-folder.resolve"}
+    derive = capabilities["xse-folder.derive"]
+    assert "rustCrate" not in derive
+    assert derive["rustSymbols"] == ["resolve_xse_folder_from_game_local_facts"]
+    compose = capabilities["xse-folder.resolve"]
+    assert compose["rustCrate"] == "classic-scangame-core"
+    assert compose["rustSymbols"] == ["resolve_xse_folder_for_scan"]
+    actions: dict[str, set[str]] = {}
+    for case in pack["scenarios"]:
+        assert case["capabilityIds"] == [case["action"]]
+        actions.setdefault(case["action"], set()).add(case["id"])
+    assert actions == {
+        "xse-folder.resolve": COMPOSITION_SCENARIOS,
+        "xse-folder.derive": DERIVATION_SCENARIOS,
+    }
+
+
+def test_xse_folder_derivation_is_rust_only_and_cxx_runs_only_the_composition():
+    """No binding exposes the facts resolver, so only Rust executes derivation."""
+    from conformance.applicability import derive_applicability
+    from conformance.coverage import load_source_parity_rows
+
+    document = load_and_validate_pack(ROOT, PACK).document()
+    participants = {
+        participant.id: participant
+        for participant in derive_applicability(
+            document, load_source_parity_rows(ROOT)
+        ).participants
+    }
+    assert set(participants) == {"rust", "cxx"}
+    assert participants["rust"].capability_ids == (
+        "xse-folder.derive",
+        "xse-folder.resolve",
+    )
+    assert set(participants["rust"].scenario_ids) == (
+        COMPOSITION_SCENARIOS | DERIVATION_SCENARIOS
+    )
+    assert participants["cxx"].capability_ids == ("xse-folder.resolve",)
+    assert set(participants["cxx"].scenario_ids) == COMPOSITION_SCENARIOS
+
+
+def test_xse_folder_derivation_rejects_uncontrolled_game_local_facts(tmp_path):
+    """Derivation facts are a closed set, so no case can probe host folders."""
+    from conformance.families.xse_folder import validate_xse_folder_pack
+
+    pack = load_and_validate_pack(ROOT, PACK).document()
+    pack["scenarios"] = [
+        case for case in pack["scenarios"] if case["id"] == "derive-explicit"
+    ]
+    relative = pack["fixtures"]["derive-explicit"]
+    fixture = json.loads((ROOT / pack["fixtureRoot"] / relative).read_text())
+    fixture["gameLocalFacts"]["docsFolderXse"] = "C:/Users"
+    target = tmp_path / pack["fixtureRoot"] / relative
+    target.parent.mkdir(parents=True)
+    target.write_text(json.dumps(fixture))
+    with pytest.raises(ValueError, match="controlled"):
+        validate_xse_folder_pack(pack, tmp_path)
 
 
 def test_xse_folder_rejects_registry_metadata_that_can_trigger_discovery(tmp_path):
