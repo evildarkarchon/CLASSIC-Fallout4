@@ -94,7 +94,8 @@ impl CrashLogScanLaunchRequest {
 ///   Settings projected for that document, and its diagnostics are reported as
 ///   [`CrashLogScanLaunchDiagnostic::UserSettings`]. A document needing migration or from a
 ///   newer minor of the same major schema contributes its saved values; a malformed,
-///   unreadable or newer-major document contributes none (published defaults apply).
+///   unreadable or newer-major document contributes none (User Settings' degraded fallbacks
+///   apply).
 ///
 /// - When FCX Mode is on, by saved setting or by override, the request carries its Crash
 ///   Log Scan Setup Context for either intent: the saved game and documents folders (none

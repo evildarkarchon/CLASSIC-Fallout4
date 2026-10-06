@@ -125,8 +125,8 @@ binding that projects it, which is how CXX, Node and Python stay in parity with 
     compatible document, which User Settings reports no diagnostic for): the request uses the saved
     values User Settings read from it, exactly as for a current document.
   - *Untrusted* — a malformed document, an unreadable one, or one from a newer major schema: none
-    of its values apply; the request uses User Settings' published defaults (the degraded
-    fallbacks), as if nothing were saved.
+    of its values apply; the request uses User Settings' degraded fallbacks, which are not
+    always the published defaults (for example Move Unsolved Logs falls back to off).
 - **Game-differs rule.** When the scanned game (the game override) differs from the managed game,
   the managed game's saved game-specific values are not applied: the game version (`auto` is used),
   FCX Mode, the custom scan folder, and the setup folders (game folder, documents folder and game
