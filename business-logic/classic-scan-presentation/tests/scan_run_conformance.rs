@@ -150,7 +150,10 @@ enum ExecutionCancellationInput {
     BeforeDiscovery,
     OnFirstLogQueued,
     OnFirstLogStarted,
+    /// Cancellation comes only from the cancel-run observer failure policy.
     OnObserverFailure,
+    /// Nothing requests cancellation; used with the continue-run observer failure policy.
+    None,
 }
 
 /// One deterministic downstream observer delivery failure requested by the plan.
@@ -159,6 +162,24 @@ enum ExecutionCancellationInput {
 struct ObserverFailureInput {
     event_kind: ObserverFailureEventInput,
     message: String,
+    policy: ObserverFailurePolicyInput,
+}
+
+/// The observer failure policy the plan passes to execution.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+enum ObserverFailurePolicyInput {
+    CancelRun,
+    ContinueRun,
+}
+
+impl From<ObserverFailurePolicyInput> for contract::ObserverFailurePolicy {
+    fn from(value: ObserverFailurePolicyInput) -> Self {
+        match value {
+            ObserverFailurePolicyInput::CancelRun => Self::CancelRun,
+            ObserverFailurePolicyInput::ContinueRun => Self::ContinueRun,
+        }
+    }
 }
 
 /// Serialized event boundary at which the test adapter rejects delivery.
@@ -390,19 +411,40 @@ fn execute_scenario(
         if scenario.input.observation_profile != ObservationProfile::Lifecycle {
             return Err(invalid_data("executionFlow requires lifecycle observation").into());
         }
-        if flow.cancellation == ExecutionCancellationInput::OnObserverFailure
-            && flow.observer_failure.is_none()
-        {
-            return Err(
-                invalid_data("on-observer-failure cancellation requires observerFailure").into(),
-            );
-        }
-        if flow.cancellation != ExecutionCancellationInput::OnObserverFailure
-            && flow.observer_failure.is_some()
-        {
-            return Err(
-                invalid_data("observerFailure requires on-observer-failure cancellation").into(),
-            );
+        // The cancellation boundary and the observer failure policy must agree: only the
+        // cancel-run policy may be the plan's source of cancellation, and the continue-run
+        // policy runs with no cancellation at all.
+        let policy = flow.observer_failure.as_ref().map(|failure| failure.policy);
+        match (flow.cancellation, policy) {
+            (
+                ExecutionCancellationInput::OnObserverFailure,
+                Some(ObserverFailurePolicyInput::CancelRun),
+            )
+            | (ExecutionCancellationInput::None, Some(ObserverFailurePolicyInput::ContinueRun))
+            | (
+                ExecutionCancellationInput::BeforeDiscovery
+                | ExecutionCancellationInput::OnFirstLogQueued
+                | ExecutionCancellationInput::OnFirstLogStarted,
+                None,
+            ) => {}
+            (ExecutionCancellationInput::OnObserverFailure, _) => {
+                return Err(invalid_data(
+                    "on-observer-failure cancellation requires a cancel-run observerFailure",
+                )
+                .into());
+            }
+            (ExecutionCancellationInput::None, _) => {
+                return Err(invalid_data(
+                    "no cancellation requires a continue-run observerFailure",
+                )
+                .into());
+            }
+            (_, Some(_)) => {
+                return Err(invalid_data(
+                    "observerFailure requires on-observer-failure or no cancellation",
+                )
+                .into());
+            }
         }
         if flow
             .observer_failure
@@ -418,8 +460,6 @@ fn execute_scenario(
         return Err(invalid_data("lifecycle observation requires executionFlow").into());
     }
     let mut events = Vec::new();
-    let mut observer_failure = None;
-    let mut delivery_failed = false;
     let observer_cancellation = cancellation.clone();
     let cancel_on_first_queued = scenario
         .input
@@ -431,29 +471,30 @@ fn execute_scenario(
         .execution_flow
         .as_ref()
         .is_some_and(|flow| flow.cancellation == ExecutionCancellationInput::OnFirstLogStarted);
-    let fail_on_discovery = scenario
+    let observer_failure_input = scenario
         .input
         .execution_flow
         .as_ref()
-        .and_then(|flow| flow.observer_failure.as_ref())
+        .and_then(|flow| flow.observer_failure.as_ref());
+    let fail_on_discovery = observer_failure_input
         .is_some_and(|failure| failure.event_kind == ObserverFailureEventInput::DiscoveryCompleted);
+    let failure_message = observer_failure_input
+        .map(|failure| failure.message.clone())
+        .unwrap_or_default();
+    // Without a planned failure the policy is moot, so the default is never consulted.
+    let observer_failure_policy = observer_failure_input
+        .map_or(contract::ObserverFailurePolicy::ContinueRun, |failure| {
+            failure.policy.into()
+        });
     let execution = {
         let mut observer = |event| {
-            if delivery_failed {
-                return;
-            }
             if fail_on_discovery && matches!(&event, contract::Event::DiscoveryCompleted(_)) {
+                // Record the refused delivery like any other attempt, then fail it for real.
+                // Rust applies the plan's policy and reports the failure in the result.
                 events.push(event);
-                // The Rust observer is infallible, so model a downstream sink refusal by
-                // ending delivery and cancelling future work at the same public boundary.
-                observer_failure = Some(json!({
-                    "kind": "observer_delivery_failure",
-                    "eventKind": "discovery_completed",
-                    "messageNonEmpty": true,
-                }));
-                delivery_failed = true;
-                observer_cancellation.cancel();
-                return;
+                return Err(contract::ObserverDeliveryFailure::new(
+                    failure_message.clone(),
+                ));
             }
             if cancel_on_first_queued && matches!(&event, contract::Event::LogQueued(_)) {
                 observer_cancellation.cancel();
@@ -467,11 +508,13 @@ fn execute_scenario(
                 observer_cancellation.cancel();
             }
             events.push(event);
+            Ok(())
         };
         get_runtime().block_on(contract::execute(
             request,
             &cancellation,
             Some(&mut observer),
+            observer_failure_policy,
         ))
     };
     let mut result = match execution {
@@ -513,15 +556,41 @@ fn execute_scenario(
             &result,
             &events,
         ),
-        ObservationProfile::Lifecycle => project_lifecycle_observation(
-            scenario_root.path(),
-            &scenario.input,
-            &result,
-            &events,
-            &cancellation,
-            observer_failure,
-        ),
+        ObservationProfile::Lifecycle => {
+            let observer_failure = project_observer_failure(
+                observer_failure_input,
+                result.observer_delivery_failure.as_ref(),
+            );
+            let pending_recovery = result.take_pending_recovery().is_some();
+            project_lifecycle_observation(
+                scenario_root.path(),
+                &scenario.input,
+                &result,
+                &events,
+                &cancellation,
+                observer_failure,
+                pending_recovery,
+            )
+        }
     }
+}
+
+/// Projects the delivery failure the Rust result reports, never one the runner tracked itself.
+///
+/// The event kind is the boundary the plan told the runner's observer to refuse; whether a
+/// failure happened at all, and its message, come from the result.
+fn project_observer_failure(
+    planned: Option<&ObserverFailureInput>,
+    reported: Option<&contract::ObserverDeliveryFailure>,
+) -> Option<Value> {
+    let reported = reported?;
+    Some(json!({
+        "kind": "observer_delivery_failure",
+        "eventKind": planned.map(|failure| match failure.event_kind {
+            ObserverFailureEventInput::DiscoveryCompleted => "discovery_completed",
+        }),
+        "messageNonEmpty": !reported.message.trim().is_empty(),
+    }))
 }
 
 /// Claims one paused continuation, applies after-pause mutations, then proves one-shot replay.
@@ -725,7 +794,11 @@ async fn run_continuation_action(
             panic!("a settle action requires a pending recovery; the flow validated this");
         };
         return pending
-            .settle(action.decision.map(Into::into), observer)
+            .settle(
+                action.decision.map(Into::into),
+                observer,
+                contract::ObserverFailurePolicy::ContinueRun,
+            )
             .await
             .map(contract::RunResult::from);
     }
@@ -736,7 +809,12 @@ async fn run_continuation_action(
                 .decision
                 .expect("continuation action was validated before execution");
             continuation
-                .resume(decision.into(), cancellation, observer)
+                .resume(
+                    decision.into(),
+                    cancellation,
+                    observer,
+                    contract::ObserverFailurePolicy::ContinueRun,
+                )
                 .await
         }
         ContinuationOperationInput::Abandon => {
@@ -1268,6 +1346,7 @@ fn project_lifecycle_observation(
     events: &[contract::Event],
     cancellation: &contract::Cancellation,
     observer_failure: Option<Value>,
+    pending_recovery: bool,
 ) -> RunnerResult<Value> {
     if result.setup.is_some() {
         return Err(invalid_data("lifecycle scenario unexpectedly returned setup data").into());
@@ -1296,6 +1375,7 @@ fn project_lifecycle_observation(
         "logs": logs,
         "events": project_compact_events(result, events)?,
         "observerFailure": observer_failure,
+        "pendingRecovery": pending_recovery,
         "cancellation": {
             "requested": cancellation.is_cancelled(),
         },

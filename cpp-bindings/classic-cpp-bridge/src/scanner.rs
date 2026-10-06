@@ -627,6 +627,29 @@ mod ffi {
         decision: ScanRunLocalIgnoreRecoveryDecision,
     }
 
+    /// Whether a failed observer delivery cancels the run.
+    ///
+    /// Passed to `scan_run_contract_execute` and `scan_run_pending_recovery_settle`. Either way
+    /// the envelope reports the first failed delivery and no further events reach the observer.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunObserverFailurePolicy {
+        /// Keep running to a normal terminal result.
+        ContinueRun = 0,
+        /// Request cancellation on the run's own control at the first failed delivery.
+        CancelRun = 1,
+    }
+
+    /// What `ScanRunObserver::on_scan_run_event` returns instead of throwing.
+    ///
+    /// A value-initialized `{}` means delivered. Set `failed` (and optionally `message`) when the
+    /// event could not be delivered; the bridge applies the caller's
+    /// `ScanRunObserverFailurePolicy` and reports the failure in the execution envelope.
+    struct ScanRunObserverDelivery {
+        failed: bool,
+        message: String,
+    }
+
     /// One setup check in a Crash Log Scan Setup Result.
     struct ScanRunSetupCheckDto {
         kind: String,
@@ -1128,6 +1151,14 @@ mod ffi {
         /// the run and cannot render from the Rust value later. Empty in both vectors when
         /// `has_recovery_prompt` is false.
         recovery_prompt: ScanRunRecoveryPrompt,
+        /// Whether an observer delivery failed during this run, whatever the payload above.
+        ///
+        /// Reported under every `ScanRunObserverFailurePolicy`, so an adapter reads "delivery
+        /// failed" here instead of tracking it in its own observer.
+        has_observer_delivery_failure: bool,
+        /// The first failed delivery's message; empty when `has_observer_delivery_failure` is
+        /// false.
+        observer_delivery_failure_message: String,
     }
 
     /// One serialized lifecycle event from the final contract.
@@ -1196,7 +1227,10 @@ mod ffi {
     unsafe extern "C++" {
         include!("classic_cxx_bridge/scan_run_observer.h");
         type ScanRunObserver;
-        fn on_scan_run_event(self: &ScanRunObserver, event: &ScanRunContractEvent);
+        fn on_scan_run_event(
+            self: &ScanRunObserver,
+            event: &ScanRunContractEvent,
+        ) -> ScanRunObserverDelivery;
     }
 
     extern "Rust" {
@@ -1362,12 +1396,18 @@ mod ffi {
         /// Executes one tagged request and retains any opaque recovery continuation beside its result.
         ///
         /// `observer` may be null. A non-null observer must remain live for the synchronous call and its
-        /// `on_scan_run_event` implementation must not throw across the CXX boundary.
+        /// `on_scan_run_event` implementation must not throw across the CXX boundary; it reports a
+        /// failed delivery by returning `ScanRunObserverDelivery{true, message}` instead.
+        /// `observer_failure_policy` decides whether such a failure cancels the run. A failure
+        /// before the run pauses for Local Ignore recovery abandons that recovery, so the run
+        /// finishes cancelled with no pending recovery and no filesystem work. Throws only for an
+        /// out-of-range policy, rejected before the run starts.
         unsafe fn scan_run_contract_execute(
             request: &ScanRunRequest,
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
-        ) -> Box<ScanRunContractExecution>;
+            observer_failure_policy: ScanRunObserverFailurePolicy,
+        ) -> Result<Box<ScanRunContractExecution>>;
         /// Moves the execution envelope out of an opaque execution operation.
         fn scan_run_contract_execution_take_result(
             execution: &mut ScanRunContractExecution,
@@ -1382,7 +1422,9 @@ mod ffi {
         ) -> Result<Box<ScanRunContinuation>>;
         /// Resumes retained work with an explicit Local Ignore recovery decision.
         ///
-        /// `observer` may be null and receives only post-discovery lifecycle events.
+        /// `observer` may be null and receives only post-discovery lifecycle events. This legacy
+        /// entry point takes no observer failure policy: a failed delivery is reported in the
+        /// envelope and never cancels. `scan_run_pending_recovery_settle` takes the policy.
         unsafe fn scan_run_continuation_resume(
             continuation: &ScanRunContinuation,
             decision: ScanRunLocalIgnoreRecoveryDecision,
@@ -1435,12 +1477,15 @@ mod ffi {
         /// No decision abandons the run: the run's own control is cancelled and the run finishes
         /// cancelled after discovery with no filesystem work. Returns the ordinary envelope,
         /// which cannot carry a continuation; a replay is the typed consumed-continuation
-        /// resume error. Throws only for an out-of-range decision. `observer` may be null and
-        /// receives only post-discovery lifecycle events; no callback crosses for the decision.
+        /// resume error. Throws only for an out-of-range decision or policy. `observer` may be
+        /// null and receives only post-discovery lifecycle events; no callback crosses for the
+        /// decision. `observer_failure_policy` decides whether a failed delivery cancels the
+        /// settled run; the envelope reports the failure either way.
         unsafe fn scan_run_pending_recovery_settle(
             pending: &ScanRunPendingRecovery,
             settlement: ScanRunLocalIgnoreRecoverySettlement,
             observer: *const ScanRunObserver,
+            observer_failure_policy: ScanRunObserverFailurePolicy,
         ) -> Result<ScanRunContractExecutionResult>;
 
         /// Human-facing Display Label for one scan-run Installed YAML Data

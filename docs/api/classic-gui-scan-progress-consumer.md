@@ -73,9 +73,9 @@ The observer:
 - receives `ScanRunContractEvent` values serially in execution order
 - owns a mutable `BatchProgressModel`
 - emits worker Qt signals from the synchronous worker-thread call
-- is `noexcept`, catches every Qt-side presentation exception, records delivery failure, and explicitly requests safe cancellation
+- is `noexcept`, catches every Qt-side presentation exception, records delivery failure, explicitly requests safe cancellation, and returns a failed `ScanRunObserverDelivery` so Rust sees the failure too
 
-Observer delivery is non-controlling. A presentation failure does not become a Rust scan failure and no exception crosses CXX. After execution returns, `ScanWorker` checks `deliveryFailed()` and emits an adapter-local error instead of presenting a possibly incomplete event stream as a successful run.
+Observer delivery is non-controlling. A presentation failure does not become a Rust scan failure and no exception crosses CXX. `ScanWorker` executes with `ScanRunObserverFailurePolicy::CancelRun`, so Rust itself cancels at the first failed delivery, stops delivering, reports it on the envelope (`has_observer_delivery_failure`), and abandons a pending recovery the failure preceded instead of handing it back. After execution returns, `ScanWorker` still checks its own `deliveryFailed()` and emits an adapter-local error instead of presenting a possibly incomplete event stream as a successful run; #280 moves that check onto the envelope fact and deletes the observer's own tracking.
 
 The worker owns one monotonic `ScanRunCancellation`. `requestCancel()` calls `scan_run_cancellation_cancel(...)`; the GUI does not poll or decide which queued work may still start.
 

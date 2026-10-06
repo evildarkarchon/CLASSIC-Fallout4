@@ -1407,6 +1407,66 @@ describe("final Crash Log Scan Run contract", () => {
         }
     });
 
+    test("an observer failure before a pending recovery makes Rust abandon it", async () => {
+        const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+        const root = writeSharedScanRunDataRoot("classic-node-scan-run-observer-before-recovery");
+        const crashLog = writeSharedScanRunLog(root, fixture.input);
+        const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+        writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+        try {
+            const cancellation = new ScanRunCancellation();
+            let deliveries = 0;
+            // `false` lets the run continue past the failure; abandonment still happens.
+            const execution = requireScanRunSuccess(
+                await scanRunExecute(
+                    ScanRunRequest.targeted(scanRunConfiguration(root), {inputs: [crashLog]}),
+                    cancellation,
+                    () => {
+                        deliveries += 1;
+                        throw new Error("progress view closed");
+                    },
+                    false,
+                ),
+            );
+
+            expect(deliveries).toBe(1);
+            expect(execution.result.status).toBe("cancelled");
+            expect(execution.pendingRecovery).toBeUndefined();
+            expect(execution.recoveryPrompt).toBeUndefined();
+            expect(execution.observerError).toMatch(/progress view closed/);
+            expect(cancellation.isCancelled).toBe(true);
+            expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+        } finally {
+            rmSync(root, {recursive: true, force: true});
+        }
+    });
+
+    test("settling applies cancelOnObserverError as the Rust observer failure policy", async () => {
+        for (const cancelOnObserverError of [true, false]) {
+            const {root, envelope} = await pausedRecovery(
+                `classic-node-scan-run-settle-observer-${cancelOnObserverError}`,
+                new ScanRunCancellation(),
+            );
+            try {
+                const settled = requireScanRunSettled(
+                    await scanRunSettle(
+                        envelope.pendingRecovery!,
+                        JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+                        () => {
+                            throw new Error("settle view closed");
+                        },
+                        cancelOnObserverError,
+                    ),
+                );
+                expect(settled.observerError).toMatch(/settle view closed/);
+                expect(settled.result.status).toBe(cancelOnObserverError ? "cancelled" : "completed");
+                expect(envelope.pendingRecovery!.cancellationRequested).toBe(cancelOnObserverError);
+            } finally {
+                rmSync(root, {recursive: true, force: true});
+            }
+        }
+    });
+
 });
 
 // ============================================================================

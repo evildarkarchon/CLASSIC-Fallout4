@@ -1005,7 +1005,11 @@ class ScanRunEvent:
 
 
 class ScanRunExecution:
-    """Final operation envelope with adapter-only observer failure data."""
+    """Final operation envelope.
+
+    ``observer_error`` is the first observer delivery failure Rust reported for
+    the run, whether or not ``cancel_on_observer_error`` asked Rust to cancel.
+    """
 
     result: ScanRunResult | None
     error: ScanRunInfrastructureError | None
@@ -1047,7 +1051,16 @@ def scan_run_execute(
         observer: Callable[[ScanRunEvent], None] | None = None,
         cancel_on_observer_error: bool = False,
 ) -> ScanRunExecution:
-    """Execute one final-contract Crash Log Scan Run."""
+    """Execute one final-contract Crash Log Scan Run.
+
+    An exception raised by ``observer`` is a failed delivery: Rust delivers no
+    further events to it and reports the failure as ``observer_error``.
+    ``cancel_on_observer_error`` is the observer failure policy Rust applies:
+    ``True`` cancels the run at the failure, ``False`` lets it finish. A failure
+    before the run pauses for Local Ignore recovery abandons that recovery either
+    way, so the run finishes cancelled with no ``pending_recovery`` and no
+    filesystem work.
+    """
 
 
 def scan_run_resume(
@@ -1094,6 +1107,9 @@ def scan_run_settle(
     cancelled after discovery with no filesystem work. Replay, here or through
     :func:`scan_run_resume` / :func:`scan_run_abandon` (they share the claim),
     raises :class:`ScanRunContinuationConsumedError`.
+
+    ``cancel_on_observer_error`` is the observer failure policy Rust applies to
+    the settled run, exactly as for :func:`scan_run_execute`.
     """
 
 

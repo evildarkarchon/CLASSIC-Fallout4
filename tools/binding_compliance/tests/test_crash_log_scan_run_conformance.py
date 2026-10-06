@@ -70,6 +70,8 @@ EXPECTED_SCENARIO_IDS = [
     "post-discovery-queued-cancelled",
     "admitted-durable-cancelled",
     "observer-delivery-failure",
+    "observer-delivery-failure-continue-run",
+    "observer-delivery-failure-before-pending-recovery",
     "request-validation-failure",
     "discovery-failure",
     "intake-failure",
@@ -501,6 +503,62 @@ def test_observer_failure_facts_fail_closed_on_mutation() -> None:
                 "cancellation"
             ].__setitem__("requested", False),
             "scan-run.observer-failure.forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
+
+
+def test_observer_failure_policy_facts_fail_closed_on_mutation() -> None:
+    """The continue-run and before-pending-recovery facts each need every observation."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "observer-delivery-failure-continue-run",
+        {
+            # Continuing must not have cancelled anything.
+            "scan-run.observer-failure.continue-run": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", True),
+        },
+    )
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "observer-delivery-failure-continue-run",
+        {
+            # The result, not the runner, must report the failure.
+            "scan-run.observer-failure.continue-run": lambda value: value.__setitem__(
+                "observerFailure", None
+            ),
+        },
+    )
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "observer-delivery-failure-continue-run",
+        {
+            # Delivery stops after the failure, so no later event may appear.
+            "scan-run.observer-failure.continue-run": lambda value: value["events"][
+                "run"
+            ].append("effective_concurrency_selected"),
+        },
+    )
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "observer-delivery-failure-before-pending-recovery",
+        {
+            # A pending recovery left behind is exactly what Rust must abandon.
+            "scan-run.observer-failure.before-pending-recovery": lambda value: (
+                value.__setitem__("pendingRecovery", True)
+            ),
+        },
+    )
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "observer-delivery-failure-before-pending-recovery",
+        {
+            # Abandonment does no filesystem work, so no Local Ignore backup may exist.
+            "scan-run.observer-failure.before-pending-recovery": lambda value: value[
                 "durableEffects"
             ]["forbidden"][0].__setitem__("exists", True),
         },
@@ -1274,6 +1332,11 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     assert "scan_run_pending_recovery_cancellation_requested" in runner
     assert "scan_run_pending_recovery_settle" in runner
     assert '"before-pending-recovery"' in runner
+    # Observer failure is reported by return value under a Rust policy, never tracked here.
+    assert "ScanRunObserverDelivery" in runner
+    assert "ScanRunObserverFailurePolicy::CancelRun" in runner
+    assert "has_observer_delivery_failure" in runner
+    assert '"pendingRecovery"' in runner
     assert "materialize_post_pause_data" in runner
     assert 'flow.value("replays"' in runner
     assert "project_terminal_resume_error" in runner
@@ -1346,6 +1409,10 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "project_terminal_error",
             "CancellationBoundaryInput::AfterResetCriticalSection",
             "local_ignore_padding_bytes",
+            "ObserverFailurePolicyInput",
+            "contract::ObserverDeliveryFailure::new",
+            "result.observer_delivery_failure",
+            "take_pending_recovery().is_some()",
         ),
         "node": (
             "scanRunExecute",
@@ -1360,6 +1427,9 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "terminalResumeError",
             '"after-reset-critical-section"',
             "localIgnorePaddingBytes",
+            'observerFailure?.policy === "cancel-run"',
+            "execution.observerError === undefined",
+            "execution.pendingRecovery !== undefined",
         ),
         "python": (
             "scan_run_execute",
@@ -1374,6 +1444,9 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "_project_terminal_resume_error",
             '"after-reset-critical-section"',
             "localIgnorePaddingBytes",
+            'observer_failure.get("policy") == "cancel-run"',
+            "if execution.observer_error is None",
+            "execution.pending_recovery is not None",
         ),
     }
     for participant_id, source_paths in PARTICIPANT_SOURCES.items():

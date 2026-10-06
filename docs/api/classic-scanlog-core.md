@@ -23,15 +23,16 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 The public use-case seam is:
 
 ```rust
-scan_run::contract::execute(request, cancellation, observer).await
+scan_run::contract::execute(request, cancellation, observer, observer_failure_policy).await
 ```
 
-It accepts one tagged request, a separate monotonic cancellation control, and
-an optional observer. It returns either a meaningful terminal `RunResult` or a
-typed run-wide `InfrastructureError`.
+It accepts one tagged request, a separate monotonic cancellation control, an
+optional observer, and the [observer failure
+policy](#observer-delivery-failure-policy). It returns either a meaningful
+terminal `RunResult` or a typed run-wide `InfrastructureError`.
 
 `scan_run::contract::execute_in_version_registry_scope(request, version_registry,
-cancellation, observer)` runs the same operation but reads Version Registry
+cancellation, observer, observer_failure_policy)` runs the same operation but reads Version Registry
 metadata only from the supplied
 [`VersionRegistryScope`](classic-version-registry-core.md#version-registry-scopes):
 Standard XSE Folder discovery, FCX setup, Installed YAML Data metadata, the
@@ -41,7 +42,7 @@ reads it too. `execute` uses the process default scope. This variant still
 hashes FCX setup inputs through the process default `FileHashScope`.
 
 `scan_run::contract::execute_in_scopes(request, version_registry, file_hash,
-yaml_file_cache, cancellation, observer)` additionally carries an opaque
+yaml_file_cache, cancellation, observer, observer_failure_policy)` additionally carries an opaque
 [`FileHashScope`](classic-file-io-core.md#file-hash-scopes) and an opaque
 [`YamlFileCacheScope`](classic-shared-core.md#cache-scopes). The FCX Game Setup
 Intake step hashes the game executable and XSE scripts through
@@ -65,7 +66,7 @@ Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
 That result owns an opaque `CrashLogScanRunContinuation`; callers explicitly
 choose `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore` or
 `LocalIgnoreRecoveryDecision::ResetToDefault`. Calling
-`continuation.resume(decision, cancellation, observer).await` consumes the
+`continuation.resume(decision, cancellation, observer, observer_failure_policy).await` consumes the
 retained work once and returns `Result<RunResult, ResumeError>`.
 
 A caller that wants to back out instead of deciding calls
@@ -96,8 +97,8 @@ shapes exist while frontends migrate; #282 removes `resume`, `abandon`, and the
   continuation cannot be represented.
 - `cancellation_requested()` reads that control live. When it is `true`, a
   frontend does not prompt: it settles with no decision.
-- `settle(decision: Option<LocalIgnoreRecoveryDecision>, observer).await`
-  returns `Result<SettledRunResult, ResumeError>`. `Some(decision)` resumes the
+- `settle(decision: Option<LocalIgnoreRecoveryDecision>, observer,
+  observer_failure_policy).await` returns `Result<SettledRunResult, ResumeError>`. `Some(decision)` resumes the
   same discovered Crash Logs without rediscovery; Reset To Default is still the
   non-interruptible transaction. `None` is abandonment with `abandon`'s
   semantics: it cancels the run's control, then finishes cancelled after
@@ -194,9 +195,38 @@ serialized calls in execution order for:
 
 Log-scoped events carry a discovery index and path. Event order describes live
 execution and may interleave across logs; it is not terminal result order.
-Observer delivery failure is outside the core result. An adapter may record the
-delivery problem and explicitly request cancellation through the separate
-control, but observation itself cannot change scheduling or outcomes.
+
+### Observer delivery failure policy
+
+Event delivery can fail. `Observer::on_event` returns
+`Result<(), ObserverDeliveryFailure>`; a closure returning `()` is an observer
+that always delivers, and a closure returning that `Result` can fail. The
+caller chooses an `ObserverFailurePolicy` at execution and settling time —
+`execute(request, &cancellation, observer, policy)` (and the scoped variants)
+and `PendingRecovery::settle(decision, observer, policy)`:
+
+- `ContinueRun` lets the run finish normally
+- `CancelRun` requests cancellation on the run's own control at the first
+  failed delivery, at the same safe seams as any other cancellation
+
+Under either policy Rust delivers no further events to an observer once one
+delivery failed, and reports the first failure as
+`observer_delivery_failure: Option<ObserverDeliveryFailure>` on `RunResult`,
+`SettledRunResult`, and `InfrastructureError` (a failure that preceded a
+run-wide error is not lost). Adapters read "delivery failed" there instead of
+tracking it in their observers.
+
+A delivery failure **before** the run pauses for Local Ignore recovery makes
+Rust abandon that recovery, under either policy: the frontend that would answer
+the prompt has lost its view of the run. The run finishes cancelled after
+discovery, `take_pending_recovery()` returns `None`, the run's own control is
+left cancelled, and nothing on disk is touched — the continuation is never
+dropped un-abandoned. With `CancelRun` the cancellation usually lands before
+intake, so the run never pauses in the first place.
+
+`CrashLogScanRunContinuation::resume` takes the policy as well while it exists;
+`abandon` takes none, because cancellation short-circuits it ahead of every
+event.
 
 ### Terminal result and ordering
 
@@ -739,6 +769,17 @@ resume and abandon surfaces keep working and share the one claim. See
 [classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md)
 and [node-python-contract-map.md](node-python-contract-map.md).
 
+The observer failure policy and the reported delivery failure reach every
+surface (#278). CXX observers return `ScanRunObserverDelivery` from
+`on_scan_run_event` instead of throwing, `scan_run_contract_execute` and
+`scan_run_pending_recovery_settle` take a `ScanRunObserverFailurePolicy`, and
+the execution envelope carries `has_observer_delivery_failure` /
+`observer_delivery_failure_message`. Node's `cancelOnObserverError` and
+Python's `cancel_on_observer_error` are the policy (`true` is `CancelRun`), and
+their `observerError` / `observer_error` is the Rust-reported failure; neither
+binding tracks delivery failure itself. The legacy CXX
+`scan_run_continuation_resume` takes no policy and continues the run.
+
 The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
 and Python. Retired report primitives and fragment-producing methods have no
 deprecated aliases or forwarding facades; parity includes the six positive
@@ -789,7 +830,13 @@ let request = Request::standard(
 );
 
 let cancellation = Cancellation::new();
-let result = contract::execute(request, &cancellation, None).await?;
+let result = contract::execute(
+    request,
+    &cancellation,
+    None,
+    contract::ObserverFailurePolicy::ContinueRun,
+)
+.await?;
 for log in result.logs {
     println!("{}: {:?}", log.crash_log.display(), log.disposition);
 }

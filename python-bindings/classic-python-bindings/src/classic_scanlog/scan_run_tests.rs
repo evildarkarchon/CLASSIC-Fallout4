@@ -372,6 +372,7 @@ fn maps_every_infrastructure_stage_and_optional_path() {
             stage,
             message: format!("failure {index}"),
             path: path.clone(),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, stage.as_str());
         assert_eq!(mapped.message, format!("failure {index}"));
@@ -591,6 +592,7 @@ fn shared_failure_fixture_maps_every_python_failure_field() {
             stage,
             message: expected["message"].as_str().unwrap().to_string(),
             path: expected["path"].as_str().map(PathBuf::from),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, expected["stage"].as_str().unwrap());
         assert_eq!(mapped.message, expected["message"].as_str().unwrap());
@@ -650,6 +652,7 @@ fn maps_setup_and_run_optional_fields_without_loss() {
                 failed: 2,
                 cancelled: 1,
                 logs: Vec::new(),
+                observer_delivery_failure: None,
             },
         )
         .expect("mapped result should allocate");
@@ -684,6 +687,7 @@ fn maps_setup_and_run_optional_fields_without_loss() {
                 failed: 0,
                 cancelled: 0,
                 logs: Vec::new(),
+                observer_delivery_failure: None,
             },
         )
         .expect("mapped result should allocate");
@@ -920,9 +924,10 @@ fn an_infrastructure_failure_carries_lines_beside_its_frozen_token() {
         stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
         message: "database is locked".to_string(),
         path: None,
+        observer_delivery_failure: None,
     };
     let expected = display_lines_to_py(&render_infrastructure_error(&facts()));
-    let execution = super::failure_execution(facts(), None);
+    let execution = super::failure_execution(facts());
 
     assert!(!expected.is_empty(), "a failure must say something");
     assert_eq!(execution.display_lines.len(), expected.len());
@@ -1155,9 +1160,10 @@ fn the_execution_envelope_carries_the_recovery_prompt_core_rendered() {
             failed: 0,
             cancelled: 0,
             logs: Vec::new(),
+            observer_delivery_failure: None,
         };
         let expected = recovery_prompt_to_py(&render_local_ignore_recovery(None));
-        let execution = success_execution(py, build(), None).expect("envelope should build");
+        let execution = success_execution(py, build()).expect("envelope should build");
 
         let prompt = execution
             .recovery_prompt()
@@ -1191,8 +1197,8 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
                 failed: 0,
                 cancelled: 0,
                 logs: Vec::new(),
+                observer_delivery_failure: None,
             },
-            None,
         )
         .expect("envelope should build");
         assert!(completed.recovery_prompt().is_none());
@@ -1202,8 +1208,8 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
                 stage: contract::InfrastructureErrorStage::Discovery,
                 message: "discovery failed".to_string(),
                 path: None,
+                observer_delivery_failure: None,
             },
-            None,
         );
         assert!(failed.recovery_prompt().is_none());
         assert!(failed.pending_recovery(py).is_none());
@@ -1232,8 +1238,8 @@ fn an_envelope_without_a_retained_continuation_offers_no_pending_recovery() {
                 failed: 0,
                 cancelled: 0,
                 logs: Vec::new(),
+                observer_delivery_failure: None,
             },
-            None,
         )
         .expect("envelope should build");
 
@@ -1257,6 +1263,7 @@ fn a_settled_envelope_projects_the_settled_result_and_its_lines() {
             failed: 0,
             cancelled: 1,
             logs: Vec::new(),
+            observer_delivery_failure: None,
         };
         let expected_lines = render_run_result(&contract::RunResult::from(
             contract::SettledRunResult {
@@ -1271,12 +1278,19 @@ fn a_settled_envelope_projects_the_settled_result_and_its_lines() {
                 failed: 0,
                 cancelled: 1,
                 logs: Vec::new(),
+                observer_delivery_failure: None,
             },
         ));
 
+        // The observer outcome is the one Rust reported on the settled result.
+        let settled = contract::SettledRunResult {
+            observer_delivery_failure: Some(contract::ObserverDeliveryFailure::new(
+                "observer failed",
+            )),
+            ..settled
+        };
         let execution =
-            settled_execution(py, Ok(settled), Some("observer failed".to_string()))
-                .expect("settled envelope should build");
+            settled_execution(py, Ok(settled)).expect("settled envelope should build");
 
         let result = execution
             .result(py)
@@ -1303,8 +1317,8 @@ fn a_settled_infrastructure_failure_resolves_as_the_error_half() {
                 stage: contract::InfrastructureErrorStage::Intake,
                 message: "intake failed".to_string(),
                 path: None,
+                observer_delivery_failure: None,
             }),
-            None,
         )
         .expect("settled envelope should build");
 
@@ -1315,4 +1329,68 @@ fn a_settled_infrastructure_failure_resolves_as_the_error_half() {
         );
         assert!(!execution.display_lines().is_empty());
     });
+}
+
+#[test]
+/// `observer_error` is the delivery failure Rust reported, on success and failure envelopes alike.
+fn observer_error_is_read_from_the_rust_result_not_tracked_by_the_binding() {
+    Python::attach(|py| {
+        let reported = || Some(contract::ObserverDeliveryFailure::new("callback raised"));
+        let completed = success_execution(
+            py,
+            contract::RunResult {
+                status: CrashLogScanRunStatus::Completed,
+                discovery: None,
+                setup: None,
+                installed_yaml_data: None,
+                continuation: None,
+                effective_concurrency: None,
+                message: None,
+                total: 0,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 0,
+                logs: Vec::new(),
+                observer_delivery_failure: reported(),
+            },
+        )
+        .expect("envelope should build");
+        assert_eq!(completed.observer_error().as_deref(), Some("callback raised"));
+
+        let failed = failure_execution(contract::InfrastructureError {
+            stage: contract::InfrastructureErrorStage::Intake,
+            message: "intake failed".to_string(),
+            path: None,
+            observer_delivery_failure: reported(),
+        });
+        assert_eq!(failed.observer_error().as_deref(), Some("callback raised"));
+
+        let settled_failure = settled_execution(
+            py,
+            Err(contract::InfrastructureError {
+                stage: contract::InfrastructureErrorStage::Intake,
+                message: "intake failed".to_string(),
+                path: None,
+                observer_delivery_failure: reported(),
+            }),
+        )
+        .expect("settled envelope should build");
+        assert_eq!(
+            settled_failure.observer_error().as_deref(),
+            Some("callback raised")
+        );
+    });
+}
+
+#[test]
+/// `cancel_on_observer_error` is the Rust observer failure policy.
+fn cancel_on_observer_error_maps_onto_the_rust_policy() {
+    assert_eq!(
+        super::observer_failure_policy(true),
+        contract::ObserverFailurePolicy::CancelRun
+    );
+    assert_eq!(
+        super::observer_failure_policy(false),
+        contract::ObserverFailurePolicy::ContinueRun
+    );
 }

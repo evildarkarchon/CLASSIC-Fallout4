@@ -142,6 +142,7 @@ fn scoped_standard_discovery_reads_game_local_only_through_the_supplied_scope() 
             facade_scope.clone(),
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
     })
     .expect("scoped Standard scan should execute");
@@ -175,6 +176,7 @@ fn unscoped_standard_discovery_keeps_reading_through_the_default_scope() {
             installation.request(),
             &contract::Cancellation::new(),
             None,
+            contract::ObserverFailurePolicy::ContinueRun,
         ))
     })
     .expect("unscoped Standard scan should execute");

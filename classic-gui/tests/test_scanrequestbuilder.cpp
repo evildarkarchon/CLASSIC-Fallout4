@@ -18,7 +18,7 @@ classic::scanner::ScanRunContractExecutionResult executeResult(
     const classic::scanner::ScanRunCancellation& cancellation,
     const classic::scanner::ScanRunObserver* observer)
 {
-    auto operation = classic::scanner::scan_run_contract_execute(request, cancellation, observer);
+    auto operation = classic::scanner::scan_run_contract_execute(request, cancellation, observer, classic::scanner::ScanRunObserverFailurePolicy::ContinueRun);
     return classic::scanner::scan_run_contract_execution_take_result(*operation);
 }
 
@@ -48,14 +48,16 @@ public:
     }
 
     /// Retains the discovery tag and requests cancellation without throwing across CXX.
-    void on_scan_run_event(const classic::scanner::ScanRunContractEvent& event) const noexcept override
+    classic::scanner::ScanRunObserverDelivery on_scan_run_event(
+        const classic::scanner::ScanRunContractEvent& event) const noexcept override
     {
         if (event.kind != classic::scanner::ScanRunContractEventKind::DiscoveryCompleted) {
-            return;
+            return {};
         }
         m_sawDiscovery = true;
         m_source = event.discovery.source;
         classic::scanner::scan_run_cancellation_cancel(m_cancellation);
+        return {};
     }
 
     /// Returns whether the Rust-owned discovery lifecycle event was observed.

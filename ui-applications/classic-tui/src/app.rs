@@ -825,7 +825,12 @@ impl App {
             let result = match answer {
                 RecoveryAnswer::Accept(decision) => {
                     continuation
-                        .resume(decision, &cancellation, Some(&mut observer))
+                        .resume(
+                            decision,
+                            &cancellation,
+                            Some(&mut observer),
+                            scan_run_contract::ObserverFailurePolicy::ContinueRun,
+                        )
                         .await
                 }
                 // Rust owns the whole dismissal sequence: `abandon` cancels this run's control and
@@ -1149,8 +1154,13 @@ impl App {
                     delivery_cancellation.cancel();
                 }
             };
-            let result =
-                scan_run_contract::execute(request, &cancellation, Some(&mut observer)).await;
+            let result = scan_run_contract::execute(
+                request,
+                &cancellation,
+                Some(&mut observer),
+                scan_run_contract::ObserverFailurePolicy::ContinueRun,
+            )
+            .await;
             let _ = tx.send(AsyncMessage::ScanFinished(Box::new(result)));
         });
     }

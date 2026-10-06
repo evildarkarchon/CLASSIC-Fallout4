@@ -77,6 +77,7 @@ fn run_result(status: RunStatus) -> RunResult {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
+        observer_delivery_failure: None,
     }
 }
 
@@ -351,6 +352,7 @@ fn infrastructure_error_pins_its_prose_and_path() {
         stage: InfrastructureErrorStage::FormIdDatabaseAccess,
         message: "the FormID database is locked".to_string(),
         path: Some(PathBuf::from("C:/CLASSIC/databases/Fallout4 FormIDs.db")),
+        observer_delivery_failure: None,
     };
 
     assert_eq!(
@@ -383,6 +385,7 @@ fn infrastructure_error_omits_an_absent_path() {
         stage: InfrastructureErrorStage::InternalInvariant,
         message: "scheduling reached an impossible state".to_string(),
         path: None,
+        observer_delivery_failure: None,
     };
 
     assert_eq!(
@@ -604,6 +607,7 @@ fn resume_error_pins_an_infrastructure_failure() {
         stage: InfrastructureErrorStage::Intake,
         message: "intake could not reopen the snapshot".to_string(),
         path: None,
+        observer_delivery_failure: None,
     });
 
     assert_eq!(
@@ -1100,6 +1104,7 @@ fn rendered_corpus() -> Vec<DisplayLine> {
                 stage,
                 message: "a diagnostic".to_string(),
                 path,
+                observer_delivery_failure: None,
             }));
         }
     }
@@ -1137,6 +1142,7 @@ fn rendered_corpus() -> Vec<DisplayLine> {
             stage: InfrastructureErrorStage::Discovery,
             message: "a diagnostic".to_string(),
             path: None,
+            observer_delivery_failure: None,
         }),
     ] {
         lines.extend(render_resume_error(&error));

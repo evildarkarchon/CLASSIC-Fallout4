@@ -241,6 +241,7 @@ fn mixed_outcome_result() -> RunResult {
         cancelled: 1,
         logs: vec![succeeded, failed, cancelled],
         continuation: None,
+        observer_delivery_failure: None,
     }
 }
 
@@ -266,6 +267,7 @@ fn an_infrastructure_error_renders_cores_lines_in_cores_order() {
         stage: InfrastructureErrorStage::Intake,
         message: "intake could not be prepared".to_string(),
         path: Some(PathBuf::from("C:/CLASSIC/CLASSIC Data")),
+        observer_delivery_failure: None,
     };
 
     assert_renders_core_lines(
@@ -318,6 +320,7 @@ fn every_resume_failure_renders_cores_lines_in_cores_order() {
             stage: InfrastructureErrorStage::Intake,
             message: "intake could not be prepared".to_string(),
             path: Some(PathBuf::from("C:/CLASSIC/CLASSIC Data")),
+            observer_delivery_failure: None,
         }),
     ];
 
@@ -609,6 +612,7 @@ fn a_terminal_result_reports_completed_work_as_its_percentage() {
         cancelled: 0,
         logs: Vec::new(),
         continuation: None,
+        observer_delivery_failure: None,
     };
     assert_eq!(format_result(&empty).percent, 0.0);
     assert_eq!(format_error(&intake_error()).percent, 0.0);
@@ -623,6 +627,7 @@ fn intake_error() -> InfrastructureError {
         stage: InfrastructureErrorStage::Intake,
         message: "the run could not continue".to_string(),
         path: None,
+        observer_delivery_failure: None,
     }
 }
 
@@ -697,6 +702,7 @@ fn every_infrastructure_stage_renders_its_display_label() {
             stage,
             message: "the run could not continue".to_string(),
             path: None,
+            observer_delivery_failure: None,
         });
         let details = details_of(&presentation);
 
@@ -795,6 +801,7 @@ fn paused_recovery_result(message: Option<&str>) -> RunResult {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
+        observer_delivery_failure: None,
     }
 }
 
@@ -997,6 +1004,7 @@ fn public_contract_cancellation_before_and_after_discovery_flows_through_tui_pro
             before_request,
             &before_cancellation,
             None,
+            classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("pre-discovery cancellation should be expected result data");
 
@@ -1029,6 +1037,7 @@ fn public_contract_cancellation_before_and_after_discovery_flows_through_tui_pro
                 after_request,
                 &after_cancellation,
                 Some(&mut observer),
+                classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
             ))
             .expect("post-discovery cancellation should be expected result data")
     };
@@ -1085,6 +1094,7 @@ fn public_contract_cancellation_after_admission_retains_durable_tui_outcomes() {
                 request,
                 &cancellation,
                 Some(&mut observer),
+                classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
             ))
             .expect("admitted cancellation should be expected result data")
     };

@@ -1140,16 +1140,21 @@ def _lifecycle_observation(
         "discovery": _discovery(result.discovery, root),
         "logs": _log_results(result.logs, root),
         "events": _compact_events(result, callbacks, root),
+        # Whether delivery failed, and its message, come from the Rust result; the event kind
+        # is the boundary the plan told this runner's observer to refuse.
         "observerFailure": None
-        if expected_failure is None
+        if execution.observer_error is None
         else {
             "kind": "observer_delivery_failure",
-            "eventKind": _require_string(
+            "eventKind": None
+            if expected_failure is None
+            else _require_string(
                 expected_failure.get("eventKind"),
                 "executionFlow.observerFailure.eventKind",
             ),
-            "messageNonEmpty": bool(execution.observer_error),
+            "messageNonEmpty": bool(execution.observer_error.strip()),
         },
+        "pendingRecovery": execution.pending_recovery is not None,
         "cancellation": {"requested": bool(cancellation.is_cancelled)},
         "durableEffects": _lifecycle_durable_effects(result.logs, inputs, root),
     }
@@ -1176,14 +1181,25 @@ def _execution_flow(
         "on-first-log-queued",
         "on-first-log-started",
         "on-observer-failure",
+        "none",
     }
     if cancellation not in supported:
         raise RunnerContractError(
             "executionFlow.cancellation is not a supported lifecycle boundary"
         )
     raw_failure = flow.get("observerFailure")
-    if cancellation == "on-observer-failure":
+    if cancellation in {"on-observer-failure", "none"}:
         failure = _require_mapping(raw_failure, "executionFlow.observerFailure")
+        # Only the cancel-run policy may be the plan's source of cancellation, and the
+        # continue-run policy runs with no cancellation at all.
+        expected_policy = "continue-run" if cancellation == "none" else "cancel-run"
+        if (
+                _require_string(failure.get("policy"), "executionFlow.observerFailure.policy")
+                != expected_policy
+        ):
+            raise RunnerContractError(
+                f"{cancellation} cancellation requires a {expected_policy} observerFailure"
+            )
         if (
                 _require_string(
                     failure.get("eventKind"),
@@ -1200,7 +1216,7 @@ def _execution_flow(
             raise RunnerContractError("observer failure message must be non-empty")
     elif raw_failure is not None:
         raise RunnerContractError(
-            "observerFailure requires on-observer-failure cancellation"
+            "observerFailure requires on-observer-failure or no cancellation"
         )
     return flow
 
@@ -1786,7 +1802,9 @@ def _execute_scenario(
                 request,
                 cancellation,
                 observe,
-                cancel_on_observer_error=boundary == "on-observer-failure",
+                # The binding maps this flag onto the Rust observer failure policy.
+                cancel_on_observer_error=observer_failure is not None
+                and observer_failure.get("policy") == "cancel-run",
             )
             continuation_flow = inputs.get("continuationFlow")
             if continuation_flow is not None:

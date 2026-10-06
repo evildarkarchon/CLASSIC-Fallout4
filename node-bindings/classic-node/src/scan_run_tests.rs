@@ -6,7 +6,7 @@ use classic_config_core::YamlDataContentIdentity;
 use classic_scan_presentation::RecoveryDecisionDescription;
 use classic_scanlog_core::scan_run::contract::{
     InfrastructureError, InfrastructureErrorStage, LogDisposition, LogEvent, LogFailure,
-    LogFailureStage, LogResult, RunResult, SettledRunResult,
+    LogFailureStage, LogResult, ObserverDeliveryFailure, RunResult, SettledRunResult,
 };
 use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
 // Imported here as well as in `scan_run.rs`, which needs it since the run status
@@ -325,6 +325,7 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
             failed: 1,
             cancelled: 0,
             logs: vec![],
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.status, status.as_str());
         assert_eq!(mapped.effective_concurrency, Some(2));
@@ -384,6 +385,7 @@ fn infrastructure_mapping_covers_every_stage_with_and_without_paths() {
             stage,
             message: "failure".to_string(),
             path: Some(PathBuf::from("C:/failure/path")),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, stage.as_str());
         assert_eq!(mapped.message, "failure");
@@ -394,6 +396,7 @@ fn infrastructure_mapping_covers_every_stage_with_and_without_paths() {
         stage: InfrastructureErrorStage::Discovery,
         message: "failure".to_string(),
         path: None,
+        observer_delivery_failure: None,
     });
     assert!(mapped.path.is_none());
 }
@@ -482,6 +485,7 @@ fn shared_failure_fixture_maps_every_node_failure_field() {
             stage,
             message: expected["message"].as_str().unwrap().to_string(),
             path: expected["path"].as_str().map(PathBuf::from),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, expected["stage"].as_str().unwrap());
         assert_eq!(mapped.message, expected["message"].as_str().unwrap());
@@ -685,6 +689,7 @@ fn completed_run_result() -> RunResult {
         failed: 0,
         cancelled: 0,
         logs: vec![],
+        observer_delivery_failure: None,
     }
 }
 
@@ -808,8 +813,9 @@ fn the_failure_envelope_carries_the_failures_display_lines() {
             stage,
             message: "failure".to_string(),
             path: Some(PathBuf::from("C:/failure/path")),
+            observer_delivery_failure: None,
         };
-        let envelope = failure_envelope(build(), None);
+        let envelope = failure_envelope(build());
         let expected = display_lines_to_js(&render_infrastructure_error(&build()));
         assert!(!envelope.display_lines.is_empty());
         assert_display_lines_match(&envelope.display_lines, &expected);
@@ -971,6 +977,7 @@ fn recovery_required_run_result() -> RunResult {
         failed: 0,
         cancelled: 0,
         logs: vec![],
+        observer_delivery_failure: None,
     }
 }
 
@@ -978,7 +985,7 @@ fn recovery_required_run_result() -> RunResult {
 /// A run paused on Local Ignore recovery resolves with the prompt Rust rendered for it.
 fn the_success_envelope_carries_the_recovery_prompt_core_rendered() {
     let expected = recovery_prompt_to_js(&render_local_ignore_recovery(None));
-    let envelope = success_envelope(recovery_required_run_result(), None);
+    let envelope = success_envelope(recovery_required_run_result());
 
     let prompt = envelope
         .recovery_prompt
@@ -1039,6 +1046,7 @@ fn completed_settled_result() -> SettledRunResult {
         failed: 0,
         cancelled: 0,
         logs: vec![],
+        observer_delivery_failure: None,
     }
 }
 
@@ -1049,10 +1057,11 @@ fn a_settled_envelope_states_the_settled_run_and_carries_no_continuation() {
         completed_settled_result(),
     )));
 
-    let envelope = settled_envelope(
-        completed_settled_result(),
-        Some("observer failed".to_string()),
-    );
+    // The observer outcome is the one Rust reported on the settled result.
+    let envelope = settled_envelope(SettledRunResult {
+        observer_delivery_failure: Some(ObserverDeliveryFailure::new("observer failed")),
+        ..completed_settled_result()
+    });
 
     assert_eq!(envelope.result.status, "completed");
     assert_eq!(envelope.result.message.as_deref(), Some("settled message"));
@@ -1068,11 +1077,11 @@ fn a_settled_envelope_states_the_settled_run_and_carries_no_continuation() {
 /// the prompt this surface always rendered but with nothing to settle.
 fn only_a_run_that_retains_a_continuation_offers_a_pending_recovery() {
     assert!(
-        success_envelope(completed_run_result(), None)
+        success_envelope(completed_run_result())
             .pending_recovery
             .is_none()
     );
-    let paused_without_continuation = success_envelope(recovery_required_run_result(), None);
+    let paused_without_continuation = success_envelope(recovery_required_run_result());
     assert!(paused_without_continuation.recovery_prompt.is_some());
     assert!(paused_without_continuation.pending_recovery.is_none());
 }
@@ -1081,7 +1090,7 @@ fn only_a_run_that_retains_a_continuation_offers_a_pending_recovery() {
 /// A run that is not waiting on a decision resolves with no prompt to show.
 fn a_terminal_envelope_resolves_without_a_recovery_prompt() {
     assert!(
-        success_envelope(completed_run_result(), None)
+        success_envelope(completed_run_result())
             .recovery_prompt
             .is_none()
     );
@@ -1178,4 +1187,46 @@ fn every_recovery_decision_maps_to_its_own_javascript_twin() {
         assert_eq!(map_local_ignore_recovery_decision(core), expected);
         assert_eq!(local_ignore_recovery_decision_to_core(expected), core);
     }
+}
+
+#[test]
+/// `observerError` is the delivery failure Rust reported, on success and failure envelopes alike.
+fn observer_error_is_read_from_the_rust_result_not_tracked_by_the_binding() {
+    let reported = || Some(ObserverDeliveryFailure::new("callback threw"));
+
+    let success = success_envelope(RunResult {
+        observer_delivery_failure: reported(),
+        ..completed_run_result()
+    });
+    assert_eq!(success.observer_error.as_deref(), Some("callback threw"));
+    assert!(
+        success_envelope(completed_run_result())
+            .observer_error
+            .is_none()
+    );
+
+    let failure = failure_envelope(InfrastructureError {
+        stage: InfrastructureErrorStage::Intake,
+        message: "intake failed".to_string(),
+        path: None,
+        observer_delivery_failure: reported(),
+    });
+    assert_eq!(failure.observer_error.as_deref(), Some("callback threw"));
+}
+
+#[test]
+/// `cancelOnObserverError` is the Rust observer failure policy, defaulting to letting the run finish.
+fn cancel_on_observer_error_maps_onto_the_rust_policy() {
+    assert_eq!(
+        observer_failure_policy(Some(true)),
+        contract::ObserverFailurePolicy::CancelRun
+    );
+    assert_eq!(
+        observer_failure_policy(Some(false)),
+        contract::ObserverFailurePolicy::ContinueRun
+    );
+    assert_eq!(
+        observer_failure_policy(None),
+        contract::ObserverFailurePolicy::ContinueRun
+    );
 }

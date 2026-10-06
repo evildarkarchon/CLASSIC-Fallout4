@@ -75,7 +75,12 @@ fn paused_run(main_yaml: Option<&str>) -> PausedRun {
     // The per-user YAML Data update cache is resolved from LOCALAPPDATA; isolating it keeps a
     // developer's real cache from changing which Main YAML Data the run selects.
     let result = temp_env::with_var("LOCALAPPDATA", Some(cache.path()), || {
-        get_runtime().block_on(contract::execute(request, &cancellation, None))
+        get_runtime().block_on(contract::execute(
+            request,
+            &cancellation,
+            None,
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
     })
     .expect("a malformed Local Ignore should pause as expected result data");
     assert_eq!(
@@ -150,7 +155,7 @@ fn the_pending_recovery_reports_cancellation_requested_on_the_runs_own_control()
 
     assert!(pending.cancellation_requested());
     let settled = get_runtime()
-        .block_on(pending.settle(None, None))
+        .block_on(pending.settle(None, None, contract::ObserverFailurePolicy::ContinueRun))
         .expect("settling a cancelled run should remain expected result data");
     assert_eq!(settled.status, contract::RunStatus::Cancelled);
 }
