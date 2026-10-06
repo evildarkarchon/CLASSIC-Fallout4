@@ -1321,3 +1321,16 @@ jobs:
           path: tools/binding_compliance/artifacts/user-settings/tui/tui/
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Run TUI Crash Log Scan Launch consumer conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_scan_run_consumer_conformance.py --family crash-log-scan-launch --participant tui --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
+
+      - name: Upload TUI Crash Log Scan Launch consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: tui-crash-log-scan-launch-consumer-conformance
+          path: tools/binding_compliance/artifacts/crash-log-scan-launch/tui/tui/
+          if-no-files-found: warn
+          retention-days: 7

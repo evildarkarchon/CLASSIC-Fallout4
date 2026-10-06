@@ -11,6 +11,7 @@
 - The CLI no longer falls back to the current working directory when CLASSIC Data is missing; it stops with a "CLASSIC Data not found" error instead.
 - CLI Standard scans look for Crash Logs under the Installation Root, not the current working directory. Use `--scan-path` to scan a different folder.
 - GUI FCX scans with missing folders run and report setup problems instead of refusing to start.
+- The TUI can scan crash logs when its settings need migration, and starting a scan no longer saves the typed path inputs; save them explicitly when you want them kept.
 
 ### 9.0.0 CHANGES
 - Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.

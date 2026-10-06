@@ -1008,6 +1008,9 @@
     },
     {
       "id": "gui.scan-launch"
+    },
+    {
+      "id": "tui.scan-launch"
     }
   ]
 }

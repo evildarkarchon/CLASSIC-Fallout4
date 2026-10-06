@@ -404,6 +404,19 @@ _EXECUTION_POLICIES += tuple(
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id == "gui"
 )
+# The TUI launches its Crash Logs scans through Crash Log Scan Launch (#287).
+_EXECUTION_POLICIES += tuple(
+    replace(
+        policy,
+        family_id="crash-log-scan-launch",
+        launcher_marker=(
+            "run_scan_run_consumer_conformance.py --family crash-log-scan-launch --participant tui"
+        ),
+        artifact_marker="name: tui-crash-log-scan-launch-consumer-conformance",
+    )
+    for policy in _EXECUTION_POLICIES[:7]
+    if policy.participant_id == "tui"
+)
 # The CLI job retains its original suite and the bounded family launches.
 _EXECUTION_POLICIES = tuple(
     replace(policy, job_timeout_minutes=360) if policy.job_id == "cli-tests" else policy

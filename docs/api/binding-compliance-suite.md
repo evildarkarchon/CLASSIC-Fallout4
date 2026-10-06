@@ -313,7 +313,13 @@ root-relative base folder and Targeted inputs, whether FCX Mode is on with its
 saved setup folders (and that missing ones still launch), and how many
 Rust-rendered warning lines it shows
 (`run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch`; CI runs it in
-the `gui-tests` job).
+the `gui-tests` job). The TUI's
+`tui.scan-launch` obligation drives its own scan start: a typed one-off custom
+scan folder reaches the launched Standard request, a document needing
+migration still starts a scan and its launch diagnostics open the Last Scan
+overlay in core's words, a Targeted scan carries exactly its inputs, and the
+User Settings document stays byte-identical throughout
+(`run_scan_run_consumer_conformance.py --family crash-log-scan-launch --participant tui`).
 
 ```powershell
 python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant rust --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
@@ -323,6 +329,7 @@ pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler clang-cl -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers
+python tools/binding_compliance/run_scan_run_consumer_conformance.py --family crash-log-scan-launch --participant tui --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
 ```
 
 ## Installed YAML Data Blocking Execution

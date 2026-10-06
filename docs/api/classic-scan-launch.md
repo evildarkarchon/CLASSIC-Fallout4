@@ -17,9 +17,14 @@ native C++ CLI launches through it too (#289): it maps its flags onto overrides,
 launch's `display_lines`. The native GUI launches through it (#288; see
 [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md)): it passes the
 Installation Root, the scan intent (Standard, or Targeted with the dropped inputs) and no
-overrides, and shows the launch's `display_lines` as a scan warning. Frontends not yet switched
-still build their own requests and switch in their own changes. Every launch rule from ADR-0009 is
-implemented:
+overrides, and shows the launch's `display_lines` as a scan warning. The TUI launches through it
+too (#287): its Standard and Targeted scans call `prepare_launch` with the Installation Root, pass
+the typed custom scan folder as a per-run `with_scan_path` override, show the launch diagnostics
+from their Display Content lines at the top of the Last Scan overlay, and never save User Settings
+when a scan starts ("save paths" stays its own User Settings Update). The consumer obligation
+`tui.scan-launch` in `tests/conformance/consumer-obligations.json` records it. A blank TUI custom
+scan input supplies no override, so a saved custom scan folder still applies: overrides can replace
+a saved value but not withhold one. Every launch rule from ADR-0009 is implemented:
 
 - the game-differs rule (#285): saved game-specific values are not applied to a non-managed game,
   each one reported as a typed launch diagnostic rendered as Display Content;

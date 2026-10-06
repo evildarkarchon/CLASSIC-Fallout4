@@ -5,7 +5,10 @@
 //! shared fixtures under isolated roots, drives the public `App` event and key paths, and records
 //! narrow layout observations without claiming semantic-adapter coverage.
 
-use classic_scan_presentation::{DisplayLine, DisplaySegment, DisplaySeverity, render_run_result};
+use classic_scan_launch::CrashLogScanLaunchRequest;
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, render_launch_diagnostics, render_run_result,
+};
 use classic_scanlog_core::scan_run::contract::{
     self, Cancellation, Configuration, Event, InfrastructureError, InfrastructureErrorStage,
     LocalIgnoreRecoveryDecision, Options, Request, RunResult,
@@ -44,6 +47,11 @@ const RECOVERY_SCENARIOS: &[&str] = &[
     "settle-reset-to-default",
     "settle-without-decision",
     "settle-already-cancelled",
+];
+const SCAN_LAUNCH_SCENARIOS: &[&str] = &[
+    "managed-game-saved-values",
+    "settings-needing-migration-still-launch",
+    "targeted-scans-exactly-its-inputs",
 ];
 const CANCELLATION_SCENARIOS: &[&str] = &[
     "pre-discovery-cancelled",
@@ -193,7 +201,7 @@ fn validate_plan(plan: &RunPlan) -> RunnerResult<()> {
     if plan.schema_version != 1
         || !matches!(
             plan.family_id.as_str(),
-            "crash-log-scan-run" | "user-settings"
+            "crash-log-scan-run" | "user-settings" | "crash-log-scan-launch"
         )
         || plan.family_version != 1
         || plan.participant.id != "tui"
@@ -239,6 +247,14 @@ fn obligation_observation(plan: &RunPlan, obligation: &ObligationPlan) -> Runner
     if plan.family_id == "user-settings" {
         return observe_user_settings(plan, obligation);
     }
+    if plan.family_id == "crash-log-scan-launch" {
+        return match obligation.id.as_str() {
+            "tui.scan-launch" => observe_scan_launch(plan, obligation),
+            unknown => {
+                Err(invalid_data(format!("unknown TUI scan launch obligation {unknown}")).into())
+            }
+        };
+    }
     match obligation.id.as_str() {
         "tui.display-content-delivery" => observe_display_delivery(plan, obligation),
         "tui.ordering" => observe_ordering(plan, obligation),
@@ -274,15 +290,19 @@ fn observe_user_settings(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerR
                     "vr-shared-and-legacy-formid-databases",
                 ],
             )?;
-            // Each launch observes the rows the TUI's Crash Logs scan would pass for the managed game.
+            // Each launch observes the rows the request the TUI's Crash Logs scan launches through
+            // Crash Log Scan Launch carries for the managed game.
             let observe = |fixture: &str| -> RunnerResult<Value> {
                 fs::copy(&plan.fixtures[fixture], &settings_path)?;
                 let before = fs::read(&settings_path)?;
                 let app = App::new_with_settings_root(root.path(), None);
-                let (game, databases) = app.scan_game_projection();
+                let launch = app.prepare_crash_scan_launch(None)?;
+                let configuration = launch.request().configuration();
                 Ok(json!({
-                    "game": game.as_str(),
-                    "formIdDatabasePaths": databases
+                    "game": configuration.game.as_str(),
+                    "formIdDatabasePaths": configuration
+                        .scan_facts
+                        .formid_database_paths
                         .iter()
                         .map(|path| path.to_string_lossy().into_owned())
                         .collect::<Vec<_>>(),
@@ -352,6 +372,152 @@ fn observe_user_settings(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerR
         }
         unknown => {
             Err(invalid_data(format!("unknown TUI User Settings obligation {unknown}")).into())
+        }
+    }
+}
+
+/// Drives the TUI's scan start through Crash Log Scan Launch for each planned launch case.
+///
+/// The Standard case types a one-off custom scan folder and observes it in the launched request;
+/// the migration case starts a real Standard scan from a document that needs migration and
+/// observes the launch diagnostics in the Last Scan overlay; the Targeted case observes the
+/// selected inputs. Every case records whether the User Settings document stayed byte-identical,
+/// because starting a scan must never save anything.
+fn observe_scan_launch(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerResult<Value> {
+    require_scenarios(obligation, SCAN_LAUNCH_SCENARIOS)?;
+
+    let (standard_root, mut standard_app, standard_before) =
+        launch_installation(plan, "managed-fallout4")?;
+    let one_off = standard_root.path().join("One-off Logs");
+    fs::create_dir(&one_off)?;
+    standard_app
+        .custom_scan_input
+        .set_value(one_off.to_string_lossy().into_owned());
+    let standard = standard_app.prepare_crash_scan_launch(None)?;
+    let Request::Standard(standard_request) = standard.request() else {
+        return Err(invalid_data("a TUI Standard scan launched a non-Standard request").into());
+    };
+    let standard_observation = json!({
+        "intent": "standard",
+        "game": standard_request.configuration().game.as_str(),
+        "gameVersion": standard_request.configuration().game_version,
+        "formIdDatabasePaths": standard_request
+            .configuration()
+            .scan_facts
+            .formid_database_paths
+            .iter()
+            .map(|path| path.to_string_lossy().into_owned())
+            .collect::<Vec<_>>(),
+        // "." is the Installation Root itself, as the launch pack writes it.
+        "baseDirectory": if standard_request.source().base_directory == standard_root.path() {
+            ".".to_string()
+        } else {
+            observed_path(standard_root.path(), &standard_request.source().base_directory)
+        },
+        "customScanDirectory": standard_request
+            .source()
+            .custom_scan_directory
+            .as_deref()
+            .map(|path| observed_path(standard_root.path(), path)),
+        "diagnosticCodes": diagnostic_codes(&standard),
+        "unchanged": standard_before == fs::read(settings_path(standard_root.path()))?,
+    });
+
+    let (migration_root, mut migration_app, migration_before) =
+        launch_installation(plan, "needs-migration")?;
+    let migration_launch = migration_app.prepare_crash_scan_launch(None)?;
+    let rendered = render_launch_diagnostics(migration_launch.diagnostics())
+        .iter()
+        .map(|line| (line.severity, flatten_line(line)))
+        .collect::<Vec<_>>();
+    migration_app.start_or_cancel_crash_scan();
+    let scan_started = migration_app.scan_in_progress;
+    if scan_started {
+        pump_until_scan_finished(&mut migration_app)?;
+    }
+    // The launch diagnostics must open the Last Scan overlay, in core's order and words.
+    let summary = migration_app
+        .scan_run_summary_lines()
+        .into_iter()
+        .map(|line| (line.severity, line.text))
+        .collect::<Vec<_>>();
+    let migration_observation = json!({
+        "scanStarted": scan_started,
+        "diagnosticCodes": diagnostic_codes(&migration_launch),
+        "diagnosticsShown": !rendered.is_empty() && summary.starts_with(&rendered),
+        "unchanged": migration_before == fs::read(settings_path(migration_root.path()))?,
+    });
+
+    let (targeted_root, targeted_app, targeted_before) =
+        launch_installation(plan, "managed-fallout4")?;
+    let targeted = targeted_app.prepare_crash_scan_launch(Some(vec![
+        targeted_root.path().join("b.log"),
+        targeted_root.path().join("a folder"),
+    ]))?;
+    let Request::Targeted(targeted_request) = targeted.request() else {
+        return Err(invalid_data("a TUI Targeted scan launched a non-Targeted request").into());
+    };
+    let targeted_observation = json!({
+        "intent": "targeted",
+        "targetedInputs": targeted_request
+            .source()
+            .inputs
+            .iter()
+            .map(|path| observed_path(targeted_root.path(), path))
+            .collect::<Vec<_>>(),
+        "unchanged": targeted_before == fs::read(settings_path(targeted_root.path()))?,
+    });
+
+    Ok(json!({
+        "standard": standard_observation,
+        "settingsNeedingMigration": migration_observation,
+        "targeted": targeted_observation,
+    }))
+}
+
+/// Creates a fresh Installation Root holding one launch-pack User Settings fixture.
+///
+/// Returns the root, a filesystem-backed App opened against it, and the document's bytes so the
+/// caller can prove a scan start left them alone.
+fn launch_installation(plan: &RunPlan, fixture: &str) -> RunnerResult<(TempDir, App, Vec<u8>)> {
+    let root = tempdir()?;
+    let source = plan
+        .fixtures
+        .get(fixture)
+        .ok_or_else(|| invalid_data(format!("unknown fixture reference {fixture}")))?;
+    fs::copy(source, settings_path(root.path()))?;
+    let before = fs::read(settings_path(root.path()))?;
+    let app = App::new_with_settings_root(root.path(), None);
+    Ok((root, app, before))
+}
+
+/// Returns the canonical User Settings document path under one Installation Root.
+fn settings_path(root: &Path) -> PathBuf {
+    root.join("CLASSIC Settings.yaml")
+}
+
+/// Returns each launch diagnostic's stable code, in launch order, never its prose.
+fn diagnostic_codes(launch: &CrashLogScanLaunchRequest) -> Vec<String> {
+    launch
+        .diagnostics()
+        .iter()
+        .map(|diagnostic| diagnostic.code().to_string())
+        .collect()
+}
+
+/// Drains background messages until the TUI's launched run reports its outcome.
+fn pump_until_scan_finished(app: &mut App) -> RunnerResult<()> {
+    loop {
+        let message = get_runtime()
+            .block_on(async {
+                tokio::time::timeout(Duration::from_secs(30), app.async_rx.recv()).await
+            })
+            .map_err(|_| invalid_data("TUI scan did not finish within 30 seconds"))?
+            .ok_or_else(|| invalid_data("TUI async channel closed before the scan finished"))?;
+        let finished = matches!(message, AsyncMessage::ScanFinished(_));
+        app.handle_async_message(message);
+        if finished {
+            return Ok(());
         }
     }
 }

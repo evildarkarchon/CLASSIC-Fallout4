@@ -1,7 +1,7 @@
 use super::{
-    CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PresentedLine, ScanRunIntent,
-    TerminalPresentation, build_request, describe_local_ignore_recovery, format_error,
-    format_event, format_result, format_resume_error, join_presented, sentence_case,
+    CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PresentedLine, TerminalPresentation,
+    describe_local_ignore_recovery, format_error, format_event, format_result, format_resume_error,
+    join_presented, sentence_case,
 };
 use classic_config_core::YamlDataContentIdentity;
 use classic_scan_presentation::{
@@ -19,8 +19,7 @@ use classic_scanlog_core::scan_run::contract::{
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
     CrashLogScanRejectedInput, CrashLogScanRunStatus, CrashLogScanSetupCheck,
-    CrashLogScanSetupResult, ScanProgressPhase, StandardCrashLogScanSource,
-    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
+    CrashLogScanSetupResult, ScanProgressPhase, TargetedCrashLogScanSource,
 };
 use classic_shared_core::GameId;
 use classic_shared_core::get_runtime;
@@ -29,17 +28,6 @@ use std::path::PathBuf;
 
 const VALID_CRASH_LOG: &str =
     include_str!("../../../business-logic/classic-scanlog-core/benches/fixtures/crash-0DB9300.log");
-
-fn configuration() -> Configuration {
-    Configuration {
-        installation_root: PathBuf::from("C:/CLASSIC"),
-        game: GameId::Fallout4,
-        game_version: "Regular".to_string(),
-        options: Options::new(true, false),
-        scan_facts: CrashLogScanFacts::default(),
-        max_concurrent: Some(4),
-    }
-}
 
 /// Builds an executable request configuration from the tracked scan-run YAML corpus.
 fn executable_configuration(max_concurrent: usize) -> Configuration {
@@ -105,81 +93,6 @@ fn assert_renders_core_lines(presented: &[PresentedLine], rendered: &[DisplayLin
 /// Returns the overlay body as one plain-text block.
 fn details_of(presentation: &TerminalPresentation) -> String {
     join_presented(&presentation.details)
-}
-
-#[test]
-fn request_projection_preserves_tagged_standard_and_targeted_intent() {
-    let standard = build_request(
-        configuration(),
-        ScanRunIntent::Standard {
-            source: StandardCrashLogScanSource {
-                base_directory: PathBuf::from("C:/CLASSIC"),
-                custom_scan_directory: Some(PathBuf::from("C:/Custom Logs")),
-                configured_documents_root: Some(PathBuf::from("C:/Documents")),
-            },
-            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
-        },
-        None,
-    );
-
-    let Request::Standard(standard) = standard else {
-        panic!("Standard TUI intent must produce a tagged Standard request");
-    };
-    assert!(!standard.fcx_enabled());
-    assert_eq!(
-        standard.unsolved_logs(),
-        &StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
-    );
-    assert_eq!(
-        standard.source().custom_scan_directory,
-        Some(PathBuf::from("C:/Custom Logs"))
-    );
-
-    let targeted = build_request(
-        configuration(),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
-            inputs: vec![PathBuf::from("C:/Selected/crash.log")],
-        }),
-        None,
-    );
-
-    let Request::Targeted(targeted) = targeted else {
-        panic!("Targeted TUI intent must produce a tagged Targeted request");
-    };
-    assert!(!targeted.fcx_enabled());
-    assert_eq!(
-        targeted.source().inputs,
-        vec![PathBuf::from("C:/Selected/crash.log")]
-    );
-
-    let setup_context = classic_scanlog_core::CrashLogScanSetupContext {
-        game_root: Some(PathBuf::from("C:/Games/Fallout 4")),
-        docs_root: Some(PathBuf::from("C:/Documents/My Games/Fallout4")),
-        game_exe_path: Some(PathBuf::from("C:/Games/Fallout 4/Fallout4.exe")),
-        xse_log_path: None,
-    };
-    let standard_fcx = build_request(
-        configuration(),
-        ScanRunIntent::Standard {
-            source: StandardCrashLogScanSource {
-                base_directory: PathBuf::from("C:/CLASSIC"),
-                custom_scan_directory: None,
-                configured_documents_root: None,
-            },
-            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
-        },
-        Some(setup_context.clone()),
-    );
-    let targeted_fcx = build_request(
-        configuration(),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
-            inputs: vec![PathBuf::from("C:/Selected/crash.log")],
-        }),
-        Some(setup_context),
-    );
-
-    assert!(matches!(standard_fcx, Request::Standard(request) if request.fcx_enabled()));
-    assert!(matches!(targeted_fcx, Request::Targeted(request) if request.fcx_enabled()));
 }
 
 fn log_result(index: usize, name: &str, disposition: LogDisposition) -> LogResult {
@@ -1000,12 +913,11 @@ fn public_contract_cancellation_before_and_after_discovery_flows_through_tui_pro
 
     let before_cancellation = classic_scanlog_core::scan_run::contract::Cancellation::new();
     before_cancellation.cancel();
-    let before_request = build_request(
+    let before_request = Request::targeted(
         executable_configuration(1),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
+        TargetedCrashLogScanSource {
             inputs: vec![target.clone()],
-        }),
-        None,
+        },
     );
     let before = get_runtime()
         .block_on(classic_scanlog_core::scan_run::contract::execute(
@@ -1025,12 +937,11 @@ fn public_contract_cancellation_before_and_after_discovery_flows_through_tui_pro
 
     let after_cancellation = classic_scanlog_core::scan_run::contract::Cancellation::new();
     let observer_cancellation = after_cancellation.clone();
-    let after_request = build_request(
+    let after_request = Request::targeted(
         executable_configuration(1),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
+        TargetedCrashLogScanSource {
             inputs: vec![target.clone()],
-        }),
-        None,
+        },
     );
     let mut event_statuses = Vec::new();
     let after = {
@@ -1080,12 +991,11 @@ fn public_contract_cancellation_after_admission_retains_durable_tui_outcomes() {
     let second = temp.path().join("crash-queued.log");
     std::fs::write(&first, VALID_CRASH_LOG).expect("first fixture log should be written");
     std::fs::write(&second, VALID_CRASH_LOG).expect("second fixture log should be written");
-    let request = build_request(
+    let request = Request::targeted(
         executable_configuration(1),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
+        TargetedCrashLogScanSource {
             inputs: vec![first, second],
-        }),
-        None,
+        },
     );
     let cancellation = classic_scanlog_core::scan_run::contract::Cancellation::new();
     let observer_cancellation = cancellation.clone();
