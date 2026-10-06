@@ -6,8 +6,7 @@
 //!   XSE log parsing, and platform-specific heuristics
 //! - **Documents Path Management**: Cross-platform documents folder detection with support
 //!   for Windows registry and Linux Steam/Proton paths
-//! - **Path Validation**: Restriction checks for custom scans, settings-path validation, and
-//!   required-file checks
+//! - **Path Validation**: Game and Documents settings-path validation and required-file checks
 //! - **Backup Management**: Version-aware backup creation with metadata preservation
 //! - **Documents Checking**: INI file validation and configuration integrity checks
 //!
@@ -17,7 +16,7 @@
 //!
 //! - `game_path`: Game installation detection and path generation
 //! - `docs_path`: Documents folder detection and INI management
-//! - `validator`: Custom-scan restriction and settings-path verification
+//! - `validator`: Game/Documents settings-path and required-file verification
 //! - `backup`: Backup creation and XSE version extraction
 //! - `checker`: Documents configuration validation
 //! - `ini_parser`: INI file parsing and validation
@@ -30,6 +29,11 @@
 //! they report) are owned by `classic_shared_core::path_core`. This crate builds on them but does
 //! not re-export them, so callers that need only a neutral path check depend on shared core alone.
 //!
+//! Custom-scan folder policy (`is_restricted_path`, `validate_custom_scan_path`, and the combined
+//! `validate_settings_paths` check) is owned by `classic_scanlog_core::custom_scan`. Scanlog depends
+//! on this crate, so path core neither depends on nor re-exports it. The `RestrictedPath` variant of
+//! [`ValidationError`] stays here as shared validation vocabulary that the scanlog policy reports.
+//!
 //! # Design Principles
 //!
 //! 1. **Pure Rust Business Logic**: No PyO3 dependencies in this crate
@@ -40,12 +44,12 @@
 //! # Examples
 //!
 //! ```rust,no_run
-//! use classic_path_core::{is_restricted_path, GamePathFinder};
+//! use classic_path_core::{validate_settings_path, GamePathFinder};
 //! use std::path::PathBuf;
 //!
-//! // Custom scans refuse system directories
-//! let path = PathBuf::from("C:\\Windows");
-//! assert!(is_restricted_path(&path));
+//! // Settings paths must exist
+//! let path = PathBuf::from("Z:\\definitely\\missing\\game");
+//! assert!(validate_settings_path(&path, "Game Path", None).is_err());
 //!
 //! // Find game path (requires YAML settings)
 //! // let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"));
@@ -81,8 +85,7 @@ pub use notification_cache::{
     notification_cache_dir_with_env,
 };
 pub use validator::{
-    is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path,
-    validate_settings_paths,
+    validate_game_and_documents_paths, validate_required_files, validate_settings_path,
 };
 pub use yaml_cache::{
     ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env,

@@ -1,7 +1,6 @@
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use classic_path_core::validate_custom_scan_path;
 use classic_resource_core::BackupType;
 use classic_scan_presentation::DisplaySeverity;
 use classic_scanlog_core::scan_run::contract::{
@@ -9,6 +8,7 @@ use classic_scanlog_core::scan_run::contract::{
     Event as ScanRunEvent, InfrastructureError, LocalIgnoreRecoveryDecision, Options, ResumeError,
     RunResult,
 };
+use classic_scanlog_core::validate_custom_scan_path;
 use classic_scanlog_core::{
     CrashLogScanFacts, CrashLogScanSetupContext, StandardCrashLogScanSource,
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,

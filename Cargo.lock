@@ -945,6 +945,7 @@ name = "classic-path-py"
 version = "9.1.0"
 dependencies = [
  "classic-path-core",
+ "classic-scanlog-core",
  "classic-shared-core",
  "classic-shared-py",
  "pyo3",

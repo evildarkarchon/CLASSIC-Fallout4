@@ -7,9 +7,11 @@ Crate metadata:
 - Crate: `classic-path-core`
 - Description: `Core path management for CLASSIC (game paths, documents, validation, backups)`
 
-This crate is the shared Rust path/setup helper layer for CLASSIC. It covers game-install detection, documents-folder detection, custom-scan and settings-path validation, lightweight INI parsing, read-only documents checks, the per-user YAML and app-notification cache directories, and versioned file backups.
+This crate is the shared Rust path/setup helper layer for CLASSIC. It covers game-install detection, documents-folder detection, Game/Documents settings-path validation, lightweight INI parsing, read-only documents checks, the per-user YAML and app-notification cache directories, and versioned file backups.
 
 The generic path primitives it builds on - existence, file/directory, permission, drive, and read-only checks, the OS cache root, and the `PathError` they report - are owned by [`classic-shared-core::path_core`](classic-shared-core.md#generic-path-primitives-path_core) (#245). This crate does not re-export them; see [Moved primitives](#moved-primitives) for the old-to-new import map.
+
+The custom-scan folder policy - `is_restricted_path()`, `validate_custom_scan_path()`, and the combined `validate_settings_paths()` check - is owned by [`classic-scanlog-core::custom_scan`](classic-scanlog-core.md#custom-scan-folder-policy) (#254 follow-up). Scanlog depends on this crate, so path core neither depends on nor re-exports it; see [Moved custom-scan policy](#moved-custom-scan-policy).
 
 It is a synchronous business-logic crate. It does not own a Tokio runtime, UI surface, or binding layer.
 
@@ -23,7 +25,7 @@ Use this crate when you need to:
 
 - resolve or validate a game installation path
 - resolve or validate a game documents folder
-- check common CLASSIC path inputs such as custom-scan folders, settings paths, and required files
+- check common CLASSIC path inputs such as the Game/Documents settings paths and required files
 - parse Bethesda-style INI files with case-insensitive section/key lookup
 - run read-only checks over the documents folder before setup or scanning
 - create version-labeled backups using version data extracted from an XSE log
@@ -31,6 +33,7 @@ Use this crate when you need to:
 Do not use this crate for:
 
 - generic existence, file/directory, permission, drive, or read-only checks - use `classic_shared_core::path_core`
+- custom-scan folder policy (restricted-path rejection, custom-scan validation, the combined settings-path check) - use `classic_scanlog_core::custom_scan`
 - loading YAML settings or version-registry metadata
 - async file I/O or runtime ownership
 - higher-level game scan orchestration
@@ -54,8 +57,8 @@ All contributor-facing APIs are re-exported from `src/lib.rs`; the internal modu
 
 ### Validation APIs
 
-- `is_restricted_path()`, `validate_custom_scan_path()` - custom-scan restriction policy
-- `validate_settings_path()`, `validate_settings_paths()` - settings/setup path validation
+- `validate_settings_path()` - one settings path, optionally with required files
+- `validate_game_and_documents_paths()` - Game Path (with executable) then Documents Path settings validation
 - `validate_required_files()` - directory plus required-entry presence check
 
 ### Cache directory APIs
@@ -102,6 +105,17 @@ These root exports ended in #245; import them from `classic_shared_core::path_co
 | `PathError`, `PathResult` | same names |
 
 The CXX, Node, and Python path adapters keep their existing export names (`is_valid_path`, `isValidExecutablePath`, `PathValidator.is_valid_executable_path`, `removeReadonly`, ...) and delegate to the shared-core owner.
+
+### Moved custom-scan policy
+
+These root exports ended in the #254 follow-up; import them from `classic_scanlog_core` (root re-exports of `classic_scanlog_core::custom_scan`) instead. They still return `classic_path_core::ValidationResult<()>`, so the `ValidationError` variants (including `RestrictedPath`) and messages are unchanged.
+
+| Old `classic_path_core::` path | New path |
+| --- | --- |
+| `is_restricted_path`, `validate_custom_scan_path` | `classic_scanlog_core::` same names |
+| `validate_settings_paths(game, docs, custom_scan, game_exe)` | `classic_scanlog_core::validate_settings_paths` (same signature); its Game/Documents half is `classic_path_core::validate_game_and_documents_paths(game, docs, game_exe)` |
+
+The CXX (`is_restricted_path`, `check_restricted_path`, `path_validate_custom_scan`), Node (`isRestrictedPath`, `validateCustomScanPath`, `validateSettingsPaths`), and Python (`PathValidator.is_restricted_path`, `PathValidator.validate_custom_scan_path`, `PathValidator.validate_settings_paths`) exports keep their names and namespaces and delegate to the scanlog owner.
 
 Contributor note:
 
@@ -170,18 +184,17 @@ Behavior visible in source:
 
 ## Validation helpers
 
-The free functions in `validator.rs` are the crate's custom-scan and settings-path guardrails. They build on the shared-core generic primitives (`validate_is_directory()` and friends).
+The free functions in `validator.rs` are the crate's Game/Documents settings-path guardrails. They build on the shared-core generic primitives (`validate_is_directory()` and friends). The custom-scan restriction guardrails live in [`classic-scanlog-core`](classic-scanlog-core.md#custom-scan-folder-policy).
 
 Most-used functions:
 
 - `validate_required_files(directory, required_files)` - directory plus required-entry presence check
-- `validate_custom_scan_path(path)` - directory check plus restricted-path guard
-- `validate_settings_paths(game_path, docs_path, custom_scan_path, game_exe)` - combined setup validation helper
+- `validate_settings_path(path, setting_name, required_files)` - existence check, plus directory and required-file checks when `required_files` is given
+- `validate_game_and_documents_paths(game_path, docs_path, game_exe)` - validates `"Game Path"` (must contain `game_exe`) and then `"Documents Path"`, returning the first `ValidationError`
 
 Behavior worth knowing:
 
-- `is_restricted_path()` uses substring checks against names like `windows`, `program files`, `system32`, and `appdata`
-- `is_restricted_path()` also treats very shallow paths and roots as restricted when `parent().is_none()` or component count is `<= 2`
+- a missing settings path surfaces as `ValidationError::ValidationFailed { setting, reason: "Path does not exist: ..." }`
 - a missing directory surfaces as `ValidationError::PathError(PathError::NotFound(..))`, and a file where a directory was expected as `ValidationError::PathError(PathError::NotADirectory(..))`
 
 Contributor note:
@@ -309,8 +322,8 @@ The main source-visible flows are:
 ## Setup validation flow
 
 1. Validate base filesystem facts with the shared-core `validate_path_exists()` / `validate_is_directory()`, or with `validate_required_files()` here.
-2. For user-provided scan targets, call `validate_custom_scan_path()` to reject system or root-like locations.
-3. For combined setup checks, call `validate_settings_paths()` here, or the shared-core `validate_path_with_permissions()` when the caller needs permission checks rather than required-file checks.
+2. For user-provided scan targets, call scanlog core's `validate_custom_scan_path()` to reject system or root-like locations.
+3. For Game/Documents setup checks, call `validate_game_and_documents_paths()` here; scanlog core's `validate_settings_paths()` adds the optional custom-scan folder after it. Use the shared-core `validate_path_with_permissions()` when the caller needs permission checks rather than required-file checks.
 4. For documents-specific checks, build `DocumentsChecker` and call `run_all_checks()`.
 
 ## Backup flow
@@ -333,11 +346,11 @@ Owned by `classic_shared_core::path_core` (see [its guide](classic-shared-core.m
 
 ## `ValidationError`
 
-Used by higher-level validation helpers.
+Used by higher-level validation helpers, including the custom-scan policy in `classic-scanlog-core`.
 
 Variants:
 
-- `RestrictedPath(PathBuf)`
+- `RestrictedPath(PathBuf)` - reported only by scanlog core's custom-scan policy; kept here so its type and message are unchanged for every caller
 - `RequiredFileNotFound { path, file }`
 - `ValidationFailed { setting, reason }`
 - `PathError(PathError)` via `#[from]`
@@ -421,7 +434,8 @@ Related CLASSIC crates and consumers:
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - uses `DocumentsChecker` in setup-time combined checks
 - [`classic-config-core`](../../business-logic/classic-config-core) - neighboring config loader that supplies path settings but does not replace this crate's validation logic
 - [`classic-xse-core`](../../business-logic/classic-xse-core) - uses `DocsPathFinder` for XSE folder derivation
-- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_restricted_path()`, the documents checker, and backups for C++ interop
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - owns the custom-scan folder policy and composes `validate_game_and_documents_paths()` into its combined `validate_settings_paths()`
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, the documents checker, and backups for C++ interop
 - [`classic-update-core`](../../business-logic/classic-update-core) and [`classic-config-core`](../../business-logic/classic-config-core) - consume the YAML and app-notification cache directories
 - [`classic-node`](../../node-bindings/classic-node) and [`classic-path-py`](../../python-bindings/classic-path-py) - binding surfaces over this crate's APIs
 - [`classic-tui`](../../ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
@@ -472,7 +486,6 @@ If the caller only needs the raw XSE-derived path, use `parse_xse_log()` directl
 - `src/lib.rs` re-exports the public surface; internal modules are private
 - `DocsPathFinder`'s Linux Proton lookup is opt-in via `with_steam_app_id(app_id)`; the default is `home/.local/share/...` only. Game-specific callers like the CXX bridge's `detect_fallout4_docs_path` and the TUI's `resolve_xse_folder_for_scan` opt in with `Fallout4Version::Original.steam_app_id()` (377160).
 - `parse_xse_log()` assumes a fixed `.../Data/XSE/Plugins`-style suffix and pops exactly three path components
-- `is_restricted_path()` is heuristic string matching, not a canonicalized allow/deny policy
 - `DocumentsChecker::run_all_check_results()` ignores per-file `Err` results internally and only appends messages from successful `validate_ini_file()` calls; `run_all_checks()` preserves the historical string-only wrapper
 - `GamePathError` includes `ExecutableNotFound` and `XseFileNotFound`, but the current `GamePathFinder` implementation does not construct those variants during its normal validation path
 - some public error variants such as `UserCancelled` are part of the API surface even though the current Rust crate does not include an interactive prompt path that returns them
@@ -483,7 +496,7 @@ If you extend this crate, update this document when you change:
 - root re-exports in `src/lib.rs`
 - game-path or documents-path strategy order
 - the opt-in rules for the Linux Proton documents lookup
-- restricted-path heuristics or permission-probe behavior
+- Game/Documents settings-path validation order or setting names
 - INI parsing assumptions or case-normalization behavior
 - documents-check message/report rules
 - backup directory layout or XSE version extraction behavior
