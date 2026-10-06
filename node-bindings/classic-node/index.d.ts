@@ -5986,6 +5986,24 @@ export declare function resetHashCacheStats(): void
 /** Reset the cache hit/miss counters to zero. */
 export declare function resetSettingsCacheStats(): void
 
+/**
+ * Locate the XSE log for a game and game version from an installation's
+ * `CLASSIC Data` directory.
+ *
+ * Rust owns the location: the log is looked for only in the XSE Folder that
+ * XSE Folder precedence selects (recorded Game Local facts, then
+ * `configuredDocsRoot`, then platform discovery), under the selected
+ * version's Version Registry XSE log name, so Fallout 4 VR has its own log.
+ *
+ * @param yamlDirData - The installation's `CLASSIC Data` directory.
+ * @param game - The game identifier (e.g., "Fallout4", "Fallout4VR").
+ * @param selectedGameVersion - The selected game version (e.g., "auto", "VR").
+ * @param configuredDocsRoot - The configured documents root; empty or omitted means none.
+ * @returns The existing log path, or null when the XSE Folder or log is missing.
+ * @throws With a "cannot inspect XSE log" message when the log cannot be inspected.
+ */
+export declare function resolveXseLogForScan(yamlDirData: string, game: string, selectedGameVersion: string, configuredDocsRoot?: string | undefined | null): string | null
+
 /** Resource type count entry. */
 export interface ResourceCount {
   /** Resource type name (e.g. "texture", "plugin") */

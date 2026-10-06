@@ -211,6 +211,7 @@ PARTICIPANT_COMMANDS = {
                 "version_values",
                 "settings_extended",
                 "installation_paths",
+                "xse_folder",
             )
             ),
             REPO_ROOT / "node-bindings/classic-node/package.json",
@@ -266,6 +267,7 @@ PARTICIPANT_COMMANDS = {
                 "version_values",
                 "settings_extended",
                 "installation_paths",
+                "xse_folder",
             )
             ),
             # The one Python adapter crate builds one native extension for every

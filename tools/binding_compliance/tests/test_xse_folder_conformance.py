@@ -23,6 +23,7 @@ def test_xse_folder_pack_is_blocking_and_has_controlled_precedence_cases():
         "malformed",
         "missing",
         *DERIVATION_SCENARIOS,
+        *LOG_SCENARIOS,
     }
 
 
@@ -43,6 +44,15 @@ DERIVATION_SCENARIOS = {
     "derive-vr-docs",
     "derive-absent",
 }
+#: XSE log scenarios (scangame's `resolve_xse_log_for_scan`, bound on every adapter).
+LOG_SCENARIOS = {
+    "log-fallout4",
+    "log-vr",
+    "log-explicit",
+    "log-precedence-missing",
+    "log-missing",
+    "log-uninspectable",
+}
 
 
 def test_xse_folder_credits_derivation_to_xse_and_composition_to_scangame():
@@ -55,13 +65,20 @@ def test_xse_folder_credits_derivation_to_xse_and_composition_to_scangame():
     pack = load_and_validate_pack(ROOT, PACK).document()
     assert pack["domainOwner"] == {"rustCrate": "classic-xse-core"}
     capabilities = {capability["id"]: capability for capability in pack["capabilities"]}
-    assert set(capabilities) == {"xse-folder.derive", "xse-folder.resolve"}
+    assert set(capabilities) == {
+        "xse-folder.derive",
+        "xse-folder.resolve",
+        "xse-folder.log",
+    }
     derive = capabilities["xse-folder.derive"]
     assert "rustCrate" not in derive
     assert derive["rustSymbols"] == ["resolve_xse_folder_from_game_local_facts"]
     compose = capabilities["xse-folder.resolve"]
     assert compose["rustCrate"] == "classic-scangame-core"
     assert compose["rustSymbols"] == ["resolve_xse_folder_for_scan"]
+    log = capabilities["xse-folder.log"]
+    assert log["rustCrate"] == "classic-scangame-core"
+    assert log["rustSymbols"] == ["resolve_xse_log_for_scan"]
     actions: dict[str, set[str]] = {}
     for case in pack["scenarios"]:
         assert case["capabilityIds"] == [case["action"]]
@@ -69,11 +86,16 @@ def test_xse_folder_credits_derivation_to_xse_and_composition_to_scangame():
     assert actions == {
         "xse-folder.resolve": COMPOSITION_SCENARIOS,
         "xse-folder.derive": DERIVATION_SCENARIOS,
+        "xse-folder.log": LOG_SCENARIOS,
     }
 
 
-def test_xse_folder_derivation_is_rust_only_and_cxx_runs_only_the_composition():
-    """No binding exposes the facts resolver, so only Rust executes derivation."""
+def test_xse_folder_derivation_is_rust_only_and_the_log_runs_on_every_adapter():
+    """No binding exposes the facts resolver, so only Rust executes derivation.
+
+    CXX also binds the Local.yaml composition; the XSE log operation is bound
+    on CXX, Node and Python, so all four adapters execute its scenarios.
+    """
     from conformance.applicability import derive_applicability
     from conformance.coverage import load_source_parity_rows
 
@@ -84,16 +106,25 @@ def test_xse_folder_derivation_is_rust_only_and_cxx_runs_only_the_composition():
             document, load_source_parity_rows(ROOT)
         ).participants
     }
-    assert set(participants) == {"rust", "cxx"}
+    assert set(participants) == {"rust", "cxx", "node", "python"}
     assert participants["rust"].capability_ids == (
         "xse-folder.derive",
+        "xse-folder.log",
         "xse-folder.resolve",
     )
     assert set(participants["rust"].scenario_ids) == (
-        COMPOSITION_SCENARIOS | DERIVATION_SCENARIOS
+        COMPOSITION_SCENARIOS | DERIVATION_SCENARIOS | LOG_SCENARIOS
     )
-    assert participants["cxx"].capability_ids == ("xse-folder.resolve",)
-    assert set(participants["cxx"].scenario_ids) == COMPOSITION_SCENARIOS
+    assert participants["cxx"].capability_ids == (
+        "xse-folder.log",
+        "xse-folder.resolve",
+    )
+    assert set(participants["cxx"].scenario_ids) == (
+        COMPOSITION_SCENARIOS | LOG_SCENARIOS
+    )
+    for binding in ("node", "python"):
+        assert participants[binding].capability_ids == ("xse-folder.log",)
+        assert set(participants[binding].scenario_ids) == LOG_SCENARIOS
 
 
 def test_xse_folder_derivation_rejects_uncontrolled_game_local_facts(tmp_path):
@@ -144,6 +175,8 @@ def test_xse_folder_receipts_cover_public_resolver_and_reject_path_drift(tmp_pat
     assert {participant.id for participant in participants.participants} == {
         "rust",
         "cxx",
+        "node",
+        "python",
     }
     pack, run, receipt = prepare_receipt_case(
         ROOT, tmp_path, PACK, "cxx", runner_id="xse-folder-boundary"
@@ -166,6 +199,59 @@ def test_xse_folder_receipts_cover_public_resolver_and_reject_path_drift(tmp_pat
         pack, run, coverage_policy=XSE_FOLDER_COVERAGE_POLICY
     )
     assert report.scenarios[3].result == "fail"
+
+
+@pytest.mark.parametrize("participant", ["node", "python"])
+def test_xse_log_receipts_cover_bindings_and_reject_the_other_editions_log(
+    tmp_path, participant
+):
+    """Node and Python earn XSE log credit only for each edition's own log."""
+    from conformance.coverage import derive_row_coverage, load_source_parity_rows
+    from conformance.families.xse_folder import XSE_FOLDER_COVERAGE_POLICY
+    from conformance.receipts import validate_prepared_run
+    from receipt_test_support import prepare_receipt_case
+
+    document = load_and_validate_pack(ROOT, PACK).document()
+    pack, run, receipt = prepare_receipt_case(
+        ROOT, tmp_path, PACK, participant, runner_id="xse-log-boundary"
+    )
+    report = validate_prepared_run(
+        pack, run, coverage_policy=XSE_FOLDER_COVERAGE_POLICY
+    )
+    assert not report.failures
+    coverage = derive_row_coverage(
+        document,
+        load_source_parity_rows(ROOT),
+        XSE_FOLDER_COVERAGE_POLICY,
+        (report,),
+        scope_participant_id=participant,
+    )
+    assert coverage.rows and not coverage.failures
+    index = [case["id"] for case in receipt["scenarios"]].index("log-vr")
+    receipt["scenarios"][index]["observation"]["log"] = "configured-docs/F4SE/f4se.log"
+    run.receipt_path.write_text(json.dumps(receipt))
+    report = validate_prepared_run(
+        pack, run, coverage_policy=XSE_FOLDER_COVERAGE_POLICY
+    )
+    assert report.scenarios[index].result == "fail"
+
+
+def test_xse_log_rejects_uncontrolled_log_files(tmp_path):
+    """Log fixtures may only create the frozen set of empty log files."""
+    from conformance.families.xse_folder import validate_xse_folder_pack
+
+    pack = load_and_validate_pack(ROOT, PACK).document()
+    pack["scenarios"] = [
+        case for case in pack["scenarios"] if case["id"] == "log-fallout4"
+    ]
+    relative = pack["fixtures"]["log-fallout4"]
+    fixture = json.loads((ROOT / pack["fixtureRoot"] / relative).read_text())
+    fixture["logFiles"].append("../escape/f4se.log")
+    target = tmp_path / pack["fixtureRoot"] / relative
+    target.parent.mkdir(parents=True)
+    target.write_text(json.dumps(fixture))
+    with pytest.raises(ValueError, match="controlled log files"):
+        validate_xse_folder_pack(pack, tmp_path)
 
 
 def test_xse_folder_expectation_cannot_hide_modified_fixture_bytes():
