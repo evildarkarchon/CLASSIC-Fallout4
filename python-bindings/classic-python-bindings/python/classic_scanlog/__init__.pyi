@@ -587,6 +587,8 @@ class ScanRunLaunchOverrides:
     explicitly requests adaptive concurrency, overriding a saved limit.
     ``show_formid_values``, ``simplify_logs`` and ``fcx_mode`` are supplied-as-on:
     ``True`` turns the option on for this run, ``False`` keeps the saved value.
+    ``no_scan_path=True`` scans no custom scan folder for this run, withholding a saved
+    one (a cleared custom scan folder input).
     """
 
     def __init__(
@@ -598,7 +600,26 @@ class ScanRunLaunchOverrides:
             show_formid_values: bool = False,
             simplify_logs: bool = False,
             fcx_mode: bool = False,
-    ) -> None: ...
+            no_scan_path: bool = False,
+    ) -> None:
+        """Create overrides; every argument is optional and absent values keep the saved ones.
+
+        Args:
+            game: Game to scan instead of the saved managed game.
+            game_version: User Settings game-version token to use instead of the saved one.
+            scan_path: Folder to scan as the custom scan folder instead of the saved one.
+            max_concurrent: Max Concurrent Scans for this run; ``0`` requests adaptive.
+            show_formid_values: ``True`` turns FormID value lookup on for this run.
+            simplify_logs: ``True`` turns simplify logs on for this run.
+            fcx_mode: ``True`` turns FCX Mode on for this run.
+            no_scan_path: ``True`` scans no custom scan folder, whatever is saved.
+
+        Raises:
+            TypeError: ``game`` is not a ``classic_shared.GameId``.
+            ValueError: ``game_version`` is not a known token, ``scan_path`` is blank, or
+                ``scan_path`` is combined with ``no_scan_path=True``.
+
+        """
 
 
 class ScanRunLaunchDiagnostic:
@@ -651,7 +672,22 @@ class ScanRunLaunch:
     def standard(
             installation_root: str,
             overrides: ScanRunLaunchOverrides | None = None,
-    ) -> ScanRunLaunch: ...
+    ) -> ScanRunLaunch:
+        """Launch a Standard Crash Log Scan from saved User Settings and ``overrides``.
+
+        Args:
+            installation_root: The Installation Root; also the Standard base folder.
+            overrides: Per-run values that win over the saved ones, or ``None``.
+
+        Returns:
+            The launched request and its diagnostics.
+
+        Raises:
+            ValueError: ``installation_root`` is blank.
+            ScanRunLaunchXseLogInspectError: FCX Mode is on and the XSE log location
+                cannot be inspected for a reason other than absence.
+
+        """
 
     @staticmethod
     def targeted(
@@ -659,10 +695,26 @@ class ScanRunLaunch:
             inputs: list[str],
             overrides: ScanRunLaunchOverrides | None = None,
     ) -> ScanRunLaunch:
-        """Raises :class:`ScanRunLaunchTargetedWithoutInputsError` for an empty ``inputs``."""
-        ...
+        """Launch a Targeted Crash Log Scan of exactly ``inputs``, in order.
 
-    def request(self) -> ScanRunRequest: ...
+        Args:
+            installation_root: The Installation Root whose User Settings apply.
+            inputs: The Crash Log files or folders to scan, in order.
+            overrides: Per-run values that win over the saved ones, or ``None``.
+
+        Returns:
+            The launched request and its diagnostics.
+
+        Raises:
+            ValueError: ``installation_root`` is blank.
+            ScanRunLaunchTargetedWithoutInputsError: ``inputs`` is empty.
+            ScanRunLaunchXseLogInspectError: FCX Mode is on and the XSE log location
+                cannot be inspected for a reason other than absence.
+
+        """
+
+    def request(self) -> ScanRunRequest:
+        """Return an executable copy of the launched request for ``scan_run_execute``."""
 
 
 class ScanRunCancellation:

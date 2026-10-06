@@ -90,9 +90,11 @@ impl CrashLogScanLaunchRequest {
 ///   used), FCX Mode, custom scan folder and setup folders are not applied, and each one
 ///   that would otherwise have shaped this launch is reported as
 ///   [`CrashLogScanLaunchDiagnostic::SavedValueNotApplied`]. Overrides still win.
-/// - Degraded User Settings (malformed, newer, needing migration) are not an error: the
-///   request is built from the values User Settings projected for that document, and its
-///   diagnostics are reported as [`CrashLogScanLaunchDiagnostic::UserSettings`].
+/// - Degraded User Settings are not an error: the request is built from the values User
+///   Settings projected for that document, and its diagnostics are reported as
+///   [`CrashLogScanLaunchDiagnostic::UserSettings`]. A document needing migration or from a
+///   newer minor of the same major schema contributes its saved values; a malformed,
+///   unreadable or newer-major document contributes none (published defaults apply).
 ///
 /// - When FCX Mode is on, by saved setting or by override, the request carries its Crash
 ///   Log Scan Setup Context for either intent: the saved game and documents folders (none
@@ -177,10 +179,16 @@ pub fn prepare_launch_in_scopes(
         CrashLogScanIntent::Standard => {
             let source = StandardCrashLogScanSource {
                 base_directory: installation_root.to_path_buf(),
-                custom_scan_directory: overrides
-                    .scan_path()
-                    .map(Path::to_path_buf)
-                    .or_else(|| saved.custom_scan_folder.map(PathBuf::from)),
+                // A supplied "no custom scan folder" wins over the saved folder like any
+                // other supplied override.
+                custom_scan_directory: if overrides.no_scan_path() {
+                    None
+                } else {
+                    overrides
+                        .scan_path()
+                        .map(Path::to_path_buf)
+                        .or_else(|| saved.custom_scan_folder.map(PathBuf::from))
+                },
                 configured_documents_root: saved.documents_root.map(PathBuf::from),
             };
             let unsolved_logs = if scan.move_unsolved_logs() {
@@ -276,7 +284,12 @@ impl<'a> SavedForGame<'a> {
             ),
             (
                 SavedGameSpecificValue::CustomScanFolder,
-                standard && overrides.scan_path().is_none() && saved.custom_scan_folder.is_some(),
+                // Either scan path override, a folder or "no custom scan folder", replaces
+                // the saved folder, so the game difference is not what kept it out.
+                standard
+                    && overrides.scan_path().is_none()
+                    && !overrides.no_scan_path()
+                    && saved.custom_scan_folder.is_some(),
             ),
             (SavedGameSpecificValue::SetupFolders, setup_folders_used),
         ];

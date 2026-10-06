@@ -37,11 +37,24 @@ impl MaxConcurrency {
     }
 }
 
+/// The custom scan folder override for one Standard launch.
+///
+/// Kept private so "not supplied" stays the absence of this value, distinct from a supplied
+/// "no custom scan folder".
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ScanPathOverride {
+    /// Scan this folder as the custom scan folder.
+    Folder(PathBuf),
+    /// Scan no custom scan folder, whatever is saved.
+    NoFolder,
+}
+
 /// Optional per-run values that win over the saved User Settings for one launch.
 ///
 /// Every override is optional. Two styles exist:
 /// - **Explicit value wins** (game, game version, scan path, max concurrency): a supplied
-///   value replaces the saved one.
+///   value replaces the saved one. The scan path can also be supplied as "no custom scan
+///   folder" ([`Self::with_no_scan_path`]), which withholds a saved custom scan folder.
 /// - **Supplied as on** (FormID values, simplify logs, FCX Mode): supplying the override
 ///   turns the option on for this run; not supplying it keeps the saved value. There is no
 ///   way to turn a saved option off for one run, matching the CLI flags these model.
@@ -51,7 +64,7 @@ impl MaxConcurrency {
 pub struct CrashLogScanLaunchOverrides {
     game: Option<GameId>,
     game_version: Option<GameVersionSelection>,
-    scan_path: Option<PathBuf>,
+    scan_path: Option<ScanPathOverride>,
     max_concurrency: Option<MaxConcurrency>,
     show_formid_values: bool,
     simplify_logs: bool,
@@ -82,9 +95,22 @@ impl CrashLogScanLaunchOverrides {
     /// Scans `scan_path` as the custom scan folder instead of the saved custom scan folder.
     ///
     /// Only a Standard scan has a custom scan folder; a Targeted scan reads only its inputs.
+    /// Replaces an earlier [`Self::with_no_scan_path`]: the last scan path override wins.
     #[must_use]
     pub fn with_scan_path(mut self, scan_path: impl Into<PathBuf>) -> Self {
-        self.scan_path = Some(scan_path.into());
+        self.scan_path = Some(ScanPathOverride::Folder(scan_path.into()));
+        self
+    }
+
+    /// Scans no custom scan folder for this run, whatever custom scan folder is saved.
+    ///
+    /// This is the explicit "none" a frontend supplies when its custom scan folder input,
+    /// pre-filled from User Settings, was cleared: a Standard scan then reads only CLASSIC's
+    /// normal locations under the Installation Root. Replaces an earlier
+    /// [`Self::with_scan_path`]: the last scan path override wins.
+    #[must_use]
+    pub fn with_no_scan_path(mut self) -> Self {
+        self.scan_path = Some(ScanPathOverride::NoFolder);
         self
     }
 
@@ -132,9 +158,21 @@ impl CrashLogScanLaunchOverrides {
     }
 
     /// Returns the supplied custom scan folder, if any.
+    ///
+    /// `None` both when no scan path override was supplied and when "no custom scan folder"
+    /// was; [`Self::no_scan_path`] tells the two apart.
     #[must_use]
     pub fn scan_path(&self) -> Option<&Path> {
-        self.scan_path.as_deref()
+        match &self.scan_path {
+            Some(ScanPathOverride::Folder(path)) => Some(path),
+            Some(ScanPathOverride::NoFolder) | None => None,
+        }
+    }
+
+    /// Returns whether "no custom scan folder" was supplied.
+    #[must_use]
+    pub const fn no_scan_path(&self) -> bool {
+        matches!(self.scan_path, Some(ScanPathOverride::NoFolder))
     }
 
     /// Returns the supplied concurrency, if any.

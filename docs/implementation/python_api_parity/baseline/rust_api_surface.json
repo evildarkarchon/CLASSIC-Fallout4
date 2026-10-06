@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T14:54:45.581401+00:00",
+  "generated_at_utc": "2026-10-06T16:25:35.236059+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -7480,6 +7480,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "no_scan_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub const fn no_scan_path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "not_applied_kind",
       "kind": "function",
       "arity": 1,
@@ -7617,6 +7627,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
       "source_decl": "pub fn with_max_concurrency(mut self, max_concurrency: MaxConcurrency)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_no_scan_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-launch",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-launch/src/overrides.rs",
+      "source_decl": "pub fn with_no_scan_path(mut self)",
       "tier": "tier1"
     },
     {

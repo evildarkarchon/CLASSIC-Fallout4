@@ -32,7 +32,7 @@ use napi::threadsafe_function::{
     ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue,
 };
 use napi::{Env, JsError, JsValue, Status, Task};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, mpsc};
 
 /// JavaScript configuration shared by Standard and Targeted requests.
@@ -843,6 +843,11 @@ pub enum ScanRunSettleTaskOutput {
 pub struct ScanRunSettleTask {
     pending: Arc<PendingRecoveryWithPrompt>,
     /// The recovery decision to settle with, or `None` to abandon the run.
+    ///
+    /// Abandonment is modelled as the absence of a decision rather than as a third variant,
+    /// because that is what it is (ADR-0007): `LocalIgnoreRecoveryDecision` deliberately carries
+    /// no abandonment variant, and adding one would reshape a type crossing five binding
+    /// surfaces.
     decision: Option<contract::LocalIgnoreRecoveryDecision>,
     observer: Option<JsObserverFunction>,
     observer_failure_policy: contract::ObserverFailurePolicy,
@@ -1444,7 +1449,8 @@ fn setup_context_to_core(value: JsScanRunSetupContext) -> CrashLogScanSetupConte
     }
 }
 
-fn required_path(value: String, label: &str) -> napi::Result<PathBuf> {
+/// Rejects blank path text, which cannot name a file or folder.
+pub(crate) fn required_path(value: String, label: &str) -> napi::Result<PathBuf> {
     if value.trim().is_empty() {
         return Err(napi::Error::new(
             Status::InvalidArg,
@@ -1461,8 +1467,9 @@ fn optional_path(value: Option<String>) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
-fn path_to_string(path: PathBuf) -> String {
-    path.to_string_lossy().into_owned()
+/// Renders a path for JavaScript without failing on non-UTF-8 components.
+pub(crate) fn path_to_string(path: impl AsRef<Path>) -> String {
+    path.as_ref().to_string_lossy().into_owned()
 }
 
 fn usize_to_u32(value: usize) -> u32 {

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T14:37:52Z",
+  "generated_at_utc": "2026-10-06T16:22:27Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -11165,6 +11165,10 @@
         {
           "name": "scan_path",
           "type": "String"
+        },
+        {
+          "name": "no_scan_path",
+          "type": "bool"
         },
         {
           "name": "has_max_concurrent",

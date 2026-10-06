@@ -12,6 +12,11 @@
 - CLI Standard scans look for Crash Logs under the Installation Root, not the current working directory. Use `--scan-path` to scan a different folder.
 - GUI FCX scans with missing folders run and report setup problems instead of refusing to start.
 - The TUI can scan crash logs when its settings need migration, and starting a scan no longer saves the typed path inputs; save them explicitly when you want them kept.
+- Clearing the TUI's custom scan folder input now scans without the saved custom scan folder for that run, instead of quietly using the saved one.
+- Fallout 4 VR scans in the GUI, TUI, Node CLI and Python CLI now use the shared Fallout 4 rows.
+- The Node CLI without `--game` now scans the managed game instead of always scanning Fallout 4; `--game` itself still accepts only `Fallout4`.
+- Fallout 4 and Fallout 4 VR scans now read only their own XSE log (`f4se.log` or `f4sevr.log`), with no fallback to the other edition's log.
+- FCX scans for Fallout 4 VR with the game version on `auto` now expect `Fallout4VR.exe` as the game executable; the GUI previously fell back to `Fallout4.exe`.
 
 ### 9.0.0 CHANGES
 - Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.

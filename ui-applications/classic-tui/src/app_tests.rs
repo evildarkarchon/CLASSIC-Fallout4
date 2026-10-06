@@ -441,6 +441,33 @@ fn starting_a_scan_applies_typed_paths_for_that_run_without_saving_them() {
 }
 
 #[test]
+fn a_cleared_custom_scan_input_scans_only_the_installation_root() {
+    let saved = PathBuf::from("D:/Saved Crash Logs");
+    let (root, mut app) = app_with_settings_yaml(&format!(
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  SCAN Custom Path: '{}'\n",
+        saved.display()
+    ));
+    // The input starts pre-filled from the saved custom scan folder.
+    assert_eq!(app.custom_scan_input.value, "D:/Saved Crash Logs");
+
+    app.custom_scan_input.set_value(String::new());
+    let launch = app
+        .prepare_crash_scan_launch(None)
+        .expect("a Standard launch should be prepared");
+
+    let classic_scanlog_core::scan_run::contract::Request::Standard(request) = launch.request()
+    else {
+        panic!("a Standard scan must launch a Standard request");
+    };
+    assert_eq!(request.source().base_directory, root.path());
+    assert_eq!(
+        request.source().custom_scan_directory,
+        None,
+        "clearing the custom scan folder must withhold the saved folder for this run"
+    );
+}
+
+#[test]
 fn a_rejected_custom_scan_folder_stops_the_scan_before_it_starts() {
     let (root, mut app) = app_with_installation("schema_version: \"1.0\"\n");
     let settings_path = root.path().join("CLASSIC Settings.yaml");

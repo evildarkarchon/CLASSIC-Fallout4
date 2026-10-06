@@ -96,6 +96,8 @@ def _overrides(scanlog: Any, shared: Any, value: Mapping[str, Any], root: Path) 
         arguments["game_version"] = _string(value["gameVersion"], "gameVersion")
     if "scanPath" in value:
         arguments["scan_path"] = str(_beneath(root, _string(value["scanPath"], "scanPath")))
+    if value.get("noScanPath") is True:
+        arguments["no_scan_path"] = True
     if "maxConcurrent" in value:
         arguments["max_concurrent"] = value["maxConcurrent"]
     if value.get("showFormidValues") is True:

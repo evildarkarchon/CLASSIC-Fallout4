@@ -10,7 +10,7 @@ mod tests;
 
 use crate::scan_run::{
     JsScanRunConfiguration, JsScanRunDisplayLine, JsScanRunSetupContext, JsScanRunStandardSource,
-    JsScanRunTargetedSource, ScanRunRequest, display_lines_to_js,
+    JsScanRunTargetedSource, ScanRunRequest, display_lines_to_js, path_to_string, required_path,
 };
 use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
 use crate::vocabulary::js_token;
@@ -25,7 +25,7 @@ use classic_scanlog_core::scan_run::contract::{Configuration, Request};
 use classic_vocabulary::Vocabulary;
 use napi::bindgen_prelude::{JsObjectValue, ToNapiValue};
 use napi::{Env, JsError, JsValue, Status};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Optional per-run values that win over saved User Settings for one launch.
 ///
@@ -37,12 +37,23 @@ use std::path::{Path, PathBuf};
 #[napi(object)]
 #[derive(Default)]
 pub struct JsScanRunLaunchOverrides {
+    /// Game to scan instead of the saved managed game; absent scans the managed game.
     pub game: Option<JsGameId>,
+    /// User Settings game-version token to use instead of the saved selection.
     pub game_version: Option<String>,
+    /// Folder to scan as the custom scan folder instead of the saved one (Standard only).
+    /// Must not be blank, and cannot be combined with `noScanPath`.
     pub scan_path: Option<String>,
+    /// `true` scans no custom scan folder for this run, withholding a saved one (a cleared
+    /// custom scan folder input). `false` or absence supplies nothing.
+    pub no_scan_path: Option<bool>,
+    /// Max Concurrent Scans for this run; `0` explicitly requests adaptive concurrency.
     pub max_concurrent: Option<u32>,
+    /// `true` turns FormID value lookup on for this run; otherwise the saved value applies.
     pub show_formid_values: Option<bool>,
+    /// `true` turns simplify logs on for this run; otherwise the saved value applies.
     pub simplify_logs: Option<bool>,
+    /// `true` turns FCX Mode on for this run; otherwise the saved value applies.
     pub fcx_mode: Option<bool>,
 }
 
@@ -136,12 +147,15 @@ impl ScanRunLaunch {
             Request::Standard(request) => {
                 let source = request.source();
                 Some(JsScanRunStandardSource {
-                    base_directory: path_text(&source.base_directory),
-                    custom_scan_directory: source.custom_scan_directory.as_deref().map(path_text),
+                    base_directory: path_to_string(&source.base_directory),
+                    custom_scan_directory: source
+                        .custom_scan_directory
+                        .as_deref()
+                        .map(path_to_string),
                     configured_documents_root: source
                         .configured_documents_root
                         .as_deref()
-                        .map(path_text),
+                        .map(path_to_string),
                 })
             }
             Request::Targeted(_) => None,
@@ -176,7 +190,7 @@ impl ScanRunLaunch {
                     .source()
                     .inputs
                     .iter()
-                    .map(|path| path_text(path))
+                    .map(|path| path_to_string(path))
                     .collect(),
             }),
         }
@@ -194,10 +208,10 @@ impl ScanRunLaunch {
         self.inner
             .setup_context()
             .map(|context| JsScanRunSetupContext {
-                game_root: context.game_root.as_deref().map(path_text),
-                docs_root: context.docs_root.as_deref().map(path_text),
-                game_exe_path: context.game_exe_path.as_deref().map(path_text),
-                xse_log_path: context.xse_log_path.as_deref().map(path_text),
+                game_root: context.game_root.as_deref().map(path_to_string),
+                docs_root: context.docs_root.as_deref().map(path_to_string),
+                game_exe_path: context.game_exe_path.as_deref().map(path_to_string),
+                xse_log_path: context.xse_log_path.as_deref().map(path_to_string),
             })
     }
 
@@ -255,8 +269,20 @@ fn overrides_to_core(value: JsScanRunLaunchOverrides) -> napi::Result<CrashLogSc
         })?;
         overrides = overrides.with_game_version(selection);
     }
+    let no_scan_path = value.no_scan_path == Some(true);
+    // The core builder lets the last scan path override win; one object has no order between
+    // its fields, so supplying a folder and "no folder" together is unrepresentable input.
+    if value.scan_path.is_some() && no_scan_path {
+        return Err(napi::Error::new(
+            Status::InvalidArg,
+            "scanPath and noScanPath cannot both be supplied",
+        ));
+    }
     if let Some(scan_path) = value.scan_path {
         overrides = overrides.with_scan_path(required_path(scan_path, "scanPath")?);
+    }
+    if no_scan_path {
+        overrides = overrides.with_no_scan_path();
     }
     if let Some(max_concurrent) = value.max_concurrent {
         overrides = overrides.with_max_concurrency(MaxConcurrency::from_count(
@@ -296,7 +322,7 @@ fn launch_error_to_napi(env: Env, error: &CrashLogScanLaunchError) -> napi::Erro
 /// Projects the core run configuration into the request-construction object.
 fn configuration_to_js(configuration: &Configuration) -> JsScanRunConfiguration {
     JsScanRunConfiguration {
-        installation_root: path_text(&configuration.installation_root),
+        installation_root: path_to_string(&configuration.installation_root),
         game: core_to_js_game_id(&configuration.game),
         game_version: configuration.game_version.clone(),
         show_formid_values: configuration.options.show_formid_values,
@@ -305,13 +331,13 @@ fn configuration_to_js(configuration: &Configuration) -> JsScanRunConfiguration 
             .scan_facts
             .formid_database_paths
             .iter()
-            .map(|path| path_text(path))
+            .map(|path| path_to_string(path))
             .collect(),
         unsolved_logs_destination: configuration
             .scan_facts
             .unsolved_logs_destination
             .as_deref()
-            .map(path_text),
+            .map(path_to_string),
         // The launch never produces a limit above u32 in practice; saturate rather than wrap.
         max_concurrent: configuration
             .max_concurrent
@@ -326,20 +352,4 @@ fn diagnostic_to_js(diagnostic: &CrashLogScanLaunchDiagnostic) -> JsScanRunLaunc
         code: diagnostic.code().to_string(),
         message: diagnostic.message().to_string(),
     }
-}
-
-/// Rejects blank path text, which cannot name a folder.
-fn required_path(value: String, label: &str) -> napi::Result<PathBuf> {
-    if value.trim().is_empty() {
-        return Err(napi::Error::new(
-            Status::InvalidArg,
-            format!("{label} must not be blank"),
-        ));
-    }
-    Ok(PathBuf::from(value))
-}
-
-/// Renders a path for JavaScript without failing on non-UTF-8 components.
-fn path_text(path: &Path) -> String {
-    path.to_string_lossy().into_owned()
 }

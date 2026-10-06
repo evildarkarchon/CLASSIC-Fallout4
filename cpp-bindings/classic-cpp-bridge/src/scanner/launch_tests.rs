@@ -9,6 +9,7 @@ fn no_overrides() -> ffi::ScanRunLaunchOverridesDto {
         game_version: String::new(),
         has_scan_path: false,
         scan_path: String::new(),
+        no_scan_path: false,
         has_max_concurrent: false,
         max_concurrent: 0,
         show_formid_values: false,
@@ -217,4 +218,43 @@ fn unrepresentable_overrides_are_rejected_before_launching() {
     };
     assert!(scan_run_launch_standard(&root_text, &bad_version).is_err());
     assert!(scan_run_launch_standard("  ", &no_overrides()).is_err());
+
+    // A folder and "no custom scan folder" at once cannot both win.
+    let both_scan_paths = ffi::ScanRunLaunchOverridesDto {
+        has_scan_path: true,
+        scan_path: root_text.clone(),
+        no_scan_path: true,
+        ..no_overrides()
+    };
+    assert!(scan_run_launch_standard(&root_text, &both_scan_paths).is_err());
+}
+
+#[test]
+fn no_scan_path_override_withholds_the_saved_custom_scan_folder() {
+    let root = tempfile::tempdir().unwrap();
+    let saved = root.path().join("Saved Custom Logs");
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        format!(
+            "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  \
+             SCAN Custom Path: '{}'\n",
+            saved.display()
+        ),
+    )
+    .unwrap();
+    let root_text = root.path().to_string_lossy().into_owned();
+    let overrides = ffi::ScanRunLaunchOverridesDto {
+        no_scan_path: true,
+        ..no_overrides()
+    };
+
+    let saved_view =
+        scan_run_launch_view(&scan_run_launch_standard(&root_text, &no_overrides()).unwrap())
+            .unwrap();
+    let cleared_view =
+        scan_run_launch_view(&scan_run_launch_standard(&root_text, &overrides).unwrap()).unwrap();
+
+    assert!(saved_view.standard_source.has_custom_scan_directory);
+    assert!(!cleared_view.standard_source.has_custom_scan_directory);
+    assert_eq!(cleared_view.standard_source.base_directory, root_text);
 }

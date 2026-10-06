@@ -124,8 +124,16 @@ fn overrides_to_core(
             .ok_or_else(|| format!("unsupported game_version override: {}", value.game_version))?;
         overrides = overrides.with_game_version(selection);
     }
+    // The core builder lets the last scan path override win; a DTO carries both flags at once,
+    // with no order between them, so supplying both is unrepresentable input.
+    if value.has_scan_path && value.no_scan_path {
+        return Err("scan_path and no_scan_path cannot both be supplied".to_string());
+    }
     if value.has_scan_path {
         overrides = overrides.with_scan_path(required_path(&value.scan_path, "scan_path")?);
+    }
+    if value.no_scan_path {
+        overrides = overrides.with_no_scan_path();
     }
     if value.has_max_concurrent {
         overrides =

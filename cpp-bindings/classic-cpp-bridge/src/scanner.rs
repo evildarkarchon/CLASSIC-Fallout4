@@ -708,7 +708,9 @@ mod ffi {
     /// Settings game-version token (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`).
     /// `max_concurrent` zero explicitly requests adaptive concurrency, which overrides a saved
     /// limit. `show_formid_values`, `simplify_logs` and `fcx_mode` are supplied-as-on: `true`
-    /// turns the option on for this run, `false` keeps the saved value.
+    /// turns the option on for this run, `false` keeps the saved value. `no_scan_path` supplies
+    /// "no custom scan folder", which withholds a saved custom scan folder for this run (a
+    /// cleared custom scan folder input); it cannot be combined with `has_scan_path`.
     struct ScanRunLaunchOverridesDto {
         has_game: bool,
         game: ScanRunGameId,
@@ -716,6 +718,7 @@ mod ffi {
         game_version: String,
         has_scan_path: bool,
         scan_path: String,
+        no_scan_path: bool,
         has_max_concurrent: bool,
         max_concurrent: usize,
         show_formid_values: bool,

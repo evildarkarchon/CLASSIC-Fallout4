@@ -4801,12 +4801,27 @@ export interface JsScanRunLaunchDiagnostic {
  * option on for this run; `false` or absence keeps the saved value.
  */
 export interface JsScanRunLaunchOverrides {
+  /** Game to scan instead of the saved managed game; absent scans the managed game. */
   game?: JsGameId
+  /** User Settings game-version token to use instead of the saved selection. */
   gameVersion?: string
+  /**
+   * Folder to scan as the custom scan folder instead of the saved one (Standard only).
+   * Must not be blank, and cannot be combined with `noScanPath`.
+   */
   scanPath?: string
+  /**
+   * `true` scans no custom scan folder for this run, withholding a saved one (a cleared
+   * custom scan folder input). `false` or absence supplies nothing.
+   */
+  noScanPath?: boolean
+  /** Max Concurrent Scans for this run; `0` explicitly requests adaptive concurrency. */
   maxConcurrent?: number
+  /** `true` turns FormID value lookup on for this run; otherwise the saved value applies. */
   showFormidValues?: boolean
+  /** `true` turns simplify logs on for this run; otherwise the saved value applies. */
   simplifyLogs?: boolean
+  /** `true` turns FCX Mode on for this run; otherwise the saved value applies. */
   fcxMode?: boolean
 }
 
