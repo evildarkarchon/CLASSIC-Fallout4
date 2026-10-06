@@ -1,11 +1,23 @@
-//! Generic YAML document locations used outside the User Settings domain.
+//! The canonical CLASSIC YAML file identity and its per-file policy.
+//!
+//! [`YamlSource`] is the one six-kind identity for CLASSIC's YAML documents
+//! outside the User Settings domain. Each kind carries its stable token
+//! ([`YamlSource::as_str`], also its `Display` and serde form), its documented
+//! location ([`YamlSource::description`]), its resolved path
+//! ([`YamlSource::path`]), its human-facing label
+//! ([`YamlSource::display_name`]), and the schema range this client accepts
+//! for it ([`YamlSource::schema_compat`]). The former
+//! `classic_settings_core::YamlFile` projected the same six kinds; its tokens,
+//! descriptions, order, display, and serialization are preserved here.
 
 use anyhow::{Context, Result};
 use classic_registry_core::RegistryScope;
-use classic_shared_core::yaml::load_yaml_merged_async;
+use classic_shared_core::yaml::{SchemaCompat, load_yaml_merged_async};
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use yaml_rust2::Yaml;
 
+use crate::client_schemas;
 use crate::game_data::canonical_game_data_name;
 
 fn resolve_application_dir(current_exe: Option<&Path>) -> Option<PathBuf> {
@@ -48,7 +60,10 @@ fn resolve_cache_path(user_dir: Option<&Path>, app_dir: Option<&Path>) -> PathBu
 ///
 /// User Settings locations and persistence belong exclusively to
 /// `classic-user-settings-core` and are intentionally absent from this enum.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+///
+/// Serializes as its bare variant name (`"Main"`, `"GameLocal"`, ...), which is
+/// also [`Self::as_str`] and the `Display` form.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum YamlSource {
     /// Main database: `CLASSIC Data/databases/CLASSIC Main.yaml`.
     Main,
@@ -67,6 +82,69 @@ pub enum YamlSource {
 }
 
 impl YamlSource {
+    /// Returns every YAML file kind in a stable order: Main, Ignore, Game,
+    /// GameLocal, Test, Cache.
+    #[must_use]
+    pub const fn all() -> [Self; 6] {
+        [
+            Self::Main,
+            Self::Ignore,
+            Self::Game,
+            Self::GameLocal,
+            Self::Test,
+            Self::Cache,
+        ]
+    }
+
+    /// Returns the stable identifier for this kind (its variant name).
+    ///
+    /// This is the token bindings and conformance observe, and it matches the
+    /// `Display` and serde forms. It is not the human-facing
+    /// [`Self::display_name`].
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Main => "Main",
+            Self::Ignore => "Ignore",
+            Self::Game => "Game",
+            Self::GameLocal => "GameLocal",
+            Self::Test => "Test",
+            Self::Cache => "Cache",
+        }
+    }
+
+    /// Describes the canonical location of this kind with `{Game}` left as a
+    /// placeholder; use [`Self::path`] for a resolved path.
+    #[must_use]
+    pub const fn description(&self) -> &'static str {
+        match self {
+            Self::Main => "CLASSIC Data/databases/CLASSIC Main.yaml",
+            Self::Ignore => "CLASSIC Ignore.yaml",
+            Self::Game => "CLASSIC Data/databases/CLASSIC {Game}.yaml",
+            Self::GameLocal => "CLASSIC Data/CLASSIC {Game} Local.yaml",
+            Self::Test => "tests/test_settings.yaml",
+            Self::Cache => "User config dir/CLASSIC/cache.yaml",
+        }
+    }
+
+    /// Returns the `schema_version` range this client accepts for this file,
+    /// or `None` when the file declares no client schema range.
+    ///
+    /// Only update-eligible YAML Data carries a range: [`Self::Main`] and the
+    /// [`Self::Game`] database of a game whose data set has a declared range
+    /// (Fallout 4, shared by Fallout 4 VR). The ranges themselves are the
+    /// [`crate::client_schemas`] constants; this is the per-file lookup.
+    #[must_use]
+    pub fn schema_compat(&self, game: &str) -> Option<SchemaCompat> {
+        match self {
+            Self::Main => Some(client_schemas::MAIN_YAML),
+            Self::Game if canonical_game_data_name(game) == "Fallout4" => {
+                Some(client_schemas::GAME_FALLOUT4_YAML)
+            }
+            _ => None,
+        }
+    }
+
     /// Returns the path for this generic YAML source.
     ///
     /// [`Self::Cache`] reads the application-directory override from the
@@ -168,26 +246,30 @@ impl YamlSource {
     }
 }
 
+impl std::fmt::Display for YamlSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 /// Routes cache-eligible YAML data through the shippable loader.
+///
+/// A file is cache-eligible exactly when [`YamlSource::schema_compat`]
+/// declares a range for it, so the loader and the range lookup cannot drift.
 async fn load_via_shippable(source: &YamlSource, game: &str) -> Result<Option<Yaml>> {
-    use crate::client_schemas::{GAME_FALLOUT4_YAML, MAIN_YAML};
     use crate::shippable::{ShippableFile, load_shippable_yaml};
 
-    let (file, compat, display) = match source {
-        YamlSource::Main => (
-            ShippableFile::main(),
-            &MAIN_YAML,
-            "Main Database".to_string(),
-        ),
-        YamlSource::Game if canonical_game_data_name(game) == "Fallout4" => (
-            ShippableFile::game(game),
-            &GAME_FALLOUT4_YAML,
-            format!("{game} Database"),
-        ),
+    let Some(compat) = source.schema_compat(game) else {
+        return Ok(None);
+    };
+    let (file, display) = match source {
+        YamlSource::Main => (ShippableFile::main(), "Main Database".to_string()),
+        YamlSource::Game => (ShippableFile::game(game), format!("{game} Database")),
+        // `schema_compat` only declares ranges for Main and Game.
         _ => return Ok(None),
     };
 
-    load_shippable_yaml(file, compat)
+    load_shippable_yaml(file, &compat)
         .await
         .map(|loaded| Some(loaded.yaml))
         .with_context(|| format!("Failed to load {display} (shippable)"))

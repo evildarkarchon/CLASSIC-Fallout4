@@ -31,7 +31,7 @@ YAML_FILE_VALUES_COVERAGE_POLICY = FamilyCoveragePolicy(
             capability_id="yaml-file-values.observe",
             action="yaml-file-values.observe",
             observation_family="values",
-            rust_symbols=("YamlFile", "as_str", "description"),
+            rust_symbols=("YamlSource", "as_str", "description"),
             matches=_observed,
             runtime_operations=(
                 None,

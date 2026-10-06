@@ -6,7 +6,7 @@ settings caching with both synchronous and asynchronous APIs.
 Architecture:
     - classic-shared-core (`yaml` module): Business logic (logical-key YAML caching,
       batch loading, validators, YamlOperations, path/mtime-aware YAML-file cache)
-    - classic-settings-core: YamlFile
+    - classic-config-core: YamlSource (projected here as YamlFile)
     - classic-settings-py: Python bindings (this module - PyO3 adapters)
 
 Features:

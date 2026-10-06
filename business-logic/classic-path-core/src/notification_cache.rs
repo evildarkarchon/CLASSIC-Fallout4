@@ -53,8 +53,9 @@ use std::path::PathBuf;
 /// The per-user cache subdirectory name, relative to the platform cache root.
 const CACHE_SUBDIR: &str = "CLASSIC";
 /// The notification-specific cache directory name inside [`CACHE_SUBDIR`].
-/// Intentionally different from [`crate::yaml_cache`]'s `yaml-cache/` so
-/// the two caches remain structurally disjoint on disk.
+/// Intentionally different from the `yaml-cache/` directory owned by
+/// `classic-config-core` (`classic_config_core::yaml_cache`) so the two caches
+/// remain structurally disjoint on disk.
 const NOTIFICATION_CACHE_DIR: &str = "app-notification";
 
 /// Defensive cap on owner/repo segment length. GitHub usernames max out at

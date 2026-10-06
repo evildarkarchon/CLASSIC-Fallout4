@@ -184,11 +184,6 @@ NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
         "rustCrate": "classic-shared-core",
         "idPrefix": "shared.",
     },
-    "YamlFile@rust": {
-        "ownerModule": "settings",
-        "rustCrate": "classic-settings-core",
-        "idPrefix": "settings.",
-    },
 }
 
 # Explicit exports avoid attributing ambiguous names such as `get` by symbol

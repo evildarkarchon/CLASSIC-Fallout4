@@ -15,7 +15,7 @@ Use this directory in this order:
 2c. [`classic-vocabulary.md`](classic-vocabulary.md) - unpublished Vocabulary naming contract: the trait by which a core crate owns the frozen Vocabulary Token and the reworkable Display Label for each variant of its domain enums
 4. [`classic-registry-core.md`](classic-registry-core.md) - process-wide typed singleton registry, convenience key helpers, and `RegistryScope` handles for facade-owned registry and application-directory state
 5. [`classic-message-core.md`](classic-message-core.md) - shared message DTOs, routing enums, and startup/log formatting helpers
-6. [`classic-settings-core.md`](classic-settings-core.md) - `YamlFile` plus re-exports of the generic YAML rules, `YamlOperations`, and both YAML caches now owned by `classic-shared-core` (scheduled for retirement)
+6. [`classic-settings-core.md`](classic-settings-core.md) - re-exports of the generic YAML rules, `YamlOperations`, and both YAML caches now owned by `classic-shared-core` (scheduled for retirement; its former `YamlFile` is now config's `YamlSource`)
 6a. [`classic-user-settings-core.md`](classic-user-settings-core.md) - exclusive typed, preservation-aware User Settings source/location/default/schema/serialization owner with reversible migrations and conflict-safe commits
 7. [`classic-version-registry-core.md`](classic-version-registry-core.md) - version registry, OG/NG/AE/VR selection metadata, known Fallout 4 / F4SE version queries, and `VersionRegistryScope` handles for facade-owned lazy snapshots
 8. [`classic-version-core.md`](classic-version-core.md) - transitional facade over the shared-core loose version and PE helpers and the Version Registry known-version queries (scheduled for retirement)
@@ -63,7 +63,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-user-settings-core` exclusively owns root-relative User Settings discovery, source selection, schema/default metadata, typed cohesive groups, diagnostics, serialization, semantic preservation, and conflict-safe atomic persistence; adapters retain presentation and consent
 - `classic-version-registry-core` loads registry-backed version and crashgen metadata on top of YAML helpers, owns the known-version queries `is_known_fallout4_version()` / `is_known_f4se_version()`, and now owns the contributor-facing `Fallout4Version` / `NULL_VERSION` surface that used to live in the retired constants crate; every snapshot sits behind an opaque `VersionRegistryScope` handle whose process default serves every unscoped caller, while each Python facade that reads the registry selects its own isolated, lazily taken scope
 - `classic-shared-core` also owns the shared `GameId` enum used across bridge, web, and setup flows
-- `classic-settings-core` owns only non-User-Settings `YamlFile` variants
+- `classic-config-core` owns the canonical non-User-Settings CLASSIC YAML file identity (`YamlSource`); `classic-settings-core` owns no file identity
 - `classic-version-core` owns no behavior; it re-exports the loose version and PE helpers owned by `classic_shared_core::version` and the known-version queries owned by `classic-version-registry-core` until it retires (#258)
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime

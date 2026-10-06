@@ -7,6 +7,13 @@
 //! may be read-only or under `Program Files`). Instead, they land in a per-user
 //! cache directory resolved here.
 //!
+//! Config owns this location as YAML Data file policy: Installed YAML Data
+//! selection reads update candidates from it and the YAML Data Update Channel
+//! (`classic-update-core`) installs into it. It moved here from
+//! `classic-path-core`, which keeps only the disjoint app-notification cache;
+//! the OS cache root both build on is the neutral
+//! `classic_shared_core::path_core::user_cache_root_with_env`.
+//!
 //! # Location
 //!
 //! - **Windows** — `%LOCALAPPDATA%\CLASSIC\yaml-cache\`, falling back to

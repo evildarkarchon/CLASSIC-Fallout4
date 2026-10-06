@@ -1,9 +1,9 @@
-//! Settings + YAML bindings (classic-shared-core `yaml` + classic-settings-core)
+//! Settings + YAML bindings (classic-shared-core `yaml` + classic-config-core `YamlSource`)
 //!
 //! The logical-key settings cache, `YamlOperations`, and the path/mtime-aware
 //! YAML-file cache are owned by `classic_shared_core::yaml` and called through
-//! that path directly, always on their default (unscoped) scopes; `YamlFile`
-//! still comes from `classic-settings-core`.
+//! that path directly, always on their default (unscoped) scopes. The `YamlFile`
+//! string enum projects the config-owned `classic_config_core::YamlSource`.
 //!
 //! Exposes the unified YAML settings cache and stateless YAML operations to
 //! JavaScript/TypeScript. This module was created by merging the former
@@ -36,7 +36,7 @@
 //! - `new YamlDocument(content)` with `getValue`, `getStringValue`, `getVecValue`,
 //!   `getHashmapValue`, `setValue`, `toString`
 
-use classic_settings_core::YamlFile;
+use classic_config_core::YamlSource;
 use classic_shared_core::yaml as shared_yaml;
 use classic_shared_core::yaml::{YamlError, YamlOperations, yaml_cache_stats};
 use napi::bindgen_prelude::*;
@@ -66,25 +66,25 @@ pub enum JsYamlFile {
     Cache,
 }
 
-fn js_to_core_yaml_file(file: &JsYamlFile) -> YamlFile {
+fn js_to_core_yaml_file(file: &JsYamlFile) -> YamlSource {
     match file {
-        JsYamlFile::Main => YamlFile::Main,
-        JsYamlFile::Ignore => YamlFile::Ignore,
-        JsYamlFile::Game => YamlFile::Game,
-        JsYamlFile::GameLocal => YamlFile::GameLocal,
-        JsYamlFile::Test => YamlFile::Test,
-        JsYamlFile::Cache => YamlFile::Cache,
+        JsYamlFile::Main => YamlSource::Main,
+        JsYamlFile::Ignore => YamlSource::Ignore,
+        JsYamlFile::Game => YamlSource::Game,
+        JsYamlFile::GameLocal => YamlSource::GameLocal,
+        JsYamlFile::Test => YamlSource::Test,
+        JsYamlFile::Cache => YamlSource::Cache,
     }
 }
 
-fn core_to_js_yaml_file(file: &YamlFile) -> JsYamlFile {
+fn core_to_js_yaml_file(file: &YamlSource) -> JsYamlFile {
     match file {
-        YamlFile::Main => JsYamlFile::Main,
-        YamlFile::Ignore => JsYamlFile::Ignore,
-        YamlFile::Game => JsYamlFile::Game,
-        YamlFile::GameLocal => JsYamlFile::GameLocal,
-        YamlFile::Test => JsYamlFile::Test,
-        YamlFile::Cache => JsYamlFile::Cache,
+        YamlSource::Main => JsYamlFile::Main,
+        YamlSource::Ignore => JsYamlFile::Ignore,
+        YamlSource::Game => JsYamlFile::Game,
+        YamlSource::GameLocal => JsYamlFile::GameLocal,
+        YamlSource::Test => JsYamlFile::Test,
+        YamlSource::Cache => JsYamlFile::Cache,
     }
 }
 
@@ -278,7 +278,7 @@ pub fn get_yaml_file_description(file: JsYamlFile) -> String {
 /// Get all YAML file type identifiers.
 #[napi]
 pub fn get_all_yaml_files() -> Vec<JsYamlFile> {
-    YamlFile::all().iter().map(core_to_js_yaml_file).collect()
+    YamlSource::all().iter().map(core_to_js_yaml_file).collect()
 }
 
 // ============================================================================

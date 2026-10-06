@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-05T23:38:53Z",
+  "generated_at_utc": "2026-10-06T00:08:51Z",
   "schema_version": 2,
   "entries": [
     {
@@ -11099,9 +11099,9 @@
         "Test",
         "Cache"
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "coreRustSymbol": "YamlFile"
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlSource"
     },
     {
       "id": "0b5a4ad5368e8a02",
@@ -11793,8 +11793,8 @@
         ],
         "returnType": "String"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "coreRustSymbol": "as_str"
     },
     {
@@ -11813,8 +11813,8 @@
         ],
         "returnType": "String"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "coreRustSymbol": "description"
     },
     {

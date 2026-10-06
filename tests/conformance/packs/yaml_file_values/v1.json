@@ -3,7 +3,7 @@
   "familyId": "yaml-file-values",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-settings-core"
+    "rustCrate": "classic-config-core"
   },
   "fixtureRoot": "tests/fixtures/yaml_file_values",
   "fixtures": {
@@ -13,7 +13,7 @@
     {
       "id": "yaml-file-values.observe",
       "rustSymbols": [
-        "YamlFile",
+        "YamlSource",
         "as_str",
         "description"
       ],

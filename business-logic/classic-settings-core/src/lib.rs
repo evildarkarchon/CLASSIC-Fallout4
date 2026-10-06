@@ -10,8 +10,11 @@
 //! freshness, counters, and errors. The two caches stay distinct from each
 //! other.
 //!
-//! This crate still owns [`YamlFile`], CLASSIC's domain-specific YAML file
-//! identity, until config takes ownership of file policy.
+//! CLASSIC's domain-specific YAML file identity no longer lives here: the
+//! former `YamlFile` enum retired in favor of the config-owned
+//! `classic_config_core::YamlSource`, which keeps its six kinds, tokens,
+//! descriptions, display, and serialization. That import path deliberately
+//! ends; this crate does not forward it.
 //!
 //! The crate identity is scheduled for retirement once its remaining callers
 //! import the accepted owners directly.
@@ -76,8 +79,6 @@
 //! # }
 //! ```
 
-mod yaml_file;
-
 // Generic YAML rules re-exported from their shared-core owner.
 pub use classic_shared_core::yaml::validators;
 pub use classic_shared_core::yaml::{
@@ -89,7 +90,6 @@ pub use classic_shared_core::yaml::{
     load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats,
     schema_compat_check,
 };
-pub use yaml_file::*;
 
 // YAML operations and the path/mtime-aware YAML-file cache, re-exported from
 // their shared-core owner (formerly the D-04 flat re-exports of `yaml_ops`).
