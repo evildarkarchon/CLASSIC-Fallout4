@@ -8248,6 +8248,16 @@
       "rustKind": "struct"
     },
     {
+      "id": "scanlog.scan_run.ScanRunPendingRecovery",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "PendingRecovery",
+      "nodeExport": "ScanRunPendingRecovery",
+      "nodeKind": "class",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
       "id": "scanlog.scan_run.scanRunExecute",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -8275,6 +8285,17 @@
       "ownerModule": "scanlog",
       "rustSymbol": "abandon",
       "nodeExport": "scanRunAbandon",
+      "nodeKind": "function",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "function",
+      "nodeArity": 4
+    },
+    {
+      "id": "scanlog.scan_run.scanRunSettle",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "settle",
+      "nodeExport": "scanRunSettle",
       "nodeKind": "function",
       "rustCrate": "classic-scanlog-core",
       "rustKind": "function",
@@ -8548,6 +8569,15 @@
       "nodeExport": "JsScanRunSuccess",
       "nodeKind": "interface",
       "unmappedReason": "Binding-owned result envelope combining core outcome, rendered presentation, and adapter observer failure; no single Rust core counterpart."
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunSettledSuccess",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": null,
+      "nodeExport": "JsScanRunSettledSuccess",
+      "nodeKind": "interface",
+      "unmappedReason": "Binding-owned settled result envelope combining the core settled outcome, rendered presentation, and adapter observer failure; no single Rust core counterpart."
     },
     {
       "id": "scanlog.scan_run.JsScanRunFailure",

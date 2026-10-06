@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T06:16:02.802497+00:00",
+  "generated_at_utc": "2026-10-06T10:38:55.693802+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -7187,6 +7187,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "PendingRecoveryWithPrompt",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use pending::{PendingRecoveryWithPrompt, take_pending_recovery};",
+      "source_expr": "pending::PendingRecoveryWithPrompt",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PendingRecoveryWithPrompt",
+      "kind": "struct",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/pending.rs",
+      "source_decl": "pub struct PendingRecoveryWithPrompt",
+      "tier": "tier1"
+    },
+    {
       "symbol": "RecoveryDecisionDescription",
       "kind": "reexport",
       "crate": "classic-scan-presentation",
@@ -7222,6 +7241,46 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scan-presentation/src/recovery.rs",
       "source_decl": "pub struct RecoveryPrompt",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cancellation_requested",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/pending.rs",
+      "source_decl": "pub fn cancellation_requested(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/pending.rs",
+      "source_decl": "pub fn new(recovery: PendingRecovery)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "prompt",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/pending.rs",
+      "source_decl": "pub const fn prompt(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "recovery",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/pending.rs",
+      "source_decl": "pub const fn recovery(&self)",
       "tier": "tier1"
     },
     {
@@ -7322,6 +7381,36 @@
       "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
       "source_decl": "pub use render::{ render_event, render_infrastructure_error, render_resume_error, render_run_result, };",
       "source_expr": "render::render_run_result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "settle",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/pending.rs",
+      "source_decl": "pub async fn settle(\n        &self,\n        decision: Option<LocalIgnoreRecoveryDecision>,\n        observer: Option<&mut dyn Observer>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "take_pending_recovery",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/pending.rs",
+      "source_decl": "pub fn take_pending_recovery(result: &mut RunResult)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "take_pending_recovery",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use pending::{PendingRecoveryWithPrompt, take_pending_recovery};",
+      "source_expr": "pending::take_pending_recovery",
       "tier": "tier1"
     },
     {
@@ -11496,6 +11585,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "PendingRecovery",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct PendingRecovery",
+      "tier": "tier1"
+    },
+    {
       "symbol": "PluginAnalyzer",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -11774,6 +11872,15 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use orchestrator::ScanProgressPhase;",
       "source_expr": "orchestrator::ScanProgressPhase",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettledRunResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct SettledRunResult",
       "tier": "tier1"
     },
     {
@@ -12147,6 +12254,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "cancellation",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn cancellation(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cancellation_requested",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn cancellation_requested(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "candidate",
       "kind": "function",
       "arity": 1,
@@ -12384,6 +12511,16 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use record_scanner::{ RecordScanner, contains_record, scan_records_batch, try_scan_records_batch, };",
       "source_expr": "record_scanner::contains_record",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "continuation",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn continuation(&self)",
       "tier": "tier1"
     },
     {
@@ -12943,6 +13080,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub const fn infrastructure(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "installed_yaml_data",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn installed_yaml_data(&self)",
       "tier": "tier1"
     },
     {
@@ -13645,6 +13792,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "settle",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub async fn settle(\n        &self,\n        decision: Option<LocalIgnoreRecoveryDecision>,\n        observer: Option<&mut dyn Observer>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "setup_context",
       "kind": "function",
       "arity": 1,
@@ -13722,6 +13879,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/papyrus.rs",
       "source_decl": "pub fn stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "take_pending_recovery",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn take_pending_recovery(&mut self)",
       "tier": "tier1"
     },
     {

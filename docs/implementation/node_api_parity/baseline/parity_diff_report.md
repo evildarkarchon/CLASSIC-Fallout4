@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T02:23:32.887012+00:00`
-- Tier-1 contract rows: **937**
-- Tier-1 matched: **920**
+- Generated: `2026-10-06T10:39:51.627412+00:00`
+- Tier-1 contract rows: **940**
+- Tier-1 matched: **922**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -919,9 +919,11 @@
 | `scanlog.scan_run.ScanRunUnsolvedLogs` | `scanlog` | `classic-scanlog-core` | `StandardUnsolvedLogsIntent` | `ScanRunUnsolvedLogs` | `matched` |
 | `scanlog.scan_run.ScanRunCancellation` | `scanlog` | `classic-scanlog-core` | `Cancellation` | `ScanRunCancellation` | `matched` |
 | `scanlog.scan_run.ScanRunContinuation` | `scanlog` | `classic-scanlog-core` | `CrashLogScanRunContinuation` | `ScanRunContinuation` | `matched` |
+| `scanlog.scan_run.ScanRunPendingRecovery` | `scanlog` | `classic-scanlog-core` | `PendingRecovery` | `ScanRunPendingRecovery` | `matched` |
 | `scanlog.scan_run.scanRunExecute` | `scanlog` | `classic-scanlog-core` | `execute` | `scanRunExecute` | `matched` |
 | `scanlog.scan_run.scanRunResume` | `scanlog` | `classic-scanlog-core` | `resume` | `scanRunResume` | `matched` |
 | `scanlog.scan_run.scanRunAbandon` | `scanlog` | `classic-scanlog-core` | `abandon` | `scanRunAbandon` | `matched` |
+| `scanlog.scan_run.scanRunSettle` | `scanlog` | `classic-scanlog-core` | `settle` | `scanRunSettle` | `matched` |
 | `scanlog.scan_run.JsScanRunConfiguration` | `scanlog` | `classic-scanlog-core` | `Configuration` | `JsScanRunConfiguration` | `matched` |
 | `scanlog.scan_run.JsScanRunStandardSource` | `scanlog` | `classic-scanlog-core` | `StandardCrashLogScanSource` | `JsScanRunStandardSource` | `matched` |
 | `scanlog.scan_run.JsScanRunTargetedSource` | `scanlog` | `classic-scanlog-core` | `TargetedCrashLogScanSource` | `JsScanRunTargetedSource` | `matched` |
@@ -949,6 +951,7 @@
 | `scanlog.scan_run.JsScanRunRecoveryDecisionDescription` | `scanlog` | `classic-scan-presentation` | `RecoveryDecisionDescription` | `JsScanRunRecoveryDecisionDescription` | `matched` |
 | `scanlog.scan_run.JsScanRunRecoveryPrompt` | `scanlog` | `classic-scan-presentation` | `RecoveryPrompt` | `JsScanRunRecoveryPrompt` | `matched` |
 | `scanlog.scan_run.JsScanRunSuccess` | `scanlog` | `-` | `None` | `JsScanRunSuccess` | `unmapped` |
+| `scanlog.scan_run.JsScanRunSettledSuccess` | `scanlog` | `-` | `None` | `JsScanRunSettledSuccess` | `unmapped` |
 | `scanlog.scan_run.JsScanRunFailure` | `scanlog` | `-` | `None` | `JsScanRunFailure` | `unmapped` |
 
 ## Gap Counts By Owner/Tier
