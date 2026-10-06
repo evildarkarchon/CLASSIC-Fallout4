@@ -33,7 +33,7 @@ use napi::threadsafe_function::{
 };
 use napi::{Env, JsError, JsValue, Status, Task};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, mpsc};
+use std::sync::{Arc, mpsc};
 
 /// JavaScript configuration shared by Standard and Targeted requests.
 #[napi(object)]
@@ -667,10 +667,14 @@ pub struct JsScanRunEvent {
     pub display_lines: Vec<JsScanRunDisplayLine>,
 }
 
-/// Successful final operation envelope with adapter-only observation failure data.
+/// Successful final operation envelope.
 #[napi(object, object_from_js = false)]
 pub struct JsScanRunSuccess {
     pub result: JsScanRunResult,
+    /// The first observer delivery failure Rust reported for this run, if any.
+    ///
+    /// Read from the Rust result, not tracked by this binding, and reported whether or not
+    /// `cancelOnObserverError` asked Rust to cancel.
     pub observer_error: Option<String>,
     /// What this run says, in Rust's words.
     ///
@@ -708,15 +712,17 @@ pub struct JsScanRunSuccess {
 #[napi(object, object_from_js = false)]
 pub struct JsScanRunSettledSuccess {
     pub result: JsScanRunResult,
+    /// The first observer delivery failure Rust reported while settling, if any.
     pub observer_error: Option<String>,
     /// What the settled run says, in Rust's words.
     pub display_lines: Vec<JsScanRunDisplayLine>,
 }
 
-/// Failed final operation envelope with adapter-only observation failure data.
+/// Failed final operation envelope.
 #[napi(object)]
 pub struct JsScanRunFailure {
     pub error: JsScanRunInfrastructureError,
+    /// The first observer delivery failure Rust reported before the run failed, if any.
     pub observer_error: Option<String>,
     /// What this failure says, in Rust's words.
     ///
@@ -748,7 +754,7 @@ pub struct ScanRunTask {
     request: contract::Request,
     cancellation: contract::Cancellation,
     observer: Option<JsObserverFunction>,
-    cancel_on_observer_error: bool,
+    observer_failure_policy: contract::ObserverFailurePolicy,
 }
 
 impl Task for ScanRunTask {
@@ -757,31 +763,22 @@ impl Task for ScanRunTask {
 
     /// Executes the core future without constructing an independent runtime.
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        let observer_error = Arc::new(Mutex::new(None));
-        let mut adapter = self.observer.take().map(|callback| JsObserverAdapter {
-            callback,
-            cancellation: self.cancellation.clone(),
-            cancel_on_error: self.cancel_on_observer_error,
-            delivery_error: Arc::clone(&observer_error),
-            delivery_failed: false,
-        });
+        let mut adapter = self
+            .observer
+            .take()
+            .map(|callback| JsObserverAdapter { callback });
         let result = classic_shared_core::get_runtime().block_on(contract::execute(
             self.request.clone(),
             &self.cancellation,
             adapter
                 .as_mut()
                 .map(|observer| observer as &mut dyn contract::Observer),
+            self.observer_failure_policy,
         ));
-        let observer_error = observer_error
-            .lock()
-            .map_err(|_| napi::Error::from_reason("scan-run observer error state was poisoned"))?
-            .clone();
 
         Ok(match result {
-            Ok(result) => {
-                ScanRunTaskOutput::Success(Box::new(success_envelope(result, observer_error)))
-            }
-            Err(error) => ScanRunTaskOutput::Failure(failure_envelope(error, observer_error)),
+            Ok(result) => ScanRunTaskOutput::Success(Box::new(success_envelope(result))),
+            Err(error) => ScanRunTaskOutput::Failure(failure_envelope(error)),
         })
     }
 
@@ -796,10 +793,12 @@ impl Task for ScanRunTask {
 
 /// Executes one final-contract request with optional serialized observation.
 ///
-/// The observer is non-controlling. If it throws or cannot be delivered, the
-/// failure is returned only through `observerError`; `cancelOnObserverError`
-/// controls whether that adapter failure also uses the separate cancellation
-/// control to request safe stopping.
+/// If the observer throws or cannot be delivered, Rust stops delivering to it and
+/// reports the first failure as `observerError`. `cancelOnObserverError` is the
+/// observer failure policy Rust applies: `true` cancels the run at the failure,
+/// `false` (the default) lets it finish. A failure before the run pauses for Local
+/// Ignore recovery abandons that recovery either way, so such a run resolves
+/// cancelled with no `pendingRecovery` and no filesystem work.
 #[napi(ts_return_type = "Promise<JsScanRunSuccess | JsScanRunFailure>")]
 pub fn scan_run_execute(
     request: &ScanRunRequest,
@@ -829,7 +828,7 @@ pub fn scan_run_execute(
         request,
         cancellation,
         observer,
-        cancel_on_observer_error: cancel_on_observer_error.unwrap_or(false),
+        observer_failure_policy: observer_failure_policy(cancel_on_observer_error),
     }))
 }
 
@@ -863,7 +862,7 @@ pub struct ScanRunClaimTask {
     decision: Option<contract::LocalIgnoreRecoveryDecision>,
     cancellation: contract::Cancellation,
     observer: Option<JsObserverFunction>,
-    cancel_on_observer_error: bool,
+    observer_failure_policy: contract::ObserverFailurePolicy,
 }
 
 impl Task for ScanRunClaimTask {
@@ -875,14 +874,10 @@ impl Task for ScanRunClaimTask {
     /// A `None` decision abandons the run through the shared core operation rather than
     /// cancelling here and resuming with a placeholder; that sequence is Rust's to own.
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        let observer_error = Arc::new(Mutex::new(None));
-        let mut adapter = self.observer.take().map(|callback| JsObserverAdapter {
-            callback,
-            cancellation: self.cancellation.clone(),
-            cancel_on_error: self.cancel_on_observer_error,
-            delivery_error: Arc::clone(&observer_error),
-            delivery_failed: false,
-        });
+        let mut adapter = self
+            .observer
+            .take()
+            .map(|callback| JsObserverAdapter { callback });
         let runtime = classic_shared_core::get_runtime();
         let result = match self.decision {
             Some(decision) => runtime.block_on(
@@ -892,6 +887,7 @@ impl Task for ScanRunClaimTask {
                     adapter
                         .as_mut()
                         .map(|observer| observer as &mut dyn contract::Observer),
+                    self.observer_failure_policy,
                 ),
             ),
             None => runtime.block_on(
@@ -903,17 +899,10 @@ impl Task for ScanRunClaimTask {
                 ),
             ),
         };
-        let observer_error = observer_error
-            .lock()
-            .map_err(|_| napi::Error::from_reason("scan-run observer error state was poisoned"))?
-            .clone();
-
         Ok(match result {
-            Ok(result) => {
-                ScanRunClaimTaskOutput::Success(Box::new(success_envelope(result, observer_error)))
-            }
+            Ok(result) => ScanRunClaimTaskOutput::Success(Box::new(success_envelope(result))),
             Err(contract::ResumeError::Infrastructure(error)) => {
-                ScanRunClaimTaskOutput::Failure(failure_envelope(error, observer_error))
+                ScanRunClaimTaskOutput::Failure(failure_envelope(error))
             }
             Err(contract::ResumeError::ContinuationConsumed) => {
                 ScanRunClaimTaskOutput::ContinuationConsumed
@@ -1039,7 +1028,7 @@ fn claim_continuation_task(
         decision,
         cancellation: cancellation.inner.clone(),
         observer,
-        cancel_on_observer_error: cancel_on_observer_error.unwrap_or(false),
+        observer_failure_policy: observer_failure_policy(cancel_on_observer_error),
     }))
 }
 
@@ -1062,7 +1051,7 @@ pub struct ScanRunSettleTask {
     /// The recovery decision to settle with, or `None` to abandon the run.
     decision: Option<contract::LocalIgnoreRecoveryDecision>,
     observer: Option<JsObserverFunction>,
-    cancel_on_observer_error: bool,
+    observer_failure_policy: contract::ObserverFailurePolicy,
 }
 
 impl Task for ScanRunSettleTask {
@@ -1071,37 +1060,27 @@ impl Task for ScanRunSettleTask {
 
     /// Settles through Rust without constructing another runtime.
     ///
-    /// Settling runs on the paused run's own control, so an observer failure that requests
-    /// safe cancellation cancels that same control.
+    /// Settling runs on the paused run's own control, so the cancel policy cancels that
+    /// same control when an observer delivery fails.
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        let observer_error = Arc::new(Mutex::new(None));
-        let mut adapter = self.observer.take().map(|callback| JsObserverAdapter {
-            callback,
-            cancellation: self.pending.recovery().cancellation().clone(),
-            cancel_on_error: self.cancel_on_observer_error,
-            delivery_error: Arc::clone(&observer_error),
-            delivery_failed: false,
-        });
+        let mut adapter = self
+            .observer
+            .take()
+            .map(|callback| JsObserverAdapter { callback });
         let result = classic_shared_core::get_runtime().block_on(
             self.pending.settle(
                 self.decision,
                 adapter
                     .as_mut()
                     .map(|observer| observer as &mut dyn contract::Observer),
+                self.observer_failure_policy,
             ),
         );
-        let observer_error = observer_error
-            .lock()
-            .map_err(|_| napi::Error::from_reason("scan-run observer error state was poisoned"))?
-            .clone();
 
         Ok(match result {
-            Ok(settled) => ScanRunSettleTaskOutput::Success(Box::new(settled_envelope(
-                settled,
-                observer_error,
-            ))),
+            Ok(settled) => ScanRunSettleTaskOutput::Success(Box::new(settled_envelope(settled))),
             Err(contract::ResumeError::Infrastructure(error)) => {
-                ScanRunSettleTaskOutput::Failure(failure_envelope(error, observer_error))
+                ScanRunSettleTaskOutput::Failure(failure_envelope(error))
             }
             Err(error) => ScanRunSettleTaskOutput::Rejected(error),
         })
@@ -1156,7 +1135,7 @@ pub fn scan_run_settle(
         pending: Arc::clone(&pending_recovery.inner),
         decision: decision.map(local_ignore_recovery_decision_to_core),
         observer,
-        cancel_on_observer_error: cancel_on_observer_error.unwrap_or(false),
+        observer_failure_policy: observer_failure_policy(cancel_on_observer_error),
     }))
 }
 
@@ -1174,36 +1153,33 @@ const fn local_ignore_recovery_decision_to_core(
     }
 }
 
-struct JsObserverAdapter {
-    callback: JsObserverFunction,
-    cancellation: contract::Cancellation,
-    cancel_on_error: bool,
-    delivery_error: Arc<Mutex<Option<String>>>,
-    delivery_failed: bool,
+/// Maps the binding's `cancelOnObserverError` option onto the Rust observer failure policy.
+///
+/// Absent means `false`, which lets the run finish; the result reports the failure either way.
+fn observer_failure_policy(
+    cancel_on_observer_error: Option<bool>,
+) -> contract::ObserverFailurePolicy {
+    if cancel_on_observer_error.unwrap_or(false) {
+        contract::ObserverFailurePolicy::CancelRun
+    } else {
+        contract::ObserverFailurePolicy::ContinueRun
+    }
 }
 
-impl JsObserverAdapter {
-    /// Records the first adapter delivery failure and optionally requests cancellation.
-    fn record_failure(&mut self, message: String) {
-        self.delivery_failed = true;
-        if let Ok(mut error) = self.delivery_error.lock()
-            && error.is_none()
-        {
-            *error = Some(message);
-        }
-        if self.cancel_on_error {
-            self.cancellation.cancel();
-        }
-    }
+/// Delivers Rust events to one JavaScript callback and reports a throw as a failed delivery.
+///
+/// Holds no failure state: Rust stops delivering after the first failure, applies the policy,
+/// and reports the failure in the result.
+struct JsObserverAdapter {
+    callback: JsObserverFunction,
 }
 
 impl contract::Observer for JsObserverAdapter {
     /// Delivers one event and waits for the callback result to preserve serialization.
-    fn on_event(&mut self, event: contract::Event) {
-        if self.delivery_failed {
-            return;
-        }
-
+    fn on_event(
+        &mut self,
+        event: contract::Event,
+    ) -> Result<(), contract::ObserverDeliveryFailure> {
         let (sender, receiver) = mpsc::sync_channel(1);
         let status = self.callback.call_with_return_value(
             event_to_js(event),
@@ -1215,14 +1191,17 @@ impl contract::Observer for JsObserverAdapter {
             },
         );
         if status != Status::Ok {
-            self.record_failure(format!("observer delivery failed: {status}"));
-            return;
+            return Err(contract::ObserverDeliveryFailure::new(format!(
+                "observer delivery failed: {status}"
+            )));
         }
 
         match receiver.recv() {
-            Ok(Ok(())) => {}
-            Ok(Err(error)) => self.record_failure(error),
-            Err(error) => self.record_failure(format!("observer delivery failed: {error}")),
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(error)) => Err(contract::ObserverDeliveryFailure::new(error)),
+            Err(error) => Err(contract::ObserverDeliveryFailure::new(format!(
+                "observer delivery failed: {error}"
+            ))),
         }
     }
 }
@@ -1824,10 +1803,8 @@ fn run_result_to_js(mut value: contract::RunResult) -> JsScanRunResult {
 ///
 /// `scanRunExecute` and `scanRunResume` both resolve this envelope, which is why
 /// one builder serves the initial run and the continuation resume alike.
-fn success_envelope(
-    result: contract::RunResult,
-    observer_error: Option<String>,
-) -> JsScanRunSuccess {
+fn success_envelope(mut result: contract::RunResult) -> JsScanRunSuccess {
+    let observer_error = observer_error_to_js(result.observer_delivery_failure.take());
     let display_lines = display_lines_to_js(&render_run_result(&result));
     // Rendered only for the one status that pauses for an answer. Every other status
     // has nothing to ask, and a prompt attached to a finished run would invite a
@@ -1859,11 +1836,9 @@ fn success_envelope(
 ///
 /// The settled result is widened into a run result only to share one projection; it has no
 /// continuation, so the projected `result.continuation` is always absent.
-fn settled_envelope(
-    result: contract::SettledRunResult,
-    observer_error: Option<String>,
-) -> JsScanRunSettledSuccess {
-    let result = contract::RunResult::from(result);
+fn settled_envelope(result: contract::SettledRunResult) -> JsScanRunSettledSuccess {
+    let mut result = contract::RunResult::from(result);
+    let observer_error = observer_error_to_js(result.observer_delivery_failure.take());
     let display_lines = display_lines_to_js(&render_run_result(&result));
     JsScanRunSettledSuccess {
         result: run_result_to_js(result),
@@ -1873,16 +1848,19 @@ fn settled_envelope(
 }
 
 /// Builds the resolved failure envelope, rendering the failure before projecting it.
-fn failure_envelope(
-    error: contract::InfrastructureError,
-    observer_error: Option<String>,
-) -> JsScanRunFailure {
+fn failure_envelope(mut error: contract::InfrastructureError) -> JsScanRunFailure {
     let display_lines = display_lines_to_js(&render_infrastructure_error(&error));
+    let observer_error = observer_error_to_js(error.observer_delivery_failure.take());
     JsScanRunFailure {
         error: infrastructure_error_to_js(error),
         observer_error,
         display_lines,
     }
+}
+
+/// Projects the Rust-reported delivery failure onto the envelope's `observerError` message.
+fn observer_error_to_js(failure: Option<contract::ObserverDeliveryFailure>) -> Option<String> {
+    failure.map(|failure| failure.message)
 }
 
 /// Flattens rendered Display Content into the JavaScript mirror types.

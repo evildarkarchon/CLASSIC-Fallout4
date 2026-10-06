@@ -4668,9 +4668,10 @@ export interface JsScanRunEvent {
   displayLines: Array<JsScanRunDisplayLine>
 }
 
-/** Failed final operation envelope with adapter-only observation failure data. */
+/** Failed final operation envelope. */
 export interface JsScanRunFailure {
   error: JsScanRunInfrastructureError
+  /** The first observer delivery failure Rust reported before the run failed, if any. */
   observerError?: string
   /**
    * What this failure says, in Rust's words.
@@ -4862,6 +4863,7 @@ export interface JsScanRunResult {
  */
 export interface JsScanRunSettledSuccess {
   result: JsScanRunResult
+  /** The first observer delivery failure Rust reported while settling, if any. */
   observerError?: string
   /** What the settled run says, in Rust's words. */
   displayLines: Array<JsScanRunDisplayLine>
@@ -4911,9 +4913,15 @@ export interface JsScanRunStandardSource {
   configuredDocumentsRoot?: string
 }
 
-/** Successful final operation envelope with adapter-only observation failure data. */
+/** Successful final operation envelope. */
 export interface JsScanRunSuccess {
   result: JsScanRunResult
+  /**
+   * The first observer delivery failure Rust reported for this run, if any.
+   *
+   * Read from the Rust result, not tracked by this binding, and reported whether or not
+   * `cancelOnObserverError` asked Rust to cancel.
+   */
   observerError?: string
   /**
    * What this run says, in Rust's words.
@@ -6192,10 +6200,12 @@ export declare function scanRunAbandon(continuation: ScanRunContinuation, cancel
 /**
  * Executes one final-contract request with optional serialized observation.
  *
- * The observer is non-controlling. If it throws or cannot be delivered, the
- * failure is returned only through `observerError`; `cancelOnObserverError`
- * controls whether that adapter failure also uses the separate cancellation
- * control to request safe stopping.
+ * If the observer throws or cannot be delivered, Rust stops delivering to it and
+ * reports the first failure as `observerError`. `cancelOnObserverError` is the
+ * observer failure policy Rust applies: `true` cancels the run at the failure,
+ * `false` (the default) lets it finish. A failure before the run pauses for Local
+ * Ignore recovery abandons that recovery either way, so such a run resolves
+ * cancelled with no `pendingRecovery` and no filesystem work.
  */
 export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 

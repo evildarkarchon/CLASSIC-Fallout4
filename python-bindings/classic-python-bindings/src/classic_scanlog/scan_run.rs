@@ -1976,8 +1976,8 @@ const fn local_ignore_recovery_decision_to_py(
 fn success_execution(
     py: Python<'_>,
     mut result: contract::RunResult,
-    observer_error: Option<String>,
 ) -> PyResult<PyScanRunExecution> {
+    let observer_error = observer_error_to_py(result.observer_delivery_failure.take());
     let pending = take_pending_recovery(&mut result).map(Arc::new);
     let display_lines = display_lines_to_py(&render_run_result(&result));
     // Rendered only for the one status that pauses for an answer. Every other status has
@@ -2017,11 +2017,11 @@ fn success_execution(
 fn settled_execution(
     py: Python<'_>,
     outcome: Result<contract::SettledRunResult, contract::InfrastructureError>,
-    observer_error: Option<String>,
 ) -> PyResult<PyScanRunSettledExecution> {
     Ok(match outcome {
         Ok(settled) => {
-            let result = contract::RunResult::from(settled);
+            let mut result = contract::RunResult::from(settled);
+            let observer_error = observer_error_to_py(result.observer_delivery_failure.take());
             let display_lines = display_lines_to_py(&render_run_result(&result));
             PyScanRunSettledExecution {
                 result: Some(run_result_to_py(py, result)?),
@@ -2030,8 +2030,9 @@ fn settled_execution(
                 display_lines,
             }
         }
-        Err(error) => {
+        Err(mut error) => {
             let display_lines = display_lines_to_py(&render_infrastructure_error(&error));
+            let observer_error = observer_error_to_py(error.observer_delivery_failure.take());
             PyScanRunSettledExecution {
                 result: None,
                 error: Some(infrastructure_error_to_py(error)),
@@ -2043,11 +2044,9 @@ fn settled_execution(
 }
 
 /// Builds the failure envelope, rendering the failure before projecting it.
-fn failure_execution(
-    error: contract::InfrastructureError,
-    observer_error: Option<String>,
-) -> PyScanRunExecution {
+fn failure_execution(mut error: contract::InfrastructureError) -> PyScanRunExecution {
     let display_lines = display_lines_to_py(&render_infrastructure_error(&error));
+    let observer_error = observer_error_to_py(error.observer_delivery_failure.take());
     PyScanRunExecution {
         result: None,
         error: Some(infrastructure_error_to_py(error)),
@@ -2137,46 +2136,50 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
     event
 }
 
-struct PyObserverAdapter {
-    callback: Py<PyAny>,
-    cancellation: contract::Cancellation,
-    cancel_on_error: bool,
-    delivery_error: Option<String>,
-    delivery_failed: bool,
+/// Projects the Rust-reported delivery failure onto the envelope's `observer_error` message.
+fn observer_error_to_py(failure: Option<contract::ObserverDeliveryFailure>) -> Option<String> {
+    failure.map(|failure| failure.message)
 }
 
-impl PyObserverAdapter {
-    /// Records only the first adapter delivery failure and optionally requests cancellation.
-    fn record_failure(&mut self, message: String) {
-        self.delivery_failed = true;
-        if self.delivery_error.is_none() {
-            self.delivery_error = Some(message);
-        }
-        if self.cancel_on_error {
-            self.cancellation.cancel();
-        }
+/// Maps the binding's `cancel_on_observer_error` flag onto the Rust observer failure policy.
+const fn observer_failure_policy(
+    cancel_on_observer_error: bool,
+) -> contract::ObserverFailurePolicy {
+    if cancel_on_observer_error {
+        contract::ObserverFailurePolicy::CancelRun
+    } else {
+        contract::ObserverFailurePolicy::ContinueRun
     }
+}
+
+/// Delivers Rust events to one Python callable and reports an exception as a failed delivery.
+///
+/// Holds no failure state: Rust stops delivering after the first failure, applies the policy,
+/// and reports the failure in the result.
+struct PyObserverAdapter {
+    callback: Py<PyAny>,
 }
 
 impl contract::Observer for PyObserverAdapter {
     /// Reacquires the GIL for exactly one serialized callback delivery.
-    fn on_event(&mut self, event: contract::Event) {
-        if self.delivery_failed {
-            return;
-        }
-
-        let result = Python::attach(|py| self.callback.call1(py, (event_to_py(event),)));
-        if let Err(error) = result {
-            self.record_failure(error.to_string());
-        }
+    fn on_event(
+        &mut self,
+        event: contract::Event,
+    ) -> Result<(), contract::ObserverDeliveryFailure> {
+        Python::attach(|py| self.callback.call1(py, (event_to_py(event),)))
+            .map(|_| ())
+            .map_err(|error| contract::ObserverDeliveryFailure::new(error.to_string()))
     }
 }
 
 /// Executes one final-contract request with optional serialized observation.
 ///
-/// Observer exceptions are adapter-only data. Delivery stops after the first
-/// exception, while `cancel_on_observer_error` determines whether the adapter
-/// also requests safe stopping through the separate cancellation control.
+/// An observer exception is a failed delivery: Rust stops delivering after the
+/// first one and reports it as `observer_error`. `cancel_on_observer_error` is the
+/// observer failure policy Rust applies: `True` cancels the run at the failure,
+/// `False` (the default) lets it finish. A failure before the run pauses for Local
+/// Ignore recovery abandons that recovery either way, so such a run finishes
+/// cancelled with no `pending_recovery` and no filesystem work.
 #[pyfunction]
 #[pyo3(signature = (request, cancellation, observer=None, cancel_on_observer_error=false))]
 pub fn scan_run_execute(
@@ -2189,14 +2192,8 @@ pub fn scan_run_execute(
     let request = request.inner.clone();
     let cancellation = cancellation.inner.clone();
     let result = without_gil_block_on(py, || async move {
-        let mut observer = observer.map(|callback| PyObserverAdapter {
-            callback,
-            cancellation: cancellation.clone(),
-            cancel_on_error: cancel_on_observer_error,
-            delivery_error: None,
-            delivery_failed: false,
-        });
-        let result = contract::execute_in_scopes(
+        let mut observer = observer.map(|callback| PyObserverAdapter { callback });
+        contract::execute_in_scopes(
             request,
             crate::classic_scanlog::SCANLOG_VERSION_REGISTRY_SCOPE.clone(),
             crate::classic_scanlog::SCANLOG_HASH_SCOPE.clone(),
@@ -2205,16 +2202,14 @@ pub fn scan_run_execute(
             observer
                 .as_mut()
                 .map(|adapter| adapter as &mut dyn contract::Observer),
+            observer_failure_policy(cancel_on_observer_error),
         )
-        .await;
-        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
-        (result, observer_error)
+        .await
     });
 
-    let (result, observer_error) = result;
     match result {
-        Ok(result) => success_execution(py, result, observer_error),
-        Err(error) => Ok(failure_execution(error, observer_error)),
+        Ok(result) => success_execution(py, result),
+        Err(error) => Ok(failure_execution(error)),
     }
 }
 
@@ -2435,18 +2430,12 @@ fn claim_continuation(
     observer: Option<Py<PyAny>>,
     cancel_on_observer_error: bool,
 ) -> PyResult<PyScanRunExecution> {
-    let (result, observer_error) = without_gil_block_on(py, || async move {
-        let mut observer = observer.map(|callback| PyObserverAdapter {
-            callback,
-            cancellation: cancellation.clone(),
-            cancel_on_error: cancel_on_observer_error,
-            delivery_error: None,
-            delivery_failed: false,
-        });
+    let result = without_gil_block_on(py, || async move {
+        let mut observer = observer.map(|callback| PyObserverAdapter { callback });
         // The legacy entry points claim the pending recovery's own continuation with the
         // caller's control, exactly as before settling existed.
         let continuation = pending.recovery().continuation();
-        let result = match decision {
+        match decision {
             Some(decision) => {
                 continuation
                     .resume(
@@ -2455,6 +2444,7 @@ fn claim_continuation(
                         observer
                             .as_mut()
                             .map(|adapter| adapter as &mut dyn contract::Observer),
+                        observer_failure_policy(cancel_on_observer_error),
                     )
                     .await
             }
@@ -2468,16 +2458,12 @@ fn claim_continuation(
                     )
                     .await
             }
-        };
-        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
-        (result, observer_error)
+        }
     });
 
     match result {
-        Ok(result) => success_execution(py, result, observer_error),
-        Err(contract::ResumeError::Infrastructure(error)) => {
-            Ok(failure_execution(error, observer_error))
-        }
+        Ok(result) => success_execution(py, result),
+        Err(contract::ResumeError::Infrastructure(error)) => Ok(failure_execution(error)),
         Err(error) => Err(scan_run_resume_error_to_py(py, error)),
     }
 }
@@ -2487,8 +2473,9 @@ fn claim_continuation(
 /// `decision` resumes the same discovered Crash Logs without rediscovery; `None` abandons the
 /// run, cancelling its own control and finishing cancelled after discovery with no filesystem
 /// work. If `pending_recovery.cancellation_requested` is already `True`, either form finishes
-/// cancelled after discovery. The GIL is released while the shared runtime executes, and the
-/// observer's optional safe cancellation uses the run's own control.
+/// cancelled after discovery. The GIL is released while the shared runtime executes, and
+/// `cancel_on_observer_error` is the observer failure policy Rust applies to the run's own
+/// control; `observer_error` reports the failure either way.
 ///
 /// Returns a [`PyScanRunSettledExecution`], which has no continuation and no pending recovery.
 /// Sequential or concurrent replay — through this function or the legacy `scan_run_resume` and
@@ -2514,31 +2501,22 @@ pub fn scan_run_settle(
         }
     });
     let pending = Arc::clone(&pending_recovery.inner);
-    let (result, observer_error) = without_gil_block_on(py, || async move {
-        let mut observer = observer.map(|callback| PyObserverAdapter {
-            callback,
-            cancellation: pending.recovery().cancellation().clone(),
-            cancel_on_error: cancel_on_observer_error,
-            delivery_error: None,
-            delivery_failed: false,
-        });
-        let result = pending
+    let result = without_gil_block_on(py, || async move {
+        let mut observer = observer.map(|callback| PyObserverAdapter { callback });
+        pending
             .settle(
                 decision,
                 observer
                     .as_mut()
                     .map(|adapter| adapter as &mut dyn contract::Observer),
+                observer_failure_policy(cancel_on_observer_error),
             )
-            .await;
-        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
-        (result, observer_error)
+            .await
     });
 
     match result {
-        Ok(settled) => settled_execution(py, Ok(settled), observer_error),
-        Err(contract::ResumeError::Infrastructure(error)) => {
-            settled_execution(py, Err(error), observer_error)
-        }
+        Ok(settled) => settled_execution(py, Ok(settled)),
+        Err(contract::ResumeError::Infrastructure(error)) => settled_execution(py, Err(error)),
         Err(error) => Err(scan_run_resume_error_to_py(py, error)),
     }
 }

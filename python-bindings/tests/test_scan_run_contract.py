@@ -1687,3 +1687,74 @@ def test_a_legacy_resume_spends_the_pending_recovery(tmp_path: Path) -> None:
 
     with pytest.raises(classic_scanlog.ScanRunContinuationConsumedError):
         classic_scanlog.scan_run_settle(execution.pending_recovery)
+
+
+@pytest.mark.parametrize("cancel_on_observer_error", [True, False])
+def test_an_observer_failure_before_a_pending_recovery_makes_rust_abandon_it(
+        tmp_path: Path,
+        cancel_on_observer_error: bool,
+) -> None:
+    """Under either policy the run finishes cancelled, with nothing pending or written."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    crash_log = _write_shared_scan_run_logs(tmp_path, [fixture["input"]])[0]
+    ignore_path = tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    ignore_path.write_text(fixture["malformedLocalIgnore"], encoding="utf-8")
+    cancellation = classic_scanlog.ScanRunCancellation()
+    deliveries: list[object] = []
+
+    def broken_observer(event: object) -> None:
+        deliveries.append(event)
+        raise RuntimeError("progress view closed")
+
+    execution = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, tmp_path),
+            classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+        ),
+        cancellation,
+        broken_observer,
+        cancel_on_observer_error=cancel_on_observer_error,
+    )
+
+    assert len(deliveries) == 1
+    assert execution.error is None
+    assert execution.result.status == "cancelled"
+    assert execution.pending_recovery is None
+    assert execution.recovery_prompt is None
+    assert "progress view closed" in execution.observer_error
+    assert cancellation.is_cancelled is True
+    assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+
+
+@pytest.mark.parametrize("cancel_on_observer_error", [True, False])
+def test_settling_applies_cancel_on_observer_error_as_the_rust_policy(
+        tmp_path: Path,
+        cancel_on_observer_error: bool,
+) -> None:
+    """The settled run reports the failure; only the cancel policy cancels it."""
+
+    import classic_scanlog
+
+    execution, _crash_log, _ignore_path = _paused_shared_run(
+        classic_scanlog, tmp_path, classic_scanlog.ScanRunCancellation()
+    )
+
+    def broken_observer(_event: object) -> None:
+        raise RuntimeError("settle view closed")
+
+    settled = classic_scanlog.scan_run_settle(
+        execution.pending_recovery,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+        broken_observer,
+        cancel_on_observer_error=cancel_on_observer_error,
+    )
+
+    assert "settle view closed" in settled.observer_error
+    assert settled.result.status == (
+        "cancelled" if cancel_on_observer_error else "completed"
+    )
+    assert execution.pending_recovery.cancellation_requested is cancel_on_observer_error
