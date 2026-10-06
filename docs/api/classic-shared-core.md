@@ -523,7 +523,7 @@ Source-observed limitation:
 
 Everything is reached through the module path, for example `classic_shared_core::yaml::load_yaml_sync` or `classic_shared_core::yaml::validators::SettingType`. Nothing from `yaml` is re-exported at the crate root, which keeps `yaml::Result` from colliding with other crate-root names.
 
-CLASSIC-specific file identity (`YamlFile`) is deliberately **not** here; it stays in [`classic-settings-core`](classic-settings-core.md) until config takes file policy (issue #246).
+CLASSIC-specific file identity is deliberately **not** here; it is the config-owned [`classic_config_core::YamlSource`](classic-config-core.md#yamlsource), which replaced the former `classic_settings_core::YamlFile` in issue #246.
 
 ### Module map
 

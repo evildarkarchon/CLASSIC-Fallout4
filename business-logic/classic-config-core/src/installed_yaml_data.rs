@@ -5,9 +5,9 @@ use crate::explicit_yaml_data::{
     ExplicitYamlDataLoadError, GameDataRole, YamlDataContentIdentity, game_data_key,
     registered_game_data_role, validate_game, validate_ignore, validate_main,
 };
+use crate::yaml_cache::yaml_cache_dir_with_env;
 use crate::yamldata::{YamlDataCore, parse_and_merge_yaml_content};
 use classic_durable_publication as durable_publication;
-use classic_path_core::yaml_cache_dir_with_env;
 use classic_shared_core::GameId;
 use classic_shared_core::yaml::YamlOperations;
 use classic_shared_core::yaml::{

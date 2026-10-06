@@ -1,8 +1,9 @@
 //! Settings operations bridge for CXX FFI.
 //!
-//! Bridges `classic_settings_core` (`YamlFile`) and the generic YAML rules,
-//! YAML operations, and both YAML caches in `classic_shared_core::yaml` to the
-//! C++ layer. Covers these surfaces:
+//! Bridges the config-owned CLASSIC YAML file identity
+//! (`classic_config_core::YamlSource`, projected as the bridge's `YamlFile`),
+//! and the generic YAML rules, YAML operations, and both YAML caches in
+//! `classic_shared_core::yaml`, to the C++ layer. Covers these surfaces:
 //!
 //! 1. **YAML operations** (pre-existing): File loading, parsing, settings access
 //!    via dot-notation keys, and per-instance cache observation. Delegates to
@@ -40,7 +41,7 @@
 //!
 //! Everything else on the shared-core logical-key cache and `validators` IS exposed.
 
-use classic_settings_core::YamlFile as CoreYamlFile;
+use classic_config_core::YamlSource as CoreYamlSource;
 use classic_shared_core::yaml as shared_yaml;
 use classic_shared_core::yaml::validators::{self, CoercedValue, SettingType};
 use classic_shared_core::yaml::{YamlCacheStats, YamlOperations, yaml_cache_stats};
@@ -1617,15 +1618,15 @@ fn settings_invalidate(key: &str) -> bool {
     shared_yaml::invalidate(key)
 }
 
-fn from_bridge_yaml_file(f: ffi::YamlFile) -> CoreYamlFile {
+fn from_bridge_yaml_file(f: ffi::YamlFile) -> CoreYamlSource {
     match f {
-        ffi::YamlFile::Main => CoreYamlFile::Main,
-        ffi::YamlFile::Ignore => CoreYamlFile::Ignore,
-        ffi::YamlFile::Game => CoreYamlFile::Game,
-        ffi::YamlFile::GameLocal => CoreYamlFile::GameLocal,
-        ffi::YamlFile::Test => CoreYamlFile::Test,
-        ffi::YamlFile::Cache => CoreYamlFile::Cache,
-        _ => CoreYamlFile::Main,
+        ffi::YamlFile::Main => CoreYamlSource::Main,
+        ffi::YamlFile::Ignore => CoreYamlSource::Ignore,
+        ffi::YamlFile::Game => CoreYamlSource::Game,
+        ffi::YamlFile::GameLocal => CoreYamlSource::GameLocal,
+        ffi::YamlFile::Test => CoreYamlSource::Test,
+        ffi::YamlFile::Cache => CoreYamlSource::Cache,
+        _ => CoreYamlSource::Main,
     }
 }
 

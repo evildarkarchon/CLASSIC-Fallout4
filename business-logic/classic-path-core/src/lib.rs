@@ -20,7 +20,10 @@
 //! - `ini_parser`: INI file parsing and validation
 //! - `platform`: Platform-specific implementations (Windows/Linux)
 //! - `error`: Unified error types
-//! - `yaml_cache` / `notification_cache`: Per-user cache directories under the OS cache root
+//! - `notification_cache`: Per-user app-notification cache directory under the OS cache root
+//!
+//! The per-user YAML Data cache location (`CLASSIC/yaml-cache`) is YAML file policy and is
+//! owned by `classic_config_core::yaml_cache`; this crate does not resolve or re-export it.
 //!
 //! The generic path primitives (existence, file/directory, permission, drive, and read-only
 //! checks, the OS cache root, and the [`PathError`](classic_shared_core::path_core::PathError)
@@ -70,7 +73,6 @@ mod docs_path;
 mod game_path;
 mod ini_parser;
 mod notification_cache;
-mod yaml_cache;
 
 pub use checker::{DocumentsCheckResult, DocumentsCheckState, DocumentsChecker, IniCheckResult};
 pub use docs_path::DocsPathFinder;
@@ -85,9 +87,6 @@ pub use notification_cache::{
 };
 pub use validator::{
     validate_game_and_documents_paths, validate_required_files, validate_settings_path,
-};
-pub use yaml_cache::{
-    ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env,
 };
 
 // Re-export platform utilities

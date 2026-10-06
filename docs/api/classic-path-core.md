@@ -65,10 +65,11 @@ All contributor-facing APIs are re-exported from `src/lib.rs`; the internal modu
 
 ### Cache directory APIs
 
-- `yaml_cache_dir()`, `ensure_yaml_cache_dir()` (plus `_with_env` forms) - per-user `CLASSIC/yaml-cache` directory
 - `notification_cache_dir()`, `ensure_notification_cache_dir()` (plus `_with_env` forms) - per-user `CLASSIC/app-notification/<owner>/<repo>` directory
 
-Both resolve their root through `classic_shared_core::path_core::user_cache_root_with_env()` and word their own failure, so their `PathError::InvalidPath` messages (for example `neither LOCALAPPDATA nor APPDATA is set; cannot resolve YAML cache directory`) are unchanged.
+It resolves its root through `classic_shared_core::path_core::user_cache_root_with_env()` and words its own failure, so its `PathError::InvalidPath` message (`... cannot resolve notification cache directory`) is unchanged.
+
+The per-user YAML Data cache (`CLASSIC/yaml-cache`) is YAML file policy and moved to [`classic-config-core`](classic-config-core.md#yaml-cache-location) in issue #246 (`classic_config_core::yaml_cache_dir` and friends). This crate no longer resolves or re-exports it; the old `classic_path_core::yaml_cache_dir` paths ended without a forwarding re-export, because path must not point up into config.
 
 ### Documents and INI APIs
 
@@ -394,8 +395,8 @@ Related CLASSIC crates and consumers:
 - [`classic-config-core`](../../business-logic/classic-config-core) - neighboring config loader that supplies path settings but does not replace this crate's validation logic
 - [`classic-xse-core`](../../business-logic/classic-xse-core) - uses `DocsPathFinder` for XSE folder derivation
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - owns the custom-scan folder policy and composes `validate_game_and_documents_paths()` into its combined `validate_settings_paths()`
-- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, and the documents checker for C++ interop
-- [`classic-update-core`](../../business-logic/classic-update-core) and [`classic-config-core`](../../business-logic/classic-config-core) - consume the YAML and app-notification cache directories
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder` and the documents checker for C++ interop
+- [`classic-update-core`](../../business-logic/classic-update-core) - consumes the app-notification cache directory (the YAML Data cache directory is config-owned since issue #246)
 - [`classic-node`](../../node-bindings/classic-node) and [`classic-path-py`](../../python-bindings/classic-path-py) - binding surfaces over this crate's APIs
 - [`classic-tui`](../../ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
 

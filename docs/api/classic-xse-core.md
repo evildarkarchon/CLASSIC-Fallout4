@@ -51,6 +51,8 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 - `get_xse_info()` - combined installation + optional version probe
 - `resolve_xse_folder_for_scan()` - fail-soft XSE Folder resolution for Crash Log collection
 - `resolve_xse_folder_for_scan_in_version_registry_scope()` - the same resolution reading Version Registry metadata only from a caller-selected scope
+- `XseGameLocalFacts` - XSE's narrow input for config-owned Game Local facts (`docs_folder_xse`, `root_folder_docs`)
+- `resolve_xse_folder_from_game_local_facts()` / `resolve_xse_folder_from_game_local_facts_in_version_registry_scope()` - the same resolution from caller-supplied Game Local facts instead of reading Local.yaml
 - `XseError`, `XseResult<T>` - crate-specific error model
 
 ## Root-level re-exports
@@ -60,7 +62,8 @@ None. The crate used to re-export `compare_versions()`, `parse_version()`, and `
 Contributor note:
 
 - `classic-path-core` supports documents-folder discovery (`DocsPathFinder`); the generic `PathError` carried by `XseError::PathError` is owned by `classic_shared_core::path_core` (#245)
-- `classic-settings-core` is used internally for Local.yaml parsing
+- `classic_shared_core::yaml::YamlOperations` is used internally for the legacy Local.yaml read in `resolve_xse_folder_for_scan*`; the facts entry points read no YAML
+- the crate does not depend on `classic-config-core`; config-owned Game Local facts arrive as plain `XseGameLocalFacts` values
 - `classic-version-registry-core` is the source of truth for docs folder names, Steam app IDs, and XSE acronyms used by XSE Folder derivation
 
 ---
@@ -183,6 +186,21 @@ Behavior worth knowing:
 - explicit `Docs_Folder_XSE` always wins over derived values
 - standard crash scans should keep custom folders additive to XSE Folder collection; use `classic_scanlog_core::LogCollector::new_for_scan(...)` (Crash Log collection moved from file I/O to scanlog core in #254) when the caller has full scan configuration
 - Version Registry metadata comes from the process default snapshot; `resolve_xse_folder_for_scan_in_version_registry_scope(..., &VersionRegistryScope)` applies the same order but reads only the caller's [scope](classic-version-registry-core.md#version-registry-scopes), taking its snapshot only for a Fallout 4 game. The Crash Log Scan Run uses it with the run's scope for Standard discovery, then builds its `LogCollector` from the resolved folder
+
+## XSE Folder from Game Local facts
+
+The Game Local document is config-owned ([Game Local Facts](classic-config-core.md#game-local-facts)), and this crate must not depend on config. So XSE also accepts the two facts it needs as a plain value:
+
+```rust
+pub struct XseGameLocalFacts {
+    pub docs_folder_xse: Option<PathBuf>,  // Game_Info.Docs_Folder_XSE
+    pub root_folder_docs: Option<PathBuf>, // Game_Info.Root_Folder_Docs
+}
+```
+
+`resolve_xse_folder_from_game_local_facts(&facts, game, selected_game_version, configured_docs_root)` and its `_in_version_registry_scope(..., &VersionRegistryScope)` form apply steps 2-5 above to the supplied facts: the explicit `docs_folder_xse`, then the folder derived from `root_folder_docs`, then the configured docs root, then documents discovery. Empty paths count as absent, the Fallout 4 VR `F4SE` folder convention is unchanged, and the registry snapshot is taken at the same point as the YAML-reading form. `resolve_xse_folder_for_scan*` now reads Local.yaml into these facts and delegates, so both entry points agree by construction.
+
+A composing caller reads the facts with `classic_config_core::read_game_local_facts(yaml_dir_data, game)` and copies `docs_folder_xse` and `root_folder_docs` into `XseGameLocalFacts`; `classic-scangame-core/tests/game_local_xse_facts.rs` pins that composition. Moving the existing scan, setup, and binding callers onto the facts entry points (and retiring XSE's own Local.yaml read) is issue #252.
 
 ## Version helpers
 
