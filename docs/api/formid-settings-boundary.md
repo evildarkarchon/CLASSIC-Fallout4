@@ -38,7 +38,7 @@ The typed read path retains relative strings exactly; Crash Log Scan preparation
 
 ### Game-aware scan read (the VR read rule)
 
-`CrashLogScanSettings::formid_databases_for_game(game: GameId) -> Vec<&str>` is the only scan-selection read of that map. Frontends never pick rows out of `formid_databases()` for a scan, and none keeps its own game-to-key mapping.
+`CrashLogScanSettings::formid_databases_for_game(game: GameId) -> Vec<&str>` is the only scan-selection read of that map. Frontends never pick rows out of `formid_databases()` for a scan, and none keeps its own game-to-key mapping. Crash Log Scan Launch ([`classic-scan-launch.md`](classic-scan-launch.md)) uses the same read for the scanned game when it builds a request, so a launched request carries exactly these rows.
 
 - **Fallout 4 VR** shares the Fallout 4 corpus, as it already does for the Main database and YAML Data. Reading for `Fallout4VR` returns the `Fallout4` rows followed by any legacy `Fallout4VR` rows, de-duplicated with the first occurrence kept. Older documents that saved VR rows under `Fallout4VR` keep working.
 - **Every other game** (`Fallout4`, `Skyrim`, `Starfield`) reads exactly the rows saved under its own key, with no de-duplication. A Fallout 4 (non-VR) scan never reads `Fallout4VR` rows, so it sees exactly the rows it saw before this rule.

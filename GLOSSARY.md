@@ -181,6 +181,10 @@ _Avoid_: config loading, scan setup
 The execution of a Standard or Targeted Crash Log scan intent. It resolves the Crash Logs for that intent, performs intake and analysis, produces Autoscan Reports, records per-log scan outcomes, and may move Unsolved Logs according to scan settings and scan intent.
 _Avoid_: scan transaction, analysis job, scan session
 
+**Crash Log Scan Launch**:
+The read-only projection of saved User Settings, the selected game, and per-run overrides into a Crash Log Scan Run request and, when FCX Mode is enabled, its Crash Log Scan Setup Context. It never persists User Settings and does not run the scan.
+_Avoid_: scan config, request builder, launch settings
+
 **Crash Log Scan Run Result**:
 The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, optional selected Installed YAML Data metadata and diagnostics, and per-log outcomes in discovery order. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
 _Avoid_: result list, exception status, scan summary string

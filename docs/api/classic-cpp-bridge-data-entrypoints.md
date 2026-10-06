@@ -412,6 +412,35 @@ Standard movement uses one opaque value returned by:
 - `scan_run_unsolved_logs_move_to_configured_or_default()`
 - `scan_run_unsolved_logs_move_to_custom(path)`
 
+### Crash Log Scan Launch
+
+Instead of building the DTOs above by hand, a caller can let Rust build the
+request from saved User Settings and per-run overrides
+([`classic-scan-launch.md`](classic-scan-launch.md), ADR-0009). Launch opens
+User Settings read-only and never writes them; no frontend uses it yet.
+
+- `scan_run_launch_standard(installation_root, overrides)` and
+  `scan_run_launch_targeted(installation_root, inputs, overrides)` return an
+  opaque `ScanRunLaunch`. They throw only for unrepresentable input: a blank
+  root or scan path, an unknown game-version token, or an out-of-range
+  `ScanRunGameId`.
+- `scan_run_launch_error(launch)` returns `ScanRunLaunchErrorDto`;
+  `has_error` is authoritative and `kind` is `TargetedWithoutInputs` today.
+- `scan_run_launch_view(launch)` returns `ScanRunLaunchRequestDto`, which
+  reuses `ScanRunConfigurationDto`, `ScanRunStandardSourceDto`,
+  `ScanRunTargetedSourceDto` and `ScanRunSetupContextDto` filled with what the
+  launch decided, plus `intent`, `unsolved_logs`, `fcx_enabled`, and
+  `diagnostics` (`ScanRunLaunchDiagnosticDto`: `kind`, `code`, `message`).
+  Fields that do not apply to the intent are empty placeholders.
+- `scan_run_launch_request(launch)` returns an executable `ScanRunRequest`
+  copy for `scan_run_contract_execute`.
+
+`ScanRunLaunchOverridesDto` uses `has_*` presence flags. A present
+`max_concurrent` of zero requests adaptive concurrency and so overrides a saved
+limit, unlike `ScanRunConfigurationDto`, where present zero is a request
+validation error. `show_formid_values` and `simplify_logs` are supplied-as-on.
+`view` and `request` throw when the launch failed; check the error first.
+
 ### Cancellation
 
 `ScanRunCancellation` is monotonic and opaque:
