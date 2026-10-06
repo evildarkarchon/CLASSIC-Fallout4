@@ -255,26 +255,6 @@ GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapsho
 
 } // namespace
 
-CrashLogScanLaunchSettings GuiUserSettingsSnapshot::scanLaunchSettings(const QString& game) const
-{
-    return {
-        game,
-        scan.gameVersion,
-        scan.formIdValueLookup,
-        scan.fcxMode,
-        scan.simplifyLogs,
-        scan.moveUnsolvedLogs,
-        scan.unsolvedLogsDestination.value_or(QString{}),
-        scan.maxConcurrentScans,
-        scan.customScanInput.value_or(QString{}),
-        // Never the raw formIdDatabases map: Rust owns which saved rows apply to this game's scan.
-        scan.scanFormIdDatabases.value(game),
-        gameSetup.gameRoot.value_or(QString{}),
-        gameSetup.documentsRoot.value_or(QString{}),
-        gameSetup.gameExecutable.value_or(QString{}),
-    };
-}
-
 GuiUserSettingsSnapshot GuiUserSettings::open(const QString& classicRoot)
 {
     return snapshotFrom(classic::settings::user_settings_open_gui_settings(toStdString(classicRoot)));

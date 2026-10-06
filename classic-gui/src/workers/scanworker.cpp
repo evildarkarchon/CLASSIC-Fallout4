@@ -1,8 +1,8 @@
 #include "scanworker.h"
 
 #include "core/rust_qt_bridge.h"
+#include "scanlaunch.h"
 #include "scanprogressmodel.h"
-#include "scanrequestbuilder.h"
 #include "scanrunpresentation.h"
 
 #include "classic_cxx_bridge/scanner.h"
@@ -154,14 +154,30 @@ void ScanWorker::requestCancel()
     scanner::scan_run_cancellation_cancel(*m_cancellation);
 }
 
-void ScanWorker::doScan(const QString& installationRoot, const classic::gui::CrashLogScanLaunchSettings& settings,
-                        const QString& baseDirectory, const QString& setupXseLogPath, const QStringList& targetedInputs)
+void ScanWorker::doScan(const QString& installationRoot, const QStringList& targetedInputs)
 {
     qDebug() << "ScanWorker: starting" << (targetedInputs.isEmpty() ? "standard" : "targeted") << "scan run";
 
     try {
-        auto request = classic::gui::buildScanRunRequest(installationRoot, baseDirectory, settings, setupXseLogPath,
-                                                         targetedInputs);
+        // Launching reads User Settings on this worker thread, at the moment the scan starts, so a
+        // save made since the window last refreshed its snapshot is what the scan uses.
+        const auto launch = classic::gui::launchScanRun(installationRoot, targetedInputs);
+        const auto launchError = scanner::scan_run_launch_error(*launch);
+        if (launchError.has_error) {
+            // Typed refusals are reserved for input Rust cannot launch from, such as an XSE log
+            // location that cannot be inspected. A missing FCX folder is not one: it launches and
+            // the run's Crash Log Scan Setup Result reports it.
+            emit error(classic::toQString(launchError.message));
+            return;
+        }
+        const auto launchView = scanner::scan_run_launch_view(*launch);
+        const QString launchWarningText = classic::gui::formatScanRunLaunchWarning(launchView);
+        if (!launchWarningText.isEmpty()) {
+            qWarning().noquote() << classic::gui::renderScanRunDisplayLinesAsPlainText(
+                classic::gui::presentScanRunDisplayLines(launchView.display_lines));
+            emit launchWarning(launchWarningText);
+        }
+        auto request = scanner::scan_run_launch_request(*launch);
         GuiScanRunObserver observer(*this);
         // The GUI has always stopped a run whose progress view failed, so it asks Rust to.
         auto operation = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer,
