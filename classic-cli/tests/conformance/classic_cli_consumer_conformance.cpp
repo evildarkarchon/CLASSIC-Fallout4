@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 //
-// Test-only Crash Log Scan Run consumer receipt runner for the native CLI.
+// Test-only Crash Log Scan Run, Crash Log Scan Launch, and User Settings consumer receipt runner
+// for the native CLI.
 
+#include "cli_args.h"
 #include "scan_run_cli.h"
-#include "user_settings_action.h"
 
 #include <nlohmann/json.hpp>
 
@@ -447,7 +448,48 @@ std::string settings_bytes(const fs::path& path) {
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
 
-/// Drives the maintained CLI settings preparation and explicit-save boundaries.
+/// Launches through the production CLI seam and returns the launched request's read-only view.
+///
+/// `launch_cli_scan_run` runs any explicit Unsolved Logs Destination update first, exactly as a
+/// CLI scan does, so a failed update surfaces here as a runner error rather than as a launch.
+scanner::ScanRunLaunchRequestDto launch_view(const CliArgs& args, const fs::path& root) {
+    auto launch = launch_cli_scan_run(args, root.string());
+    if (!launch.has_value()) {
+        throw RunnerError("CLI did not launch because its explicit User Settings Update failed");
+    }
+    const auto error = scanner::scan_run_launch_error(**launch);
+    if (error.has_error) {
+        throw RunnerError("CLI Crash Log Scan Launch failed: " + owned_string(error.message));
+    }
+    return scanner::scan_run_launch_view(**launch);
+}
+
+/// Returns the launch's diagnostic codes in Rust's order.
+json launch_diagnostic_codes(const scanner::ScanRunLaunchRequestDto& view) {
+    json codes = json::array();
+    for (const auto& diagnostic : view.diagnostics) {
+        codes.push_back(owned_string(diagnostic.code));
+    }
+    return codes;
+}
+
+/// Returns the launched FormID database rows in order.
+json launch_formid_database_paths(const scanner::ScanRunLaunchRequestDto& view) {
+    json paths = json::array();
+    for (const auto& path : view.configuration.formid_database_paths) {
+        paths.push_back(owned_string(path));
+    }
+    return paths;
+}
+
+/// Returns the launched Unsolved Logs Destination, or an empty string when none is configured.
+std::string launch_unsolved_logs_destination(const scanner::ScanRunLaunchRequestDto& view) {
+    return view.configuration.has_configured_unsolved_logs_destination
+               ? owned_string(view.configuration.configured_unsolved_logs_destination)
+               : std::string{};
+}
+
+/// Drives the maintained CLI launch and explicit-save boundaries against User Settings scenarios.
 json observe_user_settings(const json& plan, const json& obligation) {
     const std::string id = obligation.at("id").get<std::string>();
     TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(), id);
@@ -462,76 +504,156 @@ json observe_user_settings(const json& plan, const json& obligation) {
         args.game_version_was_explicit = true;
         args.max_concurrent = 3;
         args.max_concurrent_was_explicit = true;
-        const auto prepared = prepare_scan_user_settings(args, root.string());
-        if (!prepared) {
-            throw RunnerError("CLI did not prepare typed settings");
-        }
+        const auto launched = launch_view(args, root);
         const bool unchanged = before == settings_bytes(settings);
 
-        // A Fallout 4 VR managed game reaches the CLI scan through the same preparation path,
-        // with no explicit --game, so the observed rows are the ones a VR user's scan would read.
+        // A Fallout 4 VR managed game reaches the CLI scan through the same launch, with no
+        // explicit --game, so the observed rows are the ones a VR user's scan would read.
         fs::copy_file(plan.at("fixtures").at("vr_shared_and_legacy_formid_databases").get<std::string>(), settings,
                       fs::copy_options::overwrite_existing);
         const auto vr_before = settings_bytes(settings);
-        const auto vr = prepare_scan_user_settings(CliArgs{}, root.string());
-        if (!vr) {
-            throw RunnerError("CLI did not prepare Fallout 4 VR typed settings");
-        }
-        return json{{"game", prepared->game}, {"gameVersion", prepared->game_version},
-                    {"maxConcurrent", prepared->max_concurrent},
-                    {"formIdDatabasePaths", prepared->formid_database_paths},
-                    {"classification", prepared->classification}, {"commitEligibility", prepared->commit_eligibility},
+        const auto vr = launch_view(CliArgs{}, root);
+        return json{{"game", cli_scan_run_game_token(launched.configuration.game)},
+                    {"gameVersion", owned_string(launched.configuration.game_version)},
+                    {"maxConcurrent", launched.configuration.max_concurrent},
+                    {"formIdDatabasePaths", launch_formid_database_paths(launched)},
+                    {"launchDiagnosticCodes", launch_diagnostic_codes(launched)},
                     {"unchanged", unchanged},
                     {"fallout4Vr",
-                     json{{"game", vr->game},
-                          {"formIdDatabasePaths", vr->formid_database_paths},
+                     json{{"game", cli_scan_run_game_token(vr.configuration.game)},
+                          {"formIdDatabasePaths", launch_formid_database_paths(vr)},
                           {"unchanged", vr_before == settings_bytes(settings)}}}};
     }
     if (id == "cli.settings-explicit-save") {
         validate_scenario_ids(obligation, {"bootstrap-missing-overrides", "commit-one-canonical-field-without-losing-unknowns"});
+        // Each launch below first commits the destination flag as its own User Settings Update,
+        // then reads it back through Crash Log Scan Launch, which is the order a CLI scan uses.
         CliArgs args{};
         args.unsolved_logs_destination = "D:/Receipt/Unsolved";
-        const bool bootstrapped = persist_unsolved_logs_destination_option(args, root.string());
-        const auto bootstrap = prepare_scan_user_settings(CliArgs{}, root.string());
-        if (!bootstrap) {
-            throw RunnerError("CLI bootstrap did not produce scan settings");
-        }
+        const auto bootstrap = launch_view(args, root);
         fs::copy_file(plan.at("fixtures").at("unknown_entries").get<std::string>(), settings,
                       fs::copy_options::overwrite_existing);
-        const bool saved = persist_unsolved_logs_destination_option(args, root.string());
         // Observe the ordinary save before reset can hide a lost destination update.
-        const auto after_save = prepare_scan_user_settings(CliArgs{}, root.string());
-        if (!after_save) {
-            throw RunnerError("CLI ordinary save did not produce scan settings");
-        }
+        const auto after_save = launch_view(args, root);
         CliArgs reset{};
         reset.reset_unsolved_logs_destination = true;
-        const bool reset_saved = persist_unsolved_logs_destination_option(reset, root.string());
-        const auto reopened = prepare_scan_user_settings(CliArgs{}, root.string());
-        if (!reopened) {
-            throw RunnerError("CLI accepted save did not produce scan settings");
-        }
-        return json{{"bootstrapSucceeded", bootstrapped}, {"bootstrapClassification", bootstrap->classification},
-                    {"destination", bootstrap->unsolved_logs_destination}, {"saveSucceeded", saved},
-                    {"savedDestination", after_save->unsolved_logs_destination},
-                    {"resetSucceeded", reset_saved}, {"resetDestination", reopened->unsolved_logs_destination},
+        const auto reopened = launch_view(reset, root);
+        return json{{"bootstrapLaunchDiagnosticCodes", launch_diagnostic_codes(bootstrap)},
+                    {"destination", launch_unsolved_logs_destination(bootstrap)},
+                    {"savedDestination", launch_unsolved_logs_destination(after_save)},
+                    {"resetDestination", launch_unsolved_logs_destination(reopened)},
                     {"unknownRetained", settings_bytes(settings).find("ThirdPartyPlugin") != std::string::npos}};
     }
     if (id == "cli.settings-degraded-rejection") {
         validate_scenario_ids(obligation, {"reject-update-malformed"});
         fs::copy_file(plan.at("fixtures").at("malformed_document").get<std::string>(), settings);
         const auto before = settings_bytes(settings);
-        const auto prepared = prepare_scan_user_settings(CliArgs{}, root.string());
-        if (!prepared) {
-            throw RunnerError("CLI did not expose a degraded read snapshot");
-        }
+        // A degraded document still launches, carrying its diagnostics, ...
+        const auto launched = launch_view(CliArgs{}, root);
+        // ... but the explicit destination update is refused, so the CLI never starts that scan.
         CliArgs args{};
         args.unsolved_logs_destination = "D:/Receipt/Unsolved";
-        const bool saved = persist_unsolved_logs_destination_option(args, root.string());
-        return json{{"classification", prepared->classification}, {"commitEligibility", prepared->commit_eligibility},
-                    {"saved", saved}, {"unchanged", before == settings_bytes(settings)}};
+        const bool launched_after_save = launch_cli_scan_run(args, root.string()).has_value();
+        return json{{"launchDiagnosticCodes", launch_diagnostic_codes(launched)},
+                    {"launchedAfterRejectedSave", launched_after_save},
+                    {"unchanged", before == settings_bytes(settings)}};
     }
     throw RunnerError("unsupported CLI User Settings obligation: " + id);
+}
+
+/// One Crash Log Scan Launch scenario as a CLI user would type it.
+struct CliLaunchCase {
+    std::string_view scenario_id;
+    std::string_view settings_fixture;
+    std::vector<std::string> flags;
+};
+
+/// Returns the command line that expresses one launch scenario's per-run overrides.
+///
+/// The flags are this runner's own spelling of the scenario's overrides: the plan deliberately
+/// carries no scenario inputs, so the runner states them, and the catalog's expectation is what
+/// proves the flags reached the launch with the meaning the scenario gives them.
+CliLaunchCase cli_launch_case(std::string_view scenario_id) {
+    if (scenario_id == "managed-game-saved-values") {
+        return {scenario_id, "managed-fallout4", {}};
+    }
+    if (scenario_id == "explicit-value-overrides-win") {
+        return {scenario_id,
+                "managed-fallout4",
+                {"--game-version", "AE", "--scan-path", "One-off Logs", "--max-concurrent", "7"}};
+    }
+    if (scenario_id == "supplied-as-on-overrides") {
+        return {scenario_id, "saved-options-off", {"--show-fid-values", "--simplify-logs"}};
+    }
+    if (scenario_id == "adaptive-concurrency-override-beats-saved-limit") {
+        return {scenario_id, "managed-fallout4", {"--max-concurrent", "0"}};
+    }
+    if (scenario_id == "managed-game-named-explicitly-is-not-a-game-difference") {
+        return {scenario_id, "managed-fallout4", {"--game", "Fallout4"}};
+    }
+    throw RunnerError("unsupported CLI launch profile scenario: " + std::string(scenario_id));
+}
+
+/// Parses `flags` with the production CLI parser, exactly as `classic-cli` would receive them.
+CliArgs parse_cli_flags(const std::vector<std::string>& flags) {
+    std::vector<std::string> storage{"classic-cli"};
+    storage.insert(storage.end(), flags.begin(), flags.end());
+    std::vector<char*> argv;
+    for (auto& value : storage) {
+        argv.push_back(value.data());
+    }
+    return parse_args(static_cast<int>(argv.size()), argv.data());
+}
+
+/// Launches one scenario from parsed CLI flags while the working directory is an unrelated folder.
+json observe_launch_case(const json& plan, std::string_view scenario_id) {
+    const auto launch_case = cli_launch_case(scenario_id);
+    const std::string invocation_id = plan.at("invocation").at("id").get<std::string>();
+    TemporaryDirectory installation(invocation_id, std::string(scenario_id));
+    TemporaryDirectory elsewhere(invocation_id, std::string(scenario_id) + "-cwd");
+    const auto settings = installation.path() / "CLASSIC Settings.yaml";
+    fs::copy_file(plan.at("fixtures").at(std::string(launch_case.settings_fixture)).get<std::string>(), settings);
+    const auto before = settings_bytes(settings);
+
+    const auto args = parse_cli_flags(launch_case.flags);
+    // Run from an unrelated folder so a Standard base folder taken from the working directory
+    // would be visible as a mismatch rather than coinciding with the Installation Root.
+    RuntimeEnvironment environment(elsewhere.path());
+    const auto view = launch_view(args, installation.path());
+
+    const auto& configuration = view.configuration;
+    const auto& source = view.standard_source;
+    return json{
+        {"scenarioId", scenario_id},
+        {"flags", launch_case.flags},
+        {"intent", view.intent == scanner::ScanRunLaunchIntent::Standard ? "standard" : "targeted"},
+        {"game", cli_scan_run_game_token(configuration.game)},
+        {"gameVersion", owned_string(configuration.game_version)},
+        {"showFormidValues", configuration.show_formid_values},
+        {"simplifyLogs", configuration.simplify_logs},
+        {"maxConcurrent", configuration.has_max_concurrent ? json(configuration.max_concurrent) : json(nullptr)},
+        {"customScanDirectory",
+         source.has_custom_scan_directory ? json(owned_string(source.custom_scan_directory)) : json(nullptr)},
+        {"baseDirectoryIsInstallationRoot", fs::path(owned_string(source.base_directory)) == installation.path()},
+        {"fcxEnabled", view.fcx_enabled},
+        {"diagnosticCodes", launch_diagnostic_codes(view)},
+        {"settingsUnchanged", before == settings_bytes(settings)}};
+}
+
+/// Drives the maintained CLI Crash Log Scan Launch boundary.
+json observe_scan_launch(const json& plan, const json& obligation) {
+    const std::string id = obligation.at("id").get<std::string>();
+    if (id != "cli.scan-launch") {
+        throw RunnerError("unsupported CLI Crash Log Scan Launch obligation: " + id);
+    }
+    validate_scenario_ids(obligation, {"managed-game-saved-values", "explicit-value-overrides-win",
+                                       "supplied-as-on-overrides", "adaptive-concurrency-override-beats-saved-limit",
+                                       "managed-game-named-explicitly-is-not-a-game-difference"});
+    json cases = json::array();
+    for (const auto& scenario_id : obligation.at("scenarioIds")) {
+        cases.push_back(observe_launch_case(plan, scenario_id.get<std::string>()));
+    }
+    return json{{"cases", std::move(cases)}};
 }
 
 /// Executes one named consumer obligation and returns its narrow actual observation.
@@ -539,6 +661,9 @@ json execute_obligation(const json& plan, const json& obligation) {
     const std::string id = obligation.at("id").get<std::string>();
     if (plan.at("familyId") == "user-settings") {
         return observe_user_settings(plan, obligation);
+    }
+    if (plan.at("familyId") == "crash-log-scan-launch") {
+        return observe_scan_launch(plan, obligation);
     }
     if (id == "cli.display-content-delivery") {
         validate_scenario_ids(obligation, {"standard-happy-path"});
@@ -591,7 +716,8 @@ json obligation_receipt(const json& plan, const json& obligation) {
 /// Rejects semantic inputs and plans for any other execution identity.
 void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
-        (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings")) {
+        (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings" &&
+         plan.at("familyId") != "crash-log-scan-launch")) {
         throw RunnerError("unsupported CLI consumer conformance run plan");
     }
     const json& participant = plan.at("participant");

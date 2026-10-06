@@ -199,11 +199,13 @@ if(BUILD_TESTING)
     add_test(NAME classic-cxx-conformance COMMAND classic-cxx-conformance)
     set_tests_properties(classic-cxx-conformance PROPERTIES SKIP_RETURN_CODE 125)
 
-    # The CLI consumer runner links the maintained frontend presentation and
-    # recovery seams. It remains test-only and emits consumer obligations, never
-    # semantic CXX adapter observations.
+    # The CLI consumer runner links the maintained frontend presentation, launch,
+    # and recovery seams, plus the production flag parser so launch obligations
+    # start from real command lines. It remains test-only and emits consumer
+    # obligations, never semantic CXX adapter observations.
     add_executable(classic-cli-consumer-conformance
         tests/conformance/classic_cli_consumer_conformance.cpp
+        src/cli_args.cpp
         src/scan_run_cli.cpp
         src/user_settings_action.cpp
     )
@@ -211,6 +213,7 @@ if(BUILD_TESTING)
     target_include_directories(classic-cli-consumer-conformance PRIVATE src/)
     target_link_libraries(classic-cli-consumer-conformance PRIVATE
         fmt::fmt
+        CLI11::CLI11
         classic_cxx_bridge
         nlohmann_json::nlohmann_json
     )
@@ -282,6 +285,7 @@ if(BUILD_TESTING AND Catch2_FOUND)
         tests/test_scan_run_contract.cpp
         tests/test_scanner.cpp
         tests/test_user_settings_action.cpp
+        tests/test_scan_run_launch.cpp
         tests/test_perf_timing_contract.cpp
         tests/test_installation_root.cpp
         src/yaml_update.cpp

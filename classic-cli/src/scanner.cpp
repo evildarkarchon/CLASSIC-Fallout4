@@ -2,7 +2,6 @@
 #include "installation_root.h"
 #include "progress.h"
 #include "scan_run_cli.h"
-#include "user_settings_action.h"
 
 #ifdef _WIN32
 #include <io.h>
@@ -161,29 +160,42 @@ private:
 // Factored out so rust::Box<T> objects can be constructed in-place
 // rather than pre-declared (rust::Box is non-nullable, no nullptr init).
 
-/// Projects User Settings, runs the single Rust-owned operation, and presents its typed outcome.
+/// Launches through Crash Log Scan Launch, runs the single Rust-owned operation, and presents its
+/// typed outcome.
 static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
                              std::chrono::steady_clock::time_point total_start) {
-    const auto prepared = prepare_scan_user_settings(args, dirs.root);
-    if (!prepared.has_value()) {
+    // Rust builds the request from saved User Settings and the flags' overrides. A Standard scan
+    // looks for Crash Logs under the Installation Root, never under this process's working folder.
+    const auto launch = launch_cli_scan_run(args, dirs.root);
+    if (!launch.has_value()) {
         return 1;
     }
-
-    classic::registry::registry_set_game(prepared->game);
-    std::string mode_suffix;
-    if (prepared->game_version != "auto") {
-        mode_suffix += " " + prepared->game_version;
+    const auto launch_error = classic::scanner::scan_run_launch_error(**launch);
+    if (launch_error.has_error) {
+        fmt::print(stderr, "Fatal: could not launch the Crash Log Scan Run: {}\n",
+                   rust_string_to_std(launch_error.message));
+        return 2;
     }
-    if (prepared->fcx_mode) {
+    const auto view = classic::scanner::scan_run_launch_view(**launch);
+    for (const auto& message : describe_cli_scan_run_launch(view)) {
+        print_cli_scan_message(message);
+    }
+
+    const std::string game = cli_scan_run_game_token(view.configuration.game);
+    const std::string game_version = rust_string_to_std(view.configuration.game_version);
+    classic::registry::registry_set_game(game);
+    std::string mode_suffix;
+    if (game_version != "auto") {
+        mode_suffix += " " + game_version;
+    }
+    if (view.fcx_enabled) {
         mode_suffix += " [FCX]";
     }
-    fmt::print("CLASSIC v{} - Crash Log Scanner ({}{})\n\n", CLASSIC_CLI_VERSION, prepared->game, mode_suffix);
+    fmt::print("CLASSIC v{} - Crash Log Scanner ({}{})\n\n", CLASSIC_CLI_VERSION, game, mode_suffix);
 
-    std::error_code ec;
-    const std::string base_dir = fs::current_path(ec).string();
-    const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, base_dir);
+    const auto request = classic::scanner::scan_run_launch_request(**launch);
     CliScanRunCancellation cancellation;
-    CliScanRunObserver observer(prepared->game);
+    CliScanRunObserver observer(game);
 
     // Local Ignore recovery is an expected interactive choice, not a failure. The prompt clears any
     // live progress frame first so the question is not overwritten by the next render.
