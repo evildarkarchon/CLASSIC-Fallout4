@@ -741,10 +741,10 @@ move failed logs around the call.
 this crate directly and calls it; CXX exposes it as
 `scan_run_continuation_abandon`, Node as `scanRunAbandon`, and Python as
 `scan_run_abandon`. Each takes a continuation and a cancellation and no
-decision, and returns the same envelope its `resume` sibling does. Every
-frontend that offers the choice — the TUI, the native CLI, and the Qt GUI —
-routes it through this operation, so none of them writes the
-cancel-then-resume-with-a-placeholder sequence any more. `classic-py-cli` has no
+decision, and returns the same envelope its `resume` sibling does. The TUI and
+the Qt GUI route the choice through this operation, so neither writes the
+cancel-then-resume-with-a-placeholder sequence any more. The native CLI no
+longer calls it: it settles the pending recovery instead (below). `classic-py-cli` has no
 such choice to route: it treats a recovery-required result as terminal and never
 resumes.
 
@@ -769,6 +769,17 @@ resume and abandon surfaces keep working and share the one claim. See
 [classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md)
 and [node-python-contract-map.md](node-python-contract-map.md).
 
+The native CLI (`classic-cli/src/scan_run_cli.cpp`, #281) is the first frontend
+on this flow: execute, check for a pending recovery, and when its run is already
+cancelled settle with no decision without printing anything; otherwise print the
+pending recovery's prompt lines, then settle with the chosen decision, or with no
+decision when the user cancels. A non-interactive run reports the paused
+envelope unsettled. It no longer calls has-continuation, take-continuation,
+resume, or abandon, and its "second recovery request" and "recovery without a
+continuation" fatal branches are gone: the settled envelope cannot carry another
+recovery. Its `cli.recovery-interaction` consumer obligation records the
+decision passed to settling as `settledDecision`.
+
 The observer failure policy and the reported delivery failure reach every
 surface (#278). CXX observers return `ScanRunObserverDelivery` from
 `on_scan_run_event` instead of throwing, `scan_run_contract_execute` and
@@ -778,7 +789,11 @@ the execution envelope carries `has_observer_delivery_failure` /
 Python's `cancel_on_observer_error` are the policy (`true` is `CancelRun`), and
 their `observerError` / `observer_error` is the Rust-reported failure; neither
 binding tracks delivery failure itself. The legacy CXX
-`scan_run_continuation_resume` takes no policy and continues the run.
+`scan_run_continuation_resume` takes no policy and continues the run. The
+native CLI passes `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY` (`CancelRun`) to both
+execute and settle, its observer only returns the failed delivery, and it warns
+about the failure from the envelope's `has_observer_delivery_failure` rather
+than from state of its own.
 
 The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
 and Python. Retired report primitives and fragment-producing methods have no

@@ -210,6 +210,12 @@ The native CLI and Qt GUI implement this observer contract. Both initialize
 from discovery and effective-concurrency events, correlate live state by
 `discovery_index`, and present typed terminal outcomes after execution returns.
 
+The native CLI's observer reports a presentation failure only by returning a
+failed `ScanRunObserverDelivery`; it neither cancels nor records the failure.
+The CLI executes and settles under `CancelRun`
+(`CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY`) and prints its warning from the
+envelope's `has_observer_delivery_failure`.
+
 See:
 
 - [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md)
