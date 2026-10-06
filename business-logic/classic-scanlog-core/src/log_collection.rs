@@ -18,7 +18,7 @@ use tracing::debug;
 
 use classic_file_io_core::FileIOError;
 use classic_operation_context::cancellation_requested;
-use classic_xse_core::resolve_xse_folder_for_scan;
+use classic_scangame_core::resolve_xse_folder_for_scan;
 
 /// Result type for Crash Log collection: failures keep the general file I/O
 /// owner's typed [`FileIOError`] so existing binding error mapping applies.

@@ -23,13 +23,13 @@ use classic_config_core::{
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileHashScope;
 use classic_operation_context::scope_cancellation;
+use classic_scangame_core::resolve_xse_folder_for_scan_in_version_registry_scope;
 use classic_scangame_core::{
     ConfigFileCache, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, ModIniScanner,
 };
 use classic_shared_core::GameId;
 use classic_version_registry_core::VersionRegistryScope;
 use classic_vocabulary::Vocabulary;
-use classic_xse_core::resolve_xse_folder_for_scan_in_version_registry_scope;
 use futures::stream::{FuturesUnordered, StreamExt};
 use std::collections::VecDeque;
 use std::future::Future;

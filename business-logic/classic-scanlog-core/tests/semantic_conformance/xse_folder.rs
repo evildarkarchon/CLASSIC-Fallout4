@@ -27,7 +27,7 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     let _ = classic_version_registry_core::get_version_registry();
     env::set_current_dir(previous)?;
     let configured = text(&fixture["configuredDocs"])?;
-    let folder = classic_xse_core::resolve_xse_folder_for_scan(
+    let folder = classic_scangame_core::resolve_xse_folder_for_scan(
         root,
         &game,
         &text(&fixture["selectedVersion"])?,

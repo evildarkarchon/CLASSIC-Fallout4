@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T00:53:53.342421+00:00",
+  "generated_at_utc": "2026-10-06T01:20:22.320050+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -9687,6 +9687,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "resolve_xse_folder_for_scan",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/xse_folder.rs",
+      "source_decl": "pub fn resolve_xse_folder_for_scan(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_folder_for_scan",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_version_registry_scope, };",
+      "source_expr": "xse_folder::resolve_xse_folder_for_scan",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_folder_for_scan_in_version_registry_scope",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/xse_folder.rs",
+      "source_decl": "pub fn resolve_xse_folder_for_scan_in_version_registry_scope(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n    version_registry: &VersionRegistryScope,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_xse_folder_for_scan_in_version_registry_scope",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use xse_folder::{ resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_version_registry_scope, };",
+      "source_expr": "xse_folder::resolve_xse_folder_for_scan_in_version_registry_scope",
+      "tier": "tier1"
+    },
+    {
       "symbol": "run",
       "kind": "function",
       "arity": 1,
@@ -10100,6 +10140,15 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod xse;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "xse_folder",
+      "kind": "module",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub mod xse_folder;",
       "tier": "tier1"
     },
     {
@@ -22606,26 +22655,6 @@
       "owner_module": "xse",
       "source_file": "business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn new(xse_type: XseType, path: PathBuf)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "resolve_xse_folder_for_scan",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-xse-core",
-      "owner_module": "xse",
-      "source_file": "business-logic/classic-xse-core/src/lib.rs",
-      "source_decl": "pub fn resolve_xse_folder_for_scan(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "resolve_xse_folder_for_scan_in_version_registry_scope",
-      "kind": "function",
-      "arity": 5,
-      "crate": "classic-xse-core",
-      "owner_module": "xse",
-      "source_file": "business-logic/classic-xse-core/src/lib.rs",
-      "source_decl": "pub fn resolve_xse_folder_for_scan_in_version_registry_scope(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n    version_registry: &VersionRegistryScope,\n)",
       "tier": "tier1"
     },
     {

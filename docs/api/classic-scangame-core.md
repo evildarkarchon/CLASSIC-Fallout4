@@ -54,6 +54,7 @@ This crate exposes public modules directly and also re-exports most contributor-
 - `game_setup_intake` - setup-time path, version, registry, executable, documents, and XSE intake diagnostics
 - `crashgen_orchestrator` - crashgen config-path resolution, plugin detection, and report packaging
 - `game_report` - text report builders for loose-file and BA2 scan results
+- `xse_folder` - XSE Folder resolution from an installation's Game Local document (config facts composed with XSE derivation)
 
 ### Validation and scan modules
 
@@ -86,6 +87,7 @@ this state, so object results and returned duplicate maps now agree.
 - `GameSetupIntake`, `GameSetupIntakeResult`, `GameSetupCheck`, `game_setup_needs_path_detection()`
 - `GameIntegrityChecker`, `IntegrityConfig`
 - `XseChecker`, `GameVersion`, `ValidationResult`
+- `resolve_xse_folder_for_scan()`, `resolve_xse_folder_for_scan_in_version_registry_scope()`
 - `CrashgenChecker`, `TomlConfigIssue`
 - `ModIniScanner`, `ModIniScanResult`
 - `UnpackedScanner`, `UnpackedIssues`
@@ -292,6 +294,23 @@ Behavior worth knowing:
 - failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
 - documents-folder state is mapped from `classic-path-core`'s structured `DocumentsCheckState`, not rendered message text.
 - the module covers setup-only diagnostics, not ENB, crashgen TOML, Wrye, BA2, loose-file, or mod INI scans.
+
+## XSE Folder from the Game Local document
+
+`resolve_xse_folder_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> Option<PathBuf>` resolves the XSE Folder for an installation from its `CLASSIC Data` directory. It moved here from `classic-xse-core` in #252 with the same signature and behavior.
+
+Neither owner can do this alone: config owns the Game Local document and XSE owns the derivation, and XSE must not depend on config. This crate depends on both, so it composes them:
+
+1. `classic_config_core::read_game_local_facts(yaml_dir_data, game)` reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` fail-soft (missing, malformed, or blank values become absent facts).
+2. The `docs_folder_xse` and `root_folder_docs` facts are passed as `classic_xse_core::XseGameLocalFacts` to [`resolve_xse_folder_from_game_local_facts`](classic-xse-core.md#xse-folder-from-game-local-facts), which applies the precedence (explicit folder, recorded documents root, `configured_docs_root`, documents discovery) and the Fallout 4 VR `F4SE` folder convention.
+
+`resolve_xse_folder_for_scan_in_version_registry_scope(..., &VersionRegistryScope)` reads Version Registry metadata only from the caller's scope. `None` means "no XSE Folder"; the function never errors.
+
+Callers:
+
+- Crash Log collection: `classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery (with the run's Version Registry scope)
+- the C++ bridge's `classic::xse::resolve_xse_folder_for_scan`, which the GUI uses for its setup-detection XSE log hint, and `classic::files::log_collector_new_for_scan`
+- the `xse-folder` Binding Compliance Suite family (Rust and CXX participants), whose `domainOwner` is this crate
 
 ## Loose-file and archive scanning APIs
 
@@ -578,6 +597,7 @@ Important direct dependencies:
 - `classic-resource-core` - game-target DDS rules (`DDSAnalyzer`, `GameTarget`) used during loose-file scans
 - `classic-config-core` - optional rule-evaluation path for crashgen TOML checks via the absorbed crashgen rule model (`classic_config_core::crashgen_rules::*`, formerly a separate crate)
 - `classic-path-core` - path resolution and documents-folder checks used by Game Setup Intake
+- `classic-xse-core` - XSE loader probes for Game Setup Intake and XSE Folder derivation for `resolve_xse_folder_for_scan()`; `classic-config-core` supplies that resolver's Game Local facts
 - `classic-version-registry-core` - setup expectation metadata, Address Library metadata, and Fallout 4 version descriptions
 - `tokio` - async orchestration only
 - `rayon` - parallel synchronous scanning work

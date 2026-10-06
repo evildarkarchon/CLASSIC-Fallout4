@@ -72,125 +72,6 @@ fn docs_relative_path_uses_proton_safe_separator() {
     assert_eq!(docs_relative_path("Fallout4VR"), "My Games/Fallout4VR");
 }
 
-#[test]
-fn resolve_xse_folder_prefers_explicit_local_yaml_xse_folder() {
-    let temp = tempfile::tempdir().expect("tempdir");
-    let data = temp.path().join("CLASSIC Data");
-    std::fs::create_dir_all(&data).expect("create data dir");
-    std::fs::write(
-        data.join("CLASSIC Fallout4 Local.yaml"),
-        r#"
-Game_Info:
-  Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4\CustomXSE
-  Root_Folder_Docs: C:\Users\Test\Documents\My Games\Fallout4
-"#,
-    )
-    .expect("write local yaml");
-
-    let folder = resolve_xse_folder_for_scan(&data, "Fallout4", "auto", None)
-        .expect("expected explicit XSE Folder");
-
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4\CustomXSE")
-    );
-}
-
-#[test]
-fn resolve_xse_folder_derives_local_docs_root_from_registry_xse_acronym() {
-    let temp = tempfile::tempdir().expect("tempdir");
-    let data = temp.path().join("CLASSIC Data");
-    std::fs::create_dir_all(&data).expect("create data dir");
-    std::fs::write(
-        data.join("CLASSIC Fallout4 Local.yaml"),
-        r#"
-Game_Info:
-  Root_Folder_Docs: C:\Users\Test\Documents\My Games\Fallout4VR
-"#,
-    )
-    .expect("write local yaml");
-
-    let folder = resolve_xse_folder_for_scan(&data, "Fallout4", "VR", None)
-        .expect("expected derived XSE Folder");
-
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE")
-    );
-}
-
-#[test]
-fn resolve_xse_folder_treats_blank_local_values_as_missing() {
-    let temp = tempfile::tempdir().expect("tempdir");
-    let data = temp.path().join("CLASSIC Data");
-    std::fs::create_dir_all(&data).expect("create data dir");
-    std::fs::write(
-        data.join("CLASSIC Fallout4 Local.yaml"),
-        r#"
-Game_Info:
-  Docs_Folder_XSE: "   "
-  Root_Folder_Docs: "   "
-"#,
-    )
-    .expect("write local yaml");
-
-    let configured_docs_root = PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4");
-    let folder = resolve_xse_folder_for_scan(
-        &data,
-        "Fallout4",
-        "Original",
-        Some(configured_docs_root.as_path()),
-    )
-    .expect("expected configured docs root fallback");
-
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4\F4SE")
-    );
-}
-
-#[test]
-fn resolve_xse_folder_uses_configured_docs_root_when_local_yaml_missing() {
-    let temp = tempfile::tempdir().expect("tempdir");
-    let data = temp.path().join("CLASSIC Data");
-    std::fs::create_dir_all(&data).expect("create data dir");
-    let configured_docs_root = PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR");
-
-    let folder = resolve_xse_folder_for_scan(
-        &data,
-        "Fallout4",
-        "VR",
-        Some(configured_docs_root.as_path()),
-    )
-    .expect("expected configured docs root fallback");
-
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE")
-    );
-}
-
-#[test]
-fn resolve_xse_folder_treats_fallout4vr_auto_as_vr() {
-    let temp = tempfile::tempdir().expect("tempdir");
-    let data = temp.path().join("CLASSIC Data");
-    std::fs::create_dir_all(&data).expect("create data dir");
-    let configured_docs_root = PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR");
-
-    let folder = resolve_xse_folder_for_scan(
-        &data,
-        "Fallout4VR",
-        "auto",
-        Some(configured_docs_root.as_path()),
-    )
-    .expect("expected Fallout4VR auto fallback");
-
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE")
-    );
-}
-
 // ---------------------------------------------------------------------------
 // XSE Folder from caller-supplied Game Local facts
 // ---------------------------------------------------------------------------
@@ -257,6 +138,51 @@ fn xse_folder_from_facts_treats_empty_paths_as_absent() {
 }
 
 #[test]
+fn xse_folder_from_facts_prefers_the_recorded_docs_root_over_the_configured_one() {
+    let facts = XseGameLocalFacts {
+        docs_folder_xse: None,
+        root_folder_docs: Some(PathBuf::from(r"C:\Recorded\Fallout4")),
+    };
+    let configured_docs_root = PathBuf::from(r"C:\Configured\Fallout4");
+
+    let folder = resolve_xse_folder_from_game_local_facts(
+        &facts,
+        "Fallout4",
+        "Original",
+        Some(configured_docs_root.as_path()),
+    );
+
+    assert_eq!(folder, Some(PathBuf::from(r"C:\Recorded\Fallout4\F4SE")));
+}
+
+#[test]
+fn xse_folder_from_facts_still_honors_an_explicit_folder_for_unknown_games() {
+    // The explicit folder needs no registry metadata, so it is returned even
+    // when the game has no Version Registry entry.
+    let facts = XseGameLocalFacts {
+        docs_folder_xse: Some(PathBuf::from(r"D:\Custom\XSE")),
+        root_folder_docs: Some(PathBuf::from(r"C:\Recorded\Docs")),
+    };
+
+    assert_eq!(
+        resolve_xse_folder_from_game_local_facts(&facts, "Unknown", "auto", None),
+        Some(PathBuf::from(r"D:\Custom\XSE"))
+    );
+    assert_eq!(
+        resolve_xse_folder_from_game_local_facts(
+            &XseGameLocalFacts {
+                docs_folder_xse: None,
+                ..facts
+            },
+            "Unknown",
+            "auto",
+            None,
+        ),
+        None
+    );
+}
+
+#[test]
 fn xse_folder_from_facts_falls_back_to_the_configured_docs_root() {
     let configured_docs_root = PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR");
 
@@ -272,28 +198,5 @@ fn xse_folder_from_facts_falls_back_to_the_configured_docs_root() {
         Some(PathBuf::from(
             r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE"
         ))
-    );
-}
-
-#[test]
-fn xse_folder_from_facts_matches_the_local_yaml_resolver() {
-    // The YAML-reading resolver and the facts entry point must agree for the
-    // same recorded values, so moving the read to config changes nothing.
-    let temp = tempfile::tempdir().expect("tempdir");
-    let data = temp.path().join("CLASSIC Data");
-    std::fs::create_dir_all(&data).expect("create data dir");
-    std::fs::write(
-        data.join("CLASSIC Fallout4 Local.yaml"),
-        "Game_Info:\n  Root_Folder_Docs: C:\\Users\\Test\\Documents\\My Games\\Fallout4\n",
-    )
-    .expect("write local yaml");
-    let facts = XseGameLocalFacts {
-        docs_folder_xse: None,
-        root_folder_docs: Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4")),
-    };
-
-    assert_eq!(
-        resolve_xse_folder_from_game_local_facts(&facts, "Fallout4", "Original", None),
-        resolve_xse_folder_for_scan(&data, "Fallout4", "Original", None)
     );
 }

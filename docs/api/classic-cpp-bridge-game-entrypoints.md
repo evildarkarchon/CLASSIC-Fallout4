@@ -281,11 +281,11 @@ Current behavior:
 
 ### `resolve_xse_folder_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> String`
 
-Forwards to `classic_xse_core::resolve_xse_folder_for_scan()`.
+Forwards to `classic_scangame_core::resolve_xse_folder_for_scan()` (moved from `classic-xse-core` in #252; the C++ name and signature are unchanged). The CXX parity row maps it to `ownerModule: scangame`.
 
 Current behavior:
 
-- reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` through the Rust XSE module
+- reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` through `classic_config_core::read_game_local_facts()` and hands the facts to `classic_xse_core::resolve_xse_folder_from_game_local_facts()`
 - uses `Game_Info.Docs_Folder_XSE` first when present and non-blank
 - otherwise derives from `Game_Info.Root_Folder_Docs`, `configured_docs_root`, or Version Registry-backed documents discovery
 - appends the Rust XSE resolver's documents folder name for derived paths; Fallout 4 VR uses the shared `F4SE` subfolder even though its XSE acronym is `F4SEVR`

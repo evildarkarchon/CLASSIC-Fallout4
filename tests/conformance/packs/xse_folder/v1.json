@@ -3,7 +3,7 @@
   "familyId": "xse-folder",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-xse-core"
+    "rustCrate": "classic-scangame-core"
   },
   "fixtureRoot": "tests/fixtures/xse_folder_conformance",
   "fixtures": {
