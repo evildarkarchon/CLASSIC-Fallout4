@@ -928,7 +928,6 @@ dependencies = [
  "classic-shared-core",
  "configparser",
  "dirs",
- "regex",
  "serde",
  "serde_json",
  "serial_test",
@@ -943,6 +942,7 @@ name = "classic-path-py"
 version = "9.1.0"
 dependencies = [
  "classic-path-core",
+ "classic-resource-core",
  "classic-scanlog-core",
  "classic-shared-core",
  "classic-shared-py",
@@ -989,6 +989,7 @@ dependencies = [
  "classic-shared-core",
  "ddsfile",
  "rayon",
+ "regex",
  "serde",
  "tempfile",
  "thiserror 2.0.21",

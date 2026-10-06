@@ -2265,8 +2265,8 @@
       "rustSymbol": "backup_create_timestamped",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "create_backup"
     },
     {
@@ -2274,8 +2274,8 @@
       "rustSymbol": "backup_list_existing",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "list_versions"
     },
     {

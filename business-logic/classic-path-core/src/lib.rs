@@ -7,7 +7,6 @@
 //! - **Documents Path Management**: Cross-platform documents folder detection with support
 //!   for Windows registry and Linux Steam/Proton paths
 //! - **Path Validation**: Game and Documents settings-path validation and required-file checks
-//! - **Backup Management**: Version-aware backup creation with metadata preservation
 //! - **Documents Checking**: INI file validation and configuration integrity checks
 //!
 //! # Architecture
@@ -17,7 +16,6 @@
 //! - `game_path`: Game installation detection and path generation
 //! - `docs_path`: Documents folder detection and INI management
 //! - `validator`: Game/Documents settings-path and required-file verification
-//! - `backup`: Backup creation and XSE version extraction
 //! - `checker`: Documents configuration validation
 //! - `ini_parser`: INI file parsing and validation
 //! - `platform`: Platform-specific implementations (Windows/Linux)
@@ -36,6 +34,10 @@
 //! `validate_settings_paths` check) is owned by `classic_scanlog_core::custom_scan`. Scanlog depends
 //! on this crate, so path core neither depends on nor re-exports it. The `RestrictedPath` variant of
 //! [`ValidationError`] stays here as shared validation vocabulary that the scanlog policy reports.
+//!
+//! The version-labelled backup (`VersionBackupManager`, `XseVersion`) is resource policy and is
+//! owned by `classic_resource_core`. This crate neither depends on nor re-exports it, so path
+//! discovery and validation never pull backup behavior along with them.
 //!
 //! # Design Principles
 //!
@@ -66,19 +68,16 @@ mod validator;
 mod platform;
 
 // Component modules
-mod backup;
 mod checker;
 mod docs_path;
 mod game_path;
 mod ini_parser;
 mod notification_cache;
 
-pub use backup::{BackupManager, XseVersion};
 pub use checker::{DocumentsCheckResult, DocumentsCheckState, DocumentsChecker, IniCheckResult};
 pub use docs_path::DocsPathFinder;
 pub use error::{
-    BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult,
-    ValidationError, ValidationResult,
+    DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult,
 };
 pub use game_path::{GamePathFinder, parse_xse_log};
 pub use ini_parser::IniFile;
@@ -100,5 +99,4 @@ pub use platform::windows::query_game_registry;
 // Module exports (to be uncommented as modules are implemented)
 // pub use game_path::GamePathFinder;
 // pub use docs_path::DocumentsPathManager;
-// pub use backup::BackupManager;
 // pub use checker::DocumentsChecker;

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T01:31:35.103579+00:00",
+  "generated_at_utc": "2026-10-06T01:36:24.553077+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -4898,73 +4898,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "BackupError",
-      "kind": "enum",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/error.rs",
-      "source_decl": "pub enum BackupError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupError",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
-      "source_expr": "error::BackupError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupManager",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use backup::{BackupManager, XseVersion};",
-      "source_expr": "backup::BackupManager",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupManager",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use backup::BackupManager;",
-      "source_expr": "backup::BackupManager",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupManager",
-      "kind": "struct",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub struct BackupManager",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupResult",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
-      "source_expr": "error::BackupResult",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "BackupResult",
-      "kind": "type",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/error.rs",
-      "source_decl": "pub type BackupResult",
-      "tier": "tier1"
-    },
-    {
       "symbol": "DocsPathError",
       "kind": "enum",
       "crate": "classic-path-core",
@@ -4979,7 +4912,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::DocsPathError",
       "tier": "tier1"
     },
@@ -5008,7 +4941,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::DocsPathResult",
       "tier": "tier1"
     },
@@ -5113,7 +5046,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::GamePathError",
       "tier": "tier1"
     },
@@ -5152,7 +5085,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::GamePathResult",
       "tier": "tier1"
     },
@@ -5218,7 +5151,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::ValidationError",
       "tier": "tier1"
     },
@@ -5228,7 +5161,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::ValidationResult",
       "tier": "tier1"
     },
@@ -5242,25 +5175,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "XseVersion",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use backup::{BackupManager, XseVersion};",
-      "source_expr": "backup::XseVersion",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "XseVersion",
-      "kind": "struct",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub struct XseVersion",
-      "tier": "tier1"
-    },
-    {
       "symbol": "as_str",
       "kind": "function",
       "arity": 1,
@@ -5268,16 +5182,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/checker.rs",
       "source_decl": "pub const fn as_str(self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "backup_root",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn backup_root(&self)",
       "tier": "tier1"
     },
     {
@@ -5311,16 +5215,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "create_backup",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn create_backup(&self, source_file: &Path, version: &XseVersion)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "ensure_notification_cache_dir",
       "kind": "function",
       "arity": 2,
@@ -5348,16 +5242,6 @@
       "source_file": "business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use notification_cache::{ ensure_notification_cache_dir, ensure_notification_cache_dir_with_env, notification_cache_dir, notification_cache_dir_with_env, };",
       "source_expr": "notification_cache::ensure_notification_cache_dir_with_env",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_version_from_xse_log",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn extract_version_from_xse_log(&self, xse_log_path: &Path)",
       "tier": "tier1"
     },
     {
@@ -5398,16 +5282,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/game_path.rs",
       "source_decl": "pub fn find_via_xse_log(&self, log_path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "full_version",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn full_version(&self)",
       "tier": "tier1"
     },
     {
@@ -5511,16 +5385,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "get_version_path",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn get_version_path(&self, version: &XseVersion)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "has_issue",
       "kind": "function",
       "arity": 1,
@@ -5580,16 +5444,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "list_versions",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn list_versions(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "load",
       "kind": "function",
       "arity": 1,
@@ -5597,26 +5451,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/ini_parser.rs",
       "source_decl": "pub fn load(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn new(version: impl Into<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn new(backup_root: impl Into<PathBuf>)",
       "tier": "tier1"
     },
     {
@@ -5807,16 +5641,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/checker.rs",
       "source_decl": "pub fn run_all_checks(&self, docs_path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "sanitized",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/backup.rs",
-      "source_decl": "pub fn sanitized(&self)",
       "tier": "tier1"
     },
     {
@@ -6797,6 +6621,82 @@
       "tier": "tier1"
     },
     {
+      "symbol": "VersionBackupError",
+      "kind": "enum",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub enum VersionBackupError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionBackupError",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use version_backup::{ VersionBackupError, VersionBackupManager, VersionBackupResult, XseVersion, };",
+      "source_expr": "version_backup::VersionBackupError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionBackupManager",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use version_backup::{ VersionBackupError, VersionBackupManager, VersionBackupResult, XseVersion, };",
+      "source_expr": "version_backup::VersionBackupManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionBackupManager",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub struct VersionBackupManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionBackupResult",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use version_backup::{ VersionBackupError, VersionBackupManager, VersionBackupResult, XseVersion, };",
+      "source_expr": "version_backup::VersionBackupResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionBackupResult",
+      "kind": "type",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub type VersionBackupResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "XseVersion",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use version_backup::{ VersionBackupError, VersionBackupManager, VersionBackupResult, XseVersion, };",
+      "source_expr": "version_backup::XseVersion",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "XseVersion",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub struct XseVersion",
+      "tier": "tier1"
+    },
+    {
       "symbol": "all",
       "kind": "function",
       "arity": 0,
@@ -6856,6 +6756,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "backup_root",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn backup_root(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "count_resources_by_type",
       "kind": "function",
       "arity": 1,
@@ -6863,6 +6773,16 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/lib.rs",
       "source_decl": "pub fn count_resources_by_type(root: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "create_backup",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn create_backup(\n        &self,\n        source_file: &Path,\n        version: &XseVersion,\n    )",
       "tier": "tier1"
     },
     {
@@ -6925,6 +6845,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "extract_version_from_xse_log",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn extract_version_from_xse_log(\n        &self,\n        xse_log_path: &Path,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "file_patterns",
       "kind": "function",
       "arity": 1,
@@ -6932,6 +6862,16 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/backup.rs",
       "source_decl": "pub fn file_patterns(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "full_version",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn full_version(&self)",
       "tier": "tier1"
     },
     {
@@ -6951,6 +6891,16 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/backup.rs",
       "source_decl": "pub async fn get_backup_info(\n        &self,\n        backup_type: BackupType,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_version_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn get_version_path(&self, version: &XseVersion)",
       "tier": "tier1"
     },
     {
@@ -6984,6 +6934,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "list_versions",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn list_versions(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "new",
       "kind": "function",
       "arity": 1,
@@ -7001,6 +6961,26 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/dds.rs",
       "source_decl": "pub fn new(game: GameTarget)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn new(version: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn new(backup_root: impl Into<PathBuf>)",
       "tier": "tier1"
     },
     {
@@ -7061,6 +7041,16 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/backup.rs",
       "source_decl": "pub async fn restore_backup(&self, backup_type: BackupType)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "sanitized",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/version_backup.rs",
+      "source_decl": "pub fn sanitized(&self)",
       "tier": "tier1"
     },
     {

@@ -29,6 +29,7 @@ Use this crate when you need to:
 - check DDS textures against game-target rules (Fallout 4 / Skyrim SE)
 - back up, restore, or remove a fixed game-target file group (XSE, ReShade, Vulkan, ENB) under the game root
 - back up, restore, or remove pattern-matched game-root entries under a labeled backup directory
+- copy a configuration file into a version-labelled backup directory ([Version-labelled backup](#version-labelled-backup))
 
 Do not use this crate for:
 
@@ -43,7 +44,7 @@ Those concerns live in related crates such as [`classic-path-core`](../../busine
 
 ## Module And API Map
 
-The resource-discovery API lives at the crate root in `src/lib.rs`. The public `dds` module holds the game-target DDS rules, and the `backup` and `game_files` modules hold the game-target backup and game-file operations; their main types are also re-exported at the root.
+The resource-discovery API lives at the crate root in `src/lib.rs`. The public `dds` module holds the game-target DDS rules, and the `backup` and `game_files` modules hold the game-target backup and game-file operations; their main types are also re-exported at the root. The version-labelled backup lives in the private `src/version_backup.rs` module and is re-exported from the root.
 
 ## Root-level types and aliases
 
@@ -64,6 +65,7 @@ The resource-discovery API lives at the crate root in `src/lib.rs`. The public `
 
 - `DDSAnalyzer`, `DDSIssue`, `GameTarget` from `dds` (see [Game-Target DDS Rules](#game-target-dds-rules-dds))
 - `backup::{BackupInfo, BackupManager, BackupType}` and `game_files::{FileOperation, FileOperationResult, GameFilesManager}` (#250)
+- `VersionBackupManager`, `XseVersion`, `VersionBackupError`, `VersionBackupResult<T>` from the private `version_backup` module (see [Version-labelled backup](#version-labelled-backup))
 
 The former `PathError` / `PathResult` re-exports from `classic-path-core` ended in #245: the generic path error is owned by `classic_shared_core::path_core`, which callers import directly. `ResourceError::PathError` wraps that shared-core type, and the crate's native result alias is `ResourceResult<T>`.
 
@@ -271,7 +273,7 @@ Consumers: `classic-scangame-core` validates loose `.dds` files from unpacked mo
 
 These two file-group operations moved here from `classic-file-io-core` in #250. The old `classic_file_io_core::backup` and `classic_file_io_core::game_files` modules and their root re-exports are gone, with no forwarding re-export: resource depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_resource_core`. Both operations still report failures as [`classic_file_io_core::FileIOError`](classic-file-io-core.md#fileioerror), not `ResourceError`, so every CXX, Node, and Python error projection is unchanged. Neither uses Durable Publication.
 
-The game-target backup is distinct from the version-labelled XSE backup: it keeps one fixed directory per backup type under the game root and does not label backups by version.
+The game-target backup is distinct from the [version-labelled backup](#version-labelled-backup): it keeps one fixed directory per backup type under the game root and does not label backups by version.
 
 ### `backup` - game-target backup
 
@@ -320,6 +322,45 @@ Behavior worth knowing:
 Both managers scan only top-level entries of their configured roots; they do not recursively discover nested matches before copying a matched directory tree.
 
 Callers: the CXX bridge (`files.rs`: `backup_manager_*`, `game_files_*`), the Node binding (`JsBackupManager`, `JsGameFilesManager`), and the TUI backup workflow. Python does not expose either operation.
+
+## Version-labelled backup
+
+`VersionBackupManager` and `XseVersion` copy one caller-chosen file into a directory named after a version label. They moved here from `classic-path-core` in #251, where they were `BackupManager`, `XseVersion`, `BackupError`, and `BackupResult<T>`; see the [old-to-new import table](classic-path-core.md#moved-version-labelled-backup). Path core keeps game/documents discovery and validation and does not re-export this backup.
+
+This is one of the two distinct backup operations resource core owns (the other, the [game-target backup](#backup---game-target-backup), moved here from `classic-file-io-core` in #250). It is not the game-target backup of XSE/ReShade/Vulkan/ENB files under a game root: the two differ in destination, conflict, and recovery rules, keep separate Rust owner types, separate conformance packs (`path-backups` and `file-backups`), and separate binding exports.
+
+`XseVersion`:
+
+- `XseVersion::new(version)`
+- `full_version()`
+- `sanitized()` - replaces `.` with `_` for directory names
+
+`VersionBackupManager`:
+
+- `VersionBackupManager::new(backup_root)`
+- `extract_version_from_xse_log(xse_log_path) -> VersionBackupResult<XseVersion>`
+- `create_backup(source_file, version) -> VersionBackupResult<PathBuf>`
+- `backup_root()`
+- `list_versions() -> VersionBackupResult<Vec<String>>`
+- `get_version_path(version) -> PathBuf`
+
+Behavior worth knowing:
+
+- version extraction uses a case-insensitive regex matching either `version = ...` or `runtime version = ...` (`:` is accepted in place of `=`) and returns the first matching line
+- `create_backup()` stores the file at `backup_root/<version_with_underscores>/<filename>`, creating the version directory as needed
+- a second `create_backup()` with the same label overwrites the earlier copy in place; there is no conflict check, timestamping, or extra metadata
+- recovery is by path: `list_versions()` returns the sorted version directory names (files in the root are ignored, and a missing root yields an empty list) and `get_version_path()` returns a label's directory without touching the filesystem
+- the CXX bridge's `backup_create_timestamped` / `backup_list_existing` use the same manager with a `CLASSIC Backups/<game>` root beside the source file and a Unix-seconds label
+
+`VersionBackupError` variants, with display messages unchanged from the former `classic_path_core::BackupError`:
+
+- `XseLogNotFound(PathBuf)`
+- `VersionNotFound`
+- `InvalidVersionFormat(String)` - also returned when the source path has no file name
+- `CreateDirectoryFailed { path, source }`
+- `CopyFileFailed { src, dst, source }`
+- `SourceNotFound(PathBuf)`
+- `PathError(PathError)` and `IoError(std::io::Error)`
 
 ---
 
@@ -374,6 +415,7 @@ Important direct dependencies:
 - `rayon` - parallel `DDSAnalyzer::validate_batch()`
 - [`classic-file-io-core`](classic-file-io-core.md) - `FileIOError`, returned by the game-target backup and game-file operations (file I/O never depends back on this crate)
 - `tokio`, `tracing`, and `chrono` - async file operations, operation logging, and backup timestamps for `backup` and `game_files`
+- `regex` - version-label extraction from XSE logs
 
 Declared dependency with no visible use in current `src/lib.rs`:
 
@@ -386,6 +428,8 @@ Related CLASSIC crates and wrappers:
 - [`classic-resource-py`](../../python-bindings/classic-resource-py) - Python wrapper for this crate's public API
 - [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers, plus `JsBackupManager` and `JsGameFilesManager`
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - CXX `files` bridge module that wraps `BackupManager` and `GameFilesManager`
+- [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers
+- [`classic-path-py`](../../python-bindings/classic-path-py), `classic-node`'s `path` module, and the CXX bridge's `classic::path` backup helpers - wrap `VersionBackupManager` / `XseVersion` under their existing `BackupManager` / `XseVersion` / `backup_*` export names
 
 Binding collaboration visible in source today:
 
@@ -429,7 +473,7 @@ If the caller needs stricter directory validation before enumeration, validate t
 
 ## Contributor Notes And Known Limits
 
-- the public surface lives in `src/lib.rs` and the `dds`, `backup`, and `game_files` modules; any new `pub` item there changes the crate API directly
+- the public surface lives in `src/lib.rs`, the `dds`, `backup`, and `game_files` modules, and the root re-exports of `version_backup`; any new `pub` item or `pub use` there changes the crate API directly
 - `tests/game_file_dependency_boundary.rs` guards that this crate keeps no Durable Publication edge for the game-file policy and that file I/O never depends back on it
 - `ResourceType` is extension-based only; it does not inspect file headers or contents
 - `ResourceType::from_str()` is intentionally permissive and maps unknown strings to `Other`
@@ -446,4 +490,5 @@ If you extend this crate, update this document when you change:
 - enumeration error semantics or traversal policy
 - `ResourceInfo` fields or constructors
 - validation rules in `validate_resource()`
+- version-labelled backup layout, overwrite behavior, or XSE version extraction
 - any future archive/path-resolution APIs that make the crate broader than its current extension-based helper role
