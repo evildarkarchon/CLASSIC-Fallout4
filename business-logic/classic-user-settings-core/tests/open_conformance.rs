@@ -110,7 +110,12 @@ fn view(settings: &UserSettings, fields: &[Value]) -> RunnerResult<Value> {
             "scan_formid_databases" => Value::Object(
                 GameId::all()
                     .into_iter()
-                    .map(|game| (game.as_str().to_string(), scan.formid_databases_for_game(game)))
+                    .map(|game| {
+                        (
+                            game.as_str().to_string(),
+                            scan.formid_databases_for_game(game),
+                        )
+                    })
                     .filter(|(_, rows)| !rows.is_empty())
                     .map(|(game, rows)| (game, json!(rows)))
                     .collect(),
