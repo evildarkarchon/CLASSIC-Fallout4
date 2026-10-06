@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T03:59:08.355548+00:00",
+  "generated_at_utc": "2026-10-06T04:38:29.878899+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -21864,6 +21864,16 @@
       "owner_module": "xse",
       "source_file": "business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn with_version(\n        xse_type: XseType,\n        path: PathBuf,\n        version: Option<Version>,\n        installed: bool,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "xse_folder_name",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub fn xse_folder_name(acronym: &str)",
       "tier": "tier1"
     }
   ]

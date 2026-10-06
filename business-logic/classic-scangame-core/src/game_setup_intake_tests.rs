@@ -320,6 +320,12 @@ fn explicit_vr_selection_from_fallout4_uses_vr_executable_docs_and_xse() {
         Some(expected_exe.as_path())
     );
     assert_eq!(result.version.registry_id.as_deref(), Some("FO4_VR"));
+    // F4SEVR runtime plugins live under the shared F4SE folder (XSE core's rule).
+    let expected_plugins = game_root.join("Data").join("F4SE").join("Plugins");
+    assert_eq!(
+        result.paths.plugins_path.as_deref(),
+        Some(expected_plugins.as_path())
+    );
 
     let xse_loader = result
         .checks

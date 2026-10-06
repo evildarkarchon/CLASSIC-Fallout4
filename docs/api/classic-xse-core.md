@@ -51,6 +51,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 - `get_xse_info()` - combined installation + optional version probe
 - `XseGameLocalFacts` - XSE's narrow input for config-owned Game Local facts (`docs_folder_xse`, `root_folder_docs`)
 - `resolve_xse_folder_from_game_local_facts()` / `resolve_xse_folder_from_game_local_facts_in_version_registry_scope()` - fail-soft XSE Folder derivation from caller-supplied Game Local facts, reading Version Registry metadata from the default snapshot or a caller-selected scope
+- `xse_folder_name(acronym)` - the sole owner of the on-disk XSE folder-name rule: maps a Version Registry XSE acronym to the folder used both under the documents root (the XSE Folder) and under `Data/<folder>/Plugins`; `F4SEVR` maps to the shared `F4SE` folder, every other acronym (trimmed) is its own folder. Game Setup Intake's `plugins_path` uses it. Rust-only: no CXX, Node, or Python export
 - `XseError`, `XseResult<T>` - crate-specific error model
 
 ## Root-level re-exports
@@ -188,7 +189,7 @@ Behavior worth knowing:
 
 - the function is fail-soft and returns `None` for absent facts, an unknown game/version, or documents discovery failure; empty paths count as absent
 - `Fallout4VR` with `selected_game_version = "auto"` resolves as the VR registry entry
-- Version Registry XSE metadata selects the XSE family, but the derived documents subfolder uses the on-disk XSE docs folder name; Fallout 4 VR uses the shared `F4SE` folder even though its XSE acronym is `F4SEVR`
+- Version Registry XSE metadata selects the XSE family, but the derived documents subfolder uses the on-disk XSE docs folder name from `xse_folder_name()`; Fallout 4 VR uses the shared `F4SE` folder even though its XSE acronym is `F4SEVR`
 - an explicit `docs_folder_xse` always wins over derived values, and needs no registry entry
 - Version Registry metadata comes from the process default snapshot; `resolve_xse_folder_from_game_local_facts_in_version_registry_scope(..., &VersionRegistryScope)` applies the same order but reads only the caller's [scope](classic-version-registry-core.md#version-registry-scopes), taking its snapshot only for a Fallout 4 game (before the explicit-folder check, as it always has)
 

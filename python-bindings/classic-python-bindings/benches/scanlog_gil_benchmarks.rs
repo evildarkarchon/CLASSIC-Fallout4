@@ -11,10 +11,10 @@
 //!
 //! ```bash
 //! # Quick mode (development)
-//! BENCH_MODE=quick cargo bench --bench gil_benchmarks -p classic-scanlog-py
+//! BENCH_MODE=quick cargo bench --bench scanlog_gil_benchmarks -p classic-python-bindings
 //!
 //! # Thorough mode (baseline establishment)
-//! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-scanlog-py
+//! BENCH_MODE=thorough cargo bench --bench scanlog_gil_benchmarks -p classic-python-bindings
 //! ```
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};

@@ -1,11 +1,14 @@
-//! Build-script metadata for `classic-update-py` test harnesses.
+//! Build-script metadata for the `classic-python-bindings` test harnesses.
 
 /// Embed an explicit Windows UAC manifest into crate test executables.
 ///
-/// Cargo names this crate's Rust test harness after the library target, so
-/// the generated `classic_update-*.exe` contains the UAC installer keyword
-/// `update`. Without a requested-execution-level manifest, Windows can treat
-/// the harness as an updater and refuse to launch it without elevation.
+/// Carried over from the retired `classic-update-py` crate, whose test
+/// harness was named after its library target (`classic_update-*.exe`) and so
+/// contained the UAC installer keyword `update`. Without a
+/// requested-execution-level manifest, Windows can treat such an executable
+/// as an updater and refuse to launch it without elevation. The one adapter's
+/// harness (`_native-*.exe`) no longer carries that keyword, but the manifest
+/// keeps any test or bench executable whose name does from tripping it.
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 

@@ -5,7 +5,7 @@ and validation with 20-100x performance improvements over pure Python.
 
 Architecture:
     - classic-scangame-core: Business logic (config detection, file scanning, validation)
-    - classic-scangame-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - BA2 archive handling (40-100x faster with memory mapping)

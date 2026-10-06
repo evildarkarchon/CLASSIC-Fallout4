@@ -12,7 +12,7 @@ game, working-tree registry, system DLL, or network data participates.
 | game-version-order | Rust, Python | same_major |
 | fallout4-identity | Rust, CXX, Node, Python | common is_vr/exe_name/steam_app_id and enum carrier |
 | fallout4-paths | Rust, CXX, Python | as_str/docs_folder_name/is_standard/registry_id |
-| fallout4-metadata | Rust, Python | game_version |
+| fallout4-metadata | Rust, Python | game_version (Python: scoped game_version_in) |
 
 CXX parsing executes both legacy and modern public namespaces and rejects any
 result disagreement. Its valid=false result intentionally limits common parse

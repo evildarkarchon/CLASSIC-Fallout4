@@ -5,7 +5,7 @@ handling for Bethesda games, including version detection, file location, and sta
 
 Architecture:
     - classic-xse-core: Business logic (XSE detection, version parsing)
-    - classic-xse-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - XSE type enumeration (F4SE, SKSE, SFSE, etc.)

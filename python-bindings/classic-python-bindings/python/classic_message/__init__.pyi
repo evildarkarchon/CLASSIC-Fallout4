@@ -5,7 +5,7 @@ with type-safe message types, targets, and formatting utilities.
 
 Architecture:
     - classic-message-core: Business logic (message routing, formatting, logging)
-    - classic-message-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - Type-safe message categorization (INFO, WARNING, ERROR, etc.)

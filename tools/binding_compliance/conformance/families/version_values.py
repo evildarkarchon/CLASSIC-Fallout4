@@ -58,7 +58,9 @@ OPERATIONS = {
         ),
     ),
     "fallout4-metadata": (
-        ("game_version", "Fallout4Version"),
+        # Python's Fallout4Version.version reads its facade's Version Registry
+        # scope through game_version_in (#244); Rust keeps game_version.
+        ("game_version", "game_version_in", "Fallout4Version"),
         (
             "Fallout4Version.version",
             "version",

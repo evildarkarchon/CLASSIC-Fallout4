@@ -29,7 +29,7 @@ use pyo3::types::PyDict;
 /// # Example
 ///
 /// ```rust,ignore
-/// use classic_shared_py::indexmap_utils::pydict_to_indexmap_str;
+/// use crate::support::indexmap_utils::pydict_to_indexmap_str;
 ///
 /// #[pyfunction]
 /// fn process_dict(dict: &Bound<'_, PyDict>) -> PyResult<Vec<String>> {
@@ -62,7 +62,7 @@ pub fn pydict_to_indexmap_str(dict: &Bound<'_, PyDict>) -> PyResult<IndexMap<Str
 /// # Example
 ///
 /// ```rust,ignore
-/// use classic_shared_py::indexmap_utils::pydict_to_indexmap_str_optional;
+/// use crate::support::indexmap_utils::pydict_to_indexmap_str_optional;
 ///
 /// #[pyfunction]
 /// fn process_optional_dict(dict: Option<&Bound<'_, PyDict>>) -> IndexMap<String, String> {
@@ -101,7 +101,7 @@ pub fn pydict_to_indexmap_str_optional(
 /// # Example
 ///
 /// ```rust,ignore
-/// use classic_shared_py::indexmap_utils::pydict_to_indexmap_vecstr;
+/// use crate::support::indexmap_utils::pydict_to_indexmap_vecstr;
 ///
 /// #[pyfunction]
 /// fn process_patterns(dict: &Bound<'_, PyDict>) -> PyResult<usize> {
@@ -137,7 +137,7 @@ pub fn pydict_to_indexmap_vecstr(
 /// # Example
 ///
 /// ```rust,ignore
-/// use classic_shared_py::indexmap_utils::pyany_to_indexmap_str;
+/// use crate::support::indexmap_utils::pyany_to_indexmap_str;
 ///
 /// #[setter]
 /// fn set_config(&mut self, value: &Bound<'_, PyAny>) {
@@ -175,7 +175,7 @@ pub fn pyany_to_indexmap_str(py_any: &Bound<'_, pyo3::types::PyAny>) -> IndexMap
 /// # Example
 ///
 /// ```rust,ignore
-/// use classic_shared_py::indexmap_utils::pyany_to_indexmap_vecstr;
+/// use crate::support::indexmap_utils::pyany_to_indexmap_vecstr;
 ///
 /// #[setter]
 /// fn set_patterns(&mut self, value: &Bound<'_, PyAny>) {

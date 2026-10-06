@@ -7,7 +7,7 @@ functionality is implemented in Rust for maximum performance.
 Architecture:
     - classic-shared-core: Business logic (rolling Duration statistics, the
       extension's default metrics store, sample validation, seconds view)
-    - classic-perf-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - High-precision timing using Rust's Instant

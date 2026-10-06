@@ -6,7 +6,7 @@ offers significant speedup over Python's sqlite3 for FormID lookups and batch qu
 
 Architecture:
     - classic-database-core: Business logic (connection pooling, query execution)
-    - classic-database-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Features:
     - Thread-safe async connection pooling

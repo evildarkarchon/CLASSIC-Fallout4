@@ -5,7 +5,7 @@ detection, matching, and registry lookup powered by Rust.
 
 Architecture:
     - classic-version-registry-core: Business logic (version registry, matching)
-    - classic-version-registry-py: Python bindings (this module - PyO3 adapters)
+    - classic-python-bindings: Python bindings (this facade's PyO3 adapters in the one native extension)
 
 Usage:
     import classic_version_registry
