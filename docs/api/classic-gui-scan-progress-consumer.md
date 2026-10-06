@@ -69,6 +69,8 @@ Every paused run is settled, never dropped. Each of these paths settles with no 
 
 None of them can make an implicit destructive choice.
 
+The `gui.recovery-interaction` consumer obligation runs a real paused scan through `ScanWorker` for each settle scenario: `settle-proceed-without-ignore`, `settle-reset-to-default`, `settle-without-decision` (the prompt answers Cancel), and `settle-already-cancelled`, where the runner cancels the run after it paused but before the worker reads its pending recovery, and observes that the prompt is never shown, no decision is settled, and the run ends cancelled.
+
 ---
 
 ## Where Events Enter Qt

@@ -93,7 +93,7 @@ void GuiUserSettingsTests::open_returns_every_gui_group_from_one_revision()
     QCOMPARE(snapshot.scan.gameVersion, QStringLiteral("Original"));
     QVERIFY(snapshot.scan.showStatistics);
     QCOMPARE(snapshot.scan.maxConcurrentScans, 2);
-    QCOMPARE(snapshot.scan.formIdDatabases.value(QStringLiteral("Fallout4")),
+    QCOMPARE(snapshot.scan.scanFormIdDatabases.value(QStringLiteral("Fallout4")),
              QStringList{QStringLiteral("databases/original.db")});
     QCOMPARE(snapshot.gameSetup.gameRoot.value(), QStringLiteral("C:/Games/Fallout4"));
     QVERIFY(snapshot.revision.startsWith(QStringLiteral("sha256:")));
@@ -142,9 +142,9 @@ void GuiUserSettingsTests::accepted_changes_commit_as_one_preservation_aware_upd
     QVERIFY(!after.scan.moveUnsolvedLogs);
     QCOMPARE(after.scan.unsolvedLogsDestination.value(), QStringLiteral("E:/Unsolved"));
     QCOMPARE(after.scan.maxConcurrentScans, 8);
-    QCOMPARE(after.scan.formIdDatabases.value(QStringLiteral("Fallout4")),
+    QCOMPARE(after.scan.scanFormIdDatabases.value(QStringLiteral("Fallout4")),
              QStringList{QStringLiteral("databases/replacement.db")});
-    QCOMPARE(after.scan.formIdDatabases.value(QStringLiteral("Skyrim")),
+    QCOMPARE(after.scan.scanFormIdDatabases.value(QStringLiteral("Skyrim")),
              QStringList{QStringLiteral("databases/skyrim.db")});
 
     QFile persisted(root.filePath(QStringLiteral("CLASSIC Settings.yaml")));

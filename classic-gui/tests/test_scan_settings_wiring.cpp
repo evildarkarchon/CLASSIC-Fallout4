@@ -21,6 +21,7 @@ private slots:
     void mainwindow_defers_setup_commit_until_manual_completion();
     /// Verifies that the GUI keeps no Installation Root candidate search of its own.
     void mainwindow_locates_installation_root_through_config();
+    void main_finds_icon_under_the_config_located_installation_root();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
     void update_worker_declares_not_published_classification();
     void mainwindow_handles_not_published_without_error_dialog();
@@ -279,6 +280,26 @@ void ScanSettingsWiringTests::mainwindow_locates_installation_root_through_confi
     QVERIFY2(!body.contains(QStringLiteral("\"install\"")) && !body.contains(QStringLiteral("parent_path")) &&
                  !body.contains(QStringLiteral("\"CLASSIC Data\"")),
              "The GUI must not keep a private Installation Root candidate search");
+}
+
+void ScanSettingsWiringTests::main_finds_icon_under_the_config_located_installation_root()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/main.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString source = QString::fromUtf8(file.readAll());
+    const qsizetype start = source.indexOf(QStringLiteral("\nstatic QString findIcon()"));
+    const qsizetype end = source.indexOf(QStringLiteral("\n}\n"), start);
+    QVERIFY2(start >= 0 && end > start, "findIcon should be readable as one function body");
+    const QString body = source.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("classic::config::locate_installation_root(")),
+             "The icon must be found under the Installation Root from config's one shared locator");
+    QVERIFY2(!body.contains(QStringLiteral("candidates")) && !body.contains(QStringLiteral("\"/..\"")) &&
+                 !body.contains(QStringLiteral("QDir::current()")),
+             "findIcon must not keep a private CLASSIC Data candidate search");
 }
 
 void ScanSettingsWiringTests::update_worker_declares_not_published_classification()
