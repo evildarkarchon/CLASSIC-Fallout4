@@ -6,7 +6,7 @@
  * pack happens centrally (ADR-0008).
  */
 import {randomUUID} from "node:crypto";
-import {copyFile, lstat, mkdir, mkdtemp, open, readFile, rename, rm} from "node:fs/promises";
+import {lstat, mkdir, mkdtemp, open, readFile, rename, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {dirname, join, relative, resolve, sep} from "node:path";
 import type {JsScanRunLaunchOverrides, ScanRunLaunch} from "../index.js";
@@ -15,6 +15,7 @@ type JsonObject = Record<string, unknown>;
 
 const FAMILY_ID = "crash-log-scan-launch";
 const SETTINGS_FILE = "CLASSIC Settings.yaml";
+const INSTALLATION_ROOT_PLACEHOLDER = "{{installationRoot}}";
 
 /** One centrally supplied input-only scenario. */
 interface Scenario {
@@ -26,6 +27,7 @@ interface Scenario {
         intent: "standard" | "targeted";
         targetedInputs: string[];
         overrides: JsonObject;
+        files?: string[];
     };
 }
 
@@ -96,8 +98,34 @@ function overrides(classic: typeof import("../index.js"), value: JsonObject, roo
     if ("maxConcurrent" in value) result.maxConcurrent = value.maxConcurrent as number;
     if (value.showFormidValues === true) result.showFormidValues = true;
     if (value.simplifyLogs === true) result.simplifyLogs = true;
+    if (value.fcxMode === true) result.fcxMode = true;
     return result;
 }
+
+/**
+ * Replace the fixture's `{{installationRoot}}` placeholder with this run's root.
+ *
+ * The root is written with `/` separators so it reads the same inside any YAML quoting;
+ * both separators name the same folders on Windows.
+ */
+function installationRootFixture(fixture: string, root: string): string {
+    return fixture.split(INSTALLATION_ROOT_PLACEHOLDER).join(root.split(sep).join("/"));
+}
+
+/** Project the FCX setup facts root-relatively, or `null` when FCX Mode is off. */
+function setupContextView(launch: ScanRunLaunch, root: string): JsonObject | null {
+    const context = launch.setupContext;
+    if (context == null) return null;
+    return {
+        gameRoot: rootRelative(root, context.gameRoot),
+        docsRoot: rootRelative(root, context.docsRoot),
+        gameExePath: rootRelative(root, context.gameExePath),
+        xseLogPath: rootRelative(root, context.xseLogPath),
+    };
+}
+
+/** Frozen launch error tokens; any other thrown error is a runner failure. */
+const LAUNCH_ERROR_KINDS = new Set(["targeted_without_inputs", "xse_log_inspect"]);
 
 /** Map the Node camelCase Unsolved Logs token onto the pack's snake_case vocabulary. */
 function unsolvedLogsToken(value: string | null): string | null {
@@ -125,6 +153,7 @@ function requestView(launch: ScanRunLaunch, root: string): JsonObject {
         unsolvedLogs: unsolvedLogsToken(launch.unsolvedLogs),
         targetedInputs: targeted === null ? null : targeted.inputs.map(path => rootRelative(root, path)),
         fcxEnabled: launch.fcxEnabled,
+        setupContext: setupContextView(launch, root),
     };
 }
 
@@ -136,8 +165,15 @@ async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonO
     const root = resolve(await mkdtemp(join(tmpdir(), "classic-scan-launch-conformance-")));
     try {
         const settings = join(root, SETTINGS_FILE);
-        await copyFile(string(plan.fixtures[reference], "settings fixture"), settings);
+        const fixture = await readFile(string(plan.fixtures[reference], "settings fixture"), "utf8");
+        await writeFile(settings, installationRootFixture(fixture, root), "utf8");
         const before = await readFile(settings);
+        // Scenario files (game executables, XSE logs) are empty files beneath the root.
+        for (const item of scenario.input.files ?? []) {
+            const path = beneath(root, string(item, "file"));
+            await mkdir(dirname(path), {recursive: true});
+            await writeFile(path, "");
+        }
         const launchOverrides = overrides(classic, scenario.input.overrides, root);
         let launch: ScanRunLaunch;
         try {
@@ -151,7 +187,7 @@ async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonO
             }
         } catch (error) {
             const code = (error as { code?: unknown }).code;
-            if (code !== "targeted_without_inputs") throw error;
+            if (typeof code !== "string" || !LAUNCH_ERROR_KINDS.has(code)) throw error;
             return {
                 outcome: "error",
                 errorKind: code,

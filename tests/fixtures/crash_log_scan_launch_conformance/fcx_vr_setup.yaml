@@ -1,0 +1,11 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4 VR
+  Game Version: VR
+  FCX Mode: true
+  Simplify Logs: false
+  Show FormID Values: false
+  Move Unsolved Logs: false
+  Max Concurrent Scans: 2
+  Game Folder Path: '{{installationRoot}}/Fallout 4 VR'
+  Documents Folder Path: '{{installationRoot}}/Documents'

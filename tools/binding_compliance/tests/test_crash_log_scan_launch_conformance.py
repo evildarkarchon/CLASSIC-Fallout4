@@ -83,3 +83,19 @@ def test_diagnostics_must_carry_codes_not_prose() -> None:
         {"kind": "user_settings", "code": "malformed_document", "message": "prose"}
     ]
     assert not _predicate("crash-log-scan-launch.launched").matches(observation)
+
+
+def test_fcx_launch_without_its_setup_context_earns_no_credit() -> None:
+    """FCX Mode on must carry the four setup facts; FCX Mode off must carry none (#286)."""
+    observation = _launched_observation()
+    observation["request"] = dict(observation["request"], fcxEnabled=True)
+    assert not _predicate("crash-log-scan-launch.launched").matches(observation)
+    observation["request"]["setupContext"] = {
+        "gameRoot": "Fallout 4",
+        "docsRoot": "Documents",
+        "gameExePath": "Fallout 4/Fallout4.exe",
+        "xseLogPath": None,
+    }
+    assert _predicate("crash-log-scan-launch.launched").matches(observation)
+    observation["request"]["fcxEnabled"] = False
+    assert not _predicate("crash-log-scan-launch.launched").matches(observation)

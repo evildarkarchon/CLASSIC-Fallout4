@@ -60,7 +60,56 @@ classic::scanner::ScanRunLaunchOverridesDto crash_log_scan_launch_overrides(cons
     }
     overrides.show_formid_values = value.value("showFormidValues", false);
     overrides.simplify_logs = value.value("simplifyLogs", false);
+    overrides.fcx_mode = value.value("fcxMode", false);
     return overrides;
+}
+
+/// Writes the settings fixture with its `{{installationRoot}}` placeholder replaced by `root`.
+///
+/// The root is written with `/` separators so it reads the same inside any YAML quoting; both
+/// separators name the same folders on Windows.
+void crash_log_scan_launch_write_settings(const fs::path& fixture, const fs::path& root, const fs::path& settings) {
+    std::ifstream input(fixture, std::ios::binary);
+    if (!input) {
+        throw RunnerError("cannot open settings fixture: " + fixture.string());
+    }
+    std::string text{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+    const std::string placeholder = "{{installationRoot}}";
+    const std::string replacement = root.generic_string();
+    for (auto at = text.find(placeholder); at != std::string::npos;
+         at = text.find(placeholder, at + replacement.size())) {
+        text.replace(at, placeholder.size(), replacement);
+    }
+    std::ofstream output(settings, std::ios::binary);
+    output << text;
+    if (!output) {
+        throw RunnerError("cannot write settings: " + settings.string());
+    }
+}
+
+/// Projects the bridge's FCX setup facts root-relatively, or null when FCX Mode is off.
+json crash_log_scan_launch_setup_context(const fs::path& root, const classic::scanner::ScanRunLaunchRequestDto& view) {
+    if (!view.fcx_enabled) {
+        return nullptr;
+    }
+    const auto& context = view.setup_context;
+    return json{
+        {"gameRoot", crash_log_scan_launch_optional_path(root, context.has_game_root, context.game_root)},
+        {"docsRoot", crash_log_scan_launch_optional_path(root, context.has_docs_root, context.docs_root)},
+        {"gameExePath", crash_log_scan_launch_optional_path(root, context.has_game_exe_path, context.game_exe_path)},
+        {"xseLogPath", crash_log_scan_launch_optional_path(root, context.has_xse_log_path, context.xse_log_path)},
+    };
+}
+
+/// Returns the pack's frozen token for one typed launch error kind.
+std::string crash_log_scan_launch_error_token(classic::scanner::ScanRunLaunchErrorKind kind) {
+    switch (kind) {
+    case classic::scanner::ScanRunLaunchErrorKind::TargetedWithoutInputs:
+        return "targeted_without_inputs";
+    case classic::scanner::ScanRunLaunchErrorKind::XseLogInspect:
+        return "xse_log_inspect";
+    }
+    throw RunnerError("unsupported launch error kind");
 }
 
 /// Traverses the bridge's launched-request view into the pack's observation shape.
@@ -105,6 +154,7 @@ json crash_log_scan_launch_request_view(const fs::path& root, const classic::sca
         {"unsolvedLogs", standard ? json(crash_log_scan_launch_unsolved_token(view.unsolved_logs)) : json(nullptr)},
         {"targetedInputs", targeted},
         {"fcxEnabled", view.fcx_enabled},
+        {"setupContext", crash_log_scan_launch_setup_context(root, view)},
     };
 }
 
@@ -116,8 +166,20 @@ json execute_crash_log_scan_launch_scenario(const json& plan, const json& scenar
                                  scenario.at("id").get<std::string>());
     const auto& root = temporary.path();
     const fs::path settings = root / "CLASSIC Settings.yaml";
-    fs::copy_file(fs::path(plan.at("fixtures").at(reference).get<std::string>()), settings);
+    crash_log_scan_launch_write_settings(fs::path(plan.at("fixtures").at(reference).get<std::string>()), root,
+                                         settings);
     const auto before = autoscan_file_bytes(settings);
+    // Scenario files (game executables, XSE logs) are empty files beneath the root.
+    if (input.contains("files")) {
+        for (const auto& item : input.at("files")) {
+            const fs::path file = runtime_path(root, item, "files");
+            fs::create_directories(file.parent_path());
+            std::ofstream created(file, std::ios::binary);
+            if (!created) {
+                throw RunnerError("cannot create scenario file: " + file.string());
+            }
+        }
+    }
     const auto overrides = crash_log_scan_launch_overrides(root, input.at("overrides"));
 
     const auto intent = input.at("intent").get<std::string>();
@@ -138,11 +200,8 @@ json execute_crash_log_scan_launch_scenario(const json& plan, const json& scenar
     const bool unchanged = autoscan_file_bytes(settings) == before;
     const auto error = classic::scanner::scan_run_launch_error(*launch);
     if (error.has_error) {
-        if (error.kind != classic::scanner::ScanRunLaunchErrorKind::TargetedWithoutInputs) {
-            throw RunnerError("unsupported launch error kind");
-        }
         return json{{"outcome", "error"},
-                    {"errorKind", "targeted_without_inputs"},
+                    {"errorKind", crash_log_scan_launch_error_token(error.kind)},
                     {"request", nullptr},
                     {"diagnostics", json::array()},
                     {"settingsUnchanged", unchanged}};

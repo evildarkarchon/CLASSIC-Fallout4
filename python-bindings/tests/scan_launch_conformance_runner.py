@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import sys
 import tempfile
 import uuid
@@ -21,6 +20,7 @@ RUN_PLAN_ENV = "CLASSIC_CONFORMANCE_RUN_PLAN"
 OUTPUT_ENV = "CLASSIC_CONFORMANCE_OUTPUT"
 FAMILY_ID = "crash-log-scan-launch"
 SETTINGS_FILE = "CLASSIC Settings.yaml"
+INSTALLATION_ROOT_PLACEHOLDER = "{{installationRoot}}"
 
 
 class RunnerContractError(RuntimeError):
@@ -102,7 +102,30 @@ def _overrides(scanlog: Any, shared: Any, value: Mapping[str, Any], root: Path) 
         arguments["show_formid_values"] = True
     if value.get("simplifyLogs") is True:
         arguments["simplify_logs"] = True
+    if value.get("fcxMode") is True:
+        arguments["fcx_mode"] = True
     return scanlog.ScanRunLaunchOverrides(**arguments)
+
+
+def _installation_root_fixture(fixture: str, root: Path) -> str:
+    """Replace the fixture's ``{{installationRoot}}`` placeholder with this run's root.
+
+    The root is written with ``/`` separators so it reads the same inside any YAML
+    quoting; both separators name the same folders on Windows.
+    """
+    return fixture.replace(INSTALLATION_ROOT_PLACEHOLDER, root.as_posix())
+
+
+def _setup_context_view(context: Any, root: Path) -> dict[str, Any] | None:
+    """Project the FCX setup facts root-relatively, or ``None`` when FCX Mode is off."""
+    if context is None:
+        return None
+    return {
+        "gameRoot": _root_relative(root, context.game_root),
+        "docsRoot": _root_relative(root, context.docs_root),
+        "gameExePath": _root_relative(root, context.game_exe_path),
+        "xseLogPath": _root_relative(root, context.xse_log_path),
+    }
 
 
 def _request_view(launch: Any, root: Path) -> dict[str, Any]:
@@ -125,6 +148,7 @@ def _request_view(launch: Any, root: Path) -> dict[str, Any]:
         if inputs is None
         else [_root_relative(root, path) for path in inputs],
         "fcxEnabled": launch.fcx_enabled,
+        "setupContext": _setup_context_view(launch.setup_context, root),
     }
 
 
@@ -141,8 +165,16 @@ def _execute_scenario(plan: Mapping[str, Any], scenario: Mapping[str, Any]) -> d
     with tempfile.TemporaryDirectory(prefix="classic-scan-launch-") as raw_root:
         root = Path(raw_root)
         settings = root / SETTINGS_FILE
-        shutil.copyfile(_string(fixtures.get(reference), "settings fixture"), settings)
+        fixture = Path(_string(fixtures.get(reference), "settings fixture"))
+        settings.write_bytes(
+            _installation_root_fixture(fixture.read_text(encoding="utf-8"), root).encode("utf-8")
+        )
         before = settings.read_bytes()
+        # Scenario files (game executables, XSE logs) are empty files beneath the root.
+        for item in _array(inputs.get("files", []), "files"):
+            path = _beneath(root, _string(item, "file"))
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"")
         overrides = _overrides(
             classic_scanlog,
             classic_shared,
@@ -161,10 +193,17 @@ def _execute_scenario(plan: Mapping[str, Any], scenario: Mapping[str, Any]) -> d
                 launch = classic_scanlog.ScanRunLaunch.targeted(str(root), targeted, overrides)
             else:
                 raise RunnerContractError(f"unsupported intent {intent}")
-        except classic_scanlog.ScanRunLaunchTargetedWithoutInputsError:
+        except classic_scanlog.ScanRunLaunchError as error:
+            # Each frozen launch error token has its own exception subclass.
+            if isinstance(error, classic_scanlog.ScanRunLaunchTargetedWithoutInputsError):
+                kind = "targeted_without_inputs"
+            elif isinstance(error, classic_scanlog.ScanRunLaunchXseLogInspectError):
+                kind = "xse_log_inspect"
+            else:
+                raise
             return {
                 "outcome": "error",
-                "errorKind": "targeted_without_inputs",
+                "errorKind": kind,
                 "request": None,
                 "diagnostics": [],
                 "settingsUnchanged": settings.read_bytes() == before,
