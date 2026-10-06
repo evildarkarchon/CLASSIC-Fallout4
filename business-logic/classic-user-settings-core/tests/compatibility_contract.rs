@@ -261,6 +261,7 @@ mod compatibility_contract_tests {
                 "tui_remembered_state",
                 "unknown_nested_entries",
                 "unknown_root_entries",
+                "vr_formid_database_read_rule",
             ])
         );
 

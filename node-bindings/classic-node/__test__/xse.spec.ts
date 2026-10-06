@@ -6,6 +6,7 @@ import {
     getXseInfo,
     isXseInstalled,
     parseXseType,
+    resolveXseLogForScan,
     xseDllPrefix,
     xseLoaderName,
     xseTypeForGame,
@@ -277,5 +278,40 @@ describe("getXseInfo", () => {
         const info = getXseInfo(join(TEST_DIR, "nonexistent"), "F4SE");
         expect(info.installed).toBe(false);
         expect(info.version).toBeUndefined();
+    });
+});
+
+// ============================================================================
+// resolveXseLogForScan (outcome carriers; XSE log rules live in Rust and the
+// xse-folder conformance pack)
+// ============================================================================
+
+describe("resolveXseLogForScan", () => {
+    const LOG_ROOT = join(TEST_DIR, "xse_log");
+    const DATA_DIR = join(LOG_ROOT, "CLASSIC Data");
+    const DOCS_DIR = join(LOG_ROOT, "docs");
+
+    beforeAll(() => {
+        mkdirSync(DATA_DIR, {recursive: true});
+        mkdirSync(join(DOCS_DIR, "F4SE"), {recursive: true});
+        writeFileSync(join(DOCS_DIR, "F4SE", "f4sevr.log"), "");
+    });
+
+    test("returns the located log path", () => {
+        expect(resolveXseLogForScan(DATA_DIR, "Fallout4VR", "auto", DOCS_DIR))
+            .toBe(join(DOCS_DIR, "F4SE", "f4sevr.log"));
+    });
+
+    test("returns null when the log is missing", () => {
+        expect(resolveXseLogForScan(DATA_DIR, "Fallout4", "Original", DOCS_DIR)).toBeNull();
+    });
+
+    test("throws on operational failure", () => {
+        // The YAML `\0` escape records an XSE Folder no platform can inspect.
+        const badData = join(LOG_ROOT, "bad", "CLASSIC Data");
+        mkdirSync(badData, {recursive: true});
+        writeFileSync(join(badData, "CLASSIC Fallout4 Local.yaml"), "Game_Info:\n  Docs_Folder_XSE: \"bad\\0xse\"\n");
+        expect(() => resolveXseLogForScan(badData, "Fallout4", "Original", null))
+            .toThrow(/^cannot inspect XSE log /);
     });
 });

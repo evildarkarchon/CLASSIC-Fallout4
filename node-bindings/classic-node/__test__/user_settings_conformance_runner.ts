@@ -242,6 +242,7 @@ function projectView(snapshot: JsUserSettingsSnapshot, fields: string[]): JsonOb
         move_unsolved_logs: scan.moveUnsolvedLogs,
         max_concurrent_scans: scan.maxConcurrentScans,
         formid_databases: scan.formidDatabases,
+        scan_formid_databases: scan.scanFormidDatabases,
         fcx_mode: scan.fcxMode,
         simplify_logs: scan.simplifyLogs,
         show_formid_values: scan.formidValueLookup,

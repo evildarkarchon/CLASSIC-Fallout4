@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-10-06T10:39:51.627412+00:00",
+  "generated_at_utc": "2026-10-06T11:11:36.684529+00:00",
   "summary": {
-    "tier1_contract_total": 940,
-    "tier1_matched": 922,
+    "tier1_contract_total": 942,
+    "tier1_matched": 924,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -2644,6 +2644,20 @@
       "actual_node_kind": "function",
       "expected_node_arity": 3,
       "actual_node_arity": 3
+    },
+    {
+      "id": "config.installation_root.locateInstallationRoot",
+      "tier": "tier1",
+      "owner_module": "config",
+      "rust_crate": "classic-config-core",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "locate_installation_root",
+      "node_export": "locateInstallationRoot",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 2,
+      "actual_node_arity": 2
     },
     {
       "id": "config.installed_yaml_data.installedYamlDataProvenanceLabel",
@@ -5653,6 +5667,20 @@
       "actual_node_kind": "function",
       "expected_node_arity": 2,
       "actual_node_arity": 2
+    },
+    {
+      "id": "aux-xse-resolve-log-for-scan",
+      "tier": "tier1",
+      "owner_module": "aux",
+      "rust_crate": "classic-scangame-core",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "resolve_xse_log_for_scan",
+      "node_export": "resolveXseLogForScan",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 4,
+      "actual_node_arity": 4
     },
     {
       "id": "aux-phase4b-has-update",

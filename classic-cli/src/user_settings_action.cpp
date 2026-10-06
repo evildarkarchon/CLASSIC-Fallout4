@@ -51,13 +51,6 @@ void report_open_diagnostics(const classic::settings::CrashLogScanSettingsDto& s
     report_snapshot_diagnostics(setup, reported);
 }
 
-/// Returns whether a persisted FormID row applies to the selected scan game.
-bool formid_database_applies_to_game(const std::string& row_game, const std::string& selected_game) {
-    // Fallout 4 VR shares the Fallout 4 database corpus; User Settings intentionally stores
-    // those rows under Fallout4 so every maintained adapter consumes one canonical mapping.
-    return row_game == selected_game || (selected_game == "Fallout4VR" && row_game == "Fallout4");
-}
-
 } // namespace
 
 /// Persists the destination only after Rust validates the request and anchors it to a revision.
@@ -147,8 +140,10 @@ std::optional<PreparedScanUserSettings> prepare_scan_user_settings(const CliArgs
     prepared.max_concurrent =
         args.max_concurrent_was_explicit ? args.max_concurrent : scan.max_concurrent_scans;
 
-    for (const auto& row : scan.formid_database_paths) {
-        if (formid_database_applies_to_game(to_std_string(row.game), prepared.game)) {
+    // Rust already applied the game-aware read (Fallout 4 VR shares the Fallout 4 rows and keeps
+    // legacy VR rows), so the CLI only selects the rows Rust published for the scanned game.
+    for (const auto& row : scan.scan_formid_database_paths) {
+        if (to_std_string(row.game) == prepared.game) {
             prepared.formid_database_paths.push_back(to_std_string(row.path));
         }
     }

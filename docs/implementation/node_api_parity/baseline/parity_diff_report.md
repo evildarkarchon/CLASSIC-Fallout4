@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T10:39:51.627412+00:00`
-- Tier-1 contract rows: **940**
-- Tier-1 matched: **922**
+- Generated: `2026-10-06T11:11:36.684529+00:00`
+- Tier-1 contract rows: **942**
+- Tier-1 matched: **924**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -201,6 +201,7 @@
 | `config-create-yamldata-content` | `config` | `classic-config-core` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
 | `config-clear-yaml-cache` | `config` | `classic-shared-core` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
 | `config.game_local.persistGameLocalPaths` | `config` | `classic-config-core` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
+| `config.installation_root.locateInstallationRoot` | `config` | `classic-config-core` | `locate_installation_root` | `locateInstallationRoot` | `matched` |
 | `config.installed_yaml_data.installedYamlDataProvenanceLabel` | `config` | `classic-config-core` | `InstalledYamlDataProvenance` | `installedYamlDataProvenanceLabel` | `matched` |
 | `config.installed_yaml_data.installedYamlDataDiagnosticKindLabel` | `config` | `classic-config-core` | `InstalledYamlDataDiagnosticKind` | `installedYamlDataDiagnosticKindLabel` | `matched` |
 | `config.installed_yaml_data.localIgnoreYamlDataStateLabel` | `config` | `classic-config-core` | `LocalIgnoreYamlDataState` | `localIgnoreYamlDataStateLabel` | `matched` |
@@ -415,6 +416,7 @@
 | `aux-phase4b-get-user-agent-prefix` | `aux` | `classic-web-core` | `USER_AGENT_PREFIX` | `getUserAgentPrefix` | `matched` |
 | `aux-phase4b-get-user-agent-with-suffix` | `aux` | `classic-web-core` | `get_user_agent_with_suffix` | `getUserAgentWithSuffix` | `matched` |
 | `aux-phase4b-get-xse-info` | `aux` | `classic-xse-core` | `get_xse_info` | `getXseInfo` | `matched` |
+| `aux-xse-resolve-log-for-scan` | `aux` | `classic-scangame-core` | `resolve_xse_log_for_scan` | `resolveXseLogForScan` | `matched` |
 | `aux-phase4b-has-update` | `aux` | `classic-update-core` | `has_update` | `hasUpdate` | `matched` |
 | `aux-phase4b-is-supported-resource` | `aux` | `classic-resource-core` | `is_supported_resource` | `isSupportedResource` | `matched` |
 | `aux-phase4b-is-valid-url` | `aux` | `classic-web-core` | `is_valid_url` | `isValidUrl` | `matched` |

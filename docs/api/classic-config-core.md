@@ -83,6 +83,12 @@ Game Local facts and independent persistence for runtime-discovered paths in a G
 - `game_local_yaml_path(yaml_dir_data, game)` - the Game Local document path
 - `persist_game_local_paths(path, game_root, docs_root)` - root-reexported writer that updates supplied Game Local path keys without opening User Settings
 
+### `installation_root`
+
+The one Installation Root search every frontend shares (#275).
+
+- `locate_installation_root(executable_dir, working_dir)` - root-reexported locator returning the first of six candidates that holds `CLASSIC Data`, or `None`; see [Installation Root Location](#installation-root-location)
+
 ### `yamldata`
 
 Bulk YAML dataset loader for scanlog/business logic.
@@ -172,6 +178,7 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 - Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
 - `yaml_cache_dir`, `yaml_cache_dir_with_env`, `ensure_yaml_cache_dir`, `ensure_yaml_cache_dir_with_env` from `yaml_cache`
 - `GameLocalFacts`, `read_game_local_facts`, `game_local_yaml_path`, `persist_game_local_paths` from `game_local`
+- `locate_installation_root` from `installation_root`
 - `install_atomic`, `rollback`, `self_heal`, `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome` from `atomic_install`
 - `FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file`, `generate_local_yaml` from `generation`
 
@@ -263,6 +270,32 @@ Each value is trimmed; an absent, non-string, or blank value is `None`. The read
 The writer creates parent directories when needed, merges an existing multi-document YAML stream, updates only `Game_Info.Root_Folder_Game` and `Game_Info.Root_Folder_Docs`, and preserves unrelated content. It never reads or writes `CLASSIC Settings.yaml`.
 
 Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, Node `persistGameLocalPaths(...) -> Promise<void>`, and Python `persist_game_local_paths(...) -> None`. Each adapter only converts optional path values and delegates document behavior to the Rust writer.
+
+## Installation Root Location
+
+An **Installation Root** is the directory of one CLASSIC installation that holds its `CLASSIC Data`, User Settings, and Local Ignore YAML Data (see [`GLOSSARY.md`](../../GLOSSARY.md)). Config owns the `CLASSIC Data` layout beneath it, so it also owns the one search that finds it:
+
+```rust
+pub fn locate_installation_root(
+    executable_dir: Option<&Path>,
+    working_dir: Option<&Path>,
+) -> Option<PathBuf>
+```
+
+The two process facts are **inputs**, so callers and tests choose where the search starts; the locator never reads `current_exe()` or the process working directory itself. It checks these candidates in order and returns the first one that contains a `CLASSIC Data` directory:
+
+1. executable folder
+2. working directory
+3. executable parent
+4. executable grandparent (how a development build in `target/<profile>` or `classic-gui/build` finds the repository root)
+5. executable parent's `install` folder
+6. working directory's `install` folder
+
+There is no fallback: `None` means no Installation Root, and each caller turns that into its own user-facing "CLASSIC Data not found" message. An absent or empty input skips only the candidates derived from it (an empty path would otherwise silently mean the working directory); a `CLASSIC Data` *file* does not count. The search only inspects metadata, never writes, and returns a path built verbatim from the caller's input (no canonicalization).
+
+Callers: the GUI (`MainWindow::findDataRoot()` passes `QCoreApplication::applicationDirPath()` and `QDir::currentPath()`), the TUI (`classic_tui::state::locate_installation_root()`, which refuses to start with a "CLASSIC Data not found" message instead of falling back to the executable folder), and update-core's first-party YAML Data check/apply when no `bundled_yaml_dir` layout hint is supplied. The C++ CLI, Node CLI, and Python CLI still carry their own root resolution until #276 moves them onto this locator.
+
+Binding adapters expose it as CXX `classic::config::locate_installation_root(executable_dir, working_dir) -> rust::String` (empty input = unavailable, empty result = not found), Node `locateInstallationRoot(executableDir?, workingDir?) -> string | null` (synchronous), and Python `classic_config.locate_installation_root(executable_dir=None, working_dir=None) -> str | None`. The executable [`installation-paths`](binding-compliance-suite.md) conformance family proves each candidate position, first-match-wins, and the no-match result on all four adapters.
 
 ## YAML Data install, rollback, self-heal, and generation
 

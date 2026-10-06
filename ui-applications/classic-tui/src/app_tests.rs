@@ -154,46 +154,6 @@ fn path_validation_and_result_discovery_use_the_apps_canonical_root() {
 }
 
 #[test]
-fn scan_projection_uses_the_managed_game_and_its_formid_database() {
-    let (_root, app) = app_with_settings_yaml(
-        r#"schema_version: "1.0"
-CLASSIC_Settings:
-  Managed Game: Skyrim SE
-  FormID Databases:
-    Fallout4:
-      - databases/fallout4.db
-    Skyrim:
-      - databases/skyrim.db
-"#,
-    );
-
-    let (game, databases) = app.scan_game_projection();
-
-    assert_eq!(game, classic_shared_core::GameId::Skyrim);
-    assert_eq!(databases, vec![PathBuf::from("databases/skyrim.db")]);
-}
-
-#[test]
-fn scan_projection_reuses_fallout4_formid_databases_for_vr() {
-    let (_root, app) = app_with_settings_yaml(
-        r#"schema_version: "1.0"
-CLASSIC_Settings:
-  Managed Game: Fallout 4 VR
-  FormID Databases:
-    Fallout4:
-      - databases/fallout4.db
-    Fallout4VR:
-      - databases/vr-only.db
-"#,
-    );
-
-    let (game, databases) = app.scan_game_projection();
-
-    assert_eq!(game, classic_shared_core::GameId::Fallout4VR);
-    assert_eq!(databases, vec![PathBuf::from("databases/fallout4.db")]);
-}
-
-#[test]
 fn scan_complete_with_errors_updates_status_message() {
     let mut app = App::new_for_testing();
     app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult {

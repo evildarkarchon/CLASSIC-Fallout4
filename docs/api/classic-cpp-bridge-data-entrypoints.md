@@ -198,9 +198,12 @@ Native CLI and GUI callers use the first-party YAML Data operations:
 
 Rust owns the Pages URL, `yaml-data-v*` channel, shippable-file inventory,
 schema compatibility, config-inspected installed identity, and rollback targets.
-For first-party check/apply calls, Rust also discovers the installation root
-from the union of executable, CWD, parent, and `install` layouts supported by
-the native frontends. The bridge passes the accepted update policy
+For first-party check/apply calls, Rust also discovers the Installation Root
+through config's shared
+[`locate_installation_root`](classic-config-core.md#installation-root-location),
+the same locator the GUI calls directly as
+`classic::config::locate_installation_root(executable_dir, working_dir)`
+(empty input = unavailable, empty result = no Installation Root). The bridge passes the accepted update policy
 and reviewed update identity through typed DTOs. Lower-level
 `yaml_check_update`, `yaml_apply_update`, and `yaml_rollback_update` operations
 remain for tests and unusual hosts that intentionally supply their own channel

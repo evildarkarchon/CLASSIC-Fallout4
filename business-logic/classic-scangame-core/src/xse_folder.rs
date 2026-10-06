@@ -1,4 +1,5 @@
-//! XSE Folder resolution from an installation's recorded Game Local facts.
+//! XSE Folder and XSE log resolution from an installation's recorded Game
+//! Local facts.
 //!
 //! `classic-xse-core` owns XSE Folder derivation but must not depend on
 //! `classic-config-core`, which owns the Game Local document. This module is
@@ -10,7 +11,9 @@ use classic_config_core::{GameLocalFacts, read_game_local_facts_in_yaml_file_cac
 use classic_shared_core::yaml::YamlFileCacheScope;
 use classic_version_registry_core::VersionRegistryScope;
 use classic_xse_core::{
-    XseGameLocalFacts, resolve_xse_folder_from_game_local_facts_in_version_registry_scope,
+    XseGameLocalFacts, XseLogError,
+    resolve_xse_folder_from_game_local_facts_in_version_registry_scope,
+    resolve_xse_log_from_game_local_facts_in_version_registry_scope,
 };
 use std::path::{Path, PathBuf};
 
@@ -86,6 +89,67 @@ pub fn resolve_xse_folder_for_scan_in_scopes(
         yaml_file_cache,
     );
     resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
+        &xse_game_local_facts(facts),
+        game,
+        selected_game_version,
+        configured_docs_root,
+        version_registry,
+    )
+}
+
+/// Locate the XSE log for `game` and `selected_game_version` from the Game
+/// Local document in `yaml_dir_data` (the `CLASSIC Data` directory), reading
+/// Version Registry metadata from the process default snapshot.
+///
+/// The log is looked for only in the XSE Folder [`resolve_xse_folder_for_scan`]
+/// selects, under the selected version's Version Registry XSE log name, so
+/// Fallout 4 VR gets its own `f4sevr.log`. See
+/// [`classic_xse_core::resolve_xse_log_from_game_local_facts`] for the naming
+/// and absence rules. Returns `Ok(None)` when no folder resolves or the folder
+/// or log is missing; the Game Local document read stays fail-soft.
+///
+/// # Errors
+///
+/// Returns [`XseLogError::Inspect`] when the candidate log cannot be inspected
+/// for a reason other than absence.
+pub fn resolve_xse_log_for_scan(
+    yaml_dir_data: impl AsRef<Path>,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+) -> Result<Option<PathBuf>, XseLogError> {
+    resolve_xse_log_for_scan_in_scopes(
+        yaml_dir_data,
+        game,
+        selected_game_version,
+        configured_docs_root,
+        &VersionRegistryScope::default_scope(),
+        &YamlFileCacheScope::default_scope(),
+    )
+}
+
+/// Locate the XSE log like [`resolve_xse_log_for_scan`], reading Version
+/// Registry metadata only from `version_registry` and the Game Local document
+/// only through `yaml_file_cache` (see [`resolve_xse_folder_for_scan_in_scopes`]).
+///
+/// # Errors
+///
+/// Returns [`XseLogError::Inspect`] when the candidate log cannot be inspected
+/// for a reason other than absence.
+pub fn resolve_xse_log_for_scan_in_scopes(
+    yaml_dir_data: impl AsRef<Path>,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+    version_registry: &VersionRegistryScope,
+    yaml_file_cache: &YamlFileCacheScope,
+) -> Result<Option<PathBuf>, XseLogError> {
+    let facts = read_game_local_facts_in_yaml_file_cache_scope(
+        yaml_dir_data.as_ref(),
+        game,
+        yaml_file_cache,
+    );
+    resolve_xse_log_from_game_local_facts_in_version_registry_scope(
         &xse_game_local_facts(facts),
         game,
         selected_game_version,

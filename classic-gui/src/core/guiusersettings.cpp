@@ -219,6 +219,10 @@ GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapsho
     for (const auto& entry : settings.crash_log_scan.formid_database_paths) {
         databases[classic::toQString(entry.game)].append(classic::toQString(entry.path));
     }
+    QMap<QString, QStringList> scanDatabases;
+    for (const auto& entry : settings.crash_log_scan.scan_formid_database_paths) {
+        scanDatabases[classic::toQString(entry.game)].append(classic::toQString(entry.path));
+    }
 
     QMap<GuiWindow, GuiWindowGeometry> windowGeometry;
     for (const auto& geometry : settings.frontend_state.window_geometry) {
@@ -233,7 +237,7 @@ GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapsho
          classic::toQString(settings.update_preferences.update_source)},
         {settings.crash_log_scan.fcx_mode, settings.crash_log_scan.simplify_logs,
          settings.crash_log_scan.show_statistics, settings.crash_log_scan.formid_value_lookup, std::move(databases),
-         settings.crash_log_scan.move_unsolved_logs,
+         std::move(scanDatabases), settings.crash_log_scan.move_unsolved_logs,
          optionalString(settings.crash_log_scan.has_unsolved_logs_destination,
                         settings.crash_log_scan.unsolved_logs_destination),
          optionalString(settings.crash_log_scan.has_custom_scan_input, settings.crash_log_scan.custom_scan_input),
@@ -268,7 +272,8 @@ CrashLogScanLaunchSettings GuiUserSettingsSnapshot::scanLaunchSettings(const QSt
         scan.unsolvedLogsDestination.value_or(QString{}),
         scan.maxConcurrentScans,
         scan.customScanInput.value_or(QString{}),
-        scan.formIdDatabases.value(game),
+        // Never the raw formIdDatabases map: Rust owns which saved rows apply to this game's scan.
+        scan.scanFormIdDatabases.value(game),
         gameSetup.gameRoot.value_or(QString{}),
         gameSetup.documentsRoot.value_or(QString{}),
         gameSetup.gameExecutable.value_or(QString{}),

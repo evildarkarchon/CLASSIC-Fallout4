@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T10:41:22Z",
+  "generated_at_utc": "2026-10-06T11:10:28Z",
   "schema_version": 2,
   "entries": [
     {
@@ -1480,6 +1480,30 @@
       "ownerModule": "config",
       "rustCrate": "classic-config-core",
       "coreRustSymbol": "LocalIgnoreYamlDataState"
+    },
+    {
+      "id": "4765e6757b4a3133",
+      "rustSymbol": "locate_installation_root",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "executable_dir",
+            "type": "&str"
+          },
+          {
+            "name": "working_dir",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "locate_installation_root"
     },
     {
       "id": "583bb255b5c8b9ef",
@@ -12418,6 +12442,10 @@
           "type": "String"
         },
         {
+          "name": "scan_formid_database_paths",
+          "type": "Vec<FormIdDatabasePathDto>"
+        },
+        {
           "name": "move_unsolved_logs",
           "type": "bool"
         },
@@ -15599,6 +15627,38 @@
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
       "coreRustSymbol": "resolve_xse_folder_for_scan"
+    },
+    {
+      "id": "16d48d7de1e4bfe3",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "yaml_dir_data",
+            "type": "&str"
+          },
+          {
+            "name": "game",
+            "type": "&str"
+          },
+          {
+            "name": "selected_game_version",
+            "type": "&str"
+          },
+          {
+            "name": "configured_docs_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<String>"
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "resolve_xse_log_for_scan"
     },
     {
       "id": "fed1f3c1692a2596",

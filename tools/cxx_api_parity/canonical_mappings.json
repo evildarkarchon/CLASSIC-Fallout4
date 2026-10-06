@@ -782,6 +782,15 @@
       "coreRustSymbol": "persist_game_local_paths"
     },
     {
+      "id": "4765e6757b4a3133",
+      "rustSymbol": "locate_installation_root",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "locate_installation_root"
+    },
+    {
       "id": "7a1d4610ddf2ed0c",
       "rustSymbol": "settings_cache_clear",
       "kind": "function",
@@ -5818,6 +5827,15 @@
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
       "coreRustSymbol": "resolve_xse_folder_for_scan"
+    },
+    {
+      "id": "16d48d7de1e4bfe3",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "resolve_xse_log_for_scan"
     },
     {
       "id": "fed1f3c1692a2596",

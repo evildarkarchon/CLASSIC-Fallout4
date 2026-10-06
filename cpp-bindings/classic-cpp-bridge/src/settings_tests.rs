@@ -1181,6 +1181,32 @@ fn test_user_settings_crash_log_scan_snapshot_is_typed_and_preserves_origins() {
 }
 
 #[test]
+fn test_user_settings_crash_log_scan_snapshot_carries_game_aware_scan_formid_rows() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "vr_shared_and_legacy_formid_databases.yaml");
+
+    let snapshot = user_settings_open_crash_log_scan_settings(&root.path().display().to_string());
+    let rows = snapshot
+        .scan_formid_database_paths
+        .iter()
+        .map(|row| (row.game.as_str(), row.path.as_str()))
+        .collect::<Vec<_>>();
+
+    // Rows arrive grouped in supported-game order with the Fallout 4 VR read rule already applied.
+    assert_eq!(
+        rows,
+        vec![
+            ("Fallout4", "databases/Fallout4 FormIDs.db"),
+            ("Fallout4", "databases/Shared Extra FormIDs.db"),
+            ("Fallout4VR", "databases/Fallout4 FormIDs.db"),
+            ("Fallout4VR", "databases/Shared Extra FormIDs.db"),
+            ("Fallout4VR", "databases/Legacy VR FormIDs.db"),
+            ("Skyrim", "databases/Skyrim FormIDs.db"),
+        ]
+    );
+}
+
+#[test]
 fn test_user_settings_gui_snapshot_opens_every_typed_group_at_one_revision() {
     let root = tempfile::tempdir().unwrap();
     install_user_settings_fixture(root.path(), "canonical_current_nested.yaml");

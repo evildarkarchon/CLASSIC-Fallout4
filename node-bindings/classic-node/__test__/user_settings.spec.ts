@@ -555,6 +555,11 @@ describe("Crash Log Scan User Settings", () => {
                 Fallout4: ["databases/Fallout4 FormIDs.db"],
             },
             formidDatabasesOrigin: "document",
+            // Fallout 4 VR shares the Fallout 4 rows through the Rust game-aware read.
+            scanFormidDatabases: {
+                Fallout4: ["databases/Fallout4 FormIDs.db"],
+                Fallout4VR: ["databases/Fallout4 FormIDs.db"],
+            },
             moveUnsolvedLogs: true,
             moveUnsolvedLogsOrigin: "document",
             unsolvedLogsDestinationOrigin: "document",
@@ -613,6 +618,7 @@ describe("Crash Log Scan User Settings", () => {
             "degradedFallback",
         );
         expect(invalid.crashLogScanSettings.formidDatabases).toEqual({});
+        expect(invalid.crashLogScanSettings.scanFormidDatabases).toEqual({});
         expect(invalid.crashLogScanSettings.formidDatabasesOrigin).toBe(
             "degradedFallback",
         );

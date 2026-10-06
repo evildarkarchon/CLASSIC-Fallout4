@@ -103,6 +103,14 @@ pub struct PyCrashLogScanSettings {
     /// Provenance of the FormID Databases mapping.
     #[pyo3(get)]
     formid_databases_origin: String,
+    /// FormID database rows that apply to each supported game's Crash Log Scan.
+    ///
+    /// Rust applies the game-aware read: Fallout 4 VR reads the shared `Fallout4` rows followed
+    /// by legacy `Fallout4VR` rows, de-duplicated; every other game reads its own rows exactly.
+    /// Games whose scan reads no rows are absent. Scan launch reads this mapping, never
+    /// `formid_databases`.
+    #[pyo3(get)]
+    scan_formid_databases: HashMap<String, Vec<String>>,
     /// Whether Standard Crash Log Scan Runs may move Unsolved Logs.
     #[pyo3(get)]
     move_unsolved_logs: bool,
@@ -1263,6 +1271,18 @@ fn crash_log_scan_settings_to_py(settings: &CrashLogScanSettings) -> PyCrashLogS
             .map(|(game, paths)| (game.clone(), paths.clone()))
             .collect(),
         formid_databases_origin: settings.formid_databases_origin().as_str().to_string(),
+        scan_formid_databases: classic_shared_core::GameId::all()
+            .into_iter()
+            .map(|game| {
+                let rows = settings
+                    .formid_databases_for_game(game)
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect::<Vec<_>>();
+                (game.as_str().to_string(), rows)
+            })
+            .filter(|(_, rows)| !rows.is_empty())
+            .collect(),
         move_unsolved_logs: settings.move_unsolved_logs(),
         move_unsolved_logs_origin: settings.move_unsolved_logs_origin().as_str().to_string(),
         unsolved_logs_destination: settings.unsolved_logs_destination().map(str::to_string),

@@ -1,5 +1,6 @@
 //! Input-only receipt runner for public User Settings opening, updates, and migrations.
 
+use classic_shared_core::GameId;
 use classic_user_settings_core::{
     GuiWindow, MigrationEndpoint, MigrationPlanningOutcome, Revision, UserSettings,
     UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan,
@@ -104,6 +105,21 @@ fn view(settings: &UserSettings, fields: &[Value]) -> RunnerResult<Value> {
             "move_unsolved_logs" => json!(scan.move_unsolved_logs()),
             "max_concurrent_scans" => json!(scan.max_concurrent_scans()),
             "formid_databases" => json!(scan.formid_databases()),
+            // Games whose scan reads no rows are omitted so every adapter reports the same shape,
+            // including CXX whose flattened rows cannot carry an empty game.
+            "scan_formid_databases" => Value::Object(
+                GameId::all()
+                    .into_iter()
+                    .map(|game| {
+                        (
+                            game.as_str().to_string(),
+                            scan.formid_databases_for_game(game),
+                        )
+                    })
+                    .filter(|(_, rows)| !rows.is_empty())
+                    .map(|(game, rows)| (game, json!(rows)))
+                    .collect(),
+            ),
             "main_tab_width" => json!(windows.main_tab().width()),
             "main_tab_maximized" => json!(windows.main_tab().maximized()),
             "custom_scan_folder" => json!(scan.custom_scan_input()),

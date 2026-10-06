@@ -1440,3 +1440,30 @@ fn an_out_of_range_cxx_enum_value_yields_an_empty_display_label() {
     let fabricated = ffi::InstalledYamlDataDiagnosticKind { repr: u8::MAX };
     assert_eq!(installed_yaml_data_diagnostic_kind_label(fabricated), "");
 }
+
+#[test]
+/// Empty strings stand for an absent input and for "no Installation Root" at the CXX boundary.
+fn installation_root_bridge_uses_empty_strings_for_absent_inputs_and_no_match() {
+    let layout = tempdir().unwrap();
+    let executable_dir = layout.path().join("build").join("bin");
+    let working_dir = layout.path().join("work");
+    std::fs::create_dir_all(&executable_dir).unwrap();
+    std::fs::create_dir_all(&working_dir).unwrap();
+    let executable = executable_dir.to_str().unwrap();
+    let working = working_dir.to_str().unwrap();
+
+    assert_eq!(locate_installation_root(executable, working), "");
+
+    // The grandparent (a development build output folder's repository root) is candidate 4.
+    std::fs::create_dir(layout.path().join("CLASSIC Data")).unwrap();
+    assert_eq!(
+        locate_installation_root(executable, working),
+        layout.path().to_str().unwrap()
+    );
+
+    // An empty executable folder skips every executable-derived candidate.
+    assert_eq!(locate_installation_root("", working), "");
+
+    std::fs::create_dir(working_dir.join("CLASSIC Data")).unwrap();
+    assert_eq!(locate_installation_root("", working), working);
+}

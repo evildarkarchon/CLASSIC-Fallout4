@@ -3092,6 +3092,15 @@ export interface JsCrashLogScanSettings {
   formidDatabases: Record<string, Array<string>>
   /** Provenance token for FormID Databases. */
   formidDatabasesOrigin: string
+  /**
+   * FormID database rows that apply to each supported game's Crash Log Scan.
+   *
+   * Rust applies the game-aware read: Fallout 4 VR reads the shared `Fallout4` rows followed
+   * by legacy `Fallout4VR` rows, de-duplicated; every other game reads its own rows exactly.
+   * Games whose scan reads no rows are absent. Scan launch reads this map, never
+   * `formidDatabases`.
+   */
+  scanFormidDatabases: Record<string, Array<string>>
   /** Whether a standard scan may move Unsolved Logs. */
   moveUnsolvedLogs: boolean
   /** Provenance token for Move Unsolved Logs. */
@@ -5747,6 +5756,22 @@ export declare function loadSettingsSync(key: string, path: string): any
 export declare function localIgnoreYamlDataStateLabel(state: JsLocalIgnoreYamlDataState): string
 
 /**
+ * Locate the Installation Root from an executable folder and a working directory.
+ *
+ * Delegates to config's one shared candidate search (executable folder, working
+ * directory, executable parent, executable grandparent, the executable parent's
+ * `install` folder, the working directory's `install` folder) and returns the
+ * first candidate holding `CLASSIC Data`. Synchronous because it only inspects
+ * directory metadata.
+ *
+ * @param executableDir - Folder of the running executable; omitted/`null` skips its candidates.
+ * @param workingDir - Process working directory; omitted/`null` skips its candidates.
+ * @returns The matching root built from the given input, or `null` when none holds
+ *   `CLASSIC Data` (there is no fallback; the caller reports "CLASSIC Data not found").
+ */
+export declare function locateInstallationRoot(executableDir?: string | undefined | null, workingDir?: string | undefined | null): string | null
+
+/**
  * Match a detected version to the nearest known version in the registry.
  *
  * Uses intelligent matching with fallback:
@@ -6027,6 +6052,24 @@ export declare function resetHashCacheStats(): void
 
 /** Reset the cache hit/miss counters to zero. */
 export declare function resetSettingsCacheStats(): void
+
+/**
+ * Locate the XSE log for a game and game version from an installation's
+ * `CLASSIC Data` directory.
+ *
+ * Rust owns the location: the log is looked for only in the XSE Folder that
+ * XSE Folder precedence selects (recorded Game Local facts, then
+ * `configuredDocsRoot`, then platform discovery), under the selected
+ * version's Version Registry XSE log name, so Fallout 4 VR has its own log.
+ *
+ * @param yamlDirData - The installation's `CLASSIC Data` directory.
+ * @param game - The game identifier (e.g., "Fallout4", "Fallout4VR").
+ * @param selectedGameVersion - The selected game version (e.g., "auto", "VR").
+ * @param configuredDocsRoot - The configured documents root; empty or omitted means none.
+ * @returns The existing log path, or null when the XSE Folder or log is missing.
+ * @throws With a "cannot inspect XSE log" message when the log cannot be inspected.
+ */
+export declare function resolveXseLogForScan(yamlDirData: string, game: string, selectedGameVersion: string, configuredDocsRoot?: string | undefined | null): string | null
 
 /** Resource type count entry. */
 export interface ResourceCount {
