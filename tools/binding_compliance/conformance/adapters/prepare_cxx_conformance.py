@@ -98,11 +98,11 @@ def _cxx_source_paths(
         / "classic-cli/tests/conformance/classic_cxx_settings_validation_conformance.h",
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_version_values_conformance.h",
-        repo_root / "business-logic/classic-settings-core/src",
         # The generic YAML rules and logical-key cache (#239), then
         # YamlOperations and the path/mtime YAML-file cache (#240), moved out
-        # of classic-settings-core; every family that hashed the old location
-        # must keep fingerprinting their shared-core owner.
+        # of classic-settings-core, which then retired (#257); every family
+        # that hashed the old location must keep fingerprinting their
+        # shared-core owner.
         repo_root / "foundation/classic-shared-core/src/yaml",
         *(
             repo_root
@@ -122,7 +122,7 @@ def _cxx_source_paths(
         ),
         *(
             repo_root / "business-logic" / ("classic-" + name + "-core/src")
-            for name in ("registry", "web", "perf", "update", "xse")
+            for name in ("registry", "web", "update", "xse")
         ),
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_vocabulary_conformance.h",
@@ -186,6 +186,11 @@ def _cxx_source_paths(
             repo_root / "business-logic/classic-config-core/src",
             repo_root / "business-logic/classic-user-settings-core/src",
             repo_root / "business-logic/classic-file-io-core/src",
+            # The game-target backup and game-file operations behind the
+            # file-backups family moved here from file I/O (#250), and the
+            # version-labelled backup behind the path-backups bridge rows
+            # moved here from path core (#251).
+            repo_root / "business-logic/classic-resource-core/src",
             repo_root / "business-logic/classic-path-core/src",
             repo_root / "foundation/classic-shared-core/src",
             repo_root
@@ -194,6 +199,22 @@ def _cxx_source_paths(
             / "classic-cli/tests/conformance/classic_cxx_file_operations_conformance.h",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_path_operations_conformance.h",
+        )
+    else:
+        # The Crash Log Scan Run composes owners outside scanlog's contract
+        # module: its run engine, collection and custom-scan policy (#254),
+        # config's Installed YAML Data and Local Ignore recovery (#247),
+        # scangame's Game Setup Intake (#253) and XSE Folder (#252), and FormID
+        # Value Lookup. Fingerprint all of them so a stale receipt cannot
+        # certify an owner whose current bytes it never ran.
+        paths += tuple(
+            repo_root / "business-logic" / crate / "src"
+            for crate in (
+                "classic-scanlog-core",
+                "classic-config-core",
+                "classic-database-core",
+                "classic-scangame-core",
+            )
         )
     return paths
 

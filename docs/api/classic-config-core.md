@@ -27,6 +27,7 @@ Use this crate when you need to:
 - apply version-registry-backed metadata fallbacks while building config data
 - hand configuration data to higher layers such as scanlog orchestration or bindings
 - load generic Main, Game, Game Local, Ignore, Test, and Cache YAML sources
+- install, roll back, or self-heal YAML Data in the per-user YAML cache, or generate first-run Ignore/Local YAML files
 
 Do not use this crate for:
 
@@ -44,14 +45,42 @@ Those concerns live in related crates such as [`classic-scanlog-core`](../../bus
 
 ### `yaml_source`
 
-Generic non-User-Settings CLASSIC YAML locations.
+The canonical CLASSIC YAML file identity and its per-file policy (issue #246). This is the one six-kind identity for non-User-Settings CLASSIC YAML; the former `classic_settings_core::YamlFile` retired in its favor.
 
-- `YamlSource` - enum of Main, Ignore, Game, Game Local, Test, and Cache locations
+- `YamlSource` - enum of Main, Ignore, Game, Game Local, Test, and Cache, with stable tokens, documented locations, resolved paths, display names, serde form, and per-file schema ranges
+
+### `yaml_cache`
+
+The per-user YAML Data cache location (`CLASSIC/yaml-cache`), owned here as YAML file policy since issue #246 (formerly `classic-path-core`). Root re-exported.
+
+- `yaml_cache_dir()` / `yaml_cache_dir_with_env(env)` - resolve without touching the filesystem
+- `ensure_yaml_cache_dir()` / `ensure_yaml_cache_dir_with_env(env)` - resolve and create (idempotent)
+
+### `atomic_install`
+
+YAML Data install, one-step rollback, and read-path self-heal over a `<target>.prev` rollback generation, owned here since issue #248 (formerly `classic-file-io-core`). Root re-exported. See [YAML Data install, rollback, self-heal, and generation](#yaml-data-install-rollback-self-heal-and-generation).
+
+- `install_atomic` - digest-verified install of an already-downloaded file, preserving the replaced copy as `<target>.prev`
+- `rollback` - swap `<target>` with `<target>.prev`, or promote `.prev` when the target is missing
+- `self_heal` - strict subset of `rollback` that only promotes `.prev` when the target is missing; the shape every-read callers must use
+- `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome` - the returned outcomes
+
+### `generation`
+
+Ignore/Local YAML first-run generation, owned here since issue #248 (formerly `classic-file-io-core`). Root re-exported.
+
+- `FileGeneratorConfig` and `FileGenerator`
+- `generate_ignore_file()`
+- `generate_local_yaml()`
 
 ### `game_local`
 
-Independent persistence for runtime-discovered paths in a caller-selected Game Local YAML document.
+Game Local facts and independent persistence for runtime-discovered paths in a Game Local YAML document.
 
+- `GameLocalFacts` - the recorded `Game_Info` folders (`root_folder_game`, `root_folder_docs`, `docs_folder_xse`) as plain trimmed `Option<PathBuf>` values
+- `read_game_local_facts(yaml_dir_data, game)` - fail-soft reader for `<yaml_dir_data>/CLASSIC {game} Local.yaml`
+- `read_game_local_facts_in_yaml_file_cache_scope(yaml_dir_data, game, &YamlFileCacheScope)` - the same reader through a caller-selected YAML-file cache scope
+- `game_local_yaml_path(yaml_dir_data, game)` - the Game Local document path
 - `persist_game_local_paths(path, game_root, docs_root)` - root-reexported writer that updates supplied Game Local path keys without opening User Settings
 
 ### `yamldata`
@@ -138,9 +167,13 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
-- `clear_global_yaml_cache` from [`classic_shared_core::yaml`](classic-shared-core.md#yaml-file-cache) (moved there from `classic-settings-core` in issue #240; historical note: that crate absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- `clear_global_yaml_cache` from [`classic_shared_core::yaml`](classic-shared-core.md#yaml-file-cache) (moved there from `classic-settings-core` in issue #240; historical note: that crate absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1 and was itself retired in issue #257)
 - crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
 - Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
+- `yaml_cache_dir`, `yaml_cache_dir_with_env`, `ensure_yaml_cache_dir`, `ensure_yaml_cache_dir_with_env` from `yaml_cache`
+- `GameLocalFacts`, `read_game_local_facts`, `game_local_yaml_path`, `persist_game_local_paths` from `game_local`
+- `install_atomic`, `rollback`, `self_heal`, `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome` from `atomic_install`
+- `FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file`, `generate_local_yaml` from `generation`
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers. It clears the default YAML-file cache scope, which is the one config's own `YamlOperations::new()` loaders fill.
 
@@ -150,31 +183,78 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 
 ## `YamlSource`
 
-`YamlSource` identifies generic CLASSIC YAML file locations that are not User Settings. `classic-user-settings-core` separately owns the source and root-relative location of `CLASSIC Settings.yaml`.
+`YamlSource` is the canonical CLASSIC YAML file identity: the one enum for generic CLASSIC YAML files that are not User Settings. `classic-user-settings-core` separately owns the source and root-relative location of `CLASSIC Settings.yaml`.
 
-Variants:
+Variants, with their stable token (`as_str()`) and documented location (`description()`):
 
-- `Main` -> `CLASSIC Data/databases/CLASSIC Main.yaml`
-- `Ignore` -> `CLASSIC Ignore.yaml`
-- `Game` -> `CLASSIC Data/databases/CLASSIC {game}.yaml`; `Fallout4VR` resolves to the shared `CLASSIC Fallout4.yaml`
-- `GameLocal` -> `CLASSIC Data/CLASSIC {game} Local.yaml`
-- `Test` -> `tests/test_settings.yaml`
-- `Cache` -> `User config dir/CLASSIC/cache.yaml` with application-relative compatibility fallback
+| Variant | `as_str()` | `description()` | Resolved by `path(game)` |
+| --- | --- | --- | --- |
+| `Main` | `Main` | `CLASSIC Data/databases/CLASSIC Main.yaml` | same |
+| `Ignore` | `Ignore` | `CLASSIC Ignore.yaml` | same |
+| `Game` | `Game` | `CLASSIC Data/databases/CLASSIC {Game}.yaml` | `Fallout4VR` resolves to the shared `CLASSIC Fallout4.yaml` |
+| `GameLocal` | `GameLocal` | `CLASSIC Data/CLASSIC {Game} Local.yaml` | `game` used verbatim (Fallout 4 VR keeps its own Local file) |
+| `Test` | `Test` | `tests/test_settings.yaml` | same |
+| `Cache` | `Cache` | `User config dir/CLASSIC/cache.yaml` | user config dir, with application-relative compatibility fallback |
 
 Important methods:
 
+- `all() -> [YamlSource; 6]` - every kind in the stable order above
+- `as_str(&self) -> &'static str` - the stable token; also the `Display` form and the serde form (`"Main"`, `"GameLocal"`, ...)
+- `description(&self) -> &'static str` - the documented location with a `{Game}` placeholder
+- `schema_compat(&self, game: &str) -> Option<SchemaCompat>` - the client schema range for this file, see [Per-file schema ranges](#per-file-schema-ranges)
 - `path(&self, game: &str) -> PathBuf`
 - `path_in_registry_scope(&self, game: &str, registry: &classic_registry_core::RegistryScope) -> PathBuf`
-- `display_name(&self) -> &'static str`
+- `display_name(&self) -> &'static str` - the human-facing label (`Main Database`, `Game Local Config`, ...), distinct from `as_str()`
 - `display_name_with_game(&self, game: &str) -> String`
 - `load(&self, game: &str) -> anyhow::Result<yaml_rust2::Yaml>`
+
+`YamlSource` derives `Serialize`/`Deserialize`, `Copy`, `Eq`, and `Hash`. The tokens, descriptions, order, `Display`, and serialization are exactly those of the retired `classic_settings_core::YamlFile`; that import path ended in issue #246 with no forwarding re-export. Binding projections keep their published names: CXX `classic::settings::YamlFile` with `yaml_file_as_str` / `yaml_file_description`, Node `JsYamlFile` with `getAllYamlFiles` / `getYamlFileDescription`, and Python `classic_settings.YamlFile`, each backed by `YamlSource`; Node `JsYamlSource` and Python `classic_config.YamlSource` remain the path/display-name projections. The `yaml-file-values` and `yaml-source-values` conformance packs pin both projections.
 
 Contributor notes:
 
 - `YamlSource::Game` and `YamlSource::GameLocal` require a non-empty `game` string and will panic otherwise.
 - `YamlSource::Cache` uses the `CLASSIC` base directory for user config/cache paths.
-- The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). The Python `classic_config` facade passes its own facade-owned scope so `classic_registry` cannot replace or clear config's application directory once both facades share one native library.
-- `load()` reads the full YAML stream, merges documents with `classic_shared_core::yaml`, and returns one merged mapping.
+- The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). The Python `classic_config` facade passes its own facade-owned scope so `classic_registry` cannot replace or clear config's application directory now that the facades share one native library.
+- `load()` reads the full YAML stream, merges documents with `classic_shared_core::yaml`, and returns one merged mapping. A file with a declared schema range (`schema_compat` returns `Some`) loads through the cache-aware shippable selection instead, gated by that range.
+
+### Per-file schema ranges
+
+The client schema ranges are config-owned file policy. The range values live in `client_schemas` (`MAIN_YAML`, `GAME_FALLOUT4_YAML`, and `shippable_schema_entries()` for the YAML Data Update Channel); `YamlSource::schema_compat(game)` is the per-file lookup:
+
+| File | Range |
+| --- | --- |
+| `Main` | `client_schemas::MAIN_YAML` |
+| `Game` for `Fallout4` or `Fallout4VR` | `client_schemas::GAME_FALLOUT4_YAML` |
+| `Game` for any other game, `Ignore`, `GameLocal`, `Test`, `Cache` | `None` (no declared range; not update-eligible) |
+
+No other crate declares a CLASSIC file's range. First-party YAML Data update checks take them from `shippable_schema_entries()`; the binding update APIs that accept caller-built client schema entries are explicit-input seams, not a second declaration.
+
+## YAML Cache Location
+
+`yaml_cache_dir()` resolves the per-user directory where YAML Data updates are installed and where Installed YAML Data selection looks for update candidates:
+
+- Windows: `%LOCALAPPDATA%\CLASSIC\yaml-cache\`, falling back to `%APPDATA%\CLASSIC\yaml-cache\`
+- other targets (source portability): `${XDG_CACHE_HOME:-$HOME/.cache}/CLASSIC/yaml-cache/`
+
+`ensure_yaml_cache_dir()` additionally creates it (idempotent). Both return `classic_shared_core::path_core::PathError`: `InvalidPath("<missing vars>; cannot resolve YAML cache directory")` when no cache root is set, and `IoError` when creation fails. The `_with_env(env)` forms take an environment-lookup closure for tests and tooling.
+
+This location moved from `classic-path-core` in issue #246, so config no longer depends on path. The neutral OS cache root it builds on is `classic_shared_core::path_core::user_cache_root_with_env`. The app-notification cache stays in `classic-path-core` and is a disjoint sibling (`CLASSIC/app-notification/...`); `classic-update-core/tests/cache_locations_disjoint.rs` pins that disjointness. `classic-update-core` imports these functions from config.
+
+## Game Local Facts
+
+The Game Local document (`CLASSIC Data/CLASSIC {game} Local.yaml`, `YamlSource::GameLocal`) records per-installation folders under `Game_Info`. Config owns its location and keys.
+
+`read_game_local_facts(yaml_dir_data: &Path, game: &str) -> GameLocalFacts` reads `game_local_yaml_path(yaml_dir_data, game)` and returns:
+
+| Field | Key | Meaning |
+| --- | --- | --- |
+| `root_folder_game` | `Game_Info.Root_Folder_Game` | game installation folder |
+| `root_folder_docs` | `Game_Info.Root_Folder_Docs` | the game's documents folder |
+| `docs_folder_xse` | `Game_Info.Docs_Folder_XSE` | explicit XSE Folder override |
+
+Each value is trimmed; an absent, non-string, or blank value is `None`. The reader is fail-soft: a missing, unreadable, or malformed document returns `GameLocalFacts::default()`, because these facts only refine path discovery. It reads through the default-scope path/mtime YAML-file cache (`YamlOperations::new()`). `read_game_local_facts_in_yaml_file_cache_scope(..., &YamlFileCacheScope)` reads, fills, and counts only the caller's [scope](classic-shared-core.md#cache-scopes) instead; the Python `classic_scanlog` facade reaches it through its scan runs so `classic_config.clear_yaml_cache()` cannot evict its entries (#234). `GameLocalFacts::from_yaml(&Yaml)` extracts the same facts from an already-loaded document.
+
+`GameLocalFacts` carries no YAML and no policy, so crates that must not depend on config consume its plain paths. The XSE Folder resolver takes them as `classic_xse_core::XseGameLocalFacts` through `resolve_xse_folder_from_game_local_facts[_in_version_registry_scope]`; [`classic_scangame_core::resolve_xse_folder_for_scan[_in_version_registry_scope]`](classic-scangame-core.md#xse-folder-from-the-game-local-document) is the composing caller: it reads the facts here and copies `docs_folder_xse` and `root_folder_docs` across, and every setup, scan, and C++ bridge caller resolves through it (#252). There is no XSE-to-config Cargo edge, and XSE no longer reads Local.yaml itself.
 
 ## Game Local Path Persistence
 
@@ -183,6 +263,35 @@ Contributor notes:
 The writer creates parent directories when needed, merges an existing multi-document YAML stream, updates only `Game_Info.Root_Folder_Game` and `Game_Info.Root_Folder_Docs`, and preserves unrelated content. It never reads or writes `CLASSIC Settings.yaml`.
 
 Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, Node `persistGameLocalPaths(...) -> Promise<void>`, and Python `persist_game_local_paths(...) -> None`. Each adapter only converts optional path values and delegates document behavior to the Rust writer.
+
+## YAML Data install, rollback, self-heal, and generation
+
+Issue #248 moved these operations here from `classic-file-io-core`, next to the YAML cache location they write into and the shippable loader that self-heals on every read. The old `classic_file_io_core::{atomic_install, generation}` modules and root re-exports ended with no forwarding re-export, because config depends on file I/O. Every operation still returns `classic_file_io_core::FileIOError`, so the published error codes and each binding's projection of them are unchanged. Behavior is unchanged by the move.
+
+### Install, rollback, and self-heal
+
+- `install_atomic(target, source_tmp, expected_sha256) -> Result<InstallOutcome, FileIOError>` - requires `source_tmp` in the same directory as `target` (`InvalidPath` otherwise) and to be a regular file (`NotFound` / `InvalidPath`). The durability sequence is [`classic-durable-publication`](classic-durable-publication.md)'s `install_verified`: it takes the `<target>.install.lock` lock, verifies the digest case-insensitively, deletes `source_tmp` and returns `ChecksumMismatch` on mismatch (target and any `.prev` untouched), synchronizes the staged bytes, rotates `<target>` to `<target>.prev`, and moves the staged file into place. `InstallOutcome` reports the target, whether a `.prev` was created, and the verified lowercase digest. Lock and rename failures are `WriteError`; an unreadable staged file is `IoError`.
+- `rollback(target) -> Result<RollbackOutcome, FileIOError>` - under the same lock, swaps `<target>` and `<target>.prev` (so one step remains available in the other direction), promotes `.prev` when `target` is missing, or returns `NoPreviousVersion` with no filesystem change.
+- `self_heal(target) -> Result<SelfHealOutcome, FileIOError>` - promotes `.prev` only when `target` is missing and never swaps. It checks unlocked first so steady-state reads pay no lock cost, then re-checks under the lock. The shippable loader behind Installed YAML Data and `YamlSource::load` uses this, never `rollback`, so an updated file is not reverted on read.
+
+The `.prev` suffix and the install lock come from Durable Publication, so the operations that consume a rollback generation cannot drift from the one that creates it. Local Ignore YAML Data never reaches `install_verified`, which is what keeps ADR-0006's ban on `.prev` state for Local Ignore structural. The YAML Data Update Channel (`classic-update-core`) drives `install_atomic` and `rollback`; release and app-notification channels do not touch these operations. See [`yaml-update-delivery.md`](yaml-update-delivery.md).
+
+### Ignore/Local YAML generation
+
+`FileGeneratorConfig { ignore_file_content, local_yaml_content, game_name }` configures a `FileGenerator`:
+
+- `FileGenerator::new(config)`
+- `generate_ignore_file_async() -> Result<bool, FileIOError>`
+- `generate_local_yaml_async() -> Result<bool, FileIOError>`
+- `generate_all_files_async() -> Result<(bool, bool), FileIOError>`
+- `ignore_file_path()` (`CLASSIC Ignore.yaml`) and `local_yaml_path()` (`CLASSIC Data/CLASSIC {game} Local.yaml`)
+- `config()`
+
+Standalone helpers: `generate_ignore_file(content)` and `generate_local_yaml(content, game_name)`.
+
+These write relative to the current working directory, create the Local YAML parent directory when needed, and return `false` without touching an existing file. `generate_all_files_async()` uses `tokio::try_join!`, so one generation error fails the combined call. This is first-run file creation only; Local Ignore generation from selected Main defaults during Installed YAML Data loading is the separate, durably published path in `installed_yaml_data`.
+
+Binding projections keep their published names and module homes: Node `JsFileGenerator`, `generateIgnoreFile`, `generateLocalYaml`, and Python `classic_file_io.FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file_async`, `generate_local_yaml_async`. The `file-generation` conformance pack pins them. The YAML Data Update Channel's binding install/rollback APIs are projected from `classic-update-core`.
 
 ## Explicit YAML Data Loading
 
@@ -386,7 +495,7 @@ Building a `YamlDataCore` backfills crashgen name, latest crashgen version, XSE 
 - the `*_in_version_registry_scope()` forms read only the caller's scope, including the eager Local Ignore recovery snapshots built during an installed load; `resolve_registry_version_info_in()` reads only the snapshot it is given
 - the scope's snapshot is taken lazily, so a document without `Main_Root_Name` never takes it
 
-The Python `classic_config` facade passes its own facade-owned scope to `YamlData.from_yaml_content`, `load_installed_yaml_data`, and `load_explicit_yaml_data`, so once the facades share one native library another facade's first use cannot decide config's registry metadata.
+The Python `classic_config` facade passes its own facade-owned scope to `YamlData.from_yaml_content`, `load_installed_yaml_data`, and `load_explicit_yaml_data`, so now that the facades share one native library another facade's first use cannot decide config's registry metadata.
 
 ---
 
@@ -476,9 +585,13 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 ## Related Crates And Integration Points
 
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
-- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers and mtime-aware file cache (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
-- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - generic YAML loaders, document merging, and `schema_version` compatibility used by YAML Data loading
+- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - generic YAML loaders, document merging, the mtime-aware YAML-file cache, and `schema_version` compatibility used by YAML Data loading (the former `classic-settings-core` re-export facade over these items was retired in issue #257; import them from `classic_shared_core::yaml`)
+- [`classic-durable-publication`](classic-durable-publication.md) - staging, verified backup, and atomic publish sequence for the Local Ignore reset critical section; backup location, conflict policy, and the reset lock stay in this crate
+- [`classic-vocabulary`](classic-vocabulary.md) - the Vocabulary Token contract this crate implements for its Installed YAML Data and Local Ignore enums
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution
+- [`classic-file-io-core`](classic-file-io-core.md) - supplies `FileIOError`, the typed error of the install/rollback/self-heal and generation operations owned here
+- [`classic-durable-publication`](classic-durable-publication.md) - durability sequence under `install_atomic` and the Local Ignore reset, the `.prev` rollback generation, and the install lock that `rollback` and `self_heal` also take
+- [`classic-update-core`](classic-update-core.md) - YAML Data Update Channel; drives `install_atomic` and `rollback` against the YAML cache location owned here
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and evaluates the crashgen rule model through `CrashgenSettingsAnalyzer`
 - [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime

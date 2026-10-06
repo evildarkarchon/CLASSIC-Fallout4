@@ -28,5 +28,5 @@ The `ClassicError` enum covers the following categories:
 
 ## Implementation Strategy
 1. **Core Crates (`classic-scanlog-core`, etc.):** Will implement `Into<ClassicError>` for their specific error types.
-2. **Binding Layer (`classic-scanlog-py`):** Will use `classic_shared_py::to_py_err` (or a new `From` impl) to convert `ClassicError` to `PyErr`.
+2. **Binding Layer (`classic-python-bindings`, facade module `src/classic_scanlog/`):** Will use the adapter's shared `support` error conversion (the former `classic_shared_py::to_py_err`, folded into the adapter in issue #259) or a new `From` impl to convert `ClassicError` to `PyErr`.
 3. **Python:** Will receive standard Python exceptions with rich context messages.

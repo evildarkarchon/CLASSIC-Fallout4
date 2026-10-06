@@ -6,8 +6,7 @@
 //!   XSE log parsing, and platform-specific heuristics
 //! - **Documents Path Management**: Cross-platform documents folder detection with support
 //!   for Windows registry and Linux Steam/Proton paths
-//! - **Path Validation**: Comprehensive path validation with restriction checks for custom scans
-//! - **Backup Management**: Version-aware backup creation with metadata preservation
+//! - **Path Validation**: Game and Documents settings-path validation and required-file checks
 //! - **Documents Checking**: INI file validation and configuration integrity checks
 //!
 //! # Architecture
@@ -16,12 +15,29 @@
 //!
 //! - `game_path`: Game installation detection and path generation
 //! - `docs_path`: Documents folder detection and INI management
-//! - `validator`: Path validation and settings verification
-//! - `backup`: Backup creation and XSE version extraction
+//! - `validator`: Game/Documents settings-path and required-file verification
 //! - `checker`: Documents configuration validation
 //! - `ini_parser`: INI file parsing and validation
 //! - `platform`: Platform-specific implementations (Windows/Linux)
 //! - `error`: Unified error types
+//! - `notification_cache`: Per-user app-notification cache directory under the OS cache root
+//!
+//! The per-user YAML Data cache location (`CLASSIC/yaml-cache`) is YAML file policy and is
+//! owned by `classic_config_core::yaml_cache`; this crate does not resolve or re-export it.
+//!
+//! The generic path primitives (existence, file/directory, permission, drive, and read-only
+//! checks, the OS cache root, and the [`PathError`](classic_shared_core::path_core::PathError)
+//! they report) are owned by `classic_shared_core::path_core`. This crate builds on them but does
+//! not re-export them, so callers that need only a neutral path check depend on shared core alone.
+//!
+//! Custom-scan folder policy (`is_restricted_path`, `validate_custom_scan_path`, and the combined
+//! `validate_settings_paths` check) is owned by `classic_scanlog_core::custom_scan`. Scanlog depends
+//! on this crate, so path core neither depends on nor re-exports it. The `RestrictedPath` variant of
+//! [`ValidationError`] stays here as shared validation vocabulary that the scanlog policy reports.
+//!
+//! The version-labelled backup (`VersionBackupManager`, `XseVersion`) is resource policy and is
+//! owned by `classic_resource_core`. This crate neither depends on nor re-exports it, so path
+//! discovery and validation never pull backup behavior along with them.
 //!
 //! # Design Principles
 //!
@@ -33,12 +49,12 @@
 //! # Examples
 //!
 //! ```rust,no_run
-//! use classic_path_core::{is_valid_path, GamePathFinder};
+//! use classic_path_core::{validate_settings_path, GamePathFinder};
 //! use std::path::PathBuf;
 //!
-//! // Validate a path
-//! let path = PathBuf::from("C:\\Games\\Fallout4");
-//! assert!(is_valid_path(&path));
+//! // Settings paths must exist
+//! let path = PathBuf::from("Z:\\definitely\\missing\\game");
+//! assert!(validate_settings_path(&path, "Game Path", None).is_err());
 //!
 //! // Find game path (requires YAML settings)
 //! // let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"));
@@ -52,20 +68,16 @@ mod validator;
 mod platform;
 
 // Component modules
-mod backup;
 mod checker;
 mod docs_path;
 mod game_path;
 mod ini_parser;
 mod notification_cache;
-mod yaml_cache;
 
-pub use backup::{BackupManager, XseVersion};
 pub use checker::{DocumentsCheckResult, DocumentsCheckState, DocumentsChecker, IniCheckResult};
 pub use docs_path::DocsPathFinder;
 pub use error::{
-    BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult,
-    PathError, PathResult, ValidationError, ValidationResult,
+    DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult,
 };
 pub use game_path::{GamePathFinder, parse_xse_log};
 pub use ini_parser::IniFile;
@@ -74,29 +86,7 @@ pub use notification_cache::{
     notification_cache_dir_with_env,
 };
 pub use validator::{
-    check_drive_exists,
-    check_read_permissions,
-    check_write_permissions,
-    // Boolean convenience wrappers
-    drive_exists,
-    has_read_permission,
-    has_write_permission,
-    is_restricted_path,
-    // Permission and accessibility checks
-    is_valid_executable_path,
-    is_valid_path,
-    remove_readonly_attribute,
-    validate_custom_scan_path,
-    validate_is_directory,
-    validate_is_file,
-    validate_path_exists,
-    validate_path_with_permissions,
-    validate_required_files,
-    validate_settings_path,
-    validate_settings_paths,
-};
-pub use yaml_cache::{
-    ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env,
+    validate_game_and_documents_paths, validate_required_files, validate_settings_path,
 };
 
 // Re-export platform utilities
@@ -104,10 +94,9 @@ pub use platform::{get_system_documents_path, parse_steam_library};
 
 // Re-export platform-specific Windows functions
 #[cfg(target_os = "windows")]
-pub use platform::{remove_readonly, windows::query_game_registry};
+pub use platform::windows::query_game_registry;
 
 // Module exports (to be uncommented as modules are implemented)
 // pub use game_path::GamePathFinder;
 // pub use docs_path::DocumentsPathManager;
-// pub use backup::BackupManager;
 // pub use checker::DocumentsChecker;

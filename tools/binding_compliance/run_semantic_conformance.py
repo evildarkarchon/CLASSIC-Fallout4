@@ -103,13 +103,10 @@ SUPPORTED_FAMILIES = (
 
 _COMMON_SOURCES = (
     REPO_ROOT / "tools/binding_compliance/platform_path_oracle.ps1",
-    REPO_ROOT / "business-logic/classic-settings-core/src",
     REPO_ROOT / "business-logic/classic-xse-core/src",
-    REPO_ROOT / "business-logic/classic-perf-core/src",
     REPO_ROOT / "business-logic/classic-registry-core/src",
     REPO_ROOT / "business-logic/classic-web-core/src",
     REPO_ROOT / "business-logic/classic-resource-core/src",
-    REPO_ROOT / "business-logic/classic-version-core/src",
     REPO_ROOT / "business-logic/classic-update-core/src",
     Path(__file__).resolve(),
     REPO_ROOT / "tools/binding_compliance/run_scan_run_conformance.py",
@@ -247,10 +244,7 @@ PARTICIPANT_COMMANDS = {
             REPO_ROOT / "python-bindings/tests/database_operations_conformance.py",
             REPO_ROOT / "python-bindings/tests/version_registry_conformance.py",
             REPO_ROOT / "python-bindings/tests/scan_game_conformance.py",
-            REPO_ROOT / "python-bindings/classic-file-io-py/src",
-            REPO_ROOT / "python-bindings/classic-settings-py/src",
             REPO_ROOT / "python-bindings/tests/settings_load_conformance.py",
-            REPO_ROOT / "python-bindings/classic-xse-py/src",
             REPO_ROOT / "python-bindings/tests/xse_operations_conformance.py",
             REPO_ROOT / "python-bindings/tests/shared_identity_conformance.py",
             REPO_ROOT / "python-bindings/tests/yaml_file_values_conformance.py",
@@ -274,25 +268,10 @@ PARTICIPANT_COMMANDS = {
                 "installation_paths",
             )
             ),
-            *(
-                REPO_ROOT / "python-bindings" / ("classic-" + owner + "-py/src")
-                for owner in (
-                "perf",
-                "registry",
-                "web",
-                "resource",
-                "version",
-                "update",
-            )
-            ),
-            REPO_ROOT / "python-bindings/classic-path-py/src",
-            REPO_ROOT / "python-bindings/classic-message-py/src",
-            REPO_ROOT / "foundation/classic-shared-py/src",
-            REPO_ROOT / "python-bindings/classic-config-py/src",
-            REPO_ROOT / "python-bindings/classic-scanlog-py/src",
-            REPO_ROOT / "python-bindings/classic-database-py/src",
-            REPO_ROOT / "python-bindings/classic-version-registry-py/src",
-            REPO_ROOT / "python-bindings/classic-scangame-py/src",
+            # The one Python adapter crate builds one native extension for every
+            # facade, so the whole adapter (Rust and Python facades) is participant input.
+            REPO_ROOT / "python-bindings/classic-python-bindings/src",
+            REPO_ROOT / "python-bindings/classic-python-bindings/python",
             *_COMMON_SOURCES,
         ),
     ),

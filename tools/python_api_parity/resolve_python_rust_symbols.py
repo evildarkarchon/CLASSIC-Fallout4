@@ -51,7 +51,7 @@ FOUNDATION_PY_REL = "foundation"
 #: ``classic_foo_core::Bar`` and the PyO3-side ``classic_shared_py::Baz``.
 #:
 #: Intermediate module segments are consumed so the FINAL identifier is
-#: captured: ``classic_version_core::pe_version::is_valid_executable_path``
+#: captured: ``classic_shared_core::version::pe_version::is_valid_executable_path``
 #: must yield ``is_valid_executable_path``, not the module ``pe_version``.
 _QUALIFIED_RE = re.compile(
     r"\b(classic_[a-z0-9_]+?_(?:core|py))::(?:[a-z0-9_]+::)*([A-Za-z0-9_]+)"
@@ -88,6 +88,12 @@ _PYMETHOD_RE = re.compile(
     r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*(?:<[^{}]*>)?\s*\("
 )
 _PYMETHOD_NAME_RE = re.compile(r'#\[pyo3\(\s*name\s*=\s*"([A-Za-z0-9_]+)"')
+#: ``m.add("Name", ...)`` module attribute registrations (exceptions, constants).
+_ADD_ATTR_RE = re.compile(r'\.add\(\s*"([A-Za-z_][A-Za-z0-9_]*)"\s*,')
+#: ``register_exceptions!(m, Base, IO, Parse)`` from the shared helper macro.
+_REGISTER_EXCEPTIONS_RE = re.compile(
+    r"register_exceptions!\(\s*[A-Za-z_][A-Za-z0-9_]*\s*,([^)]*)\)"
+)
 
 #: Plumbing that shows up in nearly every wrapper; never a counterpart.
 _INFRASTRUCTURE_SYMBOLS = frozenset(
@@ -314,17 +320,45 @@ def _facade_module_for_path(path: Path) -> str | None:
     return module if re.fullmatch(r"classic_[a-z0-9_]+", module) else None
 
 
+#: A native route: the native submodule that owns the name (``None`` for a
+#: flat native module) and the native export name.
+NativeRoute = tuple[str | None, str]
+
+
+def _native_submodule(imported_module: str, native_module: str) -> str | None | bool:
+    """Classify an imported module path against the native extension name.
+
+    Returns ``None`` for the flat native module (``pkg._native``), the facade
+    submodule name for ``pkg._native.classic_foo``, or ``False`` when the path
+    does not name the native extension at all.
+    """
+    parts = imported_module.split(".")
+    if parts[-1] == native_module:
+        return None
+    if (
+            len(parts) >= 2
+            and parts[-2] == native_module
+            and re.fullmatch(r"classic_[a-z0-9_]+", parts[-1])
+    ):
+        return parts[-1]
+    return False
+
+
 def _facade_routes(
         crate_dir: Path, native_module: str
-) -> tuple[dict[str, str | None], bool]:
+) -> tuple[dict[str, NativeRoute | None], bool]:
     """Trace explicit facade imports to native names.
 
-    Returns the public-name-to-native-name routes (``None`` for a declared
+    Returns the public-name-to-native-route map (``None`` for a declared
     ``__all__`` name without an import) and whether any facade source exists.
+    A route names the native facade submodule when the facade imports from
+    ``<package>.<native>.<facade>`` (the merged adapter registers one native
+    submodule per facade, so same-named classes in different facades stay
+    distinct), or ``None`` for a flat native module.
     Raises ``ValueError`` for unreadable or invalid facade source, wildcard or
     conflicting native routes, or a facade with no traceable public names.
     """
-    routes: dict[str, str | None] = {}
+    routes: dict[str, NativeRoute | None] = {}
     facade_files = [
         path for path in sorted(crate_dir.rglob("*.py"))
         if _facade_module_for_path(path) is not None
@@ -337,32 +371,38 @@ def _facade_routes(
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         except (OSError, UnicodeError, SyntaxError) as error:
             raise ValueError(f"cannot read Python facade {path}: {error}") from error
-        native_aliases: set[str] = set()
-        module_routes: dict[str, str] = {}
+        # Local alias -> native submodule (None for the flat native module).
+        native_aliases: dict[str, str | None] = {}
+        module_routes: dict[str, NativeRoute] = {}
         declared: set[str] = set()
         # Only module-level bindings become attributes of the direct-import
         # facade; aliases inside helpers must not certify a public export.
         for node in tree.body:
             if isinstance(node, ast.ImportFrom):
                 imported_module = node.module or ""
-                if imported_module.split(".")[-1] == native_module:
+                submodule = (
+                    _native_submodule(imported_module, native_module)
+                    if imported_module else False
+                )
+                if submodule is not False:
                     for alias in node.names:
                         if alias.name == "*":
                             raise ValueError(
                                 f"cannot source-resolve wildcard native import in {path}"
                             )
-                        module_routes[alias.asname or alias.name] = alias.name
+                        module_routes[alias.asname or alias.name] = (
+                            submodule, alias.name
+                        )
                 elif not imported_module:
                     native_aliases.update(
-                        alias.asname or alias.name
+                        (alias.asname or alias.name, None)
                         for alias in node.names if alias.name == native_module
                     )
             elif isinstance(node, ast.Import):
-                native_aliases.update(
-                    alias.asname or alias.name
-                    for alias in node.names
-                    if alias.name.split(".")[-1] == native_module
-                )
+                for alias in node.names:
+                    submodule = _native_submodule(alias.name, native_module)
+                    if submodule is not False:
+                        native_aliases[alias.asname or alias.name] = submodule
             elif isinstance(node, ast.Assign):
                 if (
                         isinstance(node.value, ast.Attribute)
@@ -371,7 +411,10 @@ def _facade_routes(
                 ):
                     for target in node.targets:
                         if isinstance(target, ast.Name):
-                            module_routes[target.id] = node.value.attr
+                            module_routes[target.id] = (
+                                native_aliases[node.value.value.id],
+                                node.value.attr,
+                            )
                 if any(
                         isinstance(target, ast.Name) and target.id == "__all__"
                         for target in node.targets
@@ -394,13 +437,55 @@ def _facade_routes(
     return routes, bool(facade_files)
 
 
+def _lookup_native_route(
+        native_exports: dict[tuple[str | None, str], dict[str, Any]],
+        route: NativeRoute | None,
+        native_module: str,
+) -> tuple[dict[str, Any] | None, str]:
+    """Find the native declaration a facade import names.
+
+    A submodule-qualified route must match that facade's own source module. A
+    flat route (``from <native> import Name``) matches the one declaration of
+    that name; a name declared by several facades is ambiguous and stays
+    unresolved rather than borrowing another facade's owner.
+    Returns ``(info, "")`` or ``(None, reason)``.
+    """
+    if route is None:
+        return None, "no traceable native import"
+    submodule, export = route
+    if submodule is not None:
+        info = native_exports.get((submodule, export))
+        if info is None:
+            return None, f"native export {export} not found in {native_module}.{submodule}"
+        return info, ""
+    candidates = [
+        info for (_module, name), info in native_exports.items() if name == export
+    ]
+    if len(candidates) == 1:
+        return candidates[0], ""
+    if candidates:
+        return None, f"native export {export} is ambiguous in {native_module}"
+    return None, f"native export {export} not found in {native_module}"
+
+
 def collect_python_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
     """Route PyO3 native names to facade-qualified public exports.
 
+    Native exports are keyed by the facade module their source path names
+    (``src/classic_config/...`` -> ``classic_config``) and their export name, so
+    two facades may each own a class of the same Python name (the merged
+    adapter registers one native submodule per facade).
+
     Raises ``ValueError`` for unrouteable native source or duplicate native
-    declarations; explicit missing facade imports are recorded for gate diagnostics.
+    declarations within one facade; explicit missing facade imports are
+    recorded for gate diagnostics.
     """
-    native_wrappers: dict[Path, dict[str, dict[str, Any]]] = {}
+    native_wrappers: dict[Path, dict[tuple[str | None, str], dict[str, Any]]] = {}
+    # Module attributes registered without a #[pyclass]/#[pyfunction] wrapper:
+    # exceptions and constants added with `m.add("Name", ...)` or the shared
+    # `register_exceptions!` macro. A facade may re-export them; they carry no
+    # wrapper source evidence, so they never claim a core owner.
+    native_attributes: dict[Path, set[tuple[str | None, str]]] = {}
 
     for path in _binding_source_files(repo_root):
         parts = path.relative_to(repo_root).parts
@@ -408,6 +493,12 @@ def collect_python_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
         native_exports = native_wrappers.setdefault(crate_dir, {})
         text = path.read_text(encoding="utf-8")
         module = _python_module_for_source(repo_root, path)
+        attributes = native_attributes.setdefault(crate_dir, set())
+        attributes.update((module, name) for name in _ADD_ATTR_RE.findall(text))
+        for names in _REGISTER_EXCEPTIONS_RE.findall(text):
+            attributes.update(
+                (module, name.strip()) for name in names.split(",") if name.strip()
+            )
 
         import_map: dict[str, str] = {}
         import_symbols: dict[str, str] = {}
@@ -463,8 +554,9 @@ def collect_python_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
             decl_body = _balanced_block(text, match.end())
             body = decl_body + impl_bodies.get(rust_name, "")
 
-            if export in native_exports:
-                existing = native_exports[export]
+            native_key = (module, export)
+            if native_key in native_exports:
+                existing = native_exports[native_key]
                 if not ("#[cfg(" in between and existing["cfg_conditional"]):
                     raise ValueError(f"duplicate PyO3 native export {export}: {path}")
                 # Mutually exclusive platform definitions share one public name.
@@ -473,7 +565,7 @@ def collect_python_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
                         _QUALIFIED_RE.findall(existing["body"])
                 ):
                     continue
-            native_exports[export] = {
+            native_exports[native_key] = {
                 "source_module": module,
                 "source_facade_path": _has_facade_source_path(crate_dir, path),
                 "native_export": export,
@@ -497,14 +589,19 @@ def collect_python_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
         native_module = _native_module_for_crate(crate_dir)
         facade_routes, has_facade_files = _facade_routes(crate_dir, native_module)
         if has_facade_files:
-            for key, native_export in facade_routes.items():
+            for key, route in facade_routes.items():
                 module, public_name = key.split(".", 1)
-                native_info = native_exports.get(native_export) if native_export else None
+                native_info, reason = _lookup_native_route(
+                    native_exports, route, native_module
+                )
+                if native_info is None and (
+                        public_name.startswith("__")
+                        or route in native_attributes.get(crate_dir, set())
+                ):
+                    # A registered exception, constant, or module dunder:
+                    # a real native attribute with no wrapper to resolve.
+                    continue
                 if native_info is None:
-                    reason = (
-                        f"native export {native_export} not found in {native_module}"
-                        if native_export else "no traceable native import"
-                    )
                     wrappers[key] = {
                         "python_module": module,
                         "python_export": public_name,
@@ -517,8 +614,7 @@ def collect_python_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
                         "python_export": public_name,
                     }
             continue
-        for native_export, info in native_exports.items():
-            module = info["source_module"]
+        for (module, native_export), info in native_exports.items():
             legacy_facade = (
                 module is not None
                 and (

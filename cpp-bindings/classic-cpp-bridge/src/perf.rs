@@ -1,10 +1,11 @@
 //! Performance monitoring bridge for CXX FFI.
 //!
-//! Bridges the `classic_perf_core` seconds view of the shared-core timing
-//! store for recording timings and retrieving summary statistics. Every
+//! Bridges the seconds view of the shared-core timing store
+//! (`classic_shared_core::performance_core`) for recording timings and
+//! retrieving summary statistics. Every
 //! function here reads or clears this linked image's default metrics store.
 
-use classic_perf_core::{clear_metrics, get_summary, record_timing};
+use classic_shared_core::performance_core::{clear_metrics, get_summary, record_timing};
 
 /// Record a timing sample in seconds.
 ///

@@ -701,7 +701,6 @@ dependencies = [
  "atomicwrites",
  "classic-durable-publication",
  "classic-file-io-core",
- "classic-path-core",
  "classic-registry-core",
  "classic-shared-core",
  "classic-version-registry-core",
@@ -710,6 +709,7 @@ dependencies = [
  "fs4",
  "indexmap",
  "log",
+ "serde",
  "serde_json",
  "serial_test",
  "sha2 0.11.0",
@@ -717,22 +717,6 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "yaml-rust2",
-]
-
-[[package]]
-name = "classic-config-py"
-version = "9.1.0"
-dependencies = [
- "anyhow",
- "classic-config-core",
- "classic-registry-core",
- "classic-shared-core",
- "classic-shared-py",
- "classic-version-registry-core",
- "classic-vocabulary",
- "pyo3",
- "serde_json",
- "tempfile",
 ]
 
 [[package]]
@@ -744,12 +728,11 @@ dependencies = [
  "classic-file-io-core",
  "classic-message-core",
  "classic-path-core",
- "classic-perf-core",
  "classic-registry-core",
+ "classic-resource-core",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
- "classic-settings-core",
  "classic-shared-core",
  "classic-update-core",
  "classic-user-settings-core",
@@ -791,18 +774,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-database-py"
-version = "9.1.0"
-dependencies = [
- "classic-database-core",
- "classic-shared-core",
- "classic-shared-py",
- "pyo3",
- "pyo3-async-runtimes",
- "tempfile",
-]
-
-[[package]]
 name = "classic-durable-publication"
 version = "9.1.0"
 dependencies = [
@@ -818,17 +789,12 @@ name = "classic-file-io-core"
 version = "9.1.0"
 dependencies = [
  "anyhow",
- "chrono",
- "classic-durable-publication",
- "classic-operation-context",
  "classic-shared-core",
- "classic-xse-core",
  "criterion 0.6.0",
  "dashmap",
  "ddsfile",
  "encoding_rs",
  "futures",
- "glob",
  "log",
  "lru 0.18.0",
  "memmap2",
@@ -846,21 +812,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-file-io-py"
-version = "9.1.0"
-dependencies = [
- "classic-file-io-core",
- "classic-shared-core",
- "classic-shared-py",
- "criterion 0.8.2",
- "log",
- "pyo3",
- "pyo3-async-runtimes",
- "tempfile",
- "tokio",
-]
-
-[[package]]
 name = "classic-message-core"
 version = "9.1.0"
 dependencies = [
@@ -868,16 +819,6 @@ dependencies = [
  "log",
  "serde",
  "serial_test",
-]
-
-[[package]]
-name = "classic-message-py"
-version = "9.1.0"
-dependencies = [
- "classic-message-core",
- "classic-shared-py",
- "log",
- "pyo3",
 ]
 
 [[package]]
@@ -890,13 +831,11 @@ dependencies = [
  "classic-file-io-core",
  "classic-message-core",
  "classic-path-core",
- "classic-perf-core",
  "classic-registry-core",
  "classic-resource-core",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
- "classic-settings-core",
  "classic-shared-core",
  "classic-update-core",
  "classic-user-settings-core",
@@ -930,9 +869,9 @@ name = "classic-path-core"
 version = "9.1.0"
 dependencies = [
  "anyhow",
+ "classic-shared-core",
  "configparser",
  "dirs",
- "regex",
  "serde",
  "serde_json",
  "serial_test",
@@ -943,29 +882,42 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-path-py"
+name = "classic-python-bindings"
 version = "9.1.0"
 dependencies = [
+ "anyhow",
+ "classic-config-core",
+ "classic-database-core",
+ "classic-file-io-core",
+ "classic-message-core",
  "classic-path-core",
- "classic-shared-py",
- "pyo3",
-]
-
-[[package]]
-name = "classic-perf-core"
-version = "9.1.0"
-dependencies = [
+ "classic-registry-core",
+ "classic-resource-core",
+ "classic-scan-presentation",
+ "classic-scangame-core",
+ "classic-scanlog-core",
  "classic-shared-core",
- "serial_test",
-]
-
-[[package]]
-name = "classic-perf-py"
-version = "9.1.0"
-dependencies = [
- "classic-perf-core",
- "classic-shared-py",
+ "classic-update-core",
+ "classic-user-settings-core",
+ "classic-version-registry-core",
+ "classic-vocabulary",
+ "classic-web-core",
+ "classic-xse-core",
+ "criterion 0.8.2",
+ "futures",
+ "indexmap",
+ "log",
+ "parking_lot",
  "pyo3",
+ "pyo3-async-runtimes",
+ "rayon",
+ "regex",
+ "semver",
+ "serde_json",
+ "serial_test",
+ "tempfile",
+ "tokio",
+ "yaml-rust2",
 ]
 
 [[package]]
@@ -981,33 +933,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-registry-py"
-version = "9.1.0"
-dependencies = [
- "classic-registry-core",
- "classic-shared-py",
- "pyo3",
-]
-
-[[package]]
 name = "classic-resource-core"
 version = "9.1.0"
 dependencies = [
  "anyhow",
- "classic-path-core",
+ "chrono",
+ "classic-file-io-core",
+ "classic-shared-core",
+ "ddsfile",
+ "rayon",
+ "regex",
  "serde",
  "tempfile",
  "thiserror 2.0.21",
+ "tokio",
+ "tracing",
  "walkdir",
-]
-
-[[package]]
-name = "classic-resource-py"
-version = "9.1.0"
-dependencies = [
- "classic-resource-core",
- "classic-shared-py",
- "pyo3",
 ]
 
 [[package]]
@@ -1035,6 +976,7 @@ dependencies = [
  "classic-config-core",
  "classic-file-io-core",
  "classic-path-core",
+ "classic-resource-core",
  "classic-shared-core",
  "classic-user-settings-core",
  "classic-version-registry-core",
@@ -1069,23 +1011,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-scangame-py"
-version = "9.1.0"
-dependencies = [
- "anyhow",
- "classic-config-core",
- "classic-config-py",
- "classic-file-io-core",
- "classic-scangame-core",
- "classic-shared-core",
- "classic-shared-py",
- "classic-user-settings-core",
- "classic-version-registry-core",
- "pyo3",
- "tempfile",
-]
-
-[[package]]
 name = "classic-scanlog-core"
 version = "9.1.0"
 dependencies = [
@@ -1097,11 +1022,9 @@ dependencies = [
  "classic-message-core",
  "classic-operation-context",
  "classic-path-core",
- "classic-perf-core",
  "classic-registry-core",
  "classic-resource-core",
  "classic-scangame-core",
- "classic-settings-core",
  "classic-shared-core",
  "classic-update-core",
  "classic-user-settings-core",
@@ -1113,6 +1036,7 @@ dependencies = [
  "crossbeam",
  "dashmap",
  "futures",
+ "glob",
  "indexmap",
  "linked-hash-map",
  "log",
@@ -1135,60 +1059,8 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
+ "tracing",
  "xxhash-rust",
-]
-
-[[package]]
-name = "classic-scanlog-py"
-version = "9.1.0"
-dependencies = [
- "anyhow",
- "classic-config-core",
- "classic-config-py",
- "classic-database-core",
- "classic-registry-core",
- "classic-scan-presentation",
- "classic-scangame-core",
- "classic-scanlog-core",
- "classic-shared-core",
- "classic-shared-py",
- "classic-user-settings-core",
- "classic-version-registry-core",
- "classic-vocabulary",
- "criterion 0.5.1",
- "futures",
- "indexmap",
- "parking_lot",
- "pyo3",
- "rayon",
- "regex",
- "serde_json",
- "serial_test",
- "tempfile",
-]
-
-[[package]]
-name = "classic-settings-core"
-version = "9.1.0"
-dependencies = [
- "classic-shared-core",
- "serde",
- "serde_json",
- "serial_test",
- "tempfile",
- "tokio",
-]
-
-[[package]]
-name = "classic-settings-py"
-version = "9.1.0"
-dependencies = [
- "classic-settings-core",
- "classic-shared-core",
- "classic-shared-py",
- "pyo3",
- "pyo3-async-runtimes",
- "yaml-rust2",
 ]
 
 [[package]]
@@ -1224,23 +1096,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-shared-py"
-version = "9.1.0"
-dependencies = [
- "classic-shared-core",
- "indexmap",
- "log",
- "pyo3",
-]
-
-[[package]]
 name = "classic-tui"
 version = "9.1.0"
 dependencies = [
  "arboard",
  "classic-config-core",
- "classic-file-io-core",
  "classic-path-core",
+ "classic-resource-core",
  "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
@@ -1290,18 +1152,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-update-py"
-version = "9.1.0"
-dependencies = [
- "classic-shared-core",
- "classic-shared-py",
- "classic-update-core",
- "pyo3",
- "pyo3-async-runtimes",
- "tokio",
-]
-
-[[package]]
 name = "classic-user-settings-core"
 version = "9.1.0"
 dependencies = [
@@ -1311,36 +1161,6 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "tempfile",
-]
-
-[[package]]
-name = "classic-user-settings-py"
-version = "9.1.0"
-dependencies = [
- "classic-shared-py",
- "classic-user-settings-core",
- "classic-vocabulary",
- "pyo3",
-]
-
-[[package]]
-name = "classic-version-core"
-version = "9.1.0"
-dependencies = [
- "classic-shared-core",
- "classic-version-registry-core",
- "semver",
-]
-
-[[package]]
-name = "classic-version-py"
-version = "9.1.0"
-dependencies = [
- "classic-shared-core",
- "classic-shared-py",
- "classic-version-registry-core",
- "pyo3",
- "semver",
 ]
 
 [[package]]
@@ -1354,15 +1174,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "yaml-rust2",
-]
-
-[[package]]
-name = "classic-version-registry-py"
-version = "9.1.0"
-dependencies = [
- "classic-shared-py",
- "classic-version-registry-core",
- "pyo3",
 ]
 
 [[package]]
@@ -1382,16 +1193,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-web-py"
-version = "9.1.0"
-dependencies = [
- "anyhow",
- "classic-shared-py",
- "classic-web-core",
- "pyo3",
-]
-
-[[package]]
 name = "classic-xse-core"
 version = "9.1.0"
 dependencies = [
@@ -1403,16 +1204,6 @@ dependencies = [
  "serde",
  "tempfile",
  "thiserror 2.0.21",
-]
-
-[[package]]
-name = "classic-xse-py"
-version = "9.1.0"
-dependencies = [
- "classic-shared-py",
- "classic-xse-core",
- "pyo3",
- "semver",
 ]
 
 [[package]]
@@ -1621,32 +1412,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "criterion"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2b12d017a929603d80db1831cd3a24082f8137ce19c69e6447f54f5fc8d692f"
-dependencies = [
- "anes",
- "cast",
- "ciborium",
- "clap",
- "criterion-plot 0.5.0",
- "is-terminal",
- "itertools 0.10.5",
- "num-traits",
- "once_cell",
- "oorandom",
- "plotters",
- "rayon",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "tinytemplate",
- "walkdir",
 ]
 
 [[package]]
@@ -3193,17 +2958,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "928bae27f42bc99b60d9ac7334e3a21d10ad8f1835a4e12ec3ec0464765ed1b3"
 dependencies = [
  "once_cell",
-]
-
-[[package]]
-name = "is-terminal"
-version = "0.4.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
-dependencies = [
- "hermit-abi",
- "libc",
- "windows-sys 0.61.0",
 ]
 
 [[package]]

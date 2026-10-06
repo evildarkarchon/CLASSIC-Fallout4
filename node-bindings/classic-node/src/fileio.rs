@@ -1,19 +1,21 @@
 //! File I/O bindings (classic-file-io-core)
 //!
 //! Exposes file reading, writing, hashing, encoding detection, and backup management
-//! to JavaScript/TypeScript. All business logic is delegated to `classic-file-io-core`.
+//! to JavaScript/TypeScript. All business logic is delegated to `classic-file-io-core`,
+//! except the game-target backup and game-file operations, which delegate to
+//! `classic-resource-core` (moved from file I/O in #250).
 //!
 //! ## Architecture
 //! This is a THIN ADAPTER layer:
-//! - Delegates all business logic to `classic-file-io-core`
+//! - Delegates all business logic to `classic-file-io-core` / `classic-resource-core`
 //! - Only handles JavaScript <-> Rust type conversions
 //! - Respects the ONE RUNTIME RULE via `classic_shared_core::get_runtime()`
 
 use crate::runtime::spawn_result;
 use classic_file_io_core::FileIOCore;
-use classic_file_io_core::backup::{BackupManager, BackupType};
 use classic_file_io_core::encoding::EncodingDetector;
 use classic_file_io_core::hash::FileHasher;
+use classic_resource_core::backup::{BackupManager, BackupType};
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -497,10 +499,10 @@ impl JsBackupManager {
 // ============================================================================
 
 /// Parse a game target string to the core enum.
-fn parse_game_target(s: &str) -> Result<classic_file_io_core::dds::GameTarget> {
+fn parse_game_target(s: &str) -> Result<classic_resource_core::dds::GameTarget> {
     match s {
-        "Fallout4" => Ok(classic_file_io_core::dds::GameTarget::Fallout4),
-        "SkyrimSE" | "SkyrimSe" => Ok(classic_file_io_core::dds::GameTarget::SkyrimSE),
+        "Fallout4" => Ok(classic_resource_core::dds::GameTarget::Fallout4),
+        "SkyrimSE" | "SkyrimSe" => Ok(classic_resource_core::dds::GameTarget::SkyrimSE),
         _ => Err(napi::Error::from_reason(format!(
             "Unknown game target: {s}. Valid: Fallout4, SkyrimSE"
         ))),
@@ -520,7 +522,7 @@ pub struct JsDDSIssue {
 /// (dimension limits, BC compression compatibility, mipmap recommendations).
 #[napi]
 pub struct JsDDSAnalyzer {
-    inner: classic_file_io_core::dds::DDSAnalyzer,
+    inner: classic_resource_core::dds::DDSAnalyzer,
 }
 
 #[napi]
@@ -532,7 +534,7 @@ impl JsDDSAnalyzer {
     pub fn new(game_target: String) -> Result<Self> {
         let target = parse_game_target(&game_target)?;
         Ok(Self {
-            inner: classic_file_io_core::dds::DDSAnalyzer::new(target),
+            inner: classic_resource_core::dds::DDSAnalyzer::new(target),
         })
     }
 
@@ -586,7 +588,7 @@ impl JsDDSAnalyzer {
     /// @returns Array of validation issues.
     #[napi]
     pub fn validate_dimensions(width: u32, height: u32) -> Vec<JsDDSIssue> {
-        classic_file_io_core::dds::DDSAnalyzer::validate_dimensions(width, height)
+        classic_resource_core::dds::DDSAnalyzer::validate_dimensions(width, height)
             .into_iter()
             .map(|issue| JsDDSIssue {
                 message: issue.message,
@@ -636,16 +638,16 @@ pub fn calculate_text_similarity(text1: String, text2: String) -> f64 {
 }
 
 // ============================================================================
-// 6. Log Collection (path info only)
+// 6. Log Collection (path info only; owned by classic-scanlog-core, #254)
 // ============================================================================
 
 /// File pattern for standard crash log files.
 #[napi]
-pub const CRASH_LOG_PATTERN: &str = classic_file_io_core::CRASH_LOG_PATTERN;
+pub const CRASH_LOG_PATTERN: &str = classic_scanlog_core::CRASH_LOG_PATTERN;
 
 /// File pattern for AUTOSCAN report files generated during crash analysis.
 #[napi]
-pub const CRASH_AUTOSCAN_PATTERN: &str = classic_file_io_core::CRASH_AUTOSCAN_PATTERN;
+pub const CRASH_AUTOSCAN_PATTERN: &str = classic_scanlog_core::CRASH_AUTOSCAN_PATTERN;
 
 /// Log collector for organizing crash logs from multiple sources.
 ///
@@ -653,7 +655,7 @@ pub const CRASH_AUTOSCAN_PATTERN: &str = classic_file_io_core::CRASH_AUTOSCAN_PA
 /// For actual log collection (file moves/copies), use the async collect methods.
 #[napi]
 pub struct JsLogCollector {
-    inner: classic_file_io_core::LogCollector,
+    inner: classic_scanlog_core::LogCollector,
     base_folder: String,
     xse_folder: Option<String>,
     custom_folder: Option<String>,
@@ -677,7 +679,7 @@ impl JsLogCollector {
         let custom_path = custom_folder.clone().map(PathBuf::from);
 
         Self {
-            inner: classic_file_io_core::LogCollector::new(base_path, xse_path, custom_path),
+            inner: classic_scanlog_core::LogCollector::new(base_path, xse_path, custom_path),
             base_folder,
             xse_folder,
             custom_folder,
@@ -699,7 +701,7 @@ impl JsLogCollector {
     /// Execute the full log collection workflow and return discovered crash log paths.
     #[napi]
     pub async fn collect_all(&self) -> Result<Vec<String>> {
-        let collector = classic_file_io_core::LogCollector::new(
+        let collector = classic_scanlog_core::LogCollector::new(
             PathBuf::from(&self.base_folder),
             self.xse_folder.clone().map(PathBuf::from),
             self.custom_folder.clone().map(PathBuf::from),
@@ -730,7 +732,7 @@ impl JsLogCollector {
 /// File generator for CLASSIC configuration files (ignore file and local YAML).
 #[napi]
 pub struct JsFileGenerator {
-    inner: classic_file_io_core::FileGenerator,
+    inner: classic_config_core::FileGenerator,
 }
 
 #[napi]
@@ -743,8 +745,8 @@ impl JsFileGenerator {
     #[napi(constructor)]
     pub fn new(ignore_file_content: String, local_yaml_content: String, game_name: String) -> Self {
         Self {
-            inner: classic_file_io_core::FileGenerator::new(
-                classic_file_io_core::FileGeneratorConfig::new(
+            inner: classic_config_core::FileGenerator::new(
+                classic_config_core::FileGeneratorConfig::new(
                     ignore_file_content,
                     local_yaml_content,
                     game_name,
@@ -775,7 +777,7 @@ pub async fn generate_ignore_file(content: String) -> Result<bool> {
     let handle = classic_shared_core::get_runtime().handle().clone();
     handle
         .spawn(async move {
-            classic_file_io_core::generate_ignore_file(content)
+            classic_config_core::generate_ignore_file(content)
                 .await
                 .map_err(to_napi_err)
         })
@@ -793,7 +795,7 @@ pub async fn generate_local_yaml(content: String, game_name: String) -> Result<b
     let handle = classic_shared_core::get_runtime().handle().clone();
     handle
         .spawn(async move {
-            classic_file_io_core::generate_local_yaml(content, game_name)
+            classic_config_core::generate_local_yaml(content, game_name)
                 .await
                 .map_err(to_napi_err)
         })
@@ -859,7 +861,7 @@ impl JsGameFilesManager {
 
         handle
             .spawn(async move {
-                let manager = classic_file_io_core::GameFilesManager::new(
+                let manager = classic_resource_core::GameFilesManager::new(
                     PathBuf::from(&game_root),
                     PathBuf::from(&backup_root),
                 );
@@ -895,7 +897,7 @@ impl JsGameFilesManager {
 
         handle
             .spawn(async move {
-                let manager = classic_file_io_core::GameFilesManager::new(
+                let manager = classic_resource_core::GameFilesManager::new(
                     PathBuf::from(&game_root),
                     PathBuf::from(&backup_root),
                 );
@@ -931,7 +933,7 @@ impl JsGameFilesManager {
 
         handle
             .spawn(async move {
-                let manager = classic_file_io_core::GameFilesManager::new(
+                let manager = classic_resource_core::GameFilesManager::new(
                     PathBuf::from(&game_root),
                     PathBuf::from(&backup_root),
                 );

@@ -7,9 +7,9 @@ they answered it with two independently maintained copies of the same ~180-line
 parser. Two copies means the gates can silently disagree about which Rust
 exports exist, each internally consistent and both reporting success.
 
-What stays per-binding is the *crate list*, not the parsing. Python scans
-``classic-shared-py`` (a binding-local crate) that Node has no reason to look
-at, so :func:`parse_rust_surface` takes the crate configuration as arguments
+What stays per-binding is the *crate list*, not the parsing. The two gates
+track different crate sets (the Python list once included the retired
+binding-local ``classic-shared-py`` crate), so :func:`parse_rust_surface` takes the crate configuration as arguments
 rather than reading module globals. Each tool keeps a thin wrapper that passes
 its own ``RUST_TARGET_CRATES`` / ``RUST_OWNER_BY_CRATE`` in at call time -- that
 also keeps the existing tests working, since several of them monkeypatch those

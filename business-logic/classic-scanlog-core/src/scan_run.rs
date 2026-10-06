@@ -7,6 +7,7 @@
 pub mod contract;
 
 use crate::error::{Result, ScanLogError};
+use crate::log_collection::{LogCollector, RejectedInput, resolve_targeted_inputs};
 use crate::orchestrator::resolve_batch_concurrency;
 use crate::report::autoscan_report_path;
 use crate::{
@@ -20,15 +21,16 @@ use classic_config_core::{
     LocalIgnoreRecoveryPlan, load_installed_yaml_data_in_version_registry_scope,
 };
 use classic_database_core::DatabasePool;
-use classic_file_io_core::{FileHashScope, LogCollector, RejectedInput, resolve_targeted_inputs};
+use classic_file_io_core::FileHashScope;
 use classic_operation_context::scope_cancellation;
+use classic_scangame_core::resolve_xse_folder_for_scan_in_scopes;
 use classic_scangame_core::{
     ConfigFileCache, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, ModIniScanner,
 };
 use classic_shared_core::GameId;
+use classic_shared_core::yaml::YamlFileCacheScope;
 use classic_version_registry_core::VersionRegistryScope;
 use classic_vocabulary::Vocabulary;
-use classic_xse_core::resolve_xse_folder_for_scan_in_version_registry_scope;
 use futures::stream::{FuturesUnordered, StreamExt};
 use std::collections::VecDeque;
 use std::future::Future;
@@ -511,6 +513,17 @@ pub(crate) struct CrashLogScanRunServiceRequest {
     /// discovery, FCX setup, Installed YAML Data metadata, analysis
     /// configuration, and per-log analysis (also after a resume).
     pub version_registry: VersionRegistryScope,
+    /// File-hash scope the FCX Game Setup Intake step hashes the game
+    /// executable and XSE scripts through. Unscoped runs use the process
+    /// default; a binding facade passes its own isolated scope so its run
+    /// never reads, fills, or counts another facade's hash cache. A
+    /// continuation keeps the whole request, so `resume` keeps this scope too.
+    pub file_hash: FileHashScope,
+    /// Path/mtime YAML-file cache scope Standard discovery reads the Game
+    /// Local document through when it derives the XSE Folder. Unscoped runs
+    /// use the process default; a binding facade passes its own isolated
+    /// scope so another facade's YAML cache clear cannot evict its entries.
+    pub yaml_file_cache: YamlFileCacheScope,
     /// Request-scoped deterministic hooks used only by internal behavior tests.
     #[cfg(test)]
     pub(crate) test_hooks: ScanRunTestHooks,
@@ -1495,14 +1508,16 @@ async fn discover_scan_source(
         CrashLogScanSource::Standard(source) => {
             let yaml_dir_data = request.installation_root.join("CLASSIC Data");
             // Same composition as `LogCollector::new_for_scan`, but the XSE
-            // Folder is derived from this run's Version Registry scope rather
-            // than the process default snapshot.
-            let xse_folder = resolve_xse_folder_for_scan_in_version_registry_scope(
+            // Folder is derived from this run's Version Registry scope, and its
+            // Game Local document is read through this run's YAML-file cache
+            // scope, rather than the process defaults.
+            let xse_folder = resolve_xse_folder_for_scan_in_scopes(
                 &yaml_dir_data,
                 request.game.as_str(),
                 &request.game_version,
                 source.configured_documents_root.as_deref(),
                 &request.version_registry,
+                &request.yaml_file_cache,
             );
             let collector = LogCollector::new(
                 source.base_directory.clone(),
@@ -1580,10 +1595,9 @@ fn evaluate_setup_for_scan(
         intake = intake.with_xse_log_path(path);
     }
 
-    // FCX setup hashes through the process default hash scope (#242 keeps
-    // scanlog's setup step there) but reads this run's Version Registry scope.
-    let game_setup =
-        intake.run_in_scopes(&FileHashScope::default_scope(), &request.version_registry);
+    // FCX setup hashes through this run's file-hash scope and reads this run's
+    // Version Registry scope; unscoped runs carry the process defaults for both.
+    let game_setup = intake.run_in_scopes(&request.file_hash, &request.version_registry);
     let configuration_issues = detect_setup_configuration_issues(
         game_setup.paths.game_root.as_deref(),
         context.game_root.as_deref(),

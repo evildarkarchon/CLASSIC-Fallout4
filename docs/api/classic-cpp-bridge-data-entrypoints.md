@@ -122,6 +122,15 @@ The files namespace contains independently useful filesystem operations:
 - generic encoding-aware reads and writes
 - `LogCollector` inspection for callers whose use-case is log enumeration
 - targeted-input resolution for non-run review tools
+
+The `LogCollector` and targeted-resolution entries delegate to
+`classic_scanlog_core::log_collection`, which owns Crash Log collection since
+#254; their bridge names, namespace, and DTOs are unchanged. The backup
+(`backup_manager_*`, `CxxBackupManager`) and game-file group
+(`game_files_*`, `CxxGameFilesManager`) entries delegate to
+`classic_resource_core::{backup, game_files}`, which own the game-target
+backup and game-file operations since #250; their bridge names, namespace,
+and error strings are unchanged.
 - non-recursive Autoscan Report discovery and report-file reading
 
 These helpers do not provide a direct Autoscan Report writer for scan results.

@@ -17,8 +17,12 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # GitHub releases use proper semver with pre-release support (e.g., 8.0.0-beta.1),
 # while those helpers are designed for lenient game version parsing.
 
-# YAML update delivery dependencies
+# App-notification cache location
 classic-path-core = { path = "../classic-path-core" }
+# YAML update delivery dependencies. Config owns the per-user YAML cache
+# location, the shippable schema ranges, Installed YAML Data inspection, and
+# the verified install / one-step rollback operations (#248). File I/O
+# supplies only `FileIOError`, the typed error those operations return.
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-config-core = { path = "../classic-config-core" }
 

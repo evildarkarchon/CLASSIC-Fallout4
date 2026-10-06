@@ -1,10 +1,28 @@
 //! Observe public folder precedence against owned YAML and registry metadata.
-use super::{RunnerResult, invalid, text};
+//!
+//! `xse-folder.derive` exercises XSE's own derivation from supplied Game Local
+//! facts (`classic_xse_core::resolve_xse_folder_from_game_local_facts`), and
+//! `xse-folder.resolve` exercises scangame's composition that first reads
+//! those facts from the Game Local document.
+use super::{RunnerResult, invalid, optional, text};
 use serde_json::{Value, json};
-use std::{env, fs, path::Path};
+use std::{env, fs, path::Path, path::PathBuf};
 
 /// Resolve a folder in a dedicated serial process with test-owned registry bytes.
-pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
+///
+/// `action` is the scenario's trusted action; it must agree with the fixture's
+/// fact source (Game Local facts for derivation, Local.yaml for composition).
+pub(super) fn execute(action: &str, fixture: &Value) -> RunnerResult<Value> {
+    let derive = match action {
+        "xse-folder.derive" => true,
+        "xse-folder.resolve" => false,
+        _ => return Err(invalid("unsupported XSE folder action").into()),
+    };
+    if derive != fixture.get("gameLocalFacts").is_some()
+        || derive == fixture.get("localYaml").is_some()
+    {
+        return Err(invalid("XSE folder action does not match fixture facts").into());
+    }
     let temporary = tempfile::tempdir()?;
     let root = temporary.path();
     fs::write(
@@ -15,7 +33,7 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     if !matches!(game.as_str(), "Fallout4" | "Fallout4VR" | "Unknown") {
         return Err(invalid("unsupported XSE folder game").into());
     }
-    if !fixture["localYaml"].is_null() {
+    if !derive && !fixture["localYaml"].is_null() {
         fs::write(
             root.join(format!("CLASSIC {game} Local.yaml")),
             text(&fixture["localYaml"])?,
@@ -27,16 +45,32 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     let _ = classic_version_registry_core::get_version_registry();
     env::set_current_dir(previous)?;
     let configured = text(&fixture["configuredDocs"])?;
-    let folder = classic_xse_core::resolve_xse_folder_for_scan(
-        root,
-        &game,
-        &text(&fixture["selectedVersion"])?,
-        if configured.is_empty() {
-            None
-        } else {
-            Some(Path::new(&configured))
-        },
-    );
+    let configured = if configured.is_empty() {
+        None
+    } else {
+        Some(Path::new(&configured))
+    };
+    let selected_version = text(&fixture["selectedVersion"])?;
+    let folder = if derive {
+        let facts = &fixture["gameLocalFacts"];
+        let game_local = classic_xse_core::XseGameLocalFacts {
+            docs_folder_xse: optional(&facts["docsFolderXse"])?.map(PathBuf::from),
+            root_folder_docs: optional(&facts["rootFolderDocs"])?.map(PathBuf::from),
+        };
+        classic_xse_core::resolve_xse_folder_from_game_local_facts(
+            &game_local,
+            &game,
+            &selected_version,
+            configured,
+        )
+    } else {
+        classic_scangame_core::resolve_xse_folder_for_scan(
+            root,
+            &game,
+            &selected_version,
+            configured,
+        )
+    };
     let mut files = Vec::new();
     for entry in fs::read_dir(root)? {
         let entry = entry?;

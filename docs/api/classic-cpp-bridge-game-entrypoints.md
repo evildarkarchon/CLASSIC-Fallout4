@@ -49,6 +49,8 @@ This file exposes Fallout 4-specific convenience detection only:
 
 It wraps `classic-path-core` directly and resolves Fallout 4 names from version-registry metadata.
 
+The same file also carries the version-labelled backup helpers `backup_create_timestamped(source_path, game_name)` and `backup_list_existing(source_path, game_name)`. They wrap `classic_resource_core::VersionBackupManager` with a `CLASSIC Backups/<game_name>` root beside the source file and a Unix-seconds label; that backup left `classic-path-core` for resource core in #251, so the bridge names and their `classic::path` namespace are unchanged.
+
 ## `src/game.rs` -> `classic::game`
 
 This file is the broader mixed bridge surface. It exposes:
@@ -281,11 +283,11 @@ Current behavior:
 
 ### `resolve_xse_folder_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> String`
 
-Forwards to `classic_xse_core::resolve_xse_folder_for_scan()`.
+Forwards to `classic_scangame_core::resolve_xse_folder_for_scan()` (moved from `classic-xse-core` in #252; the C++ name and signature are unchanged). The CXX parity row maps it to `ownerModule: scangame`.
 
 Current behavior:
 
-- reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` through the Rust XSE module
+- reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` through `classic_config_core::read_game_local_facts()` and hands the facts to `classic_xse_core::resolve_xse_folder_from_game_local_facts()`
 - uses `Game_Info.Docs_Folder_XSE` first when present and non-blank
 - otherwise derives from `Game_Info.Root_Folder_Docs`, `configured_docs_root`, or Version Registry-backed documents discovery
 - appends the Rust XSE resolver's documents folder name for derived paths; Fallout 4 VR uses the shared `F4SE` subfolder even though its XSE acronym is `F4SEVR`
@@ -319,7 +321,7 @@ Bridge simplification versus `classic-path-core`:
 
 ### `validate_path(path) -> bool`
 
-Forwards to `classic_path_core::is_valid_path()`.
+Forwards to `classic_shared_core::path_core::is_valid_path()` (moved from `classic-path-core` in #245).
 
 Important boundary:
 
@@ -328,11 +330,11 @@ Important boundary:
 
 ### `check_restricted_path(path) -> bool`
 
-Forwards to `classic_path_core::is_restricted_path()`.
+Forwards to `classic_scanlog_core::is_restricted_path()` (the custom-scan folder policy moved from `classic-path-core` to scanlog core in the #254 follow-up; the bridge name and namespace are unchanged).
 
 Important boundary:
 
-- this is the custom-scan restriction heuristic from `classic-path-core`
+- this is the custom-scan restriction heuristic owned by `classic-scanlog-core`
 - it is substring- and depth-based, not a canonicalized Windows policy check
 
 ---
@@ -447,8 +449,8 @@ When `run_game_setup_intake_from_user_settings()` output looks wrong:
 - `src/path.rs` and `src/game.rs` both expose game-path detection, but only `src/game.rs` is generic and XSE-log-aware
 - `src/path.rs::detect_fallout4_game_path()` constructs `GamePathFinder` without an XSE loader, so it can accept a Fallout 4 root that lacks `f4se_loader.exe`
 - `src/path.rs` exposes no document validation beyond discovery
-- `src/game.rs::validate_path()` is only `Path::exists()` through `classic_path_core::is_valid_path()`
-- `src/game.rs::check_restricted_path()` reflects the current heuristic `classic-path-core` restriction rules, including shallow-path rejection
+- `src/game.rs::validate_path()` is only `Path::exists()` through `classic_shared_core::path_core::is_valid_path()`
+- `src/game.rs::check_restricted_path()` reflects the current heuristic `classic-scanlog-core` custom-scan restriction rules, including shallow-path rejection
 - `src/game.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
 - `src/game.rs` stringifies many failures as `""`; C++ callers cannot recover typed causes without adding new bridge surface
 - `src/game.rs::version_registry_get_xse_config()` drops `script_hashes`, so callers cannot build script-hash validation from this DTO alone

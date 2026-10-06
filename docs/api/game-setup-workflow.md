@@ -7,6 +7,7 @@ Contributor-facing workflow notes for setup and install validation across:
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core)
 - [`classic-user-settings-core`](../../business-logic/classic-user-settings-core)
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core)
+- [`classic-file-io-core`](../../business-logic/classic-file-io-core)
 - [`classic-shared-core`](../../foundation/classic-shared-core)
 
 This page documents the current source-backed Game Setup Intake contract.
@@ -117,6 +118,15 @@ This copies the typed managed game, selected version, game root, executable, eff
 
 `run()` leaves discovered values as `GameSetupPathUpdate { kind, path }`. It does not create a `UserSettingsUpdate` automatically. A caller must select a proposal, verify that its path is representable as UTF-8, map `game_root` to `with_game_root(...)` or `docs_root` to `with_documents_root(...)`, and then call `preview_update` on the snapshot. Preview still performs no write; conflict-safe persistence is a later explicit operation.
 
+### Read-only contract
+
+Intake never writes: it creates, modifies, or removes no files, and it does not open, preview, or commit User Settings. Its only User Settings input is the already-opened `GameSetupSettings` group. A proposal is emitted only when a resolved `game_root` or `docs_root` differs from the supplied fact, for example when only the executable path was saved and intake derives the root from its parent.
+
+Evidence for this contract:
+
+- `classic-scangame-core/tests/game_setup_intake_read_only.rs` is a structural guard. It fails if the intake source gains a filesystem write call or names a User Settings open, update, preview, or commit API.
+- The `game-setup-intake` conformance pack runs two installation scenarios through every participant. In `explicit`, every path is supplied and no proposal is returned. In `proposal`, the saved settings omit the game root, and intake proposes `game_root` from the configured executable. Both scenarios snapshot the whole setup tree before and after the run and require it to be byte-identical. Rust, Node, and Python also require the explicit-facts and settings-backed entry points to return the same observation. CXX exposes only the settings-backed entry point.
+
 ## 3. Resolve Paths
 
 Game Setup Intake delegates path discovery to `classic-path-core`:
@@ -188,6 +198,9 @@ saved settings / frontend inputs
                   +--> classic-shared-core::version
                   |         - executable PE version
                   |
+                  +--> classic-file-io-core::FileHashScope
+                  |         - executable and XSE script hashes
+                  |
                   +--> classic-version-registry-core
                   |         - version match
                   |         - executable hash expectations
@@ -234,4 +247,4 @@ Source files most often involved:
 - [`business-logic/classic-scangame-core/src/game_setup_intake.rs`](../../business-logic/classic-scangame-core/src/game_setup_intake.rs)
 - [`cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs)
 - [`node-bindings/classic-node/src/scangame.rs`](../../node-bindings/classic-node/src/scangame.rs)
-- [`python-bindings/classic-scangame-py/src/setup.rs`](../../python-bindings/classic-scangame-py/src/setup.rs)
+- [`python-bindings/classic-python-bindings/src/classic_scangame/setup.rs`](../../python-bindings/classic-python-bindings/src/classic_scangame/setup.rs)

@@ -7,9 +7,8 @@ immutable snapshot lazily, on its first use: it searches the relative
 `CLASSIC Main.yaml` locations against the working directory at that moment,
 falls back to the embedded data, and never reloads.
 
-Today every facade is a separate extension image, so these probes pass
-trivially across facades; once the facades share one native library they
-become the regression gate that keeps each facade's first-use snapshot lazy,
+All facades share one native extension, so these probes are the
+regression gate that keeps each facade's first-use snapshot lazy,
 stable, and independent of another facade's root.
 
 Each probe runs in a fresh interpreter per import order, so no order inherits

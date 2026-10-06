@@ -43,19 +43,25 @@ def test_platform_discovery_retains_native_owner_delegation() -> None:
     docs = (owner / "docs_path.rs").read_text()
     assert "query_game_registry(&self.game_name, vr_suffix, try_gog)?" in game
     assert "get_documents_path().map_err" in docs
-    binding = (ROOT / "python-bindings/classic-path-py/src/lib.rs").read_text()
+    binding = (
+        ROOT / "python-bindings/classic-python-bindings/src/classic_path/mod.rs"
+    ).read_text()
     assert ".find_game_path(cached.as_deref(), xse_log.as_deref())" in binding
     assert ".find_docs_path(cached_path.as_deref())" in binding
     xse = (ROOT / "business-logic/classic-xse-core/src/lib.rs").read_text()
-    # The unscoped resolver delegates to the scoped one, which holds the body.
+    # The unscoped facts resolver delegates to the scoped one, which holds the
+    # body. The Local.yaml read lives in config and is composed by scangame
+    # (#252), so XSE's resolver starts from caller-supplied facts.
     resolver = xse[
-        xse.index("pub fn resolve_xse_folder_for_scan_in_version_registry_scope("):
+        xse.index(
+            "pub fn resolve_xse_folder_from_game_local_facts_in_version_registry_scope("
+        ):
     ]
     assert resolver.index(
         "configured_docs_root.and_then(non_empty_path)"
     ) < resolver.index("discover_xse_folder(version_info)")
     version = xse[
-        xse.index("fn resolve_version_info<"): xse.index("fn clean_path_value(")
+        xse.index("fn resolve_version_info<"): xse.index("fn non_empty_path(")
     ]
     assert version.index(
         'if !matches!(game, "Fallout4" | "Fallout4VR")'

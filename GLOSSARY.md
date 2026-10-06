@@ -149,6 +149,10 @@ _Avoid_: record fragment, FormID finding, named record output
 The script extender folder associated with the selected game's documents location.
 _Avoid_: script extender path, docs plugin folder
 
+**Game Local Facts**:
+The per-installation folders CLASSIC records for one game in its Game Local YAML document: the game folder, the documents folder, and an optional explicit XSE Folder. Config owns the document; consumers such as XSE Folder resolution receive the facts as plain input rather than reading the YAML. They are distinct from User Settings.
+_Avoid_: local settings, Local.yaml values, game config
+
 **Game Setup Intake**:
 The preparation of a supported game installation for setup validation. It resolves saved or detected paths, selected game version, Version Registry expectations, and setup facts; it does not persist path updates or run Crash Log analysis.
 _Avoid_: setup checks, setup config, path setup

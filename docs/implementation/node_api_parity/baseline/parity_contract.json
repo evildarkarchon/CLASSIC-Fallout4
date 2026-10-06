@@ -2080,28 +2080,28 @@
       "id": "config-yaml-file-enum",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlFile",
+      "rustSymbol": "YamlSource",
       "nodeExport": "JsYamlFile",
       "nodeKind": "const_enum",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-get-all-yaml-files",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlFile",
+      "rustSymbol": "YamlSource",
       "nodeExport": "getAllYamlFiles",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-get-yaml-file-description",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlFile",
+      "rustSymbol": "YamlSource",
       "nodeExport": "getYamlFileDescription",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-default-cache-ttl-const",
@@ -2164,7 +2164,7 @@
       "rustSymbol": "generate_local_yaml",
       "nodeExport": "generateLocalYaml",
       "nodeKind": "function",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-settings-cache-stats-interface",
@@ -2278,7 +2278,7 @@
       "id": "config-validate-settings-paths",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "validate_settings_paths",
       "nodeExport": "validateSettingsPaths",
       "nodeKind": "function"
@@ -2701,7 +2701,7 @@
       "rustSymbol": "XseVersion",
       "nodeExport": "XseVersion",
       "nodeKind": "class",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "version-registry-promote-check-crashgen-config",
@@ -2925,10 +2925,10 @@
       "id": "aux-phase4a-backup-manager",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "BackupManager",
+      "rustSymbol": "VersionBackupManager",
       "nodeExport": "BackupManager",
       "nodeKind": "class",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-docs-path-finder",
@@ -2964,7 +2964,7 @@
       "rustSymbol": "BackupInfo",
       "nodeExport": "JsBackupInfo",
       "nodeKind": "interface",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-backup-manager",
@@ -2973,7 +2973,7 @@
       "rustSymbol": "BackupManager",
       "nodeExport": "JsBackupManager",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-file-generator",
@@ -2982,7 +2982,7 @@
       "rustSymbol": "FileGenerator",
       "nodeExport": "JsFileGenerator",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "aux-phase4a-js-file-i-o",
@@ -3000,7 +3000,7 @@
       "rustSymbol": "FileOperationResult",
       "nodeExport": "JsFileOperationResult",
       "nodeKind": "interface",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-game-files-manager",
@@ -3009,7 +3009,7 @@
       "rustSymbol": "GameFilesManager",
       "nodeExport": "JsGameFilesManager",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-message",
@@ -3081,7 +3081,7 @@
       "rustSymbol": "check_read_permissions",
       "nodeExport": "checkReadPermissions",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-check-write-permissions",
@@ -3090,7 +3090,7 @@
       "rustSymbol": "check_write_permissions",
       "nodeExport": "checkWritePermissions",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-clear-all-metrics",
@@ -3135,7 +3135,7 @@
       "rustSymbol": "generate_ignore_file",
       "nodeExport": "generateIgnoreFile",
       "nodeKind": "function",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "aux-phase4a-get-metrics-summary",
@@ -3198,7 +3198,7 @@
       "rustSymbol": "is_restricted_path",
       "nodeExport": "isRestrictedPath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "aux-phase4a-is-runtime-available",
@@ -3213,10 +3213,10 @@
       "id": "aux-phase4a-is-valid-executable-path",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "is_valid_executable_path",
+      "rustSymbol": "is_executable_file_path",
       "nodeExport": "isValidExecutablePath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-is-valid-path",
@@ -3225,7 +3225,7 @@
       "rustSymbol": "is_valid_path",
       "nodeExport": "isValidPath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-join-paths",
@@ -3369,7 +3369,7 @@
       "rustSymbol": "remove_readonly",
       "nodeExport": "removeReadonly",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-validate-custom-scan-path",
@@ -3378,7 +3378,7 @@
       "rustSymbol": "validate_custom_scan_path",
       "nodeExport": "validateCustomScanPath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "aux-phase4a-validate-path-with-permissions",
@@ -3387,7 +3387,7 @@
       "rustSymbol": "validate_path_with_permissions",
       "nodeExport": "validatePathWithPermissions",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-validate-paths-batch",
@@ -4116,7 +4116,7 @@
       "rustSymbol": "CRASH_AUTOSCAN_PATTERN",
       "nodeExport": "CRASH_AUTOSCAN_PATTERN",
       "nodeKind": "const",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "version-registry-phase4c-js-compatible-range",
@@ -4134,7 +4134,7 @@
       "rustSymbol": "DDSAnalyzer",
       "nodeExport": "JsDDSAnalyzer",
       "nodeKind": "type",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4c-js-dds-analyzer-class",
@@ -4143,7 +4143,7 @@
       "rustSymbol": "DDSAnalyzer",
       "nodeExport": "JsDdsAnalyzer",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4c-js-dds-batch-result",
@@ -4152,7 +4152,7 @@
       "rustSymbol": null,
       "nodeExport": "JsDdsBatchResult",
       "nodeKind": "interface",
-      "unmappedReason": "Node batch DTO combines a path with file-I/O validation issues."
+      "unmappedReason": "Node batch DTO combines a path with resource-owned DDS validation issues."
     },
     {
       "id": "aux-phase4c-js-dds-issue",
@@ -4161,7 +4161,7 @@
       "rustSymbol": "DDSIssue",
       "nodeExport": "JsDdsIssue",
       "nodeKind": "interface",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4c-js-game-id",
@@ -4208,7 +4208,7 @@
       "nodeExport": "checkDriveExists",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version-registry-phase4c-get-all-exe-hashes",
@@ -5076,7 +5076,7 @@
       "id": "scanlog.patterns.CRASH_LOG_PATTERN",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "CRASH_LOG_PATTERN",
       "rustKind": "const",
       "nodeExport": "CRASH_LOG_PATTERN",
@@ -5516,14 +5516,6 @@
       "rustKind": "reexport"
     },
     {
-      "id": "settings.YamlFile@rust",
-      "tier": "tier1",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "rustSymbol": "YamlFile@rust",
-      "rustKind": "enum"
-    },
-    {
       "id": "version_registry.display_name@rust",
       "tier": "tier1",
       "ownerModule": "version_registry",
@@ -5959,7 +5951,7 @@
       "id": "file_io.BackupType@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "BackupType@rust",
       "rustKind": "reexport"
     },
@@ -5967,7 +5959,7 @@
       "id": "file_io.CRASH_AUTOSCAN_PATTERN@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "CRASH_AUTOSCAN_PATTERN@rust",
       "rustKind": "reexport"
     },
@@ -5975,7 +5967,7 @@
       "id": "file_io.DDSAnalyzer@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "DDSAnalyzer@rust",
       "rustKind": "reexport"
     },
@@ -5991,7 +5983,7 @@
       "id": "file_io.DDSIssue@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "DDSIssue@rust",
       "rustKind": "reexport"
     },
@@ -5999,7 +5991,7 @@
       "id": "file_io.FileGeneratorConfig@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "FileGeneratorConfig@rust",
       "rustKind": "reexport"
     },
@@ -6015,7 +6007,7 @@
       "id": "file_io.FileOperation@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "FileOperation@rust",
       "rustKind": "reexport"
     },
@@ -6023,7 +6015,7 @@
       "id": "file_io.GameTarget@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "GameTarget@rust",
       "rustKind": "reexport"
     },
@@ -6031,7 +6023,7 @@
       "id": "file_io.LogCollector@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "LogCollector@rust",
       "rustKind": "reexport"
     },
@@ -6039,7 +6031,7 @@
       "id": "file_io.RejectedInput@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "RejectedInput@rust",
       "rustKind": "reexport"
     },
@@ -6047,7 +6039,7 @@
       "id": "file_io.TargetedResolution@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "TargetedResolution@rust",
       "rustKind": "reexport"
     },
@@ -6055,7 +6047,7 @@
       "id": "file_io.backup@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "backup@rust",
       "rustKind": "module"
     },
@@ -6087,7 +6079,7 @@
       "id": "file_io.game_files@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "game_files@rust",
       "rustKind": "module"
     },
@@ -6095,7 +6087,7 @@
       "id": "file_io.generate_local_yaml@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "generate_local_yaml@rust",
       "rustKind": "reexport"
     },
@@ -6103,7 +6095,7 @@
       "id": "file_io.generation@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "generation@rust",
       "rustKind": "module"
     },
@@ -6119,7 +6111,7 @@
       "id": "file_io.log_collection@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "log_collection@rust",
       "rustKind": "module"
     },
@@ -6127,7 +6119,7 @@
       "id": "file_io.resolve_targeted_inputs@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "resolve_targeted_inputs@rust",
       "rustKind": "reexport"
     },
@@ -6223,7 +6215,7 @@
       "id": "path.drive_exists@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "drive_exists@rust",
       "rustKind": "reexport"
     },
@@ -6231,24 +6223,24 @@
       "id": "path.is_valid_executable_path@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "is_valid_executable_path@rust",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "is_executable_file_path@rust",
       "rustKind": "reexport"
     },
     {
       "id": "path.BackupError@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "BackupError@rust",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "VersionBackupError@rust",
       "rustKind": "reexport"
     },
     {
       "id": "path.BackupResult@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "BackupResult@rust",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "VersionBackupResult@rust",
       "rustKind": "reexport"
     },
     {
@@ -6311,7 +6303,7 @@
       "id": "path.PathError@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PathError@rust",
       "rustKind": "reexport"
     },
@@ -6319,7 +6311,7 @@
       "id": "path.PathResult@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PathResult@rust",
       "rustKind": "reexport"
     },
@@ -6343,7 +6335,7 @@
       "id": "path.XseVersion@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "XseVersion@rust",
       "rustKind": "reexport"
     },
@@ -6351,7 +6343,7 @@
       "id": "path.check_drive_exists@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "check_drive_exists@rust",
       "rustKind": "reexport"
     },
@@ -6359,7 +6351,7 @@
       "id": "path.has_read_permission@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "has_read_permission@rust",
       "rustKind": "reexport"
     },
@@ -6367,7 +6359,7 @@
       "id": "path.has_write_permission@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "has_write_permission@rust",
       "rustKind": "reexport"
     },
@@ -6375,7 +6367,7 @@
       "id": "path.remove_readonly_attribute@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "remove_readonly_attribute@rust",
       "rustKind": "reexport"
     },
@@ -6383,7 +6375,7 @@
       "id": "path.validate_is_directory@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "validate_is_directory@rust",
       "rustKind": "reexport"
     },
@@ -6391,7 +6383,7 @@
       "id": "path.validate_is_file@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "validate_is_file@rust",
       "rustKind": "reexport"
     },
@@ -6399,7 +6391,7 @@
       "id": "path.validate_path_exists@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "validate_path_exists@rust",
       "rustKind": "reexport"
     },
@@ -6415,24 +6407,8 @@
       "id": "path.validate_settings_paths@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "validate_settings_paths@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "perf.Timer@rust",
-      "tier": "tier1",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
-      "rustSymbol": "Timer@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "perf.start_timer@rust",
-      "tier": "tier1",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
-      "rustSymbol": "start_timer@rust",
       "rustKind": "reexport"
     },
     {
@@ -7047,7 +7023,7 @@
       "id": "settings.SettingsError@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "SettingsError@rust",
       "rustKind": "reexport"
     },
@@ -7055,7 +7031,7 @@
       "id": "settings.SettingsSource@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "SettingsSource@rust",
       "rustKind": "reexport"
     },
@@ -7063,7 +7039,7 @@
       "id": "settings.Yaml@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "Yaml@rust",
       "rustKind": "reexport"
     },
@@ -7071,7 +7047,7 @@
       "id": "settings.cache_keys@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "cache_keys@rust",
       "rustKind": "reexport"
     },
@@ -7079,7 +7055,7 @@
       "id": "settings.cache_size@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "cache_size@rust",
       "rustKind": "reexport"
     },
@@ -7087,7 +7063,7 @@
       "id": "settings.cache_stats@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "cache_stats@rust",
       "rustKind": "function"
     },
@@ -7095,7 +7071,7 @@
       "id": "settings.clear_cache@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "clear_cache@rust",
       "rustKind": "function"
     },
@@ -7103,7 +7079,7 @@
       "id": "settings.get_cached@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "get_cached@rust",
       "rustKind": "reexport"
     },
@@ -7111,7 +7087,7 @@
       "id": "settings.invalidate@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "invalidate@rust",
       "rustKind": "reexport"
     },
@@ -7119,7 +7095,7 @@
       "id": "settings.is_cached@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "is_cached@rust",
       "rustKind": "reexport"
     },
@@ -7127,7 +7103,7 @@
       "id": "settings.load_settings_async@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "load_settings_async@rust",
       "rustKind": "reexport"
     },
@@ -7135,7 +7111,7 @@
       "id": "settings.load_settings_sync@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "load_settings_sync@rust",
       "rustKind": "reexport"
     },
@@ -7143,7 +7119,7 @@
       "id": "settings.load_yaml_async@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "load_yaml_async@rust",
       "rustKind": "reexport"
     },
@@ -7151,7 +7127,7 @@
       "id": "settings.load_yaml_batch_async@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "load_yaml_batch_async@rust",
       "rustKind": "reexport"
     },
@@ -7159,7 +7135,7 @@
       "id": "settings.load_yaml_batch_sync@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "load_yaml_batch_sync@rust",
       "rustKind": "reexport"
     },
@@ -7167,7 +7143,7 @@
       "id": "settings.load_yaml_merged_async@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "load_yaml_merged_async@rust",
       "rustKind": "reexport"
     },
@@ -7175,7 +7151,7 @@
       "id": "settings.load_yaml_merged_sync@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "load_yaml_merged_sync@rust",
       "rustKind": "reexport"
     },
@@ -7183,7 +7159,7 @@
       "id": "settings.load_yaml_sync@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "load_yaml_sync@rust",
       "rustKind": "reexport"
     },
@@ -7191,7 +7167,7 @@
       "id": "settings.merge_yaml_documents@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "merge_yaml_documents@rust",
       "rustKind": "reexport"
     },
@@ -7199,7 +7175,7 @@
       "id": "settings.parse_yaml_content@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "parse_yaml_content@rust",
       "rustKind": "reexport"
     },
@@ -7207,7 +7183,7 @@
       "id": "settings.reset_cache_stats@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "reset_cache_stats@rust",
       "rustKind": "function"
     },
@@ -7215,7 +7191,7 @@
       "id": "settings.validators@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "validators@rust",
       "rustKind": "module"
     },
@@ -7351,7 +7327,7 @@
       "id": "version.PeVersionError@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PeVersionError@rust",
       "rustKind": "reexport"
     },
@@ -7359,7 +7335,7 @@
       "id": "version.VersionError@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "VersionError@rust",
       "rustKind": "enum"
     },
@@ -7367,89 +7343,17 @@
       "id": "version.VersionResult@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "VersionResult@rust",
       "rustKind": "type"
-    },
-    {
-      "id": "version.compare_versions@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "compare_versions@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "version.extract_all_versions@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "extract_all_versions@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.extract_version_from_filename@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "extract_version_from_filename@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.extract_version_from_log@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "extract_version_from_log@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.format_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "format_version@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.is_known_f4se_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "is_known_f4se_version@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.is_known_fallout4_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "is_known_fallout4_version@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "version.parse_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "parse_version@rust",
-      "rustKind": "reexport"
     },
     {
       "id": "version.pe_version@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "pe_version@rust",
       "rustKind": "module"
-    },
-    {
-      "id": "version.try_parse_version@rust",
-      "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "rustSymbol": "try_parse_version@rust",
-      "rustKind": "reexport"
     },
     {
       "id": "web.CLASSIC_VERSION@rust",
@@ -7687,7 +7591,7 @@
       "id": "yaml.YamlError@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "YamlError@rust",
       "rustKind": "enum"
     },
@@ -7695,7 +7599,7 @@
       "id": "yaml.YamlOperations@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "YamlOperations@rust",
       "rustKind": "struct"
     },
@@ -7703,7 +7607,7 @@
       "id": "yaml.cache_stats@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "cache_stats@rust",
       "rustKind": "function"
     },
@@ -7711,7 +7615,7 @@
       "id": "yaml.clear_cache@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "clear_cache@rust",
       "rustKind": "function"
     },
@@ -7807,7 +7711,7 @@
       "id": "yaml.merge_keys@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "merge_keys@rust",
       "rustKind": "reexport"
     },
@@ -7831,7 +7735,7 @@
       "id": "yaml.reset_cache_stats@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "reset_cache_stats@rust",
       "rustKind": "function"
     },
@@ -7971,7 +7875,7 @@
       "id": "scanlog.JsLogCollector",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "LogCollector",
       "nodeExport": "JsLogCollector",
       "nodeKind": "class"

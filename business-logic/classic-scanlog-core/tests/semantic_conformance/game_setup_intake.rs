@@ -1,4 +1,8 @@
 //! Read-only setup intake with explicit path facts and primitive normalization.
+//!
+//! Each run fixture supplies the same setup facts twice: directly (`facts`) and as
+//! saved User Settings. When a fact is absent, intake may return a Game Setup Path
+//! Update proposal, and the before/after tree inventory proves it was not persisted.
 use super::{RunnerResult, invalid, text};
 use classic_scangame_core::{
     GameSetupIntake, GameSetupIntakeResult, game_setup_needs_path_detection,
@@ -57,6 +61,44 @@ fn project(root: &Path, result: &GameSetupIntakeResult) -> RunnerResult<Value> {
     )
 }
 
+/// Build the explicit-facts intake equivalent to the fixture's saved User Settings.
+///
+/// `facts` names the game, version, and root-relative paths a caller supplies directly.
+/// An omitted path stays unset, so intake must discover it exactly as it does when the
+/// same setting is absent from `CLASSIC Settings.yaml`.
+fn direct_intake(root: &Path, facts: &Value) -> RunnerResult<GameSetupIntake> {
+    let game_id = text(&facts["gameId"])?
+        .parse::<GameId>()
+        .map_err(|_| invalid("unknown setup game"))?;
+    let mut intake = GameSetupIntake::new(game_id, text(&facts["gameVersion"])?);
+    let path = |key: &str| -> RunnerResult<Option<std::path::PathBuf>> {
+        facts
+            .get(key)
+            .map(|value| {
+                let name = text(value)?;
+                if name.contains('\\')
+                    || Path::new(&name)
+                        .components()
+                        .any(|part| !matches!(part, Component::Normal(_)))
+                {
+                    return Err(invalid("setup fact escaped root").into());
+                }
+                Ok(root.join(name))
+            })
+            .transpose()
+    };
+    if let Some(game_root) = path("gameRoot")? {
+        intake = intake.with_game_root(game_root);
+    }
+    if let Some(docs_root) = path("docsRoot")? {
+        intake = intake.with_docs_root(docs_root);
+    }
+    if let Some(game_exe_path) = path("gameExePath")? {
+        intake = intake.with_game_exe_path(game_exe_path);
+    }
+    Ok(intake)
+}
+
 /// Execute explicit and settings-backed intake against the same supplied paths.
 pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     if fixture["operation"] == "normalize" {
@@ -99,11 +141,7 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     }
     let mut before = BTreeMap::new();
     tree(root, root, &mut before)?;
-    let direct = GameSetupIntake::new(GameId::Starfield, "Original")
-        .with_game_root(root.join("Game"))
-        .with_docs_root(root.join("Docs"))
-        .with_game_exe_path(root.join("Game/Starfield.exe"));
-    let direct = project(root, &direct.run())?;
+    let direct = project(root, &direct_intake(root, &fixture["facts"])?.run())?;
     let settings = UserSettings::open(root);
     let mut result = project(
         root,

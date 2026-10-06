@@ -130,6 +130,39 @@ def _rust_facts(
     )
 
 
+#: Where the standard exception macros live: the one Python adapter's
+#: ``support`` module. There is deliberately no fallback to the retired
+#: ``foundation/classic-shared-py`` crate (#259): source checks must not pass
+#: against a retired owner, so a macro left or restored there earns nothing.
+SHARED_EXCEPTION_MACRO_PATHS = (
+    "python-bindings/classic-python-bindings/src/support/exceptions.rs",
+)
+
+#: ``use`` prefixes that import the shared helpers, ending at the opening brace.
+#: The retired ``use classic_shared::{...}`` crate import is not accepted.
+SHARED_HELPER_USE_PREFIXES = (
+    ["use", "crate", ":", ":", "support", ":", ":", "{"],
+    ["use", "crate", ":", ":", "{"],
+)
+
+
+def _binding_stub_sources(root: Path) -> list[tuple[str, Path, list[Path]]]:
+    """Pair each maintained Python stub with the Rust sources of its module.
+
+    Returns ``(module, stub, rust_sources)``. The one adapter keeps
+    ``python/<module>/__init__.pyi`` and that facade's Rust under
+    ``src/<module>/``. Stubs in the retired per-module ``<crate>-py/`` layout
+    (folded into the adapter in #259) are not maintained surfaces and are
+    ignored, so they cannot claim declaration evidence.
+    """
+    pairs: list[tuple[str, Path, list[Path]]] = []
+    for stub in sorted((root / "python-bindings").glob("*/python/classic_*/__init__.pyi")):
+        module = stub.parent.name
+        adapter = stub.parents[2]
+        pairs.append((module, stub, sorted((adapter / "src" / module).rglob("*.rs"))))
+    return pairs
+
+
 def _shared_exception_declarations(
     root: Path, sources: list[str]
 ) -> set[tuple[str, str]]:
@@ -138,8 +171,15 @@ def _shared_exception_declarations(
     Token comparison pins declaration semantics while permitting whitespace and
     comment edits. A changed macro or local shadow must regain an evidence owner.
     """
-    path = root / "foundation/classic-shared-py/src/exceptions.rs"
-    if not path.is_file():
+    path = next(
+        (
+            candidate
+            for candidate in (root / relative for relative in SHARED_EXCEPTION_MACRO_PATHS)
+            if candidate.is_file()
+        ),
+        None,
+    )
+    if path is None:
         return set()
     expected = {
         "define_exceptions": """{
@@ -188,9 +228,11 @@ def _shared_exception_declarations(
             continue
         imported: set[str] = set()
         for i in range(len(tokens) - 5):
-            if tokens[i : i + 5] == ["use", "classic_shared", ":", ":", "{"]:
-                end = _group_end(tokens, i + 4, "{", "}")
-                names = tokens[i + 5 : end]
+            for prefix in SHARED_HELPER_USE_PREFIXES:
+                if tokens[i : i + len(prefix)] != prefix:
+                    continue
+                end = _group_end(tokens, i + len(prefix) - 1, "{", "}")
+                names = tokens[i + len(prefix) : end]
                 if "as" not in names:
                     imported.update(names)
         if not set(expected) <= imported:
@@ -232,61 +274,56 @@ def python_declaration_exports(repo_root: Path) -> set[tuple[str, str]]:
     """
     root = repo_root.resolve()
     declarations: set[tuple[str, str]] = set()
-    for layer in ("foundation", "python-bindings"):
-        for stub in sorted((root / layer).glob("*-py/*.pyi")):
-            module = ast.parse(stub.read_text(encoding="utf-8"), filename=str(stub))
-            typed_dict_names = {
-                alias.asname or alias.name
-                for statement in module.body
-                if isinstance(statement, ast.ImportFrom)
-                and statement.module in {"typing", "typing_extensions"}
-                for alias in statement.names
-                if alias.name == "TypedDict"
-            }
-            typed_dict_names -= {
-                statement.name
-                for statement in module.body
-                if isinstance(
-                    statement, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
-                )
-            }
-            # A rebound imported name no longer denotes typing's erased dictionary contract.
-            typed_dict_names -= {
-                node.id
-                for statement in module.body
-                if isinstance(statement, (ast.Assign, ast.AnnAssign, ast.AugAssign))
-                for node in ast.walk(statement)
-                if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
-            }
-            source_root = stub.parent / "src"
-            # A filename is not a cfg boundary: production modules can end in _tests.rs.
-            sources = [
-                path.read_text(encoding="utf-8")
-                for path in sorted(source_root.rglob("*.rs"))
-            ]
-            types, constructors, registered, exceptions = _rust_facts(sources)
-            exceptions |= _shared_exception_declarations(root, sources)
-            for definition in module.body:
-                if not isinstance(definition, ast.ClassDef):
-                    continue
-                if any(
-                    isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef))
-                    and member.name in {"__init__", "__new__"}
-                    for member in definition.body
-                ):
-                    continue
-                if any(
-                    isinstance(base, ast.Name) and base.id in typed_dict_names
-                    for base in definition.bases
-                ):
-                    declarations.add((stub.stem, definition.name))
-                    continue
-                names = types.get(definition.name, set())
-                # Standard exception declarations have no custom Rust constructor;
-                # the retained stub gate separately verifies their Python bases.
-                if (names and names <= registered and not names & constructors) or (
-                    stub.stem,
-                    definition.name,
-                ) in exceptions:
-                    declarations.add((stub.stem, definition.name))
+    for module_name, stub, rust_sources in _binding_stub_sources(root):
+        module = ast.parse(stub.read_text(encoding="utf-8"), filename=str(stub))
+        typed_dict_names = {
+            alias.asname or alias.name
+            for statement in module.body
+            if isinstance(statement, ast.ImportFrom)
+            and statement.module in {"typing", "typing_extensions"}
+            for alias in statement.names
+            if alias.name == "TypedDict"
+        }
+        typed_dict_names -= {
+            statement.name
+            for statement in module.body
+            if isinstance(
+                statement, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+            )
+        }
+        # A rebound imported name no longer denotes typing's erased dictionary contract.
+        typed_dict_names -= {
+            node.id
+            for statement in module.body
+            if isinstance(statement, (ast.Assign, ast.AnnAssign, ast.AugAssign))
+            for node in ast.walk(statement)
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
+        }
+        # A filename is not a cfg boundary: production modules can end in _tests.rs.
+        sources = [path.read_text(encoding="utf-8") for path in rust_sources]
+        types, constructors, registered, exceptions = _rust_facts(sources)
+        exceptions |= _shared_exception_declarations(root, sources)
+        for definition in module.body:
+            if not isinstance(definition, ast.ClassDef):
+                continue
+            if any(
+                isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and member.name in {"__init__", "__new__"}
+                for member in definition.body
+            ):
+                continue
+            if any(
+                isinstance(base, ast.Name) and base.id in typed_dict_names
+                for base in definition.bases
+            ):
+                declarations.add((module_name, definition.name))
+                continue
+            names = types.get(definition.name, set())
+            # Standard exception declarations have no custom Rust constructor;
+            # the retained stub gate separately verifies their Python bases.
+            if (names and names <= registered and not names & constructors) or (
+                module_name,
+                definition.name,
+            ) in exceptions:
+                declarations.add((module_name, definition.name))
     return declarations

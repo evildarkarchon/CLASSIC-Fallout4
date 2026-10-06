@@ -1,7 +1,7 @@
 //! High-performance string processing utilities (Pure Rust)
 //!
 //! This module provides the core string processing implementation using Lasso/Rodeo
-//! for efficient string interning. Python bindings are in `classic-shared-py`.
+//! for efficient string interning. Python bindings are in the `classic-python-bindings` adapter crate.
 
 use lasso::{Spur, ThreadedRodeo};
 use rayon::prelude::*;

@@ -24,7 +24,7 @@
 
 # Autoscan Report characterization files are byte-exact fixtures. Do not let
 # checkout newline conversion alter their final-newline or trailing-space bytes.
-tests/fixtures/autoscan_report_goldens/cases/*/expected.md -text
+tests/fixtures/autoscan_report_goldens/cases/*/expected*.md -text
 tests/fixtures/autoscan_report_goldens/fcx-game/Fallout4.exe -text
 
 # Recovery conformance hashes malformed bytes exactly; checkout conversion would change the oracle.

@@ -5,14 +5,18 @@ This page summarizes the current maintained Rust module families in CLASSIC.
 ## Foundation crates
 
 - `foundation/classic-shared-core` - shared runtime, shared helpers, cross-cutting support
-- `foundation/classic-shared-py` - Python-facing shared support module
+- `foundation/classic-operation-context` - workspace-internal async operation context (no binding surface)
+- `foundation/classic-vocabulary` - workspace-internal Vocabulary naming contract for domain enums (no binding surface)
+
+The former `foundation/classic-shared-py` helper library was folded into the
+one Python adapter crate (`python-bindings/classic-python-bindings`, module
+`src/support/`) in issue #259.
 
 ## Business-logic crates
 
 Representative maintained crates include:
 
 - `classic-config-core`
-- `classic-constants-core`
 - `classic-database-core`
 - `classic-file-io-core`
 - `classic-message-core`
@@ -20,24 +24,22 @@ Representative maintained crates include:
 - `classic-resource-core`
 - `classic-scangame-core`
 - `classic-scanlog-core`
-- `classic-settings-core`
 - `classic-update-core`
-- `classic-version-core`
 - `classic-version-registry-core`
 - `classic-web-core`
 - `classic-xse-core`
-- `classic-settings-core` (absorbed the former `classic-yaml-core` in v9.1.0 Phase 1)
 
 ## Binding crates
 
 ### Python
 
-Maintained Python modules are split across binding crates such as:
-
-- `classic-config-py` -> `classic_config`
-- `classic-scanlog-py` -> `classic_scanlog`
-- `classic-version-registry-py` -> `classic_version_registry`
-- additional `*-py` crates for other domains under `python-bindings/`
+One PyO3 adapter crate, `python-bindings/classic-python-bindings`, builds a
+single native extension and wheel (issue #259). It serves the 18 `classic_*`
+direct-import facades (`classic_config`, `classic_scanlog`,
+`classic_version_registry`, and the other domain facades under
+`python-bindings/classic-python-bindings/python/`). Facade adapter code lives in
+`src/classic_<name>/`. The former per-module `classic-*-py` crates no longer
+exist. See [`docs/api/python-bindings-adapter.md`](../api/python-bindings-adapter.md).
 
 ### Node
 

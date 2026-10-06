@@ -456,7 +456,11 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         classification="existing_gate",
         profiles=("full",),
         blocking=True,
-        summary="Builds and installs every PyO3 binding crate into python-bindings/.venv.",
+        summary=(
+            "Builds the one PyO3 adapter wheel, removes obsolete per-module wheels, "
+            "installs it into python-bindings/.venv, and verifies all 18 classic_* "
+            "imports there and in a clean environment."
+        ),
         command=CommandSpec(
             argv=(
                 "pwsh",
@@ -474,7 +478,11 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
                 ),
             ),
         ),
-        proves=("Python runtime smoke tests import freshly built PyO3 modules.",),
+        proves=(
+            "Python runtime smoke tests import freshly built PyO3 modules.",
+            "All 18 direct imports and versions load from the one wheel with no "
+            "legacy per-module native artifact left behind.",
+        ),
     ),
     ComplianceRequirement(
         id="python-runtime-smoke-tests",

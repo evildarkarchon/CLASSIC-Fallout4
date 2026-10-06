@@ -54,6 +54,7 @@ This crate exposes public modules directly and also re-exports most contributor-
 - `game_setup_intake` - setup-time path, version, registry, executable, documents, and XSE intake diagnostics
 - `crashgen_orchestrator` - crashgen config-path resolution, plugin detection, and report packaging
 - `game_report` - text report builders for loose-file and BA2 scan results
+- `xse_folder` - XSE Folder resolution from an installation's Game Local document (config facts composed with XSE derivation)
 
 ### Validation and scan modules
 
@@ -86,6 +87,7 @@ this state, so object results and returned duplicate maps now agree.
 - `GameSetupIntake`, `GameSetupIntakeResult`, `GameSetupCheck`, `game_setup_needs_path_detection()`
 - `GameIntegrityChecker`, `IntegrityConfig`
 - `XseChecker`, `GameVersion`, `ValidationResult`
+- `resolve_xse_folder_for_scan()`, `resolve_xse_folder_for_scan_in_version_registry_scope()`, `resolve_xse_folder_for_scan_in_scopes()`
 - `CrashgenChecker`, `TomlConfigIssue`
 - `ModIniScanner`, `ModIniScanResult`
 - `UnpackedScanner`, `UnpackedIssues`
@@ -130,7 +132,7 @@ Behavior worth knowing from the source:
 - per-task failures are collected into `GameScanResult.errors`; one failed sub-check does not abort the whole `run_game_checks()` call
 - the read-only config-issue portion of `run_game_checks()` now shares the public `detect_config_issues(game_path, game_name)` helper
 - `run_mod_scans()` returns a soft failure payload when `mods_path` is missing or nonexistent instead of throwing an orchestrator error
-- loose-file DDS dimension validation is delegated to [`classic-file-io-core`](../../business-logic/classic-file-io-core) `DDSAnalyzer`
+- loose-file DDS dimension validation is delegated to [`classic-resource-core`](classic-resource-core.md#game-target-dds-rules-dds) `DDSAnalyzer`
 - BA2 archive findings are converted into the same category map used by `ScanReportBuilder`
 
 ## `detect_config_issues()`
@@ -283,15 +285,33 @@ Important items:
 
 Behavior worth knowing:
 
-- Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted.
+- Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted. It writes no files, does not open, preview, or commit User Settings, and names only the already-opened `GameSetupSettings` group from `classic-user-settings-core`. `tests/game_setup_intake_read_only.rs` guards that source boundary, and the `game-setup-intake` conformance scenarios `explicit` (no proposals) and `proposal` (a `game_root` proposal discovered from the configured executable) prove that every participant sees the same proposals with the setup tree left byte-identical. Persisting a proposal is a separate caller step (see [`game-setup-workflow.md`](game-setup-workflow.md#2a-review-proposed-path-updates)).
 - `from_user_settings(game_setup_settings)` copies every typed Game Setup fact from an already-opened snapshot—including mods/staging, custom-scan, and Papyrus paths—performs no settings I/O, and consumes the effective documents root after User Settings has applied canonical-before-INI alias precedence.
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
 - a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
+- the resolved `plugins_path` is `<game root>/Data/<folder>/Plugins`, with the folder named by [`classic_xse_core::xse_folder_name`](classic-xse-core.md#root-level-api) from the selected Version Registry XSE acronym, so Fallout 4 VR uses `Data/F4SE/Plugins`. Intake keeps no copy of that rule.
 - executable and XSE script hashes go through `classic-file-io-core`'s hash cache: `run()` uses the process default `FileHashScope`; `run_in_hash_scope(scope)` behaves identically but reads, caches, and counts those hashes only in `scope`. The Python `classic_scangame` facade uses its own isolated scope so its hashing never reaches `classic_file_io.FileHasher`'s cache or statistics.
 - every Version Registry fact (version detection and matching, expectations, and known Address Library files) comes from one snapshot: `run()` and `run_in_hash_scope()` read the process default scope; `run_in_scopes(hash_scope, version_registry)` reads only `version_registry`. The Python `classic_scangame` facade passes its own isolated Version Registry scope to intake, `AddressLibInfo`, `XseChecker`, and `GameScanOrchestrator`.
 - failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
 - documents-folder state is mapped from `classic-path-core`'s structured `DocumentsCheckState`, not rendered message text.
 - the module covers setup-only diagnostics, not ENB, crashgen TOML, Wrye, BA2, loose-file, or mod INI scans.
+
+## XSE Folder from the Game Local document
+
+`resolve_xse_folder_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> Option<PathBuf>` resolves the XSE Folder for an installation from its `CLASSIC Data` directory. It moved here from `classic-xse-core` in #252 with the same signature and behavior.
+
+Neither owner can do this alone: config owns the Game Local document and XSE owns the derivation, and XSE must not depend on config. This crate depends on both, so it composes them:
+
+1. `classic_config_core::read_game_local_facts(yaml_dir_data, game)` reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` fail-soft (missing, malformed, or blank values become absent facts).
+2. The `docs_folder_xse` and `root_folder_docs` facts are passed as `classic_xse_core::XseGameLocalFacts` to [`resolve_xse_folder_from_game_local_facts`](classic-xse-core.md#xse-folder-from-game-local-facts), which applies the precedence (explicit folder, recorded documents root, `configured_docs_root`, documents discovery) and the Fallout 4 VR `F4SE` folder convention.
+
+`resolve_xse_folder_for_scan_in_version_registry_scope(..., &VersionRegistryScope)` reads Version Registry metadata only from the caller's scope. `resolve_xse_folder_for_scan_in_scopes(..., &VersionRegistryScope, &YamlFileCacheScope)` also reads the Game Local document only through the caller's [YAML-file cache scope](classic-shared-core.md#cache-scopes) (via `read_game_local_facts_in_yaml_file_cache_scope`); Crash Log Scan Run Standard discovery uses it so a binding facade's scope reaches the read (#234). The other two forms pass the process default YAML-file cache scope. `None` means "no XSE Folder"; the function never errors.
+
+Callers:
+
+- Crash Log collection: `classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery (with the run's Version Registry scope)
+- the C++ bridge's `classic::xse::resolve_xse_folder_for_scan`, which the GUI uses for its setup-detection XSE log hint, and `classic::files::log_collector_new_for_scan`
+- the `xse-folder` Binding Compliance Suite family's `xse-folder.resolve` capability (Rust and CXX participants), which credits this Local.yaml composition to this crate; the family's `domainOwner` is `classic-xse-core`, which owns the derivation (`xse-folder.derive`)
 
 ## Loose-file and archive scanning APIs
 
@@ -489,7 +509,7 @@ The main contributor-facing full-scan flow is:
 6. `run_mod_scans()` concurrently performs:
    - loose-file scan via `UnpackedScanner`
    - BA2 archive scan via `BA2Scanner`
-7. Loose `.dds` files from the unpacked scan are validated afterward with [`classic-file-io-core`](../../business-logic/classic-file-io-core) `DDSAnalyzer`.
+7. Loose `.dds` files from the unpacked scan are validated afterward with [`classic-resource-core`](classic-resource-core.md#game-target-dds-rules-dds) `DDSAnalyzer`.
 8. `ScanReportBuilder` formats unpacked/archive issue maps into the final mod-scan report text.
 
 Crashgen TOML flow in more detail:
@@ -575,9 +595,12 @@ Concurrency/performance patterns visible in source:
 
 Important direct dependencies:
 
-- `classic-file-io-core` - DDS validation helpers used during loose-file scans
+- `classic-resource-core` - game-target DDS rules (`DDSAnalyzer`, `GameTarget`) used during loose-file scans
 - `classic-config-core` - optional rule-evaluation path for crashgen TOML checks via the absorbed crashgen rule model (`classic_config_core::crashgen_rules::*`, formerly a separate crate)
 - `classic-path-core` - path resolution and documents-folder checks used by Game Setup Intake
+- `classic-user-settings-core` - the typed, already-opened `GameSetupSettings` group consumed by `GameSetupIntake::from_user_settings()`; intake never opens, previews, or commits User Settings
+- `classic-file-io-core` - the scoped file-hash cache (`FileHashScope`) behind Game Setup Intake's executable and XSE script hashes
+- `classic-xse-core` - XSE loader probes for Game Setup Intake and XSE Folder derivation for `resolve_xse_folder_for_scan()`; `classic-config-core` supplies that resolver's Game Local facts
 - `classic-version-registry-core` - setup expectation metadata, Address Library metadata, and Fallout 4 version descriptions
 - `tokio` - async orchestration only
 - `rayon` - parallel synchronous scanning work
@@ -590,7 +613,8 @@ Related CLASSIC crates:
 
 - [`classic-config-core`](../../business-logic/classic-config-core) - upstream source for paths, game-version decisions, optional `CrashgenSettingsRules`, AND the shared rule model reused for TOML validation (see the "Crashgen rule model" section in [classic-config-core.md](classic-config-core.md#crashgen-rule-model))
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream crash-log analysis layer that complements setup/game scanning rather than replacing it
-- [`classic-file-io-core`](../../business-logic/classic-file-io-core) - shared DDS and file helpers used here
+- [`classic-file-io-core`](../../business-logic/classic-file-io-core) - shared file helpers used here
+- [`classic-resource-core`](classic-resource-core.md) - game-target DDS rules used here
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - registry-backed Fallout 4 version and Address Library metadata
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared runtime policy; currently a dependency without visible direct runtime calls in this crate's source
 
@@ -601,7 +625,7 @@ Related CLASSIC crates:
 This example follows the real public API and shows the main contributor path: assemble `GameScanConfig`, then run the orchestrator.
 
 ```rust
-use classic_file_io_core::dds::GameTarget;
+use classic_resource_core::dds::GameTarget;
 use classic_scangame_core::{GameScanConfig, GameScanOrchestrator, GameVersion};
 use std::collections::HashMap;
 use std::path::PathBuf;

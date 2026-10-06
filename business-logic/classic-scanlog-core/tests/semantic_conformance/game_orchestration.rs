@@ -1,6 +1,6 @@
 //! Public concurrent game/mod orchestration and complete-pipeline equivalence.
 use super::{RunnerResult, invalid, text};
-use classic_file_io_core::dds::GameTarget;
+use classic_resource_core::dds::GameTarget;
 use classic_scangame_core::{
     orchestrator::{GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult},
     xse::GameVersion,

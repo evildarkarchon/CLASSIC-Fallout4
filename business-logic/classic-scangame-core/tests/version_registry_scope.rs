@@ -147,3 +147,58 @@ fn game_setup_intake_reads_registry_facts_from_its_scope() {
         "Using Version Registry metadata for Fallout 4 Original."
     );
 }
+
+#[test]
+fn xse_folder_from_game_local_facts_derives_from_its_scope() {
+    let cwd = CwdGuard::acquire();
+    // Take the default snapshot before entering the custom root, so this probe
+    // cannot be the one that initializes it from that root.
+    let _ = get_version_registry();
+    let root = tempfile::tempdir().expect("root");
+    std::fs::write(
+        root.path().join("CLASSIC Main.yaml"),
+        r#"Version_Registry:
+  versions:
+    - id: FO4_OG
+      game: Fallout4
+      is_vr: false
+      version: "1.10.163.0"
+      short_name: OG
+      docs_name: Fallout4
+      xse:
+        acronym: CUSTOMSE
+        compatible_version: "0.6.23"
+"#,
+    )
+    .expect("write yaml root");
+    // The recorded documents folder arrives through config's Game Local facts.
+    let data = tempfile::tempdir().expect("CLASSIC Data");
+    let docs = tempfile::tempdir().expect("recorded docs root");
+    std::fs::write(
+        data.path().join("CLASSIC Fallout4 Local.yaml"),
+        format!(
+            "Game_Info:\n  Root_Folder_Docs: '{}'\n",
+            docs.path().display()
+        ),
+    )
+    .expect("write Local.yaml");
+    let scope = VersionRegistryScope::new_isolated();
+    cwd.enter(root.path());
+
+    let scoped = classic_scangame_core::resolve_xse_folder_for_scan_in_version_registry_scope(
+        data.path(),
+        "Fallout4",
+        "Original",
+        None,
+        &scope,
+    );
+    let unscoped = classic_scangame_core::resolve_xse_folder_for_scan(
+        data.path(),
+        "Fallout4",
+        "Original",
+        None,
+    );
+
+    assert_eq!(scoped, Some(docs.path().join("CUSTOMSE")));
+    assert_eq!(unscoped, Some(docs.path().join("F4SE")));
+}

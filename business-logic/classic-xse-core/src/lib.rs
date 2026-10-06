@@ -26,7 +26,6 @@
 use classic_path_core::DocsPathFinder;
 use classic_shared_core::GameId;
 use classic_shared_core::version::parse_version;
-use classic_shared_core::yaml::YamlOperations;
 use classic_version_registry_core::{Fallout4Version, VersionInfo, VersionRegistryScope};
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -68,7 +67,7 @@ pub enum XseError {
 
     /// Path error.
     #[error("Path error: {0}")]
-    PathError(#[from] classic_path_core::PathError),
+    PathError(#[from] classic_shared_core::path_core::PathError),
 }
 
 /// Result type for XSE operations.
@@ -491,19 +490,42 @@ pub fn get_xse_info(game_path: &Path, xse_type: XseType) -> XseInfo {
     info
 }
 
-/// Resolve the XSE Folder used for Crash Log collection.
+/// The Game Local facts the XSE Folder resolver consumes.
 ///
-/// The resolver is fail-soft: missing Local.yaml files, blank settings, unreadable
-/// YAML, and platform discovery failures return `None` rather than blocking scans.
+/// This is XSE's narrow input for config-owned Game Local data: a composing
+/// caller reads the facts through `classic-config-core` (its `GameLocalFacts`
+/// carries the same two fields) and passes the plain paths here, so this crate
+/// never depends on config or parses the Game Local YAML.
+/// `classic_scangame_core::resolve_xse_folder_for_scan` is that composing
+/// caller for setup, Crash Log collection, and the C++ bridge.
+/// Empty paths are treated as absent.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct XseGameLocalFacts {
+    /// `Game_Info.Docs_Folder_XSE`: an explicit XSE Folder, used as-is.
+    pub docs_folder_xse: Option<PathBuf>,
+    /// `Game_Info.Root_Folder_Docs`: the recorded documents folder the XSE
+    /// Folder is derived from.
+    pub root_folder_docs: Option<PathBuf>,
+}
+
+/// Resolve the XSE Folder from caller-supplied Game Local facts, reading
+/// Version Registry metadata from the default snapshot.
+///
+/// Precedence is the explicit `docs_folder_xse`, then the folder derived from
+/// `root_folder_docs`, then the folder derived from `configured_docs_root`,
+/// then platform documents discovery. Fail-soft: absent or empty facts are
+/// skipped, and `None` is returned rather than an error when nothing resolves.
+/// Folders are derived from the Version Registry's XSE acronym, except that
+/// Fallout 4 VR's F4SEVR writes crash logs under `F4SE`.
 #[must_use]
-pub fn resolve_xse_folder_for_scan(
-    yaml_dir_data: impl AsRef<Path>,
+pub fn resolve_xse_folder_from_game_local_facts(
+    game_local: &XseGameLocalFacts,
     game: &str,
     selected_game_version: &str,
     configured_docs_root: Option<&Path>,
 ) -> Option<PathBuf> {
-    resolve_xse_folder_for_scan_in_version_registry_scope(
-        yaml_dir_data,
+    resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
+        game_local,
         game,
         selected_game_version,
         configured_docs_root,
@@ -511,40 +533,39 @@ pub fn resolve_xse_folder_for_scan(
     )
 }
 
-/// Resolve the XSE Folder like [`resolve_xse_folder_for_scan`], reading
-/// Version Registry metadata only from `version_registry`.
+/// Resolve the XSE Folder like [`resolve_xse_folder_from_game_local_facts`],
+/// reading Version Registry metadata only from `version_registry`.
 ///
 /// The scope's snapshot is taken lazily, and only for a Fallout 4 game; no
 /// other snapshot, including the process default, is read.
 #[must_use]
-pub fn resolve_xse_folder_for_scan_in_version_registry_scope(
-    yaml_dir_data: impl AsRef<Path>,
+pub fn resolve_xse_folder_from_game_local_facts_in_version_registry_scope(
+    game_local: &XseGameLocalFacts,
     game: &str,
     selected_game_version: &str,
     configured_docs_root: Option<&Path>,
     version_registry: &VersionRegistryScope,
 ) -> Option<PathBuf> {
+    // Resolve the registry entry before the explicit-folder check, as the
+    // former Local.yaml-reading resolver always did, so a scope's lazy
+    // first-use snapshot is taken at the same point it always was.
     let version_info = resolve_version_info(game, selected_game_version, version_registry);
-    let local_yaml_path = yaml_dir_data
-        .as_ref()
-        .join(format!("CLASSIC {game} Local.yaml"));
 
-    let yaml_ops = YamlOperations::new();
-    let local_yaml = yaml_ops.load_yaml_file(&local_yaml_path).ok();
+    if let Some(path) = game_local
+        .docs_folder_xse
+        .as_deref()
+        .and_then(non_empty_path)
+    {
+        return Some(path.to_path_buf());
+    }
 
-    if let Some(yaml) = local_yaml.as_ref() {
-        if let Some(path) =
-            clean_path_value(&yaml_ops.get_string_value(yaml, "Game_Info.Docs_Folder_XSE", ""))
-        {
-            return Some(path);
-        }
-
-        if let Some(docs_root) =
-            clean_path_value(&yaml_ops.get_string_value(yaml, "Game_Info.Root_Folder_Docs", ""))
-            && let Some(path) = xse_folder_from_docs_root(&docs_root, version_info)
-        {
-            return Some(path);
-        }
+    if let Some(docs_root) = game_local
+        .root_folder_docs
+        .as_deref()
+        .and_then(non_empty_path)
+        && let Some(path) = xse_folder_from_docs_root(docs_root, version_info)
+    {
+        return Some(path);
     }
 
     if let Some(docs_root) = configured_docs_root.and_then(non_empty_path)
@@ -580,15 +601,6 @@ fn resolve_version_info<'r>(
     selected.version_info_in(version_registry.registry())
 }
 
-fn clean_path_value(value: &str) -> Option<PathBuf> {
-    let trimmed = value.trim();
-    if trimmed.is_empty() {
-        None
-    } else {
-        Some(PathBuf::from(trimmed))
-    }
-}
-
 fn non_empty_path(path: &Path) -> Option<&Path> {
     if path.as_os_str().is_empty() {
         None
@@ -603,15 +615,26 @@ fn xse_folder_from_docs_root(
 ) -> Option<PathBuf> {
     let folder = version_info
         .and_then(|info| info.xse.as_ref())
-        .map(|xse| xse_docs_folder_name(&xse.acronym))
+        .map(|xse| xse_folder_name(&xse.acronym))
         .filter(|acronym| !acronym.is_empty())?;
 
     Some(docs_root.join(folder))
 }
 
-fn xse_docs_folder_name(acronym: &str) -> &str {
+/// Return the on-disk folder name a Script Extender uses, given its Version
+/// Registry XSE acronym.
+///
+/// The same name is used for the XSE Folder under the documents root (where
+/// crash logs are written) and for the `Data/<folder>/Plugins` runtime plugin
+/// folder under the game root. Fallout 4 VR's `F4SEVR` keeps its own loader
+/// identity but uses the shared `F4SE` folder; every other acronym is its own
+/// folder name. Surrounding whitespace is trimmed, and an empty acronym
+/// yields an empty name for the caller to treat as "no folder".
+#[must_use]
+pub fn xse_folder_name(acronym: &str) -> &str {
     match acronym.trim() {
-        // F4SEVR keeps the F4SEVR identity/loader, but writes crash logs under F4SE.
+        // F4SEVR keeps the F4SEVR identity/loader, but writes crash logs and
+        // installs runtime plugins under F4SE.
         "F4SEVR" => "F4SE",
         folder => folder,
     }

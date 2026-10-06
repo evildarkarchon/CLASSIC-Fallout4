@@ -5,9 +5,7 @@ Contributor-facing reference for CLASSIC's YAML data update channel: how shippab
 This page describes the cross-crate YAML data update flow. For per-crate APIs, see the page for each owner crate:
 
 - [`classic-shared-core`](classic-shared-core.md#schema-compatibility) (`yaml` module) — `SchemaVersion`, `SchemaCompat`, `extract_schema_version`, `schema_compat_check`
-- [`classic-config-core`](classic-config-core.md) — config-owned `inspect_installed_yaml_data`, compatibility metadata, exact-byte identity, semantic validation, and installed candidate policy
-- [`classic-path-core`](classic-path-core.md) — `yaml_cache_dir`, `ensure_yaml_cache_dir`
-- [`classic-file-io-core`](classic-file-io-core.md) — `install_atomic`, `rollback`, `self_heal`
+- [`classic-config-core`](classic-config-core.md) — config-owned `inspect_installed_yaml_data`, compatibility metadata, exact-byte identity, semantic validation, installed candidate policy, the per-user YAML cache location (`yaml_cache_dir`, `ensure_yaml_cache_dir`), and verified install / rollback / self-heal (`install_atomic`, `rollback`, `self_heal`; moved from `classic-file-io-core` in #248, still returning `FileIOError`)
 - [`classic-durable-publication`](classic-durable-publication.md) — `install_verified`, the shared durability sequence underneath `install_atomic`, plus the `.prev` rollback generation and the install lock that `rollback` and `self_heal` serialize on
 - [`classic-update-core`](classic-update-core.md) — `yaml_update` module, first-party `check_yaml_data_update`, `apply_yaml_data_update_with_decision`, `rollback_yaml_data_update`, plus lower-level generic `check_yaml_update`, `apply_yaml_update_with_decision`, `rollback_yaml_update`, and `ApprovedUpdate`
 
@@ -166,11 +164,11 @@ If `<cache_dir>/<file>` is missing but `<cache_dir>/<file>.prev` exists, inspect
 
 `install_atomic` opens the temp file and calls `sync_all()` before renaming it into `<cache_dir>/<file>`. Without this step, callers that wrote the temp file via async I/O (tokio's `write_all` + `flush`) would only drain user-space buffers; a power loss between the rename and the OS writeback could leave `<file>` existing with truncated bytes while `self_heal` refused to recover (it only restores from `.prev` when the canonical target is missing, not when it is present but corrupt). The parent-directory fsync (Unix) commits rename metadata, not data — both fsyncs are needed for crash durability.
 
-That sequence is implemented in [`classic-durable-publication`](classic-durable-publication.md)'s `install_verified`, not in `classic-file-io-core`. `install_atomic` validates the same-directory precondition, calls into it, and maps its neutral failure back onto `FileIOError`; the digest verification, the staged-file sync, the `.prev` rotation, and the install lock all live in the shared module. The published error codes and the on-disk layout are unchanged by that placement.
+That sequence is implemented in [`classic-durable-publication`](classic-durable-publication.md)'s `install_verified`, not in `classic-config-core`. `install_atomic` (config-owned since #248, formerly `classic-file-io-core`) validates the same-directory precondition, calls into it, and maps its neutral failure back onto `FileIOError`; the digest verification, the staged-file sync, the `.prev` rotation, and the install lock all live in the shared module. The published error codes and the on-disk layout are unchanged by that placement.
 
 ### Cache directory
 
-`classic_path_core::yaml_cache_dir()` resolves to:
+`classic_config_core::yaml_cache_dir()` resolves to (config owns this location; it moved from `classic-path-core` in issue #246):
 
 - Windows: `%LOCALAPPDATA%\CLASSIC\yaml-cache\` (fallback `%APPDATA%\CLASSIC\yaml-cache\`)
 - Other targets (source portability only): `${XDG_CACHE_HOME:-$HOME/.cache}/CLASSIC/yaml-cache/`
@@ -265,14 +263,14 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 | `SchemaVersion` / `SchemaCompat` / `extract_schema_version` | [`foundation/classic-shared-core/src/yaml/schema_version.rs`](../../foundation/classic-shared-core/src/yaml/schema_version.rs) |
 | `client_schemas::MAIN_YAML`, `client_schemas::GAME_FALLOUT4_YAML` | [`business-logic/classic-config-core/src/client_schemas.rs`](../../business-logic/classic-config-core/src/client_schemas.rs) |
 | Installed YAML Data inspection, exact-byte identity, candidate diagnostics | [`business-logic/classic-config-core/src/installed_yaml_data.rs`](../../business-logic/classic-config-core/src/installed_yaml_data.rs) |
-| `yaml_cache_dir`, `ensure_yaml_cache_dir` | [`business-logic/classic-path-core/src/lib.rs`](../../business-logic/classic-path-core/src/lib.rs) |
-| `install_atomic`, `rollback` | [`business-logic/classic-file-io-core/src/lib.rs`](../../business-logic/classic-file-io-core/src/lib.rs) |
+| `yaml_cache_dir`, `ensure_yaml_cache_dir` | [`business-logic/classic-config-core/src/yaml_cache.rs`](../../business-logic/classic-config-core/src/yaml_cache.rs) |
+| `install_atomic`, `rollback`, `self_heal` | [`business-logic/classic-config-core/src/atomic_install.rs`](../../business-logic/classic-config-core/src/atomic_install.rs) |
 | `install_verified` — the digest verification, staged-file sync, `.prev` rotation, and install lock underneath `install_atomic` | [`business-logic/classic-durable-publication/src/publication.rs`](../../business-logic/classic-durable-publication/src/publication.rs) |
 | First-party YAML Data Update Channel (`check_yaml_data_update`, `apply_yaml_data_update_with_decision`, `rollback_yaml_data_update`) plus generic `YamlManifest`, `fetch_yaml_manifest`, `check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update` | [`business-logic/classic-update-core/src/yaml_update.rs`](../../business-logic/classic-update-core/src/yaml_update.rs) |
 | CXX bridge first-party helpers (`yaml_data_check_update`, `yaml_data_apply_update`, `yaml_data_rollback_update`) and generic compatibility helpers (`yaml_check_update`, `yaml_apply_update`, `yaml_rollback_update`) | [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) |
 | Typed CXX/Qt User Settings policy snapshot and atomic GUI edit seam | [`cpp-bindings/classic-cpp-bridge/src/settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs), [`classic-gui/src/core/guiusersettings.cpp`](../../classic-gui/src/core/guiusersettings.cpp) |
 | Node bindings first-party helpers (`checkYamlDataUpdate`, `applyYamlDataUpdateWithDecision`, `rollbackYamlDataUpdate`) plus single-file `rollbackYamlUpdate` | [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) |
-| Python bindings (`check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update`) | [`python-bindings/classic-update-py/src/yaml_update.rs`](../../python-bindings/classic-update-py/src/yaml_update.rs) |
+| Python bindings (`check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update`) | [`python-bindings/classic-python-bindings/src/classic_update/yaml_update.rs`](../../python-bindings/classic-python-bindings/src/classic_update/yaml_update.rs) |
 | Publish workflow | [`.github/workflows/publish-yaml-data.yml`](../../.github/workflows/publish-yaml-data.yml) |
 | Publish tooling | [`tools/publish_yaml_data/`](../../tools/publish_yaml_data) |
 | Drift guard | [`tools/schema_version_gate.py`](../../tools/schema_version_gate.py) |

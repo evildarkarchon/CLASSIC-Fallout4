@@ -11,8 +11,28 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 
 [dependencies]
-# Path utilities
-classic-path-core = { path = "../classic-path-core" }
+# Generic path primitives and PathError
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+# Neutral DDS header parsing (`DDSHeader`) stays in file I/O core; resource
+# core owns the game-target DDS rules applied to parsed headers (#249). The
+# edge points inward only: file I/O must never depend back on resource core.
+# The game-target backup and game-file operations (#250) also keep returning
+# `FileIOError` from here, so their binding error projections stay the same.
+# Those modules do not need Durable Publication; resource core must not gain
+# that edge for them.
+classic-file-io-core = { path = "../classic-file-io-core" }
+
+# Parallel batch validation of DDS textures
+rayon = { workspace = true }
+
+# Async file operations for the game-target backup and game-file operations
+tokio = { workspace = true, features = ["fs", "rt", "macros"] }
+
+# Logging
+tracing = { workspace = true }
+
+# Backup creation timestamps
+chrono = "0.4"
 
 # Error handling
 thiserror = { workspace = true }
@@ -20,6 +40,9 @@ anyhow = { workspace = true }
 
 # File I/O
 walkdir = { workspace = true }
+
+# Version-label extraction from XSE logs (version_backup)
+regex = { workspace = true }
 
 # Serialization
 serde = { workspace = true, features = ["derive"] }
@@ -29,6 +52,8 @@ serde = { workspace = true, features = ["derive"] }
 [dev-dependencies]
 # Testing
 tempfile = { workspace = true }
+# Builds real DDS fixtures for the game-target DDS rule tests
+ddsfile = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

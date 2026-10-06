@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use classic_file_io_core::{BackupManager, BackupType};
+use classic_resource_core::{BackupManager, BackupType};
 use classic_shared_core::get_runtime;
 
 use super::{App, AsyncMessage, BACKUP_TYPES, Overlay, STATUS_CLEAR_SECONDS};

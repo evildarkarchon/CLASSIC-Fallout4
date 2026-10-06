@@ -13,21 +13,19 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 [dependencies]
 # CLASSIC shared utilities
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
-classic-operation-context = { path = "../../foundation/classic-operation-context" }
-classic-xse-core = { path = "../classic-xse-core" }
+# Crash Log collection (and with it the XSE Folder and operation-context
+# cancellation dependencies) moved to classic-scanlog-core (#254).
 
-# Durable Publication (staging, verified backup, atomic publish) for the YAML
-# Data Update Channel install path. It owns the digest verification, the
-# `.prev` rollback generation, and the one cross-process lock this module's
-# rollback and self-heal also serialize on.
-classic-durable-publication = { path = "../classic-durable-publication" }
+# The YAML Data install/rollback/self-heal path, and with it the dependency on
+# classic-durable-publication, moved to classic-config-core (#248). The
+# game-target backup and game-file operations moved to classic-resource-core
+# (#250) and never relied on that edge.
 
 # File I/O
 encoding_rs = { workspace = true }
 memmap2 = { workspace = true }
 walkdir = { workspace = true }
 ddsfile = { workspace = true }
-glob = "0.3"
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }
@@ -46,9 +44,10 @@ regex = { workspace = true }
 # Hashing
 sha2 = "0.10"
 
-# Cross-process file locking for atomic install / rollback serialization now
-# comes from `classic-durable-publication`, which uses std's `File::lock`. The
-# former `fs4` dependency was this crate's only use of that library.
+# Cross-process file locking for atomic install / rollback serialization comes
+# from `classic-durable-publication` (std's `File::lock`), used by the install
+# path now owned by classic-config-core. The former `fs4` dependency was this
+# crate's only use of that library.
 
 # Error handling
 anyhow = { workspace = true }
@@ -58,8 +57,7 @@ thiserror = { workspace = true }
 log = { workspace = true }
 tracing = { workspace = true }
 
-# Time handling
-chrono = "0.4"
+# Time handling (chrono) left with the game-target backup (#250).
 
 # NO PyO3 dependency!
 

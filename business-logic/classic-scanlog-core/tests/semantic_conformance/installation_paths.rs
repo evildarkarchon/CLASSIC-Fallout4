@@ -97,24 +97,28 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         }
         let scan = Path::new("validation/owned/scan");
         fs::create_dir_all(scan)?;
-        classic_path_core::validate_custom_scan_path(scan)?;
+        classic_scanlog_core::validate_custom_scan_path(scan)?;
         classic_path_core::validate_settings_path(
             Path::new(&game),
             "Game Path",
             Some(&["Fallout4.exe".to_string()]),
         )?;
-        classic_path_core::validate_settings_paths(
+        classic_scanlog_core::validate_settings_paths(
             Path::new(&game),
             Path::new(&docs),
             Some(scan),
             "Fallout4.exe",
         )?;
-        classic_path_core::check_drive_exists(root)?;
-        classic_path_core::check_read_permissions(Path::new(&game))?;
-        classic_path_core::check_write_permissions(Path::new(&game))?;
-        classic_path_core::validate_path_with_permissions(Path::new(&game), true, true)?;
-        if !classic_path_core::is_valid_path(Path::new(&game))
-            || classic_path_core::is_valid_path(Path::new("missing-path"))
+        classic_shared_core::path_core::check_drive_exists(root)?;
+        classic_shared_core::path_core::check_read_permissions(Path::new(&game))?;
+        classic_shared_core::path_core::check_write_permissions(Path::new(&game))?;
+        classic_shared_core::path_core::validate_path_with_permissions(
+            Path::new(&game),
+            true,
+            true,
+        )?;
+        if !classic_shared_core::path_core::is_valid_path(Path::new(&game))
+            || classic_shared_core::path_core::is_valid_path(Path::new("missing-path"))
         {
             return Err(invalid("path existence disagrees with owned tree").into());
         }
@@ -134,7 +138,7 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
             if !fs::metadata(&readonly_file)?.permissions().readonly() {
                 return Err(invalid("readonly precondition was not established").into());
             }
-            classic_path_core::remove_readonly(&readonly_file)?;
+            classic_shared_core::path_core::remove_readonly(&readonly_file)?;
             if fs::metadata(&readonly_file)?.permissions().readonly()
                 || fs::read_to_string(&readonly_file)? != "retained bytes"
             {
@@ -144,17 +148,19 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
                 .into());
             }
         }
-        classic_path_core::validate_path_exists(Path::new(&game))?;
-        classic_path_core::validate_is_directory(Path::new(&docs))?;
-        classic_path_core::validate_is_file(&Path::new(&game).join("Fallout4.exe"))?;
-        if classic_path_core::is_restricted_path(scan)
-            || !classic_path_core::is_restricted_path(Path::new("Windows/System32/test"))
+        classic_shared_core::path_core::validate_path_exists(Path::new(&game))?;
+        classic_shared_core::path_core::validate_is_directory(Path::new(&docs))?;
+        classic_shared_core::path_core::validate_is_file(&Path::new(&game).join("Fallout4.exe"))?;
+        if classic_scanlog_core::is_restricted_path(scan)
+            || !classic_scanlog_core::is_restricted_path(Path::new("Windows/System32/test"))
         {
             return Err(invalid("restricted-path classification changed").into());
         }
-        if !classic_path_core::is_valid_executable_path(&Path::new(&game).join("Fallout4.exe"))
-            || classic_path_core::is_valid_executable_path(Path::new("CLASSIC Main.yaml"))
-        {
+        if !classic_shared_core::path_core::is_executable_file_path(
+            &Path::new(&game).join("Fallout4.exe"),
+        ) || classic_shared_core::path_core::is_executable_file_path(Path::new(
+            "CLASSIC Main.yaml",
+        )) {
             return Err(invalid("executable path classification changed").into());
         }
         fs::remove_dir_all("validation")?;

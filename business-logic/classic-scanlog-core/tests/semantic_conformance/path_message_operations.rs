@@ -98,7 +98,7 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
         "path-operations" => {
             let relative = text(&request["path"])?;
             let path = owned(root, &relative)?;
-            let exists = classic_path_core::is_valid_path(&path);
+            let exists = classic_shared_core::path_core::is_valid_path(&path);
             let result = classic_path_core::validate_required_files(
                 &path,
                 &strings(&request["requiredFiles"])?,

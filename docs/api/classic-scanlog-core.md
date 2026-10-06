@@ -37,9 +37,29 @@ metadata only from the supplied
 Standard XSE Folder discovery, FCX setup, Installed YAML Data metadata, the
 analysis configuration, and per-log crashgen and plugin-limit analysis. A
 continuation returned for Local Ignore recovery keeps the scope, so `resume`
-reads it too. `execute` uses the process default scope. FCX setup still hashes
-through the process default `FileHashScope`. The Python `classic_scanlog`
-facade runs every scan through its own isolated scope.
+reads it too. `execute` uses the process default scope. This variant still
+hashes FCX setup inputs through the process default `FileHashScope`.
+
+`scan_run::contract::execute_in_scopes(request, version_registry, file_hash,
+yaml_file_cache, cancellation, observer)` additionally carries an opaque
+[`FileHashScope`](classic-file-io-core.md#file-hash-scopes) and an opaque
+[`YamlFileCacheScope`](classic-shared-core.md#cache-scopes). The FCX Game Setup
+Intake step hashes the game executable and XSE scripts through
+`GameSetupIntake::run_in_scopes(&file_hash, &version_registry)`, so those cache
+entries and hit/miss counters land only in `file_hash`. Standard discovery
+reads the installation's Game Local document (to derive the XSE Folder)
+through `classic_scangame_core::resolve_xse_folder_for_scan_in_scopes`, so its
+path/mtime YAML-file cache entries and counters land only in `yaml_file_cache`
+(issue #234). A Local Ignore continuation keeps every scope. `execute` and
+`execute_in_version_registry_scope` pass the process default hash and
+YAML-file cache scopes, so unscoped Rust, CXX, and Node scan runs keep hashing
+and reading exactly as before. The Python `classic_scanlog` facade runs every
+scan through `execute_in_scopes` with its own isolated Version Registry scope,
+`FileHashScope`, and `YamlFileCacheScope`, chosen at facade entry, so its FCX
+hashing never reaches the `classic_file_io` or `classic_scangame` caches or
+statistics, and `classic_config.clear_yaml_cache()` cannot evict its cached
+Game Local reads. Public-interface probes: `tests/file_hash_scope.rs`,
+`tests/yaml_file_cache_scope.rs`, and `tests/version_registry_scope.rs`.
 
 Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
 That result owns an opaque `CrashLogScanRunContinuation`; callers explicitly
@@ -355,6 +375,115 @@ descriptions are optional report enrichment. Every other failure while
 collecting one log becomes that log's `LogFailureStage::Analysis`, prevents a
 partial Autoscan Report from being persisted, and does not convert successful
 empty results into failures.
+
+---
+
+## Crash Log Collection And Targeted Input Resolution
+
+The `log_collection` module is the discovery/intake area of this crate. It
+moved here from `classic-file-io-core` (#254), so file I/O no longer depends on
+XSE Folder resolution or `classic-operation-context`. A Crash Log Scan Run's
+Standard discovery builds a `LogCollector` and its Targeted discovery calls
+`resolve_targeted_inputs`; the same primitives stay public because the CXX,
+Node, and Python collection surfaces expose them directly. Calling them does
+not start, schedule, or finalize a run, and never moves Unsolved Logs.
+
+Root re-exports: `LogCollector`, `CRASH_LOG_PATTERN` (`crash-*.log`),
+`CRASH_AUTOSCAN_PATTERN` (`crash-*-AUTOSCAN.md`), `resolve_targeted_inputs`,
+`TargetedResolution`, and `RejectedInput`. `log_collection::Result<T>` is
+`Result<T, classic_file_io_core::FileIOError>`: the moved APIs kept their typed
+filesystem error so binding error projections did not change. There is no
+re-export from `classic_file_io_core`; import these names from
+`classic_scanlog_core`.
+
+### `LogCollector`
+
+Construction and accessors:
+
+- `LogCollector::new(base_folder, xse_folder, custom_folder)`
+- `LogCollector::new_for_scan(base_folder, yaml_dir_data, game, selected_game_version, configured_docs_root, custom_folder)` - resolves the XSE Folder through `classic_scangame_core::resolve_xse_folder_for_scan` (config's Game Local facts plus XSE derivation, process default Version Registry snapshot) and keeps the custom folder additive
+- `with_current_dir(xse_folder, custom_folder)`
+- `crash_logs_dir()` (`<base>/Crash Logs`) and `pastebin_dir()` (`<base>/Crash Logs/Pastebin`)
+
+Workflow methods, all `async` and returning `Result<_, FileIOError>`:
+
+- `move_from_base_folder() -> usize`
+- `copy_from_xse_folder() -> usize`
+- `collect_crash_logs() -> Vec<PathBuf>`
+- `collect_all() -> Vec<PathBuf>`
+
+`collect_all()` flow:
+
+1. Ensure `Crash Logs/` and `Crash Logs/Pastebin/` exist.
+2. Move `crash-*.log` and `crash-*-AUTOSCAN.md` from the base folder into `Crash Logs/`.
+3. Copy `crash-*.log` from the optional XSE Folder into `Crash Logs/`.
+4. Return all `crash-*.log` files found recursively under `Crash Logs/` plus the optional custom folder.
+
+Behavior worth knowing:
+
+- base-folder files are moved, and XSE Folder files copied, only when the destination path does not already exist; XSE originals are preserved
+- the custom folder is searched with a non-recursive `crash-*.log` glob and is additive to XSE Folder import, never a replacement
+- autoscan markdown is organized by `move_from_base_folder()`, but `collect_crash_logs()` returns only `.log` files and does not deduplicate across sources
+- `Io(String)` carries formatted glob or directory-setup failures
+- inside the unpublished `classic-operation-context` cancellation scope, collection checks only at safe boundaries between completed directory/file operations and enumeration entries; cancellation discards the accumulator and the public method returns its zero/empty sentinel, which the scope-owning scan service distinguishes by reading the same monotonic control; completed moves and copies are not rolled back
+
+The Crash Log Scan Run does not call `new_for_scan`: it derives the XSE Folder
+from the run's own Version Registry scope with
+`classic_scangame_core::resolve_xse_folder_for_scan_in_version_registry_scope` and passes it to
+`LogCollector::new`.
+
+### `resolve_targeted_inputs`
+
+`resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution` resolves
+explicit user-supplied file and directory paths for Targeted runs.
+
+- `TargetedResolution { logs: Vec<PathBuf>, rejected: Vec<RejectedInput> }` - deduplicated accepted logs in first-seen order, plus rejected inputs
+- `RejectedInput { path: PathBuf, reason: String }` - the original input and a human-readable reason; the run contract converts it into `CrashLogScanRejectedInput`
+
+Behavior worth knowing:
+
+- explicit regular file inputs are accepted directly regardless of file name
+- directory inputs are searched recursively with `**/crash-*.log`
+- paths are canonicalized for deduplication while preserving first-seen order
+- non-existent paths, non-file/non-directory paths, unreadable paths, and directories without matches are rejected with specific reasons
+- no directories are created and no files are moved or copied
+- inside the `classic-operation-context` cancellation scope, resolution yields between recursive entries, discards partial accumulators on cancellation, and returns an empty resolution for the scope-owning scan service to discard
+
+## Custom-Scan Folder Policy
+
+The `custom_scan` module owns which folders a user may configure as the
+custom-scan folder (an extra, additive Crash Log discovery root). It moved here
+from `classic-path-core` (#254 follow-up); path core keeps only Game and
+Documents path behavior and has no re-export. Scanlog depends on path core (path
+core depends only on shared core), so the graph stays acyclic.
+
+Root re-exports: `is_restricted_path`, `validate_custom_scan_path`, and
+`validate_settings_paths`. The fallible functions return
+`classic_path_core::ValidationResult<()>`: they kept path core's typed
+`ValidationError`, so the variants, messages, and every binding error projection
+are unchanged.
+
+- `is_restricted_path(path) -> bool` - heuristic, case-insensitive substring
+  checks against `windows`, `program files`, `program files (x86)`,
+  `programdata`, `system32`, `syswow64`, and `appdata`; roots and very shallow
+  paths (`parent().is_none()` or component count `<= 2`) are also restricted.
+  It is string matching, not a canonicalized allow/deny policy.
+- `validate_custom_scan_path(path)` - `ValidationError::PathError(..)` when the
+  path is missing or not a directory, otherwise
+  `ValidationError::RestrictedPath(path)` (`Path is restricted for custom scans: <path>`)
+  when `is_restricted_path` rejects it.
+- `validate_settings_paths(game_path, docs_path, custom_scan_path, game_exe)` -
+  the combined setup check: path core's
+  `validate_game_and_documents_paths(game_path, docs_path, game_exe)` first,
+  then `validate_custom_scan_path` when a custom-scan folder is given; returns
+  the first `ValidationError`.
+
+These helpers are synchronous and touch the filesystem. The Crash Log Scan Run
+does not call them; frontends (the TUI settings flow) and the CXX
+(`is_restricted_path`, `check_restricted_path`, `path_validate_custom_scan`),
+Node (`isRestrictedPath`, `validateCustomScanPath`, `validateSettingsPaths`),
+and Python (`classic_path.PathValidator.*`) path surfaces delegate to them with
+unchanged export names.
 
 ---
 

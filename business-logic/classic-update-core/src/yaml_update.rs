@@ -9,9 +9,9 @@
 //!   (see [`fetch_yaml_manifest`]).
 //! - Downloading each advertised YAML file to the per-user yaml-cache
 //!   directory and installing it atomically via
-//!   [`classic_file_io_core::install_atomic`].
+//!   [`classic_config_core::install_atomic`].
 //! - Rolling back one installed generation via
-//!   [`classic_file_io_core::rollback`].
+//!   [`classic_config_core::rollback`].
 //!
 //! # No client credentials
 //!
@@ -57,9 +57,11 @@ use classic_config_core::{
     InstalledYamlDataInspection, InstalledYamlDataInspectionRequest, client_schemas,
     inspect_installed_yaml_data, inspect_installed_yaml_data_with_env,
 };
-use classic_file_io_core::{FileIOError, RollbackOutcome as FsRollbackOutcome, install_atomic};
-use classic_path_core::{ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env};
+use classic_config_core::{RollbackOutcome as FsRollbackOutcome, install_atomic};
+use classic_config_core::{ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env};
+use classic_file_io_core::FileIOError;
 use classic_shared_core::GameId;
+use classic_shared_core::path_core::{PathError, non_empty_env_var};
 use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, parse_yaml_content,
     schema_compat_check,
@@ -493,7 +495,7 @@ pub enum RollbackOutcome {
 ///
 /// The `cache_dir` argument points at the directory where ETag and cached
 /// manifest body are persisted. In production this is
-/// [`classic_path_core::yaml_cache_dir`]; tests inject a tempdir. Passing
+/// [`classic_config_core::yaml_cache_dir`]; tests inject a tempdir. Passing
 /// `None` disables caching entirely — no `If-None-Match` header is sent,
 /// no 304 cached-body read is attempted, and no files are written.
 ///
@@ -1199,7 +1201,7 @@ pub async fn check_yaml_data_update_with(
     pages_url: &str,
     config: UpdateCheckConfig,
 ) -> Result<YamlUpdateStatus> {
-    check_yaml_data_update_with_env(client, pages_url, config, process_env_lookup).await
+    check_yaml_data_update_with_env(client, pages_url, config, non_empty_env_var).await
 }
 
 /// Testable first-party check with one injected cache environment.
@@ -1485,9 +1487,7 @@ fn enrich_installed(
 }
 
 /// Convert cache preparation into the updater's best-effort manifest-cache policy.
-fn prepare_yaml_cache_dir(
-    result: std::result::Result<PathBuf, classic_path_core::PathError>,
-) -> Option<PathBuf> {
+fn prepare_yaml_cache_dir(result: std::result::Result<PathBuf, PathError>) -> Option<PathBuf> {
     match result {
         Ok(directory) => Some(directory),
         Err(source) => {
@@ -1560,14 +1560,6 @@ fn installation_root_from_layout_hint(directory: &Path) -> PathBuf {
         return root.to_path_buf();
     }
     directory.to_path_buf()
-}
-
-/// Read one process environment value while treating empty strings as unset.
-fn process_env_lookup(name: &str) -> Option<String> {
-    match std::env::var(name) {
-        Ok(value) if !value.is_empty() => Some(value),
-        _ => None,
-    }
 }
 
 /// Enforce the manifest's published `min_client_schema` /
@@ -2140,7 +2132,7 @@ pub fn rollback_yaml_update(file_name: &str) -> Result<RollbackOutcome> {
     let target = cache_dir.join(file_name);
     ensure_path_in_cache(&cache_dir, &target)?;
 
-    match classic_file_io_core::rollback(&target).map_err(|e| {
+    match classic_config_core::rollback(&target).map_err(|e| {
         UpdateError::Generic(format!("rollback failed for {}: {e}", target.display()))
     })? {
         FsRollbackOutcome::RolledBack { .. } => Ok(RollbackOutcome::RolledBack {

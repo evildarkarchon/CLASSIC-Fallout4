@@ -1,11 +1,11 @@
-"""Binding probes for the two scoped generic YAML caches (#240).
+"""Binding probes for the two scoped generic YAML caches (#240, #234).
 
 `classic_settings` reaches the logical-key settings cache and the
-path/mtime-aware YAML-file cache through its own core-owned scope handles,
-while `classic_config.clear_yaml_cache()` clears the default YAML-file scope
-that config's loaders use. Today every facade is a separate extension image,
-so these probes pass trivially across facades; once the facades share one
-native library they become the regression gate that keeps one facade's
+path/mtime-aware YAML-file cache through its own core-owned scope handles, and
+`classic_scanlog`'s Crash Log Scan Runs read Game Local through a YAML-file
+scope of their own, while `classic_config.clear_yaml_cache()` clears only the
+default YAML-file scope. All facades share one native
+extension, so these probes are the regression gate that keeps one facade's
 loads, clears, and counter resets invisible to another.
 
 Cross-facade probes run in a fresh interpreter per import order so neither
@@ -65,6 +65,121 @@ print(json.dumps({
     "logical_stats": settings.cache_stats(),
 }))
 """
+
+
+_SCANLOG_PROBE = r"""
+import importlib
+import json
+import os
+import pathlib
+import sys
+
+order = sys.argv[1].split(",")
+root = pathlib.Path(sys.argv[2])
+sys.path.insert(0, sys.argv[3])
+modules = {name: importlib.import_module(name) for name in order}
+scanlog = modules["classic_scanlog"]
+config = modules["classic_config"]
+shared = modules["classic_shared"]
+
+from tests.test_scan_run_contract import _write_logs, _write_scan_run_data_root
+
+_write_scan_run_data_root(root)
+xse_a = root / "xse-a"
+xse_b = root / "xse-b"
+_write_logs(xse_a, ["crash-from-a.log"])
+_write_logs(xse_b, ["crash-from-b.log"])
+base = root / "base"
+base.mkdir()
+local = root / "CLASSIC Data" / "CLASSIC Fallout4 Local.yaml"
+
+def point_local_at(folder):
+    local.write_text(
+        "Game_Info:\n  Docs_Folder_XSE: '" + str(folder).replace("'", "''") + "'\n",
+        encoding="utf-8",
+    )
+
+def standard_scan():
+    configuration = scanlog.ScanRunConfiguration(
+        installation_root=str(root),
+        game=shared.GameId.Fallout4,
+        game_version="auto",
+        show_formid_values=False,
+        simplify_logs=False,
+        formid_database_paths=[],
+    )
+    request = scanlog.ScanRunRequest.standard(
+        configuration,
+        scanlog.ScanRunStandardSource(base_directory=str(base)),
+        scanlog.ScanRunUnsolvedLogs.leave_in_place(),
+    )
+    execution = scanlog.scan_run_execute(request, scanlog.ScanRunCancellation())
+    assert execution.error is None, execution.error
+    return sorted(os.path.basename(path) for path in execution.result.discovery.accepted_logs)
+
+observed = {}
+point_local_at(xse_a)
+# The first Standard scan reads Local.yaml (XSE Folder A) into classic_scanlog's
+# YAML-file cache scope.
+observed["first"] = standard_scan()
+
+# Repoint Local.yaml at XSE Folder B but restore its modification time, so only
+# an evicted cache entry would make the next scan read the new content.
+stamp = os.stat(local)
+point_local_at(xse_b)
+os.utime(local, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+
+# classic_config's clear owns the default YAML-file scope only: scanlog's cached
+# Local.yaml entry must survive it, so the next scan still collects from A.
+config.clear_yaml_cache()
+observed["after_config_clear"] = standard_scan()
+
+# Control: a newer modification time invalidates scanlog's own entry, proving the
+# previous observation came from its cache rather than from never re-reading.
+later = stamp.st_mtime_ns + 2_000_000_000
+os.utime(local, ns=(later, later))
+observed["after_touch"] = standard_scan()
+print(json.dumps(observed))
+"""
+
+
+@pytest.mark.parametrize(
+    "import_order",
+    [
+        ("classic_scanlog", "classic_config", "classic_shared"),
+        ("classic_config", "classic_shared", "classic_scanlog"),
+    ],
+    ids=["scanlog-first", "config-first"],
+)
+def test_config_clear_never_evicts_scanlog_game_local_entries(
+    tmp_path: Path, import_order: tuple[str, ...]
+) -> None:
+    """A Standard scan's cached Game Local read survives `classic_config.clear_yaml_cache()`.
+
+    `classic_scanlog` exposes no YAML-cache controls, so the probe observes its
+    scope through behaviour: a cache entry whose file changed without a newer
+    modification time keeps serving the old XSE Folder until it is evicted.
+    Counters and the scope identity are pinned by Rust tests in the adapter
+    crate (`classic_scanlog/mod_tests.rs`).
+    """
+    script = tmp_path / "scanlog_yaml_scope_probe.py"
+    script.write_text(_SCANLOG_PROBE, encoding="utf-8")
+    run_root = tmp_path / "run"
+    run_root.mkdir()
+    bindings_root = Path(__file__).resolve().parents[1]
+    completed = subprocess.run(
+        [sys.executable, str(script), ",".join(import_order), str(run_root), str(bindings_root)],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=tmp_path,
+    )
+    assert completed.returncode == 0, completed.stderr
+    observed = json.loads(completed.stdout.strip().splitlines()[-1])
+
+    assert observed["first"] == ["crash-from-a.log"]
+    assert observed["after_config_clear"] == ["crash-from-a.log"]
+    assert observed["after_touch"] == ["crash-from-a.log", "crash-from-b.log"]
 
 
 def _yaml_file(tmp_path: Path, name: str = "probe.yaml") -> Path:

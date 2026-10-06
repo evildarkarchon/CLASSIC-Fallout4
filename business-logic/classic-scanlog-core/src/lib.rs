@@ -5,11 +5,13 @@
 //! - FormID extraction and validation
 //! - Plugin and record detection
 //! - Mod detection algorithms
+//! - Standard Crash Log collection and Targeted input resolution
+//! - Custom-scan folder policy (restricted-path rejection and validation)
 //! - Rust-owned Crash Log Scan Run execution
 //! - Report generation
 //!
 //! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
-//! For Python bindings, see `classic-scanlog-py`.
+//! For Python bindings, see the `classic_scanlog` module of `classic-python-bindings`.
 //!
 //! # Optional Features
 //!
@@ -29,12 +31,14 @@ pub mod crash_pattern;
 pub mod crash_suspect_analyzer;
 pub mod crashgen_registry;
 pub mod crashgen_settings_analyzer;
+pub mod custom_scan;
 pub mod error;
 pub(crate) mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
 pub mod formid_finding_analyzer;
 pub mod gpu_detector;
+pub mod log_collection;
 pub mod mod_guidance_analyzer;
 pub mod named_record_finding_analyzer;
 // These implementation modules retain focused characterization helpers that are
@@ -67,6 +71,9 @@ pub use crashgen_settings_analyzer::{
     CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
     CrashgenSettingsAnalyzer, DisabledSettingNotice,
 };
+// Custom-scan folder policy moved here from classic-path-core (#254
+// follow-up); path core keeps no reverse re-export.
+pub use custom_scan::{is_restricted_path, validate_custom_scan_path, validate_settings_paths};
 pub use error::ScanLogError;
 pub use fcx_handler::ConfigIssue;
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
@@ -76,6 +83,12 @@ pub use formid_finding_analyzer::{
     FormIDPlugin, FormIDValueLookupStatus,
 };
 pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
+// Standard collection and Targeted input resolution moved here from
+// classic-file-io-core (#254); file I/O keeps no reverse re-export.
+pub use log_collection::{
+    CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution,
+    resolve_targeted_inputs,
+};
 pub use mod_guidance_analyzer::{
     ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult,
     ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance,

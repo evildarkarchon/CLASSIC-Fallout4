@@ -3,7 +3,7 @@
   "familyId": "log-collection",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-file-io-core"
+    "rustCrate": "classic-scanlog-core"
   },
   "fixtureRoot": "tests/fixtures/log_collection",
   "fixtures": {

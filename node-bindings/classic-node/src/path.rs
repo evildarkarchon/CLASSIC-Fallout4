@@ -2,6 +2,14 @@
 //!
 //! Exposes game path detection, validation, and document path utilities
 //! to JavaScript/TypeScript. Windows registry access gated behind cfg.
+//! The generic existence, permission, drive, and read-only checks delegate
+//! to `classic_shared_core::path_core`, which owns those neutral primitives.
+//! The custom-scan folder policy (`isRestrictedPath`, `validateCustomScanPath`,
+//! `validateSettingsPaths`) delegates to `classic_scanlog_core::custom_scan`.
+//! The `BackupManager` / `XseVersion` classes keep their JavaScript names but
+//! wrap the version-labelled backup owned by `classic_resource_core`
+//! (`VersionBackupManager`); they are unrelated to the game-target
+//! `JsBackupManager` in `fileio.rs`.
 
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;
@@ -127,7 +135,7 @@ pub fn parse_xse_log(log_path: String) -> Option<String> {
 /// @returns `true` if the path exists, `false` otherwise.
 #[napi]
 pub fn is_valid_path(path: String) -> bool {
-    classic_path_core::is_valid_path(&PathBuf::from(path))
+    classic_shared_core::path_core::is_valid_path(&PathBuf::from(path))
 }
 
 /// Check if a path is restricted for custom scans.
@@ -139,7 +147,7 @@ pub fn is_valid_path(path: String) -> bool {
 /// @returns `true` if the path is restricted, `false` if safe for custom scans.
 #[napi]
 pub fn is_restricted_path(path: String) -> bool {
-    classic_path_core::is_restricted_path(&PathBuf::from(path))
+    classic_scanlog_core::is_restricted_path(&PathBuf::from(path))
 }
 
 /// Check if a path points to a valid executable file.
@@ -151,7 +159,7 @@ pub fn is_restricted_path(path: String) -> bool {
 /// @returns `true` if the path is a valid executable, `false` otherwise.
 #[napi]
 pub fn is_valid_executable_path(path: String) -> bool {
-    classic_path_core::is_valid_executable_path(&PathBuf::from(path))
+    classic_shared_core::path_core::is_executable_file_path(&PathBuf::from(path))
 }
 
 /// Validate a custom scan path.
@@ -162,7 +170,7 @@ pub fn is_valid_executable_path(path: String) -> bool {
 /// @throws if the path is invalid or restricted.
 #[napi]
 pub fn validate_custom_scan_path(path: String) -> Result<()> {
-    classic_path_core::validate_custom_scan_path(&PathBuf::from(path)).map_err(to_napi_err)
+    classic_scanlog_core::validate_custom_scan_path(&PathBuf::from(path)).map_err(to_napi_err)
 }
 
 /// Validate that required files exist in a directory.
@@ -214,7 +222,7 @@ pub fn validate_settings_paths(
     let docs_path_buf = PathBuf::from(docs_path);
     let custom_scan_path_buf = custom_scan_path.map(PathBuf::from);
 
-    classic_path_core::validate_settings_paths(
+    classic_scanlog_core::validate_settings_paths(
         &game_path_buf,
         &docs_path_buf,
         custom_scan_path_buf.as_deref(),
@@ -229,7 +237,7 @@ pub fn validate_settings_paths(
 /// @throws if the drive does not exist (Windows only).
 #[napi]
 pub fn check_drive_exists(path: String) -> Result<()> {
-    classic_path_core::check_drive_exists(&PathBuf::from(path)).map_err(to_napi_err)
+    classic_shared_core::path_core::check_drive_exists(&PathBuf::from(path)).map_err(to_napi_err)
 }
 
 /// Check read permissions for a path.
@@ -241,7 +249,8 @@ pub fn check_drive_exists(path: String) -> Result<()> {
 /// @throws if read access is denied.
 #[napi]
 pub fn check_read_permissions(path: String) -> Result<()> {
-    classic_path_core::check_read_permissions(&PathBuf::from(path)).map_err(to_napi_err)
+    classic_shared_core::path_core::check_read_permissions(&PathBuf::from(path))
+        .map_err(to_napi_err)
 }
 
 /// Check write permissions for a path.
@@ -253,7 +262,8 @@ pub fn check_read_permissions(path: String) -> Result<()> {
 /// @throws if write access is denied.
 #[napi]
 pub fn check_write_permissions(path: String) -> Result<()> {
-    classic_path_core::check_write_permissions(&PathBuf::from(path)).map_err(to_napi_err)
+    classic_shared_core::path_core::check_write_permissions(&PathBuf::from(path))
+        .map_err(to_napi_err)
 }
 
 /// Comprehensive path validation with permission checks.
@@ -270,7 +280,7 @@ pub fn validate_path_with_permissions(
     check_read: Option<bool>,
     check_write: Option<bool>,
 ) -> Result<()> {
-    classic_path_core::validate_path_with_permissions(
+    classic_shared_core::path_core::validate_path_with_permissions(
         &PathBuf::from(path),
         check_read.unwrap_or(true),
         check_write.unwrap_or(false),
@@ -385,7 +395,7 @@ impl DocsPathFinder {
 /// Construct with `new BackupManager(backupRoot)`.
 #[napi]
 pub struct BackupManager {
-    inner: classic_path_core::BackupManager,
+    inner: classic_resource_core::VersionBackupManager,
 }
 
 #[napi]
@@ -396,7 +406,7 @@ impl BackupManager {
     #[napi(constructor)]
     pub fn new(backup_root: String) -> Self {
         Self {
-            inner: classic_path_core::BackupManager::new(backup_root),
+            inner: classic_resource_core::VersionBackupManager::new(backup_root),
         }
     }
 
@@ -469,7 +479,7 @@ impl BackupManager {
 /// Construct with `new XseVersion(version)`.
 #[napi]
 pub struct XseVersion {
-    inner: classic_path_core::XseVersion,
+    inner: classic_resource_core::XseVersion,
 }
 
 #[napi]
@@ -480,7 +490,7 @@ impl XseVersion {
     #[napi(constructor)]
     pub fn new(version: String) -> Self {
         Self {
-            inner: classic_path_core::XseVersion::new(version),
+            inner: classic_resource_core::XseVersion::new(version),
         }
     }
 
@@ -643,7 +653,7 @@ pub fn get_system_documents_path() -> Option<String> {
 #[napi]
 #[cfg(target_os = "windows")]
 pub fn remove_readonly(file_path: String) -> Result<()> {
-    classic_path_core::remove_readonly(&PathBuf::from(file_path)).map_err(to_napi_err)
+    classic_shared_core::path_core::remove_readonly(&PathBuf::from(file_path)).map_err(to_napi_err)
 }
 
 /// Remove the read-only attribute (stub for non-Windows platforms).

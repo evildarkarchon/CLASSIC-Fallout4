@@ -1,5 +1,4 @@
 use super::*;
-use crate::yaml_cache::yaml_cache_dir_with_env;
 use std::collections::HashMap;
 
 const TEST_OWNER: &str = "evildarkarchon";
@@ -92,47 +91,32 @@ fn unix_errors_when_both_env_vars_missing() {
     assert!(matches!(err, PathError::InvalidPath(_)));
 }
 
-// Empty-string env handling lives in the `process_env_lookup` helper
-// shared with yaml_cache (filters `Ok("")` to `None`). The `*_with_env`
-// closure seam does not apply that filter — tests that want to exercise
-// it should drive `process_env_lookup` directly, as yaml_cache_tests.rs
-// does. Re-running that coverage here would duplicate without adding
-// notification-specific value.
-
-// ---------------------------------------------------------------------------
-// Disjoint from yaml-cache (design D-06)
-// ---------------------------------------------------------------------------
-
+/// The OS cache root moved to shared core; this cache still words its own
+/// failure, so the message callers observe is unchanged by the move.
 #[test]
-fn notification_cache_path_is_disjoint_from_yaml_cache() {
-    // Same env drives both resolvers; the per-channel sub-directory must
-    // differ so a cleanup of one cache does not nuke the other.
+fn missing_cache_root_error_message_is_unchanged() {
+    let err =
+        notification_cache_dir_with_env(TEST_OWNER, TEST_REPO, env_from_map(&[])).unwrap_err();
     #[cfg(target_os = "windows")]
-    let env_pairs = [("LOCALAPPDATA", "C:\\Users\\me\\AppData\\Local")];
+    let missing = "neither LOCALAPPDATA nor APPDATA is set";
     #[cfg(not(target_os = "windows"))]
-    let env_pairs = [("HOME", "/home/me")];
-
-    let notif_env = env_from_map(&env_pairs);
-    let yaml_env = env_from_map(&env_pairs);
-
-    let notif = notification_cache_dir_with_env(TEST_OWNER, TEST_REPO, notif_env).unwrap();
-    let yaml = yaml_cache_dir_with_env(yaml_env).unwrap();
-
-    assert_ne!(
-        notif, yaml,
-        "app-notification and yaml-cache paths must differ"
-    );
-    let notif_str = notif.to_string_lossy().to_string();
-    let yaml_str = yaml.to_string_lossy().to_string();
-    assert!(
-        notif_str.contains("app-notification"),
-        "notification path must contain 'app-notification', got {notif_str}"
-    );
-    assert!(
-        yaml_str.contains("yaml-cache"),
-        "yaml-cache path must contain 'yaml-cache', got {yaml_str}"
+    let missing = "neither XDG_CACHE_HOME nor HOME is set";
+    assert_eq!(
+        err.to_string(),
+        format!("Invalid path: {missing}; cannot resolve notification cache directory")
     );
 }
+
+// Empty-string env handling lives in the shared-core `non_empty_env_var`
+// helper used by both this cache and config's YAML cache (filters `Ok("")` to
+// `None`). The `*_with_env` closure seam does not apply that filter — tests
+// that want to exercise it should drive `non_empty_env_var` directly, as
+// classic-config-core's yaml_cache_tests.rs does. Re-running that coverage here would duplicate
+// without adding notification-specific value.
+
+// Disjointness from the YAML Data cache (design D-06) spans two owners now
+// that config owns the YAML cache location; it is asserted by
+// classic-update-core/tests/cache_locations_disjoint.rs, which consumes both.
 
 // ---------------------------------------------------------------------------
 // Owner/repo namespacing — the codex adversarial-review fix

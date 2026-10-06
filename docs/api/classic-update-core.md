@@ -388,7 +388,7 @@ Related CLASSIC crates and consumers:
 - [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) - alternative version helpers with intentionally different, more lenient parsing rules
 - [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) - narrower frontend-oriented bridge over latest-release check + comparison
 - [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) - fuller binding layer preserving `GithubClient` and DTOs
-- [`python-bindings/classic-update-py/src/github.rs`](../../python-bindings/classic-update-py/src/github.rs) - Python wrapper over the same client model
+- [`python-bindings/classic-python-bindings/src/classic_update/github.rs`](../../python-bindings/classic-python-bindings/src/classic_update/github.rs) - Python wrapper over the same client model
 - [`ui-applications/classic-tui/src/app.rs`](../../ui-applications/classic-tui/src/app.rs) - direct in-repo UI consumer
 
 ---

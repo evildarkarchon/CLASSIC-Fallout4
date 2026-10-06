@@ -143,9 +143,9 @@ All five resume exceptions now go through one builder, so `ScanRunContinuationCo
 
 `scan_run_abandon(...)` shares that exception channel and narrows it to one case. It takes no decision, and cancellation short-circuits ahead of every stage that produces a reset or infrastructure failure, so the only exception it can raise is `ScanRunContinuationConsumedError` — the shared one-shot claim, spent by whichever of the two entry points ran first. A consumer that already handles resume's exceptions needs no new `except` clause.
 
-**Example 1:** `config_error_to_pyerr()` in [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs) maps each `ConfigError` variant to a specific Python exception class.
+**Example 1:** `config_error_to_pyerr()` in [`python-bindings/classic-python-bindings/src/classic_config/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_config/mod.rs) maps each `ConfigError` variant to a specific Python exception class.
 
-**Example 2:** [`foundation/classic-shared-py/src/lib.rs`](../../foundation/classic-shared-py/src/lib.rs) provides `define_exceptions!` and `register_exceptions!` macros plus the `ToPyErr` trait and `ResultExt` extension for consistent exception wiring across all Python binding crates.
+**Example 2:** [`python-bindings/classic-python-bindings/src/support/mod.rs`](../../python-bindings/classic-python-bindings/src/support/mod.rs) provides `define_exceptions!` and `register_exceptions!` macros plus the `ToPyErr` trait and `ResultExt` extension for consistent exception wiring across every facade module of the one Python adapter crate.
 
 **Example 3:** Tests use `pytest.raises(RustConfigParseError)` with message inspection to verify both the exception type and the error context.
 
@@ -201,7 +201,7 @@ The schema-gated `CLASSIC_Info.version` reader (`classic_config_core::load_main_
 | --- | --- |
 | C++ (CXX) | `MainYamlVersionDto { version: "", error_kind: "<kind>", error_message: "<Display of MainYamlVersionError>" }`. Empty-string sentinel on the `version` field when `error_kind` is non-empty. `error_kind` values: `"load"` (schema-incompatible or file missing / unparseable), `"version_key_missing"`, `"version_empty"`, `"version_not_string"`, `"version_invalid"` (schema-2.0 shape violation: legacy `CLASSIC ` prefix, prerelease/build suffix, or non-semver garbage), or `"unknown"` (reserved for future `#[non_exhaustive]` variants). See [`cpp-bindings/classic-cpp-bridge/src/config.rs::main_yaml_version_error_kind`](../../cpp-bindings/classic-cpp-bridge/src/config.rs). |
 | Node (NAPI-RS) | `Promise.reject(new Error(...))` whose `message` is prefixed with one of `"LOAD: "`, `"VERSION_KEY_MISSING: "`, `"VERSION_EMPTY: "`, `"VERSION_NOT_STRING: "`, `"VERSION_INVALID: "`, or `"UNKNOWN: "`. **Shape matches the notification channel**: the `#[napi] async fn` surface threads `napi::Error<Status>`, where `Status` is a fixed C-style enum with no room for per-variant codes — the message prefix is the only representation that round-trips through the async bridge while preserving a stable discriminator. See [`node-bindings/classic-node/src/config.rs::main_yaml_version_error_to_napi`](../../node-bindings/classic-node/src/config.rs). |
-| Python (PyO3) | Raises a `ClassicMainYamlVersionError` subclass whose name encodes the variant (`ClassicMainYamlVersionLoadError`, `ClassicMainYamlVersionKeyMissingError`, `ClassicMainYamlVersionEmptyError`, `ClassicMainYamlVersionNotStringError`, `ClassicMainYamlVersionInvalidError`). Consumers that want to catch any failure use `except ClassicMainYamlVersionError`. See [`python-bindings/classic-config-py/src/main_yaml_version.rs`](../../python-bindings/classic-config-py/src/main_yaml_version.rs). |
+| Python (PyO3) | Raises a `ClassicMainYamlVersionError` subclass whose name encodes the variant (`ClassicMainYamlVersionLoadError`, `ClassicMainYamlVersionKeyMissingError`, `ClassicMainYamlVersionEmptyError`, `ClassicMainYamlVersionNotStringError`, `ClassicMainYamlVersionInvalidError`). Consumers that want to catch any failure use `except ClassicMainYamlVersionError`. See [`python-bindings/classic-python-bindings/src/classic_config/main_yaml_version.rs`](../../python-bindings/classic-python-bindings/src/classic_config/main_yaml_version.rs). |
 
 Callers MUST NOT fall back to a raw YAML read on any of these errors — that defeats the whole point of the schema gate. Cross-crate background: [`classic-config-core.md`](classic-config-core.md#schema-gated-classic-mainyaml-version-reader).
 
@@ -302,8 +302,8 @@ Source: [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic
 - `ToPyErr` trait -- standard interface for error-to-`PyErr` conversion
 - `ResultExt` -- extension trait for converting `Result<T, E>` to `PyResult<T>`
 - `without_gil` -- GIL release helper for blocking operations
-- `timing_error_to_py()` -- maps `TimingError` to `ValueError(coded_message())`; defined privately in both [`classic-perf-py`](../../python-bindings/classic-perf-py/src/lib.rs) and [`classic-shared-py`'s `performance_py.rs`](../../foundation/classic-shared-py/src/performance_py.rs) until the single Python adapter lands
+- `timing_error_to_py()` -- maps `TimingError` to `ValueError(coded_message())`; defined privately in both [`classic_perf` adapter module](../../python-bindings/classic-python-bindings/src/classic_perf/mod.rs) and [`classic_shared` adapter module's `performance_py.rs`](../../python-bindings/classic-python-bindings/src/classic_shared/performance_py.rs); both are modules of the one Python adapter crate, so the two views also share one default metrics store
 
-Source: [`foundation/classic-shared-py/src/lib.rs`](../../foundation/classic-shared-py/src/lib.rs)
+Source: [`python-bindings/classic-python-bindings/src/support/mod.rs`](../../python-bindings/classic-python-bindings/src/support/mod.rs)
 
-Per-module converters like `config_error_to_pyerr()` live alongside each binding crate: [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs)
+Per-module converters like `config_error_to_pyerr()` live in each facade module of the adapter: [`python-bindings/classic-python-bindings/src/classic_config/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_config/mod.rs)

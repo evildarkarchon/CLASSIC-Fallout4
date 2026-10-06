@@ -17,8 +17,17 @@
     {
       "id": "path-operations.validate",
       "rustSymbols": [
-        "is_valid_path",
         "validate_required_files"
+      ],
+      "observationFamilies": [
+        "path-validation"
+      ]
+    },
+    {
+      "id": "path-operations.exists",
+      "rustCrate": "classic-shared-core",
+      "rustSymbols": [
+        "is_valid_path"
       ],
       "observationFamilies": [
         "path-validation"
@@ -30,7 +39,8 @@
       "id": "required-files-present",
       "action": "path-operations.validate",
       "capabilityIds": [
-        "path-operations.validate"
+        "path-operations.validate",
+        "path-operations.exists"
       ],
       "fixtureRefs": [
         "required-files-present"
@@ -56,7 +66,8 @@
       "id": "required-file-missing",
       "action": "path-operations.validate",
       "capabilityIds": [
-        "path-operations.validate"
+        "path-operations.validate",
+        "path-operations.exists"
       ],
       "fixtureRefs": [
         "required-file-missing"
@@ -82,7 +93,8 @@
       "id": "missing-directory",
       "action": "path-operations.validate",
       "capabilityIds": [
-        "path-operations.validate"
+        "path-operations.validate",
+        "path-operations.exists"
       ],
       "fixtureRefs": [
         "missing-directory"
@@ -108,7 +120,8 @@
       "id": "file-as-directory",
       "action": "path-operations.validate",
       "capabilityIds": [
-        "path-operations.validate"
+        "path-operations.validate",
+        "path-operations.exists"
       ],
       "fixtureRefs": [
         "file-as-directory"
@@ -134,7 +147,8 @@
       "id": "empty-required-list",
       "action": "path-operations.validate",
       "capabilityIds": [
-        "path-operations.validate"
+        "path-operations.validate",
+        "path-operations.exists"
       ],
       "fixtureRefs": [
         "empty-required-list"

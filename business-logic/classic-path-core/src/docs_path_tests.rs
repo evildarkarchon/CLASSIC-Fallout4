@@ -36,9 +36,9 @@ fn test_validate_docs_path_not_found() {
     assert!(result.is_err());
     assert!(matches!(
         result,
-        Err(DocsPathError::PathError(crate::error::PathError::NotFound(
-            _
-        )))
+        Err(DocsPathError::PathError(
+            classic_shared_core::path_core::PathError::NotFound(_)
+        ))
     ));
 }
 
@@ -113,7 +113,9 @@ fn test_find_docs_path_fallback_to_platform_detection() {
                 matches!(e, DocsPathError::NotFound)
                     || matches!(
                         e,
-                        DocsPathError::PathError(crate::error::PathError::NotFound(_))
+                        DocsPathError::PathError(
+                            classic_shared_core::path_core::PathError::NotFound(_)
+                        )
                     )
             );
         }

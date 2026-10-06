@@ -70,7 +70,7 @@ CONSTRUCTOR_ALLOWLIST = {
 }
 CALL_SITE_ALLOWLIST = {
     "cpp-bindings/classic-cpp-bridge/src/runtime_support.rs",
-    "foundation/classic-shared-py/src/lib.rs",
+    "python-bindings/classic-python-bindings/src/support/mod.rs",
     "node-bindings/classic-node/src/runtime.rs",
 }
 

@@ -215,7 +215,12 @@ python tools/binding_compliance/run_scan_run_consumer_conformance.py --participa
 ```
 
 Each invocation creates a fresh input-only `run_plan.json` and calls only the
-selected adapter's public scan-run seam. Rust, Node, and Python publish
+selected adapter's public scan-run seam. Its source identity binds the whole
+`src` tree of every owner a run composes — scanlog (run engine, collection,
+custom-scan policy), config (Installed YAML Data and Local Ignore recovery),
+scangame (Game Setup Intake, XSE Folder), database (FormID Value Lookup), and
+scan presentation — for semantic, CXX, and CLI/GUI/TUI consumer plans alike, so
+a receipt cannot certify an owner whose current bytes it never ran. Rust, Node, and Python publish
 `receipt.json`, `attempt.json`, and `conformance_report.json` beneath
 `tools/binding_compliance/artifacts/<participant>/<instance>/<invocation>/`.
 The CXX launcher hosts its bridge-only target through the approved CLI wrapper,
@@ -243,7 +248,9 @@ when execution or validation fails.
 ## Autoscan Report Blocking Execution
 
 `tests/conformance/packs/autoscan_report/v1.json` selects the original empty,
-populated, and FCX golden cases. The central validator reads their immutable
+populated, and FCX golden cases plus three FormID enrichment variants of the
+populated case (values disabled, no database installed, malformed database
+reply) that must all persist the same values-free report. The central validator reads their immutable
 expected Markdown; adapters receive only inputs and return actual persisted
 bytes, digest, length, typed Display Content, and durable effects. Neither
 adapter output nor a generated replacement oracle can establish expectations.
@@ -256,7 +263,7 @@ pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family autoscan-report -Compiler clang-cl
 ```
 
-Run each adapter's retained build prerequisites first. All three scenarios and
+Run each adapter's retained build prerequisites first. All six scenarios and
 both CXX compiler instances require fresh same-revision receipts; missing or
 failed evidence remains blocking alongside existing gates. Only FCX path
 tokens expand on the expectation side; actual report bytes remain exact. The
@@ -445,13 +452,15 @@ an explicit retained disposition and grants no semantic receipt credit.
 `tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
-independently authored nineteen-scenario blocking oracle: Standard and Targeted
+independently authored twenty-seven-scenario blocking oracle: Standard and Targeted
 happy paths, generated Local Ignore, pre-discovery cancellation,
 post-discovery queued cancellation, admitted/durable cancellation, observer
 delivery failure, public request-validation, discovery, intake, report-write,
-and Unsolved Logs finalization failures, both recovery decisions, intervening-change conflict,
-portable backup failure, both reset cancellation boundaries, replay, and
-abandonment. Its
+FormID database access, and Unsolved Logs finalization failures (default and
+configured destinations), a successful custom Unsolved Logs move, the
+`no_crash_logs_found` and `setup_failed` run statuses, both recovery decisions, intervening-change conflict,
+portable backup failure, both reset cancellation boundaries, replay,
+abandonment, both FCX request factories, and `ConfigIssue` construction. Its
 materialized plans contain only declared inputs and normalization policy; the
 Rust, Node, Python, and CXX runners cannot read its expected observations. The pack
 compares ordered discovery, setup absence, effective concurrency, Installed
@@ -535,7 +544,7 @@ runtime evidence; expanding a family does not expand its earlier retirement set.
 
 `xse-operations` is blocking across Rust, CXX (MSVC and clang-cl), Node, and Python. Eighteen scenarios observe all six extender types in missing, loader-only, and detected states. Each uses a disposable directory and records the final file bytes; constructor coverage requires the corresponding variant observation.
 
-`xse-folder` is blocking for Rust and CXX, the public adapters that expose `resolve_xse_folder_for_scan`. Six scenarios exercise Local.yaml precedence, configured documents fallback, VR folder naming, and fail-soft malformed/missing local data. They initialize the Version Registry from fixed fixture metadata and reject inputs that could enter host discovery. Run it with `run_semantic_conformance.py --family xse-folder --participant rust`, or the CXX launcher with `-Family xse-folder -Compiler msvc` (and `clang-cl`).
+`xse-folder` is blocking for Rust and CXX. Its `domainOwner` is `classic-xse-core`, which owns XSE Folder derivation. The family has two operation-scoped capabilities. `xse-folder.derive` exercises XSE's facts-based `resolve_xse_folder_from_game_local_facts` with supplied Game Local facts in five Rust-only `derive-*` scenarios; no binding exposes that resolver. `xse-folder.resolve` carries `rustCrate: classic-scangame-core` and credits the Local.yaml composition, `resolve_xse_folder_for_scan`, which scangame has owned since #252. It is the capability the CXX bridge exposes. Its six original scenarios exercise Local.yaml precedence, configured documents fallback, VR folder naming, and fail-soft malformed/missing local data. All scenarios initialize the Version Registry from fixed fixture metadata and reject inputs that could enter host discovery. Run it with `run_semantic_conformance.py --family xse-folder --participant rust`, or the CXX launcher with `-Family xse-folder -Compiler msvc` (and `clang-cl`).
 
 `installation-paths` is blocking across all four adapters and both CXX compilers. Its two directory layouts exercise validated cached game/documents lookup and ordered missing-INI reports, including paths with spaces, while checking the complete unchanged file and directory inventory.
 

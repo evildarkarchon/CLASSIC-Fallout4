@@ -9,11 +9,14 @@
 //! in `game.rs` so existing C++ callers using `classic::game::*` continue
 //! to compile. New code should use `classic::xse::*`.
 
+// XSE Folder resolution reads config-owned Game Local facts, so its Rust owner
+// is the composing scangame entry point rather than `classic-xse-core` (#252).
+// The bridge keeps exposing it under `classic::xse` for existing C++ callers.
+use classic_scangame_core::resolve_xse_folder_for_scan as core_resolve_xse_folder_for_scan;
 use classic_shared_core::GameId;
 use classic_xse_core::{
     XseInfo as CoreXseInfo, XseType as CoreXseType, detect_xse_version as core_detect_xse_version,
     get_xse_info as core_get_xse_info, is_xse_installed as core_is_xse_installed,
-    resolve_xse_folder_for_scan as core_resolve_xse_folder_for_scan,
 };
 use std::path::Path;
 

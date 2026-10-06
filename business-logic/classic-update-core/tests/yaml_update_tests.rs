@@ -14,7 +14,7 @@
 //!   with If-None-Match, API fallback, total failure).
 //! - `download_*` tests prove the URL allowlist at the download layer
 //!   (HTTPS + `github.com` host).
-//! - The `install_atomic` primitive is *not* re-tested here; file-io tests cover
+//! - The `install_atomic` primitive is *not* re-tested here; config-core tests cover
 //!   clean install, `.prev` recovery, mismatch, and rollback
 //!   with tempfiles. The orchestrator's job here is to compose these two
 //!   already-tested primitives (download + install_atomic), and the
@@ -1389,7 +1389,7 @@ async fn download_rejects_off_template_github_url() {
 // ---------------------------------------------------------------------------
 // rollback_yaml_update: "no previous version" round-trip.
 //
-// Swap and self-heal semantics are already covered at the file-io-core
+// Swap and self-heal semantics are already covered at the classic-config-core
 // unit level in Phase A; this test only ensures the update-core wrapper
 // doesn't panic or surface an unexpected error variant on the happy
 // "no .prev" path, which is the steady-state after a fresh install.

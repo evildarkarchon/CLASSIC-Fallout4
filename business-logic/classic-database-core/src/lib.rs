@@ -2,7 +2,7 @@
 //!
 //! This crate provides the core database operations for CLASSIC without any PyO3 dependencies.
 //! It can be used directly by Rust applications (CLI/TUI) or through the Python bindings
-//! in classic-database-py.
+//! in the classic-python-bindings adapter crate.
 //!
 //! ## Features
 //! - TRUE ASYNC connection pooling with sqlx

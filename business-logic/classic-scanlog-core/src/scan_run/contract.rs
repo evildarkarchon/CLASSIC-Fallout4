@@ -26,7 +26,9 @@ use classic_config_core::{
     LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult,
     LocalIgnoreYamlDataState, YamlDataContentIdentity,
 };
+use classic_file_io_core::FileHashScope;
 use classic_shared_core::GameId;
+use classic_shared_core::yaml::YamlFileCacheScope;
 use classic_version_registry_core::VersionRegistryScope;
 use classic_vocabulary::Vocabulary;
 use std::fmt;
@@ -304,6 +306,8 @@ impl Request {
         self,
         cancellation: &Cancellation,
         version_registry: VersionRegistryScope,
+        file_hash: FileHashScope,
+        yaml_file_cache: YamlFileCacheScope,
     ) -> CrashLogScanRunServiceRequest {
         let (configuration, source, setup, move_unsolved_logs, custom_destination) = match self {
             Self::Standard(request) => {
@@ -357,6 +361,8 @@ impl Request {
             // Discovery order is mandatory in the final result contract.
             preserve_order: true,
             version_registry,
+            file_hash,
+            yaml_file_cache,
             #[cfg(test)]
             test_hooks: ScanRunTestHooks::default(),
         }
@@ -1763,7 +1769,10 @@ pub async fn execute(
 /// configuration, and per-log analysis. A continuation returned for Local
 /// Ignore recovery keeps the scope, so [`CrashLogScanRunContinuation::resume`]
 /// reads it too. No other snapshot, including the process default, is read.
-/// This lets a binding facade keep its own snapshot.
+/// This lets a binding facade keep its own snapshot. FCX setup still hashes
+/// through the process default [`FileHashScope`], and Standard discovery reads
+/// the Game Local document through the process default [`YamlFileCacheScope`];
+/// use [`execute_in_scopes`] to choose those scopes as well.
 ///
 /// # Errors
 ///
@@ -1774,9 +1783,48 @@ pub async fn execute_in_version_registry_scope(
     cancellation: &Cancellation,
     observer: Option<&mut dyn Observer>,
 ) -> Result<RunResult, InfrastructureError> {
+    execute_in_scopes(
+        request,
+        version_registry,
+        FileHashScope::default_scope(),
+        YamlFileCacheScope::default_scope(),
+        cancellation,
+        observer,
+    )
+    .await
+}
+
+/// Executes one Crash Log Scan Run like [`execute_in_version_registry_scope`],
+/// and also hashes only through `file_hash` and reads the Game Local document
+/// only through `yaml_file_cache`.
+///
+/// The FCX Game Setup Intake step hashes the game executable and XSE scripts
+/// with [`GameSetupIntake::run_in_scopes`](classic_scangame_core::GameSetupIntake::run_in_scopes),
+/// so its cache entries and hit/miss counters land only in `file_hash`. A
+/// continuation returned for Local Ignore recovery keeps every scope.
+/// Standard discovery reads `CLASSIC <game> Local.yaml` (to derive the XSE
+/// Folder) through `yaml_file_cache`, so its path/mtime cache entries and
+/// hit/miss counters land only there and no other facade's YAML cache clear
+/// can evict them. All handles are opaque and chosen by the caller (a
+/// binding facade selects its own at facade entry); unscoped callers use
+/// [`execute`], which passes the process defaults.
+///
+/// # Errors
+///
+/// Same as [`execute`].
+pub async fn execute_in_scopes(
+    request: Request,
+    version_registry: VersionRegistryScope,
+    file_hash: FileHashScope,
+    yaml_file_cache: YamlFileCacheScope,
+    cancellation: &Cancellation,
+    observer: Option<&mut dyn Observer>,
+) -> Result<RunResult, InfrastructureError> {
     execute_inner(
         request,
         version_registry,
+        file_hash,
+        yaml_file_cache,
         cancellation,
         observer,
         #[cfg(test)]
@@ -1796,6 +1844,8 @@ pub(crate) async fn execute_with_test_hooks(
     execute_inner(
         request,
         VersionRegistryScope::default_scope(),
+        FileHashScope::default_scope(),
+        YamlFileCacheScope::default_scope(),
         cancellation,
         observer,
         test_hooks,
@@ -1807,6 +1857,8 @@ pub(crate) async fn execute_with_test_hooks(
 async fn execute_inner(
     request: Request,
     version_registry: VersionRegistryScope,
+    file_hash: FileHashScope,
+    yaml_file_cache: YamlFileCacheScope,
     cancellation: &Cancellation,
     mut observer: Option<&mut dyn Observer>,
     #[cfg(test)] test_hooks: ScanRunTestHooks,
@@ -1827,7 +1879,8 @@ async fn execute_inner(
         ));
     }
 
-    let engine_request = request.into_engine_request(cancellation, version_registry);
+    let engine_request =
+        request.into_engine_request(cancellation, version_registry, file_hash, yaml_file_cache);
     #[cfg(test)]
     let engine_request = {
         let mut engine_request = engine_request;

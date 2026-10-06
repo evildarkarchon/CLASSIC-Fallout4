@@ -37,16 +37,13 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
     "classic-file-io-core": "business-logic/classic-file-io-core/src/lib.rs",
     "classic-path-core": "business-logic/classic-path-core/src/lib.rs",
-    "classic-settings-core": "business-logic/classic-settings-core/src/lib.rs",
     "classic-message-core": "business-logic/classic-message-core/src/lib.rs",
-    "classic-perf-core": "business-logic/classic-perf-core/src/lib.rs",
     "classic-registry-core": "business-logic/classic-registry-core/src/lib.rs",
     "classic-shared-core": "foundation/classic-shared-core/src/lib.rs",
     # Phase 4 Plan 1 expansion — matches Phase 3's set.
     # (yaml-core was absorbed into settings-core in v9.1.0 Phase 1.
     # The former crashgen rules crate was absorbed into classic-config-core
     # in v9.1.0 Phase 2 — rule model now lives in config-core::crashgen_rules.)
-    "classic-version-core": "business-logic/classic-version-core/src/lib.rs",
     "classic-web-core": "business-logic/classic-web-core/src/lib.rs",
     "classic-update-core": "business-logic/classic-update-core/src/lib.rs",
     "classic-xse-core": "business-logic/classic-xse-core/src/lib.rs",
@@ -74,14 +71,11 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     # Foundation/aux crates kept as distinct owners per Phase 3 A5.
     "classic-file-io-core": "file_io",
     "classic-path-core": "path",
-    "classic-settings-core": "settings",
     "classic-message-core": "message",
-    "classic-perf-core": "perf",
     "classic-registry-core": "registry",
     "classic-shared-core": "shared",
     # Phase 4 expansion — each new crate gets its own distinct owner label.
     # (yaml owner was absorbed into settings in v9.1.0 Phase 1.)
-    "classic-version-core": "version",
     "classic-web-core": "web",
     "classic-update-core": "update",
     "classic-xse-core": "xse",
@@ -185,11 +179,6 @@ NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
         "ownerModule": "shared",
         "rustCrate": "classic-shared-core",
         "idPrefix": "shared.",
-    },
-    "YamlFile@rust": {
-        "ownerModule": "settings",
-        "rustCrate": "classic-settings-core",
-        "idPrefix": "settings.",
     },
 }
 

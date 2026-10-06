@@ -1,4 +1,9 @@
-"""Structured import diagnostics for maintained CLASSIC Python bindings."""
+"""Structured import diagnostics for maintained CLASSIC Python bindings.
+
+All 18 direct-import ``classic_*`` modules ship in one wheel
+(``classic-python-bindings``) over one native extension, so a missing or stale
+install usually fails every module at once.
+"""
 
 from __future__ import annotations
 
@@ -19,6 +24,7 @@ EXPECTED_BINDINGS = [
     "classic_scangame",
     "classic_scanlog",
     "classic_settings",
+    "classic_shared",
     "classic_update",
     "classic_user_settings",
     "classic_version",

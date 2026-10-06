@@ -4,7 +4,8 @@
 
 .DESCRIPTION
     Rebuilds one or more Rust targets used by the CLASSIC project:
-      - Python bindings (PyO3 wheels, install + verify)
+      - Python bindings (the one PyO3 wheel for all 18 classic_* modules:
+        build, remove obsolete per-module wheels, install, verify, clean-install probe)
       - Rust workspace (cargo build --workspace)
       - Node bindings (NAPI-RS addon build)
 
@@ -19,7 +20,7 @@
 
 .PARAMETER Crates
     Optional positional filters:
-      - Target python: matches Python binding modules by package/wheel/import name
+      - Target python: ignored (all 18 modules ship in one wheel)
       - Target workspace/all: maps to cargo package filters (`cargo build -p <crate>`)
       - Target node: currently ignored
 
@@ -27,7 +28,7 @@
     Perform clean rebuild behavior for selected targets.
 
 .PARAMETER BuildOnly
-    Python target: build wheels but skip install/verification.
+    Python target: build the wheel but skip install/verification.
     Other targets: accepted for compatibility but has no effect.
 
 .PARAMETER Debug
@@ -43,8 +44,8 @@
     # Default workspace target with package filter equivalent to `cargo build -p classic_yaml`
 
 .EXAMPLE
-    ./rebuild_rust.ps1 -Target python classic_yaml
-    # Rebuild only matching Python binding module(s)
+    ./rebuild_rust.ps1 -Target python
+    # Rebuild, install, and verify the one Python wheel (18 classic_* modules)
 
 .EXAMPLE
     ./rebuild_rust.ps1 -Target workspace classic-scanlog-core
@@ -89,6 +90,8 @@ $UseUv = [bool](Get-Command uv -ErrorAction SilentlyContinue)
 $PythonBindingsRoot = Join-Path $ProjectRoot "python-bindings"
 $PythonBindingsVenv = Join-Path $PythonBindingsRoot ".venv"
 $PythonBindingsPython = Join-Path $PythonBindingsVenv "Scripts/python.exe"
+$PythonAdapterDir = Join-Path $PythonBindingsRoot "classic-python-bindings"
+$OneWheelTool = Join-Path $ProjectRoot "tools/python_wheel/one_wheel.py"
 
 function Assert-LastExitCode {
     param (
@@ -99,40 +102,6 @@ function Assert-LastExitCode {
         Write-Error "$CommandLabel failed with exit code $LASTEXITCODE."
         exit $LASTEXITCODE
     }
-}
-
-function Get-RustModuleInfo {
-    param (
-        [string]$CargoPath
-    )
-
-    $content = Get-Content $CargoPath -Raw
-
-    # Extract package name
-    $packageName = $null
-    if ($content -match '\[package\][\s\S]*?name\s*=\s*"(?<name>[^"]+)"') {
-        $packageName = $Matches.name
-    }
-
-    # Extract lib name (import name)
-    $libName = $null
-    if ($content -match '\[lib\][\s\S]*?name\s*=\s*"(?<name>[^"]+)"') {
-        $libName = $Matches.name
-    }
-
-    # Check for PyO3 dependency or cdylib crate-type
-    $isPyO3 = $content -match 'pyo3\s*=' -or $content -match 'crate-type\s*=\s*\[.*"cdylib".*\]'
-
-    if ($packageName -and $libName -and $isPyO3) {
-        return [PSCustomObject]@{
-            WheelName   = $packageName.Replace('-', '_')
-            Dir         = Split-Path -Path $CargoPath -Parent
-            ImportName  = $libName
-            PackageName = $packageName
-        }
-    }
-
-    return $null
 }
 
 function Test-IsTransientLinkerLock {
@@ -173,7 +142,7 @@ function Invoke-MaturinBuildWithRetry {
                 # Stream output directly so Ctrl+C is handled like a normal foreground command.
                 $PSNativeCommandUseErrorActionPreference = $false
                 if ($UseUv) {
-                    & uv run --python $PythonBindingsPython maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
+                    & uv run --no-project --python $PythonBindingsPython maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
                 }
                 else {
                     & maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
@@ -256,82 +225,73 @@ function Invoke-CommandWithTransientLinkerRetry {
     return $false
 }
 
-function Get-PythonRustModules {
-    param (
-        [string[]]$CrateFilters
-    )
-
-    Write-Host "🔍 Discovering Rust Python modules..." -ForegroundColor Cyan
-    $rustModules = @()
-
-    $searchPaths = @(
-        (Join-Path $ProjectRoot "foundation"),
-        (Join-Path $ProjectRoot "python-bindings")
-    )
-
-    foreach ($path in $searchPaths) {
-        if (Test-Path $path) {
-            $cargoFiles = Get-ChildItem -Path $path -Filter "Cargo.toml" -Recurse -File
-            foreach ($file in $cargoFiles) {
-                $info = Get-RustModuleInfo -CargoPath $file.FullName
-                if ($info) {
-                    $rustModules += $info
-                }
-            }
-        }
+function Get-PythonAdapterInfo {
+    # The one PyO3 adapter crate builds one wheel behind the 18 classic_* facades.
+    $manifest = Join-Path $PythonAdapterDir "Cargo.toml"
+    if (-not (Test-Path $manifest)) {
+        Write-Error "Python adapter crate not found at '$PythonAdapterDir'."
+        exit 1
     }
 
-    # Sort modules (foundation first, then alphabetical)
-    $rustModules = @($rustModules | Sort-Object {
-            if ($_.Dir -match "[\\/]foundation([\\/]|$)") { "0_" + $_.WheelName } else { "1_" + $_.WheelName }
-        })
-
-    # Filter modules if arguments provided
-    if ($CrateFilters -and $CrateFilters.Count -gt 0) {
-        $filteredModules = @()
-        foreach ($crate in $CrateFilters) {
-            $match = $rustModules | Where-Object {
-                $_.WheelName -match $crate -or
-                $_.ImportName -match $crate -or
-                $_.PackageName -match $crate
-            }
-            if ($match) {
-                $filteredModules += $match
-            }
-            else {
-                Write-Warning "Could not find module matching '$crate'"
-            }
-        }
-
-        if ($filteredModules.Count -eq 0) {
-            Write-Error "No modules matched the provided arguments."
-            exit 1
-        }
-
-        # Deduplicate by WheelName and ensure array
-        $rustModules = @($filteredModules | Group-Object WheelName | ForEach-Object { $_.Group[0] })
+    $content = Get-Content $manifest -Raw
+    $version = $null
+    if ($content -match '\[package\][\s\S]*?version\s*=\s*"(?<version>[^"]+)"') {
+        $version = $Matches.version
+    }
+    if (-not $version) {
+        Write-Error "Could not read the package version from '$manifest'."
+        exit 1
     }
 
-    return @($rustModules)
+    return [PSCustomObject]@{
+        Dir       = $PythonAdapterDir
+        WheelName = "classic_python_bindings"
+        Version   = $version
+    }
 }
 
-function Remove-PythonInstalledArtifacts {
+function Invoke-OneWheelTool {
     param (
-        [array]$RustModules
+        [string]$Python,
+        [string[]]$Arguments,
+        [string]$CommandLabel
     )
 
-    $sitePackages = Join-Path $PythonBindingsVenv "Lib/site-packages"
-    if (-not (Test-Path $sitePackages)) {
-        Write-Host "ℹ️  No Python bindings .venv site-packages found; skipping installed artifact cleanup." -ForegroundColor Gray
-        return
+    & $Python $OneWheelTool @Arguments
+    Assert-LastExitCode -CommandLabel $CommandLabel
+}
+
+function Test-CleanWheelInstall {
+    param (
+        [string]$WheelPath,
+        [string]$ExpectedVersion
+    )
+
+    # Prove the wheel on its own: a fresh environment with nothing else
+    # installed, so a development artifact cannot mask a broken package.
+    $cleanRoot = Join-Path $ProjectRoot ".maturin-temp\clean-install"
+    if (Test-Path $cleanRoot) {
+        Remove-Item -Recurse -Force $cleanRoot
     }
 
-    Write-Host "🗑️  Removing old Python binding artifacts from python-bindings/.venv..." -ForegroundColor Cyan
-    foreach ($module in $RustModules) {
-        Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.pyd") -ErrorAction SilentlyContinue
-        Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.dll") -ErrorAction SilentlyContinue
-        Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)-*.dist-info") -Recurse -ErrorAction SilentlyContinue
+    Write-Host "🧪 Verifying a clean install in $cleanRoot..." -ForegroundColor Cyan
+    if ($UseUv) {
+        & uv venv --quiet --python $PythonBindingsPython $cleanRoot
+        Assert-LastExitCode -CommandLabel "uv venv $cleanRoot"
+        $cleanPython = Join-Path $cleanRoot "Scripts/python.exe"
+        & uv pip install --quiet --python $cleanPython $WheelPath
+        Assert-LastExitCode -CommandLabel "uv pip install (clean environment)"
     }
+    else {
+        & $PythonBindingsPython -m venv $cleanRoot
+        Assert-LastExitCode -CommandLabel "python -m venv $cleanRoot"
+        $cleanPython = Join-Path $cleanRoot "Scripts/python.exe"
+        & $cleanPython -m pip install --quiet $WheelPath
+        Assert-LastExitCode -CommandLabel "pip install (clean environment)"
+    }
+
+    Invoke-OneWheelTool -Python $cleanPython -Arguments @("verify", "--expected-version", $ExpectedVersion) -CommandLabel "clean-install verification"
+    Remove-Item -Recurse -Force $cleanRoot
 }
 
 function Invoke-PythonBindingsRebuild {
@@ -342,7 +302,7 @@ function Invoke-PythonBindingsRebuild {
     )
 
     Write-Host "Rust bindings are mandatory prerequisites for CLASSIC Python entrypoints." -ForegroundColor Cyan
-    Write-Host "This run rebuilds/installs required Python bindings used by startup-all validation." -ForegroundColor Cyan
+    Write-Host "This run rebuilds the one CLASSIC Python wheel (18 direct-import facades over one native extension)." -ForegroundColor Cyan
     Write-Host "Using Python bindings virtual environment at $PythonBindingsVenv" -ForegroundColor Cyan
 
     if (-not (Test-Path $PythonBindingsPython)) {
@@ -350,17 +310,13 @@ function Invoke-PythonBindingsRebuild {
         exit 1
     }
 
-    $rustModules = Get-PythonRustModules -CrateFilters $CrateFilters
-    if ($rustModules.Count -eq 0) {
-        Write-Error "No Rust Python modules were discovered."
-        exit 1
+    if ($CrateFilters -and $CrateFilters.Count -gt 0) {
+        Write-Warning "Python module filters are ignored: all 18 classic_* modules ship in one wheel and are always rebuilt together."
     }
 
-    Write-Host "Found $($rustModules.Count) Python module(s) to build." -ForegroundColor Cyan
-    foreach ($m in $rustModules) {
-        $relativeDir = $m.Dir.Replace($ProjectRoot, ".").Replace('\\', '/')
-        Write-Host " - $($m.WheelName) ($relativeDir)" -ForegroundColor Gray
-    }
+    $adapter = Get-PythonAdapterInfo
+    $relativeDir = $adapter.Dir.Replace($ProjectRoot, ".").Replace('\', '/')
+    Write-Host " - $($adapter.WheelName) $($adapter.Version) ($relativeDir)" -ForegroundColor Gray
 
     if ($CleanBuild) {
         Write-Host "🧹 Cleaning old Rust build artifacts..." -ForegroundColor Cyan
@@ -372,111 +328,69 @@ function Invoke-PythonBindingsRebuild {
         finally {
             Pop-Location
         }
-
-        Remove-PythonInstalledArtifacts -RustModules $rustModules
     }
     else {
         Write-Host "ℹ️  Skipping clean step (use -Clean to force)" -ForegroundColor Gray
     }
 
     Write-Host ""
-    if ($BuildOnlyMode) {
-        Write-Host "🔨 Building wheels (install skipped)..." -ForegroundColor Yellow
-    }
-    else {
-        Write-Host "🔨 Building and installing..." -ForegroundColor Yellow
-    }
-    Write-Host ""
+    Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+    Write-Host "Building $($adapter.WheelName)..." -ForegroundColor Cyan
+    Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-    foreach ($module in $rustModules) {
-        Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-        Write-Host "Building $($module.WheelName)..." -ForegroundColor Cyan
-        Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-
-        Push-Location $module.Dir
-        try {
-            $buildOk = Invoke-MaturinBuildWithRetry -WheelName $module.WheelName
-            if (-not $buildOk) {
-                Write-Error "Failed to build $($module.WheelName)!"
-                exit 1
-            }
-
-            $wheel = Get-ChildItem -Path "dist\$($module.WheelName)-*.whl" |
-            Sort-Object LastWriteTime -Descending |
-            Select-Object -First 1
-
-            if (-not $wheel) {
-                Write-Error "No wheel file found for $($module.WheelName)!"
-                exit 1
-            }
-
-            if (-not $BuildOnlyMode) {
-                Write-Host "📦 Installing $($module.WheelName)..." -ForegroundColor Green
-                if ($UseUv) {
-                    & uv pip install --python $PythonBindingsPython $wheel.FullName --reinstall
-                    Assert-LastExitCode -CommandLabel "uv pip install --python $PythonBindingsPython $($wheel.FullName)"
-                }
-                else {
-                    & $PythonBindingsPython -m pip install $wheel.FullName --force-reinstall
-                    Assert-LastExitCode -CommandLabel "$PythonBindingsPython -m pip install $($wheel.FullName)"
-                }
-            }
-        }
-        finally {
-            Pop-Location
+    $wheel = $null
+    Push-Location $adapter.Dir
+    try {
+        $buildOk = Invoke-MaturinBuildWithRetry -WheelName $adapter.WheelName
+        if (-not $buildOk) {
+            Write-Error "Failed to build $($adapter.WheelName)!"
+            exit 1
         }
 
-        Write-Host ""
+        $wheel = Get-ChildItem -Path "dist\$($adapter.WheelName)-$($adapter.Version)-*.whl" |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+    }
+    finally {
+        Pop-Location
     }
 
+    if (-not $wheel) {
+        Write-Error "No wheel file found for $($adapter.WheelName) $($adapter.Version)!"
+        exit 1
+    }
+    Write-Host "  Wheel: $($wheel.FullName)" -ForegroundColor Gray
+
     if ($BuildOnlyMode) {
-        Write-Host "✨ Wheel build complete. Install these wheels before running CLASSIC Python entrypoints." -ForegroundColor Green
+        Write-Host "✨ Wheel build complete. Install it before running CLASSIC Python entrypoints." -ForegroundColor Green
         return
     }
 
-    Write-Host "✅ Verifying installations..." -ForegroundColor Green
-    Write-Host ""
+    # Upgrade path: the 18 legacy per-module wheels share directory names with
+    # the new facade packages. Remove their recorded files and any leftover
+    # native module first, so neither a stale .pyd nor a later uninstall of a
+    # legacy distribution can affect the new install.
+    Write-Host "🗑️  Removing obsolete per-module binding wheels from python-bindings/.venv..." -ForegroundColor Cyan
+    Invoke-OneWheelTool -Python $PythonBindingsPython -Arguments @("remove-obsolete") -CommandLabel "remove obsolete Python binding artifacts"
 
-    $verificationResults = @()
-    foreach ($module in $rustModules) {
-        try {
-            $importName = $module.ImportName
-            $version = & $PythonBindingsPython -c "import $importName; print($importName.__version__)" 2>&1
-
-            if ($LASTEXITCODE -eq 0) {
-                $verificationResults += @{ Module = $module.WheelName; Status = "✓"; Version = $version }
-                Write-Host "  ✓ $($module.WheelName) (import: $importName) v$version" -ForegroundColor Green
-            }
-            else {
-                $verificationResults += @{ Module = $module.WheelName; Status = "✗"; Version = "Failed" }
-                Write-Host "  ✗ $($module.WheelName) (import: $importName) - Import failed" -ForegroundColor Red
-            }
-        }
-        catch {
-            $verificationResults += @{ Module = $module.WheelName; Status = "✗"; Version = "Error" }
-            Write-Host "  ✗ $($module.WheelName) (import: $importName) - $($_.Exception.Message)" -ForegroundColor Red
-        }
-    }
-
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host "Installation Summary" -ForegroundColor Cyan
-    Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-
-    $successCount = @($verificationResults | Where-Object { $_.Status -eq "✓" }).Count
-    $totalCount = @($verificationResults).Count
-
-    Write-Host ""
-    Write-Host "Installed: $successCount/$totalCount modules" -ForegroundColor $(if ($successCount -eq $totalCount) { "Green" } else { "Yellow" })
-    Write-Host ""
-
-    if ($successCount -eq $totalCount) {
-        Write-Host "✨ Python bindings rebuild complete!" -ForegroundColor Green
+    Write-Host "📦 Installing $($wheel.Name)..." -ForegroundColor Green
+    if ($UseUv) {
+        & uv pip install --python $PythonBindingsPython $wheel.FullName --reinstall
+        Assert-LastExitCode -CommandLabel "uv pip install --python $PythonBindingsPython $($wheel.FullName)"
     }
     else {
-        Write-Host "⚠️  Some Python modules failed!" -ForegroundColor Yellow
-        exit 1
+        & $PythonBindingsPython -m pip install $wheel.FullName --force-reinstall
+        Assert-LastExitCode -CommandLabel "$PythonBindingsPython -m pip install $($wheel.FullName)"
     }
+
+    Write-Host ""
+    Write-Host "✅ Verifying the upgraded environment (18 imports, versions, no obsolete artifacts)..." -ForegroundColor Green
+    Invoke-OneWheelTool -Python $PythonBindingsPython -Arguments @("verify", "--expected-version", $adapter.Version) -CommandLabel "installed-wheel verification"
+
+    Test-CleanWheelInstall -WheelPath $wheel.FullName -ExpectedVersion $adapter.Version
+
+    Write-Host ""
+    Write-Host "✨ Python bindings rebuild complete! 18/18 modules verified from one wheel." -ForegroundColor Green
 }
 
 function Invoke-RustWorkspaceRebuild {
@@ -603,7 +517,7 @@ Write-Host "CLASSIC Rust rebuild script" -ForegroundColor Cyan
 Write-Host "Target: $Target" -ForegroundColor Cyan
 
 if ($Crates -and $Target -eq "node") {
-    Write-Warning "Positional crate/module filters are ignored for -Target node. Use -Target python to build wheels."
+    Write-Warning "Positional crate/module filters are ignored for -Target node."
 }
 if ($BuildOnly -and ($Target -eq "workspace" -or $Target -eq "node")) {
     Write-Warning "-BuildOnly only affects Python wheel install/verification. No-op for target '$Target'."

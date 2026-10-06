@@ -7,7 +7,7 @@ Crate metadata:
 - Crate: `classic-version-registry-core`
 - Description: `Pure Rust version registry for CLASSIC - game version detection and matching`
 
-This crate is the Rust-side source of truth for known game versions, version matching, known-version queries, and per-version metadata such as Address Library, XSE, and crashgen compatibility data. It is the sole policy owner of the known-version queries `is_known_fallout4_version()` and `is_known_f4se_version()` (issue #244; they used to live in [`classic-version-core`](classic-version-core.md), which now only re-exports them until it retires in #258).
+This crate is the Rust-side source of truth for known game versions, version matching, known-version queries, and per-version metadata such as Address Library, XSE, and crashgen compatibility data. It is the sole policy owner of the known-version queries `is_known_fallout4_version()` and `is_known_f4se_version()` (issue #244; they used to live in `classic-version-core`, which was retired in #258 with no forwarding shim).
 
 Every registry snapshot sits behind a `VersionRegistryScope` handle. The unscoped accessors read one process default scope, which is what Rust, CXX, and Node callers have always observed; the Python facades that read the registry each select their own isolated scope (see [Version Registry Scopes](#version-registry-scopes)).
 
@@ -84,7 +84,7 @@ This crate does not expose its modules directly. `lib.rs` re-exports the public 
 Contributor note:
 
 - it is a sentinel only; it does not change registry behavior on its own
-- downstream crates such as [`classic-version-core`](classic-version-core.md) re-export it directly from this crate now that the dedicated constants crate is gone
+- callers import it directly from this crate now that the dedicated constants crate is gone; no other crate re-exports it (the former `classic-version-core` re-export ended with that crate in #258)
 
 ## `Fallout4Version`
 
@@ -235,7 +235,7 @@ Source-visible behavior:
 - the game query compares each entry's `major.minor.patch`, dropping the fourth (build) component, by exact equality
 - the F4SE query parses each entry's `xse.compatible_version` with the lenient shared-core `try_parse_version()`; entries without an XSE section or with an unparseable string never match
 
-These were `classic_version_core::is_known_fallout4_version()` / `is_known_f4se_version()` until issue #244. That crate re-exports the free functions unchanged until it retires (#258); new callers import this crate.
+These were `classic_version_core::is_known_fallout4_version()` / `is_known_f4se_version()` until issue #244. That crate re-exported the free functions unchanged until it was retired in #258 with no forwarding shim; callers import this crate.
 
 ## Version Registry Scopes
 
@@ -256,11 +256,11 @@ Snapshot rules:
 Scoped entry points in downstream owners take either a snapshot (`&VersionRegistry`, the `*_in` helpers) for pure lookups or a `&VersionRegistryScope` for workflows, so a workflow that never needs registry data never takes the snapshot:
 
 - [`classic-config-core`](classic-config-core.md): `resolve_registry_version_info_in()`, `YamlDataCore::from_yaml_content_in_version_registry_scope()`, `load_installed_yaml_data_in_version_registry_scope()`, `load_explicit_yaml_data_in_version_registry_scope()`
-- [`classic-xse-core`](classic-xse-core.md): `resolve_xse_folder_for_scan_in_version_registry_scope()`
-- [`classic-scangame-core`](classic-scangame-core.md): `AddressLibInfo::*_in()`, `XseChecker::with_version_registry_scope()`, `GameSetupIntake::run_in_scopes()`, `GameScanOrchestrator::with_version_registry_scope()`
-- [`classic-scanlog-core`](classic-scanlog-core.md): `PluginAnalyzer::with_version_registry_scope()`, `scan_run::contract::execute_in_version_registry_scope()`
+- [`classic-xse-core`](classic-xse-core.md): `resolve_xse_folder_from_game_local_facts_in_version_registry_scope()`
+- [`classic-scangame-core`](classic-scangame-core.md): `resolve_xse_folder_for_scan_in_version_registry_scope()`, `AddressLibInfo::*_in()`, `XseChecker::with_version_registry_scope()`, `GameSetupIntake::run_in_scopes()`, `GameScanOrchestrator::with_version_registry_scope()`
+- [`classic-scanlog-core`](classic-scanlog-core.md): `PluginAnalyzer::with_version_registry_scope()`, `scan_run::contract::execute_in_version_registry_scope()`, `scan_run::contract::execute_in_scopes()`
 
-Rust, CXX, and Node callers keep using the unscoped paths and therefore the default scope. The Python `classic_version_registry`, `classic_version`, `classic_config`, `classic_scangame`, and `classic_scanlog` facades each hold their own isolated scope and pass it at facade entry or object construction, so once the facades share one native library (#259) each keeps the snapshot of its own first use.
+Rust, CXX, and Node callers keep using the unscoped paths and therefore the default scope. The Python `classic_version_registry`, `classic_version`, `classic_config`, `classic_scangame`, and `classic_scanlog` facades each hold their own isolated scope and pass it at facade entry or object construction, so now that the facades share one native library (#259) each keeps the snapshot of its own first use.
 
 ## `MatchResult` and `MatchConfidence`
 
@@ -367,7 +367,7 @@ Variants:
 
 - `InvalidVersion(String)`
 - `NotFound(String)`
-- `YamlError(classic_settings_core::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1; it is now owned by `classic_shared_core::yaml` and re-exported under the same `classic_settings_core` path)
+- `YamlError(classic_shared_core::yaml::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1 and is now owned by `classic_shared_core::yaml`; the `classic_settings_core` path ended when that crate retired in issue #257)
 - `NotInitialized`
 - `InvalidConfig(String)`
 
@@ -389,7 +389,7 @@ This crate is synchronous.
 
 - It does not expose async APIs.
 - It does not construct a Tokio runtime.
-- Registry initialization uses synchronous YAML loading through [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: the former `classic-yaml-core` crate was absorbed into `classic-settings-core` in v9.1.0 Phase 1).
+- Registry initialization uses synchronous YAML loading through [`classic_shared_core::yaml`](classic-shared-core.md#generic-yaml-yaml) (historical note: that surface came from the former `classic-yaml-core` crate by way of the now-retired `classic-settings-core`).
 - This fits the repo rule that runtime ownership stays in shared higher layers rather than inside business-logic crates.
 
 Contributor rule: if you extend this crate, keep it runtime-agnostic and compatible with the shared-runtime assumptions used elsewhere in CLASSIC.
@@ -398,12 +398,12 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 
 ## Related Crates And Integration Points
 
-- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML loading and extraction used during registry initialization (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - YAML loading and extraction (`YamlOperations`) used during registry initialization (historical note: formerly reached through `classic-settings-core`, which absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1 and retired in issue #257)
 - [`classic-config-core`](../../business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
 - [`classic-node`](../../node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
-- [`classic-version-registry-py`](../../python-bindings/classic-version-registry-py) - maintained Python-facing integration layer for registry lookups and version metadata
+- [`classic_version_registry` adapter module](../../python-bindings/classic-python-bindings/src/classic_version_registry/) - maintained Python-facing integration layer for registry lookups and version metadata
 
 In practice, this crate sits upstream of config-building and scanlog-analysis decisions.
 

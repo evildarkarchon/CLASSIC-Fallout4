@@ -19,7 +19,7 @@ The `Arc<AtomicBool>` is the existing provisional scan-run control representatio
 - Code outside a scope retains its ordinary uncancelled behavior.
 - This crate is workspace-internal and has no C++, Node, or Python surface. User-facing cancellation remains owned by the high-level Crash Log Scan Run contract.
 
-Current consumers are `classic-scanlog-core`, which scopes source discovery, and `classic-file-io-core`, which checks the scope between completed directory/file operations and enumeration entries. Partial discovery accumulators are discarded by the file-I/O implementation; the scan service checks the same monotonic flag before publishing discovery.
+The current consumer is `classic-scanlog-core`. Its scan service scopes source discovery, and its `log_collection` module (Crash Log collection and Targeted input resolution, moved from `classic-file-io-core` in #254) checks the scope between completed directory/file operations and enumeration entries. Partial discovery accumulators are discarded by the collection implementation; the scan service checks the same monotonic flag before publishing discovery. `classic-file-io-core` no longer depends on this crate.
 
 ## Runtime ownership
 

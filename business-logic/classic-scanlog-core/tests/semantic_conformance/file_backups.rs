@@ -1,7 +1,7 @@
 //! Managed backup lifecycles observed through public core APIs.
 
 use super::{RunnerResult, text};
-use classic_file_io_core::{
+use classic_resource_core::{
     GameFilesManager,
     backup::{BackupManager, BackupType},
 };
@@ -60,7 +60,7 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         }
         let manager = GameFilesManager::new(game, root.join("backups"));
         let patterns = vec!["f4se_".to_owned()];
-        let summarize = |value: classic_file_io_core::game_files::FileOperationResult| format!("{} files affected, {} errors", value.files_affected, value.errors.len());
+        let summarize = |value: classic_resource_core::game_files::FileOperationResult| format!("{} files affected, {} errors", value.files_affected, value.errors.len());
         let backup = summarize(manager.backup("fixture", &patterns).await?);
         fs::write(&source, "changed\n")?;
         let restore = summarize(manager.restore("fixture", &patterns).await?);

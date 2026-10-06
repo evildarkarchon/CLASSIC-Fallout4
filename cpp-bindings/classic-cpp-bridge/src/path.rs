@@ -2,7 +2,12 @@
 //!
 //! Bridges `classic-path-core` helpers so the Qt GUI can reuse the same
 //! automatic game/docs detection logic, path validation, INI checking,
-//! and backup management as other implementations.
+//! and backup management as other implementations. The generic existence
+//! and kind checks (`is_valid_path`, `path_validate_exists`,
+//! `path_validate_is_directory`, `path_validate_is_file`) delegate to
+//! `classic_shared_core::path_core`, which owns those neutral primitives.
+//! The custom-scan folder policy (`is_restricted_path`, `check_restricted_path`,
+//! `path_validate_custom_scan`) delegates to `classic_scanlog_core::custom_scan`.
 //!
 //! # Architecture
 //!
@@ -22,18 +27,25 @@
 //! - INI checker (REAL surface): `docs_checker_validate_ini_file`,
 //!   `docs_checker_run_all_checks`
 //! - Backup helpers: `backup_create_timestamped`, `backup_list_existing`
+//!   (version-labelled backup owned by `classic_resource_core`)
 //! - XSE log + game-path: `parse_xse_log`, `find_game_path`
 //! - Fallout4-specific detection: `detect_fallout4_game_path`,
 //!   `resolve_fallout4_exe_name`, `detect_fallout4_docs_path`
 
 use classic_path_core::{
-    BackupManager, DocsPathFinder, DocumentsChecker, GamePathFinder,
-    IniCheckResult as CoreIniCheckResult, is_restricted_path as core_is_restricted_path,
-    is_valid_path as core_is_valid_path, parse_xse_log as core_parse_xse_log,
+    DocsPathFinder, DocumentsChecker, GamePathFinder, IniCheckResult as CoreIniCheckResult,
+    parse_xse_log as core_parse_xse_log, validate_required_files as core_validate_required_files,
+};
+use classic_resource_core::{VersionBackupManager, XseVersion};
+// The custom-scan folder policy is owned by scanlog core (#254 follow-up);
+// the bridge names and the `classic::path` namespace are unchanged.
+use classic_scanlog_core::{
+    is_restricted_path as core_is_restricted_path,
     validate_custom_scan_path as core_validate_custom_scan_path,
-    validate_is_directory as core_validate_is_directory, validate_is_file as core_validate_is_file,
-    validate_path_exists as core_validate_path_exists,
-    validate_required_files as core_validate_required_files,
+};
+use classic_shared_core::path_core::{
+    is_valid_path as core_is_valid_path, validate_is_directory as core_validate_is_directory,
+    validate_is_file as core_validate_is_file, validate_path_exists as core_validate_path_exists,
 };
 use classic_version_registry_core::Fallout4Version;
 use std::path::Path;
@@ -214,8 +226,9 @@ fn map_ini_check_result(r: CoreIniCheckResult) -> ffi::IniCheckResultDto {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Backup helpers
-// BackupManager uses instance-based new(backup_root) API; the bridge wraps
-// it as static-style helpers by deriving the backup root from the source path.
+// VersionBackupManager (resource core's version-labelled backup) uses an
+// instance-based new(backup_root) API; the bridge wraps it as static-style
+// helpers by deriving the backup root from the source path.
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn backup_create_timestamped(source_path: &str, game_name: &str) -> Result<String, String> {
@@ -228,7 +241,7 @@ fn backup_create_timestamped(source_path: &str, game_name: &str) -> Result<Strin
         .ok_or_else(|| "backup_create_timestamped: source path has no parent".to_string())?
         .join("CLASSIC Backups")
         .join(game_name);
-    let manager = BackupManager::new(&backup_root);
+    let manager = VersionBackupManager::new(&backup_root);
 
     // Extract version from source file's sibling XSE log if available.
     // Fall back to a simple timestamped copy when no XSE log is present.
@@ -241,7 +254,7 @@ fn backup_create_timestamped(source_path: &str, game_name: &str) -> Result<Strin
         secs.to_string()
     };
 
-    let xse_version = classic_path_core::XseVersion::new(timestamp);
+    let xse_version = XseVersion::new(timestamp);
     manager
         .create_backup(source, &xse_version)
         .map(|p| p.to_string_lossy().to_string())
@@ -260,7 +273,7 @@ fn backup_list_existing(source_path: &str, game_name: &str) -> Vec<String> {
     if !backup_root.exists() {
         return Vec::new();
     }
-    let manager = BackupManager::new(&backup_root);
+    let manager = VersionBackupManager::new(&backup_root);
     manager.list_versions().unwrap_or_default()
 }
 

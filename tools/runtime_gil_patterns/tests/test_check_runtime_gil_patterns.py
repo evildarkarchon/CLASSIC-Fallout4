@@ -60,7 +60,7 @@ def test_raw_call_sites_are_report_only_by_default_and_strict_failures(
         "fn bridge() { classic_shared_core::get_runtime().block_on(async {}); }\n",
     )
     _write(
-        repo / "python-bindings" / "classic-file-io-py" / "src" / "core.rs",
+        repo / "python-bindings" / "classic-python-bindings" / "src" / "classic_file_io" / "core.rs",
         "fn py(py: Python<'_>) { pyo3_async_runtimes::tokio::future_into_py(py, async {}); }\n",
     )
 

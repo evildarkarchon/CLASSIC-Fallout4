@@ -9,8 +9,8 @@
 //! 1. **Self-heal** — If the cache copy is missing but a `<file>.prev` exists
 //!    (interrupted install state), promote `.prev` → canonical before
 //!    checking compatibility. This uses
-//!    [`classic_file_io_core::self_heal`] rather than the full
-//!    [`classic_file_io_core::rollback`] helper; the loader MUST NOT swap
+//!    [`crate::atomic_install::self_heal`] rather than the full
+//!    [`crate::atomic_install::rollback`] helper; the loader MUST NOT swap
 //!    `<file>` ↔ `<file>.prev` on normal reads (that would silently revert
 //!    the just-installed file every time its cache is loaded).
 //! 2. **Cache candidate** — If `<cache>/<filename>` exists and its
@@ -24,16 +24,16 @@
 //!
 //! # Design notes
 //!
-//! - The cache directory is obtained from [`classic_path_core::yaml_cache_dir`]
+//! - The cache directory is obtained from [`crate::yaml_cache::yaml_cache_dir`]
 //!   so platform-specific resolution (Windows `%LOCALAPPDATA%\CLASSIC\yaml-cache\`,
 //!   Unix `${XDG_CACHE_HOME:-$HOME/.cache}/CLASSIC/yaml-cache/`) lives in one
 //!   place.
 //! - The self-heal delegates to
-//!   [`classic_file_io_core::self_heal`] so a startup crash between the
+//!   [`crate::atomic_install::self_heal`] so a startup crash between the
 //!   "rename target → .prev" and "rename tmp → target" steps of
-//!   [`classic_file_io_core::install_atomic`] is recovered transparently.
-//!   Unlike the broader [`classic_file_io_core::rollback`] helper,
-//!   [`classic_file_io_core::self_heal`] only promotes `.prev` when the
+//!   [`crate::atomic_install::install_atomic`] is recovered transparently.
+//!   Unlike the broader [`crate::atomic_install::rollback`] helper,
+//!   [`crate::atomic_install::self_heal`] only promotes `.prev` when the
 //!   canonical target is missing; when both exist it is a strict no-op.
 //! - We deliberately **do not** repurpose `YamlSource::Cache` for the cache
 //!   directory: that variant already names `cache.yaml` and is plumbed
@@ -58,8 +58,8 @@
 //! println!("loaded from {:?}, schema {}", loaded.source, loaded.schema_version);
 //! ```
 
-use classic_file_io_core::{SelfHealOutcome, self_heal};
-use classic_path_core::{yaml_cache_dir, yaml_cache_dir_with_env};
+use crate::atomic_install::{SelfHealOutcome, self_heal};
+use crate::yaml_cache::{yaml_cache_dir, yaml_cache_dir_with_env};
 use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, SchemaVersion, YamlSchemaError, extract_schema_version,
     load_yaml_merged_async, schema_compat_check,
@@ -235,7 +235,7 @@ where
 
 fn resolve_cache_path_via<R>(file_name: &str, resolver: R) -> Option<PathBuf>
 where
-    R: FnOnce() -> Result<PathBuf, classic_path_core::PathError>,
+    R: FnOnce() -> Result<PathBuf, classic_shared_core::path_core::PathError>,
 {
     match resolver() {
         Ok(dir) => Some(dir.join(file_name)),

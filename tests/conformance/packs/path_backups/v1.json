@@ -3,7 +3,7 @@
   "familyId": "path-backups",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-path-core"
+    "rustCrate": "classic-resource-core"
   },
   "fixtureRoot": "tests/fixtures/path_backups",
   "fixtures": {
@@ -14,7 +14,7 @@
     {
       "id": "path-backups.versioned",
       "rustSymbols": [
-        "BackupManager",
+        "VersionBackupManager",
         "XseVersion"
       ],
       "operationScoped": true,

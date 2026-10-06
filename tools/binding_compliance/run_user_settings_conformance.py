@@ -76,7 +76,10 @@ PARTICIPANT_COMMANDS = {
         source_paths=(
             REPO_ROOT / "python-bindings/tests/user_settings_conformance_runner.py",
             REPO_ROOT / "python-bindings/tests/user_settings_defaults_conformance.py",
-            REPO_ROOT / "python-bindings/classic-user-settings-py/src",
+            # The one Python adapter crate builds one native extension for every
+            # facade, so the whole adapter (Rust and Python facades) is participant input.
+            REPO_ROOT / "python-bindings/classic-python-bindings/src",
+            REPO_ROOT / "python-bindings/classic-python-bindings/python",
             *_COMMON_SOURCES,
         ),
     ),

@@ -62,6 +62,10 @@ This crate exposes both root-level items and public modules.
 ### `path_core`
 
 - `PathHandler` - cached path normalization, validation, joining, splitting, and prefix helpers
+- generic path primitives (#245): `is_valid_path`, `validate_path_exists`, `validate_is_directory`, `validate_is_file`, `is_executable_file_path`, `check_drive_exists`, `check_read_permissions`, `check_write_permissions`, `validate_path_with_permissions`, `drive_exists`, `has_read_permission`, `has_write_permission`, `remove_readonly_attribute`, Windows-only `remove_readonly`, and `PathError` / `PathResult<T>`
+- OS cache root: `user_cache_root()`, `user_cache_root_with_env()`, `CacheRootUnavailable`, `non_empty_env_var()`
+
+See [Generic path primitives](#generic-path-primitives-path_core).
 
 ### `performance_core`
 
@@ -307,13 +311,56 @@ Source-observed limitation:
 
 - comments describe the bounded cache as LRU, but the current eviction logic removes the bottom 20% of entries by `hit_count`, not by recency timestamp
 
+## Generic path primitives (`path_core`)
+
+`path_core` is the domain-neutral owner of CLASSIC's generic path checks. They moved unchanged from `classic-path-core` in #245 so callers that only need a neutral check depend on shared core alone; `classic-path-core` keeps game/documents discovery, custom-scan and settings-path policy, required-file checks, and the per-user cache directories, and no longer re-exports these items.
+
+Existence and kind:
+
+- `is_valid_path(path) -> bool` - `Path::exists()`
+- `validate_path_exists(path)`, `validate_is_directory(path)`, `validate_is_file(path) -> PathResult<()>` - a missing path is always `NotFound` before any kind check
+- `is_executable_file_path(path) -> bool` - an existing file whose extension is `.exe`, `.app`, or absent. This was `classic_path_core::is_valid_executable_path`; it is renamed because `version::pe_version::is_valid_executable_path` (an existing `.exe`/`.dll` whose PE version can be read) answers a different question, and the parity tooling keys Rust symbols by crate and bare name.
+
+Permission and drive:
+
+- `check_drive_exists(path)` - checks the Windows drive prefix; always `Ok(())` elsewhere
+- `check_read_permissions(path)` - lists a directory or opens a file; anything else is `InvalidPath("Path is neither a file nor directory: ..")`
+- `check_write_permissions(path)` - creates and removes `.classic_test_write` in the directory (or the file's parent)
+- `validate_path_with_permissions(path, check_read, check_write)` - drive, existence, then the requested permission checks
+- `drive_exists`, `has_read_permission`, `has_write_permission` - boolean wrappers over the checks above
+
+Read-only:
+
+- `remove_readonly_attribute(path)` - clears the read-only flag on Windows; a no-op elsewhere
+- `remove_readonly(path)` (Windows only) - same flag change, but also writes a warning to stderr when clearing fails; kept distinct because the Node and Python `remove_readonly` exports rely on that behavior
+
+`PathError` variants and messages are unchanged and are observed by the CXX, Node, and Python path adapters:
+
+- `NotFound(PathBuf)` - `Path does not exist: ..`
+- `NotADirectory(PathBuf)` - `Path is not a directory: ..`
+- `NotAFile(PathBuf)` - `Path is not a file: ..`
+- `IoError { path, source }` - `I/O error for path ..: ..`
+- `PermissionDenied(String)` - `Permission denied: ..`
+- `InvalidPath(String)` - `Invalid path: ..`
+
+OS cache root:
+
+- `user_cache_root_with_env(env) -> Result<PathBuf, CacheRootUnavailable>` - `%LOCALAPPDATA%`, then `%APPDATA%` on Windows; `$XDG_CACHE_HOME`, then `$HOME/.cache` elsewhere. Pure resolution; nothing is created.
+- `user_cache_root()` - the same, reading the process environment through `non_empty_env_var()`
+- `non_empty_env_var(name)` - treats unset *and* empty variables as absent so an empty `%LOCALAPPDATA%` falls through to the next candidate
+- `CacheRootUnavailable` displays as `neither LOCALAPPDATA nor APPDATA is set` (or the Unix pair). Cache owners append their own context, which is how `classic-path-core`'s YAML and app-notification cache errors keep their exact pre-move messages.
+
+The root holds no `CLASSIC/...` subdirectory policy; each cache owner joins its own.
+
 ## `PerformanceMetrics`, `Timer`, and helpers
 
-`performance_core` is the single, constant-memory timing implementation. C++, Node, and both Python performance views (`classic_perf` through the `classic-perf-core` facade, and `classic_shared.RustPerformanceMonitor`) all record into it.
+`performance_core` is the single, constant-memory timing implementation. C++, Node, and both Python performance views (`classic_perf` and `classic_shared.RustPerformanceMonitor`, both in the one Python adapter) all record into it.
+
+The former `classic-perf-core` crate, a seconds-view re-export facade over this module, was retired in issue #256. Its `classic_perf_core::*` import paths end with no forwarding shim; Rust callers import `classic_shared_core::performance_core` directly. The CXX, Node, and Python parity contracts name `classic-shared-core` as the owning Rust crate for every timing row; do not restore `classic-perf-core` as an owner during a baseline refresh.
 
 ### Default store
 
-There is **one default observable store per linked library image**: `get_global_metrics()`, the seconds/milliseconds free functions, and `Timer` all read and clear the same timing and byte state. A `PerformanceMetrics::new()` value owns independent state that the default store never sees. The C++ bridge and Node addon each link their own image and therefore their own default. Today `classic_perf` and `classic_shared` are separate Python extension images with separate stores; the single-wheel adapter (issue #259) puts them in one image.
+There is **one default observable store per linked library image**: `get_global_metrics()`, the seconds/milliseconds free functions, and `Timer` all read and clear the same timing and byte state. A `PerformanceMetrics::new()` value owns independent state that the default store never sees. The C++ bridge and Node addon each link their own image and therefore their own default. The one Python adapter (issue #259) links `classic_perf` and `classic_shared` into one image, so they share its default store: a timing recorded through either facade appears in the other's view (`classic_perf` in seconds, `RustPerformanceMonitor` in milliseconds and bytes), and clearing through either clears timing and byte state for both. Probes: `python-bindings/tests/test_one_wheel_facades.py`.
 
 ### Sample contract
 
@@ -324,6 +371,42 @@ There is **one default observable store per linked library image**: `get_global_
 - Rejections happen before any mutation: no entry is created and no counter changes.
 
 `TimingError` variants carry a stable `code()` token: `timing_sample_not_finite`, `timing_sample_negative`, `timing_sample_out_of_range`, and `timing_counter_overflow`. Every binding uses `coded_message()` (`"<code>: <message>"`) as its error text ([error contract](error-contract.md#timing-sample-errors)).
+
+### Binding projections
+
+| Binding | Entry points | Units | Invalid input |
+|---|---|---|---|
+| [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) (`classic::perf`) | `perf_record_timing -> Result<()>`, `perf_get_summary`, `perf_clear_metrics`, `perf_get_operation_count`, `perf_get_operation_average` | seconds | `rust::Error`, message begins with the stable token |
+| [`classic-node`](../../node-bindings/classic-node/src/shared.rs) | `recordTimingMetric`, `getMetricsSummary`, `clearAllMetrics` | milliseconds | `Error` with `code === "InvalidArg"`, message begins with the stable token |
+| [`classic_perf` adapter module](../../python-bindings/classic-python-bindings/src/classic_perf/mod.rs) (`classic_perf`) | `record_timing`, `get_summary`, `clear_metrics`, `reset_metrics`, `Timer`, `start_timer`, `MetricsSummary` | seconds | `ValueError`, message begins with the stable token |
+
+Missing operations keep their existing projections: absent from summary maps, and `0` / `0.0` from the CXX numeric accessors.
+
+### Seconds-view example
+
+```rust
+use classic_shared_core::performance_core::{
+    clear_metrics, get_summary, record_timing, start_timer,
+};
+use std::thread;
+use std::time::Duration;
+
+clear_metrics();
+
+for _ in 0..3 {
+    let timer = start_timer("load_config");
+    thread::sleep(Duration::from_millis(10));
+    timer.finish().expect("a short sample cannot overflow");
+}
+
+let summary = get_summary();
+assert_eq!(summary["load_config"].count, 3);
+assert!(summary["load_config"].average >= 0.010);
+
+// Invalid samples are rejected before any state changes.
+assert!(record_timing("load_config", f64::NAN).is_err());
+assert_eq!(get_summary()["load_config"].count, 3);
+```
 
 ## `PerformanceMetrics`
 
@@ -436,11 +519,13 @@ Source-observed limitation:
 
 ## Generic YAML (`yaml`)
 
-`classic_shared_core::yaml` is the single owner of CLASSIC's domain-neutral YAML rules. The generic rules and logical-key cache moved here from `classic-settings-core` in issue #239, and `YamlOperations` with its path/mtime-aware YAML-file cache followed in issue #240. `classic-settings-core` now only re-exports these items until its retirement (issue #257), so loading through either path reads and clears the **same** default-scope caches.
+`classic_shared_core::yaml` is the single owner of CLASSIC's domain-neutral YAML rules. The generic rules and logical-key cache moved here from `classic-settings-core` in issue #239, and `YamlOperations` with its path/mtime-aware YAML-file cache followed in issue #240.
+
+The former `classic-settings-core` crate, a re-export facade over this module, was retired in issue #257. Its `classic_settings_core::*` import paths, including `classic_settings_core::validators::*`, end with no forwarding shim; Rust callers import `classic_shared_core::yaml` directly (for example `classic_shared_core::yaml::validators::SettingType`). The CXX, Node, and Python parity contracts name `classic-shared-core` as the owning Rust crate for every generic YAML, `YamlOperations`, YAML-file cache, and validator row, including the Rust-only `settings.*@rust` / `yaml.*@rust` proxy rows; do not restore `classic-settings-core` as an owner during a baseline refresh. The `classic_settings` Python facade and the Node/CXX `settings` modules keep their published names and call this module directly.
 
 Everything is reached through the module path, for example `classic_shared_core::yaml::load_yaml_sync` or `classic_shared_core::yaml::validators::SettingType`. Nothing from `yaml` is re-exported at the crate root, which keeps `yaml::Result` from colliding with other crate-root names.
 
-CLASSIC-specific file identity (`YamlFile`) is deliberately **not** here; it stays in [`classic-settings-core`](classic-settings-core.md) until config takes file policy (issue #246).
+CLASSIC-specific file identity is deliberately **not** here; it is the config-owned [`classic_config_core::YamlSource`](classic-config-core.md#yamlsource), which replaced the former `classic_settings_core::YamlFile` in issue #246.
 
 ### Module map
 
@@ -567,17 +652,19 @@ Both caches keep their state behind an opaque, cheaply cloneable scope handle: `
 - Clones of a handle name the same store; `==` compares store identity (not contents). `Debug` reports only whether the handle is the default scope and its entry count.
 - Scopes are never selected from thread-local or task-local state. A caller passes the handle explicitly (or moves a clone into an `async` block), so async work keeps its scope regardless of which runtime thread resumes it.
 
-Why scopes exist: today each of the 18 Python extension modules links its own copy of this crate, so each facade's caches are implicitly separate. When those facades merge into one native extension, the Python adapter preserves that separation by selecting a scope per former facade:
+Why scopes exist: the 18 Python facades once were separate extension images, each linking its own copy of this crate, so each facade's caches were implicitly separate. Now that they share one native extension (issue #259), the Python adapter preserves that separation by selecting a scope per former facade:
 
 - `classic_settings` uses its own isolated `LogicalKeyCacheScope` and `YamlFileCacheScope`. Its cache functions, every `classic_settings.YamlOperations` object, and its `clear_global_yaml_cache` / `reset_yaml_cache_stats` / `yaml_cache_stats` helpers affect only those stores.
-- `classic_config.clear_yaml_cache()` clears the default `YamlFileCacheScope`, which is the store config-core's own `YamlOperations::new()` loaders fill. It never evicts `classic_settings` entries.
-- `classic_xse`, `classic_version_registry`, `classic_user_settings`, and `classic_scanlog` only fill the YAML-file cache indirectly, through config-core, Version Registry, and scanlog loaders that call `YamlOperations::new()`. After the merge they share the default scope with `classic_config`. This deliberately narrows #233's per-image rule: none of those facades exposes YAML-file cache stats or controls, entries are mtime-validated, and the Version Registry snapshot is loaded once, so the only effect of a `classic_config.clear_yaml_cache()` on their entries is an extra re-read. Threading a scope through those loaders would change their public Rust signatures for no observable gain.
+- `classic_scanlog` uses its own isolated `YamlFileCacheScope`. Standard discovery in its Crash Log Scan Runs reads the installation's Game Local document through that scope (`scan_run::contract::execute_in_scopes` → `classic_scangame_core::resolve_xse_folder_for_scan_in_scopes` → `classic_config_core::read_game_local_facts_in_yaml_file_cache_scope`). The facade exposes no YAML-cache controls.
+- `classic_config.clear_yaml_cache()` clears the default `YamlFileCacheScope` only. It never evicts or resets `classic_settings` or `classic_scanlog` entries or counters.
+- `classic_version_registry` and `classic_user_settings` use no YAML-file cache at all. Their cores call `YamlOperations::new()` only for stateless parse, dump, and dot-path get/set helpers, never for `load_yaml_file`, `save_yaml_file`, or `load_yaml_files_batch`, so there is nothing for them to scope. The core probes `first_use_leaves_the_shared_yaml_file_cache_untouched` (`classic-version-registry-core/tests/version_registry_scopes.rs`) and `classic-user-settings-core/tests/yaml_file_cache_unused.rs` fail if that changes.
+- The logical-key cache has the same shape: only `classic_settings` uses it from Python, through its own isolated scope. No core loader reached by another facade calls the unscoped logical-key functions.
 
 Parity: the scope handles and `YamlOperations::with_cache_scope` / `cache_scope` are deliberately Rust-only. Bindings never hand a scope to their callers; the CXX and Node adapters keep the unscoped default paths, and the Python adapter selects handles internally. They therefore appear in the Rust API surface baselines without a binding mapping row.
 
 ### `YamlOperations`
 
-`YamlOperations` is the integration type for parsing, serializing, saving, and reading dot-path values from single YAML documents, with an optional path/mtime-aware file cache. It moved here from `classic-settings-core` (issue #240), which still re-exports it.
+`YamlOperations` is the integration type for parsing, serializing, saving, and reading dot-path values from single YAML documents, with an optional path/mtime-aware file cache. It moved here from `classic-settings-core` (issue #240); that crate has since retired (issue #257).
 
 Construction and cache control:
 
@@ -706,9 +793,9 @@ Use a non-User-Settings document; first-party production code must use [`classic
 
 `classic_shared_core::version` is the domain-neutral owner of CLASSIC's lenient version-string helpers and Windows PE file-version extraction (issue #243). It knows nothing about which game or XSE versions exist: known-version queries are Version Registry policy and stay outside shared core.
 
-The former `classic_version_core` root and `classic_version_core::pe_version` paths re-export these exact items until that crate retires (issue #258). Values, `VersionError` / `PeVersionError` variants, and their messages are unchanged by the move. New callers import `classic_shared_core::version` directly. `classic-xse-core` no longer re-exports `parse_version()`, `try_parse_version()`, or `compare_versions()`.
+The former `classic-version-core` crate, a re-export facade over these items and the Version Registry known-version queries, was retired in issue #258. Its `classic_version_core` root and `classic_version_core::pe_version` import paths end with no forwarding shim. Values, `VersionError` / `PeVersionError` variants, and their messages are unchanged by the move. New callers import `classic_shared_core::version` directly. `classic-xse-core` no longer re-exports `parse_version()`, `try_parse_version()`, or `compare_versions()`.
 
-Parity ownership: CXX, Node, and Python rows for these helpers name `classic-shared-core` while keeping their row IDs and exported operation identities. Rust-only `@rust` proxy rows for items `classic-version-core` still re-exports name that facade. Do not restore `classic-version-core` as the owner of the binding rows during a baseline refresh. The `version-operations`, `version-extraction`, `version-pe`, and `version-pe-path` conformance packs name `classic-shared-core` as their `domainOwner`; `version-f4se` names the known-version policy owner, `classic-version-registry-core`.
+Parity ownership: CXX, Node, and Python rows for these helpers name `classic-shared-core` while keeping their row IDs and exported operation identities. The Rust-only `@rust` proxy rows that track `VersionError`, `VersionResult<T>`, `PeVersionError`, `PeVersionResult<T>`, and the `pe_version` module also name `classic-shared-core`; the facade-only Node `@rust` proxy rows for the helper functions were dropped with the facade in #258, because each helper already has a binding row that names this crate. Do not restore `classic-version-core` as the owner of any row during a baseline refresh. The `version-operations`, `version-extraction`, `version-pe`, and `version-pe-path` conformance packs name `classic-shared-core` as their `domainOwner`; `version-f4se` names the known-version policy owner, `classic-version-registry-core`.
 
 ### `VersionError` and `VersionResult<T>`
 
@@ -875,7 +962,7 @@ That is useful for contributor ergonomics, but callers that need to preserve exa
 
 This crate does not replace the more specific error enums in higher layers such as:
 
-- `SettingsError` and `YamlError` in this crate's own [`yaml`](#generic-yaml-yaml) module, which `classic-settings-core` re-exports
+- `SettingsError` and `YamlError` in this crate's own [`yaml`](#generic-yaml-yaml) module
 - `ConfigError` in [`classic-config-core`](../../docs/api/classic-config-core.md)
 - `FileIOError` in [`classic-file-io-core`](../../docs/api/classic-file-io-core.md)
 - `DatabaseError` in [`classic-database-core`](../../docs/api/classic-database-core.md)
@@ -928,7 +1015,7 @@ Related CLASSIC crates and consumers:
 - [`classic-config-core`](../../business-logic/classic-config-core) - re-exports `get_runtime` and depends on the shared-runtime rule
 - [`classic-file-io-core`](../../business-logic/classic-file-io-core), [`classic-database-core`](../../business-logic/classic-database-core), and [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - async business-logic crates expected to run on the shared runtime
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that call into async Rust using the shared runtime
-- [`classic-shared-py`](../../foundation/classic-shared-py) - PyO3 wrapper over this crate's runtime/error/path/performance/string helpers
+- [`classic_shared` adapter module](../../python-bindings/classic-python-bindings/src/classic_shared/) - PyO3 wrapper over this crate's runtime/error/path/performance/string helpers
 - [`classic-gui`](../../classic-gui) and Rust UI crates such as [`ui-applications/classic-tui`](../../ui-applications/classic-tui) - UI surfaces that depend on the same runtime policy; Slint-style bridging is feature-gated here
 
 Source-observed note:

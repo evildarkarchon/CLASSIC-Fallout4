@@ -34,6 +34,27 @@ def test_rust_target_crates_floor_is_sixteen() -> None:
     )
 
 
+def test_retired_classic_perf_core_is_not_tracked() -> None:
+    """#256 retired classic-perf-core; timing rows are owned by classic-shared-core."""
+    assert "classic-perf-core" not in gb.RUST_TARGET_CRATES
+    assert "classic-perf-core" not in gb.RUST_OWNER_BY_CRATE
+
+
+def test_retired_classic_settings_core_is_not_tracked() -> None:
+    """#257 retired classic-settings-core; generic YAML rows are owned by classic-shared-core."""
+    assert "classic-settings-core" not in gb.RUST_TARGET_CRATES
+    assert "classic-settings-core" not in gb.RUST_OWNER_BY_CRATE
+
+
+def test_retired_classic_version_core_is_not_tracked() -> None:
+    """#258 retired the classic-version-core facade; loose version and PE rows
+    are owned by classic-shared-core and known-version rows by
+    classic-version-registry-core.
+    """
+    assert "classic-version-core" not in gb.RUST_TARGET_CRATES
+    assert "classic-version-core" not in gb.RUST_OWNER_BY_CRATE
+
+
 def test_inventory_filter_is_deleted() -> None:
     """RUST_FULL_INVENTORY_CRATES set and include_rust_symbol() filter must
     both be gone after Plan 1 Task 1 — every tracked crate now produces full

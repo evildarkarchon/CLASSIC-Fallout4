@@ -24,21 +24,41 @@
         "parse_xse_log",
         "IniCheckResult",
         "validate_ini_file",
-        "validate_custom_scan_path",
         "validate_settings_path",
+        "validate_required_files"
+      ],
+      "observationFamilies": [
+        "installation-results"
+      ]
+    },
+    {
+      "id": "installation-paths.custom-scan",
+      "operationScoped": true,
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbols": [
+        "validate_custom_scan_path",
         "validate_settings_paths",
+        "is_restricted_path"
+      ],
+      "observationFamilies": [
+        "installation-results"
+      ]
+    },
+    {
+      "id": "installation-paths.primitives",
+      "operationScoped": true,
+      "rustCrate": "classic-shared-core",
+      "rustSymbols": [
         "check_drive_exists",
         "check_read_permissions",
         "check_write_permissions",
         "validate_path_with_permissions",
-        "is_restricted_path",
-        "is_valid_executable_path",
+        "is_executable_file_path",
         "validate_path_exists",
         "validate_is_directory",
         "validate_is_file",
         "remove_readonly",
-        "is_valid_path",
-        "validate_required_files"
+        "is_valid_path"
       ],
       "observationFamilies": [
         "installation-results"
@@ -50,7 +70,9 @@
       "id": "cached",
       "action": "installation-paths.inspect",
       "capabilityIds": [
-        "installation-paths.inspect"
+        "installation-paths.inspect",
+        "installation-paths.custom-scan",
+        "installation-paths.primitives"
       ],
       "fixtureRefs": [
         "cached"
@@ -91,7 +113,9 @@
       "id": "cached-spaces",
       "action": "installation-paths.inspect",
       "capabilityIds": [
-        "installation-paths.inspect"
+        "installation-paths.inspect",
+        "installation-paths.custom-scan",
+        "installation-paths.primitives"
       ],
       "fixtureRefs": [
         "cached-spaces"

@@ -75,8 +75,16 @@ def test_goldens_remain_independent_and_all_adapters_are_blocking() -> None:
         "empty-findings",
         "populated-findings",
         "fcx-mode",
+        "populated-findings-values-disabled",
+        "populated-findings-database-absent",
+        "populated-findings-malformed-reply",
     ]
-    assert len(pack.oracle_paths) == 3
+    # Every FormID-enrichment variant shares one independently authored oracle:
+    # disabled and missing lookups render the same identifier/count line, and a
+    # malformed reply falls back to disabled lookup instead of failing the log.
+    assert len(pack.oracle_paths) == 6
+    assert pack.oracle_paths[3] == pack.oracle_paths[4] == pack.oracle_paths[5]
+    assert pack.oracle_paths[3].name == "expected-without-values.md"
     assert not set(pack.oracle_paths) & {f.resolved_path for f in pack.fixtures}
     for scenario, oracle in zip(document["scenarios"], pack.oracle_paths, strict=True):
         report = scenario["expected"]["durableEffects"]["reports"][0]

@@ -5,7 +5,7 @@ This guide describes the current maintained ScanGame Rust surfaces.
 ## Current layout
 
 - Core logic: `business-logic/classic-scangame-core`
-- Python binding: `python-bindings/classic-scangame-py`
+- Python binding: `python-bindings/classic-python-bindings` (adapter module `src/classic_scangame/`, facade `classic_scangame`)
 - Node exposure: `node-bindings/classic-node`
 - C++ consumers reach shared logic through `cpp-bindings/classic-cpp-bridge` where applicable
 

@@ -610,6 +610,38 @@ fn test_timer_records_at_most_once() {
     clear_metrics();
 }
 
+/// Concurrent timers on distinct names all land in the default store.
+///
+/// Carried over from the retired `classic-perf-core` facade suite so the
+/// seconds view keeps a multi-threaded recording check after #256.
+#[test]
+#[serial]
+fn test_concurrent_timers_record_into_default_store() {
+    clear_metrics();
+
+    let handles: Vec<_> = (0..10)
+        .map(|i| {
+            thread::spawn(move || {
+                for _ in 0..10 {
+                    let timer = start_timer(format!("thread_{i}"));
+                    thread::sleep(Duration::from_micros(100));
+                    timer.finish().unwrap();
+                }
+            })
+        })
+        .collect();
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    let summary = get_summary();
+    assert_eq!(summary.len(), 10);
+    for i in 0..10 {
+        assert_eq!(summary[&format!("thread_{i}")].count, 10);
+    }
+    clear_metrics();
+}
+
 #[test]
 #[serial]
 fn test_timer_overflow_is_rejected_on_finish_and_skipped_on_drop() {

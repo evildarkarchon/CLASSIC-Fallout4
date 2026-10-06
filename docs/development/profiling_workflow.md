@@ -30,7 +30,7 @@ Performance optimization in CLASSIC follows a systematic four-step process:
 ```bash
 # Ensure Python bindings environment is ready
 # python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
-# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+# --inexact is load-bearing: it keeps uv from pruning the maturin-built classic-python-bindings wheel.
 uv sync --project python-bindings --inexact
 
 # Build Rust extensions used by the maintained Python smoke/parity workflow
@@ -60,7 +60,7 @@ Generate CPU flamegraphs for Rust benchmarks or applications:
 .\scripts\profile\run_flamegraph.ps1 -Bench -BenchFilter "parse_yaml"
 
 # Profile specific crate
-.\scripts\profile\run_flamegraph.ps1 -Crate classic-settings-core -Open
+.\scripts\profile\run_flamegraph.ps1 -Crate classic-shared-core -Open
 ```
 
 Output: `target/profiling/flamegraphs/flamegraph-{timestamp}.svg`
@@ -176,17 +176,16 @@ Baseline location: `target/criterion/{baseline-name}/`
 
 ### GIL Benchmarks
 
-For Python-binding crates, GIL benchmarks measure pure Rust compute time:
+For the Python binding adapter (`classic-python-bindings`, one crate behind all
+18 `classic_*` facades since issue #259), GIL benchmarks measure pure Rust
+compute time:
 
 ```bash
-# Run GIL benchmarks for YAML operations
-BENCH_MODE=quick cargo bench --bench gil_benchmarks -p classic-yaml-py
-
 # Run GIL benchmarks for scanlog operations
-BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-scanlog-py
+BENCH_MODE=thorough cargo bench --bench scanlog_gil_benchmarks -p classic-python-bindings
 
 # Run GIL benchmarks for file-io operations
-BENCH_MODE=quick cargo bench --bench gil_benchmarks -p classic-file-io-py
+BENCH_MODE=quick cargo bench --bench file_io_gil_benchmarks -p classic-python-bindings
 ```
 
 ## Step 3: Implement Optimization

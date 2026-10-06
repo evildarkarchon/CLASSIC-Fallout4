@@ -534,7 +534,7 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
         Some("settings-load" | "settings-yaml" | "settings-yaml-batch") => {
             return settings_load::execute(&fixture);
         }
-        Some("xse-folder") => return xse_folder::execute(&fixture),
+        Some("xse-folder") => return xse_folder::execute(&text(&scenario["action"])?, &fixture),
         Some("installation-paths") => return installation_paths::execute(&fixture),
         Some("xse-operations") => return xse_operations::execute(&fixture),
         Some("game-identity" | "runtime-access") => {

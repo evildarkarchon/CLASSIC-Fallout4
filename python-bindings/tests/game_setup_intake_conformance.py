@@ -42,17 +42,34 @@ def observe_setup(fixture: dict) -> dict:
             }
 
         before = tree()
+        facts = fixture["facts"]
+
+        def fact(name):
+            """Resolve one optional root-relative fact; omitted facts stay unset for discovery."""
+            value = facts.get(name)
+            if value is None:
+                return None
+            if (
+                    "\\" in value
+                    or Path(value).is_absolute()
+                    or any(part in {"", ".", ".."} for part in value.split("/"))
+            ):
+                raise ValueError("setup fact escaped root")
+            return root / value
+
+        game_root = fact("gameRoot")
         intake = classic_scangame.GameSetupIntake(
-            "Starfield",
-            "Original",
-            game_root=root / "Game",
-            docs_root=root / "Docs",
-            game_exe_path=root / "Game/Starfield.exe",
+            facts["gameId"],
+            facts["gameVersion"],
+            game_root=game_root,
+            docs_root=fact("docsRoot"),
+            game_exe_path=fact("gameExePath"),
         )
         if (
-                intake.game_id != "Starfield"
-                or intake.game_version != "Original"
-                or Path(intake.game_root) != root / "Game"
+                intake.game_id != facts["gameId"]
+                or intake.game_version != facts["gameVersion"]
+                or (None if intake.game_root is None else Path(intake.game_root))
+                != game_root
         ):
             raise ValueError("setup constructor lost supplied facts")
 

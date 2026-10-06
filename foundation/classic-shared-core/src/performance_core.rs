@@ -27,8 +27,8 @@
 //!   checked arithmetic. A record that would wrap any of them is rejected.
 //!
 //! A rejected record returns a [`TimingError`] and leaves every counter for
-//! every operation unchanged. Python bindings are in `classic-shared-py` and
-//! `classic-perf-py`.
+//! every operation unchanged. Python bindings are the `classic_shared` and
+//! `classic_perf` modules of the `classic-python-bindings` adapter crate.
 
 use dashmap::DashMap;
 use dashmap::mapref::entry::Entry;

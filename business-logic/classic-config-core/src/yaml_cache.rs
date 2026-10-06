@@ -1,0 +1,113 @@
+//! Per-user YAML cache directory resolver.
+//!
+//! Shippable CLASSIC YAML files (`CLASSIC Main.yaml`, `CLASSIC Fallout4.yaml`,
+//! future additions) are bundled into the install directory at build time but
+//! are also allowed to be *updated in place* at runtime via the YAML update
+//! delivery flow. Updated copies never overwrite the bundled install tree (which
+//! may be read-only or under `Program Files`). Instead, they land in a per-user
+//! cache directory resolved here.
+//!
+//! Config owns this location as YAML Data file policy: Installed YAML Data
+//! selection reads update candidates from it and the YAML Data Update Channel
+//! (`classic-update-core`) installs into it. It moved here from
+//! `classic-path-core`, which keeps only the disjoint app-notification cache;
+//! the OS cache root both build on is the neutral
+//! `classic_shared_core::path_core::user_cache_root_with_env`.
+//!
+//! # Location
+//!
+//! - **Windows** — `%LOCALAPPDATA%\CLASSIC\yaml-cache\`, falling back to
+//!   `%APPDATA%\CLASSIC\yaml-cache\` when `LOCALAPPDATA` is not set (unusual but
+//!   possible on stripped-down Windows environments).
+//! - **Other targets (source portability)** —
+//!   `${XDG_CACHE_HOME:-$HOME/.cache}/CLASSIC/yaml-cache/`. This keeps the Rust
+//!   workspace cross-compilable even though shipped binaries are Windows-only.
+//!
+//! # Helpers
+//!
+//! - [`yaml_cache_dir`] — pure resolution, never touches the filesystem.
+//! - [`ensure_yaml_cache_dir`] — resolves and creates the directory (idempotent).
+//!
+//! # Testing
+//!
+//! The env-lookup seam is factored through [`yaml_cache_dir_with_env`] and
+//! [`ensure_yaml_cache_dir_with_env`] so unit tests can drive the resolver with a
+//! mocked environment without mutating process-wide env (which is `unsafe` in
+//! edition 2024 and forbidden by this crate's `unsafe_code = "deny"` lint).
+
+use classic_shared_core::path_core::{PathError, non_empty_env_var, user_cache_root_with_env};
+use std::path::PathBuf;
+
+/// The per-user cache subdirectory name, relative to the platform cache root.
+const CACHE_SUBDIR: &str = "CLASSIC";
+/// The YAML-specific cache directory name inside [`CACHE_SUBDIR`].
+const YAML_CACHE_DIR: &str = "yaml-cache";
+
+/// Resolve the absolute path of the per-user YAML cache directory.
+///
+/// This does not create the directory; use [`ensure_yaml_cache_dir`] to resolve
+/// and mkdir in one call.
+///
+/// # Errors
+///
+/// Returns [`PathError::InvalidPath`] when none of the expected environment
+/// variables are set (e.g., Windows without `LOCALAPPDATA` and `APPDATA`, or a
+/// Unix environment without `HOME` and without `XDG_CACHE_HOME`).
+pub fn yaml_cache_dir() -> Result<PathBuf, PathError> {
+    yaml_cache_dir_with_env(non_empty_env_var)
+}
+
+/// Testable form of [`yaml_cache_dir`] that reads environment variables through
+/// a caller-supplied closure. Production code calls [`yaml_cache_dir`], which
+/// threads `std::env::var` through this function.
+///
+/// The closure should return `None` for unset *or empty* variables; unit tests
+/// typically pass a closure backed by a `HashMap`.
+pub fn yaml_cache_dir_with_env<F>(env: F) -> Result<PathBuf, PathError>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    let root = cache_root(&env)?;
+    Ok(root.join(CACHE_SUBDIR).join(YAML_CACHE_DIR))
+}
+
+/// Resolve the per-user YAML cache directory and create it (and parents) if
+/// missing. Idempotent — returns `Ok` even when the directory already exists.
+///
+/// # Errors
+///
+/// - [`PathError::InvalidPath`] when the cache root cannot be resolved
+///   (see [`yaml_cache_dir`]).
+/// - [`PathError::IoError`] when directory creation fails after resolution.
+pub fn ensure_yaml_cache_dir() -> Result<PathBuf, PathError> {
+    ensure_yaml_cache_dir_with_env(non_empty_env_var)
+}
+
+/// Testable form of [`ensure_yaml_cache_dir`] that reads environment variables
+/// through a caller-supplied closure.
+pub fn ensure_yaml_cache_dir_with_env<F>(env: F) -> Result<PathBuf, PathError>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    let dir = yaml_cache_dir_with_env(env)?;
+    std::fs::create_dir_all(&dir).map_err(|source| PathError::IoError {
+        path: dir.clone(),
+        source,
+    })?;
+    Ok(dir)
+}
+
+/// Resolve the shared OS cache root, wording a failure for this cache so the
+/// error message stays identical to the pre-move per-platform resolvers.
+fn cache_root<F>(env: &F) -> Result<PathBuf, PathError>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    user_cache_root_with_env(env).map_err(|missing| {
+        PathError::InvalidPath(format!("{missing}; cannot resolve YAML cache directory"))
+    })
+}
+
+#[cfg(test)]
+#[path = "yaml_cache_tests.rs"]
+mod tests;

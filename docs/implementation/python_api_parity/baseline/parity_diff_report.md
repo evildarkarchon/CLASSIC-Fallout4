@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-02T01:55:08.174049+00:00`
-- Tier-1 contract rows: **1237**
-- Tier-1 matched: **1235**
+- Generated: `2026-10-06T03:59:08.659691+00:00`
+- Tier-1 contract rows: **1225**
+- Tier-1 matched: **1223**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -274,13 +274,13 @@
 | `shared.lib.GameId.exe_name` | `shared` | `classic-shared-core` | `GameId` | `classic_shared.GameId.exe_name` | `matched` |
 | `shared.lib.GameId.is_vr` | `shared` | `classic-shared-core` | `GameId` | `classic_shared.GameId.is_vr` | `matched` |
 | `version_registry.lib.NULL_VERSION@rust` | `version_registry` | `classic-version-registry-core` | `NULL_VERSION` | `classic_version_registry.Fallout4Version` | `matched` |
-| `settings.lib.YamlFile` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile` | `matched` |
-| `settings.lib.YamlFile.__eq__` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.__eq__` | `matched` |
-| `settings.lib.YamlFile.__hash__` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.__hash__` | `matched` |
-| `settings.lib.YamlFile.__repr__` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.__repr__` | `matched` |
-| `settings.lib.YamlFile.__str__` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.__str__` | `matched` |
-| `settings.lib.YamlFile.as_str` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.as_str` | `matched` |
-| `settings.lib.YamlFile.description` | `settings` | `classic-settings-core` | `YamlFile` | `classic_settings.YamlFile.description` | `matched` |
+| `settings.lib.YamlFile` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile` | `matched` |
+| `settings.lib.YamlFile.__eq__` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.__eq__` | `matched` |
+| `settings.lib.YamlFile.__hash__` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.__hash__` | `matched` |
+| `settings.lib.YamlFile.__repr__` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.__repr__` | `matched` |
+| `settings.lib.YamlFile.__str__` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.__str__` | `matched` |
+| `settings.lib.YamlFile.as_str` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.as_str` | `matched` |
+| `settings.lib.YamlFile.description` | `settings` | `classic-config-core` | `YamlSource` | `classic_settings.YamlFile.description` | `matched` |
 | `version_registry.lib.display_name@rust` | `version_registry` | `classic-version-registry-core` | `display_name` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.display_name_string@rust` | `version_registry` | `classic-version-registry-core` | `display_name_string` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.game_version@rust` | `version_registry` | `classic-version-registry-core` | `game_version` | `classic_version_registry.Fallout4Version` | `matched` |
@@ -346,9 +346,9 @@
 | `database.formid_value_lookup.FormIdValueLookup.from_shared_pool` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.from_shared_pool` | `matched` |
 | `database.formid_value_lookup.FormIdValueLookup.lookup` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup` | `matched` |
 | `database.formid_value_lookup.FormIdValueLookup.lookup_batch` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup_batch` | `matched` |
-| `file_io.core.BackupInfo@rust` | `file_io` | `classic-file-io-core` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.BackupManager@rust` | `file_io` | `classic-file-io-core` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.BackupType@rust` | `file_io` | `classic-file-io-core` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupInfo@rust` | `file_io` | `classic-resource-core` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupManager@rust` | `file_io` | `classic-resource-core` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupType@rust` | `file_io` | `classic-resource-core` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.FileIOCore` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.FileIOCore.__init__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.__init__` | `matched` |
 | `file_io.core.FileIOCore.append_file` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.append_file` | `matched` |
@@ -371,18 +371,18 @@
 | `file_io.core.FileIOCore.write_bytes` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_bytes` | `matched` |
 | `file_io.core.FileIOCore.write_file` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_file` | `matched` |
 | `file_io.core.FileIOCore.write_lines` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_lines` | `matched` |
-| `file_io.core.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.FileOperationResult@rust` | `file_io` | `classic-file-io-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.GameFilesManager@rust` | `file_io` | `classic-file-io-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.GameTarget@rust` | `file_io` | `classic-file-io-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.RejectedInput@rust` | `file_io` | `classic-file-io-core` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.TargetedResolution@rust` | `file_io` | `classic-file-io-core` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.backup@rust` | `file_io` | `classic-file-io-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileOperation@rust` | `file_io` | `classic-resource-core` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileOperationResult@rust` | `file_io` | `classic-resource-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.GameFilesManager@rust` | `file_io` | `classic-resource-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.backup@rust` | `file_io` | `classic-resource-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.calculate_similarity` | `file_io` | `classic-file-io-core` | `calculate_similarity` | `classic_file_io.calculate_similarity` | `matched` |
 | `file_io.core.core@rust` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `classic-file-io-core` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `classic-scanlog-core` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.similarity_ratio` | `file_io` | `classic-file-io-core` | `similarity_ratio` | `classic_file_io.similarity_ratio` | `matched` |
-| `file_io.dds.DDSAnalyzer@rust` | `file_io` | `classic-file-io-core` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.DDSAnalyzer@rust` | `file_io` | `classic-resource-core` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.DDSHeader` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.DDSHeader.from_bytes` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.from_bytes` | `matched` |
 | `file_io.dds.DDSHeader.has_mipmaps` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.has_mipmaps` | `matched` |
@@ -390,7 +390,7 @@
 | `file_io.dds.DDSHeader.has_valid_bc_dimensions` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.has_valid_bc_dimensions` | `matched` |
 | `file_io.dds.DDSHeader.is_bc_compressed` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.is_bc_compressed` | `matched` |
 | `file_io.dds.DDSHeader.is_reasonable_size` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader.is_reasonable_size` | `matched` |
-| `file_io.dds.DDSIssue@rust` | `file_io` | `classic-file-io-core` | `DDSIssue` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.DDSIssue@rust` | `file_io` | `classic-resource-core` | `DDSIssue` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.dds@rust` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.encoding.EncodingDetector` | `file_io` | `classic-file-io-core` | `EncodingDetector` | `classic_file_io.EncodingDetector` | `matched` |
 | `file_io.encoding.EncodingDetector.__init__` | `file_io` | `classic-file-io-core` | `EncodingDetector` | `classic_file_io.EncodingDetector.__init__` | `matched` |
@@ -399,19 +399,19 @@
 | `file_io.error.RustFileIOError` | `file_io` | `classic-file-io-core` | `FileIOError` | `classic_file_io.RustFileIOError` | `matched` |
 | `file_io.error.RustFileIOIOError` | `file_io` | `classic-file-io-core` | `FileIOError` | `classic_file_io.RustFileIOIOError` | `matched` |
 | `file_io.error.RustFileIOParseError` | `file_io` | `classic-file-io-core` | `FileIOError` | `classic_file_io.RustFileIOParseError` | `matched` |
-| `file_io.generation.FileGenerator` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
-| `file_io.generation.FileGenerator.__init__` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.__init__` | `matched` |
-| `file_io.generation.FileGenerator.config` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.config` | `matched` |
-| `file_io.generation.FileGenerator.generate_all_files_async` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_all_files_async` | `matched` |
-| `file_io.generation.FileGenerator.generate_ignore_file_async` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_ignore_file_async` | `matched` |
-| `file_io.generation.FileGenerator.generate_local_yaml_async` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_local_yaml_async` | `matched` |
-| `file_io.generation.FileGenerator.ignore_file_path` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.ignore_file_path` | `matched` |
-| `file_io.generation.FileGenerator.local_yaml_path` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.local_yaml_path` | `matched` |
-| `file_io.generation.FileGeneratorConfig` | `file_io` | `classic-file-io-core` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig` | `matched` |
-| `file_io.generation.FileGeneratorConfig.__init__` | `file_io` | `classic-file-io-core` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig.__init__` | `matched` |
-| `file_io.generation.generate_ignore_file_async` | `file_io` | `classic-file-io-core` | `generate_ignore_file` | `classic_file_io.generate_ignore_file_async` | `matched` |
-| `file_io.generation.generate_local_yaml_async` | `file_io` | `classic-file-io-core` | `generate_local_yaml` | `classic_file_io.generate_local_yaml_async` | `matched` |
-| `file_io.generation.generation@rust` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
+| `file_io.generation.FileGenerator` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
+| `file_io.generation.FileGenerator.__init__` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.__init__` | `matched` |
+| `file_io.generation.FileGenerator.config` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.config` | `matched` |
+| `file_io.generation.FileGenerator.generate_all_files_async` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_all_files_async` | `matched` |
+| `file_io.generation.FileGenerator.generate_ignore_file_async` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_ignore_file_async` | `matched` |
+| `file_io.generation.FileGenerator.generate_local_yaml_async` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_local_yaml_async` | `matched` |
+| `file_io.generation.FileGenerator.ignore_file_path` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.ignore_file_path` | `matched` |
+| `file_io.generation.FileGenerator.local_yaml_path` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.local_yaml_path` | `matched` |
+| `file_io.generation.FileGeneratorConfig` | `file_io` | `classic-config-core` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig` | `matched` |
+| `file_io.generation.FileGeneratorConfig.__init__` | `file_io` | `classic-config-core` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig.__init__` | `matched` |
+| `file_io.generation.generate_ignore_file_async` | `file_io` | `classic-config-core` | `generate_ignore_file` | `classic_file_io.generate_ignore_file_async` | `matched` |
+| `file_io.generation.generate_local_yaml_async` | `file_io` | `classic-config-core` | `generate_local_yaml` | `classic_file_io.generate_local_yaml_async` | `matched` |
+| `file_io.generation.generation@rust` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
 | `file_io.hash.FileHasher` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher` | `matched` |
 | `file_io.hash.FileHasher.cache_size` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher.cache_size` | `matched` |
 | `file_io.hash.FileHasher.cache_stats` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher.cache_stats` | `matched` |
@@ -422,23 +422,23 @@
 | `file_io.hash.FileHasher.reset_cache_stats` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher.reset_cache_stats` | `matched` |
 | `file_io.hash.FileHasherCacheStats` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasherCacheStats` | `matched` |
 | `file_io.hash.hash@rust` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher` | `matched` |
-| `file_io.log_collection.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-file-io-core` | `CRASH_AUTOSCAN_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
-| `file_io.log_collection.CRASH_LOG_PATTERN@rust` | `file_io` | `classic-file-io-core` | `CRASH_LOG_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
-| `file_io.log_collection.PyLineStreamer` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLineStreamer` | `matched` |
-| `file_io.log_collection.PyLineStreamer.__aiter__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLineStreamer.__aiter__` | `matched` |
-| `file_io.log_collection.PyLineStreamer.__anext__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLineStreamer.__anext__` | `matched` |
-| `file_io.log_collection.PyLogCollector` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
-| `file_io.log_collection.PyLogCollector.__init__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.__init__` | `matched` |
-| `file_io.log_collection.PyLogCollector.collect_all` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.collect_all` | `matched` |
-| `file_io.log_collection.PyLogCollector.collect_crash_logs` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.collect_crash_logs` | `matched` |
-| `file_io.log_collection.PyLogCollector.copy_from_xse_folder` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.copy_from_xse_folder` | `matched` |
-| `file_io.log_collection.PyLogCollector.crash_logs_dir` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.crash_logs_dir` | `matched` |
-| `file_io.log_collection.PyLogCollector.move_from_base_folder` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.move_from_base_folder` | `matched` |
-| `file_io.log_collection.PyLogCollector.pastebin_dir` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.pastebin_dir` | `matched` |
-| `file_io.log_collection.PySyncLineStreamer` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PySyncLineStreamer` | `matched` |
-| `file_io.log_collection.PySyncLineStreamer.__iter__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PySyncLineStreamer.__iter__` | `matched` |
-| `file_io.log_collection.PySyncLineStreamer.__next__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PySyncLineStreamer.__next__` | `matched` |
-| `file_io.log_collection.log_collection@rust` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.CRASH_LOG_PATTERN@rust` | `file_io` | `classic-scanlog-core` | `CRASH_LOG_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.PyLineStreamer` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PyLineStreamer` | `matched` |
+| `file_io.log_collection.PyLineStreamer.__aiter__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PyLineStreamer.__aiter__` | `matched` |
+| `file_io.log_collection.PyLineStreamer.__anext__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PyLineStreamer.__anext__` | `matched` |
+| `file_io.log_collection.PyLogCollector` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.PyLogCollector.__init__` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.__init__` | `matched` |
+| `file_io.log_collection.PyLogCollector.collect_all` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.collect_all` | `matched` |
+| `file_io.log_collection.PyLogCollector.collect_crash_logs` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.collect_crash_logs` | `matched` |
+| `file_io.log_collection.PyLogCollector.copy_from_xse_folder` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.copy_from_xse_folder` | `matched` |
+| `file_io.log_collection.PyLogCollector.crash_logs_dir` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.crash_logs_dir` | `matched` |
+| `file_io.log_collection.PyLogCollector.move_from_base_folder` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.move_from_base_folder` | `matched` |
+| `file_io.log_collection.PyLogCollector.pastebin_dir` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.pastebin_dir` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PySyncLineStreamer` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer.__iter__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PySyncLineStreamer.__iter__` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer.__next__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PySyncLineStreamer.__next__` | `matched` |
+| `file_io.log_collection.log_collection@rust` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
 | `message.lib.Message` | `message` | `classic-message-core` | `Message` | `classic_message.Message` | `matched` |
 | `message.lib.Message.__init__` | `message` | `classic-message-core` | `Message` | `classic_message.Message.__init__` | `matched` |
 | `message.lib.Message.content` | `message` | `classic-message-core` | `Message` | `classic_message.Message.content` | `matched` |
@@ -484,14 +484,14 @@
 | `message.logging.logging@rust` | `message` | `classic-message-core` | `Logger` | `classic_message.Logger` | `matched` |
 | `message.logging.redact_contract_fields@rust` | `message` | `classic-message-core` | `redact_contract_fields` | `classic_message.Logger` | `matched` |
 | `message.logging.redact_field_value@rust` | `message` | `classic-message-core` | `redact_field_value` | `classic_message.Logger` | `matched` |
-| `path.lib.BackupError@rust` | `path` | `classic-path-core` | `BackupError` | `classic_path.BackupManager` | `matched` |
-| `path.lib.BackupManager` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager` | `matched` |
-| `path.lib.BackupManager.__init__` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.__init__` | `matched` |
-| `path.lib.BackupManager.create_backup` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.create_backup` | `matched` |
-| `path.lib.BackupManager.extract_version_from_xse_log` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.extract_version_from_xse_log` | `matched` |
-| `path.lib.BackupManager.get_version_path` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.get_version_path` | `matched` |
-| `path.lib.BackupManager.list_versions` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.list_versions` | `matched` |
-| `path.lib.BackupResult@rust` | `path` | `classic-path-core` | `BackupResult` | `classic_path.BackupManager` | `matched` |
+| `path.lib.BackupError@rust` | `path` | `classic-resource-core` | `VersionBackupError` | `classic_path.BackupManager` | `matched` |
+| `path.lib.BackupManager` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager` | `matched` |
+| `path.lib.BackupManager.__init__` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.__init__` | `matched` |
+| `path.lib.BackupManager.create_backup` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.create_backup` | `matched` |
+| `path.lib.BackupManager.extract_version_from_xse_log` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.extract_version_from_xse_log` | `matched` |
+| `path.lib.BackupManager.get_version_path` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.get_version_path` | `matched` |
+| `path.lib.BackupManager.list_versions` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.list_versions` | `matched` |
+| `path.lib.BackupResult@rust` | `path` | `classic-resource-core` | `VersionBackupResult` | `classic_path.BackupManager` | `matched` |
 | `path.lib.DocsPathError@rust` | `path` | `classic-path-core` | `DocsPathError` | `classic_path.BackupManager` | `matched` |
 | `path.lib.DocsPathFinder` | `path` | `classic-path-core` | `DocsPathFinder` | `classic_path.DocsPathFinder` | `matched` |
 | `path.lib.DocsPathFinder.__init__` | `path` | `classic-path-core` | `DocsPathFinder` | `classic_path.DocsPathFinder.__init__` | `matched` |
@@ -516,46 +516,46 @@
 | `path.lib.IniCheckResult` | `path` | `classic-path-core` | `IniCheckResult` | `classic_path.IniCheckResult` | `matched` |
 | `path.lib.IniCheckResult.has_issue` | `path` | `classic-path-core` | `IniCheckResult` | `classic_path.IniCheckResult.has_issue` | `matched` |
 | `path.lib.IniFile@rust` | `path` | `classic-path-core` | `IniFile` | `classic_path.BackupManager` | `matched` |
-| `path.lib.PathError@rust` | `path` | `classic-path-core` | `PathError` | `classic_path.BackupManager` | `matched` |
-| `path.lib.PathResult@rust` | `path` | `classic-path-core` | `PathResult` | `classic_path.BackupManager` | `matched` |
+| `path.lib.PathError@rust` | `path` | `classic-shared-core` | `PathError` | `classic_path.BackupManager` | `matched` |
+| `path.lib.PathResult@rust` | `path` | `classic-shared-core` | `PathResult` | `classic_path.BackupManager` | `matched` |
 | `path.lib.PathValidator` | `path` | `None` | `None` | `classic_path.PathValidator` | `unmapped` |
-| `path.lib.PathValidator.check_drive_exists` | `path` | `classic-path-core` | `check_drive_exists` | `classic_path.PathValidator.check_drive_exists` | `matched` |
-| `path.lib.PathValidator.check_read_permissions` | `path` | `classic-path-core` | `check_read_permissions` | `classic_path.PathValidator.check_read_permissions` | `matched` |
-| `path.lib.PathValidator.check_write_permissions` | `path` | `classic-path-core` | `check_write_permissions` | `classic_path.PathValidator.check_write_permissions` | `matched` |
-| `path.lib.PathValidator.is_restricted_path` | `path` | `classic-path-core` | `is_restricted_path` | `classic_path.PathValidator.is_restricted_path` | `matched` |
-| `path.lib.PathValidator.is_valid_executable_path` | `path` | `classic-path-core` | `is_valid_executable_path` | `classic_path.PathValidator.is_valid_executable_path` | `matched` |
-| `path.lib.PathValidator.is_valid_path` | `path` | `classic-path-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
-| `path.lib.PathValidator.validate_custom_scan_path` | `path` | `classic-path-core` | `validate_custom_scan_path` | `classic_path.PathValidator.validate_custom_scan_path` | `matched` |
-| `path.lib.PathValidator.validate_path_with_permissions` | `path` | `classic-path-core` | `validate_path_with_permissions` | `classic_path.PathValidator.validate_path_with_permissions` | `matched` |
+| `path.lib.PathValidator.check_drive_exists` | `path` | `classic-shared-core` | `check_drive_exists` | `classic_path.PathValidator.check_drive_exists` | `matched` |
+| `path.lib.PathValidator.check_read_permissions` | `path` | `classic-shared-core` | `check_read_permissions` | `classic_path.PathValidator.check_read_permissions` | `matched` |
+| `path.lib.PathValidator.check_write_permissions` | `path` | `classic-shared-core` | `check_write_permissions` | `classic_path.PathValidator.check_write_permissions` | `matched` |
+| `path.lib.PathValidator.is_restricted_path` | `path` | `classic-scanlog-core` | `is_restricted_path` | `classic_path.PathValidator.is_restricted_path` | `matched` |
+| `path.lib.PathValidator.is_valid_executable_path` | `path` | `classic-shared-core` | `is_executable_file_path` | `classic_path.PathValidator.is_valid_executable_path` | `matched` |
+| `path.lib.PathValidator.is_valid_path` | `path` | `classic-shared-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
+| `path.lib.PathValidator.validate_custom_scan_path` | `path` | `classic-scanlog-core` | `validate_custom_scan_path` | `classic_path.PathValidator.validate_custom_scan_path` | `matched` |
+| `path.lib.PathValidator.validate_path_with_permissions` | `path` | `classic-shared-core` | `validate_path_with_permissions` | `classic_path.PathValidator.validate_path_with_permissions` | `matched` |
 | `path.lib.PathValidator.validate_required_files` | `path` | `classic-path-core` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.PathValidator.validate_settings_path` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.PathValidator.validate_settings_path` | `matched` |
-| `path.lib.PathValidator.validate_settings_paths` | `path` | `classic-path-core` | `validate_settings_paths` | `classic_path.PathValidator.validate_settings_paths` | `matched` |
+| `path.lib.PathValidator.validate_settings_paths` | `path` | `classic-scanlog-core` | `validate_settings_paths` | `classic_path.PathValidator.validate_settings_paths` | `matched` |
 | `path.lib.ValidationError@rust` | `path` | `classic-path-core` | `ValidationError` | `classic_path.BackupManager` | `matched` |
-| `path.lib.XseVersion` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion` | `matched` |
-| `path.lib.XseVersion.__init__` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.__init__` | `matched` |
-| `path.lib.XseVersion.full_version` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.full_version` | `matched` |
-| `path.lib.XseVersion.sanitized` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.sanitized` | `matched` |
-| `path.lib.check_drive_exists@rust` | `path` | `classic-path-core` | `check_drive_exists` | `classic_path.BackupManager` | `matched` |
-| `path.lib.check_read_permissions@rust` | `path` | `classic-path-core` | `check_read_permissions` | `classic_path.BackupManager` | `matched` |
-| `path.lib.check_write_permissions@rust` | `path` | `classic-path-core` | `check_write_permissions` | `classic_path.BackupManager` | `matched` |
+| `path.lib.XseVersion` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion` | `matched` |
+| `path.lib.XseVersion.__init__` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion.__init__` | `matched` |
+| `path.lib.XseVersion.full_version` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion.full_version` | `matched` |
+| `path.lib.XseVersion.sanitized` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion.sanitized` | `matched` |
+| `path.lib.check_drive_exists@rust` | `path` | `classic-shared-core` | `check_drive_exists` | `classic_path.BackupManager` | `matched` |
+| `path.lib.check_read_permissions@rust` | `path` | `classic-shared-core` | `check_read_permissions` | `classic_path.BackupManager` | `matched` |
+| `path.lib.check_write_permissions@rust` | `path` | `classic-shared-core` | `check_write_permissions` | `classic_path.BackupManager` | `matched` |
 | `path.lib.get_system_documents_path@rust` | `path` | `classic-path-core` | `get_system_documents_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.has_read_permission@rust` | `path` | `classic-path-core` | `has_read_permission` | `classic_path.BackupManager` | `matched` |
-| `path.lib.has_write_permission@rust` | `path` | `classic-path-core` | `has_write_permission` | `classic_path.BackupManager` | `matched` |
-| `path.lib.is_restricted_path@rust` | `path` | `classic-path-core` | `is_restricted_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.is_valid_path@rust` | `path` | `classic-path-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
+| `path.lib.has_read_permission@rust` | `path` | `classic-shared-core` | `has_read_permission` | `classic_path.BackupManager` | `matched` |
+| `path.lib.has_write_permission@rust` | `path` | `classic-shared-core` | `has_write_permission` | `classic_path.BackupManager` | `matched` |
+| `path.lib.is_restricted_path@rust` | `path` | `classic-scanlog-core` | `is_restricted_path` | `classic_path.BackupManager` | `matched` |
+| `path.lib.is_valid_path@rust` | `path` | `classic-shared-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
 | `path.lib.parse_steam_library@rust` | `path` | `classic-path-core` | `parse_steam_library` | `classic_path.BackupManager` | `matched` |
 | `path.lib.parse_xse_log@rust` | `path` | `classic-path-core` | `parse_xse_log` | `classic_path.BackupManager` | `matched` |
 | `path.lib.query_game_registry@rust` | `path` | `classic-path-core` | `query_game_registry` | `classic_path.BackupManager` | `matched` |
-| `path.lib.remove_readonly` | `path` | `classic-path-core` | `remove_readonly` | `classic_path.remove_readonly` | `matched` |
-| `path.lib.remove_readonly_attribute@rust` | `path` | `classic-path-core` | `remove_readonly_attribute` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_custom_scan_path@rust` | `path` | `classic-path-core` | `validate_custom_scan_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_is_directory@rust` | `path` | `classic-path-core` | `validate_is_directory` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_is_file@rust` | `path` | `classic-path-core` | `validate_is_file` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_path_exists@rust` | `path` | `classic-path-core` | `validate_path_exists` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_path_with_permissions@rust` | `path` | `classic-path-core` | `validate_path_with_permissions` | `classic_path.BackupManager` | `matched` |
+| `path.lib.remove_readonly` | `path` | `classic-shared-core` | `remove_readonly` | `classic_path.remove_readonly` | `matched` |
+| `path.lib.remove_readonly_attribute@rust` | `path` | `classic-shared-core` | `remove_readonly_attribute` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_custom_scan_path@rust` | `path` | `classic-scanlog-core` | `validate_custom_scan_path` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_is_directory@rust` | `path` | `classic-shared-core` | `validate_is_directory` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_is_file@rust` | `path` | `classic-shared-core` | `validate_is_file` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_path_exists@rust` | `path` | `classic-shared-core` | `validate_path_exists` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_path_with_permissions@rust` | `path` | `classic-shared-core` | `validate_path_with_permissions` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_required_files@rust` | `path` | `classic-path-core` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_settings_paths@rust` | `path` | `classic-scanlog-core` | `validate_settings_paths` | `classic_path.BackupManager` | `matched` |
 | `perf.lib.MetricsSummary` | `perf` | `classic-shared-core` | `MetricsSummary` | `classic_perf.MetricsSummary` | `matched` |
 | `perf.lib.Timer` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer` | `matched` |
 | `perf.lib.Timer.__init__` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer.__init__` | `matched` |
@@ -969,11 +969,11 @@
 | `scanlog.version.CrashgenVersion.__init__` | `scanlog` | `classic-scanlog-core` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__init__` | `matched` |
 | `scanlog.version.CrashgenVersion.to_tuple` | `scanlog` | `classic-scanlog-core` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.to_tuple` | `matched` |
 | `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `classic-scanlog-core` | `crashgen_version_gen` | `classic_scanlog.parse_crashgen_version` | `matched` |
-| `settings.lib.CacheStats@rust` | `settings` | `classic-settings-core` | `CacheStats` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.CacheStats@rust` | `settings` | `classic-shared-core` | `CacheStats` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.SettingsCacheStats` | `settings` | `None` | `None` | `classic_settings.SettingsCacheStats` | `unmapped` |
-| `settings.lib.SettingsError@rust` | `settings` | `classic-settings-core` | `SettingsError` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.SettingsSource@rust` | `settings` | `classic-settings-core` | `SettingsSource` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.Yaml@rust` | `settings` | `classic-settings-core` | `Yaml` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.SettingsError@rust` | `settings` | `classic-shared-core` | `SettingsError` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.SettingsSource@rust` | `settings` | `classic-shared-core` | `SettingsSource` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.Yaml@rust` | `settings` | `classic-shared-core` | `Yaml` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.cache_keys` | `settings` | `classic-shared-core` | `cache_keys` | `classic_settings.cache_keys` | `matched` |
 | `settings.lib.cache_size` | `settings` | `classic-shared-core` | `cache_size` | `classic_settings.cache_size` | `matched` |
 | `settings.lib.cache_stats` | `settings` | `classic-shared-core` | `cache_stats` | `classic_settings.cache_stats` | `matched` |
@@ -986,14 +986,14 @@
 | `settings.lib.load_batch_sync` | `settings` | `classic-shared-core` | `load_batch_sync` | `classic_settings.load_batch_sync` | `matched` |
 | `settings.lib.load_settings_async` | `settings` | `classic-shared-core` | `load_settings_async` | `classic_settings.load_settings_async` | `matched` |
 | `settings.lib.load_settings_sync` | `settings` | `classic-shared-core` | `load_settings_sync` | `classic_settings.load_settings_sync` | `matched` |
-| `settings.lib.load_yaml_async@rust` | `settings` | `classic-settings-core` | `load_yaml_async` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_batch_async@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_async` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_batch_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_sync` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_merged_async@rust` | `settings` | `classic-settings-core` | `load_yaml_merged_async` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_merged_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_merged_sync` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_sync` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.merge_yaml_documents@rust` | `settings` | `classic-settings-core` | `merge_yaml_documents` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.parse_yaml_content@rust` | `settings` | `classic-settings-core` | `parse_yaml_content` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_async@rust` | `settings` | `classic-shared-core` | `load_yaml_async` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_batch_async@rust` | `settings` | `classic-shared-core` | `load_yaml_batch_async` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_batch_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_batch_sync` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_merged_async@rust` | `settings` | `classic-shared-core` | `load_yaml_merged_async` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_merged_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_merged_sync` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_sync` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.merge_yaml_documents@rust` | `settings` | `classic-shared-core` | `merge_yaml_documents` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.parse_yaml_content@rust` | `settings` | `classic-shared-core` | `parse_yaml_content` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.reset_cache_stats` | `settings` | `classic-shared-core` | `reset_cache_stats` | `classic_settings.reset_cache_stats` | `matched` |
 | `settings.lib.validate_setting_value` | `settings` | `classic-shared-core` | `validate_setting_value` | `classic_settings.validate_setting_value` | `matched` |
 | `shared.path.PathHandler` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler` | `matched` |
@@ -1014,8 +1014,6 @@
 | `shared.path.PathHandler.to_absolute` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler.to_absolute` | `matched` |
 | `shared.path.PathHandler.validate_paths_batch` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler.validate_paths_batch` | `matched` |
 | `shared.path.PathHandler.validate_paths_batch_fast` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler.validate_paths_batch_fast` | `matched` |
-| `shared.path.PathLike@rust` | `shared` | `classic-shared-py` | `PathLike` | `classic_shared.PathHandler` | `matched` |
-| `shared.path.path@rust` | `shared` | `classic-shared-py` | `path` | `classic_shared.PathHandler` | `matched` |
 | `shared.path.path_py@rust` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler` | `matched` |
 | `shared.performance.RustPerformanceMonitor` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor` | `matched` |
 | `shared.performance.RustPerformanceMonitor.__init__` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.__init__` | `matched` |
@@ -1026,21 +1024,11 @@
 | `shared.performance.RustPerformanceMonitor.start_timer` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.start_timer` | `matched` |
 | `shared.performance.RustPerformanceMonitor.stop_timer` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.stop_timer` | `matched` |
 | `shared.performance.performance_py@rust` | `shared` | `classic-shared-core` | `record_timing` | `classic_shared.RustPerformanceMonitor` | `matched` |
-| `shared.runtime.ClassicError@rust` | `shared` | `classic-shared-py` | `ClassicError` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.ClassicResult@rust` | `shared` | `classic-shared-py` | `ClassicResult` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.ResultExt@rust` | `shared` | `classic-shared-py` | `ResultExt` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.RuntimeStats` | `shared` | `classic-shared-py` | `RuntimeStats` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.ToPyErr@rust` | `shared` | `classic-shared-py` | `ToPyErr` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.error_convert@rust` | `shared` | `classic-shared-py` | `RuntimeStats` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.ClassicError@rust` | `shared` | `classic-shared-core` | `ClassicError` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.ClassicResult@rust` | `shared` | `classic-shared-core` | `ClassicResult` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.RuntimeStats` | `shared` | `classic-shared-core` | `get_runtime` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.get_runtime_stats` | `shared` | `classic-shared-core` | `get_runtime` | `classic_shared.get_runtime_stats` | `matched` |
 | `shared.runtime.is_runtime_healthy` | `shared` | `classic-shared-core` | `get_runtime` | `classic_shared.is_runtime_healthy` | `matched` |
-| `shared.runtime.pyany_to_indexmap_str@rust` | `shared` | `classic-shared-py` | `pyany_to_indexmap_str` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.pyany_to_indexmap_vecstr@rust` | `shared` | `classic-shared-py` | `pyany_to_indexmap_vecstr` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.pydict_to_indexmap_str@rust` | `shared` | `classic-shared-py` | `pydict_to_indexmap_str` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.pydict_to_indexmap_str_optional@rust` | `shared` | `classic-shared-py` | `pydict_to_indexmap_str_optional` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.pydict_to_indexmap_vecstr@rust` | `shared` | `classic-shared-py` | `pydict_to_indexmap_vecstr` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.resolve_python_entry_dir@rust` | `shared` | `classic-shared-py` | `resolve_python_entry_dir` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.to_py_err@rust` | `shared` | `classic-shared-py` | `to_py_err` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.strings.StringProcessor` | `shared` | `classic-shared-core` | `StringProcessor` | `classic_shared.StringProcessor` | `matched` |
 | `shared.strings.StringProcessor.__init__` | `shared` | `classic-shared-core` | `StringProcessor` | `classic_shared.StringProcessor.__init__` | `matched` |
 | `shared.strings.StringProcessor.clear_pool` | `shared` | `classic-shared-core` | `StringProcessor` | `classic_shared.StringProcessor.clear_pool` | `matched` |
@@ -1089,10 +1077,10 @@
 | `version-registry-unknown-version-get-default` | `version_registry` | `classic-version-registry-core` | `UnknownVersionHandling` | `classic_version_registry.UnknownVersionHandling.get_default` | `matched` |
 | `version-registry-unknown-version-handling-class` | `version_registry` | `classic-version-registry-core` | `UnknownVersionHandling` | `classic_version_registry.UnknownVersionHandling` | `matched` |
 | `version-registry-version-info-class` | `version_registry` | `classic-version-registry-core` | `VersionInfo` | `classic_version_registry.VersionInfo` | `matched` |
-| `version.lib.PeVersionError@rust` | `version` | `classic-version-core` | `PeVersionError` | `classic_version.compare_versions` | `matched` |
-| `version.lib.PeVersionResult@rust` | `version` | `classic-version-core` | `PeVersionResult` | `classic_version.compare_versions` | `matched` |
-| `version.lib.VersionError@rust` | `version` | `classic-version-core` | `VersionError` | `classic_version.compare_versions` | `matched` |
-| `version.lib.VersionResult@rust` | `version` | `classic-version-core` | `VersionResult` | `classic_version.compare_versions` | `matched` |
+| `version.lib.PeVersionError@rust` | `version` | `classic-shared-core` | `PeVersionError` | `classic_version.compare_versions` | `matched` |
+| `version.lib.PeVersionResult@rust` | `version` | `classic-shared-core` | `PeVersionResult` | `classic_version.compare_versions` | `matched` |
+| `version.lib.VersionError@rust` | `version` | `classic-shared-core` | `VersionError` | `classic_version.compare_versions` | `matched` |
+| `version.lib.VersionResult@rust` | `version` | `classic-shared-core` | `VersionResult` | `classic_version.compare_versions` | `matched` |
 | `version.lib.compare_versions` | `version` | `classic-shared-core` | `compare_versions` | `classic_version.compare_versions` | `matched` |
 | `version.lib.extract_all_versions` | `version` | `classic-shared-core` | `extract_all_versions` | `classic_version.extract_all_versions` | `matched` |
 | `version.lib.extract_pe_version` | `version` | `classic-shared-core` | `extract_pe_version` | `classic_version.extract_pe_version` | `matched` |
@@ -1196,7 +1184,7 @@
 | `xse.lib.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.parse_xse_type` | `xse` | `classic-xse-core` | `XseType` | `classic_xse.parse_xse_type` | `matched` |
 | `yaml.lib.YamlCacheStats` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlCacheStats` | `matched` |
-| `yaml.lib.YamlError@rust` | `settings` | `classic-settings-core` | `YamlError` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.YamlError@rust` | `settings` | `classic-shared-core` | `YamlError` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.YamlOperations` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlOperations` | `matched` |
 | `yaml.lib.YamlOperations.__init__` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlOperations.__init__` | `matched` |
 | `yaml.lib.YamlOperations.clear_cache` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlOperations.clear_cache` | `matched` |
@@ -1219,7 +1207,7 @@
 | `yaml.lib.is_cache_enabled@rust` | `settings` | `classic-shared-core` | `is_cache_enabled` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.load_yaml_file@rust` | `settings` | `classic-shared-core` | `load_yaml_file` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.load_yaml_files_batch@rust` | `settings` | `classic-shared-core` | `load_yaml_files_batch` | `classic_settings.YamlCacheStats` | `matched` |
-| `yaml.lib.merge_keys@rust` | `settings` | `classic-settings-core` | `merge_keys` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.merge_keys@rust` | `settings` | `classic-shared-core` | `merge_keys` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.parse_yaml@rust` | `settings` | `classic-shared-core` | `parse_yaml` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.save_yaml_file@rust` | `settings` | `classic-shared-core` | `save_yaml_file` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.set_cache_enabled@rust` | `settings` | `classic-shared-core` | `set_cache_enabled` | `classic_settings.YamlCacheStats` | `matched` |
@@ -1263,16 +1251,12 @@
 | `file_io` | 0 |
 | `scangame` | 0 |
 | `registry` | 0 |
-| `perf` | 0 |
-| `settings` | 0 |
 | `message` | 0 |
 | `path` | 0 |
-| `version` | 0 |
 | `resource` | 0 |
 | `xse` | 0 |
 | `web` | 0 |
 | `update` | 0 |
-| `shared` | 0 |
 | `shared` | 0 |
 | `aux` | 0 |
 

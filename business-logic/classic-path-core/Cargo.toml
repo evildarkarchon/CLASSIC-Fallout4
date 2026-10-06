@@ -4,10 +4,13 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Core path management for CLASSIC (game paths, documents, validation, backups)"
+description = "Core path management for CLASSIC (game paths, documents, validation)"
 license = "MIT"
 
 [dependencies]
+# Generic path primitives, PathError, and the OS cache root
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
 # Error handling
 thiserror = { workspace = true }
 anyhow = { workspace = true }
@@ -22,9 +25,6 @@ configparser = "3.1"
 # Serialization (for Any type handling)
 serde = { workspace = true }
 serde_json = { workspace = true }
-
-# Regex for parsing
-regex = { workspace = true }
 
 # Windows registry access
 [target.'cfg(windows)'.dependencies]

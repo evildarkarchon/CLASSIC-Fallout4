@@ -379,7 +379,17 @@ def test_rust_file_io_error_is_exception_hierarchy() -> None:
 
 
 def test_rust_only_symbols_in_core_surface() -> None:
-    """All 25 classic_file_io @rust-suffixed rows resolve against rust_api_surface."""
+    """All 25 classic_file_io @rust-suffixed rows resolve against rust_api_surface.
+
+    Each row resolves against its own ``rustCrate`` surface. Crash Log
+    collection rows (``LogCollector``, ``resolve_targeted_inputs``, the two
+    patterns, and their result types) keep their ``file_io`` row IDs but name
+    ``classic-scanlog-core`` since #254, and the game-target backup and
+    game-file operation rows (``backup``, ``BackupManager``, ``BackupType``,
+    ``BackupInfo``, ``GameFilesManager``, ``FileOperation``,
+    ``FileOperationResult``) name ``classic-resource-core`` since #250, so a
+    crate-qualified lookup is what keeps a stale file-I/O owner from passing.
+    """
     surface_path = Path("docs/implementation/python_api_parity/baseline/rust_api_surface.json")
     contract_path = Path("docs/implementation/python_api_parity/baseline/parity_contract.json")
 
@@ -391,9 +401,9 @@ def test_rust_only_symbols_in_core_surface() -> None:
     with contract_path.open(encoding="utf-8") as f:
         contract = json.load(f)
 
-    file_io_symbols = {
-        s["symbol"] for s in surface["symbols"] if s.get("crate") == "classic-file-io-core"
-    }
+    symbols_by_crate: dict[str, set[str]] = {}
+    for s in surface["symbols"]:
+        symbols_by_crate.setdefault(s.get("crate"), set()).add(s["symbol"])
 
     rust_only_rows = [
         r for r in contract["tier1Mappings"]
@@ -402,8 +412,44 @@ def test_rust_only_symbols_in_core_surface() -> None:
 
     missing: list[str] = []
     for row in rust_only_rows:
-        if row["rustSymbol"] not in file_io_symbols:
-            missing.append(f"{row['id']} -> {row['rustSymbol']}")
+        if row["rustSymbol"] not in symbols_by_crate.get(row["rustCrate"], set()):
+            missing.append(f"{row['id']} -> {row['rustCrate']}::{row['rustSymbol']}")
+
+    # The moved collection rows must name their actual owner, not file I/O.
+    moved = {
+        r["id"]: r["rustCrate"]
+        for r in rust_only_rows
+        if r["rustSymbol"]
+        in {
+            "LogCollector",
+            "resolve_targeted_inputs",
+            "TargetedResolution",
+            "RejectedInput",
+            "CRASH_LOG_PATTERN",
+            "CRASH_AUTOSCAN_PATTERN",
+        }
+    }
+    assert moved and set(moved.values()) == {"classic-scanlog-core"}, moved
+
+    # The game-target backup and game-file operation rows moved to resource
+    # core in #250; a stale file I/O owner must not satisfy them.
+    moved_to_resource = {
+        r["id"]: r["rustCrate"]
+        for r in rust_only_rows
+        if r["rustSymbol"]
+        in {
+            "backup",
+            "BackupManager",
+            "BackupType",
+            "BackupInfo",
+            "GameFilesManager",
+            "FileOperation",
+            "FileOperationResult",
+        }
+    }
+    assert len(moved_to_resource) == 7 and set(moved_to_resource.values()) == {
+        "classic-resource-core"
+    }, moved_to_resource
 
     assert not missing, (
             "Rust-only file_io @rust-suffix rows missing from rust_api_surface: "

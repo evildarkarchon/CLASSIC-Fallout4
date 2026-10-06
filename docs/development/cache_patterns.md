@@ -10,14 +10,14 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 | String-Key Cache | `classic-shared-core` (`yaml`) | `String` | `Arc<Vec<Yaml>>` | Manual | Loaded YAML settings |
 | Dynamic Registry | `classic-registry-core` | `String` | `Arc<dyn Any>` | Manual | Application state |
 | Path Hash Cache | `classic-file-io-core` | `PathBuf` | `String` | Manual | File integrity |
-| Time Series Metrics | `classic-perf-core` | `String` | `Vec<f64>` | Manual | Performance data |
+| Time Series Metrics | `classic-shared-core` (`performance_core`) | `String` | Rolling `Duration` stats | Manual | Performance data |
 | Typed FormID Lookup Cache | `classic-database-core` | `CacheKey` | `CacheEntry` | TTL + capacity eviction | FormID DB lookups |
 
 ## Pattern Details
 
 ### 1. File Mod-Time Cache (YAML)
 
-**Location**: `foundation/classic-shared-core/src/yaml/file_cache.rs` and `operations.rs` (moved from `classic-settings-core`, which absorbed the former `classic-yaml-core` in v9.1.0 Phase 1 and still re-exports it)
+**Location**: `foundation/classic-shared-core/src/yaml/file_cache.rs` and `operations.rs` (moved from `classic-settings-core`, which absorbed the former `classic-yaml-core` in v9.1.0 Phase 1 and retired in #257)
 
 **Scopes**: the store lives behind a `YamlFileCacheScope` handle. `YamlOperations::new()` and the free functions use the process default scope; `YamlOperations::with_cache_scope(YamlFileCacheScope::new_isolated())` gives a caller (such as one Python facade) its own entries and counters. The String-Key Cache below has the matching `LogicalKeyCacheScope`.
 
@@ -60,7 +60,7 @@ if let Some(cached) = CACHE.get(&path) {
 
 ### 2. String-Key Cache (Settings)
 
-**Location**: `foundation/classic-shared-core/src/yaml/logical_key_cache.rs` (moved from `classic-settings-core`, which still re-exports it)
+**Location**: `foundation/classic-shared-core/src/yaml/logical_key_cache.rs` (moved from `classic-settings-core`, since retired in #257)
 
 **Purpose**: Cache loaded YAML settings with logical names for fast lookup.
 
@@ -192,18 +192,20 @@ let stats = scope.cache_stats();
 
 ### 5. Time Series Metrics
 
-**Location**: `business-logic/classic-perf-core/src/metrics.rs`
+**Location**: `foundation/classic-shared-core/src/performance_core.rs` (the former `classic-perf-core` seconds facade was retired in #256)
 
 **Purpose**: Record and summarize performance timing data.
 
 **Key Features**:
-- Stores multiple samples per operation
+- Constant-memory rolling statistics per operation (whole-nanosecond count, sum, min, max) instead of a sample vector
 - Computes summary statistics (count, total, avg, min, max)
-- Thread-safe concurrent recording
+- Thread-safe concurrent recording; invalid or overflowing samples are rejected before any mutation
 
 **Data Structure**:
 ```rust
-static METRICS: Lazy<DashMap<String, Vec<f64>>> = Lazy::new(DashMap::new);
+static METRICS: LazyLock<Arc<PerformanceMetrics>> =
+    LazyLock::new(|| Arc::new(PerformanceMetrics::new()));
+// PerformanceMetrics { operations: DashMap<String, OperationState> }
 ```
 
 **When to Use**:
