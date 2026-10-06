@@ -3,7 +3,7 @@
   "familyId": "file-generation",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-file-io-core"
+    "rustCrate": "classic-config-core"
   },
   "fixtureRoot": "tests/fixtures/file_generation",
   "fixtures": {

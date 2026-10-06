@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T01:50:55.932535+00:00",
+  "generated_at_utc": "2026-10-06T02:14:58.702464+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -342,6 +342,44 @@
       "tier": "tier1"
     },
     {
+      "symbol": "FileGenerator",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
+      "source_expr": "generation::FileGenerator",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileGenerator",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub struct FileGenerator",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileGeneratorConfig",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
+      "source_expr": "generation::FileGeneratorConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileGeneratorConfig",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub struct FileGeneratorConfig",
+      "tier": "tier1"
+    },
+    {
       "symbol": "GAME_FALLOUT4_YAML",
       "kind": "const",
       "crate": "classic-config-core",
@@ -405,6 +443,25 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
       "source_decl": "pub struct InspectedYamlDataFile",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstallOutcome",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
+      "source_expr": "atomic_install::InstallOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstallOutcome",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/atomic_install.rs",
+      "source_decl": "pub struct InstallOutcome",
       "tier": "tier1"
     },
     {
@@ -890,6 +947,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "RollbackOutcome",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/atomic_install.rs",
+      "source_decl": "pub enum RollbackOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RollbackOutcome",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
+      "source_expr": "atomic_install::RollbackOutcome",
+      "tier": "tier1"
+    },
+    {
       "symbol": "RuleMessages",
       "kind": "struct",
       "crate": "classic-config-core",
@@ -923,6 +999,25 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub struct RuleTarget",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SelfHealOutcome",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/atomic_install.rs",
+      "source_decl": "pub enum SelfHealOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SelfHealOutcome",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
+      "source_expr": "atomic_install::SelfHealOutcome",
       "tier": "tier1"
     },
     {
@@ -1108,6 +1203,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "atomic_install",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod atomic_install;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "backup_identity",
       "kind": "function",
       "arity": 1,
@@ -1174,6 +1278,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub mod client_schemas;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "config",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub fn config(&self)",
       "tier": "tier1"
     },
     {
@@ -1553,6 +1667,85 @@
       "tier": "tier1"
     },
     {
+      "symbol": "generate_all_files_async",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub async fn generate_all_files_async(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_ignore_file",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub async fn generate_ignore_file(content: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_ignore_file",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
+      "source_expr": "generation::generate_ignore_file",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_ignore_file_async",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub async fn generate_ignore_file_async(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_local_yaml",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub async fn generate_local_yaml(\n    content: impl Into<String>,\n    game_name: impl Into<String>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_local_yaml",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
+      "source_expr": "generation::generate_local_yaml",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_local_yaml_async",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub async fn generate_local_yaml_async(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generation",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod generation;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_crashgen_ignore",
       "kind": "function",
       "arity": 1,
@@ -1600,6 +1793,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
       "source_decl": "pub const fn identity(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ignore_file_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub fn ignore_file_path(&self)",
       "tier": "tier1"
     },
     {
@@ -1660,6 +1863,26 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetDurabilityReceipt, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_in_version_registry_scope, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::inspect_installed_yaml_data_with_env",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "install_atomic",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/atomic_install.rs",
+      "source_decl": "pub fn install_atomic(\n    target: &Path,\n    source_tmp: &Path,\n    expected_sha256: &str,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "install_atomic",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
+      "source_expr": "atomic_install::install_atomic",
       "tier": "tier1"
     },
     {
@@ -1872,6 +2095,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "local_yaml_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub fn local_yaml_path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "main",
       "kind": "function",
       "arity": 1,
@@ -1949,6 +2182,26 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub fn new(ignore_file_content: String, local_yaml_content: String, game_name: String)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/generation.rs",
+      "source_decl": "pub fn new(config: FileGeneratorConfig)",
       "tier": "tier1"
     },
     {
@@ -2192,6 +2445,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "rollback",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/atomic_install.rs",
+      "source_decl": "pub fn rollback(target: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "rollback",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
+      "source_expr": "atomic_install::rollback",
+      "tier": "tier1"
+    },
+    {
       "symbol": "schema_compat",
       "kind": "function",
       "arity": 2,
@@ -2219,6 +2492,26 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
       "source_decl": "pub fn selected_game_version(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "self_heal",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/atomic_install.rs",
+      "source_decl": "pub fn self_heal(target: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "self_heal",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
+      "source_expr": "atomic_install::self_heal",
       "tier": "tier1"
     },
     {
@@ -3234,44 +3527,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "FileGenerator",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
-      "source_expr": "generation::FileGenerator",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "FileGenerator",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub struct FileGenerator",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "FileGeneratorConfig",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
-      "source_expr": "generation::FileGeneratorConfig",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "FileGeneratorConfig",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub struct FileGeneratorConfig",
-      "tier": "tier1"
-    },
-    {
       "symbol": "FileHashScope",
       "kind": "reexport",
       "crate": "classic-file-io-core",
@@ -3348,69 +3603,12 @@
       "tier": "tier1"
     },
     {
-      "symbol": "InstallOutcome",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
-      "source_expr": "atomic_install::InstallOutcome",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "InstallOutcome",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/atomic_install.rs",
-      "source_decl": "pub struct InstallOutcome",
-      "tier": "tier1"
-    },
-    {
       "symbol": "Result",
       "kind": "type",
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/error.rs",
       "source_decl": "pub type Result",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "RollbackOutcome",
-      "kind": "enum",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/atomic_install.rs",
-      "source_decl": "pub enum RollbackOutcome",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "RollbackOutcome",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
-      "source_expr": "atomic_install::RollbackOutcome",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SelfHealOutcome",
-      "kind": "enum",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/atomic_install.rs",
-      "source_decl": "pub enum SelfHealOutcome",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SelfHealOutcome",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
-      "source_expr": "atomic_install::SelfHealOutcome",
       "tier": "tier1"
     },
     {
@@ -3421,15 +3619,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/core.rs",
       "source_decl": "pub async fn append_file(&self, path: &Path, content: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "atomic_install",
-      "kind": "module",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub mod atomic_install;",
       "tier": "tier1"
     },
     {
@@ -3520,16 +3709,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn clear_cache()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "config",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub fn config(&self)",
       "tier": "tier1"
     },
     {
@@ -3626,85 +3805,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/dds.rs",
       "source_decl": "pub fn from_bytes(bytes: &[u8])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_all_files_async",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub async fn generate_all_files_async(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_ignore_file",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub async fn generate_ignore_file(content: impl Into<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_ignore_file",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
-      "source_expr": "generation::generate_ignore_file",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_ignore_file_async",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub async fn generate_ignore_file_async(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_local_yaml",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub async fn generate_local_yaml(\n    content: impl Into<String>,\n    game_name: impl Into<String>,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_local_yaml",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
-      "source_expr": "generation::generate_local_yaml",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_local_yaml_async",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub async fn generate_local_yaml_async(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generation",
-      "kind": "module",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub mod generation;",
       "tier": "tier1"
     },
     {
@@ -3817,36 +3917,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "ignore_file_path",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub fn ignore_file_path(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "install_atomic",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/atomic_install.rs",
-      "source_decl": "pub fn install_atomic(\n    target: &Path,\n    source_tmp: &Path,\n    expected_sha256: &str,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "install_atomic",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
-      "source_expr": "atomic_install::install_atomic",
-      "tier": "tier1"
-    },
-    {
       "symbol": "is_bc_compressed",
       "kind": "function",
       "arity": 1,
@@ -3877,16 +3947,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "local_yaml_path",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub fn local_yaml_path(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "metadata_cache_size",
       "kind": "function",
       "arity": 1,
@@ -3914,26 +3974,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/encoding.rs",
       "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub fn new(ignore_file_content: String, local_yaml_content: String, game_name: String)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/generation.rs",
-      "source_decl": "pub fn new(config: FileGeneratorConfig)",
       "tier": "tier1"
     },
     {
@@ -4034,46 +4074,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn reset_cache_stats()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "rollback",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/atomic_install.rs",
-      "source_decl": "pub fn rollback(target: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "rollback",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
-      "source_expr": "atomic_install::rollback",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "self_heal",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/atomic_install.rs",
-      "source_decl": "pub fn self_heal(target: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "self_heal",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
-      "source_expr": "atomic_install::self_heal",
       "tier": "tier1"
     },
     {

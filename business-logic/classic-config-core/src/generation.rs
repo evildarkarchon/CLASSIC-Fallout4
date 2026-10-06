@@ -4,8 +4,14 @@
 //! required by the CLASSIC application, including:
 //! - CLASSIC Ignore.yaml (ignore patterns)
 //! - CLASSIC Data/CLASSIC `<GAME>` Local.yaml (game-specific local config)
+//!
+//! Ignore/Local YAML generation is config policy (#248): config owns the
+//! CLASSIC YAML file identities these files belong to. The module moved here
+//! from `classic-file-io-core` without a re-export there, since config depends
+//! on file I/O. Errors stay [`FileIOError`] so every binding's projection of a
+//! generation failure is unchanged.
 
-use crate::error::FileIOError;
+use classic_file_io_core::FileIOError;
 use std::path::PathBuf;
 use tokio::fs;
 
