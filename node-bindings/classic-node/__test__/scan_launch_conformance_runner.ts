@@ -9,12 +9,14 @@ import {randomUUID} from "node:crypto";
 import {copyFile, lstat, mkdir, mkdtemp, open, readFile, rename, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {dirname, join, relative, resolve, sep} from "node:path";
-import type {JsScanRunLaunchOverrides, ScanRunLaunch} from "../index.js";
+import type {JsGameId, JsScanRunLaunchOverrides, ScanRunLaunch} from "../index.js";
 
 type JsonObject = Record<string, unknown>;
 
 const FAMILY_ID = "crash-log-scan-launch";
 const SETTINGS_FILE = "CLASSIC Settings.yaml";
+/** The `JsGameId` string values, which are also the pack's game tokens. */
+const GAME_TOKENS: readonly string[] = ["Fallout4", "Fallout4VR", "Skyrim", "Starfield"];
 
 /** One centrally supplied input-only scenario. */
 interface Scenario {
@@ -83,13 +85,14 @@ function rootRelative(root: string, value: string | null | undefined): string | 
 }
 
 /** Build the binding's overrides object from the scenario's overrides. */
-function overrides(classic: typeof import("../index.js"), value: JsonObject, root: string): JsScanRunLaunchOverrides {
+function overrides(value: JsonObject, root: string): JsScanRunLaunchOverrides {
     const result: JsScanRunLaunchOverrides = {};
     if ("game" in value) {
         const game = string(value.game, "game");
-        const match = Object.values(classic.JsGameId).find(candidate => candidate === game);
-        if (match === undefined) throw new Error(`unsupported game ${game}`);
-        result.game = match;
+        // `JsGameId` is a declared const enum with no runtime object to enumerate, so the
+        // pack tokens, which equal its string values, are checked against them directly.
+        if (!GAME_TOKENS.includes(game)) throw new Error(`unsupported game ${game}`);
+        result.game = game as JsGameId;
     }
     if ("gameVersion" in value) result.gameVersion = string(value.gameVersion, "gameVersion");
     if ("scanPath" in value) result.scanPath = beneath(root, string(value.scanPath, "scanPath"));
@@ -138,7 +141,7 @@ async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonO
         const settings = join(root, SETTINGS_FILE);
         await copyFile(string(plan.fixtures[reference], "settings fixture"), settings);
         const before = await readFile(settings);
-        const launchOverrides = overrides(classic, scenario.input.overrides, root);
+        const launchOverrides = overrides(scenario.input.overrides, root);
         let launch: ScanRunLaunch;
         try {
             if (scenario.input.intent === "standard") {

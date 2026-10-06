@@ -537,7 +537,7 @@ fn observer_delivery_failure_to_dto(
 /// tag plus one field per payload shape. Fields the kind does not use stay empty rather
 /// than carrying a sentinel, because an empty string is what a C++ consumer already reads
 /// as "not present" everywhere else in this bridge.
-fn display_lines_to_dto(lines: &[DisplayLine]) -> Vec<ffi::ScanRunDisplayLine> {
+pub(super) fn display_lines_to_dto(lines: &[DisplayLine]) -> Vec<ffi::ScanRunDisplayLine> {
     lines
         .iter()
         .map(|line| ffi::ScanRunDisplayLine {

@@ -29,6 +29,23 @@ std::string crash_log_scan_launch_unsolved_token(classic::scanner::ScanRunLaunch
     throw RunnerError("unsupported launched Unsolved Logs intent");
 }
 
+/// Returns the pack's snake_case token for one launch diagnostic kind.
+std::string crash_log_scan_launch_diagnostic_token(classic::scanner::ScanRunLaunchDiagnosticKind kind) {
+    switch (kind) {
+    case classic::scanner::ScanRunLaunchDiagnosticKind::UserSettings:
+        return "user_settings";
+    case classic::scanner::ScanRunLaunchDiagnosticKind::GameVersionNotApplied:
+        return "game_version_not_applied";
+    case classic::scanner::ScanRunLaunchDiagnosticKind::FcxModeNotApplied:
+        return "fcx_mode_not_applied";
+    case classic::scanner::ScanRunLaunchDiagnosticKind::CustomScanFolderNotApplied:
+        return "custom_scan_folder_not_applied";
+    case classic::scanner::ScanRunLaunchDiagnosticKind::SetupFoldersNotApplied:
+        return "setup_folders_not_applied";
+    }
+    throw RunnerError("unsupported launch diagnostic kind");
+}
+
 /// Returns a presence-flagged bridge path relative to the Installation Root, or null.
 json crash_log_scan_launch_optional_path(const fs::path& root, bool present, const rust::String& value) {
     return present ? json(relative_path(root, fs::path(owned_string(value)))) : json(nullptr);
@@ -152,10 +169,13 @@ json execute_crash_log_scan_launch_scenario(const json& plan, const json& scenar
     (void)classic::scanner::scan_run_launch_request(*launch);
     json diagnostics = json::array();
     for (const auto& diagnostic : view.diagnostics) {
-        if (diagnostic.kind != classic::scanner::ScanRunLaunchDiagnosticKind::UserSettings) {
-            throw RunnerError("unsupported launch diagnostic kind");
-        }
-        diagnostics.push_back(json{{"kind", "user_settings"}, {"code", owned_string(diagnostic.code)}});
+        diagnostics.push_back(json{{"kind", crash_log_scan_launch_diagnostic_token(diagnostic.kind)},
+                                   {"code", owned_string(diagnostic.code)}});
+    }
+    // The bridge renders one Display Content line per diagnostic; a mismatch would mean a
+    // frontend showing these lines silently drops or invents a diagnostic.
+    if (view.display_lines.size() != view.diagnostics.size()) {
+        throw RunnerError("launch display lines do not match its diagnostics");
     }
     return json{{"outcome", "launched"},
                 {"errorKind", nullptr},
