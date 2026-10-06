@@ -37,6 +37,12 @@ classic-xse-core = { path = "../classic-xse-core" }
 # second copy of their strings.
 classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 
+# Custom-scan folder policy (moved from classic-path-core, #254 follow-up)
+# composes path core's Game/Documents settings checks and keeps reporting its
+# typed `ValidationError`, so every binding error projection stays the same.
+# Path core depends only on shared core, so this edge stays acyclic.
+classic-path-core = { path = "../classic-path-core" }
+
 # Crash Log collection globs crash-*.log / AUTOSCAN reports (moved from
 # classic-file-io-core with `log_collection`, #254).
 glob = "0.3"
@@ -93,7 +99,6 @@ classic-registry-core = { path = "../classic-registry-core" }
 classic-web-core = { path = "../classic-web-core" }
 classic-resource-core = { path = "../classic-resource-core" }
 classic-update-core = { path = "../classic-update-core" }
-classic-path-core = { path = "../classic-path-core" }
 classic-message-core = { path = "../classic-message-core" }
 tempfile = { workspace = true }
 criterion = { version = "0.6.0", features = ["html_reports"] }

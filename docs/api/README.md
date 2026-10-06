@@ -25,12 +25,12 @@ Use this directory in this order:
 11b. [`app-update-notification-delivery.md`](app-update-notification-delivery.md) - payload-free app-update notification channel: manifest schema, Pages-first + Releases fallback, classification model, maintainer publish workflow
 12. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata, AND the absorbed crashgen rule model (formerly its own crate, merged into config-core in v9.1.0 Phase 2)
 13. [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md) - standalone runtime contract for generic source/cache paths, merged YAML semantics, and Main/Game/Ignore/Game Local keys
-14. [`classic-path-core.md`](classic-path-core.md) - game-path, documents-path, custom-scan/settings validation, cache-directory, and backup helpers
+14. [`classic-path-core.md`](classic-path-core.md) - game-path, documents-path, Game/Documents settings validation, cache-directory, and backup helpers (custom-scan policy moved to scanlog core)
 15. [`classic-xse-core.md`](classic-xse-core.md) - XSE loader/version detection helpers used by setup checks and bindings
 16. [`game-setup-workflow.md`](game-setup-workflow.md) - current cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
 17. [`formid-settings-boundary.md`](formid-settings-boundary.md) - current split between Rust config serialization and scan-time FormID DB path consumption
-18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, and hashing (with `FileHashScope` handles for facade-owned hash caches); Crash Log collection moved to scanlog core
-19. [`classic-resource-core.md`](classic-resource-core.md) - lightweight resource classification, enumeration, and per-file validation helpers
+18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, and hashing (with `FileHashScope` handles for facade-owned hash caches); Crash Log collection moved to scanlog core; game-target DDS rules moved to resource core
+19. [`classic-resource-core.md`](classic-resource-core.md) - lightweight resource classification, enumeration, and per-file validation helpers, plus game-target DDS rules (`DDSAnalyzer`)
 20. [`classic-database-core.md`](classic-database-core.md) - SQLite/FormID lookup pool used by analysis paths
 21. [`formid-sqlite-conventions.md`](formid-sqlite-conventions.md) - practical fixture/schema/path rules for contributor FormID DB work
 22. [`classic-scangame-core.md`](classic-scangame-core.md) - game-installation, archive, loose-file, and setup validation workflows
@@ -44,7 +44,7 @@ Use this directory in this order:
 30. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
 31. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
 32. [`binding-compliance-suite.md`](binding-compliance-suite.md) - canonical umbrella binding gate that maps policy requirements to executable checks and gap reporting
-33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - Crash Log collection, Targeted input resolution, and crash-log analysis built on top of loaded config data and optional DB lookups
+33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - Crash Log collection, Targeted input resolution, custom-scan folder policy, and crash-log analysis built on top of loaded config data and optional DB lookups
 33a. [`classic-scan-presentation.md`](classic-scan-presentation.md) - unpublished Crash Log Scan Run Display Content owner: the render functions that turn a run result, event, or failure into typed display lines, so every frontend states the same run the same way. Consumed by `classic-tui` directly and by `classic-cli` and `classic-gui` through the C++ bridge, and mirrored onto the Node and Python bindings, which carry the lines for whatever a consumer builds. Every frontend now renders it
 34. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
 35. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
@@ -71,12 +71,12 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `app-update-notification-delivery.md` documents the payload-free app-update notification channel: the `notification` module in `classic-update-core`, `notification_cache_dir` in `classic-path-core`, disjoint Pages path under `app-notification/`, and the `publish-app-notification.yml` maintainer workflow
 - `classic-config-core` loads YAML and uses Version Registry metadata to build config data; the typed crashgen rule model and evaluator now live at `classic_config_core::crashgen_rules::*` (historical note: this owner absorbed the former `classic-crashgen-settings-core` crate during v9.1.0 Phase 2)
 - `classic-config-core-yaml-schema.md` captures the runtime YAML contract for generic merged Main/Game/Ignore and Game Local files that `classic-config-core` consumes
-- `classic-path-core` handles game-path discovery, documents-folder checks, custom-scan/settings path validation, and versioned backups; the generic path primitives it builds on live in `classic-shared-core::path_core`
+- `classic-path-core` handles game-path discovery, documents-folder checks, Game/Documents settings path validation, and versioned backups; the generic path primitives it builds on live in `classic-shared-core::path_core`, and the custom-scan folder policy (restricted-path rejection, custom-scan and combined settings-path validation) lives in `classic-scanlog-core`
 - `classic-xse-core` builds on path/version helpers to resolve XSE Folder paths, detect XSE installation state, and parse XSE versions
 - `game-setup-workflow.md` explains how current setup/install validation is split across path, XSE, scangame, and Version Registry crates
 - `formid-settings-boundary.md` documents the typed FormID settings boundary shared by scan callers and the C++ bridge
 - `classic-file-io-core` provides shared file-system, decoding, and hashing helpers used by higher layers (Crash Log collection and Targeted input resolution belong to `classic-scanlog-core`); every hash cache sits behind an opaque `FileHashScope` handle whose process default serves every unscoped caller, while the Python `classic_file_io` and `classic_scangame` facades each select their own isolated scope
-- `classic-resource-core` provides lightweight resource classification and enumeration helpers used alongside broader file and scan workflows
+- `classic-resource-core` provides lightweight resource classification and enumeration helpers used alongside broader file and scan workflows, and owns the game-target DDS rules applied to file I/O's neutral `DDSHeader`
 - `classic-database-core` manages async SQLite pools and FormID lookups for analysis consumers
 - `formid-sqlite-conventions.md` captures the current source-backed fixture/schema/path assumptions around FormID databases
 - `classic-scangame-core` handles game setup validation, archive/loose-file checks, and related install-scanning workflows

@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T00:10:11.820004+00:00`
+- Generated: `2026-10-06T00:53:53.544266+00:00`
 - Tier-1 contract rows: **946**
 - Tier-1 matched: **929**
 - Tier-1 missing Rust: **0**
@@ -237,7 +237,7 @@
 | `config-get-settings-cache-stats` | `config` | `classic-shared-core` | `cache_stats` | `getSettingsCacheStats` | `matched` |
 | `config-reset-settings-cache-stats` | `config` | `classic-shared-core` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
 | `config-validate-settings-path` | `path` | `classic-path-core` | `validate_settings_path` | `validateSettingsPath` | `matched` |
-| `config-validate-settings-paths` | `path` | `classic-path-core` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
+| `config-validate-settings-paths` | `path` | `classic-scanlog-core` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
 | `config-yaml-document-class` | `config` | `classic-shared-core` | `YamlOperations` | `YamlDocument` | `matched` |
 | `config-yaml-parse` | `config` | `classic-shared-core` | `parse_yaml` | `yamlParse` | `matched` |
 | `config-yaml-stringify` | `config` | `classic-shared-core` | `dump_yaml` | `yamlStringify` | `matched` |
@@ -335,7 +335,7 @@
 | `aux-phase4a-hash-file` | `aux` | `classic-file-io-core` | `FileHasher` | `hashFile` | `matched` |
 | `aux-phase4a-hash-files-parallel` | `aux` | `classic-file-io-core` | `FileHasher` | `hashFilesParallel` | `matched` |
 | `aux-phase4a-intern-string` | `aux` | `classic-shared-core` | `intern` | `internString` | `matched` |
-| `aux-phase4a-is-restricted-path` | `aux` | `classic-path-core` | `is_restricted_path` | `isRestrictedPath` | `matched` |
+| `aux-phase4a-is-restricted-path` | `aux` | `classic-scanlog-core` | `is_restricted_path` | `isRestrictedPath` | `matched` |
 | `aux-phase4a-is-runtime-available` | `aux` | `classic-shared-core` | `get_runtime` | `isRuntimeAvailable` | `matched` |
 | `aux-phase4a-is-valid-executable-path` | `aux` | `classic-shared-core` | `is_executable_file_path` | `isValidExecutablePath` | `matched` |
 | `aux-phase4a-is-valid-path` | `aux` | `classic-shared-core` | `is_valid_path` | `isValidPath` | `matched` |
@@ -355,7 +355,7 @@
 | `aux-phase4a-registry-set` | `aux` | `classic-registry-core` | `register` | `registrySet` | `matched` |
 | `aux-phase4a-registry-set-game` | `aux` | `classic-registry-core` | `set_game` | `registrySetGame` | `matched` |
 | `aux-phase4a-remove-readonly` | `aux` | `classic-shared-core` | `remove_readonly` | `removeReadonly` | `matched` |
-| `aux-phase4a-validate-custom-scan-path` | `aux` | `classic-path-core` | `validate_custom_scan_path` | `validateCustomScanPath` | `matched` |
+| `aux-phase4a-validate-custom-scan-path` | `aux` | `classic-scanlog-core` | `validate_custom_scan_path` | `validateCustomScanPath` | `matched` |
 | `aux-phase4a-validate-path-with-permissions` | `aux` | `classic-shared-core` | `validate_path_with_permissions` | `validatePathWithPermissions` | `matched` |
 | `aux-phase4a-validate-paths-batch` | `aux` | `classic-shared-core` | `validate_paths_batch` | `validatePathsBatch` | `matched` |
 | `aux-phase4a-validate-required-files` | `aux` | `classic-path-core` | `validate_required_files` | `validateRequiredFiles` | `matched` |
@@ -435,10 +435,10 @@
 | `aux-phase4b-xse-type-name` | `aux` | `classic-xse-core` | `XseType` | `xseTypeName` | `matched` |
 | `aux-phase4c-crash-autoscan-pattern` | `aux` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN` | `CRASH_AUTOSCAN_PATTERN` | `matched` |
 | `version-registry-phase4c-js-compatible-range` | `version_registry` | `classic-version-registry-core` | `CompatibleRange` | `JsCompatibleRange` | `matched` |
-| `aux-phase4c-js-dds-analyzer-alias` | `aux` | `classic-file-io-core` | `DDSAnalyzer` | `JsDDSAnalyzer` | `matched` |
-| `aux-phase4c-js-dds-analyzer-class` | `aux` | `classic-file-io-core` | `DDSAnalyzer` | `JsDdsAnalyzer` | `matched` |
+| `aux-phase4c-js-dds-analyzer-alias` | `aux` | `classic-resource-core` | `DDSAnalyzer` | `JsDDSAnalyzer` | `matched` |
+| `aux-phase4c-js-dds-analyzer-class` | `aux` | `classic-resource-core` | `DDSAnalyzer` | `JsDdsAnalyzer` | `matched` |
 | `aux-phase4c-js-dds-batch-result` | `aux` | `-` | `None` | `JsDdsBatchResult` | `unmapped` |
-| `aux-phase4c-js-dds-issue` | `aux` | `classic-file-io-core` | `DDSIssue` | `JsDdsIssue` | `matched` |
+| `aux-phase4c-js-dds-issue` | `aux` | `classic-resource-core` | `DDSIssue` | `JsDdsIssue` | `matched` |
 | `aux-phase4c-js-game-id` | `aux` | `classic-shared-core` | `GameId` | `JsGameId` | `matched` |
 | `aux-phase4c-js-ini-check-result` | `aux` | `classic-path-core` | `IniCheckResult` | `JsIniCheckResult` | `matched` |
 | `version-registry-phase4c-js-match-result` | `version_registry` | `classic-version-registry-core` | `MatchResult` | `JsMatchResult` | `matched` |
@@ -642,13 +642,13 @@
 | `database.PoolStatistics@rust` | `database` | `classic-database-core` | `PoolStatistics@rust` | `None` | `matched` |
 | `file_io.BackupType@rust` | `file_io` | `classic-file-io-core` | `BackupType@rust` | `None` | `matched` |
 | `file_io.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN@rust` | `None` | `matched` |
-| `file_io.DDSAnalyzer@rust` | `file_io` | `classic-file-io-core` | `DDSAnalyzer@rust` | `None` | `matched` |
+| `file_io.DDSAnalyzer@rust` | `file_io` | `classic-resource-core` | `DDSAnalyzer@rust` | `None` | `matched` |
 | `file_io.DDSHeader@rust` | `file_io` | `classic-file-io-core` | `DDSHeader@rust` | `None` | `matched` |
-| `file_io.DDSIssue@rust` | `file_io` | `classic-file-io-core` | `DDSIssue@rust` | `None` | `matched` |
+| `file_io.DDSIssue@rust` | `file_io` | `classic-resource-core` | `DDSIssue@rust` | `None` | `matched` |
 | `file_io.FileGeneratorConfig@rust` | `file_io` | `classic-file-io-core` | `FileGeneratorConfig@rust` | `None` | `matched` |
 | `file_io.FileIOError@rust` | `file_io` | `classic-file-io-core` | `FileIOError@rust` | `None` | `matched` |
 | `file_io.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation@rust` | `None` | `matched` |
-| `file_io.GameTarget@rust` | `file_io` | `classic-file-io-core` | `GameTarget@rust` | `None` | `matched` |
+| `file_io.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget@rust` | `None` | `matched` |
 | `file_io.LogCollector@rust` | `file_io` | `classic-scanlog-core` | `LogCollector@rust` | `None` | `matched` |
 | `file_io.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput@rust` | `None` | `matched` |
 | `file_io.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution@rust` | `None` | `matched` |
@@ -697,7 +697,7 @@
 | `path.validate_is_file@rust` | `path` | `classic-shared-core` | `validate_is_file@rust` | `None` | `matched` |
 | `path.validate_path_exists@rust` | `path` | `classic-shared-core` | `validate_path_exists@rust` | `None` | `matched` |
 | `path.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path@rust` | `None` | `matched` |
-| `path.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths@rust` | `None` | `matched` |
+| `path.validate_settings_paths@rust` | `path` | `classic-scanlog-core` | `validate_settings_paths@rust` | `None` | `matched` |
 | `registry.Keys@rust` | `registry` | `classic-registry-core` | `Keys@rust` | `None` | `matched` |
 | `registry.get_application_dir@rust` | `registry` | `classic-registry-core` | `get_application_dir@rust` | `None` | `matched` |
 | `registry.get_game_path_gui@rust` | `registry` | `classic-registry-core` | `get_game_path_gui@rust` | `None` | `matched` |

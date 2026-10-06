@@ -24,11 +24,21 @@
         "parse_xse_log",
         "IniCheckResult",
         "validate_ini_file",
-        "validate_custom_scan_path",
         "validate_settings_path",
-        "validate_settings_paths",
-        "is_restricted_path",
         "validate_required_files"
+      ],
+      "observationFamilies": [
+        "installation-results"
+      ]
+    },
+    {
+      "id": "installation-paths.custom-scan",
+      "operationScoped": true,
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbols": [
+        "validate_custom_scan_path",
+        "validate_settings_paths",
+        "is_restricted_path"
       ],
       "observationFamilies": [
         "installation-results"
@@ -61,6 +71,7 @@
       "action": "installation-paths.inspect",
       "capabilityIds": [
         "installation-paths.inspect",
+        "installation-paths.custom-scan",
         "installation-paths.primitives"
       ],
       "fixtureRefs": [
@@ -103,6 +114,7 @@
       "action": "installation-paths.inspect",
       "capabilityIds": [
         "installation-paths.inspect",
+        "installation-paths.custom-scan",
         "installation-paths.primitives"
       ],
       "fixtureRefs": [
