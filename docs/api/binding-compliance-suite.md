@@ -439,7 +439,7 @@ The suite does not replace lower-level parsers. It owns the top-level pass/fail 
 - Node: `python tools/node_api_parity/check_parity_gate.py --repo-root .` plus `bun run dts:freshness:check` in the Node CI slice.
 - Python: `python tools/python_api_parity/check_parity_gate.py --repo-root .` plus `validate_stubs.py`.
 - User Settings ownership: `python tools/user_settings_ownership/check.py --repo-root .` rejects first-party production references that reintroduce flat models, generic User Settings variants/key policies, raw `CLASSIC_Settings` interpretation outside `classic-user-settings-core`, or runtime use of the generated default mirror.
-- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/` and compares its variant inventory with the Rust enums. The trusted variant policy maps every source-derived variant to a required executable scenario fact or a named retained analyzer. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity, or Python stubs/parity. Blocking semantic and consumer receipts supply executable scenario and presentation coverage. Copied adapter acknowledgements, positive source markers, and per-scenario or presentation required-owner lists are retired.
+- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/` and compares its variant inventory with the Rust enums. The trusted variant policy maps every source-derived variant to a required executable scenario fact or a named retained analyzer. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name, or a removed separate resume/abandon entry point, continuation accessor, opaque continuation type, or run-result continuation field (#282), remains in public source, CXX parity data, Node declarations/parity, or Python stubs/parity. Blocking semantic and consumer receipts supply executable scenario and presentation coverage. Copied adapter acknowledgements, positive source markers, and per-scenario or presentation required-owner lists are retired.
 
 Existing C++, Node, and Python parity gates remain available as focused debugging commands. Do not remove or weaken them unless the compliance suite demonstrably covers the same check and the replacement is documented in the same change.
 
@@ -486,10 +486,10 @@ count noun selected by Rust. Its current cases cover 84 lines, all five
 severities, and five emitted segment kinds. The unproduced `Name` kind remains
 an explicit retained disposition and grants no semantic receipt credit.
 
-`tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
+`tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot settlement, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
-independently authored thirty-three-scenario blocking oracle: Standard and Targeted
+independently authored thirty-two-scenario blocking oracle: Standard and Targeted
 happy paths, generated Local Ignore, pre-discovery cancellation,
 post-discovery queued cancellation, admitted/durable cancellation, observer
 delivery failure under the cancel-run and continue-run policies and before a
@@ -498,15 +498,18 @@ FormID database access, and Unsolved Logs finalization failures (default and
 configured destinations), a successful custom Unsolved Logs move, the
 `no_crash_logs_found` and `setup_failed` run statuses, both recovery decisions, intervening-change conflict,
 portable backup failure, both reset cancellation boundaries, replay,
-abandonment, settling a pending recovery (with each decision, with no decision,
+settling a pending recovery (with each decision, with no decision,
 and after the run's cancellation was already requested), both FCX request
-factories, and `ConfigIssue` construction. The four settle scenarios use a
-`settle` continuation action whose decision is optional, a
-`before-pending-recovery` cancellation boundary, and an
-`initial.pendingRecovery` observation (`cancellationRequested` plus the prompt
-read from each adapter's own pending-recovery DTO); every runner traverses its
-binding's settle surface for them, and the legacy resume replay in
-`settle-without-decision` proves the old and new surfaces share one claim. The
+factories, and `ConfigIssue` construction. Every recovery scenario uses a
+`settle` continuation action whose decision is optional — the only operation,
+since the separate resume and abandon entry points were removed (#282) and the
+former `abandon-local-ignore-recovery` scenario retired; abandonment is
+`settle-without-decision`, whose replays (no decision, then Reset To Default)
+prove one spent claim rejects every decision. Cancellation boundaries are
+`before-pending-recovery`, `before-settle`, and `after-reset-critical-section`,
+and every recovery scenario records an `initial.pendingRecovery` observation
+(`cancellationRequested` plus the prompt read from each adapter's own
+pending-recovery DTO). The
 three observer-delivery-failure scenarios state the policy in
 `executionFlow.observerFailure.policy` (`cancel-run` pairs with the
 `on-observer-failure` cancellation boundary, `continue-run` with `none`); every

@@ -153,8 +153,8 @@ description says what a decision *does* and stays true whether or not this run c
 
 **Backing out is not a decision.** `LocalIgnoreRecoveryDecision` has exactly two variants by design;
 abandonment is spelled as the *absence* of a decision and reaches the contract by settling a pending
-recovery with no decision (or through `CrashLogScanRunContinuation::abandon`, which settling
-replaces). The cancel affordance and its wording stay each frontend's.
+recovery with no decision, the one abandonment operation. The cancel affordance and its wording stay
+each frontend's.
 
 **The argument is optional** because a caller holding `RunResult::installed_yaml_data` holds an
 `Option` and must do something when it is absent. All three native frontends independently decided
@@ -189,19 +189,19 @@ for one of them to pass the arguments the wrong way round.
 This is also what keeps translation from being a rewrite later. CLASSIC stays single-language; the
 crate builds no message catalogue, no locale plumbing, and no runtime language selection.
 
-## Take the continuation out before rendering
+## Take the pending recovery out before rendering
 
-A `RunResult` is not clonable — it retains a one-shot Crash Log Scan Run Continuation. Every entry
-point therefore borrows, and every adapter must take the continuation out of the result **before**
-rendering:
+A `RunResult` is not clonable — a paused run privately retains a one-shot Crash Log Scan Run
+Continuation, reachable only as its pending recovery. Every entry point therefore borrows, and every
+adapter must take the pending recovery out of the result **before** rendering:
 
 ```rust
-let continuation = result.continuation.take();
+let pending = take_pending_recovery(&mut result);
 let lines = render_run_result(&result);
 ```
 
-Rendering first and moving the continuation afterwards borrows the result across the move and will
-not compile. All three native frontends already sequence it this way; documenting it makes the
+Rendering first and taking the pending recovery afterwards borrows the result across the mutation and
+will not compile. All three native frontends already sequence it this way; documenting it makes the
 ordering a contract rather than a coincidence.
 
 ## The pending recovery a frontend receives
@@ -236,8 +236,9 @@ can honour, including whether Reset To Default is available.
 
 When `cancellation_requested()` is `true`, do not prompt: settle with no decision. `settle(None, ..)`
 is abandonment, not a third decision. Every binding projects this bundle as its pending-recovery
-object, and backs its legacy continuation with the same bundle so the two share one claim until #282
-removes the legacy surface. `tests/pending_recovery.rs` pins the prompt against
+object, which is the only way it answers a paused run: the separate resume and abandon surfaces and
+the run result's continuation field were removed (#282). `tests/pending_recovery.rs` pins the
+prompt against
 `render_local_ignore_recovery`, with and without retained defaults.
 
 ## Rules an adapter must follow
@@ -357,7 +358,7 @@ typed `diagnostics` beside them.
 
 The recovery prompt rides the same seams and is rendered under the same rule — while the Rust value
 is live — but only for a run whose status is Local Ignore Recovery Required, which is exactly when
-the execution retains a continuation to answer with. Every other run carries no prompt rather than an
+the execution offers a pending recovery to answer with. Every other run carries no prompt rather than an
 empty one, so a consumer cannot mistake "nothing to ask" for "ask with no options":
 
 - **The bridge** carries `has_recovery_prompt` beside a `ScanRunRecoveryPrompt`, because `cxx` has no
