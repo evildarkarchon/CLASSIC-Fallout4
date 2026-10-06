@@ -293,7 +293,46 @@ describe("classic-node CLI", () => {
         const result = runCli([], workspace);
 
         expect(result.exitCode).toBe(2);
-        expect(result.output).toContain("Fatal:");
+        expect(result.stderr).toContain("Fatal: CLASSIC Data not found");
+        // Both search starts are named so a user can see where the CLI looked from.
+        expect(result.stderr).toContain(workspace);
+        // The working directory is not quietly treated as the installation: nothing was
+        // scanned, and no User Settings were created there.
+        expect(result.output).not.toContain("Crash Log Scanner");
+        expect(existsSync(join(workspace, "CLASSIC Settings.yaml"))).toBe(false);
+    });
+
+    test("reports CLASSIC Data not found as a structured fatal in JSON mode", () => {
+        const workspace = rememberTempDir("classic-node-cli-fatal-json-");
+
+        const result = runCli(["--json"], workspace);
+
+        expect(result.exitCode).toBe(2);
+        expect(JSON.parse(result.stdout)).toMatchObject({
+            mode: "fatal",
+            exitCode: 2,
+            message: expect.stringContaining("CLASSIC Data not found"),
+        });
+    });
+
+    test("locates the Installation Root through Config's shared search", () => {
+        // `<working directory>/install` is the locator's sixth candidate, one this CLI's
+        // own search never checked, so finding it proves the search is Config's.
+        const workspace = rememberTempDir("classic-node-cli-install-root-");
+        const installationRoot = join(workspace, "install");
+        const scanDir = join(workspace, "incoming");
+
+        mkdirSync(installationRoot, {recursive: true});
+        writeWorkspaceDataRoot(installationRoot);
+        mkdirSync(scanDir, {recursive: true});
+
+        const result = runCli(
+            ["--scan-path", scanDir, "--game-version", "auto"],
+            workspace,
+        );
+
+        expect(result.exitCode).toBe(0);
+        expect(result.output).toContain(`Data root: ${installationRoot}`);
     });
 
     test("returns fatal exit code when the native binding fails during startup", () => {
