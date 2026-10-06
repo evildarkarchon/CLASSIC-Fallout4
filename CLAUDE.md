@@ -25,7 +25,7 @@ Read on demand, not up front:
 
 ## Python Binding Testing Quickstart
 
-The binding-local virtualenv at `python-bindings/.venv/` is a uv-managed project that does **not** carry the maturin-built `-py` extension modules by default. Run tests in this order:
+The binding-local virtualenv at `python-bindings/.venv/` is a uv-managed project that does **not** carry the maturin-built `classic-python-bindings` wheel (one native extension behind all 18 `classic_*` modules) by default. Run tests in this order:
 
 ```powershell
 # 1. Pin pyo3's interpreter for any cargo invocation (shell-scoped).
@@ -33,12 +33,14 @@ $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 
 # 2. Create/refresh the tooling venv from the locked manifest.
 #    `--inexact` is load-bearing — it stops uv from pruning the
-#    maturin-built `classic-*-py` wheels (they are not declared in
+#    maturin-built `classic-python-bindings` wheel (it is not declared in
 #    pyproject.toml). This also installs ruamel.yaml for
 #    `tools/schema_version_gate.py`; it is a default dependency.
 uv sync --project python-bindings --inexact
 
-# 3. Build and install every `-py` crate into the venv via maturin.
+# 3. Build the one adapter wheel via maturin, remove obsolete per-module
+#    `classic-*-py` wheels, install it, and verify all 18 imports (also from
+#    a clean environment).
 ./rebuild_rust.ps1 -Target python
 
 # 4. Run pytest through the project's venv. `--project` pins the
@@ -49,6 +51,6 @@ uv sync --project python-bindings --inexact
 uv run --project python-bindings python -m pytest python-bindings/tests -q
 ```
 
-Each skipped step has a distinct failure mode: skipping step 1 makes cargo's pyo3-build-config chase a stale `VIRTUAL_ENV`; skipping `--inexact` in step 2 wipes every `classic-*-py` wheel from the venv on each re-sync; skipping step 3 produces `ModuleNotFoundError` at pytest collection time.
+Each skipped step has a distinct failure mode: skipping step 1 makes cargo's pyo3-build-config chase a stale `VIRTUAL_ENV`; skipping `--inexact` in step 2 wipes the `classic-python-bindings` wheel from the venv on each re-sync; skipping step 3 produces `ModuleNotFoundError` at pytest collection time.
 
 For deeper context (why `.cargo/config.toml` intentionally omits a global PyO3 pin, which `-py` crates this rebuilds, or how the parity gates fit on top), see the Python binding test rule and the PyO3 Quick Note in `AGENTS.md`, plus `docs/implementation/python_api_parity/`.

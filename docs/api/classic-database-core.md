@@ -33,7 +33,7 @@ Do not use this crate for:
 - binding-specific wrapper APIs
 - crash-log analysis itself
 
-Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge), [`classic-node`](../../node-bindings/classic-node), and [`classic-database-py`](../../python-bindings/classic-database-py).
+Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge), [`classic-node`](../../node-bindings/classic-node), and [`classic_database` adapter module](../../python-bindings/classic-python-bindings/src/classic_database/).
 
 ---
 
@@ -226,7 +226,7 @@ SQLite does not support binding identifiers (table or column names) as query par
 
 To keep that interpolation safe, both lookup methods validate the resolved table name with `DatabasePool::validate_table_identifier` before any SQL is constructed. A name is accepted only if it matches the unquoted SQLite identifier grammar `[A-Za-z_][A-Za-z0-9_]*` (non-empty, ASCII letters/underscore/digits only, and not starting with a digit). Anything else — including empty strings, spaces, punctuation, quotes, semicolons, or substrings like `x; DROP TABLE y--` — is rejected with `DatabaseError::InvalidTableIdentifier` rather than forwarded to sqlx.
 
-This guard matters because the foreign-language `set_game_table` bindings (`classic-database-py`, `classic-node`) can otherwise supply an arbitrary string from outside Rust. Internally set game names such as `Fallout4`, `Skyrim`, and `FalloutNewVegas` always pass validation.
+This guard matters because the foreign-language `set_game_table` bindings (the `classic_database` adapter module, `classic-node`) can otherwise supply an arbitrary string from outside Rust. Internally set game names such as `Fallout4`, `Skyrim`, and `FalloutNewVegas` always pass validation.
 
 ### Expected SQLite shape
 
@@ -298,7 +298,7 @@ Contributor rule: if you extend this crate, keep new async work compatible with 
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer; the final scan-run engine attaches a `DatabasePool` internally for richer FormID report text
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - configures scan-time DB cache profiles and logs `PoolStatistics`
 - [`classic-node`](../../node-bindings/classic-node) - JavaScript/TypeScript wrapper over this crate's pool API
-- [`classic-database-py`](../../python-bindings/classic-database-py) - PyO3 adapter that delegates business logic to this crate
+- [`classic_database` adapter module](../../python-bindings/classic-python-bindings/src/classic_database/) - PyO3 adapter that delegates business logic to this crate
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared runtime policy used by higher-level callers and benchmarks
 
 This crate sits upstream of the optional FormID-enrichment path in [`classic-scanlog-core`](../../business-logic/classic-scanlog-core). Scanlog analysis can run without it, but richer entry descriptions depend on it.

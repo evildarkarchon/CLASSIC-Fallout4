@@ -95,7 +95,7 @@ def test_shared_exception_macro_requires_real_import_registration_and_unmodified
     from conformance.source_declarations import python_declaration_exports
 
     root = Path(__file__).resolve().parents[3]
-    macro = Path("foundation/classic-shared-py/src/exceptions.rs")
+    macro = Path("python-bindings/classic-python-bindings/src/support/exceptions.rs")
     (tmp_path / macro).parent.mkdir(parents=True)
     shutil.copy2(root / macro, tmp_path / macro)
     crate = tmp_path / "python-bindings/classic-example-py"
@@ -145,3 +145,36 @@ def test_exception_declaration_requires_pyo3_provenance_and_registration(
     ):
         rust.write_text(changed)
         assert python_declaration_exports(tmp_path) == set()
+
+
+def test_one_adapter_facade_stub_reads_only_its_own_module_sources(
+        tmp_path: Path,
+) -> None:
+    """In the merged adapter, each facade stub pairs with `src/<facade>/` only."""
+    from conformance.source_declarations import python_declaration_exports
+
+    root = Path(__file__).resolve().parents[3]
+    macro = Path("python-bindings/classic-python-bindings/src/support/exceptions.rs")
+    (tmp_path / macro).parent.mkdir(parents=True)
+    shutil.copy2(root / macro, tmp_path / macro)
+    adapter = tmp_path / "python-bindings/classic-python-bindings"
+    for facade in ("classic_alpha", "classic_beta"):
+        stub = adapter / "python" / facade / "__init__.pyi"
+        stub.parent.mkdir(parents=True)
+        stub.write_text(
+            "class Result: ...\nclass Error(Exception): ...\n"
+            "class IOError(Error): ...\nclass ParseError(Error): ...\n"
+        )
+        (adapter / "src" / facade).mkdir(parents=True)
+    # Only classic_alpha declares and registers these types.
+    (adapter / "src" / "classic_alpha" / "mod.rs").write_text(
+        "use crate::support::{define_exceptions, register_exceptions};\n"
+        "define_exceptions!(module: classic_alpha, base: Error, io: IOError, parse: ParseError);\n"
+        "#[pyclass]\npub struct Result {}\n"
+        "fn register_facade(m: Module) { m.add_class::<Result>(); "
+        "register_exceptions!(m, Error, IOError, ParseError); }\n"
+    )
+
+    assert python_declaration_exports(tmp_path) == {
+        ("classic_alpha", name) for name in ("Result", "Error", "IOError", "ParseError")
+    }

@@ -326,8 +326,8 @@ Important direct dependencies:
 Related CLASSIC crates and wrappers:
 
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/registry.rs) - exposes CXX-friendly string/bool/i32 registry accessors on top of this crate
-- [`classic-registry-py`](../../python-bindings/classic-registry-py/src/lib.rs) - stores Python objects through a wrapper type in its own facade scope
-- [`classic-config-py`](../../python-bindings/classic-config-py/src/lib.rs) and [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/src/lib.rs) - register their import-time application directory in their own facade scopes
+- [`classic_registry` adapter module](../../python-bindings/classic-python-bindings/src/classic_registry/mod.rs) - stores Python objects through a wrapper type in its own facade scope
+- [`classic_config` adapter module](../../python-bindings/classic-python-bindings/src/classic_config/mod.rs) and [`classic_scanlog` adapter module](../../python-bindings/classic-python-bindings/src/classic_scanlog/mod.rs) - register their import-time application directory in their own facade scopes
 - [`classic-config-core`](../../business-logic/classic-config-core/src/yaml_source.rs) - reads the application-directory override from the default scope or, through `YamlSource::path_in_registry_scope`, from a caller-selected scope
 - [`classic-node`](../../node-bindings/classic-node/src/shared.rs) - uses `serde_json::Value` plus fallbacks to common Rust scalar types when reading registry values from Node
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - documents the `Fallout4Version` type that many callers store in this generic registry

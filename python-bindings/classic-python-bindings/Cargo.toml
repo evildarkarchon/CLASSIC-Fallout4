@@ -1,0 +1,82 @@
+[package]
+name = "classic-python-bindings"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+authors = ["CLASSIC Development Team"]
+description = "The one CLASSIC PyO3 adapter: a single native extension behind the 18 classic_* direct-import Python facades"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+license = "MIT"
+
+[lib]
+# The extension is `_classic_native._native`; the 18 facade packages under
+# `python/` re-export its submodules (see pyproject.toml).
+name = "_native"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Business logic (pure Rust). Each facade module adapts its own owners.
+classic-config-core = { path = "../../business-logic/classic-config-core" }
+classic-database-core = { path = "../../business-logic/classic-database-core" }
+classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+classic-message-core = { path = "../../business-logic/classic-message-core" }
+classic-path-core = { path = "../../business-logic/classic-path-core" }
+classic-registry-core = { path = "../../business-logic/classic-registry-core" }
+classic-resource-core = { path = "../../business-logic/classic-resource-core" }
+classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+# Crash Log Scan Run Display Content. Rust decides what a run says; the
+# classic_scanlog facade only carries the rendered lines across the seam,
+# because a `RunResult` retains a one-shot continuation and cannot be held on
+# the Python side to render later.
+classic-scan-presentation = { path = "../../business-logic/classic-scan-presentation" }
+classic-update-core = { path = "../../business-logic/classic-update-core" }
+classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
+classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
+classic-web-core = { path = "../../business-logic/classic-web-core" }
+classic-xse-core = { path = "../../business-logic/classic-xse-core" }
+
+# Foundation: shared runtime, errors, GameId, generic YAML, timing.
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+# Workspace-internal Vocabulary naming contract: brings the `Vocabulary` trait
+# into scope so facades can project core-owned tokens and Display Labels rather
+# than keep their own tables of them. It adds no Python surface.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
+# PyO3 bindings and the async bridge onto the shared Tokio runtime.
+pyo3 = { workspace = true, features = ["extension-module"] }
+pyo3-async-runtimes = { workspace = true, features = ["tokio-runtime"] }
+tokio = { workspace = true, features = ["fs", "io-util", "sync"] }
+
+anyhow = { workspace = true }
+futures = { workspace = true }
+indexmap = { workspace = true }
+log = { workspace = true }
+parking_lot = { workspace = true }
+rayon = { workspace = true }
+regex = { workspace = true }
+semver = "1.0"
+serde_json = { workspace = true }
+# YAML representation for the generic YamlOperations/Python conversion helpers.
+yaml-rust2 = { workspace = true }
+
+[dev-dependencies]
+criterion = "0.8.2"
+pyo3 = { workspace = true, features = ["extension-module", "auto-initialize"] }
+serial_test = "3.2"
+tempfile = { workspace = true }
+
+[[bench]]
+name = "file_io_gil_benchmarks"
+harness = false
+
+[[bench]]
+name = "scanlog_gil_benchmarks"
+harness = false
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"

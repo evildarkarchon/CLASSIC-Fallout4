@@ -3,7 +3,8 @@
 This contract defines the Tier-1 parity gate between:
 
 - Rust core symbols in the declared crate, including foundation owners
-- Python binding exports declared in maintained `classic_*.pyi` files
+- Python binding exports declared in the maintained facade stubs
+  (`python-bindings/classic-python-bindings/python/classic_*/__init__.pyi`)
 
 ## Tier model
 
@@ -13,7 +14,8 @@ This contract defines the Tier-1 parity gate between:
 ## Current Tier-1 scope
 
 All 18 direct-import `classic_*` modules are covered. Existing row IDs remain
-stable as Rust owners move and Python facades later share a native adapter.
+stable as Rust owners move; the Python facades now share one native adapter
+(#259), so rows name core owners, never the adapter crate.
 
 Tier-1 rows are codified in `parity_contract.json` and enforced by:
 

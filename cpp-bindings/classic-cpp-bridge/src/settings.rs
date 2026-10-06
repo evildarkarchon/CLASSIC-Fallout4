@@ -1642,7 +1642,7 @@ fn yaml_file_description(f: ffi::YamlFile) -> String {
 
 /// Parse a setting-type token into `SettingType`.
 ///
-/// Mirrors `parse_setting_type` in `classic-settings-py/src/lib.rs` 1:1:
+/// Mirrors `parse_setting_type` in `classic-python-bindings/src/classic_settings/mod.rs` 1:1:
 /// accepts `int|integer`, `bool|boolean`, `float|double`, `path`, `string|str`
 /// (case-insensitive).
 fn parse_setting_type_token(type_name: &str) -> Result<SettingType, String> {

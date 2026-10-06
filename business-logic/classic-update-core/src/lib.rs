@@ -6,12 +6,12 @@
 //! - Rate limiting and error handling
 //!
 //! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
-//! For Python bindings, see `classic-update-py`.
+//! For Python bindings, see the `classic_update` module of `classic-python-bindings`.
 //!
 //! # Architecture
 //!
 //! This is the `-core` crate containing pure Rust business logic. The Python bindings
-//! are in the separate `classic-update-py` crate, following the **SEPARATION OF CONCERNS** rule.
+//! are in the `classic_update` module of the separate `classic-python-bindings` adapter crate, following the **SEPARATION OF CONCERNS** rule.
 //!
 //! # Examples
 //!

@@ -260,18 +260,17 @@ Contract:
 - handles are `Send + Sync + 'static` and keep naming the same store when moved into Rayon or async work
 
 Current owners: the Rust, CXX, and Node `FileHasher` surfaces use the default
-scope. The Python `classic_file_io.FileHasher` facade and Game Setup Intake runs
-started through `classic_scangame` each hold their own isolated scope, so their
-caches and statistics stay independent once the Python facades share one
-native library. Game Setup Intake selects a scope with
-`GameSetupIntake::run_in_hash_scope` (see `classic-scangame-core.md`).
-
-The FCX setup step of a Crash Log Scan Run (`classic-scanlog-core`) still calls
-`GameSetupIntake::run()`, so `classic_scanlog` scans hash through the default
-scope. No Python facade reads, clears, or resets the default scope, so that work
-cannot change `classic_file_io`'s or `classic_scangame`'s caches or statistics;
-a Python facade that later needs hash-cache controls must select its own
-isolated scope rather than expose the default one.
+scope. In the one Python native extension, three facades each hold their own
+isolated scope, so their caches and statistics stay independent: the
+`classic_file_io.FileHasher` facade, Game Setup Intake runs started through
+`classic_scangame`, and the FCX setup step of Crash Log Scan Runs started
+through `classic_scanlog`. Game Setup Intake selects a scope with
+`GameSetupIntake::run_in_hash_scope` / `run_in_scopes` (see
+`classic-scangame-core.md`); a Crash Log Scan Run carries one through
+`scan_run::contract::execute_in_scopes` (see `classic-scanlog-core.md`), while
+the unscoped `execute` keeps the default scope. No Python facade reads, clears,
+or resets the default scope; a Python facade that later needs hash-cache
+controls must select its own isolated scope rather than expose the default one.
 
 ## Similarity helpers
 

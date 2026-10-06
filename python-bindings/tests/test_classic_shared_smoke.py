@@ -326,7 +326,9 @@ def test_rust_only_symbols_in_core_surface() -> None:
     # while `classic-shared-py` exports the wrapper types
     # `PyPathHandler` and `PyStringProcessor` under different names. Honouring
     # each row's own `rustCrate` also verifies the crate attribution, which
-    # matching on the bare symbol never did.
+    # matching on the bare symbol never did. (#259 folded `classic-shared-py`
+    # into the one Python adapter crate; its helper-only @rust rows retired and
+    # the re-exported `ClassicError`/`ClassicResult` rows name shared core.)
     surface_symbols = {(s.get("crate"), s["symbol"]) for s in surface["symbols"]}
 
     rust_only_rows = [
@@ -341,8 +343,10 @@ def test_rust_only_symbols_in_core_surface() -> None:
 
     assert not missing, "Rust-only @rust-suffix shared rows missing from rust_api_surface: " + ", ".join(missing)
 
-    # Plan 08 enrolled 19 @rust-suffixed shared proxy rows. Floor allows
-    # minor fluctuations from future refactors without breaking the guard.
-    assert len(rust_only_rows) >= 15, (
-        f"Expected >=15 @rust rows for shared owner; got {len(rust_only_rows)}"
+    # Plan 08 enrolled 19 @rust-suffixed shared proxy rows; #259 retired the
+    # 12 that inventoried adapter-only helpers of the folded classic-shared-py
+    # crate. The floor still catches an accidental mass removal.
+    assert len(rust_only_rows) >= 5, (
+        f"Expected >=5 @rust rows for shared owner; got {len(rust_only_rows)}"
     )
+    assert all(row.get("rustCrate") != "classic-shared-py" for row in rust_only_rows)

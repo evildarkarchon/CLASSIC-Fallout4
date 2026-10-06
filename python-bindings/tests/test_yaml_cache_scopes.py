@@ -3,9 +3,8 @@
 `classic_settings` reaches the logical-key settings cache and the
 path/mtime-aware YAML-file cache through its own core-owned scope handles,
 while `classic_config.clear_yaml_cache()` clears the default YAML-file scope
-that config's loaders use. Today every facade is a separate extension image,
-so these probes pass trivially across facades; once the facades share one
-native library they become the regression gate that keeps one facade's
+that config's loaders use. All facades share one native
+extension, so these probes are the regression gate that keeps one facade's
 loads, clears, and counter resets invisible to another.
 
 Cross-facade probes run in a fresh interpreter per import order so neither

@@ -6,7 +6,6 @@ members = [
     "foundation/classic-operation-context",
     "foundation/classic-vocabulary",
     "foundation/classic-shared-core",
-    "foundation/classic-shared-py",
     # Business Logic (Pure Rust - no PyO3)
     # Workspace-internal: no binding surface, absent from the parity matrix.
     "business-logic/classic-durable-publication",
@@ -30,28 +29,9 @@ members = [
     # Version Registry (Game version detection and matching)
     "business-logic/classic-version-registry-core",
     # Python Bindings (PyO3 adapters)
-    "python-bindings/classic-database-py",
-    "python-bindings/classic-file-io-py",
-    "python-bindings/classic-scanlog-py",
-    "python-bindings/classic-config-py",
-    "python-bindings/classic-user-settings-py",
-    "python-bindings/classic-scangame-py",
-    # Phase 1 - Core Infrastructure (Python Bindings)
-    "python-bindings/classic-registry-py",
-    "python-bindings/classic-perf-py",
-    "python-bindings/classic-settings-py",
-    "python-bindings/classic-message-py",
-    # Phase 2 - Path Management (Python Bindings)
-    "python-bindings/classic-path-py",
-    # Phase 4 - Constants and Utilities (Python Bindings)
-    "python-bindings/classic-version-py",
-    "python-bindings/classic-resource-py",
-    "python-bindings/classic-xse-py",
-    "python-bindings/classic-web-py",
-    # Phase 5 - Application Coordination (Python Bindings)
-    "python-bindings/classic-update-py",
-    # Version Registry (Python Bindings)
-    "python-bindings/classic-version-registry-py",
+    # One PyO3 adapter crate: a single native extension and wheel behind
+    # the 18 classic_* direct-import facades (#259).
+    "python-bindings/classic-python-bindings",
     # Node.js/Bun Bindings (NAPI-RS adapters)
     "node-bindings/classic-node",
     # UI Applications

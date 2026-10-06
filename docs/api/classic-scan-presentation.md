@@ -46,7 +46,7 @@ It renders identically to `classic-cli` — segments joined by single spaces, no
 capitalization rule, paths whole, severity spent entirely on the choice of output stream — which is
 what a Node frontend gets for free by reading the lines instead of writing its own.
 
-`classic-scanlog-py` is the second carrying binding and the last surface to adopt the model. It
+The `classic_scanlog` module of the Python adapter is the second carrying binding and the last surface to adopt the model. It
 mirrors the same flattening onto pyo3 classes, differing from Node only where the shape of the
 surface differs: Python has one execution envelope with `result` and `error` presence, so a single
 `display_lines` covers both payloads the way the bridge's does, and its five resume rejections are

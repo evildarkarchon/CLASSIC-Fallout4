@@ -258,9 +258,9 @@ Scoped entry points in downstream owners take either a snapshot (`&VersionRegist
 - [`classic-config-core`](classic-config-core.md): `resolve_registry_version_info_in()`, `YamlDataCore::from_yaml_content_in_version_registry_scope()`, `load_installed_yaml_data_in_version_registry_scope()`, `load_explicit_yaml_data_in_version_registry_scope()`
 - [`classic-xse-core`](classic-xse-core.md): `resolve_xse_folder_from_game_local_facts_in_version_registry_scope()`
 - [`classic-scangame-core`](classic-scangame-core.md): `resolve_xse_folder_for_scan_in_version_registry_scope()`, `AddressLibInfo::*_in()`, `XseChecker::with_version_registry_scope()`, `GameSetupIntake::run_in_scopes()`, `GameScanOrchestrator::with_version_registry_scope()`
-- [`classic-scanlog-core`](classic-scanlog-core.md): `PluginAnalyzer::with_version_registry_scope()`, `scan_run::contract::execute_in_version_registry_scope()`
+- [`classic-scanlog-core`](classic-scanlog-core.md): `PluginAnalyzer::with_version_registry_scope()`, `scan_run::contract::execute_in_version_registry_scope()`, `scan_run::contract::execute_in_scopes()`
 
-Rust, CXX, and Node callers keep using the unscoped paths and therefore the default scope. The Python `classic_version_registry`, `classic_version`, `classic_config`, `classic_scangame`, and `classic_scanlog` facades each hold their own isolated scope and pass it at facade entry or object construction, so once the facades share one native library (#259) each keeps the snapshot of its own first use.
+Rust, CXX, and Node callers keep using the unscoped paths and therefore the default scope. The Python `classic_version_registry`, `classic_version`, `classic_config`, `classic_scangame`, and `classic_scanlog` facades each hold their own isolated scope and pass it at facade entry or object construction, so now that the facades share one native library (#259) each keeps the snapshot of its own first use.
 
 ## `MatchResult` and `MatchConfidence`
 
@@ -403,7 +403,7 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
 - [`classic-node`](../../node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
-- [`classic-version-registry-py`](../../python-bindings/classic-version-registry-py) - maintained Python-facing integration layer for registry lookups and version metadata
+- [`classic_version_registry` adapter module](../../python-bindings/classic-python-bindings/src/classic_version_registry/) - maintained Python-facing integration layer for registry lookups and version metadata
 
 In practice, this crate sits upstream of config-building and scanlog-analysis decisions.
 

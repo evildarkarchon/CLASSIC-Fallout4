@@ -37,9 +37,23 @@ metadata only from the supplied
 Standard XSE Folder discovery, FCX setup, Installed YAML Data metadata, the
 analysis configuration, and per-log crashgen and plugin-limit analysis. A
 continuation returned for Local Ignore recovery keeps the scope, so `resume`
-reads it too. `execute` uses the process default scope. FCX setup still hashes
-through the process default `FileHashScope`. The Python `classic_scanlog`
-facade runs every scan through its own isolated scope.
+reads it too. `execute` uses the process default scope. This variant still
+hashes FCX setup inputs through the process default `FileHashScope`.
+
+`scan_run::contract::execute_in_scopes(request, version_registry, file_hash,
+cancellation, observer)` additionally carries an opaque
+[`FileHashScope`](classic-file-io-core.md#file-hash-scopes): the FCX Game Setup
+Intake step hashes the game executable and XSE scripts through
+`GameSetupIntake::run_in_scopes(&file_hash, &version_registry)`, so those cache
+entries and hit/miss counters land only in `file_hash`. A Local Ignore
+continuation keeps both scopes. `execute` and
+`execute_in_version_registry_scope` pass the process default hash scope, so
+unscoped Rust, CXX, and Node scan runs keep hashing exactly as before. The
+Python `classic_scanlog` facade runs every scan through `execute_in_scopes`
+with its own isolated Version Registry scope and its own isolated
+`FileHashScope`, chosen at facade entry, so its FCX hashing never reaches the
+`classic_file_io` or `classic_scangame` caches or statistics. Public-interface
+probes: `tests/file_hash_scope.rs` and `tests/version_registry_scope.rs`.
 
 Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
 That result owns an opaque `CrashLogScanRunContinuation`; callers explicitly

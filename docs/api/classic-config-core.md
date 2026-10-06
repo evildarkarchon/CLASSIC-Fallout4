@@ -213,7 +213,7 @@ Contributor notes:
 
 - `YamlSource::Game` and `YamlSource::GameLocal` require a non-empty `game` string and will panic otherwise.
 - `YamlSource::Cache` uses the `CLASSIC` base directory for user config/cache paths.
-- The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). The Python `classic_config` facade passes its own facade-owned scope so `classic_registry` cannot replace or clear config's application directory once both facades share one native library.
+- The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). The Python `classic_config` facade passes its own facade-owned scope so `classic_registry` cannot replace or clear config's application directory now that the facades share one native library.
 - `load()` reads the full YAML stream, merges documents with `classic_shared_core::yaml`, and returns one merged mapping. A file with a declared schema range (`schema_compat` returns `Some`) loads through the cache-aware shippable selection instead, gated by that range.
 
 ### Per-file schema ranges
@@ -494,7 +494,7 @@ Building a `YamlDataCore` backfills crashgen name, latest crashgen version, XSE 
 - the `*_in_version_registry_scope()` forms read only the caller's scope, including the eager Local Ignore recovery snapshots built during an installed load; `resolve_registry_version_info_in()` reads only the snapshot it is given
 - the scope's snapshot is taken lazily, so a document without `Main_Root_Name` never takes it
 
-The Python `classic_config` facade passes its own facade-owned scope to `YamlData.from_yaml_content`, `load_installed_yaml_data`, and `load_explicit_yaml_data`, so once the facades share one native library another facade's first use cannot decide config's registry metadata.
+The Python `classic_config` facade passes its own facade-owned scope to `YamlData.from_yaml_content`, `load_installed_yaml_data`, and `load_explicit_yaml_data`, so now that the facades share one native library another facade's first use cannot decide config's registry metadata.
 
 ---
 

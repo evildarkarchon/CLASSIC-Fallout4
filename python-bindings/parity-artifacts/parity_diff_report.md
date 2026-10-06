@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T02:23:33.706875+00:00`
-- Tier-1 contract rows: **1237**
-- Tier-1 matched: **1235**
+- Generated: `2026-10-06T03:59:08.659691+00:00`
+- Tier-1 contract rows: **1225**
+- Tier-1 matched: **1223**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -1014,8 +1014,6 @@
 | `shared.path.PathHandler.to_absolute` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler.to_absolute` | `matched` |
 | `shared.path.PathHandler.validate_paths_batch` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler.validate_paths_batch` | `matched` |
 | `shared.path.PathHandler.validate_paths_batch_fast` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler.validate_paths_batch_fast` | `matched` |
-| `shared.path.PathLike@rust` | `shared` | `classic-shared-py` | `PathLike` | `classic_shared.PathHandler` | `matched` |
-| `shared.path.path@rust` | `shared` | `classic-shared-py` | `path` | `classic_shared.PathHandler` | `matched` |
 | `shared.path.path_py@rust` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler` | `matched` |
 | `shared.performance.RustPerformanceMonitor` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor` | `matched` |
 | `shared.performance.RustPerformanceMonitor.__init__` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.__init__` | `matched` |
@@ -1026,21 +1024,11 @@
 | `shared.performance.RustPerformanceMonitor.start_timer` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.start_timer` | `matched` |
 | `shared.performance.RustPerformanceMonitor.stop_timer` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.stop_timer` | `matched` |
 | `shared.performance.performance_py@rust` | `shared` | `classic-shared-core` | `record_timing` | `classic_shared.RustPerformanceMonitor` | `matched` |
-| `shared.runtime.ClassicError@rust` | `shared` | `classic-shared-py` | `ClassicError` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.ClassicResult@rust` | `shared` | `classic-shared-py` | `ClassicResult` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.ResultExt@rust` | `shared` | `classic-shared-py` | `ResultExt` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.RuntimeStats` | `shared` | `classic-shared-py` | `RuntimeStats` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.ToPyErr@rust` | `shared` | `classic-shared-py` | `ToPyErr` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.error_convert@rust` | `shared` | `classic-shared-py` | `RuntimeStats` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.ClassicError@rust` | `shared` | `classic-shared-core` | `ClassicError` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.ClassicResult@rust` | `shared` | `classic-shared-core` | `ClassicResult` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.RuntimeStats` | `shared` | `classic-shared-core` | `get_runtime` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.get_runtime_stats` | `shared` | `classic-shared-core` | `get_runtime` | `classic_shared.get_runtime_stats` | `matched` |
 | `shared.runtime.is_runtime_healthy` | `shared` | `classic-shared-core` | `get_runtime` | `classic_shared.is_runtime_healthy` | `matched` |
-| `shared.runtime.pyany_to_indexmap_str@rust` | `shared` | `classic-shared-py` | `pyany_to_indexmap_str` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.pyany_to_indexmap_vecstr@rust` | `shared` | `classic-shared-py` | `pyany_to_indexmap_vecstr` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.pydict_to_indexmap_str@rust` | `shared` | `classic-shared-py` | `pydict_to_indexmap_str` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.pydict_to_indexmap_str_optional@rust` | `shared` | `classic-shared-py` | `pydict_to_indexmap_str_optional` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.pydict_to_indexmap_vecstr@rust` | `shared` | `classic-shared-py` | `pydict_to_indexmap_vecstr` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.resolve_python_entry_dir@rust` | `shared` | `classic-shared-py` | `resolve_python_entry_dir` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.to_py_err@rust` | `shared` | `classic-shared-py` | `to_py_err` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.strings.StringProcessor` | `shared` | `classic-shared-core` | `StringProcessor` | `classic_shared.StringProcessor` | `matched` |
 | `shared.strings.StringProcessor.__init__` | `shared` | `classic-shared-core` | `StringProcessor` | `classic_shared.StringProcessor.__init__` | `matched` |
 | `shared.strings.StringProcessor.clear_pool` | `shared` | `classic-shared-core` | `StringProcessor` | `classic_shared.StringProcessor.clear_pool` | `matched` |
@@ -1269,7 +1257,6 @@
 | `xse` | 0 |
 | `web` | 0 |
 | `update` | 0 |
-| `shared` | 0 |
 | `shared` | 0 |
 | `aux` | 0 |
 
