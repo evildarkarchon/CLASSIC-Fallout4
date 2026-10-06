@@ -33,7 +33,15 @@ from conformance.packs import (
 PACK_PATH = (
         REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_run" / "v1.json"
 )
-DEFAULT_ARTIFACT_ROOT = REPO_ROOT / "tools" / "binding_compliance" / "artifacts"
+# Every family the TUI participates in as a consumer, mapped to its tracked pack.
+FAMILY_PACK_PATHS = {
+    "crash-log-scan-run": PACK_PATH,
+    "user-settings": REPO_ROOT / "tests" / "conformance" / "packs" / "user_settings" / "v1.json",
+    "crash-log-scan-launch": (
+            REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_launch" / "v1.json"
+    ),
+}
+DEFAULT_ARTIFACT_ROOT =REPO_ROOT / "tools" / "binding_compliance" / "artifacts"
 RUN_PLAN_ENV = "CLASSIC_CONSUMER_CONFORMANCE_RUN_PLAN"
 OUTPUT_ENV = "CLASSIC_CONSUMER_CONFORMANCE_OUTPUT"
 TUI_COMMAND = (
@@ -154,13 +162,9 @@ def run_tui_consumer(
 ) -> tuple[int, Path]:
     """Execute the maintained TUI seam and build its exact consumer report."""
 
-    if family not in {"crash-log-scan-run", "user-settings"}:
+    if family not in FAMILY_PACK_PATHS:
         raise ValueError(f"unsupported consumer family: {family}")
-    pack_path = (
-        PACK_PATH
-        if family == "crash-log-scan-run"
-        else (REPO_ROOT / "tests/conformance/packs/user_settings/v1.json")
-    )
+    pack_path = FAMILY_PACK_PATHS[family]
     pack = load_and_validate_pack(REPO_ROOT, pack_path)
     prepared = prepare_consumer_run(
         pack,
@@ -208,7 +212,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--participant", choices=("tui",), required=True)
     parser.add_argument(
         "--family",
-        choices=("crash-log-scan-run", "user-settings"),
+        choices=tuple(FAMILY_PACK_PATHS),
         default="crash-log-scan-run",
     )
     parser.add_argument("--artifact-root", type=Path, default=DEFAULT_ARTIFACT_ROOT)

@@ -370,6 +370,7 @@
           "sourcePaths": [
             "business-logic/classic-config-core/src",
             "business-logic/classic-database-core/src",
+            "business-logic/classic-scan-launch/src",
             "business-logic/classic-scan-presentation/src",
             "business-logic/classic-scangame-core/src",
             "business-logic/classic-scanlog-core/src",
@@ -743,6 +744,7 @@
             "tui"
           ],
           "sourcePaths": [
+            "business-logic/classic-scan-launch/src",
             "business-logic/classic-user-settings-core/src",
             "cpp-bindings/classic-cpp-bridge/src/settings.rs",
             "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py",
@@ -815,6 +817,68 @@
                 "changed": true,
                 "backupMatchesOriginal": true,
                 "fcxMode": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "familyId": "crash-log-scan-launch",
+      "consumers": [
+        {
+          "id": "tui",
+          "executionInstanceIds": [
+            "tui"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-scan-launch/src",
+            "business-logic/classic-scan-presentation/src",
+            "business-logic/classic-user-settings-core/src",
+            "tools/binding_compliance/run_scan_run_consumer_conformance.py",
+            "ui-applications/classic-tui/Cargo.toml",
+            "ui-applications/classic-tui/src/app.rs",
+            "ui-applications/classic-tui/src/event.rs",
+            "ui-applications/classic-tui/src/scan_run.rs",
+            "ui-applications/classic-tui/tests/scan_run_consumer_conformance.rs"
+          ],
+          "obligations": [
+            {
+              "id": "tui.scan-launch",
+              "scenarioIds": [
+                "managed-game-saved-values",
+                "settings-needing-migration-still-launch",
+                "targeted-scans-exactly-its-inputs"
+              ],
+              "expected": {
+                "standard": {
+                  "intent": "standard",
+                  "game": "Fallout4",
+                  "gameVersion": "NextGen",
+                  "formIdDatabasePaths": [
+                    "databases/Fallout4 FormIDs.db"
+                  ],
+                  "baseDirectory": ".",
+                  "customScanDirectory": "One-off Logs",
+                  "diagnosticCodes": [],
+                  "unchanged": true
+                },
+                "settingsNeedingMigration": {
+                  "scanStarted": true,
+                  "diagnosticCodes": [
+                    "migration_required_unversioned_document"
+                  ],
+                  "diagnosticsShown": true,
+                  "unchanged": true
+                },
+                "targeted": {
+                  "intent": "targeted",
+                  "targetedInputs": [
+                    "b.log",
+                    "a folder"
+                  ],
+                  "unchanged": true
+                }
               }
             }
           ]

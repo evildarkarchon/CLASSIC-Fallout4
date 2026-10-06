@@ -298,8 +298,13 @@ scan-run launcher selects a launch-specific runner per adapter
 (`classic-scan-launch/tests/launch_conformance.rs`,
 `__test__/scan_launch_conformance_runner.ts` via `bun run conformance:scan-launch`,
 `python-bindings/tests/scan_launch_conformance_runner.py`, and the CXX
-`classic_cxx_crash_log_scan_launch_conformance.h` dispatch). No frontend
-launches through it yet, so the family has no consumer obligations.
+`classic_cxx_crash_log_scan_launch_conformance.h` dispatch). Frontends that
+launch through it join the family as consumer participants. The TUI's
+`tui.scan-launch` obligation drives its own scan start: a typed one-off custom
+scan folder reaches the launched Standard request, a document needing
+migration still starts a scan and its launch diagnostics open the Last Scan
+overlay in core's words, a Targeted scan carries exactly its inputs, and the
+User Settings document stays byte-identical throughout.
 
 ```powershell
 python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant rust --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
@@ -307,6 +312,7 @@ python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-s
 uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant python --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler clang-cl -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch
+python tools/binding_compliance/run_scan_run_consumer_conformance.py --family crash-log-scan-launch --participant tui --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
 ```
 
 ## Installed YAML Data Blocking Execution

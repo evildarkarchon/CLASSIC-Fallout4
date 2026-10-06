@@ -352,7 +352,7 @@ _EXECUTION_POLICIES += tuple(
 )
 # Crash Log Scan Launch (ADR-0009) also uses the shared scan-run launcher, with
 # its own per-adapter runners, the same four semantic adapters, and separate
-# diagnostics. No frontend consumes it yet, so it has no consumer participants.
+# diagnostics. Frontends consume it through their own consumer launchers.
 _EXECUTION_POLICIES += tuple(
     replace(
         policy,
@@ -369,6 +369,19 @@ _EXECUTION_POLICIES += tuple(
     )
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}
+)
+# The TUI launches its Crash Logs scans through Crash Log Scan Launch (#287).
+_EXECUTION_POLICIES += tuple(
+    replace(
+        policy,
+        family_id="crash-log-scan-launch",
+        launcher_marker=(
+            "run_scan_run_consumer_conformance.py --family crash-log-scan-launch --participant tui"
+        ),
+        artifact_marker="name: tui-crash-log-scan-launch-consumer-conformance",
+    )
+    for policy in _EXECUTION_POLICIES[:7]
+    if policy.participant_id == "tui"
 )
 # The CLI job retains its original suite and the bounded family launches.
 _EXECUTION_POLICIES = tuple(

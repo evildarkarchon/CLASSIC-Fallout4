@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from conformance.applicability import derive_applicability
+from conformance.consumers import load_consumer_obligations, prepare_consumer_run
 from conformance.coverage import (
     derive_row_coverage,
     load_retained_analyzer_kinds,
@@ -25,12 +26,39 @@ PACK = Path("tests/conformance/packs/crash_log_scan_launch/v1.json")
 def test_launch_requires_all_four_semantic_adapters() -> None:
     """Every binding maps the launch crate, so none may skip its runner."""
     pack = load_and_validate_pack(ROOT, PACK).document()
-    matrix = derive_applicability(pack, load_source_parity_rows(ROOT))
-    assert {p.id for p in matrix.participants} == {"rust", "cxx", "node", "python"}
+    matrix = derive_applicability(
+        pack,
+        load_source_parity_rows(ROOT),
+        consumer_catalog=load_consumer_obligations(ROOT),
+    )
+    assert {
+        p.id for p in matrix.participants if p.role == "semantic-adapter"
+    } == {"rust", "cxx", "node", "python"}
+    # Frontends that launch through Crash Log Scan Launch join as consumers (#287 onward).
+    assert "tui" in {p.id for p in matrix.participants if p.role == "consumer"}
     assert next(
         p for p in matrix.participants if p.id == "cxx"
     ).execution_instance_ids == ("windows-clang-cl", "windows-msvc")
     assert enforcement_for_family("crash-log-scan-launch") == "blocking"
+
+
+def test_tui_consumer_plan_names_the_launch_obligation_without_expectations() -> None:
+    """The TUI proves it launches through Crash Log Scan Launch from an input-only plan."""
+    pack = load_and_validate_pack(ROOT, PACK)
+    catalog = load_consumer_obligations(ROOT)
+    run = prepare_consumer_run(
+        pack,
+        participant_id="tui",
+        execution_instance_id="tui",
+        artifact_root=ROOT / "tools/binding_compliance/artifacts/consumer-tests",
+        catalog=catalog,
+    )
+    plan = run.document()
+    assert plan["familyId"] == "crash-log-scan-launch"
+    assert plan["participant"]["role"] == "consumer"
+    assert "scenarios" not in plan
+    assert [item["id"] for item in plan["obligations"]] == ["tui.scan-launch"]
+    assert all(set(item) == {"id", "scenarioIds"} for item in plan["obligations"])
 
 
 @pytest.mark.parametrize("participant", ("cxx", "node", "python"))
