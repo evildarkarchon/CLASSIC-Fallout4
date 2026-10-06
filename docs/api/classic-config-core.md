@@ -27,6 +27,7 @@ Use this crate when you need to:
 - apply version-registry-backed metadata fallbacks while building config data
 - hand configuration data to higher layers such as scanlog orchestration or bindings
 - load generic Main, Game, Game Local, Ignore, Test, and Cache YAML sources
+- install, roll back, or self-heal YAML Data in the per-user YAML cache, or generate first-run Ignore/Local YAML files
 
 Do not use this crate for:
 
@@ -54,6 +55,23 @@ The per-user YAML Data cache location (`CLASSIC/yaml-cache`), owned here as YAML
 
 - `yaml_cache_dir()` / `yaml_cache_dir_with_env(env)` - resolve without touching the filesystem
 - `ensure_yaml_cache_dir()` / `ensure_yaml_cache_dir_with_env(env)` - resolve and create (idempotent)
+
+### `atomic_install`
+
+YAML Data install, one-step rollback, and read-path self-heal over a `<target>.prev` rollback generation, owned here since issue #248 (formerly `classic-file-io-core`). Root re-exported. See [YAML Data install, rollback, self-heal, and generation](#yaml-data-install-rollback-self-heal-and-generation).
+
+- `install_atomic` - digest-verified install of an already-downloaded file, preserving the replaced copy as `<target>.prev`
+- `rollback` - swap `<target>` with `<target>.prev`, or promote `.prev` when the target is missing
+- `self_heal` - strict subset of `rollback` that only promotes `.prev` when the target is missing; the shape every-read callers must use
+- `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome` - the returned outcomes
+
+### `generation`
+
+Ignore/Local YAML first-run generation, owned here since issue #248 (formerly `classic-file-io-core`). Root re-exported.
+
+- `FileGeneratorConfig` and `FileGenerator`
+- `generate_ignore_file()`
+- `generate_local_yaml()`
 
 ### `game_local`
 
@@ -153,6 +171,8 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 - Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
 - `yaml_cache_dir`, `yaml_cache_dir_with_env`, `ensure_yaml_cache_dir`, `ensure_yaml_cache_dir_with_env` from `yaml_cache`
 - `GameLocalFacts`, `read_game_local_facts`, `game_local_yaml_path`, `persist_game_local_paths` from `game_local`
+- `install_atomic`, `rollback`, `self_heal`, `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome` from `atomic_install`
+- `FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file`, `generate_local_yaml` from `generation`
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers. It clears the default YAML-file cache scope, which is the one config's own `YamlOperations::new()` loaders fill.
 
@@ -242,6 +262,35 @@ Each value is trimmed; an absent, non-string, or blank value is `None`. The read
 The writer creates parent directories when needed, merges an existing multi-document YAML stream, updates only `Game_Info.Root_Folder_Game` and `Game_Info.Root_Folder_Docs`, and preserves unrelated content. It never reads or writes `CLASSIC Settings.yaml`.
 
 Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, Node `persistGameLocalPaths(...) -> Promise<void>`, and Python `persist_game_local_paths(...) -> None`. Each adapter only converts optional path values and delegates document behavior to the Rust writer.
+
+## YAML Data install, rollback, self-heal, and generation
+
+Issue #248 moved these operations here from `classic-file-io-core`, next to the YAML cache location they write into and the shippable loader that self-heals on every read. The old `classic_file_io_core::{atomic_install, generation}` modules and root re-exports ended with no forwarding re-export, because config depends on file I/O. Every operation still returns `classic_file_io_core::FileIOError`, so the published error codes and each binding's projection of them are unchanged. Behavior is unchanged by the move.
+
+### Install, rollback, and self-heal
+
+- `install_atomic(target, source_tmp, expected_sha256) -> Result<InstallOutcome, FileIOError>` - requires `source_tmp` in the same directory as `target` (`InvalidPath` otherwise) and to be a regular file (`NotFound` / `InvalidPath`). The durability sequence is [`classic-durable-publication`](classic-durable-publication.md)'s `install_verified`: it takes the `<target>.install.lock` lock, verifies the digest case-insensitively, deletes `source_tmp` and returns `ChecksumMismatch` on mismatch (target and any `.prev` untouched), synchronizes the staged bytes, rotates `<target>` to `<target>.prev`, and moves the staged file into place. `InstallOutcome` reports the target, whether a `.prev` was created, and the verified lowercase digest. Lock and rename failures are `WriteError`; an unreadable staged file is `IoError`.
+- `rollback(target) -> Result<RollbackOutcome, FileIOError>` - under the same lock, swaps `<target>` and `<target>.prev` (so one step remains available in the other direction), promotes `.prev` when `target` is missing, or returns `NoPreviousVersion` with no filesystem change.
+- `self_heal(target) -> Result<SelfHealOutcome, FileIOError>` - promotes `.prev` only when `target` is missing and never swaps. It checks unlocked first so steady-state reads pay no lock cost, then re-checks under the lock. The shippable loader behind Installed YAML Data and `YamlSource::load` uses this, never `rollback`, so an updated file is not reverted on read.
+
+The `.prev` suffix and the install lock come from Durable Publication, so the operations that consume a rollback generation cannot drift from the one that creates it. Local Ignore YAML Data never reaches `install_verified`, which is what keeps ADR-0006's ban on `.prev` state for Local Ignore structural. The YAML Data Update Channel (`classic-update-core`) drives `install_atomic` and `rollback`; release and app-notification channels do not touch these operations. See [`yaml-update-delivery.md`](yaml-update-delivery.md).
+
+### Ignore/Local YAML generation
+
+`FileGeneratorConfig { ignore_file_content, local_yaml_content, game_name }` configures a `FileGenerator`:
+
+- `FileGenerator::new(config)`
+- `generate_ignore_file_async() -> Result<bool, FileIOError>`
+- `generate_local_yaml_async() -> Result<bool, FileIOError>`
+- `generate_all_files_async() -> Result<(bool, bool), FileIOError>`
+- `ignore_file_path()` (`CLASSIC Ignore.yaml`) and `local_yaml_path()` (`CLASSIC Data/CLASSIC {game} Local.yaml`)
+- `config()`
+
+Standalone helpers: `generate_ignore_file(content)` and `generate_local_yaml(content, game_name)`.
+
+These write relative to the current working directory, create the Local YAML parent directory when needed, and return `false` without touching an existing file. `generate_all_files_async()` uses `tokio::try_join!`, so one generation error fails the combined call. This is first-run file creation only; Local Ignore generation from selected Main defaults during Installed YAML Data loading is the separate, durably published path in `installed_yaml_data`.
+
+Binding projections keep their published names and module homes: Node `JsFileGenerator`, `generateIgnoreFile`, `generateLocalYaml`, and Python `classic_file_io.FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file_async`, `generate_local_yaml_async`. The `file-generation` conformance pack pins them. The YAML Data Update Channel's binding install/rollback APIs are projected from `classic-update-core`.
 
 ## Explicit YAML Data Loading
 
@@ -538,6 +587,9 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 - [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers and mtime-aware file cache (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - generic YAML loaders, document merging, and `schema_version` compatibility used by YAML Data loading
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution
+- [`classic-file-io-core`](classic-file-io-core.md) - supplies `FileIOError`, the typed error of the install/rollback/self-heal and generation operations owned here
+- [`classic-durable-publication`](classic-durable-publication.md) - durability sequence under `install_atomic` and the Local Ignore reset, the `.prev` rollback generation, and the install lock that `rollback` and `self_heal` also take
+- [`classic-update-core`](classic-update-core.md) - YAML Data Update Channel; drives `install_atomic` and `rollback` against the YAML cache location owned here
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and evaluates the crashgen rule model through `CrashgenSettingsAnalyzer`
 - [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime

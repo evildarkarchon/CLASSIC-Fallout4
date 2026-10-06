@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T00:53:53.544266+00:00`
+- Generated: `2026-10-06T01:20:27.754032+00:00`
 - Tier-1 contract rows: **946**
 - Tier-1 matched: **929**
 - Tier-1 missing Rust: **0**
@@ -224,7 +224,7 @@
 | `config-get-default-cache-ttl` | `config` | `classic-database-core` | `DEFAULT_CACHE_TTL_SECS` | `getDefaultCacheTtl` | `matched` |
 | `config-get-batch-cache-ttl` | `config` | `classic-database-core` | `BATCH_CACHE_TTL_SECS` | `getBatchCacheTtl` | `matched` |
 | `config-get-max-cache-ttl` | `config` | `classic-database-core` | `MAX_CACHE_TTL_SECS` | `getMaxCacheTtl` | `matched` |
-| `config-generate-local-yaml` | `config` | `classic-file-io-core` | `generate_local_yaml` | `generateLocalYaml` | `matched` |
+| `config-generate-local-yaml` | `config` | `classic-config-core` | `generate_local_yaml` | `generateLocalYaml` | `matched` |
 | `config-settings-cache-stats-interface` | `config` | `classic-shared-core` | `CacheStats` | `SettingsCacheStats` | `matched` |
 | `config-load-settings-sync` | `config` | `classic-shared-core` | `load_settings_sync` | `loadSettingsSync` | `matched` |
 | `config-load-settings-async` | `config` | `classic-shared-core` | `load_settings_async` | `loadSettingsAsync` | `matched` |
@@ -311,7 +311,7 @@
 | `aux-phase4a-game-path-finder` | `aux` | `classic-path-core` | `GamePathFinder` | `GamePathFinder` | `matched` |
 | `aux-phase4a-js-backup-info` | `aux` | `classic-file-io-core` | `BackupInfo` | `JsBackupInfo` | `matched` |
 | `aux-phase4a-js-backup-manager` | `aux` | `classic-file-io-core` | `BackupManager` | `JsBackupManager` | `matched` |
-| `aux-phase4a-js-file-generator` | `aux` | `classic-file-io-core` | `FileGenerator` | `JsFileGenerator` | `matched` |
+| `aux-phase4a-js-file-generator` | `aux` | `classic-config-core` | `FileGenerator` | `JsFileGenerator` | `matched` |
 | `aux-phase4a-js-file-i-o` | `aux` | `classic-file-io-core` | `FileIOCore` | `JsFileIO` | `matched` |
 | `aux-phase4a-js-file-operation-result` | `aux` | `classic-file-io-core` | `FileOperationResult` | `JsFileOperationResult` | `matched` |
 | `aux-phase4a-js-game-files-manager` | `aux` | `classic-file-io-core` | `GameFilesManager` | `JsGameFilesManager` | `matched` |
@@ -328,7 +328,7 @@
 | `aux-phase4a-create-message` | `aux` | `classic-message-core` | `Message` | `createMessage` | `matched` |
 | `aux-phase4a-detect-encoding` | `aux` | `classic-file-io-core` | `EncodingDetector` | `detectEncoding` | `matched` |
 | `aux-phase4a-format-message` | `aux` | `classic-message-core` | `format_log_message` | `formatMessage` | `matched` |
-| `aux-phase4a-generate-ignore-file` | `aux` | `classic-file-io-core` | `generate_ignore_file` | `generateIgnoreFile` | `matched` |
+| `aux-phase4a-generate-ignore-file` | `aux` | `classic-config-core` | `generate_ignore_file` | `generateIgnoreFile` | `matched` |
 | `aux-phase4a-get-metrics-summary` | `aux` | `classic-shared-core` | `get_summary` | `getMetricsSummary` | `matched` |
 | `aux-phase4a-get-runtime-info` | `aux` | `classic-shared-core` | `get_runtime` | `getRuntimeInfo` | `matched` |
 | `aux-phase4a-get-system-documents-path` | `aux` | `classic-path-core` | `get_system_documents_path` | `getSystemDocumentsPath` | `matched` |
@@ -645,7 +645,7 @@
 | `file_io.DDSAnalyzer@rust` | `file_io` | `classic-resource-core` | `DDSAnalyzer@rust` | `None` | `matched` |
 | `file_io.DDSHeader@rust` | `file_io` | `classic-file-io-core` | `DDSHeader@rust` | `None` | `matched` |
 | `file_io.DDSIssue@rust` | `file_io` | `classic-resource-core` | `DDSIssue@rust` | `None` | `matched` |
-| `file_io.FileGeneratorConfig@rust` | `file_io` | `classic-file-io-core` | `FileGeneratorConfig@rust` | `None` | `matched` |
+| `file_io.FileGeneratorConfig@rust` | `file_io` | `classic-config-core` | `FileGeneratorConfig@rust` | `None` | `matched` |
 | `file_io.FileIOError@rust` | `file_io` | `classic-file-io-core` | `FileIOError@rust` | `None` | `matched` |
 | `file_io.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation@rust` | `None` | `matched` |
 | `file_io.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget@rust` | `None` | `matched` |
@@ -657,8 +657,8 @@
 | `file_io.dds@rust` | `file_io` | `classic-file-io-core` | `dds@rust` | `None` | `matched` |
 | `file_io.encoding@rust` | `file_io` | `classic-file-io-core` | `encoding@rust` | `None` | `matched` |
 | `file_io.game_files@rust` | `file_io` | `classic-file-io-core` | `game_files@rust` | `None` | `matched` |
-| `file_io.generate_local_yaml@rust` | `file_io` | `classic-file-io-core` | `generate_local_yaml@rust` | `None` | `matched` |
-| `file_io.generation@rust` | `file_io` | `classic-file-io-core` | `generation@rust` | `None` | `matched` |
+| `file_io.generate_local_yaml@rust` | `file_io` | `classic-config-core` | `generate_local_yaml@rust` | `None` | `matched` |
+| `file_io.generation@rust` | `file_io` | `classic-config-core` | `generation@rust` | `None` | `matched` |
 | `file_io.hash@rust` | `file_io` | `classic-file-io-core` | `hash@rust` | `None` | `matched` |
 | `file_io.log_collection@rust` | `file_io` | `classic-scanlog-core` | `log_collection@rust` | `None` | `matched` |
 | `file_io.resolve_targeted_inputs@rust` | `file_io` | `classic-scanlog-core` | `resolve_targeted_inputs@rust` | `None` | `matched` |

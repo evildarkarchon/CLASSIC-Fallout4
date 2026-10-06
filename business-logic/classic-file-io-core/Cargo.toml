@@ -16,11 +16,8 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # Crash Log collection (and with it the XSE Folder and operation-context
 # cancellation dependencies) moved to classic-scanlog-core (#254).
 
-# Durable Publication (staging, verified backup, atomic publish) for the YAML
-# Data Update Channel install path. It owns the digest verification, the
-# `.prev` rollback generation, and the one cross-process lock this module's
-# rollback and self-heal also serialize on.
-classic-durable-publication = { path = "../classic-durable-publication" }
+# The YAML Data install/rollback/self-heal path, and with it the dependency on
+# classic-durable-publication, moved to classic-config-core (#248).
 
 # File I/O
 encoding_rs = { workspace = true }
@@ -45,9 +42,10 @@ regex = { workspace = true }
 # Hashing
 sha2 = "0.10"
 
-# Cross-process file locking for atomic install / rollback serialization now
-# comes from `classic-durable-publication`, which uses std's `File::lock`. The
-# former `fs4` dependency was this crate's only use of that library.
+# Cross-process file locking for atomic install / rollback serialization comes
+# from `classic-durable-publication` (std's `File::lock`), used by the install
+# path now owned by classic-config-core. The former `fs4` dependency was this
+# crate's only use of that library.
 
 # Error handling
 anyhow = { workspace = true }

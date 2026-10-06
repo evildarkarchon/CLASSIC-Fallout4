@@ -730,7 +730,7 @@ impl JsLogCollector {
 /// File generator for CLASSIC configuration files (ignore file and local YAML).
 #[napi]
 pub struct JsFileGenerator {
-    inner: classic_file_io_core::FileGenerator,
+    inner: classic_config_core::FileGenerator,
 }
 
 #[napi]
@@ -743,8 +743,8 @@ impl JsFileGenerator {
     #[napi(constructor)]
     pub fn new(ignore_file_content: String, local_yaml_content: String, game_name: String) -> Self {
         Self {
-            inner: classic_file_io_core::FileGenerator::new(
-                classic_file_io_core::FileGeneratorConfig::new(
+            inner: classic_config_core::FileGenerator::new(
+                classic_config_core::FileGeneratorConfig::new(
                     ignore_file_content,
                     local_yaml_content,
                     game_name,
@@ -775,7 +775,7 @@ pub async fn generate_ignore_file(content: String) -> Result<bool> {
     let handle = classic_shared_core::get_runtime().handle().clone();
     handle
         .spawn(async move {
-            classic_file_io_core::generate_ignore_file(content)
+            classic_config_core::generate_ignore_file(content)
                 .await
                 .map_err(to_napi_err)
         })
@@ -793,7 +793,7 @@ pub async fn generate_local_yaml(content: String, game_name: String) -> Result<b
     let handle = classic_shared_core::get_runtime().handle().clone();
     handle
         .spawn(async move {
-            classic_file_io_core::generate_local_yaml(content, game_name)
+            classic_config_core::generate_local_yaml(content, game_name)
                 .await
                 .map_err(to_napi_err)
         })

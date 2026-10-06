@@ -49,3 +49,26 @@ fn file_io_core_has_no_xse_or_operation_context_dependency() {
         );
     }
 }
+
+/// YAML Data install, rollback, and self-heal moved to `classic-config-core`
+/// (#248). That path was file I/O's only reason to depend on
+/// `classic-durable-publication`; config consumes Durable Publication
+/// directly, so the edge must not come back with a stray helper.
+#[test]
+fn file_io_core_has_no_durable_publication_dependency() {
+    let manifest_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
+    let manifest = std::fs::read_to_string(&manifest_path).expect("read file I/O manifest");
+    let names = normal_dependency_names(&manifest);
+
+    // Same vacuity guard as above: prove the table was actually parsed.
+    assert!(
+        names.iter().any(|name| name == "classic-shared-core"),
+        "expected classic-shared-core in {names:?}"
+    );
+    assert!(
+        !names
+            .iter()
+            .any(|name| name == "classic-durable-publication"),
+        "classic-file-io-core must not depend on classic-durable-publication; YAML Data install/rollback/self-heal is owned by classic-config-core"
+    );
+}

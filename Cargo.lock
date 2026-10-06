@@ -817,7 +817,6 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "chrono",
- "classic-durable-publication",
  "classic-shared-core",
  "criterion 0.6.0",
  "dashmap",
@@ -844,6 +843,7 @@ dependencies = [
 name = "classic-file-io-py"
 version = "9.1.0"
 dependencies = [
+ "classic-config-core",
  "classic-file-io-core",
  "classic-resource-core",
  "classic-scanlog-core",

@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T00:53:55.335449+00:00`
+- Generated: `2026-10-06T01:19:51.047919+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -399,19 +399,19 @@
 | `file_io.error.RustFileIOError` | `file_io` | `classic-file-io-core` | `FileIOError` | `classic_file_io.RustFileIOError` | `matched` |
 | `file_io.error.RustFileIOIOError` | `file_io` | `classic-file-io-core` | `FileIOError` | `classic_file_io.RustFileIOIOError` | `matched` |
 | `file_io.error.RustFileIOParseError` | `file_io` | `classic-file-io-core` | `FileIOError` | `classic_file_io.RustFileIOParseError` | `matched` |
-| `file_io.generation.FileGenerator` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
-| `file_io.generation.FileGenerator.__init__` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.__init__` | `matched` |
-| `file_io.generation.FileGenerator.config` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.config` | `matched` |
-| `file_io.generation.FileGenerator.generate_all_files_async` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_all_files_async` | `matched` |
-| `file_io.generation.FileGenerator.generate_ignore_file_async` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_ignore_file_async` | `matched` |
-| `file_io.generation.FileGenerator.generate_local_yaml_async` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_local_yaml_async` | `matched` |
-| `file_io.generation.FileGenerator.ignore_file_path` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.ignore_file_path` | `matched` |
-| `file_io.generation.FileGenerator.local_yaml_path` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator.local_yaml_path` | `matched` |
-| `file_io.generation.FileGeneratorConfig` | `file_io` | `classic-file-io-core` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig` | `matched` |
-| `file_io.generation.FileGeneratorConfig.__init__` | `file_io` | `classic-file-io-core` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig.__init__` | `matched` |
-| `file_io.generation.generate_ignore_file_async` | `file_io` | `classic-file-io-core` | `generate_ignore_file` | `classic_file_io.generate_ignore_file_async` | `matched` |
-| `file_io.generation.generate_local_yaml_async` | `file_io` | `classic-file-io-core` | `generate_local_yaml` | `classic_file_io.generate_local_yaml_async` | `matched` |
-| `file_io.generation.generation@rust` | `file_io` | `classic-file-io-core` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
+| `file_io.generation.FileGenerator` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
+| `file_io.generation.FileGenerator.__init__` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.__init__` | `matched` |
+| `file_io.generation.FileGenerator.config` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.config` | `matched` |
+| `file_io.generation.FileGenerator.generate_all_files_async` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_all_files_async` | `matched` |
+| `file_io.generation.FileGenerator.generate_ignore_file_async` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_ignore_file_async` | `matched` |
+| `file_io.generation.FileGenerator.generate_local_yaml_async` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.generate_local_yaml_async` | `matched` |
+| `file_io.generation.FileGenerator.ignore_file_path` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.ignore_file_path` | `matched` |
+| `file_io.generation.FileGenerator.local_yaml_path` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator.local_yaml_path` | `matched` |
+| `file_io.generation.FileGeneratorConfig` | `file_io` | `classic-config-core` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig` | `matched` |
+| `file_io.generation.FileGeneratorConfig.__init__` | `file_io` | `classic-config-core` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig.__init__` | `matched` |
+| `file_io.generation.generate_ignore_file_async` | `file_io` | `classic-config-core` | `generate_ignore_file` | `classic_file_io.generate_ignore_file_async` | `matched` |
+| `file_io.generation.generate_local_yaml_async` | `file_io` | `classic-config-core` | `generate_local_yaml` | `classic_file_io.generate_local_yaml_async` | `matched` |
+| `file_io.generation.generation@rust` | `file_io` | `classic-config-core` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
 | `file_io.hash.FileHasher` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher` | `matched` |
 | `file_io.hash.FileHasher.cache_size` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher.cache_size` | `matched` |
 | `file_io.hash.FileHasher.cache_stats` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher.cache_stats` | `matched` |
