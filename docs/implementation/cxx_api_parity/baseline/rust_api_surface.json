@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T01:36:23Z",
+  "generated_at_utc": "2026-10-06T10:00:51Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -12275,6 +12275,10 @@
         {
           "name": "formid_databases_origin",
           "type": "String"
+        },
+        {
+          "name": "scan_formid_database_paths",
+          "type": "Vec<FormIdDatabasePathDto>"
         },
         {
           "name": "move_unsolved_logs",

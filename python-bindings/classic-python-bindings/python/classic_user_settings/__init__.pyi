@@ -64,6 +64,16 @@ class CrashLogScanSettings:
     def formid_databases_origin(self) -> str: ...
 
     @property
+    def scan_formid_databases(self) -> dict[str, list[str]]:
+        """FormID database rows that apply to each game's Crash Log Scan.
+
+        Fallout 4 VR reads the shared ``Fallout4`` rows followed by legacy
+        ``Fallout4VR`` rows, de-duplicated; every other game reads its own rows
+        exactly. Games whose scan reads no rows are absent.
+        """
+        ...
+
+    @property
     def move_unsolved_logs(self) -> bool: ...
 
     @property

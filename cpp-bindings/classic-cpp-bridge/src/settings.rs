@@ -535,6 +535,7 @@ fn user_settings_crash_log_scan_settings_dto(
         formid_database_games,
         formid_database_paths,
         formid_databases_origin: scan.formid_databases_origin().as_str().to_string(),
+        scan_formid_database_paths: scan_formid_database_paths(scan),
         move_unsolved_logs: scan.move_unsolved_logs(),
         move_unsolved_logs_origin: scan.move_unsolved_logs_origin().as_str().to_string(),
         has_unsolved_logs_destination,
@@ -1253,6 +1254,26 @@ fn flatten_formid_databases(
     (games, paths)
 }
 
+/// Projects the Rust-owned game-aware scan read for every supported game as CXX-safe rows.
+///
+/// Each game's rows come from `CrashLogScanSettings::formid_databases_for_game`, so the
+/// Fallout 4 VR read rule stays in Rust and C++ frontends only filter by the scanned game.
+fn scan_formid_database_paths(
+    scan: &classic_user_settings_core::CrashLogScanSettings,
+) -> Vec<ffi::FormIdDatabasePathDto> {
+    classic_shared_core::GameId::all()
+        .into_iter()
+        .flat_map(|game| {
+            scan.formid_databases_for_game(game)
+                .into_iter()
+                .map(move |path| ffi::FormIdDatabasePathDto {
+                    game: game.as_str().to_string(),
+                    path: path.to_string(),
+                })
+        })
+        .collect()
+}
+
 /// Converts one accepted typed field into a flat tagged DTO suitable for a CXX vector.
 fn user_settings_update_field_dto(
     field: &CoreUserSettingsUpdateField,
@@ -1911,6 +1932,14 @@ mod ffi {
         formid_database_games: Vec<String>,
         formid_database_paths: Vec<FormIdDatabasePathDto>,
         formid_databases_origin: String,
+        /// FormID database rows that apply to each supported game's Crash Log Scan.
+        ///
+        /// Rust applies the game-aware read rule (`formid_databases_for_game`): a Fallout 4 VR
+        /// row set is the shared `Fallout4` rows followed by legacy `Fallout4VR` rows,
+        /// de-duplicated; every other game carries its own rows exactly. Rows are grouped in
+        /// supported-game order. Scan launch selects rows whose `game` equals the scanned game
+        /// and must never read `formid_database_paths` for that purpose.
+        scan_formid_database_paths: Vec<FormIdDatabasePathDto>,
         move_unsolved_logs: bool,
         move_unsolved_logs_origin: String,
         has_unsolved_logs_destination: bool,
