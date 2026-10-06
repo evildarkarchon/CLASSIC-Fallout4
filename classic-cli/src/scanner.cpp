@@ -85,13 +85,15 @@ static void print_cli_scan_message(const CliScanRunMessage& message) {
     }
 }
 
-/// Presents serialized final-contract events and translates adapter failures into safe cancellation.
+/// Presents serialized final-contract events and reports adapter failures as failed deliveries.
+///
+/// It neither cancels nor remembers a failure: Rust applies `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY`
+/// and reports the failure on the run result, which is where the CLI reads it.
 class CliScanRunObserver final : public classic::scanner::ScanRunObserver {
 public:
-    /// Borrows the cancellation owner for the synchronous execution lifetime.
-    CliScanRunObserver(std::string game, CliScanRunCancellation& cancellation)
-        : game_(std::move(game))
-        , cancellation_(cancellation) {}
+    /// Creates an observer that labels its progress display with `game`.
+    explicit CliScanRunObserver(std::string game)
+        : game_(std::move(game)) {}
 
     /// Renders one event without allowing presentation failures to cross CXX.
     ///
@@ -139,8 +141,6 @@ public:
             progress_->render();
             return {};
         } catch (...) {
-            delivery_failed_ = true;
-            cancellation_.request();
             return {true, "scan progress presentation failed"};
         }
     }
@@ -152,14 +152,9 @@ public:
         }
     }
 
-    /// Reports whether event presentation failed and requested safe cancellation.
-    [[nodiscard]] bool delivery_failed() const noexcept { return delivery_failed_; }
-
 private:
     std::string game_;
-    CliScanRunCancellation& cancellation_;
     mutable std::unique_ptr<ProgressDisplay> progress_;
-    mutable bool delivery_failed_ = false;
 };
 
 // ── Scan pipeline (inner) ──────────────────────────────────────────
@@ -188,7 +183,7 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
     const std::string base_dir = fs::current_path(ec).string();
     const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, base_dir);
     CliScanRunCancellation cancellation;
-    CliScanRunObserver observer(prepared->game, cancellation);
+    CliScanRunObserver observer(prepared->game);
 
     // Local Ignore recovery is an expected interactive choice, not a failure. The prompt clears any
     // live progress frame first so the question is not overwritten by the next render.
@@ -213,10 +208,6 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 
     const auto outcome = execute_cli_scan_run(*request, cancellation, &observer, recovery_prompt);
     observer.finish();
-
-    if (observer.delivery_failed()) {
-        fmt::print(stderr, "Warning: scan progress presentation failed; safe cancellation was requested.\n");
-    }
 
     const auto total_end = std::chrono::steady_clock::now();
     const double duration = std::chrono::duration<double>(total_end - total_start).count();

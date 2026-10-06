@@ -318,14 +318,17 @@ void copy_fixture(const json& plan, std::string_view fixture_ref, const fs::path
 }
 
 /// Maps one recovery scenario identity onto the explicit answer supplied by the consumer profile.
+///
+/// `settle-already-cancelled` supplies Reset To Default, the one answer that could write, so the
+/// observation proves the CLI never asks rather than that it happened to be told to cancel.
 CliLocalIgnoreRecoveryChoice recovery_choice(std::string_view scenario_id) {
-    if (scenario_id == "proceed-without-ignore-recovery") {
+    if (scenario_id == "settle-proceed-without-ignore") {
         return CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore;
     }
-    if (scenario_id == "reset-to-default-recovery") {
+    if (scenario_id == "settle-reset-to-default" || scenario_id == "settle-already-cancelled") {
         return CliLocalIgnoreRecoveryChoice::ResetToDefault;
     }
-    if (scenario_id == "abandon-local-ignore-recovery") {
+    if (scenario_id == "settle-without-decision") {
         return CliLocalIgnoreRecoveryChoice::Cancel;
     }
     throw RunnerError("unsupported CLI recovery profile scenario: " + std::string(scenario_id));
@@ -355,7 +358,10 @@ std::string_view recovery_decision_token(scanner::ScanRunLocalIgnoreRecoveryDeci
     throw RunnerError("unrecognized CLI recovery decision");
 }
 
-/// Executes one real retained Local Ignore continuation through the production CLI callback seam.
+/// Settles one real pending Local Ignore recovery through the production CLI callback seam.
+///
+/// `settledDecision` is the decision the CLI passed to settling (null for none), which is what
+/// shows the prompt's choice reaching Rust rather than only the prompt's return value.
 json observe_recovery_case(const json& plan, std::string_view scenario_id) {
     const std::string invocation_id = plan.at("invocation").at("id").get<std::string>();
     TemporaryDirectory temporary(invocation_id, scenario_id);
@@ -380,33 +386,47 @@ json observe_recovery_case(const json& plan, std::string_view scenario_id) {
     const auto selected = recovery_choice(scenario_id);
     bool prompted = false;
     json offered = json::array();
-    const auto outcome =
-        execute_cli_scan_run(*request, cancellation, nullptr, [&](const CliLocalIgnoreRecoveryPresentation& recovery) {
-            prompted = true;
-            for (const auto& option : recovery.decisions) {
-                if (option.available) {
-                    offered.push_back(
-                        json{{"decision", recovery_decision_token(option.decision)}, {"available", true}});
-                }
+    const CliLocalIgnoreRecoveryPrompt prompt = [&](const CliLocalIgnoreRecoveryPresentation& recovery) {
+        prompted = true;
+        for (const auto& option : recovery.decisions) {
+            if (option.available) {
+                offered.push_back(
+                    json{{"decision", recovery_decision_token(option.decision)}, {"available", true}});
             }
-            const std::string answer = selected == CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore ? "p\n"
-                                       : selected == CliLocalIgnoreRecoveryChoice::ResetToDefault     ? "r\n"
-                                                                                                      : "c\n";
-            std::istringstream input(answer);
-            std::ostringstream output;
-            const auto read_choice =
-                read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery.decisions);
-            if (read_choice != selected) {
-                throw RunnerError("CLI recovery input selected an unexpected decision");
-            }
-            return read_choice;
-        });
+        }
+        const std::string answer = selected == CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore ? "p\n"
+                                   : selected == CliLocalIgnoreRecoveryChoice::ResetToDefault     ? "r\n"
+                                                                                                  : "c\n";
+        std::istringstream input(answer);
+        std::ostringstream output;
+        const auto read_choice =
+            read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery.decisions);
+        if (read_choice != selected) {
+            throw RunnerError("CLI recovery input selected an unexpected decision");
+        }
+        return read_choice;
+    };
+
+    CliScanRunExecutionOutcome outcome{};
+    if (scenario_id == "settle-already-cancelled") {
+        // The pack's `before-pending-recovery` boundary: the run already paused, and its control is
+        // cancelled before the CLI reads the pause. In production only Ctrl+C lands here, so this
+        // drives the same execute-then-resolve sequence `execute_cli_scan_run` does, split open.
+        auto operation = scanner::scan_run_contract_execute(*request, cancellation.token(), nullptr,
+                                                            CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY);
+        cancellation.request();
+        outcome = resolve_cli_local_ignore_recovery(*operation, nullptr, prompt);
+    } else {
+        outcome = execute_cli_scan_run(*request, cancellation, nullptr, prompt);
+    }
     const auto presentation = present_cli_scan_run_outcome(outcome, 1.0);
     return json{{"scenarioId", scenario_id},
                 {"prompted", prompted},
                 {"offered", std::move(offered)},
-                {"selected", recovery_choice_token(selected)},
-                {"continuationConsumed", outcome.local_ignore_continuation_consumed},
+                {"selected", prompted ? json(recovery_choice_token(selected)) : json(nullptr)},
+                {"recoverySettled", outcome.local_ignore_recovery_settled},
+                {"settledDecision", outcome.settled_decision ? json(recovery_decision_token(*outcome.settled_decision))
+                                                             : json(nullptr)},
                 {"terminalExitCode", presentation.exit_code}};
 }
 
@@ -542,8 +562,8 @@ json execute_obligation(const json& plan, const json& obligation) {
         return json{{"cases", std::move(cases)}};
     }
     if (id == "cli.recovery-interaction") {
-        validate_scenario_ids(obligation, {"proceed-without-ignore-recovery", "reset-to-default-recovery",
-                                           "abandon-local-ignore-recovery"});
+        validate_scenario_ids(obligation, {"settle-proceed-without-ignore", "settle-reset-to-default",
+                                           "settle-without-decision", "settle-already-cancelled"});
         json cases = json::array();
         for (const auto& scenario_id : obligation.at("scenarioIds")) {
             cases.push_back(observe_recovery_case(plan, scenario_id.get<std::string>()));
