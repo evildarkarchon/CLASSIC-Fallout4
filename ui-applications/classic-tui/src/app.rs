@@ -1084,9 +1084,10 @@ impl App {
     /// folder is passed as a per-run override for a Standard scan; it is passed as typed, and
     /// [`Self::start_or_cancel_crash_scan`] is what refuses a folder the TUI rejects.
     ///
-    /// A blank custom scan input supplies no override, so a saved custom scan folder still
-    /// applies: launch overrides can replace a saved folder but cannot withhold one. The typed
-    /// mods folder shapes no Crash Log Scan Run request, so it is not passed at all.
+    /// The input starts pre-filled from the saved custom scan folder, so it is the authority for
+    /// the run: a blank input supplies "no custom scan folder", which withholds the saved folder
+    /// and scans only the Installation Root's normal locations. The typed mods folder shapes no
+    /// Crash Log Scan Run request, so it is not passed at all.
     ///
     /// Public so the consumer conformance runner observes the exact request a scan would run.
     ///
@@ -1102,9 +1103,11 @@ impl App {
             Some(inputs) => CrashLogScanIntent::Targeted(inputs),
             None => {
                 let typed = self.custom_scan_input.value.trim();
-                if !typed.is_empty() {
-                    overrides = overrides.with_scan_path(typed);
-                }
+                overrides = if typed.is_empty() {
+                    overrides.with_no_scan_path()
+                } else {
+                    overrides.with_scan_path(typed)
+                };
                 CrashLogScanIntent::Standard
             }
         };

@@ -43,6 +43,35 @@ fn fcx_mode_override_is_supplied_as_on() {
 }
 
 #[test]
+fn no_scan_path_override_supplies_no_custom_scan_folder() {
+    let cleared = overrides_to_core(JsScanRunLaunchOverrides {
+        no_scan_path: Some(true),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+    let absent = overrides_to_core(JsScanRunLaunchOverrides {
+        no_scan_path: Some(false),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+
+    assert!(cleared.no_scan_path());
+    assert!(!absent.no_scan_path());
+}
+
+#[test]
+fn scan_path_and_no_scan_path_together_are_an_invalid_argument() {
+    let error = overrides_to_core(JsScanRunLaunchOverrides {
+        scan_path: Some("One-off Logs".to_string()),
+        no_scan_path: Some(true),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .expect_err("a folder and no folder cannot both win");
+
+    assert_eq!(error.status, Status::InvalidArg);
+}
+
+#[test]
 fn unknown_game_version_override_is_an_invalid_argument() {
     let error = overrides_to_core(JsScanRunLaunchOverrides {
         game_version: Some("Nonsense".to_string()),

@@ -483,7 +483,9 @@ User Settings read-only and never writes them; no frontend uses it yet.
 `max_concurrent` of zero requests adaptive concurrency and so overrides a saved
 limit, unlike `ScanRunConfigurationDto`, where present zero is a request
 validation error. `show_formid_values`, `simplify_logs` and `fcx_mode` are
-supplied-as-on. With FCX Mode on, by saved setting or `fcx_mode`, the view's
+supplied-as-on. `no_scan_path` supplies "no custom scan folder", withholding a
+saved custom scan folder for the run; launching throws when it is combined with
+`has_scan_path`. With FCX Mode on, by saved setting or `fcx_mode`, the view's
 `setup_context` carries the game folder, documents folder, game executable and
 XSE log that Rust resolved; the GUI's own executable normalization and XSE log
 lookup are no longer needed once it launches through here.

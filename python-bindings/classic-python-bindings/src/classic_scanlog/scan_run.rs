@@ -26,7 +26,7 @@ use pyo3::create_exception;
 use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 create_exception!(
@@ -1328,7 +1328,7 @@ fn setup_context_to_core(value: &PyScanRunSetupContext) -> CrashLogScanSetupCont
 }
 
 /// Validates required path text at the adapter boundary.
-fn required_path(value: String, label: &str) -> PyResult<PathBuf> {
+pub(crate) fn required_path(value: String, label: &str) -> PyResult<PathBuf> {
     if value.trim().is_empty() {
         return Err(PyValueError::new_err(format!("{label} must not be blank")));
     }
@@ -1342,8 +1342,9 @@ fn optional_path(value: Option<&str>) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
-fn path_to_string(path: PathBuf) -> String {
-    path.to_string_lossy().into_owned()
+/// Renders a path for Python without failing on non-UTF-8 components.
+pub(crate) fn path_to_string(path: impl AsRef<Path>) -> String {
+    path.as_ref().to_string_lossy().into_owned()
 }
 
 /// Maps discovery while preserving all accepted, rejected, and searched paths.
@@ -1922,10 +1923,9 @@ const fn local_ignore_recovery_decision_to_py(
 
 /// Builds the success envelope, rendering the run before projecting it.
 ///
-/// The order is load-bearing. `run_result_to_py` consumes the result, so the
-/// render has to
-/// happen while the Rust value is still borrowable. Rendering afterwards would have
-/// nothing left to render, and writing it that way does not compile.
+/// The order is load-bearing. `run_result_to_py` consumes the result, so the render has to
+/// happen while the Rust value is still borrowable. Rendering afterwards would have nothing
+/// left to render, and writing it that way does not compile.
 ///
 /// The pending recovery is taken out first, which is the presentation crate's documented
 /// ordering: rendering only borrows, and the continuation must not be left in a value that is
@@ -2305,6 +2305,10 @@ fn scan_run_resume_error_body(
 /// cancelled after discovery. The GIL is released while the shared runtime executes, and
 /// `cancel_on_observer_error` is the observer failure policy Rust applies to the run's own
 /// control; `observer_error` reports the failure either way.
+///
+/// Abandonment is modelled as the absence of a decision rather than as a third variant, because
+/// that is what it is (ADR-0007): [`contract::LocalIgnoreRecoveryDecision`] deliberately carries
+/// none, and adding one would reshape a type crossing five binding surfaces.
 ///
 /// Returns a [`PyScanRunSettledExecution`], which has no continuation and no pending recovery.
 /// Sequential or concurrent replay raises [`ScanRunContinuationConsumedError`] with code

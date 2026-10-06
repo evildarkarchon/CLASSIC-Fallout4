@@ -22,9 +22,10 @@ too (#287): its Standard and Targeted scans call `prepare_launch` with the Insta
 the typed custom scan folder as a per-run `with_scan_path` override, show the launch diagnostics
 from their Display Content lines at the top of the Last Scan overlay, and never save User Settings
 when a scan starts ("save paths" stays its own User Settings Update). The consumer obligation
-`tui.scan-launch` in `tests/conformance/consumer-obligations.json` records it. A blank TUI custom
-scan input supplies no override, so a saved custom scan folder still applies: overrides can replace
-a saved value but not withhold one. Every launch rule from ADR-0009 is implemented:
+`tui.scan-launch` in `tests/conformance/consumer-obligations.json` records it. The TUI custom scan
+input starts pre-filled from the saved custom scan folder, so it is the authority for the run: a
+blank input supplies the `with_no_scan_path` override, which withholds the saved folder and scans
+only the Installation Root's normal locations. Every launch rule from ADR-0009 is implemented:
 
 - the game-differs rule (#285): saved game-specific values are not applied to a non-managed game,
   each one reported as a typed launch diagnostic rendered as Display Content;
@@ -96,6 +97,12 @@ binding that projects it, which is how CXX, Node and Python stay in parity with 
   test proves the document is byte-identical and nothing appears beside it.
 - **Override model.** Every override is optional and a supplied override wins over the saved value.
   - *Explicit value wins:* game, game version, scan path, max concurrency.
+  - *Scan path is tri-state:* not supplied (the saved custom scan folder applies), a folder
+    (`with_scan_path`, replaces the saved folder), or "no custom scan folder" (`with_no_scan_path`,
+    withholds the saved folder for this run). On the builder the last scan path override wins;
+    `no_scan_path()` tells "no custom scan folder" apart from "not supplied". A binding record
+    carries both fields at once, so every binding rejects a folder and "no custom scan folder"
+    together as unrepresentable input.
   - *Supplied as on:* FormID values, simplify logs and FCX Mode (`with_fcx_mode`). Supplying one
     turns the option on for the run; not supplying it keeps the saved value. There is no way to
     turn a saved option off for one run, matching the CLI flags these model.
@@ -110,10 +117,16 @@ binding that projects it, which is how CXX, Node and Python stay in parity with 
 - **FormID rows** come from `CrashLogScanSettings::formid_databases_for_game` for the scanned game,
   so a Fallout 4 VR scan reads the shared `Fallout4` rows followed by legacy `Fallout4VR` rows,
   de-duplicated (see [`formid-settings-boundary.md`](formid-settings-boundary.md)).
-- **Degraded User Settings** (malformed, newer, needing migration) are never an error. The request
-  is built from the values User Settings projected for that document (its degraded fallbacks for an
-  untrusted document) and every User Settings diagnostic is reported as a
-  `CrashLogScanLaunchDiagnostic::UserSettings`, code unchanged.
+- **Degraded User Settings** are never an error, and every User Settings diagnostic is reported as
+  a `CrashLogScanLaunchDiagnostic::UserSettings`, code unchanged. Which values the request is built
+  from depends on how User Settings classified the document:
+  - *Readable* — a document that needs migration (for example an unversioned one, reported with its
+    migration diagnostic) or one written by a newer minor version of the same major schema (a newer
+    compatible document, which User Settings reports no diagnostic for): the request uses the saved
+    values User Settings read from it, exactly as for a current document.
+  - *Untrusted* — a malformed document, an unreadable one, or one from a newer major schema: none
+    of its values apply; the request uses User Settings' degraded fallbacks, which are not
+    always the published defaults (for example Move Unsolved Logs falls back to off).
 - **Game-differs rule.** When the scanned game (the game override) differs from the managed game,
   the managed game's saved game-specific values are not applied: the game version (`auto` is used),
   FCX Mode, the custom scan folder, and the setup folders (game folder, documents folder and game
@@ -135,8 +148,9 @@ binding that projects it, which is how CXX, Node and Python stay in parity with 
     executable is kept only when it exists directly inside the game folder (compared
     case-insensitively); otherwise the selected version's `<docs_name>.exe` from its Version
     Registry entry under the game folder applies (`Fallout4.exe` when no entry resolves); with no
-    game folder the saved executable passes through. The one difference from the GUI is Fallout 4
-    VR on `auto`, which names `Fallout4VR.exe` rather than the flat-screen default;
+    game folder the saved executable passes through. The one difference from the GUI is an
+    intentional deviation: Fallout 4 VR with game version `auto` derives `Fallout4VR.exe` (the VR
+    entry), where the GUI's previous `auto` lookup fell back to the flat-screen `Fallout4.exe`;
   - the XSE log, from `classic_scangame_core::resolve_xse_log_for_scan_in_scopes` under
     `<Installation Root>/CLASSIC Data` with the scanned game, the selected version and the saved
     documents folder, so Fallout 4 VR gets its own `f4sevr.log`.
@@ -161,9 +175,9 @@ new bridge module and no new Python facade.
 
 | Surface | Entry points | Notes |
 |---|---|---|
-| CXX `classic::scanner` (`cpp-bindings/classic-cpp-bridge/src/scanner/launch.rs`) | `scan_run_launch_standard(root, overrides)`, `scan_run_launch_targeted(root, inputs, overrides)` → opaque `ScanRunLaunch`; `scan_run_launch_error`, `scan_run_launch_view`, `scan_run_launch_request` | `ScanRunLaunchOverridesDto` uses presence flags; `max_concurrent` 0 with `has_max_concurrent` is adaptive; `fcx_mode` is supplied-as-on. `ScanRunLaunchErrorDto.has_error` is authoritative; `ScanRunLaunchErrorKind` is `TargetedWithoutInputs` or `XseLogInspect`. The view reuses `ScanRunConfigurationDto`, `ScanRunStandardSourceDto`, `ScanRunTargetedSourceDto` and `ScanRunSetupContextDto`, plus `display_lines`. Exceptions are reserved for unrepresentable input (blank paths, an unknown game-version token, an out-of-range game discriminant). |
-| Node (`node-bindings/classic-node/src/scan_run_launch.rs`) | `ScanRunLaunch.standard(root, overrides?)`, `ScanRunLaunch.targeted(root, inputs, overrides?)` | Getters `intent`, `configuration`, `standardSource`, `unsolvedLogs`, `targetedSource`, `fcxEnabled`, `setupContext`, `diagnostics`, `displayLines`; `request()` returns a `ScanRunRequest`. Overrides include `fcxMode`. A typed launch error throws with `code` and `kind` set to its token (`targeted_without_inputs`, `xse_log_inspect`); diagnostic kinds are camelCase (`userSettings`, `gameVersionNotApplied`, …). |
-| Python `classic_scanlog` (`classic_scanlog/scan_launch.rs`) | `ScanRunLaunch.standard(root, overrides=None)`, `ScanRunLaunch.targeted(root, inputs, overrides=None)`, `ScanRunLaunchOverrides(...)` | Flat read-only properties (`game`, `game_version`, `formid_database_paths`, `base_directory`, `unsolved_logs`, `targeted_inputs`, `setup_context`, `diagnostics`, `display_lines`, …); `request()` returns a `ScanRunRequest`. Overrides include `fcx_mode=False`. `ScanRunLaunchTargetedWithoutInputsError` and `ScanRunLaunchXseLogInspectError` subclass `ScanRunLaunchError(ValueError)`. Launches go through `prepare_launch_in_scopes` with the facade's own Version Registry and YAML-file scopes, the ones `scan_run_execute` uses. |
+| CXX `classic::scanner` (`cpp-bindings/classic-cpp-bridge/src/scanner/launch.rs`) | `scan_run_launch_standard(root, overrides)`, `scan_run_launch_targeted(root, inputs, overrides)` → opaque `ScanRunLaunch`; `scan_run_launch_error`, `scan_run_launch_view`, `scan_run_launch_request` | `ScanRunLaunchOverridesDto` uses presence flags; `max_concurrent` 0 with `has_max_concurrent` is adaptive; `fcx_mode` is supplied-as-on; `no_scan_path` supplies "no custom scan folder" (an exception together with `has_scan_path`). `ScanRunLaunchErrorDto.has_error` is authoritative; `ScanRunLaunchErrorKind` is `TargetedWithoutInputs` or `XseLogInspect`. The view reuses `ScanRunConfigurationDto`, `ScanRunStandardSourceDto`, `ScanRunTargetedSourceDto` and `ScanRunSetupContextDto`, plus `display_lines`. Exceptions are reserved for unrepresentable input (blank paths, an unknown game-version token, an out-of-range game discriminant). |
+| Node (`node-bindings/classic-node/src/scan_run_launch.rs`) | `ScanRunLaunch.standard(root, overrides?)`, `ScanRunLaunch.targeted(root, inputs, overrides?)` | Getters `intent`, `configuration`, `standardSource`, `unsolvedLogs`, `targetedSource`, `fcxEnabled`, `setupContext`, `diagnostics`, `displayLines`; `request()` returns a `ScanRunRequest`. Overrides include `fcxMode` and `noScanPath` ("no custom scan folder"; `InvalidArg` together with `scanPath`). A typed launch error throws with `code` and `kind` set to its token (`targeted_without_inputs`, `xse_log_inspect`); diagnostic kinds are camelCase (`userSettings`, `gameVersionNotApplied`, …). |
+| Python `classic_scanlog` (`classic_scanlog/scan_launch.rs`) | `ScanRunLaunch.standard(root, overrides=None)`, `ScanRunLaunch.targeted(root, inputs, overrides=None)`, `ScanRunLaunchOverrides(...)` | Flat read-only properties (`game`, `game_version`, `formid_database_paths`, `base_directory`, `unsolved_logs`, `targeted_inputs`, `setup_context`, `diagnostics`, `display_lines`, …); `request()` returns a `ScanRunRequest`. Overrides include `fcx_mode=False` and `no_scan_path=False` ("no custom scan folder"; `ValueError` together with `scan_path`). `ScanRunLaunchTargetedWithoutInputsError` and `ScanRunLaunchXseLogInspectError` subclass `ScanRunLaunchError(ValueError)`. Launches go through `prepare_launch_in_scopes` with the facade's own Version Registry and YAML-file scopes, the ones `scan_run_execute` uses. |
 
 Every binding parses the game-version override with `GameVersionSelection::parse` and maps a
 max-concurrency count with `MaxConcurrency::from_count`, so none of them restates a merge rule.
@@ -174,7 +188,8 @@ max-concurrency count with `MaxConcurrency::from_count`, so none of them restate
   `ScanRunLaunch.standard(installationRoot, overrides)` and executes `launch.request()`. Only the
   flags the user supplied become overrides (`--game`, `--game-version`, `--scan-path`,
   `--max-concurrent` with `0` meaning adaptive, and the supplied-as-on `--fcx-mode`,
-  `--show-fid-values`, `--simplify-logs`); an omitted `--game` scans the managed game. The Standard
+  `--show-fid-values`, `--simplify-logs`); `--game` accepts only `Fallout4`, like the native CLI,
+  and an omitted `--game` scans the managed game. The Standard
   base folder is therefore the Installation Root, not the working directory. It prints
   `displayLines` before the run and carries the typed `diagnostics` as `launchDiagnostics` in its
   JSON summary. A launch error is a fatal (exit 2).
@@ -191,7 +206,8 @@ Ignore recovery: a paused run stays terminal and exits as a product failure (exi
 
 The `crash-log-scan-launch` executable conformance family
 (`tests/conformance/packs/crash_log_scan_launch/v1.json`, fixtures in
-`tests/fixtures/crash_log_scan_launch_conformance/`) pins override merging, the adaptive-concurrency
+`tests/fixtures/crash_log_scan_launch_conformance/`) pins override merging, the saved custom scan
+folder and the "no custom scan folder" override that withholds it, the adaptive-concurrency
 override, the Fallout 4 VR row rule, the game-differs rule, degraded settings, Targeted inputs, the
 typed Targeted error, and the FCX setup context: saved setup for the managed game, the Fallout 4 VR
 XSE log, missing folders still launching, the FCX Mode override on a Targeted intent, and the typed

@@ -276,7 +276,8 @@
               "scenarioIds": [
                 "settle-proceed-without-ignore",
                 "settle-reset-to-default",
-                "settle-without-decision"
+                "settle-without-decision",
+                "settle-already-cancelled"
               ],
               "expected": {
                 "decisionOrder": [
@@ -308,6 +309,13 @@
                     "scenarioId": "settle-without-decision",
                     "selected": "cancel",
                     "promptThread": "gui",
+                    "settledDecision": null,
+                    "terminal": "cancelled"
+                  },
+                  {
+                    "scenarioId": "settle-already-cancelled",
+                    "selected": null,
+                    "promptThread": "none",
                     "settledDecision": null,
                     "terminal": "cancelled"
                   }

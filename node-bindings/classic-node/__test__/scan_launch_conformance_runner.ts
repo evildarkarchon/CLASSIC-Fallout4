@@ -98,6 +98,7 @@ function overrides(value: JsonObject, root: string): JsScanRunLaunchOverrides {
     }
     if ("gameVersion" in value) result.gameVersion = string(value.gameVersion, "gameVersion");
     if ("scanPath" in value) result.scanPath = beneath(root, string(value.scanPath, "scanPath"));
+    if (value.noScanPath === true) result.noScanPath = true;
     if ("maxConcurrent" in value) result.maxConcurrent = value.maxConcurrent as number;
     if (value.showFormidValues === true) result.showFormidValues = true;
     if (value.simplifyLogs === true) result.simplifyLogs = true;

@@ -182,3 +182,12 @@ def test_all_eighteen_stubs_match_checked_in_name_inventory() -> None:
 
     assert success, report["errors"]
     assert report["total_crates"] == 18
+
+
+def test_report_records_the_repository_root_without_a_host_path() -> None:
+    """The committed report must be byte-stable across checkouts, so it names no host path."""
+    validator = StubValidator()
+    _success, report = validator.validate_all(REPO_ROOT)
+
+    assert report["rust_dir"] == "."
+    assert all(str(REPO_ROOT) not in str(value) for value in report.values())

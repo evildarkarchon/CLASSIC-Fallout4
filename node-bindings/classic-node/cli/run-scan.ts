@@ -103,9 +103,9 @@ export function getSupportedGameVersions(
  * Projects the flags the user supplied onto Crash Log Scan Launch's override model.
  *
  * Only supplied flags become overrides; an absent flag leaves the saved User Setting in
- * force, which Rust decides. `--game` passes its `JsGameId` token straight through, so
- * the binding rather than a table here decides which games exist (an unknown token is
- * rejected by the binding). `--max-concurrent 0` is an explicit request for adaptive
+ * force, which Rust decides. `--game` (already limited to `Fallout4` by the argument
+ * parser, as in the native CLI) passes its `JsGameId` token straight through.
+ * `--max-concurrent 0` is an explicit request for adaptive
  * concurrency, which the launch honours over a saved limit. The boolean flags are
  * supplied-as-on: present means on for this run.
  */

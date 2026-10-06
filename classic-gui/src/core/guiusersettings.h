@@ -28,16 +28,13 @@ struct GuiCrashLogScanSettings {
     bool simplifyLogs = false;
     bool showStatistics = false;
     bool formIdValueLookup = false;
-    /// Raw saved FormID rows keyed by stored game key, exactly as persisted.
-    ///
-    /// Read-only evidence of the stored document; the Settings dialog shows
-    /// `scanFormIdDatabases` and saves through `GuiUserSettingsChanges::formIdDatabaseSave`.
-    QMap<QString, QStringList> formIdDatabases;
     /// Rust-selected FormID rows that apply to each game's Crash Log Scan.
     ///
     /// Already carries the Fallout 4 VR read rule (shared Fallout4 rows, then legacy
-    /// Fallout4VR rows, de-duplicated). The Settings dialog lists this projection; a Crash Log
-    /// Scan does not read it, because Crash Log Scan Launch selects the same rows in Rust.
+    /// Fallout4VR rows, de-duplicated). The Settings dialog lists this projection and saves
+    /// through `GuiUserSettingsChanges::formIdDatabaseSave`; a Crash Log Scan does not read it,
+    /// because Crash Log Scan Launch selects the same rows in Rust. The raw stored mapping is
+    /// deliberately not projected: no GUI code may pick rows by stored key.
     QMap<QString, QStringList> scanFormIdDatabases;
     bool moveUnsolvedLogs{};
     std::optional<QString> unsolvedLogsDestination;

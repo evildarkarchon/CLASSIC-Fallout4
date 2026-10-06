@@ -226,6 +226,28 @@ describe("classic-node CLI", () => {
         expect(result.output).toContain("Crash Log Scanner (Fallout4VR VR)");
     });
 
+    test("accepts only Fallout4 for --game, like the native CLI", () => {
+        // Widening `--game` beyond Fallout 4 is out of scope: Fallout 4 VR, Skyrim and
+        // Starfield are refused at parse time, before anything is launched or scanned.
+        const workspace = rememberTempDir("classic-node-cli-game-flag-");
+        const scanDir = join(workspace, "incoming");
+
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
+
+        for (const game of ["Fallout4VR", "Skyrim", "Starfield", "fallout4"]) {
+            const result = runCli(["--game", game, "--scan-path", scanDir], workspace);
+
+            expect(result.exitCode).toBe(1);
+            expect(result.stderr).toContain(`--game must be one of: Fallout4 (got ${game})`);
+            expect(result.output).not.toContain("Crash Log Scanner");
+        }
+
+        const accepted = runCli(["--game", "Fallout4", "--scan-path", scanDir], workspace);
+        expect(accepted.exitCode).toBe(0);
+        expect(accepted.output).toContain("Crash Log Scanner (Fallout4");
+    });
+
     test("shows launch diagnostics in Rust's words", () => {
         // Scanning a game other than the managed one withholds the managed game's saved
         // game version, and Crash Log Scan Launch reports that as a launch diagnostic.

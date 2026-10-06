@@ -207,13 +207,6 @@ namespace {
 /// Converts one cohesive CXX GUI projection without interpreting default policy in Qt.
 GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapshotDto& settings)
 {
-    QMap<QString, QStringList> databases;
-    for (const auto& game : settings.crash_log_scan.formid_database_games) {
-        databases.insert(classic::toQString(game), {});
-    }
-    for (const auto& entry : settings.crash_log_scan.formid_database_paths) {
-        databases[classic::toQString(entry.game)].append(classic::toQString(entry.path));
-    }
     QMap<QString, QStringList> scanDatabases;
     for (const auto& entry : settings.crash_log_scan.scan_formid_database_paths) {
         scanDatabases[classic::toQString(entry.game)].append(classic::toQString(entry.path));
@@ -231,7 +224,7 @@ GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapsho
         {settings.update_preferences.update_check_enabled,
          classic::toQString(settings.update_preferences.update_source)},
         {settings.crash_log_scan.fcx_mode, settings.crash_log_scan.simplify_logs,
-         settings.crash_log_scan.show_statistics, settings.crash_log_scan.formid_value_lookup, std::move(databases),
+         settings.crash_log_scan.show_statistics, settings.crash_log_scan.formid_value_lookup,
          std::move(scanDatabases), settings.crash_log_scan.move_unsolved_logs,
          optionalString(settings.crash_log_scan.has_unsolved_logs_destination,
                         settings.crash_log_scan.unsolved_logs_destination),

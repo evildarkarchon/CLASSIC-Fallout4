@@ -304,6 +304,64 @@ fn scan_path_override_replaces_the_saved_custom_scan_folder() {
     );
 }
 
+#[test]
+fn no_scan_path_override_scans_without_the_saved_custom_scan_folder() {
+    let root = tempfile::tempdir().unwrap();
+    let saved = root.path().join("Saved Custom Logs");
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        format!(
+            "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  \
+             SCAN Custom Path: {}\n",
+            yaml_path(&saved)
+        ),
+    )
+    .unwrap();
+
+    let launch = prepare_launch(
+        root.path(),
+        CrashLogScanIntent::Standard,
+        &CrashLogScanLaunchOverrides::new().with_no_scan_path(),
+    )
+    .unwrap();
+
+    let Request::Standard(request) = launch.request() else {
+        panic!("a Standard intent must produce a Standard request");
+    };
+    // A supplied "no custom scan folder" wins over the saved folder: only the Installation
+    // Root is scanned.
+    assert_eq!(request.source().base_directory, root.path());
+    assert_eq!(request.source().custom_scan_directory, None);
+    assert!(
+        launch.diagnostics().is_empty(),
+        "{:?}",
+        launch.diagnostics()
+    );
+}
+
+#[test]
+fn the_last_scan_path_override_supplied_wins() {
+    let root = root_with_settings(MANAGED_FALLOUT4);
+    let one_off = root.path().join("One-off Logs");
+
+    let cleared = CrashLogScanLaunchOverrides::new()
+        .with_scan_path(&one_off)
+        .with_no_scan_path();
+    let replaced = CrashLogScanLaunchOverrides::new()
+        .with_no_scan_path()
+        .with_scan_path(&one_off);
+
+    let custom = |overrides: &CrashLogScanLaunchOverrides| {
+        let launch = prepare_launch(root.path(), CrashLogScanIntent::Standard, overrides).unwrap();
+        let Request::Standard(request) = launch.request() else {
+            panic!("a Standard intent must produce a Standard request");
+        };
+        request.source().custom_scan_directory.clone()
+    };
+    assert_eq!(custom(&cleared), None);
+    assert_eq!(custom(&replaced), Some(one_off));
+}
+
 /// Builds a Fallout 4 VR managed-game document with the given FormID Databases body.
 fn managed_vr(formid_databases: &str) -> String {
     format!(
@@ -414,6 +472,27 @@ fn newer_user_settings_produce_a_request_with_their_diagnostics() {
             "unsupported_future_major_schema",
             "commit_blocked_untrusted_document"
         ]
+    );
+}
+
+#[test]
+fn newer_minor_user_settings_of_the_same_major_launch_from_their_saved_values() {
+    let root = root_with_settings(
+        "schema_version: \"1.99\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4 VR\n  \
+         Game Version: VR\n  Max Concurrent Scans: 9\n",
+    );
+
+    let launch = standard(root.path());
+
+    // A newer minor of the same major is a newer compatible document, unlike a newer major:
+    // its saved values apply, and User Settings reports nothing to relay for it.
+    assert_eq!(launch.request().configuration().game, GameId::Fallout4VR);
+    assert_eq!(launch.request().configuration().game_version, "VR");
+    assert_eq!(launch.request().configuration().max_concurrent, Some(9));
+    assert!(
+        launch.diagnostics().is_empty(),
+        "{:?}",
+        launch.diagnostics()
     );
 }
 

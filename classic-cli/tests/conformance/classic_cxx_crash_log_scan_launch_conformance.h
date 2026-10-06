@@ -71,6 +71,7 @@ classic::scanner::ScanRunLaunchOverridesDto crash_log_scan_launch_overrides(cons
         overrides.has_scan_path = true;
         overrides.scan_path = runtime_path(root, value.at("scanPath"), "scanPath").string();
     }
+    overrides.no_scan_path = value.value("noScanPath", false);
     if (value.contains("maxConcurrent")) {
         overrides.has_max_concurrent = true;
         overrides.max_concurrent = value.at("maxConcurrent").get<std::size_t>();

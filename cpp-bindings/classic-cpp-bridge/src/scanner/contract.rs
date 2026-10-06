@@ -1294,7 +1294,6 @@ pub(crate) fn scan_run_local_ignore_reset_failure_stage_label(
     display_label(stage, map_reset_failure_stage).to_string()
 }
 
-/// Maps the explicit CXX recovery choice into the Rust-owned continuation contract.
 /// Maps the CXX observer failure policy onto the core policy, rejecting CXX's
 /// non-exhaustive out-of-range sentinel before anything runs.
 fn map_observer_failure_policy(
@@ -1314,6 +1313,8 @@ fn map_observer_failure_policy(
     }
 }
 
+/// Maps the explicit CXX recovery choice into the Rust-owned recovery decision a settle
+/// applies, rejecting CXX's non-exhaustive out-of-range sentinel.
 fn map_local_ignore_recovery_decision(
     value: ffi::ScanRunLocalIgnoreRecoveryDecision,
 ) -> Result<contract::LocalIgnoreRecoveryDecision, String> {

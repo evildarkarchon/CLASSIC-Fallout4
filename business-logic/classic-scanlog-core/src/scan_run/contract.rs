@@ -978,8 +978,10 @@ impl CrashLogScanRunContinuation {
     ///
     /// The run's control stays cancelled afterwards. That is intended: abandoning the run *is*
     /// cancelling it. The request is made *before* the claim is attempted, so a call that goes on
-    /// to report a consumed continuation has still cancelled the control, which is inert because
-    /// that run has already finished.
+    /// to report a consumed continuation has still cancelled the control. That is inert for the
+    /// intended use — the control belongs to the run this continuation came from, and that run
+    /// has already finished — but a caller that reuses one control across runs would be
+    /// cancelling the wrong one, which it would be doing at [`Self::resume`] too.
     ///
     /// # Errors
     ///

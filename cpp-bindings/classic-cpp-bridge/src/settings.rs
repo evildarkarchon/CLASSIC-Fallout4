@@ -1085,7 +1085,8 @@ fn commit_user_settings_update(
     }
 }
 
-/// Converts one update rejection into its shared CXX representation.
+/// Converts one update diagnostic, a rejection reason or an accepted update's non-blocking
+/// effect report, into its shared CXX representation.
 fn update_diagnostic_dto(
     diagnostic: &classic_user_settings_core::UpdateDiagnostic,
 ) -> ffi::UserSettingsUpdateDiagnosticDto {

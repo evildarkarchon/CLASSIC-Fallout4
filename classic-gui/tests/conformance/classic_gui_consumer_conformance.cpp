@@ -281,6 +281,12 @@ classic::gui::ScanRunLocalIgnoreRecoveryChoice settlementChoice(const QString& s
     if (scenarioId == QStringLiteral("settle-without-decision")) {
         return Choice::Cancel;
     }
+    if (scenarioId == QStringLiteral("settle-already-cancelled")) {
+        // The run is cancelled before the worker reads its pending recovery, so the prompt must
+        // never be asked. It would answer Reset To Default, a durable decision, so a worker that
+        // prompted anyway would show up as a settled decision instead of the expected none.
+        return Choice::ResetToDefault;
+    }
     throw RunnerError(QStringLiteral("unsupported GUI recovery settlement scenario: %1").arg(scenarioId).toStdString());
 }
 
@@ -339,10 +345,14 @@ QJsonObject observeRecoverySettlement(const QJsonObject& plan, const QString& sc
     copyPlanFixture(plan, QStringLiteral("validCrashLog"), crashLog);
 
     const auto choice = settlementChoice(scenarioId);
+    // `settle-already-cancelled` cancels the run after it paused but before the worker reads its
+    // pending recovery (the pack's `before-pending-recovery` boundary).
+    const bool cancelBeforePendingRecovery = scenarioId == QStringLiteral("settle-already-cancelled");
     ScanController controller(nullptr, nullptr);
     QThread* const guiThread = QThread::currentThread();
     QThread* promptThread = nullptr;
-    classic::gui::ScanRunLocalIgnoreRecoveryChoice selected = classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel;
+    // Stays empty when the worker never prompts, which reads back as JSON null.
+    std::optional<classic::gui::ScanRunLocalIgnoreRecoveryChoice> selected;
     controller.setLocalIgnoreRecoveryPrompt(
         [&promptThread, &selected, choice](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation&) {
             promptThread = QThread::currentThread();
@@ -363,9 +373,18 @@ QJsonObject observeRecoverySettlement(const QJsonObject& plan, const QString& sc
     QObject::connect(&workerThread, &QThread::started, &context, [&]() {
         // Constructed on the worker thread so the worker and its signals never change affinity.
         ScanWorker worker(prompt);
-        QObject::connect(
-            &worker, &ScanWorker::installedYamlDataResolved,
-            [&settled](const classic::gui::ScanRunInstalledYamlDataPresentation& installed) { settled = installed; });
+        // The worker publishes the paused run's Installed YAML Data on this thread, directly
+        // before it reads the pending recovery, so cancelling here lands exactly between the
+        // pause and that read. Cancellation is monotonic, so repeating it on the settled run's
+        // publication is inert.
+        QObject::connect(&worker, &ScanWorker::installedYamlDataResolved,
+                         [&settled, &worker, cancelBeforePendingRecovery](
+                             const classic::gui::ScanRunInstalledYamlDataPresentation& installed) {
+                             settled = installed;
+                             if (cancelBeforePendingRecovery) {
+                                 worker.requestCancel();
+                             }
+                         });
         QObject::connect(&worker, &ScanWorker::finished,
                          [&terminal](int, int, int, const QString&) { terminal = QStringLiteral("completed"); });
         QObject::connect(&worker, &ScanWorker::cancelled,
@@ -388,7 +407,8 @@ QJsonObject observeRecoverySettlement(const QJsonObject& plan, const QString& sc
     }
     return {
         {QStringLiteral("scenarioId"), scenarioId},
-        {QStringLiteral("selected"), recoveryChoiceToken(selected)},
+        {QStringLiteral("selected"),
+         selected.has_value() ? QJsonValue(recoveryChoiceToken(*selected)) : QJsonValue(QJsonValue::Null)},
         {QStringLiteral("promptThread"),
          promptThread == nullptr ? QStringLiteral("none")
                                  : (promptThread == guiThread ? QStringLiteral("gui") : QStringLiteral("worker"))},

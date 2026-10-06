@@ -230,6 +230,36 @@ fn explicit_overrides_still_win_for_a_non_managed_game() {
 }
 
 #[test]
+fn no_scan_path_override_is_not_reported_as_a_withheld_custom_scan_folder() {
+    let saved = saved_fallout4();
+
+    let launch = launch_vr(
+        saved.root.path(),
+        CrashLogScanIntent::Standard,
+        CrashLogScanLaunchOverrides::new().with_no_scan_path(),
+    );
+
+    let Request::Standard(request) = launch.request() else {
+        panic!("a Standard intent must produce a Standard request");
+    };
+    assert_eq!(request.source().custom_scan_directory, None);
+    // "No custom scan folder" replaced the saved folder, so the game difference did not
+    // withhold it.
+    let values: Vec<_> = not_applied(&launch)
+        .into_iter()
+        .map(|(value, _, _)| value)
+        .collect();
+    assert_eq!(
+        values,
+        [
+            SavedGameSpecificValue::GameVersion,
+            SavedGameSpecificValue::FcxMode,
+            SavedGameSpecificValue::SetupFolders
+        ]
+    );
+}
+
+#[test]
 fn only_saved_values_that_would_have_applied_are_reported() {
     let root = tempfile::tempdir().unwrap();
     std::fs::write(

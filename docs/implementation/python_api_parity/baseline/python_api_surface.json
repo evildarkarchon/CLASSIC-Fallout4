@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T14:54:45.616952+00:00",
+  "generated_at_utc": "2026-10-06T16:25:35.284492+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -9957,7 +9957,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "def request(self) -> ScanRunRequest: ..."
+      "signature": "def request(self) -> ScanRunRequest:"
     },
     {
       "module": "classic_scanlog",
@@ -9969,7 +9969,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "def standard( installation_root: str, overrides: ScanRunLaunchOverrides | None = None, ) -> ScanRunLaunch: ..."
+      "signature": "def standard( installation_root: str, overrides: ScanRunLaunchOverrides | None = None, ) -> ScanRunLaunch:"
     },
     {
       "module": "classic_scanlog",
@@ -10019,11 +10019,11 @@
       "export_path": "ScanRunLaunchOverrides.__init__",
       "parent_class": "ScanRunLaunchOverrides",
       "kind": "method",
-      "arity": 7,
+      "arity": 8,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "def __init__( self, game: GameId | None = None, game_version: str | None = None, scan_path: str | None = None, max_concurrent: int | None = None, show_formid_values: bool = False, simplify_logs: bool = False, fcx_mode: bool = False, ) -> None: ..."
+      "signature": "def __init__( self, game: GameId | None = None, game_version: str | None = None, scan_path: str | None = None, max_concurrent: int | None = None, show_formid_values: bool = False, simplify_logs: bool = False, fcx_mode: bool = False, no_scan_path: bool = False, ) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -13197,7 +13197,7 @@
       "owner_module": "user_settings",
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
-      "signature": "def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]: ..."
+      "signature": "def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]:"
     },
     {
       "module": "classic_user_settings",

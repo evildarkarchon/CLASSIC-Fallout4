@@ -184,6 +184,9 @@ fn overrides(value: &Value, root: &Path) -> RunnerResult<CrashLogScanLaunchOverr
     if let Some(scan_path) = value.get("scanPath") {
         overrides = overrides.with_scan_path(root.join(relative(string(scan_path, "scanPath")?)?));
     }
+    if value.get("noScanPath") == Some(&Value::Bool(true)) {
+        overrides = overrides.with_no_scan_path();
+    }
     if let Some(count) = value.get("maxConcurrent") {
         let count = count
             .as_u64()

@@ -127,3 +127,26 @@ def test_uninspectable_xse_log_raises_the_typed_error(tmp_path: Path) -> None:
 def test_unknown_game_version_override_is_rejected() -> None:
     with pytest.raises(ValueError):
         classic_scanlog.ScanRunLaunchOverrides(game_version="Nonsense")
+
+
+def test_no_scan_path_override_withholds_the_saved_custom_scan_folder(tmp_path: Path) -> None:
+    saved = tmp_path / "Saved Custom Logs"
+    root = _root_with_settings(
+        tmp_path,
+        'schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n'
+        f"  SCAN Custom Path: '{saved.as_posix()}'\n",
+    )
+
+    kept = classic_scanlog.ScanRunLaunch.standard(str(root))
+    cleared = classic_scanlog.ScanRunLaunch.standard(
+        str(root), classic_scanlog.ScanRunLaunchOverrides(no_scan_path=True)
+    )
+
+    assert kept.custom_scan_directory is not None
+    assert cleared.custom_scan_directory is None
+    assert cleared.base_directory == str(root)
+
+
+def test_scan_path_and_no_scan_path_together_are_rejected() -> None:
+    with pytest.raises(ValueError):
+        classic_scanlog.ScanRunLaunchOverrides(scan_path="One-off Logs", no_scan_path=True)

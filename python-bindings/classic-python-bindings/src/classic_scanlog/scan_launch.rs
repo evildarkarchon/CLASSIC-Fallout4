@@ -6,7 +6,7 @@
 
 use crate::classic_scanlog::scan_run::{
     PyScanRunDisplayLine, PyScanRunRequest, PyScanRunSetupContext, display_lines_to_py,
-    typed_game_id_to_core,
+    path_to_string, required_path, typed_game_id_to_core,
 };
 use classic_scan_launch::{
     CrashLogScanIntent, CrashLogScanLaunchDiagnostic, CrashLogScanLaunchError,
@@ -21,7 +21,7 @@ use pyo3::create_exception;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 create_exception!(
     classic_scanlog,
@@ -48,7 +48,9 @@ create_exception!(
 /// game-version token (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`).
 /// `max_concurrent=0` explicitly requests adaptive concurrency, which overrides a saved
 /// limit. `show_formid_values`, `simplify_logs` and `fcx_mode` are supplied-as-on: `True`
-/// turns the option on for this run; `False` keeps the saved value.
+/// turns the option on for this run; `False` keeps the saved value. `no_scan_path=True`
+/// scans no custom scan folder for this run, withholding a saved one (a cleared custom scan
+/// folder input); it cannot be combined with `scan_path`.
 #[pyclass(name = "ScanRunLaunchOverrides", from_py_object)]
 #[derive(Clone, Default)]
 pub struct PyScanRunLaunchOverrides {
@@ -62,9 +64,13 @@ impl PyScanRunLaunchOverrides {
     /// # Errors
     ///
     /// Raises `TypeError`/`ValueError` for a `game` that is not a `classic_shared.GameId`,
-    /// and `ValueError` for an unknown game-version token or a blank `scan_path`.
+    /// and `ValueError` for an unknown game-version token, a blank `scan_path`, or
+    /// `scan_path` together with `no_scan_path=True`.
     #[new]
-    #[pyo3(signature = (game=None, game_version=None, scan_path=None, max_concurrent=None, show_formid_values=false, simplify_logs=false, fcx_mode=false))]
+    #[pyo3(signature = (game=None, game_version=None, scan_path=None, max_concurrent=None, show_formid_values=false, simplify_logs=false, fcx_mode=false, no_scan_path=false))]
+    // One parameter per override keeps the Python constructor keyword-compatible with every
+    // other binding's override record.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         game: Option<&Bound<'_, PyAny>>,
         game_version: Option<String>,
@@ -73,7 +79,15 @@ impl PyScanRunLaunchOverrides {
         show_formid_values: bool,
         simplify_logs: bool,
         fcx_mode: bool,
+        no_scan_path: bool,
     ) -> PyResult<Self> {
+        // The core builder lets the last scan path override win; keyword arguments have no
+        // order, so a folder and "no folder" together are unrepresentable input.
+        if scan_path.is_some() && no_scan_path {
+            return Err(PyValueError::new_err(
+                "scan_path and no_scan_path cannot both be supplied",
+            ));
+        }
         let mut inner = CrashLogScanLaunchOverrides::new();
         if let Some(game) = game {
             inner = inner.with_game(typed_game_id_to_core(game)?);
@@ -86,6 +100,9 @@ impl PyScanRunLaunchOverrides {
         }
         if let Some(scan_path) = scan_path {
             inner = inner.with_scan_path(required_path(scan_path, "scan_path")?);
+        }
+        if no_scan_path {
+            inner = inner.with_no_scan_path();
         }
         if let Some(max_concurrent) = max_concurrent {
             inner = inner.with_max_concurrency(MaxConcurrency::from_count(max_concurrent));
@@ -140,7 +157,9 @@ impl PyScanRunLaunch {
     ///
     /// # Errors
     ///
-    /// Raises `ValueError` for a blank `installation_root`.
+    /// Raises `ValueError` for a blank `installation_root`, and
+    /// `ScanRunLaunchXseLogInspectError` (a `ScanRunLaunchError`) when FCX Mode is on and the
+    /// XSE log location cannot be inspected for a reason other than absence.
     #[staticmethod]
     #[pyo3(signature = (installation_root, overrides=None))]
     pub fn standard(
@@ -155,7 +174,8 @@ impl PyScanRunLaunch {
     /// # Errors
     ///
     /// Raises `ScanRunLaunchTargetedWithoutInputsError` (a `ScanRunLaunchError`) for an
-    /// empty `inputs` list, and `ValueError` for a blank `installation_root`.
+    /// empty `inputs` list, `ScanRunLaunchXseLogInspectError` as for `standard`, and
+    /// `ValueError` for a blank `installation_root`.
     #[staticmethod]
     #[pyo3(signature = (installation_root, inputs, overrides=None))]
     pub fn targeted(
@@ -219,7 +239,7 @@ impl PyScanRunLaunch {
             .scan_facts
             .formid_database_paths
             .iter()
-            .map(|path| path_text(path))
+            .map(path_to_string)
             .collect()
     }
 
@@ -232,7 +252,7 @@ impl PyScanRunLaunch {
             .scan_facts
             .unsolved_logs_destination
             .as_deref()
-            .map(path_text)
+            .map(path_to_string)
     }
 
     /// Returns the explicit concurrency limit, or `None` for adaptive concurrency.
@@ -244,19 +264,24 @@ impl PyScanRunLaunch {
     /// Returns the Standard base folder (always the Installation Root), or `None` when Targeted.
     #[getter]
     pub fn base_directory(&self) -> Option<String> {
-        self.standard_source(|source| Some(path_text(&source.base_directory)))
+        self.standard_source(|source| Some(path_to_string(&source.base_directory)))
     }
 
     /// Returns the Standard custom scan folder, if any.
     #[getter]
     pub fn custom_scan_directory(&self) -> Option<String> {
-        self.standard_source(|source| source.custom_scan_directory.as_deref().map(path_text))
+        self.standard_source(|source| source.custom_scan_directory.as_deref().map(path_to_string))
     }
 
     /// Returns the Standard configured documents root, if any.
     #[getter]
     pub fn configured_documents_root(&self) -> Option<String> {
-        self.standard_source(|source| source.configured_documents_root.as_deref().map(path_text))
+        self.standard_source(|source| {
+            source
+                .configured_documents_root
+                .as_deref()
+                .map(path_to_string)
+        })
     }
 
     /// Returns the Standard Unsolved Logs intent token, or `None` when Targeted.
@@ -281,14 +306,9 @@ impl PyScanRunLaunch {
     pub fn targeted_inputs(&self) -> Option<Vec<String>> {
         match self.inner.request() {
             Request::Standard(_) => None,
-            Request::Targeted(request) => Some(
-                request
-                    .source()
-                    .inputs
-                    .iter()
-                    .map(|path| path_text(path))
-                    .collect(),
-            ),
+            Request::Targeted(request) => {
+                Some(request.source().inputs.iter().map(path_to_string).collect())
+            }
         }
     }
 
@@ -303,10 +323,10 @@ impl PyScanRunLaunch {
     pub fn setup_context(&self) -> Option<PyScanRunSetupContext> {
         self.inner.setup_context().map(|context| {
             PyScanRunSetupContext::new(
-                context.game_root.as_deref().map(path_text),
-                context.docs_root.as_deref().map(path_text),
-                context.game_exe_path.as_deref().map(path_text),
-                context.xse_log_path.as_deref().map(path_text),
+                context.game_root.as_deref().map(path_to_string),
+                context.docs_root.as_deref().map(path_to_string),
+                context.game_exe_path.as_deref().map(path_to_string),
+                context.xse_log_path.as_deref().map(path_to_string),
             )
         })
     }
@@ -393,19 +413,6 @@ fn diagnostic_to_py(diagnostic: &CrashLogScanLaunchDiagnostic) -> PyScanRunLaunc
         code: diagnostic.code().to_string(),
         message: diagnostic.message().to_string(),
     }
-}
-
-/// Rejects blank path text, which cannot name a folder.
-fn required_path(value: String, label: &str) -> PyResult<PathBuf> {
-    if value.trim().is_empty() {
-        return Err(PyValueError::new_err(format!("{label} must not be blank")));
-    }
-    Ok(PathBuf::from(value))
-}
-
-/// Renders a path for Python without failing on non-UTF-8 components.
-fn path_text(path: &Path) -> String {
-    path.to_string_lossy().into_owned()
 }
 
 /// Registers the launch classes and exceptions on the `classic_scanlog` facade.
