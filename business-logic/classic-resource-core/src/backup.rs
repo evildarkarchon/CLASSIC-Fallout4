@@ -2,9 +2,16 @@
 //!
 //! This module provides backup/restore functionality for various game file types
 //! including XSE (F4SE/SKSE), ReShade, Vulkan, and ENB files.
+//!
+//! This is the game-target backup: one fixed backup directory per
+//! [`BackupType`] under the game root. It is distinct from the version-labelled
+//! XSE backup and keeps its own destination, conflict (replace-on-create), and
+//! recovery behavior. It moved here from `classic-file-io-core` (#250); the
+//! operations still return [`FileIOError`] so every binding error projection
+//! stays the same.
 
-use crate::error::FileIOError;
 use chrono::{DateTime, Local};
+use classic_file_io_core::FileIOError;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 

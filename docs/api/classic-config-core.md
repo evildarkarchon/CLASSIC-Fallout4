@@ -584,8 +584,9 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 ## Related Crates And Integration Points
 
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
-- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers and mtime-aware file cache (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
-- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - generic YAML loaders, document merging, and `schema_version` compatibility used by YAML Data loading
+- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - generic YAML loaders, document merging, the mtime-aware YAML-file cache, and `schema_version` compatibility used by YAML Data loading (this crate has no `classic-settings-core` edge; that crate only re-exports the shared-core items until its retirement in issue #257)
+- [`classic-durable-publication`](classic-durable-publication.md) - staging, verified backup, and atomic publish sequence for the Local Ignore reset critical section; backup location, conflict policy, and the reset lock stay in this crate
+- [`classic-vocabulary`](classic-vocabulary.md) - the Vocabulary Token contract this crate implements for its Installed YAML Data and Local Ignore enums
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution
 - [`classic-file-io-core`](classic-file-io-core.md) - supplies `FileIOError`, the typed error of the install/rollback/self-heal and generation operations owned here
 - [`classic-durable-publication`](classic-durable-publication.md) - durability sequence under `install_atomic` and the Local Ignore reset, the `.prev` rollback generation, and the install lock that `rollback` and `self_heal` also take

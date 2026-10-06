@@ -1,7 +1,16 @@
-//! Backup management for configuration files.
+//! Version-labelled backup of game configuration files.
 //!
 //! This module provides functionality for creating and managing backups of game configuration
 //! files (INI files, save games, etc.) with version tracking based on XSE log information.
+//!
+//! It is one of resource core's two distinct backup operations. The version-labelled backup
+//! copies one caller-chosen file into `<backup_root>/<sanitized version label>/<file name>`,
+//! replacing an earlier copy with the same label. It is deliberately separate from the
+//! game-target backup (the XSE/ReShade/Vulkan/ENB game-root snapshots): the two have different
+//! destinations, conflict rules, and recovery paths, so neither is expressed through the other.
+//!
+//! This operation moved here from `classic-path-core` (#251). Path core keeps game and
+//! documents discovery and path validation, and does not re-export this backup policy.
 //!
 //! # Features
 //!
@@ -13,12 +22,12 @@
 //! # Examples
 //!
 //! ```rust,no_run
-//! use classic_path_core::BackupManager;
+//! use classic_resource_core::VersionBackupManager;
 //! use std::path::Path;
 //!
 //! // Create backup manager
 //! let backup_dir = Path::new("C:\\Users\\Name\\Documents\\My Games\\Fallout4\\Backups");
-//! let manager = BackupManager::new(backup_dir);
+//! let manager = VersionBackupManager::new(backup_dir);
 //!
 //! // Extract version from XSE log
 //! let xse_log = Path::new("C:\\Users\\Name\\Documents\\My Games\\Fallout4\\F4SE\\f4se.log");
@@ -30,10 +39,65 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
-use crate::error::{BackupError, BackupResult};
+use classic_shared_core::path_core::PathError;
 use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
+use thiserror::Error;
+
+/// Version-labelled backup errors.
+///
+/// Variants and display messages are unchanged from the former
+/// `classic_path_core::BackupError`; binding adapters forward the messages verbatim.
+#[derive(Error, Debug)]
+pub enum VersionBackupError {
+    /// XSE log file not found for version extraction.
+    #[error("XSE log file not found: {0}")]
+    XseLogNotFound(PathBuf),
+
+    /// Version string not found in XSE log.
+    #[error("Version string not found in XSE log")]
+    VersionNotFound,
+
+    /// Invalid version format in XSE log.
+    #[error("Invalid version format: {0}")]
+    InvalidVersionFormat(String),
+
+    /// Failed to create backup directory.
+    #[error("Failed to create backup directory '{path}': {source}")]
+    CreateDirectoryFailed {
+        /// The path of the directory that failed to be created.
+        path: PathBuf,
+        /// The underlying I/O error.
+        source: std::io::Error,
+    },
+
+    /// Failed to copy file to backup.
+    #[error("Failed to copy file '{src}' to '{dst}': {source}")]
+    CopyFileFailed {
+        /// The source file path.
+        src: PathBuf,
+        /// The destination file path.
+        dst: PathBuf,
+        /// The underlying I/O error.
+        source: std::io::Error,
+    },
+
+    /// Source file not found for backup.
+    #[error("Source file not found: {0}")]
+    SourceNotFound(PathBuf),
+
+    /// General path error.
+    #[error(transparent)]
+    PathError(#[from] PathError),
+
+    /// I/O error.
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+}
+
+/// Convenience type alias for Results with [`VersionBackupError`].
+pub type VersionBackupResult<T> = Result<T, VersionBackupError>;
 
 /// Version information extracted from XSE log.
 ///
@@ -43,7 +107,7 @@ use std::path::{Path, PathBuf};
 /// # Examples
 ///
 /// ```rust
-/// use classic_path_core::XseVersion;
+/// use classic_resource_core::XseVersion;
 ///
 /// let version = XseVersion::new("1.10.163.0");
 /// assert_eq!(version.full_version(), "1.10.163.0");
@@ -68,7 +132,7 @@ impl XseVersion {
     /// # Examples
     ///
     /// ```rust
-    /// use classic_path_core::XseVersion;
+    /// use classic_resource_core::XseVersion;
     ///
     /// let version = XseVersion::new("1.10.163.0");
     /// assert_eq!(version.full_version(), "1.10.163.0");
@@ -99,7 +163,7 @@ impl XseVersion {
     /// # Examples
     ///
     /// ```rust
-    /// use classic_path_core::XseVersion;
+    /// use classic_resource_core::XseVersion;
     ///
     /// let version = XseVersion::new("1.10.163.0");
     /// assert_eq!(version.sanitized(), "1_10_163_0");
@@ -117,21 +181,21 @@ impl XseVersion {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::BackupManager;
+/// use classic_resource_core::VersionBackupManager;
 /// use std::path::Path;
 ///
 /// let backup_dir = Path::new("Backups");
-/// let manager = BackupManager::new(backup_dir);
+/// let manager = VersionBackupManager::new(backup_dir);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[derive(Debug, Clone)]
-pub struct BackupManager {
+pub struct VersionBackupManager {
     /// Root directory for all backups
     backup_root: PathBuf,
 }
 
-impl BackupManager {
-    /// Create a new BackupManager.
+impl VersionBackupManager {
+    /// Create a new VersionBackupManager.
     ///
     /// # Arguments
     ///
@@ -139,15 +203,15 @@ impl BackupManager {
     ///
     /// # Returns
     ///
-    /// A new BackupManager instance.
+    /// A new VersionBackupManager instance.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use classic_path_core::BackupManager;
+    /// use classic_resource_core::VersionBackupManager;
     /// use std::path::Path;
     ///
-    /// let manager = BackupManager::new("Backups");
+    /// let manager = VersionBackupManager::new("Backups");
     /// ```
     pub fn new(backup_root: impl Into<PathBuf>) -> Self {
         Self {
@@ -178,10 +242,10 @@ impl BackupManager {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use classic_path_core::BackupManager;
+    /// use classic_resource_core::VersionBackupManager;
     /// use std::path::Path;
     ///
-    /// let manager = BackupManager::new("Backups");
+    /// let manager = VersionBackupManager::new("Backups");
     /// let xse_log = Path::new("f4se.log");
     ///
     /// match manager.extract_version_from_xse_log(xse_log) {
@@ -190,10 +254,15 @@ impl BackupManager {
     /// }
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn extract_version_from_xse_log(&self, xse_log_path: &Path) -> BackupResult<XseVersion> {
+    pub fn extract_version_from_xse_log(
+        &self,
+        xse_log_path: &Path,
+    ) -> VersionBackupResult<XseVersion> {
         // Check if log file exists
         if !xse_log_path.exists() {
-            return Err(BackupError::XseLogNotFound(xse_log_path.to_path_buf()));
+            return Err(VersionBackupError::XseLogNotFound(
+                xse_log_path.to_path_buf(),
+            ));
         }
 
         // Read log file
@@ -203,7 +272,7 @@ impl BackupManager {
         // Looking for lines like: "F4SE version = 0.6.23"
         // or "runtime version = 1.10.163.0"
         let version_regex = Regex::new(r"(?i)(?:runtime )?version\s*[=:]\s*(\d+(?:\.\d+)+)")
-            .map_err(|error| BackupError::InvalidVersionFormat(error.to_string()))?;
+            .map_err(|error| VersionBackupError::InvalidVersionFormat(error.to_string()))?;
 
         for line in content.lines() {
             if let Some(captures) = version_regex.captures(line)
@@ -215,7 +284,7 @@ impl BackupManager {
         }
 
         // Version not found
-        Err(BackupError::VersionNotFound)
+        Err(VersionBackupError::VersionNotFound)
     }
 
     /// Create a backup of a file with version metadata.
@@ -242,10 +311,10 @@ impl BackupManager {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use classic_path_core::{BackupManager, XseVersion};
+    /// use classic_resource_core::{VersionBackupManager, XseVersion};
     /// use std::path::Path;
     ///
-    /// let manager = BackupManager::new("Backups");
+    /// let manager = VersionBackupManager::new("Backups");
     /// let version = XseVersion::new("1.10.163.0");
     /// let ini_file = Path::new("Fallout4.ini");
     ///
@@ -253,27 +322,35 @@ impl BackupManager {
     /// println!("Backup created at: {}", backup_path.display());
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn create_backup(&self, source_file: &Path, version: &XseVersion) -> BackupResult<PathBuf> {
+    pub fn create_backup(
+        &self,
+        source_file: &Path,
+        version: &XseVersion,
+    ) -> VersionBackupResult<PathBuf> {
         // Check source file exists
         if !source_file.exists() {
-            return Err(BackupError::SourceNotFound(source_file.to_path_buf()));
+            return Err(VersionBackupError::SourceNotFound(
+                source_file.to_path_buf(),
+            ));
         }
 
         // Create versioned backup directory
         let version_dir = self.backup_root.join(version.sanitized());
-        fs::create_dir_all(&version_dir).map_err(|e| BackupError::CreateDirectoryFailed {
-            path: version_dir.clone(),
-            source: e,
+        fs::create_dir_all(&version_dir).map_err(|e| {
+            VersionBackupError::CreateDirectoryFailed {
+                path: version_dir.clone(),
+                source: e,
+            }
         })?;
 
         // Determine destination path
         let file_name = source_file
             .file_name()
-            .ok_or_else(|| BackupError::InvalidVersionFormat("No filename".to_string()))?;
+            .ok_or_else(|| VersionBackupError::InvalidVersionFormat("No filename".to_string()))?;
         let dest_path = version_dir.join(file_name);
 
         // Copy file to backup
-        fs::copy(source_file, &dest_path).map_err(|e| BackupError::CopyFileFailed {
+        fs::copy(source_file, &dest_path).map_err(|e| VersionBackupError::CopyFileFailed {
             src: source_file.to_path_buf(),
             dst: dest_path.clone(),
             source: e,
@@ -300,15 +377,15 @@ impl BackupManager {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use classic_path_core::BackupManager;
+    /// use classic_resource_core::VersionBackupManager;
     ///
-    /// let manager = BackupManager::new("Backups");
+    /// let manager = VersionBackupManager::new("Backups");
     /// for version in manager.list_versions()? {
     ///     println!("Backup version: {}", version);
     /// }
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn list_versions(&self) -> BackupResult<Vec<String>> {
+    pub fn list_versions(&self) -> VersionBackupResult<Vec<String>> {
         if !self.backup_root.exists() {
             return Ok(Vec::new());
         }
@@ -342,9 +419,9 @@ impl BackupManager {
     /// # Examples
     ///
     /// ```rust
-    /// use classic_path_core::{BackupManager, XseVersion};
+    /// use classic_resource_core::{VersionBackupManager, XseVersion};
     ///
-    /// let manager = BackupManager::new("Backups");
+    /// let manager = VersionBackupManager::new("Backups");
     /// let version = XseVersion::new("1.10.163.0");
     /// let version_dir = manager.get_version_path(&version);
     /// ```
@@ -354,5 +431,5 @@ impl BackupManager {
 }
 
 #[cfg(test)]
-#[path = "backup_tests.rs"]
+#[path = "version_backup_tests.rs"]
 mod tests;

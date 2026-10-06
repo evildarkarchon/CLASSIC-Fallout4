@@ -7,9 +7,11 @@ Crate metadata:
 - Crate: `classic-file-io-core`
 - Description: `Pure Rust file I/O operations for CLASSIC (no PyO3)`
 
-This crate is the shared Rust file-system utility layer for CLASSIC business-logic crates. It combines async text and byte I/O, directory walking, DDS header parsing, hash utilities, and backup workflows in one crate.
+This crate is the shared Rust file-system utility layer for CLASSIC business-logic crates. It combines async text and byte I/O, directory walking, DDS header parsing, and hash utilities in one crate.
 
 YAML Data install, rollback, and self-heal (`install_atomic`, `rollback`, `self_heal`, `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome`) and Ignore/Local YAML generation (`FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file`, `generate_local_yaml`) moved to [`classic-config-core`](classic-config-core.md#yaml-data-install-rollback-self-heal-and-generation) (#248). The old `classic_file_io_core::atomic_install` and `classic_file_io_core::generation` modules and their root re-exports are gone, with no forwarding re-export: config depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_config_core` (root, `atomic_install`, or `generation` module). The moved APIs still return this crate's `FileIOError`, so error codes and binding projections are unchanged. With that path gone, this crate no longer depends on `classic-durable-publication`.
+
+The game-target backup (`BackupManager`, `BackupType`, `BackupInfo`) and game-file operations (`GameFilesManager`, `FileOperation`, `FileOperationResult`) moved to [`classic-resource-core`](classic-resource-core.md#game-target-backup-and-game-file-operations) (#250). The old `classic_file_io_core::backup` and `classic_file_io_core::game_files` modules and their root re-exports are gone, with no forwarding re-export: resource depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_resource_core`. The moved APIs still report failures as this crate's `FileIOError`.
 
 Crash Log collection (`LogCollector`, `CRASH_LOG_PATTERN`, `CRASH_AUTOSCAN_PATTERN`) and Targeted input resolution (`resolve_targeted_inputs`, `TargetedResolution`, `RejectedInput`) moved to [`classic-scanlog-core`](classic-scanlog-core.md#crash-log-collection-and-targeted-input-resolution) (#254). The old `classic_file_io_core::log_collection` module and its root re-exports are gone, with no forwarding re-export: scanlog depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_scanlog_core`. The moved APIs still report filesystem failures as this crate's `FileIOError`.
 
@@ -30,7 +32,6 @@ Use this crate when you need to:
 - walk directories or normalize cached path values
 - parse DDS headers (game-target DDS validation is owned by `classic-resource-core`)
 - hash files or compare file similarity
-- back up, restore, or remove game-adjacent files through shared Rust utilities
 
 Do not use this crate for:
 
@@ -39,6 +40,7 @@ Do not use this crate for:
 - scanlog analysis logic
 - Crash Log collection or Targeted input resolution (owned by `classic-scanlog-core`)
 - YAML Data install/rollback/self-heal or Ignore/Local YAML generation (owned by `classic-config-core`)
+- game-target backup or game-file backup/restore/remove operations (owned by `classic-resource-core`)
 - database lookup logic
 - binding-specific wrapper APIs
 
@@ -84,21 +86,6 @@ File hashing helpers.
 - `FileHasher` - SHA256 hashing with a process default cache and Rayon batch helpers
 - `FileHashScope` - opaque handle to one hash-cache store and its statistics, for callers that need their own cache
 
-### `backup`
-
-Fixed-type backup helpers for game-side files.
-
-- `BackupType` - `XSE`, `ReShade`, `Vulkan`, or `ENB`
-- `BackupInfo` - backup metadata snapshot
-- `BackupManager` - create, inspect, restore, and remove typed backups
-
-### `game_files`
-
-Pattern-based backup/restore/remove operations.
-
-- `GameFilesManager` - generalized file-group operations over a game root
-- `FileOperation` - `Backup`, `Restore`, or `Remove`
-- `FileOperationResult` - per-operation summary with partial-failure reporting
 
 ### `similarity`
 
@@ -286,48 +273,6 @@ cannot change `classic_file_io`'s or `classic_scangame`'s caches or statistics;
 a Python facade that later needs hash-cache controls must select its own
 isolated scope rather than expose the default one.
 
-## Backup and game-file management APIs
-
-There are two separate file-group APIs.
-
-### `BackupManager`
-
-Typed backup workflow for known modding-related file groups.
-
-- `BackupType` variants: `XSE`, `ReShade`, `Vulkan`, `ENB`
-- `BackupType::display_name()`, `file_patterns()`, `backup_dir_name()`, `all()`
-- `BackupManager::new(game_root, backup_base)`
-- `backup_exists(type) -> Result<bool, FileIOError>`
-- `get_backup_info(type) -> Result<BackupInfo, FileIOError>`
-- `create_backup(type) -> Result<BackupInfo, FileIOError>`
-- `restore_backup(type) -> Result<usize, FileIOError>`
-- `remove_backup(type) -> Result<(), FileIOError>`
-
-Behavior worth knowing:
-
-- default backup root is `game_root/CLASSIC_Backups`
-- backup matching uses a simple `*` prefix/suffix matcher over top-level file names only
-- `create_backup()` replaces an existing typed backup directory before copying
-- if no files match the backup type's patterns, `create_backup()` removes the newly created backup directory and returns `FileIOError::NotFound`
-
-### `GameFilesManager`
-
-Generalized pattern-based file-group operations.
-
-- `GameFilesManager::new(game_root, backup_root)`
-- `backup(label, patterns) -> Result<FileOperationResult, FileIOError>`
-- `restore(label, patterns) -> Result<FileOperationResult, FileIOError>`
-- `remove(label, patterns) -> Result<FileOperationResult, FileIOError>`
-- `FileOperationResult::is_success()` and `is_partial()`
-
-Behavior worth knowing:
-
-- matching is case-insensitive substring matching on top-level entry names in `game_root`
-- matching covers both files and directories
-- operations run in chunks with bounded Tokio-task concurrency
-- per-entry failures are accumulated in `FileOperationResult.errors` instead of failing the whole operation after matching succeeds
-- `restore()` restores only entries that both match the requested patterns and exist in the labeled backup directory
-
 ## Similarity helpers
 
 Ignore/Local YAML generation is documented in [`classic-config-core`](classic-config-core.md#yaml-data-install-rollback-self-heal-and-generation).
@@ -392,10 +337,9 @@ The crate uses a few different error styles depending on API family.
 Most operational APIs use `FileIOError`, including:
 
 - `FileIOCore`
-- `BackupManager`
-- `GameFilesManager`
 - `FileHasher`
-- the config-owned install/rollback/self-heal and generation operations, which kept this error type when they moved
+
+`FileIOError` is also the error type of APIs that moved out of this crate and kept it so binding error projections stay unchanged: scanlog core's Crash Log collection, resource core's `BackupManager` and `GameFilesManager`, and config core's YAML Data install/rollback/self-heal and Ignore/Local YAML generation.
 
 ## Fail-soft APIs
 
@@ -403,7 +347,6 @@ Several APIs intentionally avoid failing the entire batch:
 
 - `FileHasher::hash_files_parallel()` returns `None` for files that fail to hash
 - `FileIOCore::read_dds_headers_batch()` maps per-file failures to `None`
-- `GameFilesManager` stores per-entry failures in `FileOperationResult.errors`
 - `walk_directory()` skips per-entry traversal errors instead of surfacing them
 
 ## Non-`FileIOError` APIs
@@ -419,7 +362,7 @@ That split matters for contributors: this crate mixes strict top-level I/O error
 
 This crate exposes async APIs but does not create its own runtime.
 
-- async entry points include most of `FileIOCore`, all of `BackupManager`, and all of `GameFilesManager`
+- async entry points include most of `FileIOCore`
 - synchronous helpers still exist where they fit better, including `walk_directory()`, `stream_lines_sync()`, `FileHasher`, `DDSHeader::from_bytes()`, and similarity helpers
 - the crate depends on Tokio but does not construct or export a runtime, and it no longer depends on `classic-operation-context`: scoped discovery cancellation moved with Crash Log collection to `classic-scanlog-core`
 - that matches the repo rule that runtime ownership stays outside low-level crates and should remain compatible with the shared CLASSIC runtime model
@@ -457,6 +400,7 @@ Related CLASSIC crates:
 - [`classic-resource-core`](classic-resource-core.md) - downstream owner of game-target DDS rules applied to this crate's `DDSHeader`
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - downstream consumer of file I/O helpers for game-file checks
 - [`classic-config-core`](classic-config-core.md) - downstream owner of YAML Data install/rollback/self-heal and Ignore/Local YAML generation, which return this crate's `FileIOError`
+- [`classic-resource-core`](classic-resource-core.md) - downstream owner of the game-target backup and game-file operations, which return this crate's `FileIOError`
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that depend on stable higher-level behavior built on top of these helpers
 
 Source-observed notes:
@@ -510,7 +454,6 @@ If the caller needs a guaranteed fresh read after out-of-band file changes, call
 - `default_encoding` is stored in `FileIOCore`, but current read logic visibly relies on automatic detection instead of using that configured encoding as an override.
 - `write_file()` does not create parent directories even though some other write helpers do.
 - `walk_directory()` can hide unreadable-entry problems because it drops traversal errors.
-- `BackupManager` and `GameFilesManager` only scan top-level entries of their configured roots; they do not recursively discover nested matches before copying a matched directory tree.
 - `calculate_similarity()` is text-oriented and uses lossy UTF-8 conversion, so it is not a binary diff API.
 
 If you extend this crate, update this document when you change:
@@ -519,4 +462,3 @@ If you extend this crate, update this document when you change:
 - cache invalidation or freshness rules
 - file-read decoding behavior or mmap thresholds
 - batch ordering or concurrency behavior
-- backup matching semantics

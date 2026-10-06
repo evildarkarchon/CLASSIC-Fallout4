@@ -17,7 +17,9 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # cancellation dependencies) moved to classic-scanlog-core (#254).
 
 # The YAML Data install/rollback/self-heal path, and with it the dependency on
-# classic-durable-publication, moved to classic-config-core (#248).
+# classic-durable-publication, moved to classic-config-core (#248). The
+# game-target backup and game-file operations moved to classic-resource-core
+# (#250) and never relied on that edge.
 
 # File I/O
 encoding_rs = { workspace = true }
@@ -55,8 +57,7 @@ thiserror = { workspace = true }
 log = { workspace = true }
 tracing = { workspace = true }
 
-# Time handling
-chrono = "0.4"
+# Time handling (chrono) left with the game-target backup (#250).
 
 # NO PyO3 dependency!
 

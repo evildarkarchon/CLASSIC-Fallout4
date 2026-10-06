@@ -2701,7 +2701,7 @@
       "rustSymbol": "XseVersion",
       "nodeExport": "XseVersion",
       "nodeKind": "class",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "version-registry-promote-check-crashgen-config",
@@ -2925,10 +2925,10 @@
       "id": "aux-phase4a-backup-manager",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "BackupManager",
+      "rustSymbol": "VersionBackupManager",
       "nodeExport": "BackupManager",
       "nodeKind": "class",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-docs-path-finder",
@@ -2964,7 +2964,7 @@
       "rustSymbol": "BackupInfo",
       "nodeExport": "JsBackupInfo",
       "nodeKind": "interface",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-backup-manager",
@@ -2973,7 +2973,7 @@
       "rustSymbol": "BackupManager",
       "nodeExport": "JsBackupManager",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-file-generator",
@@ -3000,7 +3000,7 @@
       "rustSymbol": "FileOperationResult",
       "nodeExport": "JsFileOperationResult",
       "nodeKind": "interface",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-game-files-manager",
@@ -3009,7 +3009,7 @@
       "rustSymbol": "GameFilesManager",
       "nodeExport": "JsGameFilesManager",
       "nodeKind": "class",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-js-message",
@@ -5951,7 +5951,7 @@
       "id": "file_io.BackupType@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "BackupType@rust",
       "rustKind": "reexport"
     },
@@ -6007,7 +6007,7 @@
       "id": "file_io.FileOperation@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "FileOperation@rust",
       "rustKind": "reexport"
     },
@@ -6047,7 +6047,7 @@
       "id": "file_io.backup@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "backup@rust",
       "rustKind": "module"
     },
@@ -6079,7 +6079,7 @@
       "id": "file_io.game_files@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "game_files@rust",
       "rustKind": "module"
     },
@@ -6231,16 +6231,16 @@
       "id": "path.BackupError@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "BackupError@rust",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "VersionBackupError@rust",
       "rustKind": "reexport"
     },
     {
       "id": "path.BackupResult@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "BackupResult@rust",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "VersionBackupResult@rust",
       "rustKind": "reexport"
     },
     {
@@ -6335,7 +6335,7 @@
       "id": "path.XseVersion@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "XseVersion@rust",
       "rustKind": "reexport"
     },

@@ -1,19 +1,21 @@
 //! File I/O bindings (classic-file-io-core)
 //!
 //! Exposes file reading, writing, hashing, encoding detection, and backup management
-//! to JavaScript/TypeScript. All business logic is delegated to `classic-file-io-core`.
+//! to JavaScript/TypeScript. All business logic is delegated to `classic-file-io-core`,
+//! except the game-target backup and game-file operations, which delegate to
+//! `classic-resource-core` (moved from file I/O in #250).
 //!
 //! ## Architecture
 //! This is a THIN ADAPTER layer:
-//! - Delegates all business logic to `classic-file-io-core`
+//! - Delegates all business logic to `classic-file-io-core` / `classic-resource-core`
 //! - Only handles JavaScript <-> Rust type conversions
 //! - Respects the ONE RUNTIME RULE via `classic_shared_core::get_runtime()`
 
 use crate::runtime::spawn_result;
 use classic_file_io_core::FileIOCore;
-use classic_file_io_core::backup::{BackupManager, BackupType};
 use classic_file_io_core::encoding::EncodingDetector;
 use classic_file_io_core::hash::FileHasher;
+use classic_resource_core::backup::{BackupManager, BackupType};
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -859,7 +861,7 @@ impl JsGameFilesManager {
 
         handle
             .spawn(async move {
-                let manager = classic_file_io_core::GameFilesManager::new(
+                let manager = classic_resource_core::GameFilesManager::new(
                     PathBuf::from(&game_root),
                     PathBuf::from(&backup_root),
                 );
@@ -895,7 +897,7 @@ impl JsGameFilesManager {
 
         handle
             .spawn(async move {
-                let manager = classic_file_io_core::GameFilesManager::new(
+                let manager = classic_resource_core::GameFilesManager::new(
                     PathBuf::from(&game_root),
                     PathBuf::from(&backup_root),
                 );
@@ -931,7 +933,7 @@ impl JsGameFilesManager {
 
         handle
             .spawn(async move {
-                let manager = classic_file_io_core::GameFilesManager::new(
+                let manager = classic_resource_core::GameFilesManager::new(
                     PathBuf::from(&game_root),
                     PathBuf::from(&backup_root),
                 );

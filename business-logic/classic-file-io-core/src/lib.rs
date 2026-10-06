@@ -16,12 +16,10 @@
 //! Ignore/Local YAML generation and the YAML Data install, rollback, and
 //! self-heal operations are owned by `classic-config-core` (#248).
 
-pub mod backup;
 pub mod core;
 pub mod dds;
 pub mod encoding;
 pub mod error;
-pub mod game_files;
 pub mod hash;
 pub mod similarity;
 
@@ -31,7 +29,11 @@ pub mod similarity;
 // `generate_local_yaml`) are owned by classic-config-core (#248). No re-export
 // here: config depends on file I/O, so a re-export would close a dependency
 // cycle.
-pub use backup::{BackupInfo, BackupManager, BackupType};
+// The game-target backup (`BackupManager`, `BackupType`, `BackupInfo`) and
+// game-file operations (`GameFilesManager`, `FileOperation`,
+// `FileOperationResult`) are owned by classic-resource-core (#250). No
+// re-export here: resource depends on file I/O, so a re-export would close a
+// dependency cycle.
 pub use core::FileIOCore;
 pub use dds::DDSHeader;
 // Game-target DDS rules (DDSAnalyzer, GameTarget, DDSIssue) are owned by
@@ -39,7 +41,6 @@ pub use dds::DDSHeader;
 // file I/O, so a re-export would close a dependency cycle.
 pub use encoding::EncodingDetector;
 pub use error::FileIOError;
-pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};
 pub use hash::{FileHashScope, FileHasher};
 // Crash Log collection and Targeted input resolution are owned by
 // classic-scanlog-core (#254). No re-export here: scanlog depends on file I/O,

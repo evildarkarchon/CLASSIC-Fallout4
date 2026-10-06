@@ -32,6 +32,11 @@
       "libRs": "business-logic/classic-registry-core/src/lib.rs"
     },
     {
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
+      "libRs": "business-logic/classic-resource-core/src/lib.rs"
+    },
+    {
       "ownerModule": "scan_presentation",
       "rustCrate": "classic-scan-presentation",
       "libRs": "business-logic/classic-scan-presentation/src/lib.rs"
@@ -1744,8 +1749,8 @@
       "rustSymbol": "backup_manager_create",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "create_backup"
     },
     {
@@ -1753,8 +1758,8 @@
       "rustSymbol": "backup_manager_exists",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "backup_exists"
     },
     {
@@ -1762,8 +1767,8 @@
       "rustSymbol": "backup_manager_new",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "BackupManager"
     },
     {
@@ -1771,8 +1776,8 @@
       "rustSymbol": "backup_manager_remove",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "remove_backup"
     },
     {
@@ -1780,8 +1785,8 @@
       "rustSymbol": "backup_manager_restore",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "restore_backup"
     },
     {
@@ -1805,8 +1810,8 @@
       "rustSymbol": "game_files_backup",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "backup"
     },
     {
@@ -1814,8 +1819,8 @@
       "rustSymbol": "game_files_manager_new",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "GameFilesManager"
     },
     {
@@ -1823,8 +1828,8 @@
       "rustSymbol": "game_files_remove",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "remove"
     },
     {
@@ -1832,8 +1837,8 @@
       "rustSymbol": "game_files_restore",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "restore"
     },
     {
@@ -1949,8 +1954,8 @@
       "rustSymbol": "CxxBackupManager",
       "kind": "opaque",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "BackupManager"
     },
     {
@@ -1958,8 +1963,8 @@
       "rustSymbol": "CxxGameFilesManager",
       "kind": "opaque",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "GameFilesManager"
     },
     {
@@ -2260,8 +2265,8 @@
       "rustSymbol": "backup_create_timestamped",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "create_backup"
     },
     {
@@ -2269,8 +2274,8 @@
       "rustSymbol": "backup_list_existing",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
       "coreRustSymbol": "list_versions"
     },
     {

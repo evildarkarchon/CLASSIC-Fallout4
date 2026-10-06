@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T01:20:27.754032+00:00`
+- Generated: `2026-10-06T01:35:32.211810+00:00`
 - Tier-1 contract rows: **946**
 - Tier-1 matched: **929**
 - Tier-1 missing Rust: **0**
@@ -282,7 +282,7 @@
 | `version-registry-promote-js-unknown-version-handling` | `version_registry` | `classic-version-registry-core` | `UnknownVersionHandling` | `JsUnknownVersionHandling` | `matched` |
 | `version-registry-promote-js-version-info` | `version_registry` | `classic-version-registry-core` | `VersionInfo` | `JsVersionInfo` | `matched` |
 | `version-registry-promote-js-version-registry-snapshot` | `version_registry` | `-` | `None` | `JsVersionRegistrySnapshot` | `unmapped` |
-| `version-registry-promote-xse-version` | `version_registry` | `classic-path-core` | `XseVersion` | `XseVersion` | `matched` |
+| `version-registry-promote-xse-version` | `version_registry` | `classic-resource-core` | `XseVersion` | `XseVersion` | `matched` |
 | `version-registry-promote-check-crashgen-config` | `version_registry` | `classic-scangame-core` | `CrashgenChecker` | `checkCrashgenConfig` | `matched` |
 | `version-registry-promote-check-crashgen-full` | `version_registry` | `classic-scangame-core` | `CrashgenChecker` | `checkCrashgenFull` | `matched` |
 | `version-registry-promote-compare-versions` | `version_registry` | `classic-shared-core` | `compare_versions` | `compareVersions` | `matched` |
@@ -305,16 +305,16 @@
 | `version-registry-promote-registry-get-game-version` | `version_registry` | `classic-registry-core` | `get` | `registryGetGameVersion` | `matched` |
 | `version_registry.MatchConfidence@rust` | `version_registry` | `classic-version-registry-core` | `MatchConfidence@rust` | `None` | `matched` |
 | `version-registry-promote-try-parse-version` | `version_registry` | `classic-shared-core` | `try_parse_version` | `tryParseVersion` | `matched` |
-| `aux-phase4a-backup-manager` | `aux` | `classic-path-core` | `BackupManager` | `BackupManager` | `matched` |
+| `aux-phase4a-backup-manager` | `aux` | `classic-resource-core` | `VersionBackupManager` | `BackupManager` | `matched` |
 | `aux-phase4a-docs-path-finder` | `aux` | `classic-path-core` | `DocsPathFinder` | `DocsPathFinder` | `matched` |
 | `aux-phase4a-documents-checker` | `aux` | `classic-path-core` | `DocumentsChecker` | `DocumentsChecker` | `matched` |
 | `aux-phase4a-game-path-finder` | `aux` | `classic-path-core` | `GamePathFinder` | `GamePathFinder` | `matched` |
-| `aux-phase4a-js-backup-info` | `aux` | `classic-file-io-core` | `BackupInfo` | `JsBackupInfo` | `matched` |
-| `aux-phase4a-js-backup-manager` | `aux` | `classic-file-io-core` | `BackupManager` | `JsBackupManager` | `matched` |
+| `aux-phase4a-js-backup-info` | `aux` | `classic-resource-core` | `BackupInfo` | `JsBackupInfo` | `matched` |
+| `aux-phase4a-js-backup-manager` | `aux` | `classic-resource-core` | `BackupManager` | `JsBackupManager` | `matched` |
 | `aux-phase4a-js-file-generator` | `aux` | `classic-config-core` | `FileGenerator` | `JsFileGenerator` | `matched` |
 | `aux-phase4a-js-file-i-o` | `aux` | `classic-file-io-core` | `FileIOCore` | `JsFileIO` | `matched` |
-| `aux-phase4a-js-file-operation-result` | `aux` | `classic-file-io-core` | `FileOperationResult` | `JsFileOperationResult` | `matched` |
-| `aux-phase4a-js-game-files-manager` | `aux` | `classic-file-io-core` | `GameFilesManager` | `JsGameFilesManager` | `matched` |
+| `aux-phase4a-js-file-operation-result` | `aux` | `classic-resource-core` | `FileOperationResult` | `JsFileOperationResult` | `matched` |
+| `aux-phase4a-js-game-files-manager` | `aux` | `classic-resource-core` | `GameFilesManager` | `JsGameFilesManager` | `matched` |
 | `aux-phase4a-js-message` | `aux` | `classic-message-core` | `Message` | `JsMessage` | `matched` |
 | `aux-phase4a-js-message-target` | `aux` | `classic-message-core` | `MessageTarget` | `JsMessageTarget` | `matched` |
 | `aux-phase4a-js-message-type` | `aux` | `classic-message-core` | `MessageType` | `JsMessageType` | `matched` |
@@ -640,23 +640,23 @@
 | `database.MIN_CACHE_CLEANUP_OP_THRESHOLD@rust` | `database` | `classic-database-core` | `MIN_CACHE_CLEANUP_OP_THRESHOLD@rust` | `None` | `matched` |
 | `database.MIN_QUERY_CACHE_CAPACITY@rust` | `database` | `classic-database-core` | `MIN_QUERY_CACHE_CAPACITY@rust` | `None` | `matched` |
 | `database.PoolStatistics@rust` | `database` | `classic-database-core` | `PoolStatistics@rust` | `None` | `matched` |
-| `file_io.BackupType@rust` | `file_io` | `classic-file-io-core` | `BackupType@rust` | `None` | `matched` |
+| `file_io.BackupType@rust` | `file_io` | `classic-resource-core` | `BackupType@rust` | `None` | `matched` |
 | `file_io.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN@rust` | `None` | `matched` |
 | `file_io.DDSAnalyzer@rust` | `file_io` | `classic-resource-core` | `DDSAnalyzer@rust` | `None` | `matched` |
 | `file_io.DDSHeader@rust` | `file_io` | `classic-file-io-core` | `DDSHeader@rust` | `None` | `matched` |
 | `file_io.DDSIssue@rust` | `file_io` | `classic-resource-core` | `DDSIssue@rust` | `None` | `matched` |
 | `file_io.FileGeneratorConfig@rust` | `file_io` | `classic-config-core` | `FileGeneratorConfig@rust` | `None` | `matched` |
 | `file_io.FileIOError@rust` | `file_io` | `classic-file-io-core` | `FileIOError@rust` | `None` | `matched` |
-| `file_io.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation@rust` | `None` | `matched` |
+| `file_io.FileOperation@rust` | `file_io` | `classic-resource-core` | `FileOperation@rust` | `None` | `matched` |
 | `file_io.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget@rust` | `None` | `matched` |
 | `file_io.LogCollector@rust` | `file_io` | `classic-scanlog-core` | `LogCollector@rust` | `None` | `matched` |
 | `file_io.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput@rust` | `None` | `matched` |
 | `file_io.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution@rust` | `None` | `matched` |
-| `file_io.backup@rust` | `file_io` | `classic-file-io-core` | `backup@rust` | `None` | `matched` |
+| `file_io.backup@rust` | `file_io` | `classic-resource-core` | `backup@rust` | `None` | `matched` |
 | `file_io.core@rust` | `file_io` | `classic-file-io-core` | `core@rust` | `None` | `matched` |
 | `file_io.dds@rust` | `file_io` | `classic-file-io-core` | `dds@rust` | `None` | `matched` |
 | `file_io.encoding@rust` | `file_io` | `classic-file-io-core` | `encoding@rust` | `None` | `matched` |
-| `file_io.game_files@rust` | `file_io` | `classic-file-io-core` | `game_files@rust` | `None` | `matched` |
+| `file_io.game_files@rust` | `file_io` | `classic-resource-core` | `game_files@rust` | `None` | `matched` |
 | `file_io.generate_local_yaml@rust` | `file_io` | `classic-config-core` | `generate_local_yaml@rust` | `None` | `matched` |
 | `file_io.generation@rust` | `file_io` | `classic-config-core` | `generation@rust` | `None` | `matched` |
 | `file_io.hash@rust` | `file_io` | `classic-file-io-core` | `hash@rust` | `None` | `matched` |
@@ -675,8 +675,8 @@
 | `message.redact_field_value@rust` | `message` | `classic-message-core` | `redact_field_value@rust` | `None` | `matched` |
 | `path.drive_exists@rust` | `path` | `classic-shared-core` | `drive_exists@rust` | `None` | `matched` |
 | `path.is_valid_executable_path@rust` | `path` | `classic-shared-core` | `is_executable_file_path@rust` | `None` | `matched` |
-| `path.BackupError@rust` | `path` | `classic-path-core` | `BackupError@rust` | `None` | `matched` |
-| `path.BackupResult@rust` | `path` | `classic-path-core` | `BackupResult@rust` | `None` | `matched` |
+| `path.BackupError@rust` | `path` | `classic-resource-core` | `VersionBackupError@rust` | `None` | `matched` |
+| `path.BackupResult@rust` | `path` | `classic-resource-core` | `VersionBackupResult@rust` | `None` | `matched` |
 | `path.DocsPathError@rust` | `path` | `classic-path-core` | `DocsPathError@rust` | `None` | `matched` |
 | `path.DocsPathResult@rust` | `path` | `classic-path-core` | `DocsPathResult@rust` | `None` | `matched` |
 | `path.DocumentsPathManager@rust` | `path` | `classic-path-core` | `DocumentsPathManager@rust` | `None` | `matched` |
@@ -688,7 +688,7 @@
 | `path.PathResult@rust` | `path` | `classic-shared-core` | `PathResult@rust` | `None` | `matched` |
 | `path.ValidationError@rust` | `path` | `classic-path-core` | `ValidationError@rust` | `None` | `matched` |
 | `path.ValidationResult@rust` | `path` | `classic-scangame-core` | `ValidationResult@rust` | `None` | `matched` |
-| `path.XseVersion@rust` | `path` | `classic-path-core` | `XseVersion@rust` | `None` | `matched` |
+| `path.XseVersion@rust` | `path` | `classic-resource-core` | `XseVersion@rust` | `None` | `matched` |
 | `path.check_drive_exists@rust` | `path` | `classic-shared-core` | `check_drive_exists@rust` | `None` | `matched` |
 | `path.has_read_permission@rust` | `path` | `classic-shared-core` | `has_read_permission@rust` | `None` | `matched` |
 | `path.has_write_permission@rust` | `path` | `classic-shared-core` | `has_write_permission@rust` | `None` | `matched` |

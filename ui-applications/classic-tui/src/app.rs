@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use classic_file_io_core::BackupType;
+use classic_resource_core::BackupType;
 use classic_scan_presentation::DisplaySeverity;
 use classic_scanlog_core::scan_run::contract::{
     self as scan_run_contract, Cancellation, Configuration, CrashLogScanRunContinuation,

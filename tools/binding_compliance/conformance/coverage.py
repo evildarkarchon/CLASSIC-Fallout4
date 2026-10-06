@@ -68,6 +68,15 @@ _SEMANTIC_BRIDGE_OPERATIONS = {
     "formid_value_lookup_sqlite_new": "sqlite",
 }
 
+# Python facade classes whose Rust owner type was renamed while the Python
+# class name stayed put, as (python class, rust symbol). Their method rows keep
+# the bare method name as their operation, exactly as before the rename, so a
+# row's runtime evidence stays bound to the method that produced it. The
+# version-labelled backup became classic_resource_core::VersionBackupManager
+# (#251) so it cannot share a crate-qualified name with the game-target
+# BackupManager, which also moves to resource core (#250).
+_RENAMED_PYTHON_FACADE_OWNERS = frozenset({("BackupManager", "VersionBackupManager")})
+
 
 class CoverageDerivationError(ValueError):
     """Raised when family coverage policy cannot produce trustworthy facts."""
@@ -676,7 +685,12 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                         "Python method/property row has no export path"
                     )
                 owner, _, method = export.rpartition(".")
-                runtime_operation = method if owner == rust_symbol else export
+                runtime_operation = (
+                    method
+                    if owner == rust_symbol
+                    or (owner, rust_symbol) in _RENAMED_PYTHON_FACADE_OWNERS
+                    else export
+                )
                 if runtime_operation == "from_shared_pool":
                     runtime_operation = "shared_pool"
             elif participant_id == "cxx" and raw_row.get("kind") == "function":

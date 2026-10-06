@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T01:19:51.047919+00:00`
+- Generated: `2026-10-06T01:35:30.253796+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -346,9 +346,9 @@
 | `database.formid_value_lookup.FormIdValueLookup.from_shared_pool` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.from_shared_pool` | `matched` |
 | `database.formid_value_lookup.FormIdValueLookup.lookup` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup` | `matched` |
 | `database.formid_value_lookup.FormIdValueLookup.lookup_batch` | `database` | `classic-database-core` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup_batch` | `matched` |
-| `file_io.core.BackupInfo@rust` | `file_io` | `classic-file-io-core` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.BackupManager@rust` | `file_io` | `classic-file-io-core` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.BackupType@rust` | `file_io` | `classic-file-io-core` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupInfo@rust` | `file_io` | `classic-resource-core` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupManager@rust` | `file_io` | `classic-resource-core` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupType@rust` | `file_io` | `classic-resource-core` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.FileIOCore` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.FileIOCore.__init__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.__init__` | `matched` |
 | `file_io.core.FileIOCore.append_file` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.append_file` | `matched` |
@@ -371,13 +371,13 @@
 | `file_io.core.FileIOCore.write_bytes` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_bytes` | `matched` |
 | `file_io.core.FileIOCore.write_file` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_file` | `matched` |
 | `file_io.core.FileIOCore.write_lines` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore.write_lines` | `matched` |
-| `file_io.core.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.FileOperationResult@rust` | `file_io` | `classic-file-io-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.GameFilesManager@rust` | `file_io` | `classic-file-io-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileOperation@rust` | `file_io` | `classic-resource-core` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileOperationResult@rust` | `file_io` | `classic-resource-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.GameFilesManager@rust` | `file_io` | `classic-resource-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.GameTarget@rust` | `file_io` | `classic-resource-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.backup@rust` | `file_io` | `classic-file-io-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.backup@rust` | `file_io` | `classic-resource-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.calculate_similarity` | `file_io` | `classic-file-io-core` | `calculate_similarity` | `classic_file_io.calculate_similarity` | `matched` |
 | `file_io.core.core@rust` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `classic-scanlog-core` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
@@ -484,14 +484,14 @@
 | `message.logging.logging@rust` | `message` | `classic-message-core` | `Logger` | `classic_message.Logger` | `matched` |
 | `message.logging.redact_contract_fields@rust` | `message` | `classic-message-core` | `redact_contract_fields` | `classic_message.Logger` | `matched` |
 | `message.logging.redact_field_value@rust` | `message` | `classic-message-core` | `redact_field_value` | `classic_message.Logger` | `matched` |
-| `path.lib.BackupError@rust` | `path` | `classic-path-core` | `BackupError` | `classic_path.BackupManager` | `matched` |
-| `path.lib.BackupManager` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager` | `matched` |
-| `path.lib.BackupManager.__init__` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.__init__` | `matched` |
-| `path.lib.BackupManager.create_backup` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.create_backup` | `matched` |
-| `path.lib.BackupManager.extract_version_from_xse_log` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.extract_version_from_xse_log` | `matched` |
-| `path.lib.BackupManager.get_version_path` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.get_version_path` | `matched` |
-| `path.lib.BackupManager.list_versions` | `path` | `classic-path-core` | `BackupManager` | `classic_path.BackupManager.list_versions` | `matched` |
-| `path.lib.BackupResult@rust` | `path` | `classic-path-core` | `BackupResult` | `classic_path.BackupManager` | `matched` |
+| `path.lib.BackupError@rust` | `path` | `classic-resource-core` | `VersionBackupError` | `classic_path.BackupManager` | `matched` |
+| `path.lib.BackupManager` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager` | `matched` |
+| `path.lib.BackupManager.__init__` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.__init__` | `matched` |
+| `path.lib.BackupManager.create_backup` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.create_backup` | `matched` |
+| `path.lib.BackupManager.extract_version_from_xse_log` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.extract_version_from_xse_log` | `matched` |
+| `path.lib.BackupManager.get_version_path` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.get_version_path` | `matched` |
+| `path.lib.BackupManager.list_versions` | `path` | `classic-resource-core` | `VersionBackupManager` | `classic_path.BackupManager.list_versions` | `matched` |
+| `path.lib.BackupResult@rust` | `path` | `classic-resource-core` | `VersionBackupResult` | `classic_path.BackupManager` | `matched` |
 | `path.lib.DocsPathError@rust` | `path` | `classic-path-core` | `DocsPathError` | `classic_path.BackupManager` | `matched` |
 | `path.lib.DocsPathFinder` | `path` | `classic-path-core` | `DocsPathFinder` | `classic_path.DocsPathFinder` | `matched` |
 | `path.lib.DocsPathFinder.__init__` | `path` | `classic-path-core` | `DocsPathFinder` | `classic_path.DocsPathFinder.__init__` | `matched` |
@@ -531,10 +531,10 @@
 | `path.lib.PathValidator.validate_settings_path` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.PathValidator.validate_settings_path` | `matched` |
 | `path.lib.PathValidator.validate_settings_paths` | `path` | `classic-scanlog-core` | `validate_settings_paths` | `classic_path.PathValidator.validate_settings_paths` | `matched` |
 | `path.lib.ValidationError@rust` | `path` | `classic-path-core` | `ValidationError` | `classic_path.BackupManager` | `matched` |
-| `path.lib.XseVersion` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion` | `matched` |
-| `path.lib.XseVersion.__init__` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.__init__` | `matched` |
-| `path.lib.XseVersion.full_version` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.full_version` | `matched` |
-| `path.lib.XseVersion.sanitized` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.sanitized` | `matched` |
+| `path.lib.XseVersion` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion` | `matched` |
+| `path.lib.XseVersion.__init__` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion.__init__` | `matched` |
+| `path.lib.XseVersion.full_version` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion.full_version` | `matched` |
+| `path.lib.XseVersion.sanitized` | `path` | `classic-resource-core` | `XseVersion` | `classic_path.XseVersion.sanitized` | `matched` |
 | `path.lib.check_drive_exists@rust` | `path` | `classic-shared-core` | `check_drive_exists` | `classic_path.BackupManager` | `matched` |
 | `path.lib.check_read_permissions@rust` | `path` | `classic-shared-core` | `check_read_permissions` | `classic_path.BackupManager` | `matched` |
 | `path.lib.check_write_permissions@rust` | `path` | `classic-shared-core` | `check_write_permissions` | `classic_path.BackupManager` | `matched` |

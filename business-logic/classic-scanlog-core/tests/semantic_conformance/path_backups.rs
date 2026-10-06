@@ -1,7 +1,7 @@
-//! Retain byte-copy and replacement evidence from the public path backup core.
+//! Retain byte-copy and replacement evidence from the version-labelled backup in resource core.
 
 use super::{RunnerResult, invalid, text};
-use classic_path_core::{BackupManager, XseVersion};
+use classic_resource_core::{VersionBackupManager, XseVersion};
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
@@ -54,7 +54,7 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     let log = root.join("xse.log");
     fs::write(&log, text(&fixture["log"])?)?;
     fs::write(&source, decode(text(&fixture["firstHex"])?)?)?;
-    let manager = BackupManager::new(root.join("backups"));
+    let manager = VersionBackupManager::new(root.join("backups"));
     let initial = manager.list_versions()?;
     let version = manager.extract_version_from_xse_log(&log)?;
     let explicit = XseVersion::new(text(&fixture["version"])?);
@@ -87,7 +87,8 @@ fn timestamp(fixture: &Value) -> RunnerResult<Value> {
     let root = temporary.path();
     let source = root.join("settings.ini");
     fs::write(&source, decode(text(&fixture["hex"])?)?)?;
-    let manager = BackupManager::new(root.join("CLASSIC Backups").join(text(&fixture["game"])?));
+    let manager =
+        VersionBackupManager::new(root.join("CLASSIC Backups").join(text(&fixture["game"])?));
     let initial = manager.list_versions()?;
     let before = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     let version = XseVersion::new(before.to_string());
