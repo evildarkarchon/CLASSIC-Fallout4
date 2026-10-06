@@ -2701,7 +2701,7 @@
       "rustSymbol": "XseVersion",
       "nodeExport": "XseVersion",
       "nodeKind": "class",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "version-registry-promote-check-crashgen-config",
@@ -2925,10 +2925,10 @@
       "id": "aux-phase4a-backup-manager",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "BackupManager",
+      "rustSymbol": "VersionBackupManager",
       "nodeExport": "BackupManager",
       "nodeKind": "class",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-resource-core"
     },
     {
       "id": "aux-phase4a-docs-path-finder",
@@ -6231,16 +6231,16 @@
       "id": "path.BackupError@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "BackupError@rust",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "VersionBackupError@rust",
       "rustKind": "reexport"
     },
     {
       "id": "path.BackupResult@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "BackupResult@rust",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "VersionBackupResult@rust",
       "rustKind": "reexport"
     },
     {
@@ -6335,7 +6335,7 @@
       "id": "path.XseVersion@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-resource-core",
       "rustSymbol": "XseVersion@rust",
       "rustKind": "reexport"
     },

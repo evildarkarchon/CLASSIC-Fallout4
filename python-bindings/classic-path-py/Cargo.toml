@@ -28,6 +28,9 @@ classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 # Generic path primitives (existence, kind, permission, drive, read-only) and PathError
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
+# Version-labelled backup (BackupManager / XseVersion facade classes)
+classic-resource-core = { path = "../../business-logic/classic-resource-core" }
+
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "deny"

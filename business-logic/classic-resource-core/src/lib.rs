@@ -18,6 +18,8 @@
 //!   restore, and removal under the game root ([`backup`])
 //! - **Game-File Operations**: Pattern-matched backup, restore, and removal of
 //!   game-root entries ([`game_files`])
+//! - **Version-Labelled Backup**: Copy a configuration file under a sanitized version label
+//!   ([`VersionBackupManager`], [`XseVersion`]); distinct from the game-target backup
 //!
 //! # Examples
 //!
@@ -41,8 +43,12 @@ use walkdir::WalkDir;
 use classic_shared_core::path_core::PathError;
 
 pub mod dds;
+mod version_backup;
 
 pub use dds::{DDSAnalyzer, DDSIssue, GameTarget};
+pub use version_backup::{
+    VersionBackupError, VersionBackupManager, VersionBackupResult, XseVersion,
+};
 
 // Game-target backup and game-file operations moved here from
 // classic-file-io-core (#250). File I/O does not re-export them: resource

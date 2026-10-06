@@ -169,54 +169,6 @@ pub enum DocsPathError {
     IoError(#[from] std::io::Error),
 }
 
-/// Backup operation errors.
-#[derive(Error, Debug)]
-pub enum BackupError {
-    /// XSE log file not found for version extraction.
-    #[error("XSE log file not found: {0}")]
-    XseLogNotFound(PathBuf),
-
-    /// Version string not found in XSE log.
-    #[error("Version string not found in XSE log")]
-    VersionNotFound,
-
-    /// Invalid version format in XSE log.
-    #[error("Invalid version format: {0}")]
-    InvalidVersionFormat(String),
-
-    /// Failed to create backup directory.
-    #[error("Failed to create backup directory '{path}': {source}")]
-    CreateDirectoryFailed {
-        /// The path of the directory that failed to be created.
-        path: PathBuf,
-        /// The underlying I/O error.
-        source: std::io::Error,
-    },
-
-    /// Failed to copy file to backup.
-    #[error("Failed to copy file '{src}' to '{dst}': {source}")]
-    CopyFileFailed {
-        /// The source file path.
-        src: PathBuf,
-        /// The destination file path.
-        dst: PathBuf,
-        /// The underlying I/O error.
-        source: std::io::Error,
-    },
-
-    /// Source file not found for backup.
-    #[error("Source file not found: {0}")]
-    SourceNotFound(PathBuf),
-
-    /// General path error.
-    #[error(transparent)]
-    PathError(#[from] PathError),
-
-    /// I/O error.
-    #[error(transparent)]
-    IoError(#[from] std::io::Error),
-}
-
 /// Convenience type alias for Results with ValidationError.
 pub type ValidationResult<T> = Result<T, ValidationError>;
 
@@ -225,6 +177,3 @@ pub type GamePathResult<T> = Result<T, GamePathError>;
 
 /// Convenience type alias for Results with DocsPathError.
 pub type DocsPathResult<T> = Result<T, DocsPathError>;
-
-/// Convenience type alias for Results with BackupError.
-pub type BackupResult<T> = Result<T, BackupError>;
