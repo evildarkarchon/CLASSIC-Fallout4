@@ -16,7 +16,7 @@ use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, MatchConfidence, VersionInfo, VersionRegistry,
     VersionRegistryScope,
 };
-use classic_xse_core::{XseType, get_xse_info};
+use classic_xse_core::{XseType, get_xse_info, xse_folder_name};
 
 /// Top-level state for a Game Setup Intake run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -739,7 +739,7 @@ fn resolve_version_dependent_paths(
         .zip(info.and_then(|info| info.xse.as_ref()))
         .map(|(root, xse)| {
             root.join("Data")
-                .join(xse_runtime_folder_name(&xse.acronym))
+                .join(xse_folder_name(&xse.acronym))
                 .join("Plugins")
         });
 
@@ -1446,15 +1446,6 @@ fn match_confidence_name(confidence: MatchConfidence) -> &'static str {
         MatchConfidence::Nearest => "nearest",
         MatchConfidence::Default => "default",
         MatchConfidence::Unknown => "unknown",
-    }
-}
-
-fn xse_runtime_folder_name(acronym: &str) -> &str {
-    match acronym.trim() {
-        // F4SEVR keeps its loader identity, but runtime plugins are conventionally
-        // installed under Data/F4SE/Plugins.
-        "F4SEVR" => "F4SE",
-        other => other,
     }
 }
 

@@ -615,15 +615,26 @@ fn xse_folder_from_docs_root(
 ) -> Option<PathBuf> {
     let folder = version_info
         .and_then(|info| info.xse.as_ref())
-        .map(|xse| xse_docs_folder_name(&xse.acronym))
+        .map(|xse| xse_folder_name(&xse.acronym))
         .filter(|acronym| !acronym.is_empty())?;
 
     Some(docs_root.join(folder))
 }
 
-fn xse_docs_folder_name(acronym: &str) -> &str {
+/// Return the on-disk folder name a Script Extender uses, given its Version
+/// Registry XSE acronym.
+///
+/// The same name is used for the XSE Folder under the documents root (where
+/// crash logs are written) and for the `Data/<folder>/Plugins` runtime plugin
+/// folder under the game root. Fallout 4 VR's `F4SEVR` keeps its own loader
+/// identity but uses the shared `F4SE` folder; every other acronym is its own
+/// folder name. Surrounding whitespace is trimmed, and an empty acronym
+/// yields an empty name for the caller to treat as "no folder".
+#[must_use]
+pub fn xse_folder_name(acronym: &str) -> &str {
     match acronym.trim() {
-        // F4SEVR keeps the F4SEVR identity/loader, but writes crash logs under F4SE.
+        // F4SEVR keeps the F4SEVR identity/loader, but writes crash logs and
+        // installs runtime plugins under F4SE.
         "F4SEVR" => "F4SE",
         folder => folder,
     }

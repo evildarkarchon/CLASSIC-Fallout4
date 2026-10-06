@@ -24,6 +24,16 @@ fn test_xse_type_from_game_id() {
 }
 
 #[test]
+fn xse_folder_name_maps_f4sevr_to_the_shared_f4se_folder() {
+    assert_eq!(xse_folder_name("F4SEVR"), "F4SE");
+    assert_eq!(xse_folder_name(" F4SEVR "), "F4SE");
+    assert_eq!(xse_folder_name("F4SE"), "F4SE");
+    assert_eq!(xse_folder_name("SKSE64"), "SKSE64");
+    assert_eq!(xse_folder_name(" SFSE "), "SFSE");
+    assert_eq!(xse_folder_name(""), "");
+}
+
+#[test]
 fn test_xse_type_loader_name() {
     assert_eq!(XseType::F4SE.loader_name(), "f4se_loader.exe");
     assert_eq!(XseType::SKSE64.loader_name(), "skse64_loader.exe");
