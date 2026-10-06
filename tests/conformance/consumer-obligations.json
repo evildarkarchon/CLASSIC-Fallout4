@@ -139,14 +139,14 @@
             {
               "id": "cli.recovery-interaction",
               "scenarioIds": [
-                "proceed-without-ignore-recovery",
-                "reset-to-default-recovery",
-                "abandon-local-ignore-recovery"
+                "settle-proceed-without-ignore",
+                "settle-reset-to-default",
+                "settle-without-decision",
+                "settle-already-cancelled"
               ],
               "expected": {
                 "cases": [
                   {
-                    "continuationConsumed": true,
                     "offered": [
                       {
                         "available": true,
@@ -158,12 +158,13 @@
                       }
                     ],
                     "prompted": true,
-                    "scenarioId": "proceed-without-ignore-recovery",
+                    "recoverySettled": true,
+                    "scenarioId": "settle-proceed-without-ignore",
                     "selected": "proceed_without_ignore",
+                    "settledDecision": "proceed_without_ignore",
                     "terminalExitCode": 0
                   },
                   {
-                    "continuationConsumed": true,
                     "offered": [
                       {
                         "available": true,
@@ -175,12 +176,13 @@
                       }
                     ],
                     "prompted": true,
-                    "scenarioId": "reset-to-default-recovery",
+                    "recoverySettled": true,
+                    "scenarioId": "settle-reset-to-default",
                     "selected": "reset_to_default",
+                    "settledDecision": "reset_to_default",
                     "terminalExitCode": 0
                   },
                   {
-                    "continuationConsumed": true,
                     "offered": [
                       {
                         "available": true,
@@ -192,8 +194,19 @@
                       }
                     ],
                     "prompted": true,
-                    "scenarioId": "abandon-local-ignore-recovery",
+                    "recoverySettled": true,
+                    "scenarioId": "settle-without-decision",
                     "selected": "cancel",
+                    "settledDecision": null,
+                    "terminalExitCode": 130
+                  },
+                  {
+                    "offered": [],
+                    "prompted": false,
+                    "recoverySettled": true,
+                    "scenarioId": "settle-already-cancelled",
+                    "selected": null,
+                    "settledDecision": null,
                     "terminalExitCode": 130
                   }
                 ]
