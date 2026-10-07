@@ -6,7 +6,7 @@ use classic_config_core::YamlDataContentIdentity;
 use classic_scan_presentation::RecoveryDecisionDescription;
 use classic_scanlog_core::scan_run::contract::{
     InfrastructureError, InfrastructureErrorStage, LogDisposition, LogEvent, LogFailure,
-    LogFailureStage, LogResult, RunResult,
+    LogFailureStage, LogResult, ObserverDeliveryFailure, RunResult, SettledRunResult,
 };
 use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
 // Imported here as well as in `scan_run.rs`, which needs it since the run status
@@ -70,6 +70,31 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
     .expect("standard source should convert");
     assert!(source.custom_scan_directory.is_none());
     assert!(source.configured_documents_root.is_none());
+}
+
+#[test]
+fn path_conversion_trims_surrounding_whitespace_like_the_other_bindings() {
+    // The CXX bridge builds paths from trimmed text; identical input must name the same folder here.
+    assert_eq!(
+        required_path(" \tC:/CLASSIC  ".to_string(), "installationRoot")
+            .expect("padded path text should convert"),
+        PathBuf::from("C:/CLASSIC")
+    );
+    let source = standard_source_to_core(JsScanRunStandardSource {
+        base_directory: "  C:/CLASSIC ".to_string(),
+        custom_scan_directory: Some(" D:/One-off Logs\t".to_string()),
+        configured_documents_root: Some("\tE:/Documents/My Games/Fallout4 ".to_string()),
+    })
+    .expect("standard source should convert");
+    assert_eq!(source.base_directory, PathBuf::from("C:/CLASSIC"));
+    assert_eq!(
+        source.custom_scan_directory,
+        Some(PathBuf::from("D:/One-off Logs"))
+    );
+    assert_eq!(
+        source.configured_documents_root,
+        Some(PathBuf::from("E:/Documents/My Games/Fallout4"))
+    );
 }
 
 #[test]
@@ -312,12 +337,11 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
         .iter()
         .copied()
     {
-        let mapped = run_result_to_js(RunResult {
+        let mapped = run_result_to_js(RunResult::from(SettledRunResult {
             status,
             discovery: None,
             setup: None,
             installed_yaml_data: None,
-            continuation: None,
             effective_concurrency: Some(2),
             message: Some("terminal message".to_string()),
             total: 1,
@@ -325,7 +349,8 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
             failed: 1,
             cancelled: 0,
             logs: vec![],
-        });
+            observer_delivery_failure: None,
+        }));
         assert_eq!(mapped.status, status.as_str());
         assert_eq!(mapped.effective_concurrency, Some(2));
         assert_eq!(mapped.message.as_deref(), Some("terminal message"));
@@ -384,6 +409,7 @@ fn infrastructure_mapping_covers_every_stage_with_and_without_paths() {
             stage,
             message: "failure".to_string(),
             path: Some(PathBuf::from("C:/failure/path")),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, stage.as_str());
         assert_eq!(mapped.message, "failure");
@@ -394,6 +420,7 @@ fn infrastructure_mapping_covers_every_stage_with_and_without_paths() {
         stage: InfrastructureErrorStage::Discovery,
         message: "failure".to_string(),
         path: None,
+        observer_delivery_failure: None,
     });
     assert!(mapped.path.is_none());
 }
@@ -482,6 +509,7 @@ fn shared_failure_fixture_maps_every_node_failure_field() {
             stage,
             message: expected["message"].as_str().unwrap().to_string(),
             path: expected["path"].as_str().map(PathBuf::from),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, expected["stage"].as_str().unwrap());
         assert_eq!(mapped.message, expected["message"].as_str().unwrap());
@@ -672,12 +700,11 @@ fn assert_display_lines_match(actual: &[JsScanRunDisplayLine], expected: &[JsSca
 /// that compares a projection against a fresh render has to build the value
 /// twice rather than reuse it.
 fn completed_run_result() -> RunResult {
-    RunResult {
+    RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: None,
         setup: None,
         installed_yaml_data: None,
-        continuation: None,
         effective_concurrency: Some(2),
         message: Some("terminal message".to_string()),
         total: 1,
@@ -685,7 +712,8 @@ fn completed_run_result() -> RunResult {
         failed: 0,
         cancelled: 0,
         logs: vec![],
-    }
+        observer_delivery_failure: None,
+    })
 }
 
 #[test]
@@ -808,8 +836,9 @@ fn the_failure_envelope_carries_the_failures_display_lines() {
             stage,
             message: "failure".to_string(),
             path: Some(PathBuf::from("C:/failure/path")),
+            observer_delivery_failure: None,
         };
-        let envelope = failure_envelope(build(), None);
+        let envelope = failure_envelope(build());
         let expected = display_lines_to_js(&render_infrastructure_error(&build()));
         assert!(!envelope.display_lines.is_empty());
         assert_display_lines_match(&envelope.display_lines, &expected);
@@ -859,7 +888,7 @@ fn a_discovery_with_rejections_states_them_separately() {
 
 /// Builds one resume failure of every kind, so no variant rejects untested.
 ///
-/// `Infrastructure` is deliberately absent: `ScanRunClaimTask::compute` routes it
+/// `Infrastructure` is deliberately absent: `ScanRunSettleTask::compute` routes it
 /// into the failure envelope rather than into a rejection, and
 /// [`the_failure_envelope_carries_the_failures_display_lines`] covers that path.
 fn every_resume_failure() -> Vec<contract::ResumeError> {
@@ -958,12 +987,11 @@ fn the_replay_rejection_keeps_its_published_code_and_message() {
 /// Built twice for the reason [`completed_run_result`] is: `RunResult` retains a
 /// one-shot continuation and is not `Clone`.
 fn recovery_required_run_result() -> RunResult {
-    RunResult {
+    RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
         discovery: None,
         setup: None,
         installed_yaml_data: None,
-        continuation: None,
         effective_concurrency: None,
         message: Some("Local Ignore requires a recovery decision".to_string()),
         total: 0,
@@ -971,14 +999,15 @@ fn recovery_required_run_result() -> RunResult {
         failed: 0,
         cancelled: 0,
         logs: vec![],
-    }
+        observer_delivery_failure: None,
+    })
 }
 
 #[test]
 /// A run paused on Local Ignore recovery resolves with the prompt Rust rendered for it.
 fn the_success_envelope_carries_the_recovery_prompt_core_rendered() {
     let expected = recovery_prompt_to_js(&render_local_ignore_recovery(None));
-    let envelope = success_envelope(recovery_required_run_result(), None);
+    let envelope = success_envelope(recovery_required_run_result());
 
     let prompt = envelope
         .recovery_prompt
@@ -1023,11 +1052,66 @@ fn assert_segments_match(actual: &[JsScanRunDisplaySegment], expected: &[JsScanR
     }
 }
 
+/// Builds a completed settled result.
+///
+/// Built twice for the reason [`completed_run_result`] is: a settled result is not `Clone`.
+fn completed_settled_result() -> SettledRunResult {
+    SettledRunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        effective_concurrency: Some(1),
+        message: Some("settled message".to_string()),
+        total: 1,
+        succeeded: 1,
+        failed: 0,
+        cancelled: 0,
+        logs: vec![],
+        observer_delivery_failure: None,
+    }
+}
+
+#[test]
+/// A settled run resolves with what it says, its observer outcome, and nothing to resume.
+fn a_settled_envelope_states_the_settled_run_and_carries_no_continuation() {
+    let expected = display_lines_to_js(&render_run_result(&RunResult::from(
+        completed_settled_result(),
+    )));
+
+    // The observer outcome is the one Rust reported on the settled result.
+    let envelope = settled_envelope(SettledRunResult {
+        observer_delivery_failure: Some(ObserverDeliveryFailure::new("observer failed")),
+        ..completed_settled_result()
+    });
+
+    assert_eq!(envelope.result.status, "completed");
+    assert_eq!(envelope.result.message.as_deref(), Some("settled message"));
+    assert_eq!(envelope.observer_error.as_deref(), Some("observer failed"));
+    assert_display_lines_match(&envelope.display_lines, &expected);
+}
+
+#[test]
+/// Only a real paused run, which retains a continuation, offers a pending recovery.
+///
+/// A hand-built recovery-required result has no continuation, so it still resolves with
+/// the prompt this surface always rendered but with nothing to settle.
+fn only_a_run_that_retains_a_continuation_offers_a_pending_recovery() {
+    assert!(
+        success_envelope(completed_run_result())
+            .pending_recovery
+            .is_none()
+    );
+    let paused_without_continuation = success_envelope(recovery_required_run_result());
+    assert!(paused_without_continuation.recovery_prompt.is_some());
+    assert!(paused_without_continuation.pending_recovery.is_none());
+}
+
 #[test]
 /// A run that is not waiting on a decision resolves with no prompt to show.
 fn a_terminal_envelope_resolves_without_a_recovery_prompt() {
     assert!(
-        success_envelope(completed_run_result(), None)
+        success_envelope(completed_run_result())
             .recovery_prompt
             .is_none()
     );
@@ -1124,4 +1208,47 @@ fn every_recovery_decision_maps_to_its_own_javascript_twin() {
         assert_eq!(map_local_ignore_recovery_decision(core), expected);
         assert_eq!(local_ignore_recovery_decision_to_core(expected), core);
     }
+}
+
+#[test]
+/// `observerError` is the delivery failure Rust reported, on success and failure envelopes alike.
+fn observer_error_is_read_from_the_rust_result_not_tracked_by_the_binding() {
+    let reported = || Some(ObserverDeliveryFailure::new("callback threw"));
+
+    // Assigned rather than struct-updated: a run result's continuation is private, so no
+    // literal outside the core crate can name or copy it.
+    let mut observed = completed_run_result();
+    observed.observer_delivery_failure = reported();
+    let success = success_envelope(observed);
+    assert_eq!(success.observer_error.as_deref(), Some("callback threw"));
+    assert!(
+        success_envelope(completed_run_result())
+            .observer_error
+            .is_none()
+    );
+
+    let failure = failure_envelope(InfrastructureError {
+        stage: InfrastructureErrorStage::Intake,
+        message: "intake failed".to_string(),
+        path: None,
+        observer_delivery_failure: reported(),
+    });
+    assert_eq!(failure.observer_error.as_deref(), Some("callback threw"));
+}
+
+#[test]
+/// `cancelOnObserverError` is the Rust observer failure policy, defaulting to letting the run finish.
+fn cancel_on_observer_error_maps_onto_the_rust_policy() {
+    assert_eq!(
+        observer_failure_policy(Some(true)),
+        contract::ObserverFailurePolicy::CancelRun
+    );
+    assert_eq!(
+        observer_failure_policy(Some(false)),
+        contract::ObserverFailurePolicy::ContinueRun
+    );
+    assert_eq!(
+        observer_failure_policy(None),
+        contract::ObserverFailurePolicy::ContinueRun
+    );
 }

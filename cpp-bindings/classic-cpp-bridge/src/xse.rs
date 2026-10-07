@@ -13,6 +13,8 @@
 // is the composing scangame entry point rather than `classic-xse-core` (#252).
 // The bridge keeps exposing it under `classic::xse` for existing C++ callers.
 use classic_scangame_core::resolve_xse_folder_for_scan as core_resolve_xse_folder_for_scan;
+// The XSE log follows XSE Folder rules, so it shares the same composing owner.
+use classic_scangame_core::resolve_xse_log_for_scan as core_resolve_xse_log_for_scan;
 use classic_shared_core::GameId;
 use classic_xse_core::{
     XseInfo as CoreXseInfo, XseType as CoreXseType, detect_xse_version as core_detect_xse_version,
@@ -140,6 +142,38 @@ fn resolve_xse_folder_for_scan(
     .unwrap_or_default()
 }
 
+/// Locate the XSE log through `classic_scangame_core::resolve_xse_log_for_scan`.
+///
+/// An empty string means "no log" (no XSE Folder resolved, or the folder or
+/// log is missing), matching `resolve_xse_folder_for_scan`'s sentinel. An
+/// operational failure becomes `Err`, which CXX raises in C++ as
+/// `rust::Error` carrying the core's "cannot inspect XSE log ..." message.
+/// An empty `configured_docs_root` means "none".
+fn resolve_xse_log_for_scan(
+    yaml_dir_data: &str,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: &str,
+) -> Result<String, String> {
+    let configured_docs_root = if configured_docs_root.trim().is_empty() {
+        None
+    } else {
+        Some(Path::new(configured_docs_root))
+    };
+
+    core_resolve_xse_log_for_scan(
+        Path::new(yaml_dir_data),
+        game,
+        selected_game_version,
+        configured_docs_root,
+    )
+    .map(|log| {
+        log.map(|path| path.to_string_lossy().to_string())
+            .unwrap_or_default()
+    })
+    .map_err(|error| error.to_string())
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // String-form helpers (D-08 backward-compat, also called from game.rs shims)
 // ─────────────────────────────────────────────────────────────────────
@@ -211,6 +245,12 @@ mod ffi {
             selected_game_version: &str,
             configured_docs_root: &str,
         ) -> String;
+        fn resolve_xse_log_for_scan(
+            yaml_dir_data: &str,
+            game: &str,
+            selected_game_version: &str,
+            configured_docs_root: &str,
+        ) -> Result<String>;
 
         // String-form D-08 backward-compat
         fn detect_xse_version_string(exe_path: &str, xse_type_str: &str) -> String;

@@ -63,6 +63,13 @@ pub struct JsCrashLogScanSettings {
     pub formid_databases: HashMap<String, Vec<String>>,
     /// Provenance token for FormID Databases.
     pub formid_databases_origin: String,
+    /// FormID database rows that apply to each supported game's Crash Log Scan.
+    ///
+    /// Rust applies the game-aware read: Fallout 4 VR reads the shared `Fallout4` rows followed
+    /// by legacy `Fallout4VR` rows, de-duplicated; every other game reads its own rows exactly.
+    /// Games whose scan reads no rows are absent. Scan launch reads this map, never
+    /// `formidDatabases`.
+    pub scan_formid_databases: HashMap<String, Vec<String>>,
     /// Whether a standard scan may move Unsolved Logs.
     pub move_unsolved_logs: bool,
     /// Provenance token for Move Unsolved Logs.
@@ -286,6 +293,12 @@ pub struct JsUserSettingsUpdate {
     pub formid_value_lookup: Option<bool>,
     /// Requested replacement FormID database mapping.
     pub formid_databases: Option<HashMap<String, Vec<String>>>,
+    /// Requested game-aware save of one game's FormID database rows.
+    ///
+    /// Rust stores Fallout 4 VR rows under `Fallout4` and removes a legacy `Fallout4VR` key,
+    /// reporting the removal in the preview and commit `diagnostics`; any other game replaces
+    /// only its own rows. Applied on top of `formidDatabases` when both are requested.
+    pub formid_databases_for_game: Option<JsFormIdDatabaseSave>,
     /// Requested Move Unsolved Logs preference.
     pub move_unsolved_logs: Option<bool>,
     /// Requested Unsolved Logs destination; `null` explicitly selects the default.
@@ -298,6 +311,15 @@ pub struct JsUserSettingsUpdate {
     pub max_concurrent_scans: Option<f64>,
 }
 
+/// One game's FormID database rows for a game-aware User Settings save.
+#[napi(object)]
+pub struct JsFormIdDatabaseSave {
+    /// Game whose Crash Log Scans read these rows.
+    pub game: JsGameId,
+    /// Complete replacement rows, exactly as they should be persisted.
+    pub paths: Vec<String>,
+}
+
 /// One canonical field and value in an accepted User Settings Update preview.
 #[napi(object)]
 pub struct JsUserSettingsUpdateField {
@@ -307,7 +329,8 @@ pub struct JsUserSettingsUpdateField {
     pub value: Either5<bool, String, HashMap<String, Vec<String>>, u32, Null>,
 }
 
-/// Field-specific reason that a User Settings Update preview was rejected.
+/// Field-specific User Settings Update diagnostic: a rejection reason, or a non-rejecting
+/// effect report on an accepted preview or committed result.
 #[napi(object)]
 pub struct JsUserSettingsUpdateDiagnostic {
     /// Rejected canonical field path, absent for a preview-level failure.
@@ -327,7 +350,8 @@ pub struct JsUserSettingsUpdatePreview {
     pub base_revision: Option<String>,
     /// Only the explicitly requested canonical fields, empty when rejected.
     pub fields: Vec<JsUserSettingsUpdateField>,
-    /// All rejection diagnostics, empty when accepted.
+    /// Rejection diagnostics when rejected; non-rejecting effect diagnostics (such as
+    /// `legacy_formid_databases_key_removed`) when accepted.
     pub diagnostics: Vec<JsUserSettingsUpdateDiagnostic>,
 }
 
@@ -342,7 +366,8 @@ pub struct JsUserSettingsCommitResult {
     pub expected_revision: String,
     /// Latest document revision, present only when a conflict is detected.
     pub actual_revision: Option<String>,
-    /// Validation diagnostics, populated only when the update is rejected.
+    /// Validation diagnostics when rejected; the accepted preview's effect diagnostics when
+    /// committed.
     pub diagnostics: Vec<JsUserSettingsUpdateDiagnostic>,
 }
 
@@ -1350,12 +1375,18 @@ fn commit_user_settings(
     };
 
     match accepted.commit(&classic_root) {
-        Ok(UserSettingsCommitOutcome::Committed { revision }) => Ok(JsUserSettingsCommitResult {
+        Ok(UserSettingsCommitOutcome::Committed {
+            revision,
+            diagnostics,
+        }) => Ok(JsUserSettingsCommitResult {
             status: "committed".to_string(),
             revision: Some(revision.token()),
             expected_revision: base_revision,
             actual_revision: None,
-            diagnostics: Vec::new(),
+            diagnostics: diagnostics
+                .into_iter()
+                .map(user_settings_update_diagnostic_to_js)
+                .collect(),
         }),
         Ok(UserSettingsCommitOutcome::Conflict {
             expected_revision,
@@ -1408,6 +1439,18 @@ fn crash_log_scan_settings_to_js(settings: &UserSettings) -> JsCrashLogScanSetti
             .map(|(game, paths)| (game.clone(), paths.clone()))
             .collect(),
         formid_databases_origin: js_token(scan.formid_databases_origin().as_str()),
+        scan_formid_databases: classic_shared_core::GameId::all()
+            .into_iter()
+            .map(|game| {
+                let rows = scan
+                    .formid_databases_for_game(game)
+                    .into_iter()
+                    .map(ToOwned::to_owned)
+                    .collect::<Vec<_>>();
+                (game.as_str().to_string(), rows)
+            })
+            .filter(|(_, rows)| !rows.is_empty())
+            .collect(),
         move_unsolved_logs: scan.move_unsolved_logs(),
         move_unsolved_logs_origin: js_token(scan.move_unsolved_logs_origin().as_str()),
         unsolved_logs_destination: scan.unsolved_logs_destination().map(ToOwned::to_owned),
@@ -1501,6 +1544,10 @@ fn user_settings_update_to_core(update: JsUserSettingsUpdate) -> UserSettingsUpd
     if let Some(value) = update.formid_databases {
         core = core.with_formid_databases(value.into_iter().collect());
     }
+    if let Some(save) = update.formid_databases_for_game {
+        core = core
+            .with_formid_databases_for_game(js_to_core_game_id(&save.game).as_str(), save.paths);
+    }
     if let Some(value) = update.move_unsolved_logs {
         core = core.with_move_unsolved_logs(value);
     }
@@ -1576,7 +1623,12 @@ fn user_settings_update_preview_to_js(
                 .iter()
                 .map(user_settings_update_field_to_js)
                 .collect(),
-            diagnostics: Vec::new(),
+            diagnostics: accepted
+                .diagnostics()
+                .iter()
+                .cloned()
+                .map(user_settings_update_diagnostic_to_js)
+                .collect(),
         },
         UserSettingsUpdatePreview::Rejected(diagnostics) => JsUserSettingsUpdatePreview {
             accepted: false,
@@ -1590,7 +1642,7 @@ fn user_settings_update_preview_to_js(
     }
 }
 
-/// Converts one core update rejection into the shared NAPI diagnostic DTO.
+/// Converts one core update diagnostic (rejection or effect report) into the shared NAPI DTO.
 fn user_settings_update_diagnostic_to_js(
     diagnostic: classic_user_settings_core::UpdateDiagnostic,
 ) -> JsUserSettingsUpdateDiagnostic {

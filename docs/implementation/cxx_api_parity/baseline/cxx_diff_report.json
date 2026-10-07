@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 647,
-    "current_total": 647,
-    "matched": 647,
+    "contract_total": 667,
+    "current_total": 667,
+    "matched": 667,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -603,6 +603,14 @@
     {
       "id": "88a8165b0039518c",
       "rustSymbol": "local_ignore_yaml_data_state_label",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4765e6757b4a3133",
+      "rustSymbol": "locate_installation_root",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -2729,6 +2737,38 @@
       "reason": "-"
     },
     {
+      "id": "cea0da4e43b4a17a",
+      "rustSymbol": "ScanRunLaunchDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8209ae76fc056f3e",
+      "rustSymbol": "ScanRunLaunchErrorKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ca8c406aa53c2c9d",
+      "rustSymbol": "ScanRunLaunchIntent",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "000462851ef67b6e",
+      "rustSymbol": "ScanRunLaunchUnsolvedLogs",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "1ca5c72cad0943dd",
       "rustSymbol": "ScanRunLocalIgnoreRecoveryDecision",
       "kind": "enum",
@@ -2747,6 +2787,14 @@
     {
       "id": "1ad54c3b19d79960",
       "rustSymbol": "ScanRunLocalIgnoreYamlDataState",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "656ed53c286370a4",
+      "rustSymbol": "ScanRunObserverFailurePolicy",
       "kind": "enum",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3017,22 +3065,6 @@
       "reason": "-"
     },
     {
-      "id": "3e200e21dc680fbe",
-      "rustSymbol": "scan_run_continuation_abandon",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "1473c74ad462f005",
-      "rustSymbol": "scan_run_continuation_resume",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "f1a23f880846dde0",
       "rustSymbol": "scan_run_contract_execute",
       "kind": "function",
@@ -3041,16 +3073,16 @@
       "reason": "-"
     },
     {
-      "id": "8b7e216f62dd5d3b",
-      "rustSymbol": "scan_run_contract_execution_has_continuation",
+      "id": "87c18c84692a0b8f",
+      "rustSymbol": "scan_run_contract_execution_has_pending_recovery",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "bcba7f5d14da68c4",
-      "rustSymbol": "scan_run_contract_execution_take_continuation",
+      "id": "fa07ea60a0e724d3",
+      "rustSymbol": "scan_run_contract_execution_take_pending_recovery",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3089,6 +3121,46 @@
       "reason": "-"
     },
     {
+      "id": "beb69275d5176d3b",
+      "rustSymbol": "scan_run_launch_error",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7a8d35972d45cfa1",
+      "rustSymbol": "scan_run_launch_request",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "cffca841e1206122",
+      "rustSymbol": "scan_run_launch_standard",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "280bcca2d7fcd1a0",
+      "rustSymbol": "scan_run_launch_targeted",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "55fcffaf675620e4",
+      "rustSymbol": "scan_run_launch_view",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "3e7dcba09e694224",
       "rustSymbol": "scan_run_local_ignore_reset_failure_stage_label",
       "kind": "function",
@@ -3115,6 +3187,30 @@
     {
       "id": "594f2973e02fe0ce",
       "rustSymbol": "scan_run_log_failure_stage_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "33c8278f0480e268",
+      "rustSymbol": "scan_run_pending_recovery_cancellation_requested",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1b7bd7cd9a081d86",
+      "rustSymbol": "scan_run_pending_recovery_prompt",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "70f8563542a526f4",
+      "rustSymbol": "scan_run_pending_recovery_settle",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3241,14 +3337,6 @@
       "reason": "-"
     },
     {
-      "id": "841c557115efd105",
-      "rustSymbol": "ScanRunContinuation",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "20927c22fed83137",
       "rustSymbol": "ScanRunContractExecution",
       "kind": "opaque",
@@ -3257,8 +3345,24 @@
       "reason": "-"
     },
     {
+      "id": "95da635bec943a19",
+      "rustSymbol": "ScanRunLaunch",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9d43dc52d6749684",
       "rustSymbol": "ScanRunObserver",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "217acdac98879071",
+      "rustSymbol": "ScanRunPendingRecovery",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3817,8 +3921,56 @@
       "reason": "-"
     },
     {
+      "id": "603a4b666b13c135",
+      "rustSymbol": "ScanRunLaunchDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "548f89a1359f6191",
+      "rustSymbol": "ScanRunLaunchErrorDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ea7cb17add81ffae",
+      "rustSymbol": "ScanRunLaunchOverridesDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3af3ade35638b7e7",
+      "rustSymbol": "ScanRunLaunchRequestDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "96174ecfa4e972be",
+      "rustSymbol": "ScanRunLocalIgnoreRecoverySettlement",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "e0e0fec08acd4c5b",
       "rustSymbol": "ScanRunLocalIgnoreResetRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "82e5222be05096af",
+      "rustSymbol": "ScanRunObserverDelivery",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -5139,6 +5291,14 @@
     {
       "id": "d6aeb07b6b9d96e1",
       "rustSymbol": "resolve_xse_folder_for_scan",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "16d48d7de1e4bfe3",
+      "rustSymbol": "resolve_xse_log_for_scan",
       "kind": "function",
       "bridgeModule": "xse",
       "status": "matched",

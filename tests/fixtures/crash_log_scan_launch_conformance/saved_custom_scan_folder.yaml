@@ -1,0 +1,5 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4
+  Move Unsolved Logs: false
+  SCAN Custom Path: '{{installationRoot}}/Saved Custom Logs'

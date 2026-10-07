@@ -101,6 +101,10 @@ _Avoid_: backup path string, automatic repair, `.prev` rollback
 The first-party distribution channel through which CLASSIC clients discover, review, install, and roll back newer YAML Data. It is the maintained update path for curated YAML Data, not a generic arbitrary data feed.
 _Avoid_: YAML updater, data update constants, update feed
 
+**Installation Root**:
+The directory of one CLASSIC installation that holds its CLASSIC Data, User Settings, and Local Ignore YAML Data. Every operation for that installation is anchored to the same Installation Root.
+_Avoid_: data root, CLASSIC root, app dir
+
 **User Settings**:
 The complete set of persisted user choices that customize CLASSIC behavior and remember frontend state, including scan and setup preferences, saved paths, limits, and presentation state. They are distinct from curated YAML Data.
 _Avoid_: user config, raw settings keys, frontend settings
@@ -181,6 +185,10 @@ _Avoid_: config loading, scan setup
 The execution of a Standard or Targeted Crash Log scan intent. It resolves the Crash Logs for that intent, performs intake and analysis, produces Autoscan Reports, records per-log scan outcomes, and may move Unsolved Logs according to scan settings and scan intent.
 _Avoid_: scan transaction, analysis job, scan session
 
+**Crash Log Scan Launch**:
+The read-only projection of saved User Settings, the selected game, and per-run overrides into a Crash Log Scan Run request and, when FCX Mode is enabled, its Crash Log Scan Setup Context. It never persists User Settings and does not run the scan.
+_Avoid_: scan config, request builder, launch settings
+
 **Crash Log Scan Run Result**:
 The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, optional selected Installed YAML Data metadata and diagnostics, and per-log outcomes in discovery order. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
 _Avoid_: result list, exception status, scan summary string
@@ -206,7 +214,7 @@ A scan context flag that enables local installation checks and affects Autoscan 
 _Avoid_: FCX finding, FCX contribution
 
 **Crash Log Scan Setup Context**:
-The explicit game setup facts supplied to a Crash Log Scan Run when FCX Mode is enabled. It is built by adapters from saved User Settings or current frontend state; scanlog core uses it for setup validation but does not load or persist User Settings.
+The explicit game setup facts supplied to a Crash Log Scan Run when FCX Mode is enabled: the game folder, the documents folder, the game executable, and the XSE log. Crash Log Scan Launch builds it from saved User Settings, resolving the XSE log through XSE Folder rules; missing folders are left for setup validation to report. Scanlog core uses it for setup validation but does not load or persist User Settings.
 _Avoid_: scan config, hidden config load, FCX globals input
 
 **Crash Log Scan Setup Result**:

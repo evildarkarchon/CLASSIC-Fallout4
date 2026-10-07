@@ -69,6 +69,17 @@ json settings_selected_view(const classic::settings::GuiSettingsSnapshotDto& sna
                 databases.at(owned_string(row.game)).push_back(owned_string(row.path));
             }
             view[field] = std::move(databases);
+        } else if (field == "scan_formid_databases") {
+            // Rust publishes only games whose scan reads at least one row, already in read order.
+            json databases = json::object();
+            for (const auto& row : scan.scan_formid_database_paths) {
+                const std::string game = owned_string(row.game);
+                if (!databases.contains(game)) {
+                    databases[game] = json::array();
+                }
+                databases.at(game).push_back(owned_string(row.path));
+            }
+            view[field] = std::move(databases);
         } else {
             bool recognized = false;
             for (const auto& geometry : frontend.window_geometry) {
@@ -181,6 +192,9 @@ json settings_operation_tree(const fs::path& root) {
     return tree;
 }
 
+/// Request selector prefix naming a game-aware FormID database save for the trailing game.
+const std::string kFormIdDatabaseSavePrefix = "/CLASSIC_Settings/FormID Databases/";
+
 /// Forwards the pack's requested typed values without duplicating Rust validation or defaults.
 classic::settings::UserSettingsUpdateDto settings_requested_update(const json& requested) {
     classic::settings::UserSettingsUpdateDto update{};
@@ -266,6 +280,14 @@ classic::settings::UserSettingsUpdateDto settings_requested_update(const json& r
                     update.formid_database_paths.push_back(std::move(row));
                 }
             }
+        } else if (field.rfind(kFormIdDatabaseSavePrefix, 0) == 0 &&
+                   field.size() > kFormIdDatabaseSavePrefix.size()) {
+            // A pointer below the mapping names one game's game-aware save, not a raw key write.
+            update.has_formid_database_save = true;
+            update.formid_database_save_game = field.substr(kFormIdDatabaseSavePrefix.size());
+            for (const auto& path : value) {
+                update.formid_database_save_paths.push_back(path.get<std::string>());
+            }
         } else if (field == "/CLASSIC_Settings/Move Unsolved Logs") {
             update.has_move_unsolved_logs = true;
             update.move_unsolved_logs = value.get<bool>();
@@ -293,6 +315,18 @@ classic::settings::UserSettingsUpdateDto settings_requested_update(const json& r
     return update;
 }
 
+/// Projects ordered update diagnostics, rejecting or not, into the shared observation shape.
+json settings_update_diagnostics(const rust::Vec<classic::settings::UserSettingsUpdateDiagnosticDto>& source) {
+    json diagnostics = json::array();
+    for (const auto& diagnostic : source) {
+        diagnostics.push_back(
+            json{{"fieldPath", diagnostic.has_field_path ? json(owned_string(diagnostic.field_path)) : json(nullptr)},
+                 {"code", owned_string(diagnostic.code)},
+                 {"message", owned_string(diagnostic.message)}});
+    }
+    return diagnostics;
+}
+
 /// Projects values and ordered diagnostics from the returned public preview artifact.
 json settings_operation_preview(const classic::settings::UserSettingsUpdatePreviewDto& preview) {
     json fields = json::array();
@@ -316,18 +350,11 @@ json settings_operation_preview(const classic::settings::UserSettingsUpdatePrevi
         }
         fields.push_back(json{{"fieldPath", owned_string(field.field_path)}, {"value", std::move(value)}});
     }
-    json diagnostics = json::array();
-    for (const auto& diagnostic : preview.diagnostics) {
-        diagnostics.push_back(
-            json{{"fieldPath", diagnostic.has_field_path ? json(owned_string(diagnostic.field_path)) : json(nullptr)},
-                 {"code", owned_string(diagnostic.code)},
-                 {"message", owned_string(diagnostic.message)}});
-    }
     return json{
         {"status", preview.accepted ? "accepted" : "rejected"},
         {"baseRevision", preview.base_revision.empty() ? json(nullptr) : json(owned_string(preview.base_revision))},
         {"acceptedFields", std::move(fields)},
-        {"diagnostics", std::move(diagnostics)}};
+        {"diagnostics", settings_update_diagnostics(preview.diagnostics)}};
 }
 
 /// Previews and optionally commits an isolated operation through the public Rust bridge.
@@ -361,8 +388,11 @@ json execute_user_settings_operation_scenario(const json& plan, const json& scen
     if (!external_edit.is_null()) {
         copy_fixture(plan, scenario, external_edit, root, "externalEdit");
     }
-    json commit{
-        {"status", "not-attempted"}, {"revision", nullptr}, {"expectedRevision", nullptr}, {"actualRevision", nullptr}};
+    json commit{{"status", "not-attempted"},
+                {"revision", nullptr},
+                {"expectedRevision", nullptr},
+                {"actualRevision", nullptr},
+                {"diagnostics", json::array()}};
     if (input.at("commit").get<bool>() && preview.accepted) {
         const auto outcome =
             bootstrap ? classic::settings::user_settings_commit_bootstrap(root.string(), preview.base_revision, update)
@@ -371,6 +401,7 @@ json execute_user_settings_operation_scenario(const json& plan, const json& scen
         commit["status"] = status;
         if (status == "committed") {
             commit["revision"] = owned_string(outcome.revision);
+            commit["diagnostics"] = settings_update_diagnostics(outcome.diagnostics);
         } else if (status == "conflict") {
             commit["expectedRevision"] = owned_string(outcome.expected_revision);
             commit["actualRevision"] = owned_string(outcome.actual_revision);

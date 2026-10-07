@@ -140,6 +140,7 @@ def _selected_view(snapshot: Any, fields: object) -> dict[str, Any]:
         "simplify_logs": scan.simplify_logs,
         "show_formid_values": scan.formid_value_lookup,
         "formid_databases": scan.formid_databases,
+        "scan_formid_databases": scan.scan_formid_databases,
         "main_tab_width": geometry.main_tab.width,
         "main_tab_maximized": geometry.main_tab.maximized,
         "custom_scan_folder": scan.custom_scan_input,
@@ -395,6 +396,10 @@ def _execute_legacy_import(
         }
 
 
+# Request selector prefix naming a game-aware FormID database save for the trailing game.
+_FORMID_DATABASE_SAVE_PREFIX = "/CLASSIC_Settings/FormID Databases/"
+
+
 def _requested_update(fields: object) -> Any:
     """Translate input selectors into public setters, leaving value policy in Rust."""
     import classic_user_settings
@@ -446,10 +451,30 @@ def _requested_update(fields: object) -> Any:
             "/UI/window_geometry/main_tab/width",
         }:
             continue
+        if path.startswith(_FORMID_DATABASE_SAVE_PREFIX) and len(path) > len(
+            _FORMID_DATABASE_SAVE_PREFIX
+        ):
+            # A pointer below the mapping names one game's game-aware save, not a raw key write.
+            update.set_formid_databases_for_game(
+                path[len(_FORMID_DATABASE_SAVE_PREFIX):], value
+            )
+            continue
         if path not in setters:
             raise RunnerContractError(f"unsupported requested field: {path}")
         setters[path](value)
     return update
+
+
+def _update_diagnostics(diagnostics: Any) -> list[dict[str, Any]]:
+    """Project ordered update diagnostics, rejecting or not, into the shared observation shape."""
+    return [
+        {
+            "fieldPath": diagnostic.field_path,
+            "code": diagnostic.code,
+            "message": diagnostic.message,
+        }
+        for diagnostic in diagnostics
+    ]
 
 
 def _install_external_edit(
@@ -757,6 +782,7 @@ def _execute_operation(
             "revision": None,
             "expectedRevision": None,
             "actualRevision": None,
+            "diagnostics": [],
         }
         if commit_requested and preview.accepted:
             outcome = preview.commit(str(root))
@@ -765,6 +791,7 @@ def _execute_operation(
                 "revision": outcome.revision,
                 "expectedRevision": outcome.expected_revision,
                 "actualRevision": outcome.actual_revision,
+                "diagnostics": _update_diagnostics(outcome.diagnostics),
             }
         return {
             "preview": {
@@ -774,14 +801,7 @@ def _execute_operation(
                     {"fieldPath": field.canonical_path, "value": field.value}
                     for field in preview.fields
                 ],
-                "diagnostics": [
-                    {
-                        "fieldPath": diagnostic.field_path,
-                        "code": diagnostic.code,
-                        "message": diagnostic.message,
-                    }
-                    for diagnostic in preview.diagnostics
-                ],
+                "diagnostics": _update_diagnostics(preview.diagnostics),
             },
             "afterPreviewTree": after_preview,
             "commit": commit,

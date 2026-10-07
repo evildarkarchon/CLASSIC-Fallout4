@@ -272,6 +272,66 @@ records the original oracle, database fixture, source-preservation checks, and
 retained owner diagnostics. Frontend transport and layout remain under their
 existing consumer obligations.
 
+## Crash Log Scan Launch Blocking Execution
+
+`tests/conformance/packs/crash_log_scan_launch/v1.json` pins Crash Log Scan
+Launch (ADR-0009, [`classic-scan-launch.md`](classic-scan-launch.md)): saved
+values for the managed game, explicit-value and supplied-as-on overrides, the
+adaptive-concurrency override beating a saved limit, the Fallout 4 VR FormID row
+rule, malformed, newer and needs-migration User Settings launching with their
+diagnostics, Targeted inputs, the typed Targeted-without-inputs error, and the
+game-differs rule (a non-managed game withholding the saved game version, FCX
+Mode, custom scan folder and setup folders with one typed diagnostic each,
+explicit overrides still winning, and the managed game named explicitly
+reporting nothing), and the FCX setup context (#286): saved setup for the
+managed game, the Fallout 4 VR XSE log, missing folders still launching, the
+FCX Mode override giving a Targeted intent its context, and the typed
+`xse_log_inspect` error. Its
+User Settings documents live in `tests/fixtures/crash_log_scan_launch_conformance/`;
+each runner copies one into a fresh Installation Root (replacing the
+`{{installationRoot}}` placeholder with that root, `/`-separated), creates the
+scenario's empty `files` beneath it, launches through its own binding, and
+reports root-relative paths (including the `setupContext` facts), Vocabulary
+tokens, diagnostic codes (never prose), and whether the document stayed
+byte-identical. The shared
+scan-run launcher selects a launch-specific runner per adapter
+(`classic-scan-launch/tests/launch_conformance.rs`,
+`__test__/scan_launch_conformance_runner.ts` via `bun run conformance:scan-launch`,
+`python-bindings/tests/scan_launch_conformance_runner.py`, and the CXX
+`classic_cxx_crash_log_scan_launch_conformance.h` dispatch). Frontends that
+launch through it own consumer obligations in
+`tests/conformance/consumer-obligations.json`. The native CLI's `cli.scan-launch`
+parses each scenario's overrides as real command-line flags with the production
+parser, launches from an unrelated working directory through
+`launch_cli_scan_run`, and reports the launched values, diagnostic codes, and
+whether the Standard base folder is the Installation Root
+(`run_cli_consumer_conformance.ps1 -Family crash-log-scan-launch`). The GUI's
+`gui.scan-launch` stages each named scenario's settings fixture under a fresh
+Installation Root, launches through `classic::gui::launchScanRun` (the function
+`ScanWorker` calls), and reports the request shape the GUI received: intent,
+root-relative base folder and Targeted inputs, whether FCX Mode is on with its
+saved setup folders (and that missing ones still launch), and how many
+Rust-rendered warning lines it shows
+(`run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch`; CI runs it in
+the `gui-tests` job). The TUI's
+`tui.scan-launch` obligation drives its own scan start: a typed one-off custom
+scan folder reaches the launched Standard request, a document needing
+migration still starts a scan and its launch diagnostics open the Last Scan
+overlay in core's words, a Targeted scan carries exactly its inputs, and the
+User Settings document stays byte-identical throughout
+(`run_scan_run_consumer_conformance.py --family crash-log-scan-launch --participant tui`).
+
+```powershell
+python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant rust --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
+python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant node --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
+uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --family crash-log-scan-launch --participant python --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler clang-cl -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers
+python tools/binding_compliance/run_scan_run_consumer_conformance.py --family crash-log-scan-launch --participant tui --artifact-root tools/binding_compliance/artifacts/crash-log-scan-launch
+```
+
 ## Installed YAML Data Blocking Execution
 
 `tests/conformance/packs/installed_yaml_data/v1.json` owns fifteen public
@@ -402,7 +462,7 @@ The suite does not replace lower-level parsers. It owns the top-level pass/fail 
 - Node: `python tools/node_api_parity/check_parity_gate.py --repo-root .` plus `bun run dts:freshness:check` in the Node CI slice.
 - Python: `python tools/python_api_parity/check_parity_gate.py --repo-root .` plus `validate_stubs.py`.
 - User Settings ownership: `python tools/user_settings_ownership/check.py --repo-root .` rejects first-party production references that reintroduce flat models, generic User Settings variants/key policies, raw `CLASSIC_Settings` interpretation outside `classic-user-settings-core`, or runtime use of the generated default mirror.
-- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/` and compares its variant inventory with the Rust enums. The trusted variant policy maps every source-derived variant to a required executable scenario fact or a named retained analyzer. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity, or Python stubs/parity. Blocking semantic and consumer receipts supply executable scenario and presentation coverage. Copied adapter acknowledgements, positive source markers, and per-scenario or presentation required-owner lists are retired.
+- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/` and compares its variant inventory with the Rust enums. The trusted variant policy maps every source-derived variant to a required executable scenario fact or a named retained analyzer. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name, or a removed separate resume/abandon entry point, continuation accessor, opaque continuation type, or run-result continuation field (#282), remains in public source, CXX parity data, Node declarations/parity, or Python stubs/parity. Blocking semantic and consumer receipts supply executable scenario and presentation coverage. Copied adapter acknowledgements, positive source markers, and per-scenario or presentation required-owner lists are retired.
 
 Existing C++, Node, and Python parity gates remain available as focused debugging commands. Do not remove or weaken them unless the compliance suite demonstrably covers the same check and the replacement is documented in the same change.
 
@@ -449,18 +509,38 @@ count noun selected by Rust. Its current cases cover 84 lines, all five
 severities, and five emitted segment kinds. The unproduced `Name` kind remains
 an explicit retained disposition and grants no semantic receipt credit.
 
-`tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
+`tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot settlement, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
-independently authored twenty-seven-scenario blocking oracle: Standard and Targeted
+independently authored thirty-two-scenario blocking oracle: Standard and Targeted
 happy paths, generated Local Ignore, pre-discovery cancellation,
 post-discovery queued cancellation, admitted/durable cancellation, observer
-delivery failure, public request-validation, discovery, intake, report-write,
+delivery failure under the cancel-run and continue-run policies and before a
+pending recovery, public request-validation, discovery, intake, report-write,
 FormID database access, and Unsolved Logs finalization failures (default and
 configured destinations), a successful custom Unsolved Logs move, the
 `no_crash_logs_found` and `setup_failed` run statuses, both recovery decisions, intervening-change conflict,
 portable backup failure, both reset cancellation boundaries, replay,
-abandonment, both FCX request factories, and `ConfigIssue` construction. Its
+settling a pending recovery (with each decision, with no decision,
+and after the run's cancellation was already requested), both FCX request
+factories, and `ConfigIssue` construction. Every recovery scenario uses a
+`settle` continuation action whose decision is optional — the only operation,
+since the separate resume and abandon entry points were removed (#282) and the
+former `abandon-local-ignore-recovery` scenario retired; abandonment is
+`settle-without-decision`, whose replays (no decision, then Reset To Default)
+prove one spent claim rejects every decision. Cancellation boundaries are
+`before-pending-recovery`, `before-settle`, and `after-reset-critical-section`,
+and every recovery scenario records an `initial.pendingRecovery` observation
+(`cancellationRequested` plus the prompt read from each adapter's own
+pending-recovery DTO). The
+three observer-delivery-failure scenarios state the policy in
+`executionFlow.observerFailure.policy` (`cancel-run` pairs with the
+`on-observer-failure` cancellation boundary, `continue-run` with `none`); every
+runner's observer fails the delivery for real and passes the policy to its
+binding, and the `observerFailure` observation is projected from the delivery
+failure the Rust result reports, never from runner-side tracking. Every
+lifecycle observation also records `pendingRecovery`, which the
+before-pending-recovery scenario requires to be false. Its
 materialized plans contain only declared inputs and normalization policy; the
 Rust, Node, Python, and CXX runners cannot read its expected observations. The pack
 compares ordered discovery, setup absence, effective concurrency, Installed
@@ -544,8 +624,8 @@ runtime evidence; expanding a family does not expand its earlier retirement set.
 
 `xse-operations` is blocking across Rust, CXX (MSVC and clang-cl), Node, and Python. Eighteen scenarios observe all six extender types in missing, loader-only, and detected states. Each uses a disposable directory and records the final file bytes; constructor coverage requires the corresponding variant observation.
 
-`xse-folder` is blocking for Rust and CXX. Its `domainOwner` is `classic-xse-core`, which owns XSE Folder derivation. The family has two operation-scoped capabilities. `xse-folder.derive` exercises XSE's facts-based `resolve_xse_folder_from_game_local_facts` with supplied Game Local facts in five Rust-only `derive-*` scenarios; no binding exposes that resolver. `xse-folder.resolve` carries `rustCrate: classic-scangame-core` and credits the Local.yaml composition, `resolve_xse_folder_for_scan`, which scangame has owned since #252. It is the capability the CXX bridge exposes. Its six original scenarios exercise Local.yaml precedence, configured documents fallback, VR folder naming, and fail-soft malformed/missing local data. All scenarios initialize the Version Registry from fixed fixture metadata and reject inputs that could enter host discovery. Run it with `run_semantic_conformance.py --family xse-folder --participant rust`, or the CXX launcher with `-Family xse-folder -Compiler msvc` (and `clang-cl`).
+`xse-folder` is blocking for Rust, CXX, Node and Python. Its `domainOwner` is `classic-xse-core`, which owns XSE Folder derivation. The family has three operation-scoped capabilities. `xse-folder.derive` exercises XSE's facts-based `resolve_xse_folder_from_game_local_facts` with supplied Game Local facts in five Rust-only `derive-*` scenarios; no binding exposes that resolver. `xse-folder.resolve` carries `rustCrate: classic-scangame-core` and credits the Local.yaml composition, `resolve_xse_folder_for_scan`, which scangame has owned since #252. It is the capability the CXX bridge exposes. Its six original scenarios exercise Local.yaml precedence, configured documents fallback, VR folder naming, and fail-soft malformed/missing local data. All scenarios initialize the Version Registry from fixed fixture metadata and reject inputs that could enter host discovery. `xse-folder.log` (#283) also carries `rustCrate: classic-scangame-core` and credits `resolve_xse_log_for_scan`, the one XSE log operation, which CXX, Node and Python all bind; it is the only capability Node and Python run. Its six `log-*` scenarios create closed sets of empty logs under the owned root and observe `{log, error}`: Fallout 4's `f4se.log` and Fallout 4 VR's own `f4sevr.log` in the shared `F4SE` folder, the explicit folder winning precedence, no fall-through to a lower-precedence folder's log, a missing folder, and the typed operational failure (`error: "inspect"`), triggered portably by a Local.yaml `\0` escape that no platform can inspect. Runners resolve with the owned root as cwd so the relative folders stay inside it. Run it with `run_semantic_conformance.py --family xse-folder --participant rust` (or `node`, or `python` through `uv run --project python-bindings`), or the CXX launcher with `-Family xse-folder -Compiler msvc` (and `clang-cl`).
 
-`installation-paths` is blocking across all four adapters and both CXX compilers. Its two directory layouts exercise validated cached game/documents lookup and ordered missing-INI reports, including paths with spaces, while checking the complete unchanged file and directory inventory.
+`installation-paths` is blocking across all four adapters and both CXX compilers. Its two directory layouts exercise validated cached game/documents lookup and ordered missing-INI reports, including paths with spaces, while checking the complete unchanged file and directory inventory. The operation-scoped `installation-paths.locate` capability (`rustCrate: classic-config-core`, #275) runs `locate_installation_root` in eight `locate-*` scenarios: a match at each of the six candidate positions, first-match-wins across several matching candidates, and no match returning null with no fallback. Every scenario starts the search at the fixed `tree/build/bin` executable folder and `tree/work` working directory, so each derived candidate stays inside the runner-owned temporary tree; the observation is the located root relative to that tree plus the complete, unchanged directory inventory.
 
 The [installation discovery evidence boundary](../implementation/installation_discovery_conformance_equivalence.md) distinguishes cached-path/checker execution from the named retained `installation-discovery-source-boundary` analyzer. Platform registry and home-directory fallback have no public injected provider; structural evidence makes no runtime discovery claim. Existing focused diagnostics remain in place, and passing receipts stay untracked.

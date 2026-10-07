@@ -25,18 +25,15 @@
 #[path = "scan_run_tests.rs"]
 mod tests;
 
+use classic_scan_launch::CrashLogScanLaunchDiagnostic;
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, render_event,
-    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_launch_diagnostics, render_resume_error,
     render_run_result,
 };
+use classic_scanlog_core::ScanProgressPhase;
 use classic_scanlog_core::scan_run::contract::{
-    Configuration, Event, InfrastructureError, LocalIgnoreRecoveryDecision, LogEvent, Request,
-    ResumeError, RunResult,
-};
-use classic_scanlog_core::{
-    CrashLogScanSetupContext, ScanProgressPhase, StandardCrashLogScanSource,
-    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
+    Event, InfrastructureError, LocalIgnoreRecoveryDecision, LogEvent, ResumeError, RunResult,
 };
 
 // Coarse weights make in-flight lifecycle events visibly advance the gauge without pretending
@@ -185,43 +182,14 @@ fn present_severity(lines: &[DisplayLine]) -> DisplaySeverity {
         .map_or(DisplaySeverity::Info, |line| line.severity)
 }
 
-/// Typed scan intent projected by the TUI before execution.
-pub(crate) enum ScanRunIntent {
-    /// Normal discovery with the Standard-only Unsolved Logs policy.
-    Standard {
-        source: StandardCrashLogScanSource,
-        unsolved_logs: StandardUnsolvedLogsIntent,
-    },
-    /// Explicit user-selected inputs without relocation capability.
-    Targeted(TargetedCrashLogScanSource),
-}
-
-/// Constructs one invariant-preserving final-contract request.
-pub(crate) fn build_request(
-    configuration: Configuration,
-    intent: ScanRunIntent,
-    setup_context: Option<CrashLogScanSetupContext>,
-) -> Request {
-    match (intent, setup_context) {
-        (
-            ScanRunIntent::Standard {
-                source,
-                unsolved_logs,
-            },
-            Some(setup_context),
-        ) => Request::standard_with_fcx(configuration, source, unsolved_logs, setup_context),
-        (
-            ScanRunIntent::Standard {
-                source,
-                unsolved_logs,
-            },
-            None,
-        ) => Request::standard(configuration, source, unsolved_logs),
-        (ScanRunIntent::Targeted(source), Some(setup_context)) => {
-            Request::targeted_with_fcx(configuration, source, setup_context)
-        }
-        (ScanRunIntent::Targeted(source), None) => Request::targeted(configuration, source),
-    }
+/// Lays out Crash Log Scan Launch diagnostics for the scrollable Last Scan overlay.
+///
+/// Core renders what each diagnostic says; this keeps every line, in core's order, with its
+/// paths whole, exactly as a run result's own lines are kept.
+pub(crate) fn format_launch_diagnostics(
+    diagnostics: &[CrashLogScanLaunchDiagnostic],
+) -> Vec<PresentedLine> {
+    present_lines(&render_launch_diagnostics(diagnostics))
 }
 
 /// Returns the bracketed key this overlay binds to one recovery decision.
@@ -384,17 +352,18 @@ pub(crate) fn join_presented(lines: &[PresentedLine]) -> String {
 
 /// Projects the Rust-owned paused-run facts the TUI shows before asking for an explicit decision.
 ///
-/// Every fact comes from the retained result; the TUI adds no policy and never inspects the
-/// malformed file itself.
-pub(crate) fn describe_local_ignore_recovery(result: &RunResult) -> LocalIgnoreRecoveryPrompt {
-    // Absent Installed YAML Data used to be resolved here, identically to how the native CLI and
-    // the Qt GUI each resolved it for themselves. `render_local_ignore_recovery` takes the
-    // `Option` precisely so that stays one rule rather than three.
-    let prompt = render_local_ignore_recovery(result.installed_yaml_data.as_ref());
+/// `prompt` is the pending recovery's own prompt, already rendered as Display Content by
+/// `classic-scan-presentation` when the pending recovery was taken, so the overlay asks exactly
+/// the question settling can honour. The run detail and retained discovery come from the paused
+/// result; the TUI adds no policy and never inspects the malformed file itself.
+pub(crate) fn describe_local_ignore_recovery(
+    result: &RunResult,
+    prompt: &RecoveryPrompt,
+) -> LocalIgnoreRecoveryPrompt {
     LocalIgnoreRecoveryPrompt {
         run_detail: present_lines(&render_run_result(result)),
         prompt_lines: present_lines(&prompt.lines),
-        decisions: prompt.decisions,
+        decisions: prompt.decisions.clone(),
         message: result.message.clone(),
         retained_logs: result
             .discovery

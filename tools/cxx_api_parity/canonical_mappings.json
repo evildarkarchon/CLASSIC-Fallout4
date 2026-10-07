@@ -42,6 +42,11 @@
       "libRs": "business-logic/classic-scan-presentation/src/lib.rs"
     },
     {
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "libRs": "business-logic/classic-scan-launch/src/lib.rs"
+    },
+    {
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
       "libRs": "business-logic/classic-scangame-core/src/lib.rs"
@@ -780,6 +785,15 @@
       "ownerModule": "config",
       "rustCrate": "classic-config-core",
       "coreRustSymbol": "persist_game_local_paths"
+    },
+    {
+      "id": "4765e6757b4a3133",
+      "rustSymbol": "locate_installation_root",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "locate_installation_root"
     },
     {
       "id": "7a1d4610ddf2ed0c",
@@ -3454,24 +3468,6 @@
       "coreRustSymbol": "Cancellation"
     },
     {
-      "id": "3e200e21dc680fbe",
-      "rustSymbol": "scan_run_continuation_abandon",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
-      "id": "1473c74ad462f005",
-      "rustSymbol": "scan_run_continuation_resume",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
       "id": "f1a23f880846dde0",
       "rustSymbol": "scan_run_contract_execute",
       "kind": "function",
@@ -3479,24 +3475,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "execute"
-    },
-    {
-      "id": "8b7e216f62dd5d3b",
-      "rustSymbol": "scan_run_contract_execution_has_continuation",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
-      "id": "bcba7f5d14da68c4",
-      "rustSymbol": "scan_run_contract_execution_take_continuation",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "db795bbb11e180e8",
@@ -3706,15 +3684,6 @@
       "coreRustSymbol": "Cancellation"
     },
     {
-      "id": "841c557115efd105",
-      "rustSymbol": "ScanRunContinuation",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "coreRustSymbol": "CrashLogScanRunContinuation"
-    },
-    {
       "id": "20927c22fed83137",
       "rustSymbol": "ScanRunContractExecution",
       "kind": "opaque",
@@ -3729,6 +3698,15 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "unmappedReason": "Foreign C++ observer interface borrowed by the CXX adapter; the Rust core Observer trait is implemented by a separate bridge-local adapter, not by this C++ type."
+    },
+    {
+      "id": "217acdac98879071",
+      "rustSymbol": "ScanRunPendingRecovery",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PendingRecovery"
     },
     {
       "id": "a899cfded87e21d4",
@@ -4350,6 +4328,15 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "InstalledYamlDataRunData"
+    },
+    {
+      "id": "96174ecfa4e972be",
+      "rustSymbol": "ScanRunLocalIgnoreRecoverySettlement",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryDecision"
     },
     {
       "id": "e0e0fec08acd4c5b",
@@ -5802,6 +5789,15 @@
       "coreRustSymbol": "resolve_xse_folder_for_scan"
     },
     {
+      "id": "16d48d7de1e4bfe3",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "resolve_xse_log_for_scan"
+    },
+    {
       "id": "fed1f3c1692a2596",
       "rustSymbol": "xse_get_dll_prefix",
       "kind": "function",
@@ -5863,6 +5859,195 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "detect_crash_pattern"
+    },
+    {
+      "id": "ea7cb17add81ffae",
+      "rustSymbol": "ScanRunLaunchOverridesDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchOverrides"
+    },
+    {
+      "id": "ca8c406aa53c2c9d",
+      "rustSymbol": "ScanRunLaunchIntent",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanIntent"
+    },
+    {
+      "id": "000462851ef67b6e",
+      "rustSymbol": "ScanRunLaunchUnsolvedLogs",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
+    },
+    {
+      "id": "cea0da4e43b4a17a",
+      "rustSymbol": "ScanRunLaunchDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchDiagnosticKind"
+    },
+    {
+      "id": "603a4b666b13c135",
+      "rustSymbol": "ScanRunLaunchDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchDiagnostic"
+    },
+    {
+      "id": "8209ae76fc056f3e",
+      "rustSymbol": "ScanRunLaunchErrorKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchErrorKind"
+    },
+    {
+      "id": "548f89a1359f6191",
+      "rustSymbol": "ScanRunLaunchErrorDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchError"
+    },
+    {
+      "id": "3af3ade35638b7e7",
+      "rustSymbol": "ScanRunLaunchRequestDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchRequest"
+    },
+    {
+      "id": "95da635bec943a19",
+      "rustSymbol": "ScanRunLaunch",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchRequest"
+    },
+    {
+      "id": "cffca841e1206122",
+      "rustSymbol": "scan_run_launch_standard",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "prepare_launch"
+    },
+    {
+      "id": "280bcca2d7fcd1a0",
+      "rustSymbol": "scan_run_launch_targeted",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "prepare_launch"
+    },
+    {
+      "id": "beb69275d5176d3b",
+      "rustSymbol": "scan_run_launch_error",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchError"
+    },
+    {
+      "id": "55fcffaf675620e4",
+      "rustSymbol": "scan_run_launch_view",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchRequest"
+    },
+    {
+      "id": "7a8d35972d45cfa1",
+      "rustSymbol": "scan_run_launch_request",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_launch",
+      "rustCrate": "classic-scan-launch",
+      "coreRustSymbol": "CrashLogScanLaunchRequest"
+    },
+    {
+      "id": "87c18c84692a0b8f",
+      "rustSymbol": "scan_run_contract_execution_has_pending_recovery",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PendingRecovery"
+    },
+    {
+      "id": "fa07ea60a0e724d3",
+      "rustSymbol": "scan_run_contract_execution_take_pending_recovery",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PendingRecovery"
+    },
+    {
+      "id": "33c8278f0480e268",
+      "rustSymbol": "scan_run_pending_recovery_cancellation_requested",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PendingRecovery"
+    },
+    {
+      "id": "1b7bd7cd9a081d86",
+      "rustSymbol": "scan_run_pending_recovery_prompt",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PendingRecovery"
+    },
+    {
+      "id": "70f8563542a526f4",
+      "rustSymbol": "scan_run_pending_recovery_settle",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PendingRecovery"
+    },
+    {
+      "id": "656ed53c286370a4",
+      "rustSymbol": "ScanRunObserverFailurePolicy",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ObserverFailurePolicy"
+    },
+    {
+      "id": "82e5222be05096af",
+      "rustSymbol": "ScanRunObserverDelivery",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ObserverDeliveryFailure"
     }
   ]
 }

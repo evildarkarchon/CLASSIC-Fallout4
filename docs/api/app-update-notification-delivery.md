@@ -33,7 +33,7 @@ Unknown fields are tolerated so a future manifest can add optional metadata with
 
 ## 2. Runtime flow (client side)
 
-Native CLI policy adds a read-only preflight before the network flow below. `--check-app-update` passes an explicitly resolved CLASSIC root to `classic-user-settings-core`, receives typed Update Preferences through `classic::settings::user_settings_open_update_preferences`, and stops before runtime/cache/network work when the safe value is disabled. Missing settings use the published default `true`; malformed, incompatible, unreadable, or invalid Update Check state fails closed to `false` with structured diagnostics. GUI and TUI consumer migration is handled by their dedicated User Settings tickets.
+Native CLI policy adds a read-only preflight before the network flow below. `--check-app-update` first locates the Installation Root through config's shared [`locate_installation_root`](classic-config-core.md#installation-root-location); with no match it prints "CLASSIC Data not found" and exits `2` without reading settings or touching the network. It passes that root to `classic-user-settings-core`, receives typed Update Preferences through `classic::settings::user_settings_open_update_preferences`, and stops before runtime/cache/network work when the safe value is disabled. Missing settings use the published default `true`; malformed, incompatible, unreadable, or invalid Update Check state fails closed to `false` with structured diagnostics. GUI and TUI consumer migration is handled by their dedicated User Settings tickets.
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T07:25:36.772558+00:00",
+  "generated_at_utc": "2026-10-06T14:45:34.366390+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -651,6 +651,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsFileOperationResult {"
+    },
+    {
+      "export": "JsFormIdDatabaseSave",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdDatabaseSave {"
     },
     {
       "export": "JsFormIdFinding",
@@ -1517,6 +1525,22 @@
       "signature": "export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {"
     },
     {
+      "export": "JsScanRunLaunchDiagnostic",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunLaunchDiagnostic {"
+    },
+    {
+      "export": "JsScanRunLaunchOverrides",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunLaunchOverrides {"
+    },
+    {
       "export": "JsScanRunLocalIgnoreRecoveryDecision",
       "kind": "const_enum",
       "owner_module": "scanlog",
@@ -1595,6 +1619,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunResult {"
+    },
+    {
+      "export": "JsScanRunSettledSuccess",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunSettledSuccess {"
     },
     {
       "export": "JsScanRunSetupCheck",
@@ -2157,12 +2189,20 @@
       "signature": "export declare class ScanRunCancellation {"
     },
     {
-      "export": "ScanRunContinuation",
+      "export": "ScanRunLaunch",
       "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare class ScanRunContinuation {"
+      "signature": "export declare class ScanRunLaunch {"
+    },
+    {
+      "export": "ScanRunPendingRecovery",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ScanRunPendingRecovery {"
     },
     {
       "export": "ScanRunRequest",
@@ -3454,6 +3494,15 @@
       "arity": 1
     },
     {
+      "export": "locateInstallationRoot",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function locateInstallationRoot(executableDir?: string | undefined | null, workingDir?: string | undefined | null): string | null",
+      "arity": 2
+    },
+    {
       "export": "matchVersion",
       "kind": "function",
       "owner_module": "version_registry",
@@ -3742,6 +3791,15 @@
       "arity": 0
     },
     {
+      "export": "resolveXseLogForScan",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function resolveXseLogForScan(yamlDirData: string, game: string, selectedGameVersion: string, configuredDocsRoot?: string | undefined | null): string | null",
+      "arity": 4
+    },
+    {
       "export": "reverseUserSettingsMigrationPlan",
       "kind": "function",
       "owner_module": "user_settings",
@@ -3823,15 +3881,6 @@
       "arity": 2
     },
     {
-      "export": "scanRunAbandon",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunAbandon(continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
-      "arity": 4
-    },
-    {
       "export": "scanRunExecute",
       "kind": "function",
       "owner_module": "scanlog",
@@ -3895,13 +3944,13 @@
       "arity": 1
     },
     {
-      "export": "scanRunResume",
+      "export": "scanRunSettle",
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
-      "arity": 5
+      "signature": "export declare function scanRunSettle(pendingRecovery: ScanRunPendingRecovery, decision?: JsScanRunLocalIgnoreRecoveryDecision | undefined | null, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSettledSuccess | JsScanRunFailure>",
+      "arity": 4
     },
     {
       "export": "scanUnpackedFiles",

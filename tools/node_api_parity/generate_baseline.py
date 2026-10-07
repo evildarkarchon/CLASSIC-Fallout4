@@ -32,6 +32,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
     # Phase 1 original 10 crates (verified pre-state 2026-04-08).
     "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
     "classic-scan-presentation": "business-logic/classic-scan-presentation/src/lib.rs",
+    "classic-scan-launch": "business-logic/classic-scan-launch/src/lib.rs",
     "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
     "classic-user-settings-core": "business-logic/classic-user-settings-core/src/lib.rs",
     "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
@@ -65,6 +66,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
     "classic-scan-presentation": "scanlog",
+    "classic-scan-launch": "scanlog",
     "classic-config-core": "config",
     "classic-user-settings-core": "user_settings",
     "classic-version-registry-core": "version_registry",

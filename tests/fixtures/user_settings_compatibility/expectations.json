@@ -180,9 +180,117 @@
           "Fallout4": [
             "databases/Fallout4 FormIDs.db"
           ]
+        },
+        "scan_formid_databases": {
+          "Fallout4": [
+            "databases/Fallout4 FormIDs.db"
+          ],
+          "Fallout4VR": [
+            "databases/Fallout4 FormIDs.db"
+          ]
         }
       },
       "diagnostics": []
+    },
+    {
+      "id": "vr_shared_and_legacy_formid_databases",
+      "coverage": [
+        "vr_formid_database_read_rule"
+      ],
+      "fixture": "vr_shared_and_legacy_formid_databases.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "current",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": [
+        "read_only_open"
+      ],
+      "commit_eligible": true,
+      "migration_required": false,
+      "expected_view": {
+        "formid_databases": {
+          "Fallout4": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Shared Extra FormIDs.db"
+          ],
+          "Fallout4VR": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Legacy VR FormIDs.db"
+          ],
+          "Skyrim": [
+            "databases/Skyrim FormIDs.db"
+          ]
+        },
+        "scan_formid_databases": {
+          "Fallout4": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Shared Extra FormIDs.db"
+          ],
+          "Fallout4VR": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Shared Extra FormIDs.db",
+            "databases/Legacy VR FormIDs.db"
+          ],
+          "Skyrim": [
+            "databases/Skyrim FormIDs.db"
+          ]
+        }
+      },
+      "diagnostics": [],
+      "preserve_nodes": [
+        {
+          "pointer": "/CLASSIC_Settings/FormID Databases/Fallout4VR",
+          "type": "sequence",
+          "value": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Legacy VR FormIDs.db"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vr_legacy_formid_databases",
+      "coverage": [
+        "vr_formid_database_read_rule"
+      ],
+      "fixture": "vr_legacy_formid_databases.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "current",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": [
+        "read_only_open"
+      ],
+      "commit_eligible": true,
+      "migration_required": false,
+      "expected_view": {
+        "formid_databases": {
+          "Fallout4VR": [
+            "databases/Legacy VR FormIDs.db"
+          ]
+        },
+        "scan_formid_databases": {
+          "Fallout4VR": [
+            "databases/Legacy VR FormIDs.db"
+          ]
+        }
+      },
+      "diagnostics": [],
+      "preserve_nodes": [
+        {
+          "pointer": "/CLASSIC_Settings/FormID Databases/Fallout4VR",
+          "type": "sequence",
+          "value": [
+            "databases/Legacy VR FormIDs.db"
+          ]
+        }
+      ]
     },
     {
       "id": "flat_classic_config",
@@ -1328,6 +1436,122 @@
         "/UI/tui/active_tab": 2,
         "/UI/tui/results_panel_width": 44,
         "/UI/tui/sort_ascending": true
+      },
+      "conformance": {
+        "action": "user-settings.update",
+        "commit": false,
+        "preview_diagnostics": [],
+        "installation_root_exists": true,
+        "preview_mode": "update"
+      }
+    },
+    {
+      "id": "commit_fallout4_vr_formid_save_removes_legacy_key",
+      "outcome": "accepted_commit",
+      "source_fixture": "vr_shared_and_legacy_formid_databases.yaml",
+      "disk_fixture_before": "vr_shared_and_legacy_formid_databases.yaml",
+      "expected_document": "vr_shared_and_legacy_formid_databases_after_vr_save.yaml",
+      "writes_document": true,
+      "requested_update": {
+        "/CLASSIC_Settings/FormID Databases/Fallout4VR": [
+          "databases/Fallout4 FormIDs.db",
+          "databases/Shared Extra FormIDs.db",
+          "databases/Legacy VR FormIDs.db",
+          "D:/Added/VR Extra.db"
+        ]
+      },
+      "expected_preview": {
+        "/CLASSIC_Settings/FormID Databases": {
+          "Fallout4": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Shared Extra FormIDs.db",
+            "databases/Legacy VR FormIDs.db",
+            "D:/Added/VR Extra.db"
+          ],
+          "Skyrim": [
+            "databases/Skyrim FormIDs.db"
+          ]
+        }
+      },
+      "changed_pointers": [
+        "/CLASSIC_Settings/FormID Databases/Fallout4",
+        "/CLASSIC_Settings/FormID Databases/Fallout4VR"
+      ],
+      "conformance": {
+        "action": "user-settings.update",
+        "commit": true,
+        "preview_diagnostics": [
+          {
+            "fieldPath": "/CLASSIC_Settings/FormID Databases",
+            "code": "legacy_formid_databases_key_removed",
+            "message": "Fallout 4 VR FormID databases are saved under Fallout4; the legacy Fallout4VR FormID Databases entry is removed"
+          }
+        ],
+        "installation_root_exists": true,
+        "preview_mode": "update"
+      }
+    },
+    {
+      "id": "commit_other_game_formid_save_preserves_every_other_game",
+      "outcome": "accepted_commit",
+      "source_fixture": "vr_shared_and_legacy_formid_databases.yaml",
+      "disk_fixture_before": "vr_shared_and_legacy_formid_databases.yaml",
+      "expected_document": "vr_shared_and_legacy_formid_databases_after_skyrim_save.yaml",
+      "writes_document": true,
+      "requested_update": {
+        "/CLASSIC_Settings/FormID Databases/Skyrim": [
+          "databases/Skyrim FormIDs.db",
+          "D:/Added/Skyrim Extra.db"
+        ]
+      },
+      "expected_preview": {
+        "/CLASSIC_Settings/FormID Databases": {
+          "Fallout4": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Shared Extra FormIDs.db"
+          ],
+          "Fallout4VR": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Legacy VR FormIDs.db"
+          ],
+          "Skyrim": [
+            "databases/Skyrim FormIDs.db",
+            "D:/Added/Skyrim Extra.db"
+          ]
+        }
+      },
+      "changed_pointers": [
+        "/CLASSIC_Settings/FormID Databases/Skyrim"
+      ],
+      "conformance": {
+        "action": "user-settings.update",
+        "commit": true,
+        "preview_diagnostics": [],
+        "installation_root_exists": true,
+        "preview_mode": "update"
+      }
+    },
+    {
+      "id": "preview_fallout4_formid_save_keeps_legacy_vr_rows",
+      "outcome": "proposed_update",
+      "source_fixture": "vr_legacy_formid_databases.yaml",
+      "disk_fixture_before": "vr_legacy_formid_databases.yaml",
+      "expected_document": "vr_legacy_formid_databases.yaml",
+      "writes_document": false,
+      "requested_update": {
+        "/CLASSIC_Settings/FormID Databases/Fallout4": [
+          "D:/Fallout4.db"
+        ]
+      },
+      "expected_preview": {
+        "/CLASSIC_Settings/FormID Databases": {
+          "Fallout4": [
+            "D:/Fallout4.db"
+          ],
+          "Fallout4VR": [
+            "databases/Legacy VR FormIDs.db"
+          ]
+        }
       },
       "conformance": {
         "action": "user-settings.update",

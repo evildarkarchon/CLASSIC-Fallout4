@@ -19,6 +19,7 @@ FAMILIES = {
     "settings-cached-docs",
     "version-registry-details",
     "xse-operations",
+    "xse-folder",
     "installation-paths",
     "game-identity",
     "runtime-access",
@@ -186,7 +187,13 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             "settings-cached-docs": {"settings-cached-docs.observe"},
             "version-registry-details": {"version-registry-details.execute"},
             "xse-operations": {"xse-operations.inspect"},
-            "installation-paths": {"installation-paths.inspect"},
+            # Python binds only the XSE log operation; folder derivation and
+            # composition stay Rust/CXX.
+            "xse-folder": {"xse-folder.log"},
+            "installation-paths": {
+                "installation-paths.inspect",
+                "installation-paths.locate",
+            },
             "game-identity": {
                 "game-identity.observe",
                 "game-identity.metadata",
@@ -667,13 +674,22 @@ def _execute_scenario(
 
         return observe_settings_load(fixture)
     if plan["familyId"] == "installation-paths":
-        from installation_paths_conformance import observe_installation_paths
+        from installation_paths_conformance import (
+            observe_installation_paths,
+            observe_installation_root,
+        )
 
+        if scenario["action"] == "installation-paths.locate":
+            return observe_installation_root(fixture)
         return observe_installation_paths(fixture)
     if plan["familyId"] == "xse-operations":
         from xse_operations_conformance import observe_xse_operations
 
         return observe_xse_operations(fixture)
+    if plan["familyId"] == "xse-folder":
+        from xse_folder_conformance import observe_xse_log
+
+        return observe_xse_log(fixture)
     if plan["familyId"] in {"game-identity", "runtime-access"}:
         from shared_identity_conformance import observe_shared_identity
 

@@ -26,7 +26,6 @@
         "LogDisposition",
         "InfrastructureError",
         "InfrastructureErrorStage",
-        "CrashLogScanRunContinuation",
         "LocalIgnoreRecoveryDecision",
         "ResumeError",
         "LocalIgnoreResetConflictError",
@@ -41,8 +40,12 @@
         "StandardCrashLogScanSource",
         "TargetedCrashLogScanSource",
         "StandardUnsolvedLogsIntent",
-        "resume",
-        "abandon"
+        "PendingRecovery",
+        "take_pending_recovery",
+        "settle",
+        "SettledRunResult",
+        "ObserverFailurePolicy",
+        "ObserverDeliveryFailure"
       ],
       "observationFamilies": [
         "run-status",
@@ -3135,6 +3138,7 @@
           "logs": []
         },
         "observerFailure": null,
+        "pendingRecovery": false,
         "cancellation": {
           "requested": true
         },
@@ -3294,6 +3298,7 @@
           ]
         },
         "observerFailure": null,
+        "pendingRecovery": false,
         "cancellation": {
           "requested": true
         },
@@ -3459,6 +3464,7 @@
           ]
         },
         "observerFailure": null,
+        "pendingRecovery": false,
         "cancellation": {
           "requested": true
         },
@@ -3537,7 +3543,8 @@
           "cancellation": "on-observer-failure",
           "observerFailure": {
             "eventKind": "discovery_completed",
-            "message": "conformance observer delivery failure"
+            "message": "conformance observer delivery failure",
+            "policy": "cancel-run"
           }
         }
       },
@@ -3594,6 +3601,7 @@
           "eventKind": "discovery_completed",
           "messageNonEmpty": true
         },
+        "pendingRecovery": false,
         "cancellation": {
           "requested": true
         },
@@ -3602,6 +3610,276 @@
           "forbidden": [
             {
               "path": "Lifecycle/crash-observer-failure-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "observer-delivery-failure-continue-run",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-observer-continue.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "none",
+          "observerFailure": {
+            "eventKind": "discovery_completed",
+            "message": "conformance observer delivery failure",
+            "policy": "continue-run"
+          }
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 1,
+          "succeeded": 1,
+          "failed": 0,
+          "cancelled": 0,
+          "effectiveConcurrency": 1
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Lifecycle/crash-observer-continue.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Lifecycle/crash-observer-continue.log"
+            }
+          ]
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Lifecycle/crash-observer-continue.log"
+            },
+            "autoscanReport": {
+              "path": "Lifecycle/crash-observer-continue-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": []
+            }
+          ]
+        },
+        "observerFailure": {
+          "kind": "observer_delivery_failure",
+          "eventKind": "discovery_completed",
+          "messageNonEmpty": true
+        },
+        "pendingRecovery": false,
+        "cancellation": {
+          "requested": false
+        },
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "Lifecycle/crash-observer-continue-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            }
+          ],
+          "forbidden": [
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "observer-delivery-failure-before-pending-recovery",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-observer-before-recovery.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Lifecycle/crash-observer-before-recovery-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "none",
+          "observerFailure": {
+            "eventKind": "discovery_completed",
+            "message": "conformance observer delivery failure",
+            "policy": "continue-run"
+          }
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled",
+          "message": "Cancelled after crash log discovery",
+          "total": 1,
+          "succeeded": 0,
+          "failed": 0,
+          "cancelled": 1,
+          "effectiveConcurrency": null
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Lifecycle/crash-observer-before-recovery.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Lifecycle/crash-observer-before-recovery.log"
+            }
+          ]
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Lifecycle/crash-observer-before-recovery.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": []
+            }
+          ]
+        },
+        "observerFailure": {
+          "kind": "observer_delivery_failure",
+          "eventKind": "discovery_completed",
+          "messageNonEmpty": true
+        },
+        "pendingRecovery": false,
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+              "exists": false
+            },
+            {
+              "path": "Lifecycle/crash-observer-before-recovery-AUTOSCAN.md",
               "exists": false
             },
             {
@@ -4094,7 +4372,7 @@
         ],
         "continuationFlow": {
           "action": {
-            "operation": "resume",
+            "operation": "settle",
             "decision": "proceed-without-ignore"
           },
           "postPauseData": [
@@ -4113,7 +4391,7 @@
           ],
           "replays": [
             {
-              "operation": "resume",
+              "operation": "settle",
               "decision": "proceed-without-ignore"
             }
           ]
@@ -4277,6 +4555,55 @@
             "status": "local_ignore_recovery_required",
             "succeeded": 0,
             "total": 1
+          },
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
           }
         },
         "replays": [
@@ -4314,7 +4641,7 @@
                 }
               ]
             },
-            "operation": "resume"
+            "operation": "settle"
           }
         ],
         "terminal": {
@@ -4471,7 +4798,7 @@
         ],
         "continuationFlow": {
           "action": {
-            "operation": "resume",
+            "operation": "settle",
             "decision": "reset-to-default"
           },
           "postPauseData": [
@@ -4490,7 +4817,7 @@
           ],
           "replays": [
             {
-              "operation": "resume",
+              "operation": "settle",
               "decision": "reset-to-default"
             }
           ]
@@ -4662,6 +4989,55 @@
             "status": "local_ignore_recovery_required",
             "succeeded": 0,
             "total": 1
+          },
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
           }
         },
         "replays": [
@@ -4699,7 +5075,7 @@
                 }
               ]
             },
-            "operation": "resume"
+            "operation": "settle"
           }
         ],
         "terminal": {
@@ -4887,7 +5263,7 @@
         ],
         "continuationFlow": {
           "action": {
-            "operation": "resume",
+            "operation": "settle",
             "decision": "reset-to-default"
           },
           "postPauseData": [
@@ -4910,7 +5286,7 @@
           ],
           "replays": [
             {
-              "operation": "resume",
+              "operation": "settle",
               "decision": "reset-to-default"
             }
           ]
@@ -5068,6 +5444,55 @@
             "status": "local_ignore_recovery_required",
             "succeeded": 0,
             "total": 1
+          },
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
           }
         },
         "replays": [
@@ -5105,7 +5530,7 @@
                 }
               ]
             },
-            "operation": "resume"
+            "operation": "settle"
           }
         ],
         "terminal": null,
@@ -5194,7 +5619,7 @@
         ],
         "continuationFlow": {
           "action": {
-            "operation": "resume",
+            "operation": "settle",
             "decision": "reset-to-default"
           },
           "postPauseData": [
@@ -5217,7 +5642,7 @@
           ],
           "replays": [
             {
-              "operation": "resume",
+              "operation": "settle",
               "decision": "reset-to-default"
             }
           ]
@@ -5375,6 +5800,55 @@
             "status": "local_ignore_recovery_required",
             "succeeded": 0,
             "total": 1
+          },
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
           }
         },
         "replays": [
@@ -5412,7 +5886,7 @@
                 }
               ]
             },
-            "operation": "resume"
+            "operation": "settle"
           }
         ],
         "terminal": null,
@@ -5497,7 +5971,7 @@
         ],
         "continuationFlow": {
           "action": {
-            "operation": "resume",
+            "operation": "settle",
             "decision": "reset-to-default"
           },
           "postPauseData": [
@@ -5516,11 +5990,11 @@
           ],
           "replays": [
             {
-              "operation": "resume",
+              "operation": "settle",
               "decision": "reset-to-default"
             }
           ],
-          "cancellation": "before-resume"
+          "cancellation": "before-settle"
         }
       },
       "expected": {
@@ -5680,6 +6154,55 @@
             "status": "local_ignore_recovery_required",
             "succeeded": 0,
             "total": 1
+          },
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
           }
         },
         "replays": [
@@ -5717,7 +6240,7 @@
                 }
               ]
             },
-            "operation": "resume"
+            "operation": "settle"
           }
         ],
         "terminal": {
@@ -5838,7 +6361,7 @@
         ],
         "continuationFlow": {
           "action": {
-            "operation": "resume",
+            "operation": "settle",
             "decision": "reset-to-default"
           },
           "postPauseData": [
@@ -5857,7 +6380,7 @@
           ],
           "replays": [
             {
-              "operation": "resume",
+              "operation": "settle",
               "decision": "reset-to-default"
             }
           ],
@@ -6025,6 +6548,55 @@
             "status": "local_ignore_recovery_required",
             "succeeded": 0,
             "total": 1
+          },
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
           }
         },
         "replays": [
@@ -6062,7 +6634,7 @@
                 }
               ]
             },
-            "operation": "resume"
+            "operation": "settle"
           }
         ],
         "terminal": {
@@ -6187,7 +6759,7 @@
       }
     },
     {
-      "id": "abandon-local-ignore-recovery",
+      "id": "settle-proceed-without-ignore",
       "action": "scan-run.execute",
       "capabilityIds": [
         "scan-run.execute"
@@ -6224,21 +6796,21 @@
         "targetedInputs": [
           {
             "fixtureRef": "validCrashLog",
-            "path": "Recovery/abandon.log"
+            "path": "Recovery/proceed.log"
           },
           {
-            "path": "Recovery/abandon-late.log"
+            "path": "Recovery/proceed-late.log"
           }
         ],
         "forbiddenEffectPaths": [
           "CLASSIC Data/CLASSIC Ignore.yaml.prev",
           "Unsolved Logs",
-          "Recovery/abandon-AUTOSCAN.md",
-          "Recovery/abandon-late-AUTOSCAN.md"
+          "Recovery/proceed-late-AUTOSCAN.md"
         ],
         "continuationFlow": {
           "action": {
-            "operation": "abandon"
+            "operation": "settle",
+            "decision": "proceed-without-ignore"
           },
           "postPauseData": [
             {
@@ -6251,16 +6823,13 @@
             },
             {
               "fixtureRef": "validCrashLog",
-              "path": "Recovery/abandon-late.log"
+              "path": "Recovery/proceed-late.log"
             }
           ],
           "replays": [
             {
-              "operation": "abandon"
-            },
-            {
-              "operation": "resume",
-              "decision": "reset-to-default"
+              "operation": "settle",
+              "decision": "proceed-without-ignore"
             }
           ]
         }
@@ -6268,8 +6837,8 @@
       "expected": {
         "terminalError": null,
         "cancellation": {
-          "afterReplays": true,
-          "afterTerminal": true,
+          "afterReplays": false,
+          "afterTerminal": false,
           "beforeTerminal": false
         },
         "durableEffects": {
@@ -6288,12 +6857,7 @@
             {
               "exists": false,
               "identity": null,
-              "path": "Recovery/abandon-AUTOSCAN.md"
-            },
-            {
-              "exists": false,
-              "identity": null,
-              "path": "Recovery/abandon-late-AUTOSCAN.md"
+              "path": "Recovery/proceed-late-AUTOSCAN.md"
             }
           ],
           "localIgnore": {
@@ -6304,28 +6868,38 @@
             },
             "path": "CLASSIC Data/CLASSIC Ignore.yaml"
           },
-          "reports": []
+          "reports": [
+            {
+              "exists": true,
+              "identity": {
+                "byteLength": 1021,
+                "sha256": "fcd495692097a88127999ca1905d2a93cdf120b62c131976bfde86806425c37f"
+              },
+              "nonEmpty": true,
+              "path": "Recovery/proceed-AUTOSCAN.md"
+            }
+          ]
         },
         "initial": {
           "continuationAvailable": true,
           "discovery": {
             "acceptedLogs": [
               {
-                "path": "Recovery/abandon.log"
+                "path": "Recovery/proceed.log"
               }
             ],
             "rejectedInputs": [
               {
-                "path": "Recovery/abandon-late.log",
+                "path": "Recovery/proceed-late.log",
                 "reason": "path does not exist"
               }
             ],
             "searchedLocations": [
               {
-                "path": "Recovery/abandon.log"
+                "path": "Recovery/proceed.log"
               },
               {
-                "path": "Recovery/abandon-late.log"
+                "path": "Recovery/proceed-late.log"
               }
             ],
             "source": "targeted"
@@ -6364,6 +6938,942 @@
             }
           },
           "logs": [],
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "proceed_without_ignore",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "operation": "settle"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/proceed.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/proceed-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/proceed.log"
+              },
+              {
+                "path": "Recovery/proceed-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": [
+                  "log_queued",
+                  "log_started",
+                  "log_phase:setup",
+                  "log_phase:parse",
+                  "log_phase:analyze",
+                  "log_phase:finalize",
+                  "log_finished:succeeded"
+                ]
+              }
+            ],
+            "run": [
+              "effective_concurrency_selected"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": false,
+            "localIgnoreState": "proceed_without_ignore",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [
+            {
+              "autoscanReport": {
+                "path": "Recovery/proceed-AUTOSCAN.md"
+              },
+              "crashLog": {
+                "path": "Recovery/proceed.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "succeeded",
+              "failures": [],
+              "message": null,
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+            "failed": 0,
+            "message": null,
+            "status": "completed",
+            "succeeded": 1,
+            "total": 1
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "settle-reset-to-default",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/reset.log"
+          },
+          {
+            "path": "Recovery/reset-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/reset-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "settle",
+            "decision": "reset-to-default"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/reset-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "settle",
+              "decision": "reset-to-default"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "terminalError": null,
+        "cancellation": {
+          "afterReplays": false,
+          "afterTerminal": false,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "backups": [
+            {
+              "identity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "parentPath": "CLASSIC Backup/YAML Data/Local Ignore"
+            }
+          ],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/reset-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 28,
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": [
+            {
+              "exists": true,
+              "identity": {
+                "byteLength": 1019,
+                "sha256": "ff71d48fbc44a50ca1e29d2be906034c9ebf63cb3099641f897c6b8bea6e903b"
+              },
+              "nonEmpty": true,
+              "path": "Recovery/reset-AUTOSCAN.md"
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset.log"
+              },
+              {
+                "path": "Recovery/reset-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "operation": "settle"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset.log"
+              },
+              {
+                "path": "Recovery/reset-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": [
+                  "log_queued",
+                  "log_started",
+                  "log_phase:setup",
+                  "log_phase:parse",
+                  "log_phase:analyze",
+                  "log_phase:finalize",
+                  "log_finished:succeeded"
+                ]
+              }
+            ],
+            "run": [
+              "effective_concurrency_selected"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              },
+              {
+                "candidate": null,
+                "kind": "local_ignore_reset",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 28,
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+            },
+            "localIgnoreReset": {
+              "backup": {
+                "exists": true,
+                "identityMatchesReceipt": true,
+                "parentPath": "CLASSIC Backup/YAML Data/Local Ignore"
+              },
+              "backupIdentity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "localIgnorePath": {
+                "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+              },
+              "malformedIdentity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "replacementIdentity": {
+                "byteLength": 28,
+                "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+              }
+            },
+            "localIgnoreResetAvailable": false,
+            "localIgnoreState": "reset_to_default",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [
+            {
+              "autoscanReport": {
+                "path": "Recovery/reset-AUTOSCAN.md"
+              },
+              "crashLog": {
+                "path": "Recovery/reset.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "succeeded",
+              "failures": [],
+              "message": null,
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+            "failed": 0,
+            "message": null,
+            "status": "completed",
+            "succeeded": 1,
+            "total": 1
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "settle-without-decision",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/settle-abandon.log"
+          },
+          {
+            "path": "Recovery/settle-abandon-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/settle-abandon-AUTOSCAN.md",
+          "Recovery/settle-abandon-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "settle"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/settle-abandon-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "settle"
+            },
+            {
+              "operation": "settle",
+              "decision": "reset-to-default"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "terminalError": null,
+        "cancellation": {
+          "afterReplays": true,
+          "afterTerminal": true,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "backups": [],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/settle-abandon-AUTOSCAN.md"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/settle-abandon-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": []
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/settle-abandon.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/settle-abandon-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/settle-abandon.log"
+              },
+              {
+                "path": "Recovery/settle-abandon-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "pendingRecovery": {
+            "cancellationRequested": false,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
           "recoveryPrompt": {
             "decisions": [
               {
@@ -6455,7 +7965,7 @@
                 }
               ]
             },
-            "operation": "abandon"
+            "operation": "settle"
           },
           {
             "decision": "reset_to_default",
@@ -6491,7 +8001,7 @@
                 }
               ]
             },
-            "operation": "resume"
+            "operation": "settle"
           }
         ],
         "terminal": {
@@ -6499,21 +8009,21 @@
           "discovery": {
             "acceptedLogs": [
               {
-                "path": "Recovery/abandon.log"
+                "path": "Recovery/settle-abandon.log"
               }
             ],
             "rejectedInputs": [
               {
-                "path": "Recovery/abandon-late.log",
+                "path": "Recovery/settle-abandon-late.log",
                 "reason": "path does not exist"
               }
             ],
             "searchedLocations": [
               {
-                "path": "Recovery/abandon.log"
+                "path": "Recovery/settle-abandon.log"
               },
               {
-                "path": "Recovery/abandon-late.log"
+                "path": "Recovery/settle-abandon-late.log"
               }
             ],
             "source": "targeted"
@@ -6532,7 +8042,391 @@
             {
               "autoscanReport": null,
               "crashLog": {
-                "path": "Recovery/abandon.log"
+                "path": "Recovery/settle-abandon.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "cancelled_before_start",
+              "failures": [],
+              "message": "Cancelled by user",
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 1,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Cancelled after crash log discovery",
+            "status": "cancelled",
+            "succeeded": 0,
+            "total": 1
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "settle-already-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/settle-cancelled.log"
+          },
+          {
+            "path": "Recovery/settle-cancelled-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/settle-cancelled-AUTOSCAN.md",
+          "Recovery/settle-cancelled-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "settle"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/settle-cancelled-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "settle",
+              "decision": "reset-to-default"
+            }
+          ],
+          "cancellation": "before-pending-recovery"
+        }
+      },
+      "expected": {
+        "terminalError": null,
+        "cancellation": {
+          "afterReplays": true,
+          "afterTerminal": true,
+          "beforeTerminal": true
+        },
+        "durableEffects": {
+          "backups": [],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/settle-cancelled-AUTOSCAN.md"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/settle-cancelled-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": []
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/settle-cancelled.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/settle-cancelled-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/settle-cancelled.log"
+              },
+              {
+                "path": "Recovery/settle-cancelled-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "pendingRecovery": {
+            "cancellationRequested": true,
+            "prompt": {
+              "decisions": [
+                {
+                  "available": true,
+                  "decision": "proceed_without_ignore",
+                  "label": "Proceed Without Ignore",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "available": true,
+                  "decision": "reset_to_default",
+                  "label": "Reset To Default",
+                  "description": [
+                    {
+                      "kind": "text",
+                      "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ],
+              "displaySeverities": [
+                "warning"
+              ],
+              "displayContent": [
+                {
+                  "severity": "warning",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "operation": "settle"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/settle-cancelled.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/settle-cancelled-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/settle-cancelled.log"
+              },
+              {
+                "path": "Recovery/settle-cancelled-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": []
+              }
+            ],
+            "run": []
+          },
+          "installedYamlData": null,
+          "logs": [
+            {
+              "autoscanReport": null,
+              "crashLog": {
+                "path": "Recovery/settle-cancelled.log"
               },
               "discoveryIndex": 0,
               "disposition": "cancelled_before_start",

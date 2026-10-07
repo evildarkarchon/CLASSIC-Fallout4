@@ -28,7 +28,14 @@ struct GuiCrashLogScanSettings {
     bool simplifyLogs = false;
     bool showStatistics = false;
     bool formIdValueLookup = false;
-    QMap<QString, QStringList> formIdDatabases;
+    /// Rust-selected FormID rows that apply to each game's Crash Log Scan.
+    ///
+    /// Already carries the Fallout 4 VR read rule (shared Fallout4 rows, then legacy
+    /// Fallout4VR rows, de-duplicated). The Settings dialog lists this projection and saves
+    /// through `GuiUserSettingsChanges::formIdDatabaseSave`; a Crash Log Scan does not read it,
+    /// because Crash Log Scan Launch selects the same rows in Rust. The raw stored mapping is
+    /// deliberately not projected: no GUI code may pick rows by stored key.
+    QMap<QString, QStringList> scanFormIdDatabases;
     bool moveUnsolvedLogs{};
     std::optional<QString> unsolvedLogsDestination;
     std::optional<QString> customScanInput;
@@ -68,23 +75,6 @@ struct GuiFrontendPreferences {
     QMap<GuiWindow, GuiWindowGeometry> windowGeometry;
 };
 
-/// Revision-approved values passed from the GUI settings snapshot into one Crash Log Scan launch.
-struct CrashLogScanLaunchSettings {
-    QString game;
-    QString gameVersion;
-    bool formIdValueLookup = false;
-    bool fcxMode = false;
-    bool simplifyLogs = false;
-    bool moveUnsolvedLogs{};
-    QString unsolvedLogsDestination;
-    int maxConcurrentScans{};
-    QString customScanDirectory;
-    QStringList formIdDatabasePaths;
-    QString setupGameRoot;
-    QString setupDocumentsRoot;
-    QString setupGameExecutable;
-};
-
 /// One revision-cohesive projection of every User Settings group used by the native GUI.
 struct GuiUserSettingsSnapshot {
     GuiUpdatePreferences update;
@@ -95,11 +85,6 @@ struct GuiUserSettingsSnapshot {
     QString revision;
     QString commitEligibility;
     std::vector<GuiUserSettingsDiagnostic> diagnostics;
-
-    /// Builds an immutable scan-launch value object from this accepted typed snapshot.
-    ///
-    /// `game` selects the corresponding FormID database list without rereading User Settings.
-    CrashLogScanLaunchSettings scanLaunchSettings(const QString& game) const;
 };
 
 /// One selected optional-string update; a selected null value explicitly clears the field.
@@ -112,6 +97,16 @@ struct SelectedGuiOptionalString {
 struct GuiWindowGeometryChange {
     GuiWindow window{};
     GuiWindowGeometry geometry;
+};
+
+/// One game's FormID database rows, saved through the Rust game-aware save.
+///
+/// Rust decides which stored key the rows land under: Fallout 4 VR rows are stored under
+/// `Fallout4` and a legacy `Fallout4VR` key is removed (reported as a commit diagnostic);
+/// every other game replaces only its own rows.
+struct GuiFormIdDatabaseSave {
+    QString game;
+    QStringList paths;
 };
 
 /// Caller-authored GUI changes that are previewed and committed as one User Settings Update.
@@ -129,7 +124,7 @@ struct GuiUserSettingsChanges {
     std::optional<bool> simplifyLogs;
     std::optional<bool> showStatistics;
     std::optional<bool> formIdValueLookup;
-    std::optional<QMap<QString, QStringList>> formIdDatabases;
+    std::optional<GuiFormIdDatabaseSave> formIdDatabaseSave;
     std::optional<bool> moveUnsolvedLogs;
     SelectedGuiOptionalString unsolvedLogsDestination;
     std::optional<int> maxConcurrentScans;
@@ -162,7 +157,9 @@ public:
     /// Previews and atomically commits all selected changes against `expectedRevision`.
     ///
     /// Returns `committed`, `conflict`, or `rejected`; operational publication failures
-    /// propagate as bridge exceptions and never partially persist selected fields.
+    /// propagate as bridge exceptions and never partially persist selected fields. A
+    /// `committed` result may carry non-rejecting effect diagnostics (for example
+    /// `legacy_formid_databases_key_removed`) that the caller should show the user.
     static GuiUserSettingsCommitResult commit(const QString& classicRoot, const QString& expectedRevision,
                                               const GuiUserSettingsChanges& changes);
 

@@ -202,6 +202,7 @@ These modules keep command implementations narrow and make compliance tests easi
 | `--output <path>` | Write JSON or Markdown report output to a file. |
 | `--repo-root <path>` | Override automatic repository root discovery. |
 | `--fixture-root <path>` | Use a fixture tree for scan/compliance scenarios. |
+| `--installation-root <path>` | Use this CLASSIC Installation Root (it must hold `CLASSIC Data`) for `scan logs` and `config main-version`. Without it the root is found by `classic_config.locate_installation_root` from the CLI package folder and working directory; no match fails with "CLASSIC Data not found" (exit `2`). There is no repository, fixture, or working-directory fallback, so fixture scans name their root explicitly. |
 | `--no-color` | Disable terminal color. |
 | `--verbose` | Include diagnostic details. |
 | `--trace` | Include Python traceback and binding exception details on failure. |
@@ -214,7 +215,7 @@ The implemented flag name is `--tracebacks` to make Python-boundary behavior exp
 
 | Command | Purpose |
 | --- | --- |
-| `classic-py scan logs` | Run fail-soft crash-log scanning through `classic_scanlog` and report the complete terminal run result, including Installed YAML Data metadata and per-log failures, in structured output. |
+| `classic-py scan logs` | Run fail-soft crash-log scanning through `classic_scanlog`, with the Targeted request built by Crash Log Scan Launch (`ScanRunLaunch.targeted`) from saved User Settings, and report the complete terminal run result, including Installed YAML Data metadata and per-log failures, in structured output. |
 | `classic-py scan game` | Run game setup checks through `classic_scangame` and related bindings. |
 | `classic-py config inspect` | Open and summarize typed User Settings at an explicit CLASSIC root through `classic_user_settings`. |
 | `classic-py config main-version` | Read the schema-gated main YAML version through the binding contract. |

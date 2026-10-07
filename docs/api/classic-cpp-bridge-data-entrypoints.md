@@ -198,9 +198,12 @@ Native CLI and GUI callers use the first-party YAML Data operations:
 
 Rust owns the Pages URL, `yaml-data-v*` channel, shippable-file inventory,
 schema compatibility, config-inspected installed identity, and rollback targets.
-For first-party check/apply calls, Rust also discovers the installation root
-from the union of executable, CWD, parent, and `install` layouts supported by
-the native frontends. The bridge passes the accepted update policy
+For first-party check/apply calls, Rust also discovers the Installation Root
+through config's shared
+[`locate_installation_root`](classic-config-core.md#installation-root-location),
+the same locator the GUI calls directly as
+`classic::config::locate_installation_root(executable_dir, working_dir)`
+(empty input = unavailable, empty result = no Installation Root). The bridge passes the accepted update policy
 and reviewed update identity through typed DTOs. Lower-level
 `yaml_check_update`, `yaml_apply_update`, and `yaml_rollback_update` operations
 remain for tests and unusual hosts that intentionally supply their own channel
@@ -291,36 +294,70 @@ prose, or markdown.
 The only public complete-run flow starts through an opaque operation:
 
 ```cpp
-auto operation = scan_run_contract_execute(request, cancellation, observer);
+auto operation = scan_run_contract_execute(request, cancellation, observer,
+                                           ScanRunObserverFailurePolicy::CancelRun);
 auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
 It forwards to `classic_scanlog_core::scan_run::contract::execute(...)` on the
-repository shared Tokio runtime. An expected malformed Local Ignore result may
-leave an opaque continuation beside the moved result. Call
-`scan_run_contract_execution_has_continuation(...)`, move it once with
-`scan_run_contract_execution_take_continuation(...)`, and resume it through
-`scan_run_continuation_resume(...)` with either `ProceedWithoutIgnore` or
-`ResetToDefault`. A frontend whose user backs out of the decision instead calls
-`scan_run_continuation_abandon(continuation, cancellation, observer)`, which
-takes no decision, cancels the supplied control, and returns the ordinary
-post-discovery cancelled envelope without touching anything on disk. The bridge
-has no public orchestration object, single-log analysis executor, batch
-lifecycle, reconstructable prepared-run executor, resettable scan token,
-process-global FCX control, or direct report writer.
+repository shared Tokio runtime. An expected malformed Local Ignore result
+leaves a pending recovery beside the moved result; settling it is the only way
+to answer the paused run. The bridge has no public orchestration object,
+single-log analysis executor, batch lifecycle, reconstructable prepared-run
+executor, resettable scan token, process-global FCX control, or direct report
+writer.
 
-Prefer `scan_run_continuation_abandon(...)` over cancelling and then resuming
-with a placeholder decision. The two are equivalent only when
-`scan_run_cancellation_cancel(...)` runs strictly before the claim; reversing
-that order spends the one-shot continuation on a real recovery attempt. Both
-native frontends used to write that sequence for themselves and no longer do.
+The separate `scan_run_continuation_resume(...)` and
+`scan_run_continuation_abandon(...)` entry points, the
+`scan_run_contract_execution_has_continuation(...)` /
+`scan_run_contract_execution_take_continuation(...)` accessors, and the opaque
+`ScanRunContinuation` type were removed (#282) with no deprecated aliases. The
+Scan Run contract manifest's `forbiddenExports` lists them for the bridge
+source and the CXX parity baseline, so the gate fails if any reappears.
 
-Unlike `scan_run_continuation_resume(...)`, this one does not throw. Resume is
-fallible only because it must reject an out-of-range
-`ScanRunLocalIgnoreRecoveryDecision` before claiming the continuation; with no
-decision to reject, abandonment has no argument that can be unrepresentable.
-Replay still arrives as `has_resume_error` with code
-`scan_run_continuation_consumed`, exactly as it does for a replayed resume.
+### Pending recovery and settling (ADR-0009)
+
+A paused run offers its recovery as one **pending recovery**.
+
+```cpp
+auto operation = scan_run_contract_execute(request, cancellation, observer, policy);
+auto execution = scan_run_contract_execution_take_result(*operation);
+if (scan_run_contract_execution_has_pending_recovery(*operation)) {
+    auto pending = scan_run_contract_execution_take_pending_recovery(*operation);
+    ScanRunLocalIgnoreRecoverySettlement settlement{};  // has_decision = false: abandon
+    if (!scan_run_pending_recovery_cancellation_requested(*pending)) {
+        auto prompt = scan_run_pending_recovery_prompt(*pending);
+        // ...ask the user; set has_decision/decision from the chosen description...
+    }
+    auto settled = scan_run_pending_recovery_settle(*pending, settlement, observer, policy);
+}
+```
+
+| Function | Contract |
+|---|---|
+| `scan_run_contract_execution_has_pending_recovery(execution)` | True exactly when the run paused and the pending recovery has not been taken |
+| `scan_run_contract_execution_take_pending_recovery(execution)` | Moves the opaque `ScanRunPendingRecovery` out; throws when the run did not pause or it was already taken |
+| `scan_run_pending_recovery_prompt(pending)` | The `ScanRunRecoveryPrompt` Rust rendered for the pause, identical to the envelope's `recovery_prompt`, including Reset To Default availability |
+| `scan_run_pending_recovery_cancellation_requested(pending)` | Read live from the control passed to `scan_run_contract_execute`; when true, do not prompt and settle with no decision |
+| `scan_run_pending_recovery_settle(pending, settlement, observer, policy)` | Settles once, synchronously, applying the observer failure policy; returns the ordinary `ScanRunContractExecutionResult` |
+
+`ScanRunLocalIgnoreRecoverySettlement { has_decision, decision }` is the
+bridge's spelling of an optional Local Ignore Recovery Decision: `decision` is
+read only when `has_decision` is true. With a decision, settling resumes the
+same discovered Crash Logs without rediscovery, Reset To Default still running
+as one non-interruptible transaction. With none, Rust cancels the run's own
+control and finishes cancelled after discovery with no filesystem work; that is
+abandonment, not a third decision, and it is what a frontend whose user backs
+out passes — never cancelling first and then picking a placeholder decision.
+No callback crosses the bridge for the decision: the frontend prompts on
+whatever thread it already uses and settles afterwards.
+
+The settled envelope is a shared struct, so it cannot carry a continuation or a
+pending recovery; `has_recovery_prompt` is always false on it. A second settle,
+with or without a decision, arrives as `has_resume_error` with code
+`scan_run_continuation_consumed`. Settle throws only for an out-of-range
+`decision` while `has_decision` is true, or an out-of-range policy, rejected
+before anything is claimed.
 
 ### Scan-run Display Labels
 
@@ -412,6 +449,48 @@ Standard movement uses one opaque value returned by:
 - `scan_run_unsolved_logs_move_to_configured_or_default()`
 - `scan_run_unsolved_logs_move_to_custom(path)`
 
+### Crash Log Scan Launch
+
+Instead of building the DTOs above by hand, a caller can let Rust build the
+request from saved User Settings and per-run overrides
+([`classic-scan-launch.md`](classic-scan-launch.md), ADR-0009). Launch opens
+User Settings read-only and never writes them; no frontend uses it yet.
+
+- `scan_run_launch_standard(installation_root, overrides)` and
+  `scan_run_launch_targeted(installation_root, inputs, overrides)` return an
+  opaque `ScanRunLaunch`. They throw only for unrepresentable input: a blank
+  root or scan path, an unknown game-version token, or an out-of-range
+  `ScanRunGameId`.
+- `scan_run_launch_error(launch)` returns `ScanRunLaunchErrorDto`;
+  `has_error` is authoritative and `kind` is `TargetedWithoutInputs` or
+  `XseLogInspect` (FCX Mode on and the XSE log location could not be
+  inspected, not mere absence).
+- `scan_run_launch_view(launch)` returns `ScanRunLaunchRequestDto`, which
+  reuses `ScanRunConfigurationDto`, `ScanRunStandardSourceDto`,
+  `ScanRunTargetedSourceDto` and `ScanRunSetupContextDto` filled with what the
+  launch decided, plus `intent`, `unsolved_logs`, `fcx_enabled`,
+  `diagnostics` (`ScanRunLaunchDiagnosticDto`: `kind`, `code`, `message`), and
+  `display_lines` (`ScanRunDisplayLine`, one per diagnostic in the same order,
+  rendered by the scan presentation module). `ScanRunLaunchDiagnosticKind` is
+  `UserSettings` or one of the game-differs kinds `GameVersionNotApplied`,
+  `FcxModeNotApplied`, `CustomScanFolderNotApplied`, `SetupFoldersNotApplied`,
+  whose `code` is the kind's snake_case token.
+  Fields that do not apply to the intent are empty placeholders.
+- `scan_run_launch_request(launch)` returns an executable `ScanRunRequest`
+  copy for `scan_run_contract_execute`.
+
+`ScanRunLaunchOverridesDto` uses `has_*` presence flags. A present
+`max_concurrent` of zero requests adaptive concurrency and so overrides a saved
+limit, unlike `ScanRunConfigurationDto`, where present zero is a request
+validation error. `show_formid_values`, `simplify_logs` and `fcx_mode` are
+supplied-as-on. `no_scan_path` supplies "no custom scan folder", withholding a
+saved custom scan folder for the run; launching throws when it is combined with
+`has_scan_path`. With FCX Mode on, by saved setting or `fcx_mode`, the view's
+`setup_context` carries the game folder, documents folder, game executable and
+XSE log that Rust resolved; the GUI's own executable normalization and XSE log
+lookup are no longer needed once it launches through here.
+`view` and `request` throw when the launch failed; check the error first.
+
 ### Cancellation
 
 `ScanRunCancellation` is monotonic and opaque:
@@ -431,9 +510,18 @@ Pass `nullptr` for no observer or a live `ScanRunObserver` from
 execution order and cover discovery, effective concurrency, queued, started,
 phase, and finished events.
 
-The callback is `noexcept`. An adapter records delivery failure outside the
-core result and may request safe cancellation through the same cancellation
-object.
+The callback is `noexcept` and returns a `ScanRunObserverDelivery`: `{}` for
+a delivered event, `{true, message}` for a failed one. No exception crosses the
+bridge. `scan_run_contract_execute` and `scan_run_pending_recovery_settle` take
+a `ScanRunObserverFailurePolicy` — `ContinueRun` or `CancelRun` — that decides
+whether Rust cancels the run at the first failed delivery; out-of-range values
+throw before anything runs. Under either policy Rust stops delivering to that
+observer, and the envelope reports the failure in
+`has_observer_delivery_failure` / `observer_delivery_failure_message`, so an
+adapter no longer tracks it in its observer. A failure before the run pauses
+for Local Ignore recovery makes Rust abandon the recovery: the envelope is
+cancelled after discovery, `scan_run_contract_execution_has_pending_recovery`
+is false, and nothing on disk changed.
 
 See
 [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md)
@@ -449,7 +537,7 @@ continuation and reset conflict/backup/replacement failures or durability
 uncertainty set `has_resume_error` with stable kinds and codes; the reset
 variants also retain expected/current identities, optional verified backup
 path, applicable path/publication stage, or the complete durability recovery
-receipt. Failures reached by otherwise valid resumed execution
+receipt. Failures reached by otherwise valid settled execution
 continue to use the typed infrastructure envelope.
 
 The result retains:
@@ -473,9 +561,9 @@ facts; diagnostics never become Autoscan Report text. The run inventory covers
 `Existing`, `Generated`, `RecoveryRequired`, `ProceedWithoutIgnore`, and
 `ResetToDefault`. A
 recovery result retains the malformed identity and structured diagnostic while
-its process-local, non-cloneable continuation owns prepared intake and the exact
-selected snapshot. Resume does not rediscover inputs or reselect YAML Data.
-Successful reset resume projects the durable backup metadata and
+its process-local, non-cloneable pending recovery owns prepared intake and the
+exact selected snapshot. Settling does not rediscover inputs or reselect YAML
+Data. A successful Reset To Default settlement projects the durable backup metadata and
 `LocalIgnoreReset` diagnostic. Pre-reset cancellation performs no filesystem
 work; cancellation after the reset transaction begins is observed only after
 the durable backup and replacement complete and returns normal cancelled result
@@ -492,18 +580,18 @@ with an empty string or zero.
 ### Display Content on the envelope
 
 The envelope also carries `display_lines`: what the run *says*, in Rust's words,
-for whichever payload the presence flags select. `scan_run_contract_execute`,
-`scan_run_continuation_resume`, and `scan_run_continuation_abandon` all return
-this same envelope type, so one field covers the initial run, the continuation
-resume, and an abandoned run alike, and it is populated for a result, an
-infrastructure error, and a resume error equally. An abandoned run is an ordinary
+for whichever payload the presence flags select. `scan_run_contract_execute`
+and `scan_run_pending_recovery_settle` both return this same envelope type, so
+one field covers the initial run, a settled run, and an abandoned run alike, and
+it is populated for a result, an infrastructure error, and a resume error
+equally. An abandoned run is an ordinary
 cancelled one, so it describes itself here like any other; a frontend never has
 to write the cancellation sentence. A moved-from envelope leaves it empty, as it
 does every other field.
 
 Rendering happens on the Rust side while the run value is still live, because
 C++ receives a projected copy and cannot render from the Rust value later. The
-continuation is taken out of the result before the result is rendered; that
+pending recovery is taken out of the result before the result is rendered; that
 ordering is load-bearing, not incidental, since the render entry point borrows.
 
 `display_lines` is human-facing and is not a surface to match on. The typed
@@ -548,7 +636,7 @@ owner of this content.
 `has_recovery_prompt` and `recovery_prompt` carry what to ask a user whose Local
 Ignore is malformed, and which answers this run can honor. The flag is true only
 when `result.status` is `LocalIgnoreRecoveryRequired`, which is also exactly when
-the execution retains an opaque continuation — so a run with nothing to ask
+the execution offers a pending recovery — so a run with nothing to ask
 carries no prompt rather than an empty one. It follows the presence-flag
 convention `has_local_ignore_reset` already uses, because CXX has no optional
 struct.
@@ -562,7 +650,7 @@ struct.
 
 Each `ScanRunRecoveryDecisionDescription` carries the
 `ScanRunLocalIgnoreRecoveryDecision` to hand back to
-`scan_run_continuation_resume`, its Display Label, a `description` flattened
+`scan_run_pending_recovery_settle`, its Display Label, a `description` flattened
 exactly as any other segment list, and `available`.
 
 **A frontend must not offer a decision whose `available` is false.** The fact
@@ -578,8 +666,8 @@ installation. Only Reset To Default can be withdrawn.
 
 Backing out appears nowhere in `decisions`.
 `ScanRunLocalIgnoreRecoveryDecision` has exactly two variants by design, and
-abandonment is spelled as the absence of a decision through
-`scan_run_continuation_abandon`. The affordance beside a description — a
+abandonment is spelled as the absence of a decision when settling through
+`scan_run_pending_recovery_settle`. The affordance beside a description — a
 bracketed letter, a key hint, a button — is the frontend's, as is the order it
 presents them in. The description itself is not.
 

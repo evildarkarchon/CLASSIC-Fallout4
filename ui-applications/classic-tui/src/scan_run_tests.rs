@@ -1,7 +1,7 @@
 use super::{
-    CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PresentedLine, ScanRunIntent,
-    TerminalPresentation, build_request, describe_local_ignore_recovery, format_error,
-    format_event, format_result, format_resume_error, join_presented, sentence_case,
+    CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PresentedLine, TerminalPresentation,
+    describe_local_ignore_recovery, format_error, format_event, format_result, format_resume_error,
+    join_presented, sentence_case,
 };
 use classic_config_core::YamlDataContentIdentity;
 use classic_scan_presentation::{
@@ -14,13 +14,12 @@ use classic_scanlog_core::scan_run::contract::{
     LocalIgnoreRecoveryDecision, LocalIgnoreResetConflictError,
     LocalIgnoreResetDurabilityUnknownError, LocalIgnoreResetFailure, LocalIgnoreResetFailureStage,
     LogDisposition, LogEvent, LogFailure, LogFailureStage, LogResult, Options, Request,
-    ResumeError, RunResult,
+    ResumeError, RunResult, SettledRunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
     CrashLogScanRejectedInput, CrashLogScanRunStatus, CrashLogScanSetupCheck,
-    CrashLogScanSetupResult, ScanProgressPhase, StandardCrashLogScanSource,
-    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
+    CrashLogScanSetupResult, ScanProgressPhase, TargetedCrashLogScanSource,
 };
 use classic_shared_core::GameId;
 use classic_shared_core::get_runtime;
@@ -29,17 +28,6 @@ use std::path::PathBuf;
 
 const VALID_CRASH_LOG: &str =
     include_str!("../../../business-logic/classic-scanlog-core/benches/fixtures/crash-0DB9300.log");
-
-fn configuration() -> Configuration {
-    Configuration {
-        installation_root: PathBuf::from("C:/CLASSIC"),
-        game: GameId::Fallout4,
-        game_version: "Regular".to_string(),
-        options: Options::new(true, false),
-        scan_facts: CrashLogScanFacts::default(),
-        max_concurrent: Some(4),
-    }
-}
 
 /// Builds an executable request configuration from the tracked scan-run YAML corpus.
 fn executable_configuration(max_concurrent: usize) -> Configuration {
@@ -107,81 +95,6 @@ fn details_of(presentation: &TerminalPresentation) -> String {
     join_presented(&presentation.details)
 }
 
-#[test]
-fn request_projection_preserves_tagged_standard_and_targeted_intent() {
-    let standard = build_request(
-        configuration(),
-        ScanRunIntent::Standard {
-            source: StandardCrashLogScanSource {
-                base_directory: PathBuf::from("C:/CLASSIC"),
-                custom_scan_directory: Some(PathBuf::from("C:/Custom Logs")),
-                configured_documents_root: Some(PathBuf::from("C:/Documents")),
-            },
-            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
-        },
-        None,
-    );
-
-    let Request::Standard(standard) = standard else {
-        panic!("Standard TUI intent must produce a tagged Standard request");
-    };
-    assert!(!standard.fcx_enabled());
-    assert_eq!(
-        standard.unsolved_logs(),
-        &StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
-    );
-    assert_eq!(
-        standard.source().custom_scan_directory,
-        Some(PathBuf::from("C:/Custom Logs"))
-    );
-
-    let targeted = build_request(
-        configuration(),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
-            inputs: vec![PathBuf::from("C:/Selected/crash.log")],
-        }),
-        None,
-    );
-
-    let Request::Targeted(targeted) = targeted else {
-        panic!("Targeted TUI intent must produce a tagged Targeted request");
-    };
-    assert!(!targeted.fcx_enabled());
-    assert_eq!(
-        targeted.source().inputs,
-        vec![PathBuf::from("C:/Selected/crash.log")]
-    );
-
-    let setup_context = classic_scanlog_core::CrashLogScanSetupContext {
-        game_root: Some(PathBuf::from("C:/Games/Fallout 4")),
-        docs_root: Some(PathBuf::from("C:/Documents/My Games/Fallout4")),
-        game_exe_path: Some(PathBuf::from("C:/Games/Fallout 4/Fallout4.exe")),
-        xse_log_path: None,
-    };
-    let standard_fcx = build_request(
-        configuration(),
-        ScanRunIntent::Standard {
-            source: StandardCrashLogScanSource {
-                base_directory: PathBuf::from("C:/CLASSIC"),
-                custom_scan_directory: None,
-                configured_documents_root: None,
-            },
-            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
-        },
-        Some(setup_context.clone()),
-    );
-    let targeted_fcx = build_request(
-        configuration(),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
-            inputs: vec![PathBuf::from("C:/Selected/crash.log")],
-        }),
-        Some(setup_context),
-    );
-
-    assert!(matches!(standard_fcx, Request::Standard(request) if request.fcx_enabled()));
-    assert!(matches!(targeted_fcx, Request::Targeted(request) if request.fcx_enabled()));
-}
-
 fn log_result(index: usize, name: &str, disposition: LogDisposition) -> LogResult {
     LogResult {
         discovery_index: index,
@@ -216,7 +129,7 @@ fn mixed_outcome_result() -> RunResult {
     ];
     let cancelled = log_result(2, "third.log", LogDisposition::CancelledBeforeStart);
 
-    RunResult {
+    RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: Some(CrashLogScanDiscoveryResult {
             source: CrashLogScanDiscoverySource::Targeted,
@@ -240,8 +153,8 @@ fn mixed_outcome_result() -> RunResult {
         failed: 1,
         cancelled: 1,
         logs: vec![succeeded, failed, cancelled],
-        continuation: None,
-    }
+        observer_delivery_failure: None,
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -266,6 +179,7 @@ fn an_infrastructure_error_renders_cores_lines_in_cores_order() {
         stage: InfrastructureErrorStage::Intake,
         message: "intake could not be prepared".to_string(),
         path: Some(PathBuf::from("C:/CLASSIC/CLASSIC Data")),
+        observer_delivery_failure: None,
     };
 
     assert_renders_core_lines(
@@ -318,6 +232,7 @@ fn every_resume_failure_renders_cores_lines_in_cores_order() {
             stage: InfrastructureErrorStage::Intake,
             message: "intake could not be prepared".to_string(),
             path: Some(PathBuf::from("C:/CLASSIC/CLASSIC Data")),
+            observer_delivery_failure: None,
         }),
     ];
 
@@ -372,12 +287,12 @@ fn an_event_renders_cores_lines_in_cores_order() {
 /// with its arguments the wrong way round — fails one half or the other.
 #[test]
 fn a_count_prints_the_noun_core_resolved_for_its_value() {
-    let one = RunResult {
-        logs: vec![log_result(0, "only.log", LogDisposition::Succeeded)],
-        total: 1,
-        succeeded: 1,
-        ..mixed_outcome_result()
-    };
+    // Assigned rather than struct-updated: a run result's continuation is private, so no
+    // literal outside the core crate can name or copy it.
+    let mut one = mixed_outcome_result();
+    one.logs = vec![log_result(0, "only.log", LogDisposition::Succeeded)];
+    one.total = 1;
+    one.succeeded = 1;
     let singular = details_of(&format_result(&one));
     assert!(
         singular.contains("1 log") && !singular.contains("1 logs"),
@@ -596,7 +511,7 @@ fn a_terminal_result_reports_completed_work_as_its_percentage() {
         (2.0_f64 / 3.0) * 100.0
     );
 
-    let empty = RunResult {
+    let empty = RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
         discovery: None,
         setup: None,
@@ -608,8 +523,8 @@ fn a_terminal_result_reports_completed_work_as_its_percentage() {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
-        continuation: None,
-    };
+        observer_delivery_failure: None,
+    });
     assert_eq!(format_result(&empty).percent, 0.0);
     assert_eq!(format_error(&intake_error()).percent, 0.0);
     assert_eq!(
@@ -623,6 +538,7 @@ fn intake_error() -> InfrastructureError {
         stage: InfrastructureErrorStage::Intake,
         message: "the run could not continue".to_string(),
         path: None,
+        observer_delivery_failure: None,
     }
 }
 
@@ -697,6 +613,7 @@ fn every_infrastructure_stage_renders_its_display_label() {
             stage,
             message: "the run could not continue".to_string(),
             path: None,
+            observer_delivery_failure: None,
         });
         let details = details_of(&presentation);
 
@@ -737,10 +654,8 @@ fn every_terminal_run_status_renders_its_display_label() {
         .iter()
         .copied()
     {
-        let result = RunResult {
-            status,
-            ..mixed_outcome_result()
-        };
+        let mut result = mixed_outcome_result();
+        result.status = status;
         let presentation = format_result(&result);
         let details = details_of(&presentation);
 
@@ -772,9 +687,17 @@ fn every_terminal_run_status_renders_its_display_label() {
 // Still this frontend's prose: the recovery prompt renderer lands with the gated recovery phase.
 // ---------------------------------------------------------------------------
 
+/// Renders the prompt a pending recovery for `result` would carry.
+///
+/// A pending recovery cannot be fabricated, so these layout tests render its prompt the way the
+/// presentation crate does when it bundles one: from the paused run's Installed YAML Data.
+fn recovery_prompt_for(result: &RunResult) -> classic_scan_presentation::RecoveryPrompt {
+    render_local_ignore_recovery(result.installed_yaml_data.as_ref())
+}
+
 /// Builds a paused-run projection carrying retained discovery but no fabricated continuation.
 fn paused_recovery_result(message: Option<&str>) -> RunResult {
-    RunResult {
+    RunResult::from(SettledRunResult {
         status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
         discovery: Some(CrashLogScanDiscoveryResult {
             source: CrashLogScanDiscoverySource::Standard,
@@ -787,7 +710,6 @@ fn paused_recovery_result(message: Option<&str>) -> RunResult {
         }),
         setup: None,
         installed_yaml_data: None,
-        continuation: None,
         effective_concurrency: None,
         message: message.map(str::to_string),
         total: 2,
@@ -795,7 +717,8 @@ fn paused_recovery_result(message: Option<&str>) -> RunResult {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
-    }
+        observer_delivery_failure: None,
+    })
 }
 
 /// Verifies the recovery overlay offers both Rust-defined decisions and a non-mutating cancel.
@@ -808,7 +731,7 @@ fn paused_recovery_result(message: Option<&str>) -> RunResult {
 fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
     let result = paused_recovery_result(Some("Local Ignore recovery is required"));
 
-    let prompt = describe_local_ignore_recovery(&result);
+    let prompt = describe_local_ignore_recovery(&result, &recovery_prompt_for(&result));
     let text = join_presented(&prompt.overlay_lines());
 
     assert_eq!(prompt.retained_logs, 2);
@@ -851,7 +774,7 @@ fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
 #[test]
 fn recovery_prompt_carries_the_run_as_core_describes_it() {
     let result = paused_recovery_result(Some("Local Ignore recovery is required"));
-    let prompt = describe_local_ignore_recovery(&result);
+    let prompt = describe_local_ignore_recovery(&result, &recovery_prompt_for(&result));
 
     assert_renders_core_lines(&prompt.run_detail, &render_run_result(&result));
     assert_renders_core_lines(
@@ -931,7 +854,7 @@ fn recovery_prompt_omits_reset_when_the_contract_says_it_cannot_succeed() {
 #[test]
 fn recovery_prompt_explains_a_paused_run_that_carried_no_message() {
     let result = paused_recovery_result(None);
-    let prompt = describe_local_ignore_recovery(&result);
+    let prompt = describe_local_ignore_recovery(&result, &recovery_prompt_for(&result));
 
     assert_eq!(prompt.message, None);
     let status = prompt.status_line();
@@ -956,7 +879,7 @@ fn recovery_prompt_explains_a_paused_run_that_carried_no_message() {
 #[test]
 fn recovery_prompt_does_not_restate_the_run_message_above_the_choices() {
     let result = paused_recovery_result(Some("Local Ignore recovery is required"));
-    let prompt = describe_local_ignore_recovery(&result);
+    let prompt = describe_local_ignore_recovery(&result, &recovery_prompt_for(&result));
     let lines = prompt.overlay_lines();
 
     let core = render_local_ignore_recovery(result.installed_yaml_data.as_ref());
@@ -985,18 +908,18 @@ fn public_contract_cancellation_before_and_after_discovery_flows_through_tui_pro
 
     let before_cancellation = classic_scanlog_core::scan_run::contract::Cancellation::new();
     before_cancellation.cancel();
-    let before_request = build_request(
+    let before_request = Request::targeted(
         executable_configuration(1),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
+        TargetedCrashLogScanSource {
             inputs: vec![target.clone()],
-        }),
-        None,
+        },
     );
     let before = get_runtime()
         .block_on(classic_scanlog_core::scan_run::contract::execute(
             before_request,
             &before_cancellation,
             None,
+            classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
         ))
         .expect("pre-discovery cancellation should be expected result data");
 
@@ -1009,12 +932,11 @@ fn public_contract_cancellation_before_and_after_discovery_flows_through_tui_pro
 
     let after_cancellation = classic_scanlog_core::scan_run::contract::Cancellation::new();
     let observer_cancellation = after_cancellation.clone();
-    let after_request = build_request(
+    let after_request = Request::targeted(
         executable_configuration(1),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
+        TargetedCrashLogScanSource {
             inputs: vec![target.clone()],
-        }),
-        None,
+        },
     );
     let mut event_statuses = Vec::new();
     let after = {
@@ -1029,6 +951,7 @@ fn public_contract_cancellation_before_and_after_discovery_flows_through_tui_pro
                 after_request,
                 &after_cancellation,
                 Some(&mut observer),
+                classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
             ))
             .expect("post-discovery cancellation should be expected result data")
     };
@@ -1063,12 +986,11 @@ fn public_contract_cancellation_after_admission_retains_durable_tui_outcomes() {
     let second = temp.path().join("crash-queued.log");
     std::fs::write(&first, VALID_CRASH_LOG).expect("first fixture log should be written");
     std::fs::write(&second, VALID_CRASH_LOG).expect("second fixture log should be written");
-    let request = build_request(
+    let request = Request::targeted(
         executable_configuration(1),
-        ScanRunIntent::Targeted(TargetedCrashLogScanSource {
+        TargetedCrashLogScanSource {
             inputs: vec![first, second],
-        }),
-        None,
+        },
     );
     let cancellation = classic_scanlog_core::scan_run::contract::Cancellation::new();
     let observer_cancellation = cancellation.clone();
@@ -1085,6 +1007,7 @@ fn public_contract_cancellation_after_admission_retains_durable_tui_outcomes() {
                 request,
                 &cancellation,
                 Some(&mut observer),
+                classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
             ))
             .expect("admitted cancellation should be expected result data")
     };

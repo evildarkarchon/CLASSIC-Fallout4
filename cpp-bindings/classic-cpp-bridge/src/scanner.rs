@@ -8,6 +8,7 @@
 
 mod analyzer;
 mod contract;
+mod launch;
 mod papyrus;
 mod util;
 
@@ -25,18 +26,23 @@ pub(crate) use analyzer::{
     plugin_evidence_analyzer_construction_result, plugin_evidence_analyzer_new,
 };
 pub(crate) use contract::{
-    ScanRunCancellation, ScanRunContinuation, ScanRunContractExecution, ScanRunRequest,
+    ScanRunCancellation, ScanRunContractExecution, ScanRunPendingRecovery, ScanRunRequest,
     ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
-    scan_run_cancellation_new, scan_run_continuation_abandon, scan_run_continuation_resume,
-    scan_run_contract_execute, scan_run_contract_execution_has_continuation,
-    scan_run_contract_execution_take_continuation, scan_run_contract_execution_take_result,
+    scan_run_cancellation_new, scan_run_contract_execute,
+    scan_run_contract_execution_has_pending_recovery,
+    scan_run_contract_execution_take_pending_recovery, scan_run_contract_execution_take_result,
     scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_installed_yaml_data_provenance_label, scan_run_local_ignore_reset_failure_stage_label,
     scan_run_local_ignore_yaml_data_state_label, scan_run_log_disposition_label,
-    scan_run_log_failure_stage_label, scan_run_request_standard,
+    scan_run_log_failure_stage_label, scan_run_pending_recovery_cancellation_requested,
+    scan_run_pending_recovery_prompt, scan_run_pending_recovery_settle, scan_run_request_standard,
     scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
+};
+pub(crate) use launch::{
+    ScanRunLaunch, scan_run_launch_error, scan_run_launch_request, scan_run_launch_standard,
+    scan_run_launch_targeted, scan_run_launch_view,
 };
 pub(crate) use papyrus::{
     CxxPapyrusAnalyzer, papyrus_analyze_full, papyrus_analyzer_new, papyrus_check_updates,
@@ -609,6 +615,39 @@ mod ffi {
         ResetToDefault = 1,
     }
 
+    /// An optional Local Ignore Recovery Decision for `scan_run_pending_recovery_settle`.
+    ///
+    /// The bridge has no `Option`, so the absence of a decision is spelled like every other
+    /// optional field here: `decision` is read only when `has_decision` is true. No decision
+    /// abandons the run; it is not a third decision.
+    struct ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: bool,
+        decision: ScanRunLocalIgnoreRecoveryDecision,
+    }
+
+    /// Whether a failed observer delivery cancels the run.
+    ///
+    /// Passed to `scan_run_contract_execute` and `scan_run_pending_recovery_settle`. Either way
+    /// the envelope reports the first failed delivery and no further events reach the observer.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunObserverFailurePolicy {
+        /// Keep running to a normal terminal result.
+        ContinueRun = 0,
+        /// Request cancellation on the run's own control at the first failed delivery.
+        CancelRun = 1,
+    }
+
+    /// What `ScanRunObserver::on_scan_run_event` returns instead of throwing.
+    ///
+    /// A value-initialized `{}` means delivered. Set `failed` (and optionally `message`) when the
+    /// event could not be delivered; the bridge applies the caller's
+    /// `ScanRunObserverFailurePolicy` and reports the failure in the execution envelope.
+    struct ScanRunObserverDelivery {
+        failed: bool,
+        message: String,
+    }
+
     /// One setup check in a Crash Log Scan Setup Result.
     struct ScanRunSetupCheckDto {
         kind: String,
@@ -661,6 +700,110 @@ mod ffi {
         game_exe_path: String,
         has_xse_log_path: bool,
         xse_log_path: String,
+    }
+
+    /// Optional per-run values that win over saved User Settings for one Crash Log Scan Launch.
+    ///
+    /// Each `has_*` flag says whether its value was supplied. `game_version` takes a User
+    /// Settings game-version token (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`).
+    /// `max_concurrent` zero explicitly requests adaptive concurrency, which overrides a saved
+    /// limit. `show_formid_values`, `simplify_logs` and `fcx_mode` are supplied-as-on: `true`
+    /// turns the option on for this run, `false` keeps the saved value. `no_scan_path` supplies
+    /// "no custom scan folder", which withholds a saved custom scan folder for this run (a
+    /// cleared custom scan folder input); it cannot be combined with `has_scan_path`.
+    struct ScanRunLaunchOverridesDto {
+        has_game: bool,
+        game: ScanRunGameId,
+        has_game_version: bool,
+        game_version: String,
+        has_scan_path: bool,
+        scan_path: String,
+        no_scan_path: bool,
+        has_max_concurrent: bool,
+        max_concurrent: usize,
+        show_formid_values: bool,
+        simplify_logs: bool,
+        fcx_mode: bool,
+    }
+
+    /// Which Crash Logs a launched request scans.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLaunchIntent {
+        Standard = 0,
+        Targeted = 1,
+    }
+
+    /// Standard-only Unsolved Logs intent carried by a launched request.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLaunchUnsolvedLogs {
+        LeaveInPlace = 0,
+        MoveToConfiguredOrDefault = 1,
+        MoveToCustom = 2,
+    }
+
+    /// Which launch rule produced a launch diagnostic.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLaunchDiagnosticKind {
+        UserSettings = 0,
+        /// The game-differs rule withheld the managed game's saved game version.
+        GameVersionNotApplied = 1,
+        /// The game-differs rule withheld the managed game's saved FCX Mode.
+        FcxModeNotApplied = 2,
+        /// The game-differs rule withheld the managed game's saved custom scan folder.
+        CustomScanFolderNotApplied = 3,
+        /// The game-differs rule withheld the managed game's saved setup folders.
+        SetupFoldersNotApplied = 4,
+    }
+
+    /// One non-fatal launch diagnostic; the launch still produced a scannable request.
+    struct ScanRunLaunchDiagnosticDto {
+        kind: ScanRunLaunchDiagnosticKind,
+        /// Stable machine-readable code (the User Settings code for `UserSettings`, the
+        /// kind's snake_case token otherwise).
+        code: String,
+        /// Human-readable context. Prose; branch on `kind` and `code` instead.
+        message: String,
+    }
+
+    /// Stable category of a typed launch error.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLaunchErrorKind {
+        TargetedWithoutInputs = 0,
+        /// FCX Mode is on and the XSE log location could not be inspected (not mere absence).
+        XseLogInspect = 1,
+    }
+
+    /// Typed launch error. `has_error` is authoritative; the other fields are placeholders
+    /// when it is false.
+    struct ScanRunLaunchErrorDto {
+        has_error: bool,
+        kind: ScanRunLaunchErrorKind,
+        message: String,
+    }
+
+    /// Read-only view of a launched Crash Log Scan Run request and its diagnostics.
+    ///
+    /// The view reuses the request-construction DTOs, filled with exactly what the launch
+    /// decided. `standard_source` and `unsolved_logs*` are meaningful only for a Standard
+    /// intent, `targeted_source` only for a Targeted intent, and `setup_context` only when
+    /// `fcx_enabled`; CXX shared structs cannot omit fields, so the others are empty.
+    struct ScanRunLaunchRequestDto {
+        intent: ScanRunLaunchIntent,
+        configuration: ScanRunConfigurationDto,
+        standard_source: ScanRunStandardSourceDto,
+        unsolved_logs: ScanRunLaunchUnsolvedLogs,
+        unsolved_logs_custom_destination: String,
+        targeted_source: ScanRunTargetedSourceDto,
+        fcx_enabled: bool,
+        setup_context: ScanRunSetupContextDto,
+        diagnostics: Vec<ScanRunLaunchDiagnosticDto>,
+        /// The diagnostics rendered as Display Content, one line per diagnostic in the
+        /// same order. Show these rather than phrasing `diagnostics` in C++.
+        display_lines: Vec<ScanRunDisplayLine>,
     }
 
     /// Stable lifecycle status from the final Crash Log Scan Run contract.
@@ -915,7 +1058,7 @@ mod ffi {
     /// attempt spends the one-shot continuation, so the user is left with no scan and no
     /// second attempt.
     struct ScanRunRecoveryDecisionDescription {
-        /// The decision to hand back to `scan_run_continuation_resume`.
+        /// The decision to hand back to `scan_run_pending_recovery_settle`.
         decision: ScanRunLocalIgnoreRecoveryDecision,
         /// The decision's Display Label.
         label: String,
@@ -934,8 +1077,8 @@ mod ffi {
     /// The descriptions themselves are not.
     ///
     /// Backing out appears nowhere here. `ScanRunLocalIgnoreRecoveryDecision` has exactly two
-    /// variants by design, and abandonment is spelled as the absence of a decision through
-    /// `scan_run_continuation_abandon`.
+    /// variants by design, and abandonment is spelled as the absence of a decision when
+    /// settling through `scan_run_pending_recovery_settle`.
     struct ScanRunRecoveryPrompt {
         lines: Vec<ScanRunDisplayLine>,
         decisions: Vec<ScanRunRecoveryDecisionDescription>,
@@ -992,9 +1135,9 @@ mod ffi {
 
     /// Exactly one of `result`, `error`, or `resume_error`, identified by presence flags.
     ///
-    /// Both `scan_run_contract_execute` and `scan_run_continuation_resume` return this
+    /// Both `scan_run_contract_execute` and `scan_run_pending_recovery_settle` return this
     /// one envelope, so a single `display_lines` field covers the initial run and the
-    /// continuation resume alike.
+    /// settled run alike.
     struct ScanRunContractExecutionResult {
         has_result: bool,
         result: ScanRunContractRunResult,
@@ -1016,7 +1159,7 @@ mod ffi {
         /// Whether `recovery_prompt` below describes a decision this run is waiting on.
         ///
         /// True only when `result.status` is `LocalIgnoreRecoveryRequired`, which is also
-        /// exactly when the execution retains an opaque continuation.
+        /// exactly when the execution offers a pending recovery.
         has_recovery_prompt: bool,
         /// What to ask the user, and which answers this run can honor.
         ///
@@ -1024,6 +1167,14 @@ mod ffi {
         /// the run and cannot render from the Rust value later. Empty in both vectors when
         /// `has_recovery_prompt` is false.
         recovery_prompt: ScanRunRecoveryPrompt,
+        /// Whether an observer delivery failed during this run, whatever the payload above.
+        ///
+        /// Reported under every `ScanRunObserverFailurePolicy`, so an adapter reads "delivery
+        /// failed" here instead of tracking it in its own observer.
+        has_observer_delivery_failure: bool,
+        /// The first failed delivery's message; empty when `has_observer_delivery_failure` is
+        /// false.
+        observer_delivery_failure_message: String,
     }
 
     /// One serialized lifecycle event from the final contract.
@@ -1092,7 +1243,10 @@ mod ffi {
     unsafe extern "C++" {
         include!("classic_cxx_bridge/scan_run_observer.h");
         type ScanRunObserver;
-        fn on_scan_run_event(self: &ScanRunObserver, event: &ScanRunContractEvent);
+        fn on_scan_run_event(
+            self: &ScanRunObserver,
+            event: &ScanRunContractEvent,
+        ) -> ScanRunObserverDelivery;
     }
 
     extern "Rust" {
@@ -1106,7 +1260,8 @@ mod ffi {
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
         type ScanRunContractExecution;
-        type ScanRunContinuation;
+        type ScanRunLaunch;
+        type ScanRunPendingRecovery;
 
         /// Constructs and validates an immutable analyzer handle from owned configuration.
         ///
@@ -1256,52 +1411,59 @@ mod ffi {
         /// Executes one tagged request and retains any opaque recovery continuation beside its result.
         ///
         /// `observer` may be null. A non-null observer must remain live for the synchronous call and its
-        /// `on_scan_run_event` implementation must not throw across the CXX boundary.
+        /// `on_scan_run_event` implementation must not throw across the CXX boundary; it reports a
+        /// failed delivery by returning `ScanRunObserverDelivery{true, message}` instead.
+        /// `observer_failure_policy` decides whether such a failure cancels the run. A failure
+        /// before the run pauses for Local Ignore recovery abandons that recovery, so the run
+        /// finishes cancelled with no pending recovery and no filesystem work. Throws only for an
+        /// out-of-range policy, rejected before the run starts.
         unsafe fn scan_run_contract_execute(
             request: &ScanRunRequest,
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
-        ) -> Box<ScanRunContractExecution>;
+            observer_failure_policy: ScanRunObserverFailurePolicy,
+        ) -> Result<Box<ScanRunContractExecution>>;
         /// Moves the execution envelope out of an opaque execution operation.
         fn scan_run_contract_execution_take_result(
             execution: &mut ScanRunContractExecution,
         ) -> ScanRunContractExecutionResult;
-        /// Returns whether an initial recovery result retained an opaque continuation.
-        fn scan_run_contract_execution_has_continuation(
+        /// Returns whether a paused run still offers its pending recovery.
+        fn scan_run_contract_execution_has_pending_recovery(
             execution: &ScanRunContractExecution,
         ) -> bool;
-        /// Moves the opaque single-use continuation out of its execution operation.
-        fn scan_run_contract_execution_take_continuation(
+        /// Moves the pending recovery out of its execution operation.
+        ///
+        /// Throws when the run did not pause or the pending recovery was already taken. Settling
+        /// it is the only way to answer a paused run (ADR-0009).
+        fn scan_run_contract_execution_take_pending_recovery(
             execution: &mut ScanRunContractExecution,
-        ) -> Result<Box<ScanRunContinuation>>;
-        /// Resumes retained work with an explicit Local Ignore recovery decision.
+        ) -> Result<Box<ScanRunPendingRecovery>>;
+        /// Returns the recovery prompt Rust rendered for this pending recovery.
+        fn scan_run_pending_recovery_prompt(
+            pending: &ScanRunPendingRecovery,
+        ) -> ScanRunRecoveryPrompt;
+        /// Returns whether cancellation of the paused run was already requested.
         ///
-        /// `observer` may be null and receives only post-discovery lifecycle events.
-        unsafe fn scan_run_continuation_resume(
-            continuation: &ScanRunContinuation,
-            decision: ScanRunLocalIgnoreRecoveryDecision,
-            cancellation: &ScanRunCancellation,
+        /// Read live from the control passed to `scan_run_contract_execute`. When true, do not
+        /// prompt: settle with no decision.
+        fn scan_run_pending_recovery_cancellation_requested(
+            pending: &ScanRunPendingRecovery,
+        ) -> bool;
+        /// Settles the paused run once, synchronously, with an optional decision.
+        ///
+        /// No decision abandons the run: the run's own control is cancelled and the run finishes
+        /// cancelled after discovery with no filesystem work. Returns the ordinary envelope,
+        /// which cannot carry a continuation; a replay is the typed consumed-continuation
+        /// resume error. Throws only for an out-of-range decision or policy. `observer` may be
+        /// null and receives only post-discovery lifecycle events; no callback crosses for the
+        /// decision. `observer_failure_policy` decides whether a failed delivery cancels the
+        /// settled run; the envelope reports the failure either way.
+        unsafe fn scan_run_pending_recovery_settle(
+            pending: &ScanRunPendingRecovery,
+            settlement: ScanRunLocalIgnoreRecoverySettlement,
             observer: *const ScanRunObserver,
-        ) -> Result<Box<ScanRunContractExecution>>;
-        /// Abandons retained work without applying either Local Ignore recovery decision.
-        ///
-        /// Requests cancellation on `cancellation` and then claims the one-shot continuation,
-        /// returning the ordinary post-discovery cancelled envelope. No backup is taken, nothing
-        /// is published, and the malformed Local Ignore file is left exactly as it was. Prefer
-        /// this over cancelling and then resuming with a placeholder decision: that sequence is
-        /// what this replaces, and getting its ordering wrong spends the continuation on a real
-        /// recovery attempt.
-        ///
-        /// `cancellation` is left cancelled afterwards, which is what abandoning the run means.
-        /// A second call reports the same consumed-continuation envelope `resume` does; unlike
-        /// `resume` this never throws, because it takes no decision that could be out of range.
-        ///
-        /// `observer` may be null and observes nothing, since no post-discovery work runs.
-        unsafe fn scan_run_continuation_abandon(
-            continuation: &ScanRunContinuation,
-            cancellation: &ScanRunCancellation,
-            observer: *const ScanRunObserver,
-        ) -> Box<ScanRunContractExecution>;
+            observer_failure_policy: ScanRunObserverFailurePolicy,
+        ) -> Result<ScanRunContractExecutionResult>;
 
         /// Human-facing Display Label for one scan-run Installed YAML Data
         /// diagnostic kind.
@@ -1352,6 +1514,41 @@ mod ffi {
         fn scan_run_local_ignore_reset_failure_stage_label(
             stage: ScanRunLocalIgnoreResetFailureStage,
         ) -> String;
+
+        /// Launches a Standard Crash Log Scan from saved User Settings and `overrides`.
+        ///
+        /// Opens User Settings under `installation_root` read-only and never writes them; the
+        /// Standard base folder is always `installation_root`. Degraded User Settings still
+        /// produce a request, with their diagnostics. Throws a CXX exception only when an input
+        /// cannot be represented (an empty root or path, an unknown game-version token, or an
+        /// out-of-range game discriminant); typed launch errors are read through
+        /// `scan_run_launch_error`. With FCX Mode on (saved or `fcx_mode`), the view's
+        /// `setup_context` carries the game folder, documents folder, game executable and
+        /// XSE log; an XSE log location that cannot be inspected is the typed
+        /// `XseLogInspect` launch error.
+        fn scan_run_launch_standard(
+            installation_root: &str,
+            overrides: &ScanRunLaunchOverridesDto,
+        ) -> Result<Box<ScanRunLaunch>>;
+        /// Launches a Targeted Crash Log Scan of exactly `inputs`, in order.
+        ///
+        /// An empty `inputs` list is the typed `TargetedWithoutInputs` launch error, not an
+        /// exception. Otherwise behaves like `scan_run_launch_standard`.
+        fn scan_run_launch_targeted(
+            installation_root: &str,
+            inputs: &Vec<String>,
+            overrides: &ScanRunLaunchOverridesDto,
+        ) -> Result<Box<ScanRunLaunch>>;
+        /// Returns the typed launch error; `has_error` is false for a successful launch.
+        fn scan_run_launch_error(launch: &ScanRunLaunch) -> ScanRunLaunchErrorDto;
+        /// Returns the read-only view of the launched request and its diagnostics.
+        ///
+        /// Throws a CXX exception when the launch failed; check `scan_run_launch_error` first.
+        fn scan_run_launch_view(launch: &ScanRunLaunch) -> Result<ScanRunLaunchRequestDto>;
+        /// Returns an executable copy of the launched request for `scan_run_contract_execute`.
+        ///
+        /// Throws a CXX exception when the launch failed; check `scan_run_launch_error` first.
+        fn scan_run_launch_request(launch: &ScanRunLaunch) -> Result<Box<ScanRunRequest>>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

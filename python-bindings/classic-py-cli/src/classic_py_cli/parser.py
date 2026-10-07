@@ -16,6 +16,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", help="write report artifacts under this directory")
     parser.add_argument("--repo-root", help="repository root override")
     parser.add_argument("--fixture-root", help="fixture root override")
+    parser.add_argument("--installation-root",
+                        help="CLASSIC Installation Root (must hold CLASSIC Data); "
+                             "default: located from the CLI folder and working directory")
     parser.add_argument("--no-color", action="store_true", help="disable colored output")
     parser.add_argument("--verbose", action="store_true", help="write diagnostics to stderr")
     parser.add_argument("--tracebacks", action="store_true", help="show Python tracebacks for unexpected CLI errors")

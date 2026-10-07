@@ -1,0 +1,162 @@
+use super::*;
+use crate::scan_run::{JsScanRunDisplaySegmentKind, JsScanRunDisplaySeverity};
+
+#[test]
+fn zero_max_concurrent_override_requests_adaptive_concurrency() {
+    let overrides = overrides_to_core(JsScanRunLaunchOverrides {
+        max_concurrent: Some(0),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+
+    assert_eq!(overrides.max_concurrency(), Some(MaxConcurrency::Adaptive));
+}
+
+#[test]
+fn false_supplied_as_on_overrides_keep_the_saved_value() {
+    let overrides = overrides_to_core(JsScanRunLaunchOverrides {
+        show_formid_values: Some(false),
+        simplify_logs: Some(true),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+
+    assert!(!overrides.show_formid_values());
+    assert!(overrides.simplify_logs());
+}
+
+#[test]
+fn fcx_mode_override_is_supplied_as_on() {
+    let on = overrides_to_core(JsScanRunLaunchOverrides {
+        fcx_mode: Some(true),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+    let off = overrides_to_core(JsScanRunLaunchOverrides {
+        fcx_mode: Some(false),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+
+    assert!(on.fcx_mode());
+    assert!(!off.fcx_mode());
+}
+
+#[test]
+fn no_scan_path_override_supplies_no_custom_scan_folder() {
+    let cleared = overrides_to_core(JsScanRunLaunchOverrides {
+        no_scan_path: Some(true),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+    let absent = overrides_to_core(JsScanRunLaunchOverrides {
+        no_scan_path: Some(false),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .unwrap();
+
+    assert!(cleared.no_scan_path());
+    assert!(!absent.no_scan_path());
+}
+
+#[test]
+fn scan_path_and_no_scan_path_together_are_an_invalid_argument() {
+    let error = overrides_to_core(JsScanRunLaunchOverrides {
+        scan_path: Some("One-off Logs".to_string()),
+        no_scan_path: Some(true),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .expect_err("a folder and no folder cannot both win");
+
+    assert_eq!(error.status, Status::InvalidArg);
+}
+
+#[test]
+fn unknown_game_version_override_is_an_invalid_argument() {
+    let error = overrides_to_core(JsScanRunLaunchOverrides {
+        game_version: Some("Nonsense".to_string()),
+        ..JsScanRunLaunchOverrides::default()
+    })
+    .expect_err("an unknown game-version token cannot be represented");
+
+    assert_eq!(error.status, Status::InvalidArg);
+}
+
+#[test]
+fn non_managed_game_projects_withheld_values_and_their_display_lines() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  \
+         Game Version: NextGen\n  SCAN Custom Path: 'C:/Saved Custom Logs'\n",
+    )
+    .unwrap();
+    let launched = ScanRunLaunch {
+        inner: prepare_launch(
+            root.path(),
+            CrashLogScanIntent::Standard,
+            &overrides_to_core(JsScanRunLaunchOverrides {
+                game: Some(JsGameId::Fallout4Vr),
+                ..JsScanRunLaunchOverrides::default()
+            })
+            .unwrap(),
+        )
+        .unwrap(),
+    };
+
+    let kinds: Vec<_> = launched
+        .diagnostics()
+        .into_iter()
+        .map(|diagnostic| diagnostic.kind)
+        .collect();
+    assert_eq!(
+        kinds,
+        ["gameVersionNotApplied", "customScanFolderNotApplied"]
+    );
+    let lines = launched.display_lines();
+    assert_eq!(lines.len(), 2);
+    assert!(matches!(
+        lines[0].severity,
+        JsScanRunDisplaySeverity::Notice
+    ));
+    assert!(matches!(
+        lines[0].segments[0].kind,
+        JsScanRunDisplaySegmentKind::Label
+    ));
+    assert_eq!(lines[0].segments[0].text, "saved game version not applied");
+}
+
+#[test]
+fn launch_projects_the_rust_built_configuration_and_diagnostics() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        "CLASSIC_Settings:\n  Managed Game: Fallout 4 VR\n  FormID Databases:\n    \
+         Fallout4VR:\n      - databases/Legacy VR FormIDs.db\n",
+    )
+    .unwrap();
+    let launched = ScanRunLaunch {
+        inner: prepare_launch(
+            root.path(),
+            CrashLogScanIntent::Standard,
+            &CrashLogScanLaunchOverrides::new(),
+        )
+        .unwrap(),
+    };
+
+    let configuration = launched.configuration();
+    assert!(matches!(configuration.game, JsGameId::Fallout4Vr));
+    assert_eq!(
+        configuration.formid_database_paths,
+        ["databases/Legacy VR FormIDs.db"]
+    );
+    assert_eq!(launched.intent(), "standard");
+    assert_eq!(launched.unsolved_logs(), Some("moveToConfiguredOrDefault"));
+    let diagnostics = launched.diagnostics();
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].kind, "userSettings");
+    assert_eq!(
+        diagnostics[0].code,
+        "migration_required_unversioned_document"
+    );
+}

@@ -16,7 +16,10 @@ from conformance.enforcement import enforcement_for_family
 from conformance.families.installation_paths import (
     INSTALLATION_PATHS_COVERAGE_POLICY as POLICY,
 )
-from conformance.families.installation_paths import validate_installation_paths_pack
+from conformance.families.installation_paths import (
+    LOCATE_CANDIDATES,
+    validate_installation_paths_pack,
+)
 from conformance.packs import load_and_validate_pack
 from conformance.receipts import validate_prepared_run
 
@@ -169,3 +172,94 @@ def test_installation_row_coverage_does_not_credit_unexecuted_methods(
         full_owner, (*rows, future), POLICY, [report], **arguments
     ).failures
     assert future.obligation_id in {failure.obligation_id for failure in failures}
+
+
+def _locate_document(tmp_path, mutate):
+    """Copy the pack with only one locate scenario, applying ``mutate`` to its fixture."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    document["scenarios"] = [
+        scenario
+        for scenario in document["scenarios"]
+        if scenario["id"] == "locate-first-match-wins"
+    ]
+    relative = Path(document["fixtureRoot"]) / document["fixtures"]["locate-first-match-wins"]
+    fixture = json.loads((ROOT / relative).read_text(encoding="utf-8"))
+    mutate(document["scenarios"][0], fixture)
+    destination = tmp_path / relative
+    destination.parent.mkdir(parents=True)
+    destination.write_text(json.dumps(fixture))
+    return document
+
+
+def test_locate_scenarios_cover_every_candidate_first_match_and_no_match():
+    """The pack proves each of the six positions, first-match-wins and no Installation Root."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    located = [
+        scenario["expected"]["installationRoot"]
+        for scenario in document["scenarios"]
+        if scenario["action"] == "installation-paths.locate"
+    ]
+    assert set(LOCATE_CANDIDATES) <= set(located)
+    assert None in located
+    first_match = next(
+        scenario
+        for scenario in document["scenarios"]
+        if scenario["id"] == "locate-first-match-wins"
+    )
+    assert first_match["expected"]["installationRoot"] == "tree/work"
+    assert sum(
+        path.endswith("/CLASSIC Data")
+        for path in first_match["expected"]["directories"]
+    ) == 3
+
+
+@pytest.mark.parametrize(
+    "mutation", ("escape", "outside-candidate", "operation", "wrong-root", "tree")
+)
+def test_locate_fixture_rejects_inputs_outside_the_owned_tree(tmp_path, mutation):
+    """Search starts and CLASSIC Data placements must stay inside the runner-owned tree."""
+
+    def mutate(case, fixture):
+        if mutation == "escape":
+            fixture["executableDir"] = "../host/bin"
+        elif mutation == "outside-candidate":
+            fixture["classicDataIn"] = ["tree/elsewhere"]
+        elif mutation == "operation":
+            fixture["operation"] = "inspect"
+        elif mutation == "wrong-root":
+            case["expected"]["installationRoot"] = "tree"
+        else:
+            case["expected"]["directories"].remove("tree/work/install")
+
+    document = _locate_document(tmp_path, mutate)
+    with pytest.raises(ValueError):
+        validate_installation_paths_pack(document, tmp_path)
+
+
+@pytest.mark.parametrize("participant", ("rust", "cxx", "node", "python"))
+def test_locate_receipts_reject_a_later_candidate_or_an_invented_fallback(
+        tmp_path, participant
+):
+    """A receipt naming any root other than the first match, or a fallback, fails."""
+    pack, run, receipt = prepare_receipt_case(
+        ROOT, tmp_path, PACK, participant, runner_id="installation-root-test"
+    )
+    assert not validate_prepared_run(pack, run, coverage_policy=POLICY).failures
+    index = next(
+        index
+        for index, scenario in enumerate(receipt["scenarios"])
+        if scenario["id"] == "locate-first-match-wins"
+    )
+    for mutation in ("later", "fallback", "write"):
+        changed = copy.deepcopy(receipt)
+        observed = changed["scenarios"][index]["observation"]
+        if mutation == "later":
+            observed["installationRoot"] = "tree"
+        elif mutation == "fallback":
+            observed["installationRoot"] = "tree/build/bin"
+        else:
+            observed["directories"] = sorted(
+                observed["directories"] + ["tree/build/bin/CLASSIC Data"]
+            )
+        run.receipt_path.write_text(json.dumps(changed))
+        assert validate_prepared_run(pack, run, coverage_policy=POLICY).failures

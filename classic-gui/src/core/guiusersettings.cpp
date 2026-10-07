@@ -66,18 +66,13 @@ void applySelection(const SelectedGuiOptionalString& selection, bool& hasField, 
     value = toStdString(selection.value.value_or(QString{}));
 }
 
-/// Flattens one GUI-authored FormID database mapping into the CXX update representation.
-void applyFormIdDatabases(const QMap<QString, QStringList>& databases, classic::settings::UserSettingsUpdateDto& update)
+/// Forwards one game's FormID rows to the Rust game-aware save without choosing a stored key.
+void applyFormIdDatabaseSave(const GuiFormIdDatabaseSave& save, classic::settings::UserSettingsUpdateDto& update)
 {
-    update.has_formid_databases = true;
-    for (auto game = databases.cbegin(); game != databases.cend(); ++game) {
-        update.formid_database_games.push_back(toStdString(game.key()));
-        for (const auto& path : game.value()) {
-            classic::settings::FormIdDatabasePathDto entry{};
-            entry.game = toStdString(game.key());
-            entry.path = toStdString(path);
-            update.formid_database_paths.push_back(std::move(entry));
-        }
+    update.has_formid_database_save = true;
+    update.formid_database_save_game = toStdString(save.game);
+    for (const auto& path : save.paths) {
+        update.formid_database_save_paths.push_back(toStdString(path));
     }
 }
 
@@ -174,8 +169,8 @@ classic::settings::UserSettingsUpdateDto updateFrom(const GuiUserSettingsChanges
         update.has_formid_value_lookup = true;
         update.formid_value_lookup = *changes.formIdValueLookup;
     }
-    if (changes.formIdDatabases.has_value()) {
-        applyFormIdDatabases(*changes.formIdDatabases, update);
+    if (changes.formIdDatabaseSave.has_value()) {
+        applyFormIdDatabaseSave(*changes.formIdDatabaseSave, update);
     }
     if (changes.moveUnsolvedLogs.has_value()) {
         update.has_move_unsolved_logs = true;
@@ -212,12 +207,9 @@ namespace {
 /// Converts one cohesive CXX GUI projection without interpreting default policy in Qt.
 GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapshotDto& settings)
 {
-    QMap<QString, QStringList> databases;
-    for (const auto& game : settings.crash_log_scan.formid_database_games) {
-        databases.insert(classic::toQString(game), {});
-    }
-    for (const auto& entry : settings.crash_log_scan.formid_database_paths) {
-        databases[classic::toQString(entry.game)].append(classic::toQString(entry.path));
+    QMap<QString, QStringList> scanDatabases;
+    for (const auto& entry : settings.crash_log_scan.scan_formid_database_paths) {
+        scanDatabases[classic::toQString(entry.game)].append(classic::toQString(entry.path));
     }
 
     QMap<GuiWindow, GuiWindowGeometry> windowGeometry;
@@ -232,8 +224,8 @@ GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapsho
         {settings.update_preferences.update_check_enabled,
          classic::toQString(settings.update_preferences.update_source)},
         {settings.crash_log_scan.fcx_mode, settings.crash_log_scan.simplify_logs,
-         settings.crash_log_scan.show_statistics, settings.crash_log_scan.formid_value_lookup, std::move(databases),
-         settings.crash_log_scan.move_unsolved_logs,
+         settings.crash_log_scan.show_statistics, settings.crash_log_scan.formid_value_lookup,
+         std::move(scanDatabases), settings.crash_log_scan.move_unsolved_logs,
          optionalString(settings.crash_log_scan.has_unsolved_logs_destination,
                         settings.crash_log_scan.unsolved_logs_destination),
          optionalString(settings.crash_log_scan.has_custom_scan_input, settings.crash_log_scan.custom_scan_input),
@@ -255,25 +247,6 @@ GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapsho
 }
 
 } // namespace
-
-CrashLogScanLaunchSettings GuiUserSettingsSnapshot::scanLaunchSettings(const QString& game) const
-{
-    return {
-        game,
-        scan.gameVersion,
-        scan.formIdValueLookup,
-        scan.fcxMode,
-        scan.simplifyLogs,
-        scan.moveUnsolvedLogs,
-        scan.unsolvedLogsDestination.value_or(QString{}),
-        scan.maxConcurrentScans,
-        scan.customScanInput.value_or(QString{}),
-        scan.formIdDatabases.value(game),
-        gameSetup.gameRoot.value_or(QString{}),
-        gameSetup.documentsRoot.value_or(QString{}),
-        gameSetup.gameExecutable.value_or(QString{}),
-    };
-}
 
 GuiUserSettingsSnapshot GuiUserSettings::open(const QString& classicRoot)
 {

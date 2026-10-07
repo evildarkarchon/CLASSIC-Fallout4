@@ -1,13 +1,10 @@
 #include "scanner.h"
+#include "installation_root.h"
 #include "progress.h"
 #include "scan_run_cli.h"
-#include "user_settings_action.h"
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <io.h>
-#include <windows.h>
 #else
 #include <unistd.h>
 #endif
@@ -52,40 +49,6 @@ struct DataDirs {
     std::string root;
 };
 
-/// Find the installation root containing "CLASSIC Data/".
-/// Mirrors the CLASSIC Data candidate search performed by MainWindow::findDataRoot().
-static DataDirs find_data_root() {
-    std::error_code ec;
-    fs::path exe_path = fs::current_path(ec); // fallback, overridden below
-
-#ifdef _WIN32
-    // Try getting actual exe path on Windows
-    wchar_t buf[MAX_PATH];
-    DWORD len = GetModuleFileNameW(nullptr, buf, MAX_PATH);
-    if (len > 0 && len < MAX_PATH) {
-        fs::path ep(buf);
-        exe_path = ep.parent_path();
-        if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
-            return DataDirs{exe_path.string()};
-        }
-    }
-#endif
-
-    // Check: Current working directory for "CLASSIC Data/" (development / distribution)
-    auto cwd = fs::current_path(ec);
-    if (fs::is_directory(cwd / "CLASSIC Data", ec)) {
-        return DataDirs{cwd.string()};
-    }
-
-    // Check: Exe directory for "CLASSIC Data/" (running from build dir)
-    if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
-        return DataDirs{exe_path.string()};
-    }
-
-    // Fallback: use cwd anyway (will fail at config load with a clear error)
-    return DataDirs{cwd.string()};
-}
-
 // ── Filename extraction helper ─────────────────────────────────────
 
 static std::string filename_from_path(const std::string& path) {
@@ -121,16 +84,22 @@ static void print_cli_scan_message(const CliScanRunMessage& message) {
     }
 }
 
-/// Presents serialized final-contract events and translates adapter failures into safe cancellation.
+/// Presents serialized final-contract events and reports adapter failures as failed deliveries.
+///
+/// It neither cancels nor remembers a failure: Rust applies `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY`
+/// and reports the failure on the run result, which is where the CLI reads it.
 class CliScanRunObserver final : public classic::scanner::ScanRunObserver {
 public:
-    /// Borrows the cancellation owner for the synchronous execution lifetime.
-    CliScanRunObserver(std::string game, CliScanRunCancellation& cancellation)
-        : game_(std::move(game))
-        , cancellation_(cancellation) {}
+    /// Creates an observer that labels its progress display with `game`.
+    explicit CliScanRunObserver(std::string game)
+        : game_(std::move(game)) {}
 
     /// Renders one event without allowing presentation failures to cross CXX.
-    void on_scan_run_event(const classic::scanner::ScanRunContractEvent& event) const noexcept override {
+    ///
+    /// A presentation failure is returned as a failed delivery; Rust applies the cancel-run
+    /// policy `execute_cli_scan_run` passes and reports the failure in the envelope.
+    classic::scanner::ScanRunObserverDelivery on_scan_run_event(
+        const classic::scanner::ScanRunContractEvent& event) const noexcept override {
         try {
             if (event.kind == classic::scanner::ScanRunContractEventKind::DiscoveryCompleted) {
                 progress_ = std::make_unique<ProgressDisplay>(
@@ -147,7 +116,7 @@ public:
             }
 
             if (!progress_) {
-                return;
+                return {};
             }
 
             const std::string key = std::to_string(event.discovery_index);
@@ -169,9 +138,9 @@ public:
                 break;
             }
             progress_->render();
+            return {};
         } catch (...) {
-            delivery_failed_ = true;
-            cancellation_.request();
+            return {true, "scan progress presentation failed"};
         }
     }
 
@@ -182,43 +151,51 @@ public:
         }
     }
 
-    /// Reports whether event presentation failed and requested safe cancellation.
-    [[nodiscard]] bool delivery_failed() const noexcept { return delivery_failed_; }
-
 private:
     std::string game_;
-    CliScanRunCancellation& cancellation_;
     mutable std::unique_ptr<ProgressDisplay> progress_;
-    mutable bool delivery_failed_ = false;
 };
 
 // ── Scan pipeline (inner) ──────────────────────────────────────────
 // Factored out so rust::Box<T> objects can be constructed in-place
 // rather than pre-declared (rust::Box is non-nullable, no nullptr init).
 
-/// Projects User Settings, runs the single Rust-owned operation, and presents its typed outcome.
+/// Launches through Crash Log Scan Launch, runs the single Rust-owned operation, and presents its
+/// typed outcome.
 static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
                              std::chrono::steady_clock::time_point total_start) {
-    const auto prepared = prepare_scan_user_settings(args, dirs.root);
-    if (!prepared.has_value()) {
+    // Rust builds the request from saved User Settings and the flags' overrides. A Standard scan
+    // looks for Crash Logs under the Installation Root, never under this process's working folder.
+    const auto launch = launch_cli_scan_run(args, dirs.root);
+    if (!launch.has_value()) {
         return 1;
     }
-
-    classic::registry::registry_set_game(prepared->game);
-    std::string mode_suffix;
-    if (prepared->game_version != "auto") {
-        mode_suffix += " " + prepared->game_version;
+    const auto launch_error = classic::scanner::scan_run_launch_error(**launch);
+    if (launch_error.has_error) {
+        fmt::print(stderr, "Fatal: could not launch the Crash Log Scan Run: {}\n",
+                   rust_string_to_std(launch_error.message));
+        return 2;
     }
-    if (prepared->fcx_mode) {
+    const auto view = classic::scanner::scan_run_launch_view(**launch);
+    for (const auto& message : describe_cli_scan_run_launch(view)) {
+        print_cli_scan_message(message);
+    }
+
+    const std::string game = cli_scan_run_game_token(view.configuration.game);
+    const std::string game_version = rust_string_to_std(view.configuration.game_version);
+    classic::registry::registry_set_game(game);
+    std::string mode_suffix;
+    if (game_version != "auto") {
+        mode_suffix += " " + game_version;
+    }
+    if (view.fcx_enabled) {
         mode_suffix += " [FCX]";
     }
-    fmt::print("CLASSIC v{} - Crash Log Scanner ({}{})\n\n", CLASSIC_CLI_VERSION, prepared->game, mode_suffix);
+    fmt::print("CLASSIC v{} - Crash Log Scanner ({}{})\n\n", CLASSIC_CLI_VERSION, game, mode_suffix);
 
-    std::error_code ec;
-    const std::string base_dir = fs::current_path(ec).string();
-    const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, base_dir);
+    const auto request = classic::scanner::scan_run_launch_request(**launch);
     CliScanRunCancellation cancellation;
-    CliScanRunObserver observer(prepared->game, cancellation);
+    CliScanRunObserver observer(game);
 
     // Local Ignore recovery is an expected interactive choice, not a failure. The prompt clears any
     // live progress frame first so the question is not overwritten by the next render.
@@ -244,10 +221,6 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
     const auto outcome = execute_cli_scan_run(*request, cancellation, &observer, recovery_prompt);
     observer.finish();
 
-    if (observer.delivery_failed()) {
-        fmt::print(stderr, "Warning: scan progress presentation failed; safe cancellation was requested.\n");
-    }
-
     const auto total_end = std::chrono::steady_clock::now();
     const double duration = std::chrono::duration<double>(total_end - total_start).count();
     const auto presentation = present_cli_scan_run_outcome(outcome, duration);
@@ -261,7 +234,21 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 // ── Public entry point ─────────────────────────────────────────────
 
 int run_scan(const CliArgs& args) {
+    return run_scan(args, current_cli_process_location());
+}
+
+int run_scan(const CliArgs& args, const CliProcessLocation& location) {
     auto total_start = std::chrono::steady_clock::now();
+
+    // Locate the Installation Root before the runtime starts: a run from the wrong folder stops
+    // here with "CLASSIC Data not found" instead of scanning that folder as if it were the
+    // installation (the old private search fell back to the working directory).
+    const auto installation_root = require_cli_installation_root(location);
+    if (!installation_root) {
+        return kCliInstallationRootNotFoundExitCode;
+    }
+    const DataDirs dirs{*installation_root};
+
     const std::string correlation_id = startup_correlation_id();
 
     // Initialize Rust runtime + logging
@@ -279,8 +266,6 @@ int run_scan(const CliArgs& args) {
         return 2;
     }
 
-    // Find data root
-    auto dirs = find_data_root();
     fmt::print("Data root: {}\n", dirs.root);
     fmt::print("\n");
 

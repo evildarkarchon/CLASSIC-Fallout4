@@ -1,4 +1,7 @@
 #include "scan_run_cli.h"
+#include "user_settings_action.h"
+
+#include "classic_cxx_bridge/shared.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -10,6 +13,7 @@
 #include <atomic>
 #include <cctype>
 #include <chrono>
+#include <cstdint>
 #include <fmt/format.h>
 #include <istream>
 #include <optional>
@@ -179,35 +183,6 @@ void append_setup_messages(const scanner::ScanRunContractRunResult& result, std:
     }
 }
 
-/// Projects typed User Settings into the shared final-contract configuration DTO.
-scanner::ScanRunConfigurationDto make_configuration(const PreparedScanUserSettings& settings,
-                                                     const std::string& installation_root) {
-    scanner::ScanRunConfigurationDto configuration{};
-    configuration.installation_root = installation_root;
-    if (settings.game == "Fallout4") {
-        configuration.game = scanner::ScanRunGameId::Fallout4;
-    } else if (settings.game == "Fallout4VR") {
-        configuration.game = scanner::ScanRunGameId::Fallout4VR;
-    } else if (settings.game == "Skyrim") {
-        configuration.game = scanner::ScanRunGameId::Skyrim;
-    } else if (settings.game == "Starfield") {
-        configuration.game = scanner::ScanRunGameId::Starfield;
-    } else {
-        throw std::invalid_argument(fmt::format("unsupported Crash Log Scan game: {}", settings.game));
-    }
-    configuration.game_version = settings.game_version;
-    configuration.show_formid_values = settings.show_formid_values;
-    configuration.simplify_logs = settings.simplify_logs;
-    for (const auto& path : settings.formid_database_paths) {
-        configuration.formid_database_paths.push_back(path);
-    }
-    configuration.has_configured_unsolved_logs_destination = !settings.unsolved_logs_destination.empty();
-    configuration.configured_unsolved_logs_destination = settings.unsolved_logs_destination;
-    configuration.has_max_concurrent = settings.max_concurrent > 0;
-    configuration.max_concurrent = settings.max_concurrent;
-    return configuration;
-}
-
 /// Trims surrounding whitespace and lowercases one console answer for choice matching.
 std::string normalize_console_answer(const std::string& answer) {
     const auto first = answer.find_first_not_of(" \t\r\n");
@@ -314,20 +289,6 @@ bool match_recovery_choice(std::string_view answer,
     return false;
 }
 
-/// Projects optional typed setup paths into explicit presence/value pairs for FCX requests.
-scanner::ScanRunSetupContextDto make_setup_context(const PreparedScanUserSettings& settings) {
-    scanner::ScanRunSetupContextDto setup{};
-    setup.has_game_root = !settings.setup_game_root.empty();
-    setup.game_root = settings.setup_game_root;
-    setup.has_docs_root = !settings.setup_docs_root.empty();
-    setup.docs_root = settings.setup_docs_root;
-    setup.has_game_exe_path = !settings.setup_game_exe_path.empty();
-    setup.game_exe_path = settings.setup_game_exe_path;
-    setup.has_xse_log_path = !settings.setup_xse_log_path.empty();
-    setup.xse_log_path = settings.setup_xse_log_path;
-    return setup;
-}
-
 /// Renders one segment as plain text, reading only the field its kind selects.
 ///
 /// The bridge flattens Rust's six-variant segment into a kind tag plus a text, a path, and a count
@@ -374,34 +335,76 @@ std::string render_cli_display_line(const scanner::ScanRunDisplayLine& line) {
     return render_cli_display_segments(line.segments);
 }
 
-rust::Box<scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
-                                                              const PreparedScanUserSettings& settings,
-                                                              const std::string& installation_root,
-                                                              const std::string& base_directory) {
-    const auto configuration = make_configuration(settings, installation_root);
-    const auto setup = make_setup_context(settings);
+scanner::ScanRunLaunchOverridesDto make_cli_scan_run_launch_overrides(const CliArgs& args) {
+    scanner::ScanRunLaunchOverridesDto overrides{};
+    if (args.game_was_explicit) {
+        // `--game` admits only `Fallout4` (cli_args.cpp rejects anything else at parse time), so an
+        // explicit flag can only ever name that game. Widening the flag is a separate CLI decision;
+        // which saved values then apply to the named game is Crash Log Scan Launch's game-differs
+        // rule, not something decided here.
+        overrides.has_game = true;
+        overrides.game = scanner::ScanRunGameId::Fallout4;
+    }
+    if (args.game_version_was_explicit) {
+        overrides.has_game_version = true;
+        overrides.game_version = args.game_version;
+    }
+    if (!args.scan_path.empty()) {
+        overrides.has_scan_path = true;
+        overrides.scan_path = args.scan_path;
+    }
+    if (args.max_concurrent_was_explicit) {
+        // Zero is passed through rather than dropped: Rust reads it as the explicit adaptive
+        // override, which is how `--max-concurrent 0` beats a saved limit.
+        overrides.has_max_concurrent = true;
+        overrides.max_concurrent = args.max_concurrent;
+    }
+    overrides.show_formid_values = args.show_fid_values;
+    overrides.simplify_logs = args.simplify_logs;
+    overrides.fcx_mode = args.fcx_mode;
+    return overrides;
+}
 
-    if (!args.input_paths.empty()) {
-        scanner::ScanRunTargetedSourceDto source{};
-        for (const auto& input : args.input_paths) {
-            source.inputs.push_back(input);
-        }
-        return settings.fcx_mode ? scanner::scan_run_request_targeted_with_fcx(configuration, source, setup)
-                                 : scanner::scan_run_request_targeted(configuration, source);
+std::optional<rust::Box<scanner::ScanRunLaunch>> launch_cli_scan_run(const CliArgs& args,
+                                                                      const std::string& installation_root) {
+    // The one User Settings write the CLI makes, deliberately ahead of the launch: Crash Log Scan
+    // Launch only reads User Settings, so this ordering is what lets the scan use the destination
+    // the user just asked to save.
+    if (!persist_unsolved_logs_destination_option(args, installation_root)) {
+        return std::nullopt;
     }
 
-    scanner::ScanRunStandardSourceDto source{};
-    source.base_directory = base_directory;
-    source.has_custom_scan_directory = !settings.custom_scan_directory.empty();
-    source.custom_scan_directory = settings.custom_scan_directory;
-    source.has_configured_documents_root = !settings.configured_documents_root.empty();
-    source.configured_documents_root = settings.configured_documents_root;
+    const auto overrides = make_cli_scan_run_launch_overrides(args);
+    if (args.input_paths.empty()) {
+        return scanner::scan_run_launch_standard(installation_root, overrides);
+    }
+    rust::Vec<rust::String> inputs;
+    for (const auto& input : args.input_paths) {
+        inputs.push_back(input);
+    }
+    return scanner::scan_run_launch_targeted(installation_root, inputs, overrides);
+}
 
-    const auto unsolved_logs = settings.move_unsolved_logs
-                                   ? scanner::scan_run_unsolved_logs_move_to_configured_or_default()
-                                   : scanner::scan_run_unsolved_logs_leave_in_place();
-    return settings.fcx_mode ? scanner::scan_run_request_standard_with_fcx(configuration, source, *unsolved_logs, setup)
-                             : scanner::scan_run_request_standard(configuration, source, *unsolved_logs);
+std::vector<CliScanRunMessage> describe_cli_scan_run_launch(const scanner::ScanRunLaunchRequestDto& view) {
+    std::vector<CliScanRunMessage> messages;
+    append_display_lines(view.display_lines, messages);
+    return messages;
+}
+
+std::string cli_scan_run_game_token(scanner::ScanRunGameId game) {
+    // CXX bridge modules cannot share an enum, so the scanner and shared bridges each mirror
+    // `classic_shared_core::GameId`. These checks make a drift between the two mirrors a compile
+    // error instead of a mislabelled game.
+    static_assert(static_cast<std::uint8_t>(scanner::ScanRunGameId::Fallout4) ==
+                  static_cast<std::uint8_t>(classic::shared::GameId::Fallout4));
+    static_assert(static_cast<std::uint8_t>(scanner::ScanRunGameId::Fallout4VR) ==
+                  static_cast<std::uint8_t>(classic::shared::GameId::Fallout4VR));
+    static_assert(static_cast<std::uint8_t>(scanner::ScanRunGameId::Skyrim) ==
+                  static_cast<std::uint8_t>(classic::shared::GameId::Skyrim));
+    static_assert(static_cast<std::uint8_t>(scanner::ScanRunGameId::Starfield) ==
+                  static_cast<std::uint8_t>(classic::shared::GameId::Starfield));
+    return to_std_string(
+        classic::shared::game_id_as_str(static_cast<classic::shared::GameId>(static_cast<std::uint8_t>(game))));
 }
 
 std::vector<CliScanRunMessage> describe_cli_scan_run_event(const scanner::ScanRunContractEvent& event) {
@@ -543,7 +546,10 @@ public:
 #endif
     }
 
-    /// Makes the monotonic request exactly once even if Ctrl+C and adapter failure race.
+    /// Makes the monotonic request exactly once even if the Ctrl+C monitor and a direct caller race.
+    ///
+    /// The scan observer no longer calls this: Rust cancels on a failed delivery under the CLI's
+    /// observer failure policy.
     void request() {
         if (!requested_.exchange(true, std::memory_order_acq_rel)) {
             scanner::scan_run_cancellation_cancel(*token_);
@@ -577,7 +583,7 @@ const scanner::ScanRunCancellation& CliScanRunCancellation::token() const noexce
 }
 
 CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
-    const scanner::ScanRunContractExecutionResult& execution) {
+    const scanner::ScanRunContractExecutionResult& execution, const scanner::ScanRunRecoveryPrompt& prompt) {
     const auto& result = execution.result;
     CliLocalIgnoreRecoveryPresentation recovery;
     // The rendered run opens with why it paused and carries the Installed YAML Data block that says
@@ -597,10 +603,10 @@ CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
     // block the user has already scrolled past. This is where the CLI used to resolve absent
     // Installed YAML Data into an availability flag for itself, next to the GUI and the TUI each
     // resolving it for themselves; `render_local_ignore_recovery` takes that `Option` so the rule
-    // is written once. Both vectors are empty when the envelope carries no prompt, which leaves
-    // Cancel as the only offered answer — the safe reading of a contract violation.
-    append_display_lines(execution.recovery_prompt.lines, recovery.details);
-    for (const auto& description : execution.recovery_prompt.decisions) {
+    // is written once. A prompt describing no decision leaves Cancel as the only offered answer —
+    // the safe reading of a contract violation.
+    append_display_lines(prompt.lines, recovery.details);
+    for (const auto& description : prompt.decisions) {
         recovery.decisions.push_back({description.decision, to_std_string(description.label),
                                       render_cli_display_segments(description.description),
                                       description.available});
@@ -672,85 +678,83 @@ CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& r
                                                 CliScanRunCancellation& cancellation,
                                                 const scanner::ScanRunObserver* observer,
                                                 const CliLocalIgnoreRecoveryPrompt& prompt) {
+    auto operation = scanner::scan_run_contract_execute(request, cancellation.token(), observer,
+                                                        CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY);
+    return resolve_cli_local_ignore_recovery(*operation, observer, prompt);
+}
+
+CliScanRunExecutionOutcome resolve_cli_local_ignore_recovery(scanner::ScanRunContractExecution& operation,
+                                                             const scanner::ScanRunObserver* observer,
+                                                             const CliLocalIgnoreRecoveryPrompt& prompt) {
     CliScanRunExecutionOutcome outcome{};
-    auto operation = scanner::scan_run_contract_execute(request, cancellation.token(), observer);
-    const bool has_continuation = scanner::scan_run_contract_execution_has_continuation(*operation);
-    outcome.execution = scanner::scan_run_contract_execution_take_result(*operation);
-
-    const bool recovery_required =
-        outcome.execution.has_result &&
-        outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired;
-    if (!recovery_required) {
-        return outcome;
-    }
-    if (!has_continuation) {
-        // Rust always retains a continuation with this status, so its absence is a broken contract
-        // rather than a user decision. Say so instead of presenting an unanswerable question.
-        outcome.recovery_diagnostics.push_back(
-            {true, "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation."});
-        return outcome;
-    }
-    if (!prompt) {
-        // Expected for a non-interactive invocation: report the typed outcome and make no choice.
+    const bool has_pending_recovery = scanner::scan_run_contract_execution_has_pending_recovery(operation);
+    outcome.execution = scanner::scan_run_contract_execution_take_result(operation);
+    if (!has_pending_recovery || !prompt) {
+        // No pending recovery means nothing to settle; Rust owns every other outcome, including
+        // abandoning a recovery whose run already failed to deliver an event. An empty prompt is
+        // the non-interactive path: report the paused envelope and make no choice.
         return outcome;
     }
 
-    // The continuation must be taken before the prompt runs so a decision can never observe a
-    // half-owned operation, and so a prompt that throws cannot leave the run resumable.
-    auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
-    const auto choice = prompt(describe_cli_local_ignore_recovery(outcome.execution));
+    // Taken before the prompt runs so a decision can never observe a half-owned operation, and so a
+    // prompt that throws cannot leave the run resumable.
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(operation);
 
-    // Cancel maps to *no decision*, which is exactly what the shared abandon operation takes. The
-    // switch stays exhaustive so a choice added later trips `-Wswitch` here rather than silently
-    // resolving to Proceed Without Ignore. The same `optional`-shaped mapping is what the Node and
-    // Python bindings use, for the same reason: `LocalIgnoreRecoveryDecision` deliberately has no
-    // abandonment variant, so absence is how abandonment is spelled everywhere.
-    const auto decision = [&]() -> std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> {
+    std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> decision;
+    // Ctrl+C observed between the pause and this check already decided the run, so the question is
+    // never printed: settling with no decision is the only answer a cancelled run can take.
+    if (!scanner::scan_run_pending_recovery_cancellation_requested(*pending)) {
+        const auto choice = prompt(
+            describe_cli_local_ignore_recovery(outcome.execution, scanner::scan_run_pending_recovery_prompt(*pending)));
+
+        // Cancel maps to *no decision*, which is how settling spells abandonment. The switch stays
+        // exhaustive so a choice added later trips `-Wswitch` here rather than silently resolving
+        // to Proceed Without Ignore. The same `optional`-shaped mapping is what the Node and Python
+        // bindings use, for the same reason: `LocalIgnoreRecoveryDecision` deliberately has no
+        // abandonment variant, so absence is how abandonment is spelled everywhere.
         switch (choice) {
         case CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
-            return scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+            decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+            break;
         case CliLocalIgnoreRecoveryChoice::ResetToDefault:
-            return scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+            decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+            break;
         case CliLocalIgnoreRecoveryChoice::Cancel:
-            return std::nullopt;
+            // Leaves `decision` empty. So does a value this build does not recognize, since no case
+            // assigns it: abandonment is the one outcome that cannot touch the user's files.
+            break;
         }
-        // Unreachable for a valid enumerator. Abandonment is the safe resolution for a value this
-        // build does not recognize: it is the one outcome that cannot touch the user's files.
-        return std::nullopt;
-    }();
-
-    // `scan_run_continuation_abandon` performs the cancel-then-resume-with-a-placeholder sequence
-    // that used to live here, so the CLI cannot reorder it, cannot pick a different placeholder,
-    // and cannot drift from what the Qt GUI and the TUI do. It cancels the shared control itself,
-    // which is why nothing here asks for cancellation first — and deliberately not through
-    // `cancellation.request()`, whose one-shot guard exists to stop the Ctrl+C monitor and an
-    // adapter failure from racing. Rust's control is monotonic, so a later `request()` is inert
-    // rather than a second cancel.
-    auto resumed = decision ? scanner::scan_run_continuation_resume(*continuation, *decision,
-                                                                    cancellation.token(), observer)
-                            : scanner::scan_run_continuation_abandon(*continuation, cancellation.token(), observer);
-    outcome.execution = scanner::scan_run_contract_execution_take_result(*resumed);
-    outcome.local_ignore_continuation_consumed = true;
-
-    if (outcome.execution.has_result &&
-        outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired) {
-        // The continuation is single-use, so a resumed run can never ask again. Refuse to present a
-        // second question the CLI has no continuation left to answer.
-        outcome.recovery_diagnostics.push_back(
-            {true, "Fatal: Crash Log Scan recovery returned an unexpected second recovery request."});
     }
+
+    // Settling with no decision cancels the run's own control, the one handed to execute, so
+    // nothing here asks for cancellation first — and deliberately not through
+    // `CliScanRunCancellation::request()`, whose one-shot guard belongs to the Ctrl+C monitor.
+    // Rust's control is monotonic, so a later `request()` is inert rather than a second cancel. The settled envelope cannot carry another pending
+    // recovery, so a second recovery request is unrepresentable rather than checked for.
+    scanner::ScanRunLocalIgnoreRecoverySettlement settlement{};
+    settlement.has_decision = decision.has_value();
+    // `decision` is read only beside `has_decision`; the placeholder is never applied.
+    settlement.decision = decision.value_or(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
+    outcome.execution =
+        scanner::scan_run_pending_recovery_settle(*pending, settlement, observer, CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY);
+    outcome.local_ignore_recovery_settled = true;
+    outcome.settled_decision = decision;
     return outcome;
 }
 
 CliScanRunPresentation present_cli_scan_run_outcome(const CliScanRunExecutionOutcome& outcome,
                                                     double duration_seconds) {
     auto presentation = present_cli_scan_run_execution(outcome.execution, duration_seconds);
-    if (outcome.recovery_diagnostics.empty()) {
+    if (!outcome.execution.has_observer_delivery_failure) {
         return presentation;
     }
 
-    presentation.messages.insert(presentation.messages.begin(), outcome.recovery_diagnostics.begin(),
-                                 outcome.recovery_diagnostics.end());
-    presentation.exit_code = 2;
+    // Read from the run result rather than from the CLI's own observer: Rust stops delivering after
+    // the first failure and has already applied the CLI's policy, so the envelope is the one place
+    // that knows a failure happened. The sentence stays this frontend's own because Rust renders no
+    // line for it; the exit code stays the run's.
+    presentation.messages.insert(
+        presentation.messages.begin(),
+        CliScanRunMessage{true, "Warning: scan progress presentation failed; safe cancellation was requested."});
     return presentation;
 }

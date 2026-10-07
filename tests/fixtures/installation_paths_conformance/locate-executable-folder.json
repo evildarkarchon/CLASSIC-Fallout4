@@ -1,0 +1,8 @@
+{
+  "operation": "locate",
+  "executableDir": "tree/build/bin",
+  "workingDir": "tree/work",
+  "classicDataIn": [
+    "tree/build/bin"
+  ]
+}

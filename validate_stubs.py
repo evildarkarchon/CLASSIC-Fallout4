@@ -29,6 +29,27 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 LEGACY_WORKSPACE_DIR = SCRIPT_DIR / "ClassicLib-rs"
 
 
+def report_rust_dir(rust_dir: Path) -> str:
+    """Return ``rust_dir`` as the report records it: relative to this repository's root.
+
+    The report is committed under ``python-bindings/parity-artifacts/``, so an absolute
+    path would change with every checkout and worktree. The validator's own folder is the
+    repository root, so validating it records ``"."``. A folder outside it (only tests do
+    that) is recorded relative to the root when the two share a drive, else by name alone.
+    """
+    resolved = rust_dir.resolve()
+    try:
+        relative = resolved.relative_to(SCRIPT_DIR)
+    except ValueError:
+        try:
+            relative = Path(os.path.relpath(resolved, SCRIPT_DIR))
+        except ValueError:
+            # Windows cannot express a path on another drive relatively.
+            return resolved.name
+    text = relative.as_posix()
+    return "." if text in {"", "."} else text
+
+
 def normalize_rust_dir(rust_dir: Path) -> Path:
     """Resolve the repo root, rejecting legacy ClassicLib-rs inputs."""
 
@@ -551,7 +572,7 @@ class StubValidator:
     ) -> dict[str, Any]:
         """Build a structured validation report payload."""
         return {
-            "rust_dir": str(rust_dir),
+            "rust_dir": report_rust_dir(rust_dir),
             "total_crates": self.total_count,
             "crates_passed": self.success_count,
             "total_errors": total_errors,
@@ -584,7 +605,7 @@ class StubValidator:
         if not bindings_dir.exists():
             print(f"[ERROR] python-bindings directory not found at {bindings_dir}")
             report = {
-                "rust_dir": str(rust_dir),
+                "rust_dir": report_rust_dir(rust_dir),
                 "total_crates": 0,
                 "crates_passed": 0,
                 "total_errors": 1,
@@ -645,7 +666,7 @@ class StubValidator:
         if not targets:
             print("[ERROR] No maintained Python stub modules selected")
             report = {
-                "rust_dir": str(rust_dir),
+                "rust_dir": report_rust_dir(rust_dir),
                 "total_crates": 0,
                 "crates_passed": 0,
                 "total_errors": 1,

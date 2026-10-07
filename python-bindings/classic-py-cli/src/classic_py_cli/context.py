@@ -17,6 +17,9 @@ class CommandContext:
     no_color: bool
     verbose: bool
     tracebacks: bool
+    # Explicit ``--installation-root``. ``None`` means commands that need an Installation Root
+    # ask Config's shared locator instead; there is no repository or fixture fallback.
+    installation_root: Path | None = None
 
 
 def find_repo_root(start: Path | None = None) -> Path:
@@ -51,6 +54,7 @@ def resolve_context(args: object) -> CommandContext:
     fixture_root_arg = getattr(args, "fixture_root", None)
     fixture_root = Path(fixture_root_arg).resolve() if fixture_root_arg else repo_root / "sample_logs" / "FO4"
     output_path_arg = getattr(args, "output", None)
+    installation_root_arg = getattr(args, "installation_root", None)
     return CommandContext(
         repo_root=repo_root,
         fixture_root=fixture_root,
@@ -59,4 +63,5 @@ def resolve_context(args: object) -> CommandContext:
         no_color=bool(getattr(args, "no_color", False)),
         verbose=bool(getattr(args, "verbose", False)),
         tracebacks=bool(getattr(args, "tracebacks", False)),
+        installation_root=Path(installation_root_arg).resolve() if installation_root_arg else None,
     )

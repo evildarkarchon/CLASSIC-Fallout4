@@ -1,18 +1,23 @@
-//! End-to-end coverage for TUI Local Ignore recovery presentation and continuation ownership.
+//! End-to-end coverage for the TUI Local Ignore recovery overlay: its layout and its interaction.
 //!
 //! These tests drive the real Rust-owned Crash Log Scan Run contract against isolated installation
 //! roots built from the shared cross-language fixture corpus in
 //! `tests/fixtures/crash_log_scan_run`. Nothing here reads or mutates the developer's own
 //! installation, update cache, or Local Ignore data.
 //!
-//! The continuation cannot be fabricated, so a real paused run is the only way to prove that the
+//! A pending recovery cannot be fabricated, so a real paused run is the only way to prove that the
 //! TUI owns it correctly. Each test therefore executes one genuine run, hands the paused result to
 //! an `App`, and then exercises exactly one decision path.
+//!
+//! What settling does with a decision (reusing the retained discovery, the byte-exact backup, a
+//! reset conflict, analyzing nothing when dismissed) is Rust's and is pinned by the
+//! `crash_log_scan_run` conformance scenarios, not here. These tests keep only what the TUI owns:
+//! which keys answer, what the overlay shows, and that the pending recovery is settled once.
 
 use classic_config_core::InstalledYamlDataProvenance;
 use classic_scanlog_core::scan_run::contract::{
     self, Cancellation, Configuration, InstalledYamlDataRunDiagnosticKind,
-    LocalIgnoreRecoveryDecision, LocalIgnoreRunState, Options, Request, ResumeError, RunResult,
+    LocalIgnoreRecoveryDecision, LocalIgnoreRunState, Options, Request, RunResult,
 };
 use classic_scanlog_core::{CrashLogScanFacts, CrashLogScanRunStatus, TargetedCrashLogScanSource};
 use classic_shared_core::{GameId, get_runtime};
@@ -95,7 +100,12 @@ fn paused_run(root: &Path, logs: Vec<PathBuf>, cancellation: &Cancellation) -> R
         TargetedCrashLogScanSource { inputs: logs },
     );
     let result = get_runtime()
-        .block_on(contract::execute(request, cancellation, None))
+        .block_on(contract::execute(
+            request,
+            cancellation,
+            None,
+            classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
+        ))
         .expect("malformed Local Ignore is expected result data, not an infrastructure error");
     assert_eq!(
         result.status,
@@ -113,7 +123,7 @@ fn app_awaiting_recovery(paused: RunResult, cancellation: Cancellation) -> App {
     assert_eq!(app.active_overlay, Some(Overlay::LocalIgnoreRecovery));
     assert!(
         app.pending_local_ignore_recovery.is_some(),
-        "a paused run must retain its continuation in non-cloneable application state"
+        "a paused run must retain its pending recovery in non-cloneable application state"
     );
     app
 }
@@ -124,9 +134,7 @@ struct PausedFixture {
     temp: tempfile::TempDir,
     /// Exact malformed bytes written, so a test can prove the file was left untouched.
     malformed: Vec<u8>,
-    /// Crash Logs the paused run accepted, in Rust-owned discovery order.
-    discovered: Vec<PathBuf>,
-    /// The TUI holding the retained continuation.
+    /// The TUI holding the pending recovery.
     app: App,
 }
 
@@ -153,18 +161,11 @@ fn awaiting_decision(names: &[&str]) -> PausedFixture {
     let malformed = malform_local_ignore(temp.path());
     let cancellation = Cancellation::new();
     let paused = paused_run(temp.path(), logs, &cancellation);
-    let discovered = paused
-        .discovery
-        .as_ref()
-        .expect("a paused run retains completed discovery")
-        .accepted_logs
-        .clone();
     let app = app_awaiting_recovery(paused, cancellation);
 
     PausedFixture {
         temp,
         malformed,
-        discovered,
         app,
     }
 }
@@ -183,10 +184,10 @@ fn pump_until(app: &mut App, is_terminal: fn(&AsyncMessage) -> bool) {
     }
 }
 
-/// Drains background messages until the resumed run reaches its terminal outcome.
-fn pump_until_resume_finished(app: &mut App) {
+/// Drains background messages until the settled run reaches its terminal outcome.
+fn pump_until_settled(app: &mut App) {
     pump_until(app, |message| {
-        matches!(message, AsyncMessage::ScanResumeFinished(_))
+        matches!(message, AsyncMessage::ScanSettleFinished { .. })
     });
 }
 
@@ -202,12 +203,12 @@ fn terminal_result(app: &App) -> &RunResult {
     match app.last_scan_run.as_ref() {
         Some(LastScanRun::Run(result)) => result,
         Some(LastScanRun::Failed(error)) => panic!("unexpected infrastructure failure: {error:?}"),
-        Some(LastScanRun::RecoveryFailed(error)) => panic!("unexpected resume failure: {error:?}"),
+        Some(LastScanRun::RecoveryFailed(error)) => panic!("unexpected settle failure: {error:?}"),
         None => panic!("no Crash Log Scan Run outcome was retained"),
     }
 }
 
-/// Returns the Installed YAML Data of a resumed run, which always reached intake.
+/// Returns the Installed YAML Data of a settled run that applied a decision, so reached intake.
 fn resumed_installed_yaml_data(
     app: &App,
 ) -> &classic_scanlog_core::scan_run::contract::InstalledYamlDataRunData {
@@ -215,15 +216,6 @@ fn resumed_installed_yaml_data(
         .installed_yaml_data
         .as_ref()
         .expect("a resumed run reached intake")
-}
-
-/// Returns every Autoscan Report the run wrote, so report content can be checked directly.
-fn autoscan_reports(result: &RunResult) -> Vec<PathBuf> {
-    result
-        .logs
-        .iter()
-        .filter_map(|log| log.autoscan_report.clone())
-        .collect()
 }
 
 /// Presses one unmodified key through the ordinary terminal event path.
@@ -289,7 +281,7 @@ fn a_tui_started_scan_reaches_recovery_from_its_own_installation_root() {
     );
 
     app.accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
-    pump_until_resume_finished(&mut app);
+    pump_until_settled(&mut app);
 
     assert_eq!(
         terminal_result(&app).status,
@@ -308,13 +300,13 @@ fn a_tui_started_scan_reaches_recovery_from_its_own_installation_root() {
 /// Verifies a run already cancelled before the pause is never offered a destructive choice.
 ///
 /// Pressing the scan-cancel key while discovery is still running already decided the run. The
-/// native CLI refuses to ask in that state, and the TUI matches it: the question is skipped
-/// entirely rather than presented to a user who is on their way out.
+/// pending recovery reports that through its own cancellation flag, and the TUI honours it: the
+/// question is skipped entirely and the run is settled with no decision.
 #[test]
 fn cancellation_observed_before_the_pause_skips_the_question_entirely() {
     let temp = installation_root();
     let logs = copy_logs(temp.path(), &["crash-01.log"]);
-    let malformed = malform_local_ignore(temp.path());
+    malform_local_ignore(temp.path());
     let cancellation = Cancellation::new();
     let paused = paused_run(temp.path(), logs, &cancellation);
 
@@ -331,15 +323,11 @@ fn cancellation_observed_before_the_pause_skips_the_question_entirely() {
     );
     assert!(app.pending_local_ignore_recovery.is_none());
 
-    pump_until_resume_finished(&mut app);
+    pump_until_settled(&mut app);
 
     assert_eq!(
         terminal_result(&app).status,
         CrashLogScanRunStatus::Cancelled
-    );
-    assert_eq!(
-        std::fs::read(local_ignore_path(temp.path())).expect("Local Ignore should still exist"),
-        malformed
     );
 }
 
@@ -430,7 +418,7 @@ fn recovery_overlay_proceed_key_applies_the_operation_scoped_decision() {
     let mut fixture = awaiting_decision(&["crash-01.log"]);
 
     press(&mut fixture.app, KeyCode::Char('p'));
-    pump_until_resume_finished(&mut fixture.app);
+    pump_until_settled(&mut fixture.app);
 
     assert_eq!(
         resumed_installed_yaml_data(&fixture.app).local_ignore_state,
@@ -445,7 +433,7 @@ fn recovery_overlay_reset_key_applies_the_durable_decision() {
     let mut fixture = awaiting_decision(&["crash-01.log"]);
 
     press(&mut fixture.app, KeyCode::Char('R'));
-    pump_until_resume_finished(&mut fixture.app);
+    pump_until_settled(&mut fixture.app);
 
     assert_eq!(
         resumed_installed_yaml_data(&fixture.app).local_ignore_state,
@@ -460,7 +448,7 @@ fn recovery_overlay_escape_key_cancels_without_mutation() {
     let mut fixture = awaiting_decision(&["crash-01.log"]);
 
     press(&mut fixture.app, KeyCode::Esc);
-    pump_until_resume_finished(&mut fixture.app);
+    pump_until_settled(&mut fixture.app);
 
     assert_eq!(
         terminal_result(&fixture.app).status,
@@ -505,9 +493,13 @@ fn recovery_overlay_presents_retained_discovery_and_installation_diagnostics() {
     assert!(text.contains("[Esc] or [C] Cancel"), "overlay text: {text}");
 }
 
-/// Verifies Proceed Without Ignore resumes the same discovery and leaves the malformed file alone.
+/// Verifies accepting a decision closes the overlay at once and settles off the UI thread.
+///
+/// What the settled run then does with the decision (reusing the retained discovery, leaving the
+/// malformed file alone) is Rust's, pinned by the `settle-proceed-without-ignore` conformance
+/// scenario rather than restated here.
 #[test]
-fn proceed_without_ignore_resumes_the_retained_discovery_without_mutation() {
+fn accepting_a_decision_closes_the_overlay_and_settles_in_the_background() {
     let mut fixture = awaiting_decision(&["crash-01.log", "crash-02.log"]);
 
     fixture
@@ -516,149 +508,21 @@ fn proceed_without_ignore_resumes_the_retained_discovery_without_mutation() {
 
     assert!(
         fixture.app.pending_local_ignore_recovery.is_none(),
-        "accepting a decision must move the continuation out of application state"
+        "accepting a decision must move the pending recovery out of application state"
     );
     assert_eq!(fixture.app.active_overlay, None);
     assert!(fixture.app.scan_in_progress);
 
-    pump_until_resume_finished(&mut fixture.app);
+    pump_until_settled(&mut fixture.app);
 
-    let result = terminal_result(&fixture.app);
-    assert_eq!(result.status, CrashLogScanRunStatus::Completed);
-    assert_eq!(
-        result
-            .discovery
-            .as_ref()
-            .expect("resume retains the original discovery")
-            .accepted_logs,
-        fixture.discovered,
-        "resume must reuse the discovered set rather than rediscovering"
-    );
-    assert_eq!(result.succeeded, 2);
-
-    let installed = resumed_installed_yaml_data(&fixture.app);
-    assert_eq!(
-        installed.local_ignore_state,
-        LocalIgnoreRunState::ProceedWithoutIgnore
-    );
-    assert!(
-        installed.local_ignore_reset.is_none(),
-        "proceeding must not perform a durable reset"
-    );
-    fixture.assert_local_ignore_untouched();
-}
-
-/// Verifies Reset To Default resumes with a byte-exact backup and reports it in run details.
-#[test]
-fn reset_to_default_resumes_with_a_durable_byte_exact_backup() {
-    let mut fixture = awaiting_decision(&["crash-01.log"]);
-
-    fixture
-        .app
-        .accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ResetToDefault);
-    pump_until_resume_finished(&mut fixture.app);
-
+    assert!(!fixture.app.scan_in_progress);
     assert_eq!(
         terminal_result(&fixture.app).status,
         CrashLogScanRunStatus::Completed
     );
-
-    let installed = resumed_installed_yaml_data(&fixture.app);
-    assert_eq!(
-        installed.local_ignore_state,
-        LocalIgnoreRunState::ResetToDefault
-    );
-    let reset = installed
-        .local_ignore_reset
-        .as_ref()
-        .expect("a successful reset retains durable metadata");
-    assert_eq!(
-        std::fs::read(&reset.backup_path).expect("the verified backup should exist"),
-        fixture.malformed,
-        "the backup must preserve the user's malformed bytes exactly"
-    );
-    assert_eq!(
-        reset.malformed_identity.sha256_hex(),
-        reset.backup_identity.sha256_hex()
-    );
-    assert_ne!(
-        fixture.local_ignore_bytes(),
-        fixture.malformed,
-        "reset must publish the retained selected-Main defaults"
-    );
-
-    let details = fixture.app.scan_run_summary_text();
-    assert!(
-        details.contains("Local Ignore: reset to default"),
-        "run details: {details}"
-    );
-    assert!(
-        details.contains("Local Ignore backup:"),
-        "run details: {details}"
-    );
-    // `Local Ignore reset`, not `local ignore reset`: the diagnostic kind's Display Label carries
-    // the glossary capitalization of a domain term, which is the wording the CLI and the GUI
-    // already assert. The TUI held the lower-cased copy, which is the drift adopting the core
-    // vocabulary removes.
-    assert!(
-        details.contains("Local Ignore reset"),
-        "run details: {details}"
-    );
-
-    // Installation and recovery diagnostics are run-level operational metadata only.
-    let reports = autoscan_reports(terminal_result(&fixture.app));
-    assert!(
-        !reports.is_empty(),
-        "a completed run writes Autoscan Reports"
-    );
-    for report in reports {
-        let text = std::fs::read_to_string(&report).expect("Autoscan Report should be readable");
-        assert!(
-            !text.contains("Installed YAML Data:"),
-            "Autoscan Report {} must not carry installation diagnostics",
-            report.display()
-        );
-        assert!(
-            !text.contains("Local Ignore reset"),
-            "Autoscan Report {} must not carry recovery diagnostics",
-            report.display()
-        );
-    }
 }
 
-/// Verifies cancelling while awaiting a decision performs no mutation and no analysis.
-#[test]
-fn cancelling_the_recovery_decision_mutates_and_analyzes_nothing() {
-    let mut fixture = awaiting_decision(&["crash-01.log", "crash-02.log"]);
-
-    fixture.app.cancel_local_ignore_recovery();
-    pump_until_resume_finished(&mut fixture.app);
-
-    let result = terminal_result(&fixture.app);
-    assert_eq!(result.status, CrashLogScanRunStatus::Cancelled);
-    assert_eq!(result.succeeded, 0);
-    assert_eq!(result.failed, 0);
-    assert!(
-        autoscan_reports(result).is_empty(),
-        "cancellation before the decision analyzes nothing"
-    );
-    for log in &fixture.discovered {
-        let report = log.with_file_name(format!(
-            "{}-AUTOSCAN.md",
-            log.file_name()
-                .expect("fixture log has a file name")
-                .to_string_lossy()
-        ));
-        assert!(
-            !report.exists(),
-            "no Autoscan Report should be written for {}",
-            log.display()
-        );
-    }
-    fixture.assert_local_ignore_untouched();
-}
-
-/// Verifies closing the overlay is an explicit cancel rather than an abandoned continuation.
+/// Verifies closing the overlay settles with no decision rather than dropping the pending recovery.
 #[test]
 fn closing_the_recovery_overlay_cancels_explicitly() {
     let mut fixture = awaiting_decision(&["crash-01.log"]);
@@ -668,7 +532,7 @@ fn closing_the_recovery_overlay_cancels_explicitly() {
     assert!(fixture.app.pending_local_ignore_recovery.is_none());
     assert_eq!(fixture.app.active_overlay, None);
 
-    pump_until_resume_finished(&mut fixture.app);
+    pump_until_settled(&mut fixture.app);
 
     assert_eq!(
         terminal_result(&fixture.app).status,
@@ -677,22 +541,22 @@ fn closing_the_recovery_overlay_cancels_explicitly() {
     fixture.assert_local_ignore_untouched();
 }
 
-/// Verifies the retained continuation is consumed exactly once at the TUI seam.
+/// Verifies the pending recovery is settled exactly once at the TUI seam.
 #[test]
-fn the_retained_continuation_is_consumed_exactly_once() {
+fn the_pending_recovery_is_settled_exactly_once() {
     let mut fixture = awaiting_decision(&["crash-01.log"]);
 
     fixture
         .app
         .accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
-    // A second key press finds nothing to resume: the continuation left with the first decision,
-    // so the destructive choice cannot be applied on top of the one the user actually made.
+    // A second key press finds nothing to settle: the pending recovery left with the first
+    // decision, so the destructive choice cannot be applied on top of the one the user made.
     fixture
         .app
         .accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ResetToDefault);
     fixture.app.cancel_local_ignore_recovery();
 
-    pump_until_resume_finished(&mut fixture.app);
+    pump_until_settled(&mut fixture.app);
 
     assert_eq!(
         terminal_result(&fixture.app).status,
@@ -708,58 +572,6 @@ fn the_retained_continuation_is_consumed_exactly_once() {
     fixture.assert_local_ignore_untouched();
     assert!(
         fixture.app.async_rx.try_recv().is_err(),
-        "no second resume should have been spawned"
-    );
-}
-
-/// Verifies a reset conflict raised while deciding is typed and leaves the newer file intact.
-#[test]
-fn a_reset_conflict_is_presented_without_overwriting_newer_local_ignore_state() {
-    let mut fixture = awaiting_decision(&["crash-01.log"]);
-
-    // The user repairs the file in another editor before answering the question.
-    let repaired = b"CLASSIC_Ignore_Fallout4:\n  - RepairedByHand.esp\n";
-    std::fs::write(local_ignore_path(fixture.temp.path()), repaired)
-        .expect("repaired Local Ignore should be written");
-
-    fixture
-        .app
-        .accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ResetToDefault);
-    pump_until_resume_finished(&mut fixture.app);
-
-    let details = fixture.app.scan_run_summary_text();
-    match fixture.app.last_scan_run.as_ref() {
-        Some(LastScanRun::RecoveryFailed(error)) => {
-            assert_eq!(error.kind().as_str(), "local_ignore_reset_conflict");
-            // Both identities must survive into the overlay, because comparing them is the whole
-            // action available to a user whose file changed while they were deciding. Asserted as
-            // the digests themselves rather than as the sentences around them: the prose belongs to
-            // `classic-scan-presentation` and is pinned there.
-            let ResumeError::LocalIgnoreResetConflict(conflict) = error else {
-                panic!("the conflict kind must carry conflict data, got {error:?}");
-            };
-            let expected = conflict.expected_identity.sha256_hex();
-            let actual = conflict
-                .actual_identity
-                .as_ref()
-                .expect("the repaired file must have been observed")
-                .sha256_hex();
-            assert_ne!(expected, actual, "the fixture must produce a real conflict");
-            assert!(details.contains(&expected), "run details: {details}");
-            assert!(details.contains(&actual), "run details: {details}");
-        }
-        other => panic!("expected a typed reset conflict, got {other:?}"),
-    }
-
-    assert!(
-        details.contains("Your Local Ignore file was not replaced."),
-        "run details: {details}"
-    );
-    // A typed recovery failure is actionable and must not expire into a generic ready status.
-    assert!(fixture.app.status_clear_at.is_none());
-    assert_eq!(
-        fixture.local_ignore_bytes(),
-        repaired,
-        "a conflict must leave the newer bytes authoritative"
+        "no second settle should have been spawned"
     );
 }

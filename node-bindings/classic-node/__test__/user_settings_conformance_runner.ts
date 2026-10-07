@@ -21,6 +21,7 @@ import type {
     JsUserSettingsMigrationReceipt,
     JsUserSettingsSnapshot,
     JsUserSettingsUpdate,
+    JsUserSettingsUpdateDiagnostic,
     JsWindowGeometry
 } from "../index.js";
 
@@ -242,6 +243,7 @@ function projectView(snapshot: JsUserSettingsSnapshot, fields: string[]): JsonOb
         move_unsolved_logs: scan.moveUnsolvedLogs,
         max_concurrent_scans: scan.maxConcurrentScans,
         formid_databases: scan.formidDatabases,
+        scan_formid_databases: scan.scanFormidDatabases,
         fcx_mode: scan.fcxMode,
         simplify_logs: scan.simplifyLogs,
         show_formid_values: scan.formidValueLookup,
@@ -311,6 +313,9 @@ async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonO
         await rm(root, {recursive: true, force: true});
     }
 }
+
+/** Request selector prefix naming a game-aware FormID database save for the trailing game. */
+const FORMID_DATABASE_SAVE_PREFIX = "/CLASSIC_Settings/FormID Databases/";
 
 /** Translate centrally selected fields into public binding arguments without owning validation. */
 function requestedUpdate(fields: JsonObject): JsUserSettingsUpdate {
@@ -393,6 +398,14 @@ function requestedUpdate(fields: JsonObject): JsUserSettingsUpdate {
                 update.maxConcurrentScans = value as never;
                 break;
             default:
+                // A pointer below the mapping names one game's game-aware save, not a raw key write.
+                if (path.startsWith(FORMID_DATABASE_SAVE_PREFIX) && path.length > FORMID_DATABASE_SAVE_PREFIX.length) {
+                    update.formidDatabasesForGame = {
+                        game: path.slice(FORMID_DATABASE_SAVE_PREFIX.length) as never,
+                        paths: value as never,
+                    };
+                    break;
+                }
                 throw new Error(`unsupported requested field: ${path}`);
         }
     }
@@ -567,6 +580,13 @@ async function executeMigration(plan: RunPlan, scenario: Scenario): Promise<Json
     }
 }
 
+/** Project ordered update diagnostics, rejecting or not, into the shared observation shape. */
+function updateDiagnostics(diagnostics: JsUserSettingsUpdateDiagnostic[]): JsonObject[] {
+    return diagnostics.map((diagnostic) => ({
+        fieldPath: diagnostic.fieldPath ?? null, code: diagnostic.code, message: diagnostic.message,
+    }));
+}
+
 /** Execute an explicit public preview and optional commit, measuring each durable phase separately. */
 async function executeOperation(plan: RunPlan, scenario: Scenario): Promise<JsonObject> {
     const temporary = resolve(await mkdtemp(join(tmpdir(), "classic-node-user-settings-operation-")));
@@ -587,7 +607,8 @@ async function executeOperation(plan: RunPlan, scenario: Scenario): Promise<Json
             status: "not-attempted",
             revision: null,
             expectedRevision: null,
-            actualRevision: null
+            actualRevision: null,
+            diagnostics: [],
         };
         if (scenario.input.commit && preview.accepted) {
             const baseRevision = string(preview.baseRevision, "accepted preview baseRevision");
@@ -599,6 +620,7 @@ async function executeOperation(plan: RunPlan, scenario: Scenario): Promise<Json
                 revision: outcome.revision ?? null,
                 expectedRevision: outcome.status === "conflict" ? outcome.expectedRevision : null,
                 actualRevision: outcome.actualRevision ?? null,
+                diagnostics: updateDiagnostics(outcome.diagnostics),
             };
         }
         return {
@@ -606,9 +628,7 @@ async function executeOperation(plan: RunPlan, scenario: Scenario): Promise<Json
                 status: preview.accepted ? "accepted" : "rejected",
                 baseRevision: preview.baseRevision ?? null,
                 acceptedFields: preview.fields.map((field) => ({fieldPath: field.fieldPath, value: field.value})),
-                diagnostics: preview.diagnostics.map((diagnostic) => ({
-                    fieldPath: diagnostic.fieldPath ?? null, code: diagnostic.code, message: diagnostic.message,
-                })),
+                diagnostics: updateDiagnostics(preview.diagnostics),
             },
             afterPreviewTree,
             commit,

@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -80,6 +80,55 @@ class _OptionalPathCommandArgs:
     """Synthetic args for catalog-dispatched commands with optional paths."""
 
     path: str | None = None
+
+
+class _InstallationRootNotFound(Exception):
+    """No Installation Root was found; ``str()`` is the user-facing "CLASSIC Data not found" text."""
+
+
+def _installation_root(context: CommandContext) -> Path:
+    """Return the Installation Root a command reads ``CLASSIC Data`` and User Settings from.
+
+    An explicit ``--installation-root`` is used as given and must itself hold ``CLASSIC Data``.
+    Otherwise the whole search is Config's shared locator
+    (``classic_config.locate_installation_root``), started from this CLI's package folder and
+    the working directory -- the same search the GUI, TUI, C++ CLI and Node CLI use. There is
+    deliberately no repository, fixture, or working-directory fallback.
+
+    Raises:
+        _InstallationRootNotFound: no explicit root holds ``CLASSIC Data``, or the locator found
+            no candidate that does.
+        ImportError: the ``classic_config`` binding is unavailable.
+    """
+
+    if context.installation_root is not None:
+        if (context.installation_root / "CLASSIC Data").is_dir():
+            return context.installation_root
+        raise _InstallationRootNotFound(
+            f"CLASSIC Data not found in --installation-root {context.installation_root}"
+        )
+    # The Python interpreter's own folder says nothing about the CLASSIC installation, so this
+    # package's folder stands in for the executable folder, as the Node CLI uses its script folder.
+    executable_dir = Path(__file__).resolve().parent
+    working_dir = Path.cwd()
+    located = require_binding("classic_config").locate_installation_root(str(executable_dir), str(working_dir))
+    if located is None:
+        raise _InstallationRootNotFound(
+            "CLASSIC Data not found. Run classic-py from the CLASSIC installation folder, or pass "
+            f"--installation-root. (CLI folder: {executable_dir}; working directory: {working_dir})"
+        )
+    return Path(located)
+
+
+def _installation_root_not_found(command: str, exc: _InstallationRootNotFound) -> CommandResult:
+    """Report a missing Installation Root as a configuration failure before any command work."""
+
+    return failure(
+        command,
+        str(exc),
+        int(ExitCode.USAGE),
+        error={"classification": "installation-root-not-found", "message": str(exc)},
+    )
 
 
 def _relative_or_absolute(path: Path, root: Path) -> str:
@@ -332,11 +381,14 @@ def version_parse(args: _VersionParseArgs, context: CommandContext) -> CommandRe
 
 
 def config_main_version(args: object, context: CommandContext) -> CommandResult:
-    """Load the main CLASSIC YAML version through classic_config."""
+    """Load the main CLASSIC YAML version from the Installation Root through classic_config."""
 
     try:
+        installation_root = _installation_root(context)
         module = require_binding("classic_config")
-        version = module.load_main_yaml_version(str(context.repo_root / "CLASSIC Data" / "databases"))
+        version = module.load_main_yaml_version(str(installation_root / "CLASSIC Data" / "databases"))
+    except _InstallationRootNotFound as exc:
+        return _installation_root_not_found("config main-version", exc)
     except ImportError as exc:
         return failure("config main-version", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
@@ -648,8 +700,8 @@ _UNRENDERED_RUN = "classic_scanlog published no Display Content for this Crash L
 # and no longer appears here at all.
 #
 # `local_ignore_recovery_required` is terminal for this CLI. The run paused before
-# analysing any log and returned a one-shot continuation that only an interactive caller
-# can answer; `scan logs` never resumes it. Falling through to the success path reported
+# analysing any log and returned a one-shot pending recovery that only an interactive caller
+# can answer; `scan logs` never settles it. Falling through to the success path reported
 # "0 succeeded, 0 failed" and exit 0, which is indistinguishable from a healthy scan of
 # an empty directory even though the real cause was a malformed CLASSIC Ignore.yaml the
 # caller was never told about.
@@ -715,7 +767,7 @@ def _scan_recovery_prompt(execution: object) -> dict[str, Any] | None:
     decision the run had already reported it cannot honor. The availability is read
     from the description that carries it, so there is no second fact to consult.
 
-    ``decision`` is ``str()`` of the binding's own enum -- ``scan_run_resume`` takes
+    ``decision`` is ``str()`` of the binding's own enum -- ``scan_run_settle`` takes
     that enum rather than a snake_case token, and the binding publishes no token for
     it. Stringifying is what keeps the mapping table out of this frontend; writing one
     here is exactly the drift the enum was chosen to prevent.
@@ -814,39 +866,17 @@ def _scan_event_summary(event: object) -> dict[str, Any]:
     return summary
 
 
-def _path_is_relative_to(path: Path, root: Path) -> bool:
-    """Return whether path is under root without requiring either to exist."""
+def _scan_launch_diagnostics(launch: object) -> list[dict[str, str]]:
+    """Project Crash Log Scan Launch's typed diagnostics into stable CLI JSON.
 
-    try:
-        path.resolve().relative_to(root.resolve())
-    except ValueError:
-        return False
-    return True
+    Kind, code and message are carried as Rust produced them; the human-facing account
+    of each is the launch's rendered ``display_lines``, which the text stream prints.
+    """
 
-
-def _fixture_yaml_root(scan_path: Path, context: CommandContext) -> Path | None:
-    """Find a fixture-local YAML root for deterministic compliance scans."""
-
-    for root in (context.fixture_root, context.repo_root / "python-bindings" / "tests" / "fixtures"):
-        if _path_is_relative_to(scan_path, root) and (root / "CLASSIC Data").exists():
-            return root.resolve()
-    return None
-
-
-def _typed_scan_game(shared_module: object, game_name: str) -> object:
-    """Map a User Settings game token to the shared binding's typed identity."""
-
-    game_id = shared_module.GameId
-    supported = {
-        "Fallout4": game_id.Fallout4,
-        "Fallout4VR": game_id.Fallout4VR,
-        "Skyrim": game_id.Skyrim,
-        "Starfield": game_id.Starfield,
-    }
-    try:
-        return supported[game_name]
-    except KeyError as exc:
-        raise ValueError(f"unsupported managed game: {game_name}") from exc
+    return [
+        {"kind": str(item.kind), "code": str(item.code), "message": str(item.message)}
+        for item in getattr(launch, "diagnostics", [])
+    ]
 
 
 @contextmanager
@@ -862,62 +892,43 @@ def _working_directory(path: Path):
 
 
 def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
-    """Run a deterministic scanlog binding path over an explicit log directory."""
+    """Run a Targeted Crash Log Scan of an explicit log path, launched through Crash Log Scan Launch.
+
+    The request comes entirely from ``classic_scanlog.ScanRunLaunch.targeted`` under the
+    Installation Root; this command builds none of it. A run that pauses for Local Ignore
+    recovery is terminal here and exits as a product failure.
+    """
 
     scan_path = Path(args.path or context.fixture_root)
     if not scan_path.is_absolute():
         scan_path = context.repo_root / scan_path
-    installation_root = _fixture_yaml_root(scan_path, context) or context.repo_root
     try:
+        # Resolved before any binding work, so a run from the wrong folder stops here rather
+        # than opening User Settings or scanning under a folder that is not an installation.
+        installation_root = _installation_root(context)
         module = require_binding("classic_scanlog")
-        shared_module = require_binding("classic_shared")
-        settings_module = require_binding("classic_user_settings")
-        snapshot = settings_module.open_user_settings(str(installation_root))
-        scan_settings = snapshot.crash_log_scan_settings
-        setup_settings = snapshot.game_setup_settings
-        game_name = str(setup_settings.managed_game)
-        game = _typed_scan_game(shared_module, game_name)
-        formid_databases = scan_settings.formid_databases
-        max_concurrent = int(scan_settings.max_concurrent_scans)
         events: list[dict[str, Any]] = []
         with _working_directory(installation_root):
-            configuration = module.ScanRunConfiguration(
-                installation_root=str(installation_root),
-                game=game,
-                game_version=str(scan_settings.game_version_selection),
-                show_formid_values=bool(scan_settings.formid_value_lookup),
-                simplify_logs=bool(scan_settings.simplify_logs),
-                formid_database_paths=[
-                    str(path) for path in formid_databases.get(game_name, [])
-                ],
-                unsolved_logs_destination=scan_settings.unsolved_logs_destination,
-                max_concurrent=max_concurrent or None,
-            )
-            source = module.ScanRunTargetedSource(inputs=[str(scan_path)])
-            if scan_settings.fcx_mode:
-                request = module.ScanRunRequest.targeted_with_fcx(
-                    configuration,
-                    source,
-                    module.ScanRunSetupContext(
-                        game_root=setup_settings.game_root,
-                        docs_root=setup_settings.documents_root,
-                        game_exe_path=setup_settings.game_executable,
-                    ),
-                )
-            else:
-                request = module.ScanRunRequest.targeted(configuration, source)
+            # Crash Log Scan Launch owns the whole request: it reads User Settings read-only,
+            # picks the managed game and its saved values, selects that game's FormID rows
+            # (including the Fallout 4 VR read rule), and builds the FCX setup context when
+            # FCX Mode is saved on. This command has no per-run flags, so it passes no
+            # overrides -- only the Targeted input the user named.
+            launch = module.ScanRunLaunch.targeted(str(installation_root), [str(scan_path)])
             execution = module.scan_run_execute(
-                request,
+                launch.request(),
                 module.ScanRunCancellation(),
                 lambda event: events.append(_scan_event_summary(event)),
                 cancel_on_observer_error=True,
             )
+    except _InstallationRootNotFound as exc:
+        return _installation_root_not_found("scan logs", exc)
     except ImportError as exc:
         return failure("scan logs", str(exc), int(ExitCode.BINDING_IMPORT))
     except AttributeError:
         return failure(
             "scan logs",
-            "scanlog or User Settings binding does not expose the final scan-run contract",
+            "scanlog binding does not expose Crash Log Scan Launch and the final scan-run contract",
             int(ExitCode.BINDING_IMPORT),
         )
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
@@ -927,6 +938,11 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     # One field covers both payloads, describing whichever of `result` and `error` the
     # envelope carries -- the same shape the C++ bridge's execution envelope has.
     display_lines = _scan_run_display_lines(execution)
+    # What the launch withheld or degraded, in Rust's words. It describes the request the
+    # run executed, so it precedes the run's own lines in every branch's text stream; the
+    # summary stays the run's leading line, because that is what states the outcome.
+    launch_lines = _scan_run_display_lines(launch)
+    launch_diagnostics = _scan_launch_diagnostics(launch)
     if infrastructure_error is not None:
         stage = str(getattr(infrastructure_error, "stage", "internal_invariant"))
         message = str(getattr(infrastructure_error, "message", infrastructure_error))
@@ -941,8 +957,8 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             _scan_run_summary(display_lines),
             int(ExitCode.PRODUCT_FAILURE),
             error={"classification": "scan-run-infrastructure", "stage": stage, "message": message, "path": path},
-            data={"events": events, "observerError": observer_error},
-            text_lines=display_lines,
+            data={"events": events, "observerError": observer_error, "launchDiagnostics": launch_diagnostics},
+            text_lines=launch_lines + display_lines,
         )
     result = getattr(execution, "result", None)
     if result is None:
@@ -952,7 +968,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "scan logs",
             "classic_scanlog returned neither a result nor an infrastructure error",
             int(ExitCode.PRODUCT_FAILURE),
-            data={"events": events, "observerError": observer_error},
+            data={"events": events, "observerError": observer_error, "launchDiagnostics": launch_diagnostics},
         )
     terminal_status = str(result.status)
     unsuccessful_exit_code = _UNSUCCESSFUL_TERMINAL_EXIT_CODES.get(terminal_status)
@@ -965,18 +981,19 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         data: dict[str, Any] = {
             "events": events,
             "observerError": observer_error,
+            "launchDiagnostics": launch_diagnostics,
             "result": _scan_run_result_summary(result),
         }
         # A paused run is terminal for this CLI, but terminal is not the same as
         # unexplained: Rust states why it paused and what each decision would do, and
         # a user reading CI output needs both to know what to run next. Nothing here
-        # claims the continuation, so no file is touched and there is nothing to
+        # settles the pending recovery, so no file is touched and there is nothing to
         # abandon -- the run is simply left where Rust left it.
         recovery_prompt = _scan_recovery_prompt(execution)
-        terminal_lines = display_lines
+        terminal_lines = launch_lines + display_lines
         if recovery_prompt is not None:
             data["recoveryPrompt"] = recovery_prompt
-            terminal_lines = display_lines + _scan_recovery_prompt_lines(recovery_prompt)
+            terminal_lines = terminal_lines + _scan_recovery_prompt_lines(recovery_prompt)
         return failure(
             "scan logs",
             _scan_run_summary(display_lines),
@@ -1005,9 +1022,10 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "reportEvidence": report_evidence,
             "events": events,
             "observerError": observer_error,
+            "launchDiagnostics": launch_diagnostics,
             "result": _scan_run_result_summary(result),
         },
-        text_lines=display_lines,
+        text_lines=launch_lines + display_lines,
     )
 
 
@@ -1029,8 +1047,23 @@ def scan_game(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
 
 
 def dispatch_scenario_command(command: list[str], context: CommandContext) -> CommandResult:
-    """Dispatch catalog scenario commands directly to user-facing handlers."""
+    """Dispatch catalog scenario commands directly to user-facing handlers.
 
+    A scenario names its Installation Root the way a user does, with ``--installation-root``
+    anywhere in the command; a relative root resolves against the repository root, like
+    ``--path``.
+    """
+
+    if "--installation-root" in command:
+        root_index = command.index("--installation-root")
+        if root_index + 1 >= len(command):
+            return failure(" ".join(command), "Scenario command is missing an --installation-root value",
+                           int(ExitCode.USAGE))
+        installation_root = Path(command[root_index + 1])
+        if not installation_root.is_absolute():
+            installation_root = context.repo_root / installation_root
+        context = replace(context, installation_root=installation_root.resolve())
+        command = command[:root_index] + command[root_index + 2:]
     if command[:2] == ["bindings", "list"]:
         return bindings_list(object(), context)
     if command[:2] == ["version", "parse"]:

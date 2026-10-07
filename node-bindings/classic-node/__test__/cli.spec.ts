@@ -168,32 +168,122 @@ describe("classic-node CLI", () => {
         expect(readFileSync(reportPath, "utf8")).toContain("AUTOSCAN REPORT");
     });
 
-    test("uses canonical User Settings when scan flags are omitted", () => {
-        const workspace = rememberTempDir("classic-node-cli-user-settings-");
+    test("a Standard scan searches the Installation Root, not the working directory", () => {
+        // The working directory holds the installation one level down, at a locator
+        // candidate, so the two folders differ. Only the Installation Root's log may be
+        // scanned: Crash Log Scan Launch makes it the Standard base folder.
+        const workspace = rememberTempDir("classic-node-cli-base-folder-");
+        const installationRoot = join(workspace, "install");
+        const documentsRoot = join(workspace, "documents");
+        const rootLog = join(installationRoot, "crash-2026-03-06-12-00-00.log");
+        const workingDirectoryLog = join(workspace, "crash-2026-03-06-12-30-00.log");
+
+        mkdirSync(installationRoot, {recursive: true});
+        writeWorkspaceDataRoot(installationRoot);
+        mkdirSync(documentsRoot, {recursive: true});
+        // A saved documents folder keeps discovery away from this machine's real one.
+        writeFileSync(
+            join(installationRoot, "CLASSIC Settings.yaml"),
+            `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Documents Folder Path: '${documentsRoot.replace(/\\/g, "/")}'\n`,
+            "utf8",
+        );
+        writeFileSync(rootLog, CLI_SAMPLE_LOG, "utf8");
+        writeFileSync(workingDirectoryLog, CLI_SAMPLE_LOG, "utf8");
+
+        const result = runCli([], workspace);
+
+        expect(result.exitCode).toBe(0);
+        // Standard discovery gathers base-folder logs into the base folder's
+        // `Crash Logs`, so the root's log is reported from there.
+        expect(
+            existsSync(
+                join(installationRoot, "Crash Logs", "crash-2026-03-06-12-00-00-AUTOSCAN.md"),
+            ),
+        ).toBe(true);
+        // The working directory's log is neither gathered nor scanned.
+        expect(existsSync(workingDirectoryLog)).toBe(true);
+        expect(existsSync(join(workspace, "Crash Logs"))).toBe(false);
+        expect(result.output).not.toContain("crash-2026-03-06-12-30-00");
+    });
+
+    test("launches the managed game when --game is omitted", () => {
+        // Fallout 4 VR is the managed game, so a launch that took no game override scans
+        // it. The CLI used to default `--game` to Fallout 4 and pass it on every run.
+        const workspace = rememberTempDir("classic-node-cli-managed-game-");
         const scanDir = join(workspace, "incoming");
-        const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
 
         writeWorkspaceDataRoot(workspace);
         mkdirSync(scanDir, {recursive: true});
-        writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
         writeFileSync(
             join(workspace, "CLASSIC Settings.yaml"),
-            `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  SCAN Custom Path: '${scanDir.replace(/\\/g, "/")}'\n  Max Concurrent Scans: 1\n`,
+            `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4 VR\n  Game Version: VR\n`,
             "utf8",
         );
 
-        const result = runCli([], workspace);
-        const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+        const result = runCli(["--scan-path", scanDir], workspace);
+
+        // The CLI's own header names the game and version the launch chose.
+        expect(result.output).toContain("Crash Log Scanner (Fallout4VR VR)");
+    });
+
+    test("accepts only Fallout4 for --game, like the native CLI", () => {
+        // Widening `--game` beyond Fallout 4 is out of scope: Fallout 4 VR, Skyrim and
+        // Starfield are refused at parse time, before anything is launched or scanned.
+        const workspace = rememberTempDir("classic-node-cli-game-flag-");
+        const scanDir = join(workspace, "incoming");
+
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
+
+        for (const game of ["Fallout4VR", "Skyrim", "Starfield", "fallout4"]) {
+            const result = runCli(["--game", game, "--scan-path", scanDir], workspace);
+
+            expect(result.exitCode).toBe(1);
+            expect(result.stderr).toContain(`--game must be one of: Fallout4 (got ${game})`);
+            expect(result.output).not.toContain("Crash Log Scanner");
+        }
+
+        const accepted = runCli(["--game", "Fallout4", "--scan-path", scanDir], workspace);
+        expect(accepted.exitCode).toBe(0);
+        expect(accepted.output).toContain("Crash Log Scanner (Fallout4");
+    });
+
+    test("shows launch diagnostics in Rust's words", () => {
+        // Scanning a game other than the managed one withholds the managed game's saved
+        // game version, and Crash Log Scan Launch reports that as a launch diagnostic.
+        // Its rendered line names the withheld value with the game-version Display
+        // Label; the CLI prints that line rather than phrasing the diagnostic itself.
+        const workspace = rememberTempDir("classic-node-cli-launch-diagnostics-");
+        const scanDir = join(workspace, "incoming");
+
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
+        writeFileSync(
+            join(workspace, "CLASSIC Settings.yaml"),
+            `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4 VR\n  Game Version: VR\n`,
+            "utf8",
+        );
+
+        const result = runCli(
+            ["--game", "Fallout4", "--scan-path", scanDir],
+            workspace,
+        );
+        const json = runCli(
+            ["--json", "--game", "Fallout4", "--scan-path", scanDir],
+            workspace,
+        );
 
         expect(result.exitCode).toBe(0);
-        // The CLI's own header, which names the game version it read from settings.
-        expect(result.output).toContain("Fallout4 Original");
-        // The settings-configured scan directory reaches discovery, and discovery says
-        // so. Anchored on the path rather than on the concurrency sentence that stood
-        // here: the fact this test exists for is that canonical settings were honoured,
-        // and the directory proves that without restating any of Rust's words.
-        expect(result.output).toContain(scanDir.replace(/\\/g, "/"));
-        expect(existsSync(reportPath)).toBe(true);
+        expect(result.output).toContain("Crash Log Scanner (Fallout4)");
+        // The managed game's display name appears only inside Rust's rendered line: the
+        // CLI's own header spells games by their `JsGameId` token.
+        expect(result.output).toContain("Fallout 4 VR");
+        expect(JSON.parse(json.stdout)).toMatchObject({
+            mode: "scan",
+            game: "Fallout4",
+            gameVersion: "auto",
+            launchDiagnostics: [{kind: "gameVersionNotApplied"}],
+        });
     });
 
     test("emits structured report failure counts when AUTOSCAN writing fails", () => {
@@ -293,7 +383,46 @@ describe("classic-node CLI", () => {
         const result = runCli([], workspace);
 
         expect(result.exitCode).toBe(2);
-        expect(result.output).toContain("Fatal:");
+        expect(result.stderr).toContain("Fatal: CLASSIC Data not found");
+        // Both search starts are named so a user can see where the CLI looked from.
+        expect(result.stderr).toContain(workspace);
+        // The working directory is not quietly treated as the installation: nothing was
+        // scanned, and no User Settings were created there.
+        expect(result.output).not.toContain("Crash Log Scanner");
+        expect(existsSync(join(workspace, "CLASSIC Settings.yaml"))).toBe(false);
+    });
+
+    test("reports CLASSIC Data not found as a structured fatal in JSON mode", () => {
+        const workspace = rememberTempDir("classic-node-cli-fatal-json-");
+
+        const result = runCli(["--json"], workspace);
+
+        expect(result.exitCode).toBe(2);
+        expect(JSON.parse(result.stdout)).toMatchObject({
+            mode: "fatal",
+            exitCode: 2,
+            message: expect.stringContaining("CLASSIC Data not found"),
+        });
+    });
+
+    test("locates the Installation Root through Config's shared search", () => {
+        // `<working directory>/install` is the locator's sixth candidate, one this CLI's
+        // own search never checked, so finding it proves the search is Config's.
+        const workspace = rememberTempDir("classic-node-cli-install-root-");
+        const installationRoot = join(workspace, "install");
+        const scanDir = join(workspace, "incoming");
+
+        mkdirSync(installationRoot, {recursive: true});
+        writeWorkspaceDataRoot(installationRoot);
+        mkdirSync(scanDir, {recursive: true});
+
+        const result = runCli(
+            ["--scan-path", scanDir, "--game-version", "auto"],
+            workspace,
+        );
+
+        expect(result.exitCode).toBe(0);
+        expect(result.output).toContain(`Data root: ${installationRoot}`);
     });
 
     test("returns fatal exit code when the native binding fails during startup", () => {

@@ -168,6 +168,9 @@ jobs:
         run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler ${{ matrix.compiler }}
 
       - name: Install User Settings conformance YAML parser
+        # The conformance steps below still run after a failed build/test step, so the parser
+        # they import must be installed then too, or they mask real results with ImportError.
+        if: ${{ !cancelled() }}
         run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
 
       - name: Run native CXX scan conformance
@@ -1261,6 +1264,26 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run native CXX crash-log-scan-launch conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch -TestOnly
+
+      - name: Upload native CXX crash-log-scan-launch conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-crash-log-scan-launch-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run CLI Crash Log Scan Run consumer conformance
         if: ${{ !cancelled() }}
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }} -TestOnly
@@ -1284,6 +1307,19 @@ jobs:
         with:
           name: cli-user-settings-consumer-conformance-${{ matrix.compiler }}
           path: tools/binding_compliance/artifacts/user-settings/cli/windows-${{ matrix.compiler }}/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run CLI Crash Log Scan Launch consumer conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers -TestOnly
+
+      - name: Upload CLI Crash Log Scan Launch consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cli-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}
+          path: tools/binding_compliance/artifacts/crash-log-scan-launch-consumers/cli/windows-${{ matrix.compiler }}/
           if-no-files-found: warn
           retention-days: 7
 
@@ -1411,6 +1447,9 @@ jobs:
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
 
       - name: Install User Settings conformance YAML parser
+        # The conformance steps below still run after a failed build/test step, so the parser
+        # they import must be installed then too, or they mask real results with ImportError.
+        if: ${{ !cancelled() }}
         run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
 
       - name: Run GUI Crash Log Scan Run consumer conformance
@@ -1436,6 +1475,19 @@ jobs:
         with:
           name: gui-user-settings-consumer-conformance-${{ matrix.compiler }}
           path: tools/binding_compliance/artifacts/user-settings/gui/windows-${{ matrix.compiler }}/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run GUI Crash Log Scan Launch consumer conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }} -Preset ci-system-qt -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers -TestOnly
+
+      - name: Upload GUI Crash Log Scan Launch consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: gui-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}
+          path: tools/binding_compliance/artifacts/crash-log-scan-launch-consumers/gui/windows-${{ matrix.compiler }}/
           if-no-files-found: warn
           retention-days: 7
 

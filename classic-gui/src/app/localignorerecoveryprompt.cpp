@@ -75,8 +75,8 @@ ScanRunLocalIgnoreRecoveryChoice promptLocalIgnoreRecoveryChoice(
     auto* cancelButton = prompt.addButton(QMessageBox::Cancel);
     // Cancel is both the default and the escape route so no keystroke or window close can authorize
     // a durable reset the user did not ask for. It is deliberately absent from `decisions`: Rust
-    // spells backing out as the *absence* of a decision, reached through the shared abandon
-    // operation, so its affordance and its wording stay this frontend's own.
+    // spells backing out as the *absence* of a decision, which the worker passes to settling, so
+    // its affordance and its wording stay this frontend's own.
     prompt.setDefaultButton(cancelButton);
     prompt.setEscapeButton(cancelButton);
     prompt.exec();

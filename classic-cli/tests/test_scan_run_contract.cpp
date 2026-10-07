@@ -18,6 +18,8 @@
 #include <fstream>
 #include <functional>
 #include <iterator>
+#include <memory>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -35,8 +37,9 @@ namespace fixture = classic::scan_run_fixture;
 /// Executes an opaque bridge operation and moves out its typed terminal envelope.
 scanner::ScanRunContractExecutionResult execute_result(
     const scanner::ScanRunRequest& request, const scanner::ScanRunCancellation& cancellation,
-    const scanner::ScanRunObserver* observer) {
-    auto operation = scanner::scan_run_contract_execute(request, cancellation, observer);
+    const scanner::ScanRunObserver* observer,
+    scanner::ScanRunObserverFailurePolicy policy = scanner::ScanRunObserverFailurePolicy::ContinueRun) {
+    auto operation = scanner::scan_run_contract_execute(request, cancellation, observer, policy);
     return scanner::scan_run_contract_execution_take_result(*operation);
 }
 
@@ -68,37 +71,26 @@ private:
     fs::path path_;
 };
 
-/// Models an adapter delivery failure by retaining the event and requesting
-/// cancellation through the separate monotonic control.
-class CancellingObserver final : public scanner::ScanRunObserver {
+/// Models an adapter whose every delivery fails, reported by return value rather than by
+/// throwing across CXX. It never touches cancellation: that is the policy's job now.
+class FailingObserver final : public scanner::ScanRunObserver {
 public:
-    /// Borrows the cancellation control that remains live for bridge execution.
-    explicit CancellingObserver(const scanner::ScanRunCancellation& cancellation) noexcept
-        : cancellation_(cancellation) {}
-
-    /// Records serialized delivery and translates the simulated adapter failure
-    /// into cooperative cancellation without throwing across CXX.
-    void on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
+    /// Records the delivery attempt and reports it failed.
+    scanner::ScanRunObserverDelivery on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
         event_kind_ = event.kind;
         event_count_ += 1;
-        delivery_failed_ = true;
-        scanner::scan_run_cancellation_cancel(cancellation_);
+        return {true, "simulated progress view failure"};
     }
 
-    /// Returns the only event kind expected before observer-requested cancellation.
+    /// Returns the kind of the last event delivery attempted.
     [[nodiscard]] scanner::ScanRunContractEventKind event_kind() const noexcept { return event_kind_; }
 
     /// Returns the number of serialized callback deliveries.
     [[nodiscard]] std::size_t event_count() const noexcept { return event_count_; }
 
-    /// Returns whether the adapter simulated a downstream delivery failure.
-    [[nodiscard]] bool delivery_failed() const noexcept { return delivery_failed_; }
-
 private:
-    const scanner::ScanRunCancellation& cancellation_;
     mutable scanner::ScanRunContractEventKind event_kind_ = scanner::ScanRunContractEventKind::DiscoveryCompleted;
     mutable std::size_t event_count_ = 0;
-    mutable bool delivery_failed_ = false;
 };
 
 /// Builds the smallest valid shared configuration needed to reach discovery.
@@ -177,10 +169,11 @@ std::string_view disposition_name(scanner::ScanRunContractLogDisposition disposi
 class RecordingObserver final : public scanner::ScanRunObserver {
 public:
     /// Retains the stable event kind in callback order.
-    void on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
+    scanner::ScanRunObserverDelivery on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
         if (count_ < kinds_.size()) {
             kinds_[count_++] = event.kind;
         }
+        return {};
     }
 
     /// Returns the stable set of event variants observed by this adapter.
@@ -209,7 +202,7 @@ public:
         , trigger_index_(trigger_index) {}
 
     /// Records only trivial event facts before requesting monotonic cancellation.
-    void on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
+    scanner::ScanRunObserverDelivery on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
         if (count_ < events_.size()) {
             events_[count_++] = EventSnapshot{event.kind, event.discovery_index, event.disposition};
         }
@@ -217,6 +210,7 @@ public:
             triggered_ = true;
             scanner::scan_run_cancellation_cancel(cancellation_);
         }
+        return {};
     }
 
     /// Returns whether the configured cancellation boundary was observed.
@@ -270,12 +264,16 @@ private:
     mutable bool triggered_ = false;
 };
 
-/// Returns the smallest typed User Settings the CLI request builder accepts.
-PreparedScanUserSettings cli_settings() {
-    PreparedScanUserSettings settings{};
-    settings.game = "Fallout4";
-    settings.game_version = "auto";
-    return settings;
+/// Launches `args` through the CLI's Crash Log Scan Launch seam and returns the executable request.
+///
+/// The fixture roots carry no User Settings document, so the launch uses Rust's defaults: managed
+/// Fallout 4, automatic game version, and no FCX Mode.
+rust::Box<scanner::ScanRunRequest> cli_launch_request(const CliArgs& args, const std::string& root) {
+    auto launch = launch_cli_scan_run(args, root);
+    if (!launch.has_value() || scanner::scan_run_launch_error(**launch).has_error) {
+        throw std::runtime_error("CLI could not launch the fixture Crash Log Scan Run");
+    }
+    return scanner::scan_run_launch_request(**launch);
 }
 
 /// Flattens CLI presentation lines so tests can assert on retained text and its order.
@@ -349,6 +347,27 @@ private:
     std::vector<std::string> details_;
     std::vector<CliLocalIgnoreRecoveryDecisionOption> decisions_;
 };
+
+/// Builds the bridge's optional-decision settlement; `decision` is read only with `has_decision`.
+scanner::ScanRunLocalIgnoreRecoverySettlement settlement_of(
+    std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> decision) {
+    scanner::ScanRunLocalIgnoreRecoverySettlement settlement{};
+    settlement.has_decision = decision.has_value();
+    settlement.decision = decision.value_or(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
+    return settlement;
+}
+
+/// Settles one pending recovery under the continue policy and returns its envelope.
+///
+/// Settling is the only way to answer a paused run; the separate resume and abandon entry points
+/// were removed (ADR-0009). `observer` may be null.
+scanner::ScanRunContractExecutionResult settle_pending(
+    const scanner::ScanRunPendingRecovery& pending,
+    std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> decision,
+    const scanner::ScanRunObserver* observer = nullptr) {
+    return scanner::scan_run_pending_recovery_settle(pending, settlement_of(decision), observer,
+                                                     scanner::ScanRunObserverFailurePolicy::ContinueRun);
+}
 
 } // namespace
 
@@ -507,8 +526,9 @@ TEST_CASE("CXX shared Local Ignore recovery retains snapshots and rejects replay
     }
 
     auto initial_operation = scanner::scan_run_contract_execute(
-        *request, *scanner::scan_run_cancellation_new(), nullptr);
-    REQUIRE(scanner::scan_run_contract_execution_has_continuation(*initial_operation));
+        *request, *scanner::scan_run_cancellation_new(), nullptr,
+        scanner::ScanRunObserverFailurePolicy::ContinueRun);
+    REQUIRE(scanner::scan_run_contract_execution_has_pending_recovery(*initial_operation));
     const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
     REQUIRE(initial.has_result);
     REQUIRE(initial.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
@@ -518,7 +538,7 @@ TEST_CASE("CXX shared Local Ignore recovery retains snapshots and rejects replay
     const auto retained_log = std::string(initial.result.discovery.accepted_logs[0]);
     const auto retained_main_sha = std::string(initial.result.installed_yaml_data.main.sha256);
     const auto retained_game_sha = std::string(initial.result.installed_yaml_data.game_file.sha256);
-    auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*initial_operation);
 
     {
         std::ofstream changed(temporary.path() / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
@@ -526,10 +546,8 @@ TEST_CASE("CXX shared Local Ignore recovery retains snapshots and rejects replay
         changed << "invalid: [unterminated";
     }
     const RecordingObserver observer;
-    auto resumed_operation = scanner::scan_run_continuation_resume(
-        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-        *scanner::scan_run_cancellation_new(), &observer);
-    const auto resumed = scanner::scan_run_contract_execution_take_result(*resumed_operation);
+    const auto resumed =
+        settle_pending(*pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore, &observer);
 
     REQUIRE(resumed.has_result);
     REQUIRE(resumed.result.status == scanner::ScanRunContractStatus::Completed);
@@ -542,10 +560,7 @@ TEST_CASE("CXX shared Local Ignore recovery retains snapshots and rejects replay
     REQUIRE(read_file_bytes(native_path(resumed.result.logs[0].autoscan_report)) == baseline_report);
     REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
 
-    auto replay_operation = scanner::scan_run_continuation_resume(
-        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-        *scanner::scan_run_cancellation_new(), nullptr);
-    const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
+    const auto replay = settle_pending(*pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
     REQUIRE_FALSE(replay.has_result);
     REQUIRE_FALSE(replay.has_error);
     REQUIRE(replay.has_resume_error);
@@ -568,12 +583,13 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
         malformed << fixture::MALFORMED_LOCAL_IGNORE;
     }
     auto initial_operation = scanner::scan_run_contract_execute(
-        *request, *scanner::scan_run_cancellation_new(), nullptr);
+        *request, *scanner::scan_run_cancellation_new(), nullptr,
+        scanner::ScanRunObserverFailurePolicy::ContinueRun);
     const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
     REQUIRE(initial.has_result);
     const auto retained_main_sha = std::string(initial.result.installed_yaml_data.main.sha256);
     const auto retained_game_sha = std::string(initial.result.installed_yaml_data.game_file.sha256);
-    auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*initial_operation);
 
     {
         std::ofstream changed_main(
@@ -586,10 +602,8 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
         changed_game << "invalid: [unterminated";
     }
     const RecordingObserver reset_observer;
-    auto reset_operation = scanner::scan_run_continuation_resume(
-        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        *scanner::scan_run_cancellation_new(), &reset_observer);
-    const auto reset = scanner::scan_run_contract_execution_take_result(*reset_operation);
+    const auto reset =
+        settle_pending(*pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault, &reset_observer);
     REQUIRE(reset.has_result);
     REQUIRE(reset.result.status == scanner::ScanRunContractStatus::Completed);
     REQUIRE(reset.result.discovery.accepted_logs.size() == initial.result.discovery.accepted_logs.size());
@@ -615,10 +629,7 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     REQUIRE(reset.result.installed_yaml_data.local_ignore_reset.replacement_identity.sha256 ==
             reset.result.installed_yaml_data.local_ignore_identity.sha256);
     REQUIRE(read_file_bytes(native_path(reset.result.logs[0].autoscan_report)) == baseline_report);
-    auto replay_operation = scanner::scan_run_continuation_resume(
-        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        *scanner::scan_run_cancellation_new(), nullptr);
-    const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
+    const auto replay = settle_pending(*pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
     REQUIRE(replay.has_resume_error);
     REQUIRE(std::string(replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
     fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
@@ -642,18 +653,18 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     pre_cancel_source.inputs.push_back(pre_cancel_log.string());
     const auto pre_cancel_request = scanner::scan_run_request_targeted(
         make_configuration(pre_cancel_temporary.path()), pre_cancel_source);
-    auto pre_cancel_initial = scanner::scan_run_contract_execute(
-        *pre_cancel_request, *scanner::scan_run_cancellation_new(), nullptr);
-    auto pre_cancel_continuation =
-        scanner::scan_run_contract_execution_take_continuation(*pre_cancel_initial);
+    // Settling runs under the paused run's own control, so cancellation is requested on the
+    // control the run was started with, after the pause and before settling.
     auto pre_cancel_cancellation = scanner::scan_run_cancellation_new();
+    auto pre_cancel_initial = scanner::scan_run_contract_execute(
+        *pre_cancel_request, *pre_cancel_cancellation, nullptr,
+        scanner::ScanRunObserverFailurePolicy::ContinueRun);
+    auto pre_cancel_pending =
+        scanner::scan_run_contract_execution_take_pending_recovery(*pre_cancel_initial);
     scanner::scan_run_cancellation_cancel(*pre_cancel_cancellation);
     const RecordingObserver pre_cancel_observer;
-    auto pre_cancel_resume = scanner::scan_run_continuation_resume(
-        *pre_cancel_continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        *pre_cancel_cancellation, &pre_cancel_observer);
-    const auto pre_cancelled =
-        scanner::scan_run_contract_execution_take_result(*pre_cancel_resume);
+    const auto pre_cancelled = settle_pending(
+        *pre_cancel_pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault, &pre_cancel_observer);
     REQUIRE(pre_cancelled.has_result);
     REQUIRE(pre_cancelled.result.status == scanner::ScanRunContractStatus::Cancelled);
     REQUIRE(pre_cancelled.result.has_discovery);
@@ -672,17 +683,16 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
         malformed << fixture::MALFORMED_LOCAL_IGNORE;
     }
     auto conflict_operation = scanner::scan_run_contract_execute(
-        *request, *scanner::scan_run_cancellation_new(), nullptr);
-    auto conflict_continuation =
-        scanner::scan_run_contract_execution_take_continuation(*conflict_operation);
+        *request, *scanner::scan_run_cancellation_new(), nullptr,
+        scanner::ScanRunObserverFailurePolicy::ContinueRun);
+    auto conflict_pending =
+        scanner::scan_run_contract_execution_take_pending_recovery(*conflict_operation);
     {
         std::ofstream changed(ignore_path, std::ios::binary | std::ios::trunc);
         changed << "CLASSIC_Ignore_Fallout4: []\n";
     }
-    auto conflict_resume = scanner::scan_run_continuation_resume(
-        *conflict_continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        *scanner::scan_run_cancellation_new(), nullptr);
-    const auto conflict = scanner::scan_run_contract_execution_take_result(*conflict_resume);
+    const auto conflict =
+        settle_pending(*conflict_pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
     REQUIRE(conflict.has_resume_error);
     REQUIRE(conflict.resume_error.kind ==
             scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetConflict);
@@ -705,19 +715,17 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     const auto backup_failure_request = scanner::scan_run_request_targeted(
         make_configuration(backup_failure_temporary.path()), backup_failure_source);
     auto backup_failure_initial = scanner::scan_run_contract_execute(
-        *backup_failure_request, *scanner::scan_run_cancellation_new(), nullptr);
-    auto backup_failure_continuation =
-        scanner::scan_run_contract_execution_take_continuation(*backup_failure_initial);
+        *backup_failure_request, *scanner::scan_run_cancellation_new(), nullptr,
+        scanner::ScanRunObserverFailurePolicy::ContinueRun);
+    auto backup_failure_pending =
+        scanner::scan_run_contract_execution_take_pending_recovery(*backup_failure_initial);
     {
         std::ofstream blocker(backup_failure_temporary.path() / "CLASSIC Backup",
                               std::ios::binary | std::ios::trunc);
         blocker << "not a directory";
     }
-    auto backup_failure_resume = scanner::scan_run_continuation_resume(
-        *backup_failure_continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        *scanner::scan_run_cancellation_new(), nullptr);
     const auto backup_failure =
-        scanner::scan_run_contract_execution_take_result(*backup_failure_resume);
+        settle_pending(*backup_failure_pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
     REQUIRE(backup_failure.has_resume_error);
     REQUIRE(backup_failure.resume_error.kind ==
             scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetBackupFailure);
@@ -740,10 +748,12 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     racing_source.inputs.push_back(racing_log.string());
     const auto racing_request = scanner::scan_run_request_targeted(
         make_configuration(racing_cancellation_temporary.path()), racing_source);
-    auto racing_initial = scanner::scan_run_contract_execute(
-        *racing_request, *scanner::scan_run_cancellation_new(), nullptr);
-    auto racing_continuation = scanner::scan_run_contract_execution_take_continuation(*racing_initial);
+    // The racing cancel must land on the run's own control, which settling runs under.
     auto racing_cancellation = scanner::scan_run_cancellation_new();
+    auto racing_initial = scanner::scan_run_contract_execute(
+        *racing_request, *racing_cancellation, nullptr,
+        scanner::ScanRunObserverFailurePolicy::ContinueRun);
+    auto racing_pending = scanner::scan_run_contract_execution_take_pending_recovery(*racing_initial);
     const auto reset_lock = racing_cancellation_temporary.path() / ".classic-local-ignore-reset.lock";
     std::atomic_bool observed_reset_entry = false;
     std::thread cancel_after_reset_entry([&] {
@@ -756,11 +766,9 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
             scanner::scan_run_cancellation_cancel(*racing_cancellation);
         }
     });
-    auto racing_resume = scanner::scan_run_continuation_resume(
-        *racing_continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        *racing_cancellation, nullptr);
+    const auto racing_result =
+        settle_pending(*racing_pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
     cancel_after_reset_entry.join();
-    const auto racing_result = scanner::scan_run_contract_execution_take_result(*racing_resume);
     REQUIRE(observed_reset_entry.load(std::memory_order_acquire));
     REQUIRE(fixture::RESET_POST_CRITICAL_CANCELLATION_STATUS == "cancelled");
     REQUIRE(racing_result.result.status == scanner::ScanRunContractStatus::Cancelled);
@@ -859,7 +867,8 @@ TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bri
     }
 }
 
-TEST_CASE("Scan Run observer can cancel after adapter delivery failure", "[bridge][scan-run]") {
+TEST_CASE("Rust cancels a run whose C++ observer reports a delivery failure under the cancel policy",
+          "[bridge][scan-run][observer-failure]") {
     TemporaryDirectory temporary;
     const fs::path crash_log = temporary.path() / "crash-2026-07-14-00-00-00.log";
     {
@@ -871,19 +880,43 @@ TEST_CASE("Scan Run observer can cancel after adapter delivery failure", "[bridg
     source.inputs.push_back(crash_log.string());
     const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
     const auto cancellation = scanner::scan_run_cancellation_new();
-    const CancellingObserver observer(*cancellation);
+    const FailingObserver observer;
 
-    const auto execution = execute_result(*request, *cancellation, &observer);
+    const auto execution = execute_result(*request, *cancellation, &observer,
+                                          scanner::ScanRunObserverFailurePolicy::CancelRun);
 
-    REQUIRE(observer.delivery_failed());
+    // Rust stops delivering after the first failure, and it is Rust that cancelled.
     REQUIRE(observer.event_count() == 1);
     REQUIRE(observer.event_kind() == scanner::ScanRunContractEventKind::DiscoveryCompleted);
     REQUIRE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
+    REQUIRE(execution.has_observer_delivery_failure);
+    REQUIRE(std::string(execution.observer_delivery_failure_message) == "simulated progress view failure");
     REQUIRE(execution.has_result);
     REQUIRE_FALSE(execution.has_error);
     REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Cancelled);
     REQUIRE(execution.result.has_discovery);
     REQUIRE(execution.result.discovery.accepted_logs.size() == 1);
+}
+
+TEST_CASE("A C++ observer delivery failure under the continue policy is reported without cancelling",
+          "[bridge][scan-run][observer-failure]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    const auto log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    const auto cancellation = scanner::scan_run_cancellation_new();
+    const FailingObserver observer;
+
+    const auto execution = execute_result(*request, *cancellation, &observer,
+                                          scanner::ScanRunObserverFailurePolicy::ContinueRun);
+
+    REQUIRE(observer.event_count() == 1);
+    REQUIRE_FALSE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
+    REQUIRE(execution.has_observer_delivery_failure);
+    REQUIRE(execution.has_result);
+    REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Completed);
 }
 
 TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation root",
@@ -902,12 +935,13 @@ TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation 
     const CliLocalIgnoreRecoveryPrompt no_prompt;
 
     const CliArgs standard_args{};
-    const auto standard_request = build_cli_scan_run_request(standard_args, cli_settings(), root, root);
+    const auto standard_request = cli_launch_request(standard_args, root);
     CliScanRunCancellation standard_cancellation(false);
     const auto standard = execute_cli_scan_run(*standard_request, standard_cancellation, nullptr, no_prompt);
 
     REQUIRE(standard.execution.has_result);
-    REQUIRE_FALSE(standard.local_ignore_continuation_consumed);
+    REQUIRE_FALSE(standard.local_ignore_recovery_settled);
+    REQUIRE_FALSE(standard.settled_decision.has_value());
     REQUIRE(standard.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
     REQUIRE(standard.execution.result.discovery.source == scanner::ScanRunContractDiscoverySource::Standard);
     REQUIRE(standard.execution.result.installed_yaml_data.local_ignore_state ==
@@ -915,7 +949,7 @@ TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation 
 
     CliArgs targeted_args{};
     targeted_args.input_paths.push_back(targeted_log.string());
-    const auto targeted_request = build_cli_scan_run_request(targeted_args, cli_settings(), root, root);
+    const auto targeted_request = cli_launch_request(targeted_args, root);
     CliScanRunCancellation targeted_cancellation(false);
     const auto targeted = execute_cli_scan_run(*targeted_request, targeted_cancellation, nullptr, no_prompt);
 
@@ -935,7 +969,7 @@ TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation 
             fixture::MALFORMED_LOCAL_IGNORE);
 }
 
-TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cli][scan-run][local-ignore]") {
+TEST_CASE("CLI Proceed Without Ignore settles the retained discovery once", "[cli][scan-run][local-ignore]") {
     TemporaryDirectory temporary;
     copy_shared_yaml_tree(temporary.path());
     CliArgs args{};
@@ -943,7 +977,7 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
         args.input_paths.push_back(copy_shared_log(temporary.path(), accepted).string());
     }
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
@@ -955,7 +989,8 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
                                               });
 
     REQUIRE(prompt.invocations() == 1);
-    REQUIRE(outcome.local_ignore_continuation_consumed);
+    REQUIRE(outcome.local_ignore_recovery_settled);
+    REQUIRE(outcome.settled_decision == scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Completed);
     REQUIRE(outcome.execution.result.installed_yaml_data.local_ignore_state ==
@@ -985,13 +1020,13 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
     }
 }
 
-TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][scan-run][local-ignore]") {
+TEST_CASE("CLI Reset To Default settles with durable backup metadata", "[cli][scan-run][local-ignore]") {
     TemporaryDirectory temporary;
     copy_shared_yaml_tree(temporary.path());
     CliArgs args{};
     args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
@@ -1003,6 +1038,7 @@ TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][sc
                                               });
 
     REQUIRE(prompt.invocations() == 1);
+    REQUIRE(outcome.settled_decision == scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
     // End-to-end proof that the described decisions survive the bridge rather than defaulting: this
     // fixture's Main YAML Data does retain a usable default, and the reset below is what proves the
     // availability attached to that decision was true. Both decisions are described whether or not
@@ -1040,7 +1076,7 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
     CliArgs args{};
     args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
@@ -1052,7 +1088,10 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
                                               });
 
     REQUIRE(prompt.invocations() == 1);
-    REQUIRE(outcome.local_ignore_continuation_consumed);
+    // Cancel is settled as the absence of a decision, not as a third decision.
+    REQUIRE(outcome.local_ignore_recovery_settled);
+    REQUIRE_FALSE(outcome.settled_decision.has_value());
+    REQUIRE(scanner::scan_run_cancellation_is_cancelled(cancellation.token()));
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Cancelled);
     REQUIRE(outcome.execution.result.logs.size() == 1);
@@ -1065,66 +1104,66 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
     REQUIRE(present_cli_scan_run_execution(outcome.execution, 1.0).exit_code == 130);
 }
 
-TEST_CASE("CXX abandonment claims the continuation without deciding or observing",
-          "[bridge][scan-run][local-ignore]") {
-    // The C++ half of the shared abandonment operation. The Rust-side bridge test cannot cover the
-    // observer at all — `ScanRunObserver` is a C++ virtual class Rust has no way to implement — so
-    // "an abandoned run emits nothing" is only assertable from here.
+TEST_CASE("CLI settles a pending recovery whose run was already cancelled without prompting",
+          "[cli][scan-run][local-ignore][settle]") {
     TemporaryDirectory temporary;
     copy_shared_yaml_tree(temporary.path());
-    const auto log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    CliArgs args{};
+    args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
+    const auto root = temporary.path().string();
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
-    scanner::ScanRunTargetedSourceDto source{};
-    source.inputs.push_back(log.string());
-    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
-    auto initial_operation =
-        scanner::scan_run_contract_execute(*request, *scanner::scan_run_cancellation_new(), nullptr);
-    const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
-    REQUIRE(initial.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-    auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
+    CliScanRunCancellation cancellation(false);
+    auto operation = scanner::scan_run_contract_execute(*request, cancellation.token(), nullptr,
+                                                        CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY);
+    // Ctrl+C lands after the run paused and before the CLI reads the pause.
+    cancellation.request();
 
-    // One control spans the paused run and its abandonment, as both native frontends' does.
-    // `scan_run_continuation_abandon` is what cancels it; nothing here cancels first.
-    auto cancellation = scanner::scan_run_cancellation_new();
-    REQUIRE_FALSE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
-    const RecordingObserver observer;
-    auto abandon_operation = scanner::scan_run_continuation_abandon(*continuation, *cancellation, &observer);
-    const auto abandoned = scanner::scan_run_contract_execution_take_result(*abandon_operation);
+    // A prompt that would reset is the worst case: it must never be asked.
+    RecordingRecoveryPrompt prompt(CliLocalIgnoreRecoveryChoice::ResetToDefault);
+    const auto outcome = resolve_cli_local_ignore_recovery(
+        *operation, nullptr,
+        [&prompt](const CliLocalIgnoreRecoveryPresentation& recovery) { return prompt(recovery); });
 
-    REQUIRE(abandoned.has_result);
-    REQUIRE(abandoned.result.status == scanner::ScanRunContractStatus::Cancelled);
-    REQUIRE(abandoned.result.has_discovery);
-    REQUIRE(abandoned.result.logs.size() == 1);
-    REQUIRE(abandoned.result.logs[0].disposition ==
-            scanner::ScanRunContractLogDisposition::CancelledBeforeStart);
-    REQUIRE_FALSE(abandoned.result.logs[0].has_autoscan_report);
-    // Cancellation short-circuits ahead of every stage that emits, so no event can reach C++.
-    REQUIRE(observer.count() == 0);
-    REQUIRE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
-    // A cancelled run still describes itself; the frontends render these rather than composing a
-    // cancellation sentence of their own.
-    REQUIRE_FALSE(abandoned.display_lines.empty());
-    // Neither the backup nor the replacement half of the reset was reached.
+    REQUIRE(prompt.invocations() == 0);
+    REQUIRE(outcome.local_ignore_recovery_settled);
+    REQUIRE_FALSE(outcome.settled_decision.has_value());
+    REQUIRE(outcome.execution.has_result);
+    REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Cancelled);
     REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
     REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
+    REQUIRE(present_cli_scan_run_outcome(outcome, 1.0).exit_code == 130);
+}
 
-    // The one-shot claim is shared with resume, so a spent continuation closes both seams. Reset To
-    // Default is the decision that could have written to disk had the claim survived.
-    auto replay_operation =
-        scanner::scan_run_continuation_abandon(*continuation, *scanner::scan_run_cancellation_new(), nullptr);
-    const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
-    REQUIRE(replay.has_resume_error);
-    REQUIRE(std::string(replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
-    auto replay_resume_operation = scanner::scan_run_continuation_resume(
-        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        *scanner::scan_run_cancellation_new(), nullptr);
-    const auto replay_resume = scanner::scan_run_contract_execution_take_result(*replay_resume_operation);
-    REQUIRE(replay_resume.has_resume_error);
-    REQUIRE(std::string(replay_resume.resume_error.code) == fixture::RESET_CONSUMED_CODE);
-    REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
-    REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
+TEST_CASE("CLI reports observer delivery failure from the run result under its cancel policy",
+          "[cli][scan-run][observer-failure]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    CliArgs args{};
+    args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
+    const auto root = temporary.path().string();
+    const auto request = cli_launch_request(args, root);
+
+    // The failing observer never touches cancellation itself; any cancel is Rust applying the
+    // policy the CLI chose.
+    CliScanRunCancellation cancellation(false);
+    const FailingObserver observer;
+    const auto outcome = execute_cli_scan_run(*request, cancellation, &observer, CliLocalIgnoreRecoveryPrompt{});
+
+    REQUIRE(CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY == scanner::ScanRunObserverFailurePolicy::CancelRun);
+    REQUIRE(observer.event_count() == 1);
+    REQUIRE(outcome.execution.has_observer_delivery_failure);
+    REQUIRE(outcome.execution.has_result);
+    REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(scanner::scan_run_cancellation_is_cancelled(cancellation.token()));
+
+    const auto presentation = present_cli_scan_run_outcome(outcome, 1.0);
+    REQUIRE(presentation.exit_code == 130);
+    REQUIRE_FALSE(presentation.messages.empty());
+    REQUIRE(presentation.messages[0].error);
+    REQUIRE(presentation.messages[0].text.find("presentation failed") != std::string::npos);
 }
 
 TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "[cli][scan-run][local-ignore]") {
@@ -1133,7 +1172,7 @@ TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "
     CliArgs args{};
     args.input_paths.push_back(copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT).string());
     const auto root = temporary.path().string();
-    const auto request = build_cli_scan_run_request(args, cli_settings(), root, root);
+    const auto request = cli_launch_request(args, root);
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
     malform_local_ignore(temporary.path());
 
@@ -1167,4 +1206,187 @@ TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "
         REQUIRE(message.error);
     }
     REQUIRE(read_file_bytes(ignore_path) == "CLASSIC_Ignore_Fallout4: []\n");
+}
+
+namespace {
+
+/// One paused targeted run, the control it was started under, and its initial envelope.
+struct PausedSettleRun {
+    std::unique_ptr<TemporaryDirectory> temporary;
+    fs::path ignore_path;
+    rust::Box<scanner::ScanRunCancellation> cancellation;
+    rust::Box<scanner::ScanRunContractExecution> operation;
+    scanner::ScanRunContractExecutionResult initial;
+};
+
+/// Pauses one targeted run on the shared malformed Local Ignore fixture.
+PausedSettleRun paused_settle_run() {
+    auto temporary = std::make_unique<TemporaryDirectory>();
+    copy_shared_yaml_tree(temporary->path());
+    const auto log = copy_shared_log(temporary->path(), fixture::INSTALLED_YAML_INPUT);
+    malform_local_ignore(temporary->path());
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary->path()), source);
+    auto cancellation = scanner::scan_run_cancellation_new();
+    auto operation = scanner::scan_run_contract_execute(*request, *cancellation, nullptr, scanner::ScanRunObserverFailurePolicy::ContinueRun);
+    auto initial = scanner::scan_run_contract_execution_take_result(*operation);
+    REQUIRE(initial.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    auto ignore_path = temporary->path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    return PausedSettleRun{std::move(temporary), std::move(ignore_path), std::move(cancellation),
+                           std::move(operation), std::move(initial)};
+}
+
+}  // namespace
+
+TEST_CASE("CXX pending recovery carries the rendered prompt and settles each decision",
+          "[bridge][scan-run][local-ignore][settle]") {
+    for (const auto decision : {scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                                scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault}) {
+        auto paused = paused_settle_run();
+        REQUIRE(scanner::scan_run_contract_execution_has_pending_recovery(*paused.operation));
+        auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+        REQUIRE_FALSE(scanner::scan_run_contract_execution_has_pending_recovery(*paused.operation));
+
+        // The pending recovery's prompt is the one the paused envelope already carries.
+        const auto prompt = scanner::scan_run_pending_recovery_prompt(*pending);
+        REQUIRE(prompt.lines.size() == paused.initial.recovery_prompt.lines.size());
+        REQUIRE(prompt.decisions.size() == paused.initial.recovery_prompt.decisions.size());
+        for (std::size_t index = 0; index < prompt.decisions.size(); ++index) {
+            REQUIRE(prompt.decisions[index].decision == paused.initial.recovery_prompt.decisions[index].decision);
+            REQUIRE(prompt.decisions[index].available == paused.initial.recovery_prompt.decisions[index].available);
+        }
+        REQUIRE_FALSE(scanner::scan_run_pending_recovery_cancellation_requested(*pending));
+
+        const RecordingObserver observer;
+        const auto settled = scanner::scan_run_pending_recovery_settle(*pending, settlement_of(decision), &observer, scanner::ScanRunObserverFailurePolicy::ContinueRun);
+        REQUIRE(settled.has_result);
+        REQUIRE(settled.result.status == scanner::ScanRunContractStatus::Completed);
+        REQUIRE(std::string(settled.result.discovery.accepted_logs[0]) ==
+                std::string(paused.initial.result.discovery.accepted_logs[0]));
+        // Settling resumes the same discovery; it never rediscovers.
+        REQUIRE_FALSE(observer.kinds().contains(scanner::ScanRunContractEventKind::DiscoveryCompleted));
+        REQUIRE_FALSE(settled.has_recovery_prompt);
+        REQUIRE_FALSE(scanner::scan_run_cancellation_is_cancelled(*paused.cancellation));
+    }
+}
+
+TEST_CASE("CXX settling without a decision abandons the run and touches nothing",
+          "[bridge][scan-run][local-ignore][settle]") {
+    // The C++ half of the one abandonment operation. The Rust-side bridge test cannot cover the
+    // observer at all — `ScanRunObserver` is a C++ virtual class Rust has no way to implement — so
+    // "an abandoned run emits nothing" is only assertable from here.
+    auto paused = paused_settle_run();
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+
+    const RecordingObserver observer;
+    const auto settled = scanner::scan_run_pending_recovery_settle(*pending, settlement_of(std::nullopt), &observer, scanner::ScanRunObserverFailurePolicy::ContinueRun);
+
+    REQUIRE(settled.has_result);
+    REQUIRE(settled.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(settled.result.has_discovery);
+    REQUIRE(settled.result.logs.size() == 1);
+    REQUIRE(settled.result.logs[0].disposition == scanner::ScanRunContractLogDisposition::CancelledBeforeStart);
+    REQUIRE_FALSE(settled.result.logs[0].has_autoscan_report);
+    // Cancellation short-circuits ahead of every stage that emits, so no event can reach C++.
+    REQUIRE(observer.count() == 0);
+    // The run's own control, the one handed to execute, is what no decision cancels.
+    REQUIRE(scanner::scan_run_cancellation_is_cancelled(*paused.cancellation));
+    // A cancelled run still describes itself; the frontends render these rather than composing a
+    // cancellation sentence of their own.
+    REQUIRE_FALSE(settled.display_lines.empty());
+    REQUIRE(read_file_bytes(paused.ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(paused.temporary->path() / "CLASSIC Backup"));
+}
+
+TEST_CASE("CXX pending recovery reports a run already cancelled and settles inert",
+          "[bridge][scan-run][local-ignore][settle]") {
+    auto paused = paused_settle_run();
+    scanner::scan_run_cancellation_cancel(*paused.cancellation);
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+
+    REQUIRE(scanner::scan_run_pending_recovery_cancellation_requested(*pending));
+    // Reset To Default is the one decision that could write; cancellation still wins.
+    const auto settled = scanner::scan_run_pending_recovery_settle(
+        *pending, settlement_of(scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault), nullptr,
+        scanner::ScanRunObserverFailurePolicy::ContinueRun);
+
+    REQUIRE(settled.has_result);
+    REQUIRE(settled.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(read_file_bytes(paused.ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(paused.temporary->path() / "CLASSIC Backup"));
+}
+
+TEST_CASE("CXX settling replays share one consumed continuation",
+          "[bridge][scan-run][local-ignore][settle]") {
+    auto paused = paused_settle_run();
+    auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+
+    const auto settled = scanner::scan_run_pending_recovery_settle(
+        *pending, settlement_of(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore), nullptr,
+        scanner::ScanRunObserverFailurePolicy::ContinueRun);
+    REQUIRE(settled.has_result);
+
+    const auto replay = scanner::scan_run_pending_recovery_settle(*pending, settlement_of(std::nullopt), nullptr, scanner::ScanRunObserverFailurePolicy::ContinueRun);
+    REQUIRE(replay.has_resume_error);
+    REQUIRE(replay.resume_error.kind == scanner::ScanRunContractResumeErrorKind::ContinuationConsumed);
+    REQUIRE(std::string(replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+
+    // Reset To Default is the decision that could have written to disk had the claim survived.
+    const auto reset_replay = settle_pending(*pending, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
+    REQUIRE(reset_replay.has_resume_error);
+    REQUIRE(std::string(reset_replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+    REQUIRE_FALSE(fs::exists(paused.temporary->path() / "CLASSIC Backup"));
+}
+
+TEST_CASE("A C++ observer delivery failure before a pending recovery makes Rust abandon it",
+          "[bridge][scan-run][local-ignore][observer-failure]") {
+    for (const auto policy : {scanner::ScanRunObserverFailurePolicy::ContinueRun,
+                              scanner::ScanRunObserverFailurePolicy::CancelRun}) {
+        TemporaryDirectory temporary;
+        copy_shared_yaml_tree(temporary.path());
+        const auto log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
+        malform_local_ignore(temporary.path());
+        scanner::ScanRunTargetedSourceDto source{};
+        source.inputs.push_back(log.string());
+        const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+        const auto cancellation = scanner::scan_run_cancellation_new();
+        const FailingObserver observer;
+
+        auto operation = scanner::scan_run_contract_execute(*request, *cancellation, &observer, policy);
+        const auto execution = scanner::scan_run_contract_execution_take_result(*operation);
+
+        // No pending recovery is left for the frontend to drop: Rust abandoned it.
+        REQUIRE_FALSE(scanner::scan_run_contract_execution_has_pending_recovery(*operation));
+        REQUIRE(execution.has_observer_delivery_failure);
+        REQUIRE(execution.has_result);
+        REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Cancelled);
+        REQUIRE_FALSE(execution.has_recovery_prompt);
+        REQUIRE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
+        REQUIRE(read_file_bytes(temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml") ==
+                fixture::MALFORMED_LOCAL_IGNORE);
+        REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
+    }
+}
+
+TEST_CASE("CXX settling applies the observer failure policy and reports the failure",
+          "[bridge][scan-run][local-ignore][settle][observer-failure]") {
+    for (const auto policy : {scanner::ScanRunObserverFailurePolicy::ContinueRun,
+                              scanner::ScanRunObserverFailurePolicy::CancelRun}) {
+        auto paused = paused_settle_run();
+        auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*paused.operation);
+        const FailingObserver observer;
+
+        const auto settled = scanner::scan_run_pending_recovery_settle(
+            *pending, settlement_of(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore), &observer,
+            policy);
+
+        const bool cancels = policy == scanner::ScanRunObserverFailurePolicy::CancelRun;
+        REQUIRE(observer.event_count() == 1);
+        REQUIRE(settled.has_observer_delivery_failure);
+        REQUIRE(settled.has_result);
+        REQUIRE(settled.result.status == (cancels ? scanner::ScanRunContractStatus::Cancelled
+                                                  : scanner::ScanRunContractStatus::Completed));
+        REQUIRE(scanner::scan_run_cancellation_is_cancelled(*paused.cancellation) == cancels);
+    }
 }

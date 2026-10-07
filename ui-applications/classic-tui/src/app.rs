@@ -2,17 +2,19 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use classic_resource_core::BackupType;
-use classic_scan_presentation::DisplaySeverity;
+use classic_scan_launch::{
+    CrashLogScanIntent, CrashLogScanLaunchError, CrashLogScanLaunchOverrides,
+    CrashLogScanLaunchRequest, prepare_launch,
+};
+use classic_scan_presentation::{
+    DisplaySeverity, PendingRecoveryWithPrompt, take_pending_recovery,
+};
 use classic_scanlog_core::scan_run::contract::{
-    self as scan_run_contract, Cancellation, Configuration, CrashLogScanRunContinuation,
-    Event as ScanRunEvent, InfrastructureError, LocalIgnoreRecoveryDecision, Options, ResumeError,
-    RunResult,
+    self as scan_run_contract, Cancellation, Event as ScanRunEvent, InfrastructureError,
+    LocalIgnoreRecoveryDecision, ObserverDeliveryFailure, ObserverFailurePolicy, ResumeError,
+    RunResult, SettledRunResult,
 };
 use classic_scanlog_core::validate_custom_scan_path;
-use classic_scanlog_core::{
-    CrashLogScanFacts, CrashLogScanSetupContext, StandardCrashLogScanSource,
-    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
-};
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
 use classic_user_settings_core::{
@@ -31,11 +33,12 @@ mod update_workflow;
 
 use crate::results_markdown::MarkdownLink;
 use crate::scan_run::{
-    LocalIgnoreRecoveryPrompt, PresentedLine, ScanRunIntent, build_request,
-    describe_local_ignore_recovery, format_error, format_event, format_result, format_resume_error,
-    join_presented,
+    LocalIgnoreRecoveryPrompt, PresentedLine, describe_local_ignore_recovery, format_error,
+    format_event, format_launch_diagnostics, format_result, format_resume_error, join_presented,
 };
-use crate::state::{classic_root, legacy_tui_state_file_path};
+use crate::state::{
+    InstallationRootNotFound, legacy_tui_state_file_path, locate_installation_root,
+};
 use crate::tabs::articles_tab::{ARTICLE_LINKS, ArticlesClickAreas};
 use crate::tabs::backup_tab::BackupClickAreas;
 use crate::tabs::main_tab::{MainClickAreas, MainFocus};
@@ -50,14 +53,41 @@ pub const BACKUP_TYPES: [BackupType; 4] = [
     BackupType::ENB,
 ];
 
-/// Returns whether a run stopped to ask for a Local Ignore recovery decision rather than finishing.
+/// Builds the observer that forwards Crash Log Scan Run events to the App's message channel.
 ///
-/// A named predicate rather than an inline comparison for two reasons. It reads as the question the
-/// two call sites are actually asking, and it keeps the only `CrashLogScanRunStatus::` in `app.rs`
-/// inside a `bool`-returning function — which is what the shared runtime audit needs in order to
-/// tell a control-flow match from a naming table without parsing Rust.
-fn awaits_local_ignore_recovery(result: &RunResult) -> bool {
-    result.status == classic_scanlog_core::CrashLogScanRunStatus::LocalIgnoreRecoveryRequired
+/// A closed channel means the App that would present the events is gone. That is reported to Rust
+/// as an observer delivery failure, and the `ObserverFailurePolicy::CancelRun` every caller passes
+/// lets Rust decide what it does to the run: Rust cancels, stops delivering, and abandons any
+/// Local Ignore recovery the run would otherwise pause on. The TUI keeps no delivery-failure state
+/// of its own, and with the App gone there is no one left to show the reported failure to.
+fn forward_scan_run_events(
+    tx: mpsc::UnboundedSender<AsyncMessage>,
+) -> impl FnMut(ScanRunEvent) -> Result<(), ObserverDeliveryFailure> + Send {
+    move |event| {
+        tx.send(AsyncMessage::ScanEvent(event))
+            .map_err(|_| ObserverDeliveryFailure::new("the TUI progress channel is closed"))
+    }
+}
+
+/// Settles a paused run whose result could not reach the App, so its recovery is not left dangling.
+///
+/// The App's channel closed between the run's last event and its result, so nothing will ever
+/// answer the question. Settling with no decision is the contract's one abandonment operation: the
+/// run ends cancelled after discovery with no filesystem work, instead of its pending recovery
+/// being dropped unsettled. Any other undelivered outcome needs nothing further.
+async fn settle_undelivered_pause(message: AsyncMessage) {
+    let AsyncMessage::ScanFinished(outcome) = message else {
+        return;
+    };
+    let Ok(mut result) = *outcome else {
+        return;
+    };
+    if let Some(recovery) = take_pending_recovery(&mut result) {
+        // There is no App left to report the settled outcome to, so it is deliberately discarded.
+        let _ = recovery
+            .settle(None, None, ObserverFailurePolicy::CancelRun)
+            .await;
+    }
 }
 
 /// Returns whether a run finished normally with at least one Crash Log to show for it.
@@ -119,40 +149,24 @@ pub enum Overlay {
     /// A Crash Log Scan Run paused for an explicit Local Ignore recovery decision.
     ///
     /// This variant is intentionally payload-free. `Overlay` is cloned on every key press, so the
-    /// non-cloneable continuation lives in [`App::pending_local_ignore_recovery`] instead.
+    /// non-cloneable pending recovery lives in [`App::pending_local_ignore_recovery`] instead.
     LocalIgnoreRecovery,
 }
 
 /// Non-cloneable owner of one Crash Log Scan Run paused on Local Ignore recovery.
 ///
-/// The opaque single-use continuation and the run's cancellation control live here and are never
-/// embedded in `Overlay` or any other cloneable or serializable presentation state. Accepting or
-/// dismissing a decision moves the whole value out, which is what makes the continuation
-/// single-use at the TUI seam as well as inside Rust.
+/// The pending recovery Rust handed back with the paused run (its single-use continuation, the
+/// run's own cancellation control, and its rendered prompt) lives here and is never embedded in
+/// `Overlay` or any other cloneable or serializable presentation state. Answering moves the whole
+/// value out, which is what makes it single-use at the TUI seam as well as inside Rust.
 pub struct PendingLocalIgnoreRecovery {
-    /// Opaque process-local continuation retaining discovery and prepared intake.
-    continuation: CrashLogScanRunContinuation,
-    /// The paused run's monotonic cancellation control, reused so a prior cancel still wins.
-    cancellation: Cancellation,
+    /// The pending recovery, settled exactly once with the user's decision or with none.
+    recovery: PendingRecoveryWithPrompt,
     /// Cloneable facts the overlay renders while awaiting a decision.
     prompt: LocalIgnoreRecoveryPrompt,
 }
 
-/// How the user answered a Local Ignore recovery question.
-///
-/// [`LocalIgnoreRecoveryDecision`] still has only two variants, so dismissal is not one of them; it
-/// is modelled here because the TUI has to express it, and a named alternative reads better at the
-/// call site than a bool. It maps onto a Rust-owned operation rather than a decision:
-/// [`CrashLogScanRunContinuation::abandon`].
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum RecoveryAnswer {
-    /// Apply one explicit Rust-defined decision to the retained run.
-    Accept(LocalIgnoreRecoveryDecision),
-    /// Dismiss the question, abandoning the paused run without consuming its recovery plan.
-    Dismiss,
-}
-
-/// Retained outcome of the most recent Crash Log Scan Run, including a resumed run.
+/// Retained outcome of the most recent Crash Log Scan Run, including a settled run.
 #[derive(Debug)]
 pub enum LastScanRun {
     /// One Crash Log Scan Run result, whether terminal or paused for a recovery decision.
@@ -161,7 +175,7 @@ pub enum LastScanRun {
     Run(Box<RunResult>),
     /// A run-wide typed infrastructure failure.
     Failed(InfrastructureError),
-    /// A typed failure raised while resuming a retained Local Ignore recovery.
+    /// A typed failure raised while settling a Local Ignore pending recovery.
     RecoveryFailed(ResumeError),
 }
 
@@ -322,8 +336,13 @@ impl InputState {
 pub enum AsyncMessage {
     ScanEvent(ScanRunEvent),
     ScanFinished(Box<Result<RunResult, InfrastructureError>>),
-    /// Terminal outcome of resuming a retained Local Ignore recovery continuation.
-    ScanResumeFinished(Box<Result<RunResult, ResumeError>>),
+    /// Terminal outcome of settling a Local Ignore pending recovery.
+    ScanSettleFinished {
+        /// The decision the settle worker passed to Rust; `None` settled with no decision.
+        decision: Option<LocalIgnoreRecoveryDecision>,
+        /// The settled run, or the typed failure settling reported.
+        outcome: Box<Result<SettledRunResult, ResumeError>>,
+    },
     UpdateResult(Result<NotificationStatus, String>),
     BackupStatuses([bool; 4]),
     BackupComplete(String),
@@ -388,23 +407,35 @@ pub struct App {
     pub async_rx: mpsc::UnboundedReceiver<AsyncMessage>,
     pub scan_cancellation: Option<Cancellation>,
     pub last_scan_run: Option<LastScanRun>,
-    /// Continuation-owning state for a run paused on Local Ignore recovery, if any.
+    /// Launch diagnostics of the run currently in flight, already laid out as display lines.
+    ///
+    /// Held apart from [`Self::last_scan_launch_diagnostics`] until the run reports back, so the
+    /// Last Scan overlay never pairs a new launch's diagnostics with the previous run's result.
+    scan_launch_diagnostics: Vec<PresentedLine>,
+    /// Launch diagnostics of the run [`Self::last_scan_run`] retains, shown above its result.
+    last_scan_launch_diagnostics: Vec<PresentedLine>,
+    /// Pending-recovery-owning state for a run paused on Local Ignore recovery, if any.
     pub pending_local_ignore_recovery: Option<PendingLocalIgnoreRecovery>,
 
     pub url_opener: UrlOpener,
     pub clipboard_writer: ClipboardWriter,
 }
 
-impl Default for App {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl App {
     /// Opens the shared canonical User Settings store for the normal TUI process.
-    pub fn new() -> Self {
-        Self::new_with_settings_root(classic_root(), legacy_tui_state_file_path())
+    ///
+    /// The store lives under the Installation Root located from this process's executable folder
+    /// and working directory. `App` deliberately has no `Default`: without an Installation Root
+    /// there is no installation to open, and the caller must show the returned error instead.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`InstallationRootNotFound`] when no candidate folder holds `CLASSIC Data`.
+    pub fn new() -> Result<Self, InstallationRootNotFound> {
+        Ok(Self::new_with_settings_root(
+            locate_installation_root()?,
+            legacy_tui_state_file_path(),
+        ))
     }
 
     /// Opens the TUI against an explicit CLASSIC root and optional legacy import source.
@@ -500,6 +531,8 @@ impl App {
             async_rx: rx,
             scan_cancellation: None,
             last_scan_run: None,
+            scan_launch_diagnostics: Vec::new(),
+            last_scan_launch_diagnostics: Vec::new(),
             pending_local_ignore_recovery: None,
             url_opener,
             clipboard_writer,
@@ -569,18 +602,23 @@ impl App {
             }
             AsyncMessage::ScanFinished(outcome) => {
                 self.scan_in_progress = false;
+                // A paused run settles under the control its pending recovery carries, so the
+                // App's own handle on this run is done either way.
+                self.scan_cancellation = None;
+                // The run whose launch produced these diagnostics is the one being retained now.
+                // A settled run keeps them, because settling continues the same launch.
+                self.last_scan_launch_diagnostics =
+                    std::mem::take(&mut self.scan_launch_diagnostics);
                 match *outcome {
-                    // Local Ignore recovery is an expected pause, not a finished run: keep the
-                    // cancellation control alive so the retained continuation resumes under it.
-                    Ok(result) if awaits_local_ignore_recovery(&result) => {
-                        self.begin_local_ignore_recovery(result);
-                    }
-                    Ok(result) => {
-                        self.scan_cancellation = None;
-                        self.apply_terminal_run_result(result);
-                    }
+                    // The pending recovery is taken before anything renders: rendering borrows
+                    // the result, and the presentation crate makes that ordering a contract so no
+                    // adapter discovers it as a borrow error later.
+                    Ok(mut result) => match take_pending_recovery(&mut result) {
+                        // Local Ignore recovery is an expected pause, not a finished run.
+                        Some(recovery) => self.begin_local_ignore_recovery(recovery, result),
+                        None => self.apply_terminal_run_result(result),
+                    },
                     Err(error) => {
-                        self.scan_cancellation = None;
                         let presentation = format_error(&error);
                         self.scan_progress = presentation.percent;
                         self.set_scan_status(presentation.status, presentation.severity);
@@ -590,19 +628,12 @@ impl App {
                     }
                 }
             }
-            AsyncMessage::ScanResumeFinished(outcome) => {
+            AsyncMessage::ScanSettleFinished { outcome, .. } => {
                 self.scan_in_progress = false;
                 self.scan_cancellation = None;
                 match *outcome {
-                    Ok(result) if awaits_local_ignore_recovery(&result) => {
-                        // Resume reuses the retained plan exactly once, so a second recovery
-                        // request is an adapter invariant to report rather than a loop to enter.
-                        self.report_recovery_invariant(
-                            "Crash Log Scan recovery returned an unexpected second recovery request",
-                            result,
-                        );
-                    }
-                    Ok(result) => self.apply_terminal_run_result(result),
+                    // A settled result carries no continuation, so it is always terminal.
+                    Ok(settled) => self.apply_terminal_run_result(settled.into()),
                     Err(error) => {
                         let presentation = format_resume_error(&error);
                         self.scan_progress = presentation.percent;
@@ -654,14 +685,14 @@ impl App {
 
     /// Applies one meaningful terminal run result to retained TUI presentation state.
     ///
-    /// Shared by an initial run and a resumed one so both present identical Rust-owned facts.
+    /// Shared by an initial run and a settled one so both present identical Rust-owned facts.
     fn apply_terminal_run_result(&mut self, mut result: RunResult) {
-        // The continuation comes out before anything renders. A terminal result carries none in
-        // practice, but the ordering is the presentation crate's documented contract rather than a
-        // property of this call site: rendering borrows the result, so a later `take()` would
-        // borrow it across the move. Dropping it also keeps the retained `LastScanRun` free of a
-        // resumable handle no terminal outcome will ever claim.
-        drop(result.continuation.take());
+        // The pending recovery comes out before anything renders. A terminal result carries none
+        // in practice, but the ordering is the presentation crate's documented contract rather
+        // than a property of this call site: rendering borrows the result, so a later take would
+        // borrow it across the mutation. Dropping it also keeps the retained `LastScanRun` free of
+        // a resumable handle no terminal outcome will ever claim.
+        drop(result.take_pending_recovery());
         let presentation = format_result(&result);
         self.scan_progress = presentation.percent;
         self.set_scan_status(presentation.status, presentation.severity);
@@ -679,58 +710,31 @@ impl App {
         self.last_scan_run = Some(LastScanRun::Run(Box::new(result)));
     }
 
-    /// Reports a recovery invariant the TUI cannot act on, retaining the typed result behind it.
+    /// Holds a paused run's pending recovery and asks the user how to settle it.
     ///
-    /// These states are unanswerable rather than merely unsuccessful, so the status deliberately
-    /// does not auto-clear: quietly returning to "Ready" would hide a question that was never put
-    /// to the user.
-    fn report_recovery_invariant(&mut self, message: &str, result: RunResult) {
-        self.scan_progress = 0.0;
-        self.scan_status = message.to_string();
-        self.status_clear_at = None;
-        self.last_scan_run = Some(LastScanRun::Run(Box::new(result)));
-    }
-
-    /// Takes ownership of a paused run's continuation and presents the recovery choice.
-    ///
-    /// The continuation is moved out of the result before anything is shown, so the retained run
-    /// is owned by exactly one place and the summary overlay keeps the rest of the typed result.
-    fn begin_local_ignore_recovery(&mut self, mut result: RunResult) {
-        // Taken before the prompt is described, not after: describing the run renders it, rendering
-        // borrows the result, and the presentation crate makes that ordering a contract precisely
-        // so no adapter discovers it as a borrow error later.
-        let retained = result.continuation.take();
-        let prompt = describe_local_ignore_recovery(&result);
-        let Some(continuation) = retained else {
-            // Reported rather than guessed at: without a retained continuation the run cannot be
-            // resumed, and deciding on the user's behalf is exactly what this contract forbids.
-            self.scan_cancellation = None;
-            self.report_recovery_invariant(
-                "Crash Log Scan Run requested Local Ignore recovery without retaining its continuation",
-                result,
-            );
-            return;
-        };
-
-        // A missing control means no cancellation was ever requested for this run, so a fresh
-        // un-cancelled token is the accurate stand-in; the run's own control is deliberately kept
-        // alive past `ScanFinished` for exactly this reason.
-        let cancellation = self.scan_cancellation.take().unwrap_or_default();
+    /// The overlay shows the pending recovery's own prompt, and the summary overlay keeps the rest
+    /// of the typed result. A pending recovery that reports its run already cancelled is settled at
+    /// once with no decision and no overlay.
+    fn begin_local_ignore_recovery(
+        &mut self,
+        recovery: PendingRecoveryWithPrompt,
+        result: RunResult,
+    ) {
+        let prompt = describe_local_ignore_recovery(&result, recovery.prompt());
+        let already_cancelled = recovery.cancellation_requested();
         self.scan_progress = 0.0;
         self.local_ignore_recovery_scroll = 0;
         self.pending_local_ignore_recovery = Some(PendingLocalIgnoreRecovery {
-            continuation,
-            cancellation: cancellation.clone(),
+            recovery,
             prompt: prompt.clone(),
         });
         self.last_scan_run = Some(LastScanRun::Run(Box::new(result)));
 
-        if cancellation.is_cancelled() {
-            // Cancellation observed before the question is asked already decided this run. Never
-            // offer a destructive choice to a user who is on their way out; go straight to the
-            // cancelled result the contract guarantees. This mirrors the pre-question cancellation
-            // check in the native CLI's `read_cli_local_ignore_recovery_choice`.
-            self.resume_local_ignore_recovery(RecoveryAnswer::Dismiss);
+        if already_cancelled {
+            // Cancellation requested before the question is asked already decided this run, and
+            // Rust says so through the pending recovery. Never offer a destructive choice to a user
+            // who is on their way out; settle with no decision, which ends the run cancelled.
+            self.settle_local_ignore_recovery(None);
             return;
         }
 
@@ -759,78 +763,64 @@ impl App {
             .is_some_and(|pending| pending.prompt.decision_available(decision))
     }
 
-    /// Accepts one explicit Rust-defined Local Ignore recovery decision and resumes the paused run.
+    /// Accepts one explicit Rust-defined Local Ignore recovery decision and settles the paused run.
     pub fn accept_local_ignore_recovery(&mut self, decision: LocalIgnoreRecoveryDecision) {
-        self.resume_local_ignore_recovery(RecoveryAnswer::Accept(decision));
+        self.settle_local_ignore_recovery(Some(decision));
     }
 
     /// Dismisses the recovery question without mutating Local Ignore or analyzing any Crash Log.
     ///
-    /// Delegates to [`CrashLogScanRunContinuation::abandon`], which owns the cancel-then-claim
-    /// sequence this frontend used to write for itself: no backup, replacement, or analysis can
-    /// happen, and the run returns its ordinary cancelled result.
+    /// Settles the pending recovery with no decision, which is Rust's one abandonment operation:
+    /// no backup, replacement, or analysis can happen, and the run returns its ordinary cancelled
+    /// result.
     pub fn cancel_local_ignore_recovery(&mut self) {
-        self.resume_local_ignore_recovery(RecoveryAnswer::Dismiss);
+        self.settle_local_ignore_recovery(None);
     }
 
-    /// Consumes the retained continuation exactly once through the shared Rust runtime.
+    /// Settles the pending recovery exactly once on the shared Rust runtime.
     ///
-    /// `answer` selects between applying a Rust-defined decision and dismissing the question;
-    /// [`RecoveryAnswer::Dismiss`] routes to [`CrashLogScanRunContinuation::abandon`], because Rust
-    /// exposes abandonment as an operation rather than as a third decision variant.
+    /// `decision` is passed to Rust unchanged: `Some` applies that Local Ignore Recovery Decision
+    /// and `None` settles with no decision, because abandonment is not a third decision. The
+    /// settle runs as a spawned task that reports back through [`AsyncMessage::ScanSettleFinished`],
+    /// so no shared-runtime worker thread ever waits on the user.
     ///
-    /// Taking the pending state first means a second key press finds nothing to resume, which
-    /// matches the continuation's own single-use contract instead of relying on the overlay
+    /// Taking the pending state first means a second key press finds nothing to settle, which
+    /// matches the pending recovery's own single-use contract instead of relying on the overlay
     /// closing in time. Does nothing when no run is paused.
-    fn resume_local_ignore_recovery(&mut self, answer: RecoveryAnswer) {
-        let Some(pending) = self.pending_local_ignore_recovery.take() else {
+    fn settle_local_ignore_recovery(&mut self, decision: Option<LocalIgnoreRecoveryDecision>) {
+        let Some(PendingLocalIgnoreRecovery { recovery, prompt }) =
+            self.pending_local_ignore_recovery.take()
+        else {
             return;
         };
-        let PendingLocalIgnoreRecovery {
-            continuation,
-            cancellation,
-            prompt,
-        } = pending;
 
         self.active_overlay = None;
         self.scan_in_progress = true;
         self.scan_progress = -1.0;
-        self.scan_status = match answer {
-            RecoveryAnswer::Accept(_) => prompt.resume_status(),
-            RecoveryAnswer::Dismiss => {
-                "Cancelling; Local Ignore will not be modified...".to_string()
-            }
+        self.scan_status = match decision {
+            Some(_) => prompt.resume_status(),
+            None => "Cancelling; Local Ignore will not be modified...".to_string(),
         };
         self.status_clear_at = None;
-        self.scan_cancellation = Some(cancellation.clone());
+        // The paused run's own control, so the scan-cancel key still reaches the settling run.
+        self.scan_cancellation = Some(recovery.recovery().cancellation().clone());
 
         let tx = self.async_tx.clone();
         get_runtime().spawn(async move {
-            let delivery_cancellation = cancellation.clone();
-            let event_tx = tx.clone();
-            let mut observer = move |event| {
-                // Losing the UI delivery channel explicitly requests safe cancellation so queued
-                // work does not continue without a usable presentation consumer.
-                if event_tx.send(AsyncMessage::ScanEvent(event)).is_err() {
-                    delivery_cancellation.cancel();
-                }
-            };
-            let result = match answer {
-                RecoveryAnswer::Accept(decision) => {
-                    continuation
-                        .resume(decision, &cancellation, Some(&mut observer))
-                        .await
-                }
-                // Rust owns the whole dismissal sequence: `abandon` cancels this run's control and
-                // then claims the continuation with a decision the run never acts on. The TUI no
-                // longer picks that placeholder, so it cannot drift from what the other frontends do.
-                RecoveryAnswer::Dismiss => {
-                    continuation
-                        .abandon(&cancellation, Some(&mut observer))
-                        .await
-                }
-            };
-            let _ = tx.send(AsyncMessage::ScanResumeFinished(Box::new(result)));
+            let mut observer = forward_scan_run_events(tx.clone());
+            let outcome = recovery
+                .settle(
+                    decision,
+                    Some(&mut observer),
+                    ObserverFailurePolicy::CancelRun,
+                )
+                .await;
+            // A settled run carries no continuation, so if the App is gone nothing is left
+            // dangling and the outcome has no one to reach.
+            let _ = tx.send(AsyncMessage::ScanSettleFinished {
+                decision,
+                outcome: Box::new(outcome),
+            });
         });
     }
 
@@ -864,23 +854,37 @@ impl App {
             Some(staging.to_string())
         };
 
-        let custom = self.custom_scan_input.value.trim();
-        let custom_scan_input = if custom.is_empty() {
-            None
-        } else {
-            let custom_path = PathBuf::from(custom);
-            validate_custom_scan_path(&custom_path).map_err(|err| err.to_string())?;
-
-            if self.is_inside_crash_logs(&custom_path) {
-                return Err("Custom Scan Folder cannot be inside Crash Logs".to_string());
-            }
-            Some(custom.to_string())
-        };
+        let custom_scan_input = self
+            .validated_custom_scan_input()?
+            .map(|path| path.to_string_lossy().into_owned());
 
         let update = UserSettingsUpdate::new()
             .with_mods_folder(mods_folder)
             .with_custom_scan_input(custom_scan_input);
         self.commit_settings_update(update)
+    }
+
+    /// Returns the typed custom scan folder, or `None` when the input is blank.
+    ///
+    /// Shared by the explicit path save and by scan start, so a folder one of them rejects the
+    /// other rejects too.
+    ///
+    /// # Errors
+    ///
+    /// Returns the status-line message for a folder that is not a usable directory, is a
+    /// restricted location, or sits inside this installation's `Crash Logs` folder.
+    fn validated_custom_scan_input(&self) -> Result<Option<PathBuf>, String> {
+        let custom = self.custom_scan_input.value.trim();
+        if custom.is_empty() {
+            return Ok(None);
+        }
+        let custom_path = PathBuf::from(custom);
+        validate_custom_scan_path(&custom_path).map_err(|err| err.to_string())?;
+
+        if self.is_inside_crash_logs(&custom_path) {
+            return Err("Custom Scan Folder cannot be inside Crash Logs".to_string());
+        }
+        Ok(Some(custom_path))
     }
 
     /// Validates and commits one explicit all-or-nothing update to the shared settings store.
@@ -1036,10 +1040,11 @@ impl App {
         lines.join("\n\n")
     }
 
-    /// Starts a crash-log scan from one cohesive User Settings snapshot, or cancels the active scan.
+    /// Starts a Standard Crash Log Scan through Crash Log Scan Launch, or cancels the active scan.
     ///
-    /// All scan and setup inputs are projected before spawning work so concurrent settings changes
-    /// cannot produce a request assembled from multiple revisions.
+    /// The typed custom scan folder applies to this run only and is never saved here: saving the
+    /// path inputs is its own explicit User Settings Update. A typed folder the explicit save
+    /// would reject stops the scan before it starts, with the same message.
     pub fn start_or_cancel_crash_scan(&mut self) {
         if self.scan_in_progress {
             if let Some(cancellation) = &self.scan_cancellation {
@@ -1050,7 +1055,7 @@ impl App {
             return;
         }
 
-        if let Err(error) = self.save_paths_from_inputs() {
+        if let Err(error) = self.validated_custom_scan_input() {
             self.scan_status = error;
             self.status_clear_at = None;
             return;
@@ -1071,80 +1076,85 @@ impl App {
         self.start_crash_scan(Some(inputs));
     }
 
-    /// Projects one settings revision and launches it through the shared Rust runtime.
+    /// Prepares the Crash Log Scan Launch a scan started now would execute, without running it.
+    ///
+    /// `None` asks for a Standard scan and `Some` for a Targeted scan of exactly those inputs.
+    /// Launch opens User Settings read-only under the Installation Root, so a document that needs
+    /// migration or is untrusted still produces a request, plus diagnostics. The typed custom scan
+    /// folder is passed as a per-run override for a Standard scan; it is passed as typed, and
+    /// [`Self::start_or_cancel_crash_scan`] is what refuses a folder the TUI rejects.
+    ///
+    /// The input starts pre-filled from the saved custom scan folder, so it is the authority for
+    /// the run: a blank input supplies "no custom scan folder", which withholds the saved folder
+    /// and scans only the Installation Root's normal locations. The typed mods folder shapes no
+    /// Crash Log Scan Run request, so it is not passed at all.
+    ///
+    /// Public so the consumer conformance runner observes the exact request a scan would run.
+    ///
+    /// # Errors
+    ///
+    /// Returns the typed [`CrashLogScanLaunchError`] when Launch cannot form a request.
+    pub fn prepare_crash_scan_launch(
+        &self,
+        targeted_inputs: Option<Vec<PathBuf>>,
+    ) -> Result<CrashLogScanLaunchRequest, CrashLogScanLaunchError> {
+        let mut overrides = CrashLogScanLaunchOverrides::new();
+        let intent = match targeted_inputs {
+            Some(inputs) => CrashLogScanIntent::Targeted(inputs),
+            None => {
+                let typed = self.custom_scan_input.value.trim();
+                overrides = if typed.is_empty() {
+                    overrides.with_no_scan_path()
+                } else {
+                    overrides.with_scan_path(typed)
+                };
+                CrashLogScanIntent::Standard
+            }
+        };
+        prepare_launch(&self.classic_root, intent, &overrides)
+    }
+
+    /// Launches one Crash Log Scan through Crash Log Scan Launch on the shared Rust runtime.
+    ///
+    /// The request is prepared before any work is spawned, from one read of User Settings, so
+    /// concurrent settings changes cannot produce a request assembled from multiple revisions.
     fn start_crash_scan(&mut self, targeted_inputs: Option<Vec<PathBuf>>) {
+        let launch = match self.prepare_crash_scan_launch(targeted_inputs) {
+            Ok(launch) => launch,
+            Err(error) => {
+                // Launch errors are caller input or operational failures it cannot decide past;
+                // the message is Rust's own, and it stays until the user acts on it.
+                self.scan_status = format!("Crash Log Scan could not start: {error}");
+                self.status_clear_at = None;
+                return;
+            }
+        };
+        let (request, diagnostics) = launch.into_parts();
+        self.scan_launch_diagnostics = format_launch_diagnostics(&diagnostics);
+
         self.scan_in_progress = true;
         self.scan_progress = -1.0;
         self.scan_status = "Discovering crash logs...".to_string();
         self.status_clear_at = None;
 
         let tx = self.async_tx.clone();
-        let scan = self.settings.crash_log_scan_settings();
-        let setup = self.settings.game_setup_settings();
-        let (managed_game, formid_database_paths) = self.scan_game_projection();
-        let custom_folder = scan.custom_scan_input().map(PathBuf::from);
-        let selected_game_version = scan.game_version_selection().as_str().to_string();
-        let setup_game_root = setup.game_root().map(PathBuf::from);
-        let configured_docs_root = setup.documents_root().map(PathBuf::from);
-        let game_exe_path = setup.game_executable().map(PathBuf::from);
-        let show_formid_values = scan.formid_value_lookup();
-        let fcx_mode = scan.fcx_mode();
-        let simplify_logs = scan.simplify_logs();
-        let unsolved_logs_destination = scan.unsolved_logs_destination().map(PathBuf::from);
-        let max_concurrent = usize::try_from(scan.max_concurrent_scans())
-            .ok()
-            .filter(|value| *value > 0);
-        let installation_root = self.classic_root.clone();
-        let base_folder = installation_root.clone();
-        let configuration = Configuration {
-            installation_root,
-            game: managed_game,
-            game_version: selected_game_version,
-            options: Options::new(show_formid_values, simplify_logs),
-            scan_facts: CrashLogScanFacts {
-                formid_database_paths,
-                unsolved_logs_destination,
-            },
-            max_concurrent,
-        };
-        let intent = match targeted_inputs {
-            Some(inputs) => ScanRunIntent::Targeted(TargetedCrashLogScanSource { inputs }),
-            None => ScanRunIntent::Standard {
-                source: StandardCrashLogScanSource {
-                    base_directory: base_folder,
-                    custom_scan_directory: custom_folder,
-                    configured_documents_root: configured_docs_root.clone(),
-                },
-                unsolved_logs: if scan.move_unsolved_logs() {
-                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
-                } else {
-                    StandardUnsolvedLogsIntent::LeaveInPlace
-                },
-            },
-        };
-        let setup_context = fcx_mode.then_some(CrashLogScanSetupContext {
-            game_root: setup_game_root,
-            docs_root: configured_docs_root,
-            game_exe_path,
-            xse_log_path: None,
-        });
-        let request = build_request(configuration, intent, setup_context);
         let cancellation = Cancellation::new();
         self.scan_cancellation = Some(cancellation.clone());
 
         get_runtime().spawn(async move {
-            let delivery_cancellation = cancellation.clone();
-            let event_tx = tx.clone();
-            let mut observer = move |event| {
-                // Losing the UI delivery channel explicitly requests safe cancellation so queued
-                // work does not continue without a usable presentation consumer.
-                if event_tx.send(AsyncMessage::ScanEvent(event)).is_err() {
-                    delivery_cancellation.cancel();
-                }
-            };
-            let result =
-                scan_run_contract::execute(request, &cancellation, Some(&mut observer)).await;
-            let _ = tx.send(AsyncMessage::ScanFinished(Box::new(result)));
+            let mut observer = forward_scan_run_events(tx.clone());
+            let result = scan_run_contract::execute(
+                request,
+                &cancellation,
+                Some(&mut observer),
+                ObserverFailurePolicy::CancelRun,
+            )
+            .await;
+            if let Err(mpsc::error::SendError(undelivered)) =
+                tx.send(AsyncMessage::ScanFinished(Box::new(result)))
+            {
+                settle_undelivered_pause(undelivered).await;
+            }
         });
     }
 
@@ -1189,8 +1199,9 @@ impl App {
 
     pub fn close_overlay(&mut self) {
         if self.pending_local_ignore_recovery.is_some() {
-            // Dismissing this overlay is itself a decision, not a passive close. Cancel explicitly
-            // so the paused run returns its ordinary cancelled result instead of being abandoned.
+            // Dismissing this overlay is itself an answer, not a passive close. Settle with no
+            // decision so the paused run returns its ordinary cancelled result instead of its
+            // pending recovery being dropped unsettled.
             self.cancel_local_ignore_recovery();
             return;
         }
@@ -1310,28 +1321,6 @@ impl App {
         custom == crash || custom.starts_with(&crash)
     }
 
-    /// Projects the canonical managed game and its analysis-data FormID databases from one snapshot.
-    fn scan_game_projection(&self) -> (classic_shared_core::GameId, Vec<PathBuf>) {
-        let managed_game = self.settings.game_setup_settings().managed_game();
-        // Fallout 4 VR keeps its runtime identity but shares Fallout 4's analysis data and FormID database rows.
-        let database_game = match managed_game {
-            classic_shared_core::GameId::Fallout4VR => classic_shared_core::GameId::Fallout4,
-            _ => managed_game,
-        };
-        let managed_game_key = database_game.as_str().to_string();
-        let databases = self
-            .settings
-            .crash_log_scan_settings()
-            .formid_databases()
-            .get(&managed_game_key)
-            .cloned()
-            .unwrap_or_default()
-            .into_iter()
-            .map(PathBuf::from)
-            .collect();
-        (managed_game, databases)
-    }
-
     /// Sets the status row from a core-rendered presentation, keeping its severity beside it.
     fn set_scan_status(&mut self, status: String, severity: DisplaySeverity) {
         self.scan_status_severity = Some((status.clone(), severity));
@@ -1355,17 +1344,27 @@ impl App {
     /// Rendered on demand from the retained typed result rather than stored as text, so the overlay
     /// always reflects what core says about that run today. The result's continuation was already
     /// taken out before it was retained, so nothing here can be borrowing across a move.
+    ///
+    /// The launch diagnostics of that run come first, as core rendered them: they describe the
+    /// settings the run was launched from, which is context for everything the result says.
     pub fn scan_run_summary_lines(&self) -> Vec<PresentedLine> {
-        match self.last_scan_run.as_ref() {
+        let run_lines = match self.last_scan_run.as_ref() {
             Some(LastScanRun::Run(result)) => format_result(result).details,
             Some(LastScanRun::Failed(error)) => format_error(error).details,
             Some(LastScanRun::RecoveryFailed(error)) => format_resume_error(error).details,
             // Not a statement about a run, so there is nothing for core to own here.
-            None => vec![PresentedLine {
-                severity: classic_scan_presentation::DisplaySeverity::Info,
-                text: "No Crash Log Scan Run has completed yet.".to_string(),
-            }],
-        }
+            None => {
+                return vec![PresentedLine {
+                    severity: classic_scan_presentation::DisplaySeverity::Info,
+                    text: "No Crash Log Scan Run has completed yet.".to_string(),
+                }];
+            }
+        };
+        self.last_scan_launch_diagnostics
+            .iter()
+            .cloned()
+            .chain(run_lines)
+            .collect()
     }
 
     /// Returns [`Self::scan_run_summary_lines`] as plain text, for callers that draw no styling.

@@ -317,9 +317,9 @@ bool buildMalformedIgnoreRoot(const QTemporaryDir& root, QString* crashLogOut)
 
 /// Drives a real `ScanWorker` on a real thread through a real paused run, answered by the real dialog.
 ///
-/// This is the shipped path end to end and the reason this test exists: `doScan` takes the one-shot
-/// continuation off the execution *before* it calls the prompt, and calls
-/// `scan_run_continuation_resume` — a `block_on` across the bridge — *after* the prompt returns. Both
+/// This is the shipped path end to end and the reason this test exists: `doScan` takes the pending
+/// recovery off the execution *before* it calls the prompt, and calls
+/// `scan_run_pending_recovery_settle` — a `block_on` across the bridge — *after* the prompt returns. Both
 /// of those legs run on the worker thread while the GUI thread owns the modal, and only running them
 /// shows they do not interact badly with the `BlockingQueuedConnection` between the two.
 ScanWorkerRun driveThroughScanWorker(const QString& installationRoot, const QString& crashLog,
@@ -356,15 +356,11 @@ ScanWorkerRun driveThroughScanWorker(const QString& installationRoot, const QStr
     QSignalSpy cancelledSpy(&worker, &ScanWorker::cancelled);
     QSignalSpy errorSpy(&worker, &ScanWorker::error);
 
-    classic::gui::CrashLogScanLaunchSettings settings;
-    settings.game = QStringLiteral("Fallout4");
-    settings.gameVersion = QStringLiteral("auto");
-
     QThread thread;
     worker.moveToThread(&thread);
     QObject::connect(&thread, &QThread::started, &worker,
-                     [&worker, &thread, installationRoot, settings, crashLog]() {
-                         worker.doScan(installationRoot, settings, installationRoot, {}, {crashLog});
+                     [&worker, &thread, installationRoot, crashLog]() {
+                         worker.doScan(installationRoot, {crashLog});
                          thread.quit();
                      });
 
@@ -452,7 +448,7 @@ void RecoveryPromptNonBlockingTests::choosing_a_decision_keeps_the_event_loop_ru
 void RecoveryPromptNonBlockingTests::abandoning_the_prompt_keeps_the_event_loop_running()
 {
     // Escape is the abandonment route the dialog binds to Cancel, and Cancel is what the worker
-    // projects by cancelling the run before it resumes the retained continuation.
+    // projects by settling the pending recovery with no decision.
     const auto escaped =
         driveAcrossControllerSeam(true, [](QMessageBox* box) { QTest::keyClick(box, Qt::Key_Escape); });
     VERIFY_EVENT_LOOP_STAYED_LIVE(escaped);
@@ -536,7 +532,7 @@ void RecoveryPromptNonBlockingTests::real_scan_worker_recovery_keeps_the_event_l
     // the availability fact reaching the prompt intact is what makes the withheld case meaningful.
     QVERIFY(run.offeredReset);
     // The run resumed and completed after the answer, which is what shows the post-prompt
-    // `scan_run_continuation_resume` ran to completion on the worker thread rather than deadlocking
+    // `scan_run_pending_recovery_settle` ran to completion on the worker thread rather than deadlocking
     // against the GUI thread that had just been holding the modal.
     QCOMPARE(run.error, 0);
     QCOMPARE(run.cancelled, 0);
@@ -555,7 +551,7 @@ void RecoveryPromptNonBlockingTests::real_scan_worker_abandonment_keeps_the_even
 
     VERIFY_EVENT_LOOP_STAYED_LIVE(run.exchange);
     QCOMPARE(run.exchange.choice, Choice::Cancel);
-    // Abandoning cancels the run and resumes with a decision it never acts on, so the terminal state
+    // Settling with no decision cancels the run without acting on either decision, so the terminal state
     // is the ordinary cancelled one and nothing was scanned.
     QCOMPARE(run.error, 0);
     QCOMPARE(run.finished, 0);

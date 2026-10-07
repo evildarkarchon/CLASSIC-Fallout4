@@ -270,6 +270,11 @@ def test_user_settings_scan_snapshot_exposes_typed_values_and_alias_policy(
     assert scan.formid_databases == {
         "Fallout4": ["databases/Fallout4 FormIDs.db"]
     }
+    # Fallout 4 VR shares the Fallout 4 rows through the Rust game-aware read.
+    assert scan.scan_formid_databases == {
+        "Fallout4": ["databases/Fallout4 FormIDs.db"],
+        "Fallout4VR": ["databases/Fallout4 FormIDs.db"],
+    }
     assert scan.move_unsolved_logs is True
     assert scan.unsolved_logs_destination is None
     assert scan.custom_scan_input is None
@@ -318,6 +323,7 @@ def test_user_settings_scan_snapshot_exposes_typed_values_and_alias_policy(
     assert invalid_scan.custom_scan_input is None
     assert invalid_scan.custom_scan_input_origin == "degraded_fallback"
     assert invalid_scan.formid_databases == {}
+    assert invalid_scan.scan_formid_databases == {}
     assert invalid_scan.formid_databases_origin == "degraded_fallback"
     assert invalid_scan.max_concurrent_scans == 0
     assert invalid_scan.max_concurrent_scans_origin == "degraded_fallback"
@@ -665,6 +671,44 @@ def test_accepted_user_settings_update_commit_publishes_preserved_document(
     committed_content = settings_path.read_text(encoding="utf-8")
     assert "ThirdPartyPlugin:" in committed_content
     assert "community_frontend:" in committed_content
+    assert outcome.diagnostics == []
+
+
+def test_fallout4_vr_formid_save_reports_legacy_key_removal_in_preview_and_commit(
+        tmp_path: Path,
+) -> None:
+    """Save VR rows under Fallout4 and report the legacy-key removal before and after commit."""
+    fixture_root = user_settings_fixture_root()
+    (tmp_path / "CLASSIC Settings.yaml").write_bytes(
+        (fixture_root / "vr_shared_and_legacy_formid_databases.yaml").read_bytes()
+    )
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+    update = classic_user_settings.UserSettingsUpdate()
+    update.set_formid_databases_for_game("Fallout4VR", ["D:/VR.db"])
+    removal = [
+        ("/CLASSIC_Settings/FormID Databases", "legacy_formid_databases_key_removed")
+    ]
+
+    preview = snapshot.preview_update(update)
+
+    assert preview.accepted is True
+    assert [(field.canonical_path, field.value) for field in preview.fields] == [
+        (
+            "/CLASSIC_Settings/FormID Databases",
+            {"Fallout4": ["D:/VR.db"], "Skyrim": ["databases/Skyrim FormIDs.db"]},
+        )
+    ]
+    assert [(d.field_path, d.code) for d in preview.diagnostics] == removal
+
+    outcome = preview.commit(str(tmp_path))
+
+    assert outcome.status == "committed"
+    assert [(d.field_path, d.code) for d in outcome.diagnostics] == removal
+    committed = classic_user_settings.open_user_settings(str(tmp_path))
+    assert committed.crash_log_scan_settings.formid_databases == {
+        "Fallout4": ["D:/VR.db"],
+        "Skyrim": ["databases/Skyrim FormIDs.db"],
+    }
 
 
 def test_missing_user_settings_requires_explicit_bootstrap_preview(

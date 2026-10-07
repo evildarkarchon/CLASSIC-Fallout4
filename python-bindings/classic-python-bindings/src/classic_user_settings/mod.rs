@@ -6,7 +6,7 @@ use classic_user_settings_core::{
     GameSetupSettings, GuiWindow, GuiWindowGeometry, LegacyTuiStateImportOutcome,
     LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, MigrationChange,
     MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, TuiRememberedState,
-    UserSettings, UserSettingsCommitOutcome,
+    UpdateDiagnostic, UserSettings, UserSettingsCommitOutcome,
     UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
     UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan, UserSettingsMigrationReceipt,
     UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion, UserSettingsUpdate,
@@ -103,6 +103,14 @@ pub struct PyCrashLogScanSettings {
     /// Provenance of the FormID Databases mapping.
     #[pyo3(get)]
     formid_databases_origin: String,
+    /// FormID database rows that apply to each supported game's Crash Log Scan.
+    ///
+    /// Rust applies the game-aware read: Fallout 4 VR reads the shared `Fallout4` rows followed
+    /// by legacy `Fallout4VR` rows, de-duplicated; every other game reads its own rows exactly.
+    /// Games whose scan reads no rows are absent. Scan launch reads this mapping, never
+    /// `formid_databases`.
+    #[pyo3(get)]
+    scan_formid_databases: HashMap<String, Vec<String>>,
     /// Whether Standard Crash Log Scan Runs may move Unsolved Logs.
     #[pyo3(get)]
     move_unsolved_logs: bool,
@@ -423,6 +431,15 @@ impl PyUserSettingsUpdate {
             std::mem::take(&mut self.inner).with_formid_databases(value.into_iter().collect());
     }
 
+    /// Requests a game-aware save of the FormID database rows `game`'s scans read.
+    ///
+    /// Rust stores Fallout 4 VR rows under `Fallout4` and removes a legacy `Fallout4VR` key,
+    /// reporting the removal in the preview and commit `diagnostics`; any other game replaces
+    /// only its own rows. Applied on top of `set_formid_databases` when both are requested.
+    fn set_formid_databases_for_game(&mut self, game: String, paths: Vec<String>) {
+        self.inner = std::mem::take(&mut self.inner).with_formid_databases_for_game(game, paths);
+    }
+
     /// Requests a new Move Unsolved Logs preference.
     fn set_move_unsolved_logs(&mut self, value: bool) {
         self.inner = std::mem::take(&mut self.inner).with_move_unsolved_logs(value);
@@ -449,7 +466,8 @@ impl PyUserSettingsUpdate {
     }
 }
 
-/// One field-specific diagnostic from a rejected User Settings Update preview.
+/// One field-specific User Settings Update diagnostic: a rejection reason, or a non-rejecting
+/// effect report on an accepted preview or committed outcome.
 #[pyclass(name = "UserSettingsUpdateDiagnostic", frozen, skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyUserSettingsUpdateDiagnostic {
@@ -526,7 +544,8 @@ pub struct PyUserSettingsUpdatePreview {
     /// Only the canonical fields explicitly requested by an accepted preview.
     #[pyo3(get)]
     fields: Vec<PyUserSettingsUpdateField>,
-    /// Field-specific or preview-level rejection diagnostics.
+    /// Field-specific or preview-level rejection diagnostics when rejected; non-rejecting
+    /// effect diagnostics (such as `legacy_formid_databases_key_removed`) when accepted.
     #[pyo3(get)]
     diagnostics: Vec<PyUserSettingsUpdateDiagnostic>,
     /// Accepted core plan retained so commit uses the exact previewed revision and fields.
@@ -570,6 +589,10 @@ pub struct PyUserSettingsCommitOutcome {
     /// Latest on-disk revision, present only for `conflict`.
     #[pyo3(get)]
     actual_revision: Option<String>,
+    /// Effect diagnostics carried over from the accepted preview, such as
+    /// `legacy_formid_databases_key_removed`; empty for `conflict` and ordinary updates.
+    #[pyo3(get)]
+    diagnostics: Vec<PyUserSettingsUpdateDiagnostic>,
 }
 
 /// Structured result of one replay-safe frontend geometry transition.
@@ -1263,6 +1286,18 @@ fn crash_log_scan_settings_to_py(settings: &CrashLogScanSettings) -> PyCrashLogS
             .map(|(game, paths)| (game.clone(), paths.clone()))
             .collect(),
         formid_databases_origin: settings.formid_databases_origin().as_str().to_string(),
+        scan_formid_databases: classic_shared_core::GameId::all()
+            .into_iter()
+            .map(|game| {
+                let rows = settings
+                    .formid_databases_for_game(game)
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect::<Vec<_>>();
+                (game.as_str().to_string(), rows)
+            })
+            .filter(|(_, rows)| !rows.is_empty())
+            .collect(),
         move_unsolved_logs: settings.move_unsolved_logs(),
         move_unsolved_logs_origin: settings.move_unsolved_logs_origin().as_str().to_string(),
         unsolved_logs_destination: settings.unsolved_logs_destination().map(str::to_string),
@@ -1289,34 +1324,45 @@ fn update_preview_to_py(preview: UserSettingsUpdatePreview) -> PyUserSettingsUpd
             accepted: true,
             base_revision: Some(accepted.base_revision().token()),
             fields: accepted.fields().iter().map(update_field_to_py).collect(),
-            diagnostics: Vec::new(),
+            diagnostics: update_diagnostics_to_py(accepted.diagnostics()),
             accepted_update: Some(accepted),
         },
         UserSettingsUpdatePreview::Rejected(diagnostics) => PyUserSettingsUpdatePreview {
             accepted: false,
             base_revision: None,
             fields: Vec::new(),
-            diagnostics: diagnostics
-                .iter()
-                .map(|diagnostic| PyUserSettingsUpdateDiagnostic {
-                    field_path: diagnostic.field_path().map(str::to_string),
-                    code: diagnostic.code().to_string(),
-                    message: diagnostic.message().to_string(),
-                })
-                .collect(),
+            diagnostics: update_diagnostics_to_py(&diagnostics),
             accepted_update: None,
         },
     }
 }
 
+/// Converts ordered core update diagnostics, rejecting or not, into Python values.
+fn update_diagnostics_to_py(
+    diagnostics: &[UpdateDiagnostic],
+) -> Vec<PyUserSettingsUpdateDiagnostic> {
+    diagnostics
+        .iter()
+        .map(|diagnostic| PyUserSettingsUpdateDiagnostic {
+            field_path: diagnostic.field_path().map(str::to_string),
+            code: diagnostic.code().to_string(),
+            message: diagnostic.message().to_string(),
+        })
+        .collect()
+}
+
 /// Converts the core commit result without flattening a stale revision into an exception.
 fn commit_outcome_to_py(outcome: UserSettingsCommitOutcome) -> PyUserSettingsCommitOutcome {
     match outcome {
-        UserSettingsCommitOutcome::Committed { revision } => PyUserSettingsCommitOutcome {
+        UserSettingsCommitOutcome::Committed {
+            revision,
+            diagnostics,
+        } => PyUserSettingsCommitOutcome {
             status: "committed".to_string(),
             revision: Some(revision.token()),
             expected_revision: None,
             actual_revision: None,
+            diagnostics: update_diagnostics_to_py(&diagnostics),
         },
         UserSettingsCommitOutcome::Conflict {
             expected_revision,
@@ -1326,6 +1372,7 @@ fn commit_outcome_to_py(outcome: UserSettingsCommitOutcome) -> PyUserSettingsCom
             revision: None,
             expected_revision: Some(expected_revision.token()),
             actual_revision: Some(actual_revision.token()),
+            diagnostics: Vec::new(),
         },
     }
 }

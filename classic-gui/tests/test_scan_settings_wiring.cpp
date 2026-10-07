@@ -7,8 +7,7 @@ class ScanSettingsWiringTests : public QObject {
 
 private slots:
     void mainwindow_sources_initial_policy_from_rust_defaults();
-    void typed_scan_settings_reach_controller();
-    void scan_pipeline_forwards_existing_xse_log_hint();
+    void mainwindow_delegates_xse_log_lookup_to_core();
     void mainwindow_forwards_game_version_to_game_files_controller();
     void game_files_controller_forwards_game_version_to_worker();
     void game_files_worker_forwards_game_version_to_setup_intake();
@@ -20,14 +19,16 @@ private slots:
     void mainwindow_bootstraps_missing_settings_when_saving_remembered_paths();
     /// Verifies that detected and manual paths reach one final consent-gated commit.
     void mainwindow_defers_setup_commit_until_manual_completion();
+    /// Verifies that the GUI keeps no Installation Root candidate search of its own.
+    void mainwindow_locates_installation_root_through_config();
+    void main_finds_icon_under_the_config_located_installation_root();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
     void update_worker_declares_not_published_classification();
     void mainwindow_handles_not_published_without_error_dialog();
     void mainwindow_shows_error_details_for_explicit_update_failures();
     void settings_dialog_handles_not_published_as_benign();
     void mainwindow_blocks_game_files_scan_when_paths_unresolved();
-    void mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved();
-    void mainwindow_uses_exe_relative_crash_logs_dir();
+    void mainwindow_uses_installation_root_crash_logs_dir();
     void mainwindow_resets_stale_game_exe_path_outside_selected_root();
     void controllers_emit_global_scan_started_signal_on_scan_start();
     void scan_controller_delegates_xse_folder_resolution_to_core();
@@ -65,21 +66,7 @@ void ScanSettingsWiringTests::mainwindow_sources_initial_policy_from_rust_defaul
              "MainWindow should derive no-root policy from the Rust-owned published-default snapshot");
 }
 
-void ScanSettingsWiringTests::typed_scan_settings_reach_controller()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    const QRegularExpression callRegex(QStringLiteral(
-        R"(m_scanController->startScan\(m_dataRoot,\s*launchSettings,\s*setupXseLogPath,\s*m_targetedInputPaths\))"));
-    QVERIFY2(callRegex.match(sourceText).hasMatch(),
-             "MainWindow should pass the accepted typed scan settings to ScanController");
-}
-
-void ScanSettingsWiringTests::scan_pipeline_forwards_existing_xse_log_hint()
+void ScanSettingsWiringTests::mainwindow_delegates_xse_log_lookup_to_core()
 {
     const QString mainWindowPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
     QFile mainWindowFile(mainWindowPath);
@@ -87,21 +74,15 @@ void ScanSettingsWiringTests::scan_pipeline_forwards_existing_xse_log_hint()
              qPrintable(QStringLiteral("Unable to read %1").arg(mainWindowPath)));
     const QString mainWindowSource = QString::fromUtf8(mainWindowFile.readAll());
 
-    QVERIFY2(mainWindowSource.contains(QStringLiteral("classic::xse::resolve_xse_folder_for_scan")),
-             "MainWindow should use the shared XSE folder resolver for the setup hint");
-    QVERIFY2(mainWindowSource.contains(QStringLiteral("QFileInfo(logPath).isFile()")),
-             "MainWindow should forward only an XSE log that actually exists");
-    QVERIFY2(mainWindowSource.contains(QStringLiteral("f4se.log")) &&
-                 mainWindowSource.contains(QStringLiteral("f4sevr.log")),
-             "MainWindow should support Fallout 4 and Fallout 4 VR XSE log conventions");
-
-    const qsizetype callStart = mainWindowSource.indexOf(QStringLiteral("m_scanController->startScan("));
-    QVERIFY2(callStart >= 0, "MainWindow should call ScanController::startScan()");
-    const qsizetype callEnd = mainWindowSource.indexOf(QStringLiteral(");"), callStart);
-    QVERIFY2(callEnd > callStart, "MainWindow should have a complete ScanController::startScan() call");
-    const QString call = mainWindowSource.mid(callStart, callEnd - callStart);
-    QVERIFY2(call.contains(QStringLiteral("setupXseLogPath")),
-             "MainWindow should pass the resolved XSE log hint to ScanController");
+    // Which log exists, and its Fallout 4 / Fallout 4 VR names, are pinned by the Rust
+    // resolve_xse_log_for_scan tests and the xse-folder conformance pack; this test only
+    // checks that MainWindow delegates to that operation instead of naming logs itself. A Crash
+    // Log Scan no longer takes the log from MainWindow at all: Crash Log Scan Launch resolves it.
+    QVERIFY2(mainWindowSource.contains(QStringLiteral("classic::xse::resolve_xse_log_for_scan")),
+             "MainWindow should use the Rust XSE log resolver for setup intake and Scan Game Files");
+    QVERIFY2(!mainWindowSource.contains(QStringLiteral("f4se.log"), Qt::CaseInsensitive) &&
+                 !mainWindowSource.contains(QStringLiteral("f4sevr.log"), Qt::CaseInsensitive),
+             "MainWindow must not hard-code XSE log file names");
 }
 
 void ScanSettingsWiringTests::mainwindow_forwards_game_version_to_game_files_controller()
@@ -277,6 +258,50 @@ void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_mig
              "MainWindow should not implement migration publication itself");
 }
 
+void ScanSettingsWiringTests::mainwindow_locates_installation_root_through_config()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString source = QString::fromUtf8(file.readAll());
+    // findDataRoot() stays as the GUI adapter seam; mainwindow_defers_setup_commit_until_manual_completion
+    // also uses its signature as the end anchor of checkFirstRunPaths().
+    const qsizetype start = source.indexOf(QStringLiteral("\nQString MainWindow::findDataRoot() const"));
+    const qsizetype end = source.indexOf(QStringLiteral("\n}\n"), start);
+    QVERIFY2(start >= 0 && end > start, "findDataRoot should be readable as one function body");
+    const QString body = source.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("classic::config::locate_installation_root(")),
+             "The Installation Root must come from config's one shared locator");
+    QVERIFY2(body.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
+             "The GUI supplies its executable folder as the locator's first input");
+    QVERIFY2(!body.contains(QStringLiteral("\"install\"")) && !body.contains(QStringLiteral("parent_path")) &&
+                 !body.contains(QStringLiteral("\"CLASSIC Data\"")),
+             "The GUI must not keep a private Installation Root candidate search");
+}
+
+void ScanSettingsWiringTests::main_finds_icon_under_the_config_located_installation_root()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/main.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString source = QString::fromUtf8(file.readAll());
+    const qsizetype start = source.indexOf(QStringLiteral("\nstatic QString findIcon()"));
+    const qsizetype end = source.indexOf(QStringLiteral("\n}\n"), start);
+    QVERIFY2(start >= 0 && end > start, "findIcon should be readable as one function body");
+    const QString body = source.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("classic::config::locate_installation_root(")),
+             "The icon must be found under the Installation Root from config's one shared locator");
+    QVERIFY2(!body.contains(QStringLiteral("candidates")) && !body.contains(QStringLiteral("\"/..\"")) &&
+                 !body.contains(QStringLiteral("QDir::current()")),
+             "findIcon must not keep a private CLASSIC Data candidate search");
+}
+
 void ScanSettingsWiringTests::update_worker_declares_not_published_classification()
 {
     const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/updateworker.h");
@@ -390,39 +415,6 @@ void ScanSettingsWiringTests::mainwindow_blocks_game_files_scan_when_paths_unres
              "MainWindow game-file scan should guard on unresolved paths inside onScanGameFiles() and return early");
 }
 
-void ScanSettingsWiringTests::mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    const auto extractFunctionBody = [&](const QString& signature) -> QString {
-        const QString marker = QStringLiteral("void MainWindow::") + signature;
-        const qsizetype start = sourceText.indexOf(marker);
-        if (start < 0) {
-            return {};
-        }
-
-        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
-        const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
-        return sourceText.mid(start, end - start);
-    };
-
-    const QString body = extractFunctionBody(QStringLiteral("onScanCrashLogs()"));
-    QVERIFY2(!body.isEmpty(), "MainWindow crash-log scan slot should exist");
-
-    const QRegularExpression guardRegex(QStringLiteral(
-        R"(if\s*\(launchSettings\.fcxMode\)\s*\{(?:.|\n)*?loadValidatedGameAndDocsPaths\(&setupGameRoot,\s*&setupDocsPath\)(?:.|\n)*?FCX mode requires valid game and INI folder paths(?:.|\n)*?return;)"));
-    QVERIFY2(
-        guardRegex.match(body).hasMatch(),
-        "MainWindow crash-log scan should gate FCX mode on validated paths inside onScanCrashLogs() and return early");
-    QVERIFY2(body.contains(QStringLiteral("resolve_fallout4_exe_name(launchSettings.gameVersion.toStdString())")) &&
-                 body.contains(QStringLiteral("classic::gui::normalizeGameExecutablePath(")),
-             "MainWindow FCX scan should use the selected version and shared executable normalization rule");
-}
-
 void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_selected_root()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
@@ -452,7 +444,7 @@ void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_sele
              "MainWindow game-file scan should not reinterpret raw setup settings");
 }
 
-void ScanSettingsWiringTests::mainwindow_uses_exe_relative_crash_logs_dir()
+void ScanSettingsWiringTests::mainwindow_uses_installation_root_crash_logs_dir()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
     QFile file(sourcePath);
@@ -472,10 +464,14 @@ void ScanSettingsWiringTests::mainwindow_uses_exe_relative_crash_logs_dir()
         return sourceText.mid(start, end - start);
     };
 
+    // The Results tab and the Open Crash Logs button must look where a Standard scan looks, and
+    // Crash Log Scan Launch makes that the Installation Root's Crash Logs folder.
     const QString body = extractFunctionBody(QStringLiteral("readCrashLogsDir() const"));
     QVERIFY2(!body.isEmpty(), "MainWindow::readCrashLogsDir() should exist");
-    QVERIFY2(body.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
-             "MainWindow should resolve Crash Logs relative to the GUI executable directory");
+    QVERIFY2(body.contains(QStringLiteral("m_dataRoot")),
+             "MainWindow should resolve Crash Logs under the Installation Root");
+    QVERIFY2(!body.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
+             "MainWindow should not resolve Crash Logs relative to the GUI executable directory");
     QVERIFY2(!body.contains(QStringLiteral("CLASSIC_Settings.Crash Logs Folder")),
              "MainWindow should not load a separate Crash Logs Folder setting");
     QVERIFY2(!body.contains(QStringLiteral("QDir::current().filePath(QStringLiteral(\"Crash Logs\"))")),

@@ -13,12 +13,16 @@
 
 #include "controllers/scancontroller.h"
 #include "core/guiusersettings.h"
+#include "core/rust_qt_bridge.h"
+#include "workers/scanlaunch.h"
 #include "workers/scanprogressmodel.h"
 #include "workers/scanrunpresentation.h"
+#include "workers/scanworker.h"
 
 #include <cmath>
 #include <exception>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -264,6 +268,165 @@ observeRecoveryDispatch(const classic::gui::ScanRunLocalIgnoreRecoveryPresentati
     return observation;
 }
 
+/// Maps one settle scenario identity onto the answer the GUI-thread prompt gives in this profile.
+classic::gui::ScanRunLocalIgnoreRecoveryChoice settlementChoice(const QString& scenarioId)
+{
+    using Choice = classic::gui::ScanRunLocalIgnoreRecoveryChoice;
+    if (scenarioId == QStringLiteral("settle-proceed-without-ignore")) {
+        return Choice::ProceedWithoutIgnore;
+    }
+    if (scenarioId == QStringLiteral("settle-reset-to-default")) {
+        return Choice::ResetToDefault;
+    }
+    if (scenarioId == QStringLiteral("settle-without-decision")) {
+        return Choice::Cancel;
+    }
+    if (scenarioId == QStringLiteral("settle-already-cancelled")) {
+        // The run is cancelled before the worker reads its pending recovery, so the prompt must
+        // never be asked. It would answer Reset To Default, a durable decision, so a worker that
+        // prompted anyway would show up as a settled decision instead of the expected none.
+        return Choice::ResetToDefault;
+    }
+    throw RunnerError(QStringLiteral("unsupported GUI recovery settlement scenario: %1").arg(scenarioId).toStdString());
+}
+
+/// Returns the decision Rust applied when it settled the run, read from the settled Local Ignore state.
+///
+/// The settled run reports which recovery it carried out, so this is what the worker passed to
+/// settling as Rust saw it, not what the prompt claims it returned. A run settled with no decision
+/// still reports the recovery as required, which reads back as JSON null.
+QJsonValue settledDecisionToken(const classic::gui::ScanRunInstalledYamlDataPresentation& settled)
+{
+    using State = scanner::ScanRunLocalIgnoreYamlDataState;
+    switch (settled.localIgnoreState) {
+    case State::ProceedWithoutIgnore:
+        return QStringLiteral("proceed-without-ignore");
+    case State::ResetToDefault:
+        return QStringLiteral("reset-to-default");
+    case State::RecoveryRequired:
+        return QJsonValue::Null;
+    case State::Existing:
+    case State::Generated:
+        break;
+    }
+    // A malformed Local Ignore file is never Existing or Generated, so this is a profile failure.
+    throw RunnerError("GUI recovery settlement reported a Local Ignore state no settlement produces");
+}
+
+/// Copies one launcher-declared crash-log-scan-run fixture into an isolated installation root.
+void copyPlanFixture(const QJsonObject& plan, const QString& fixtureRef, const QString& destination)
+{
+    const auto fixtures = requiredObject(plan, QStringLiteral("fixtures"));
+    const QString source = fixtures.value(fixtureRef).toString();
+    if (source.isEmpty() || !QDir().mkpath(QFileInfo(destination).absolutePath()) ||
+        !QFile::copy(source, destination)) {
+        throw RunnerError(QStringLiteral("GUI recovery profile cannot stage fixture %1").arg(fixtureRef).toStdString());
+    }
+}
+
+/// Runs one real paused scan on a worker thread and observes how the GUI settles it.
+///
+/// The `ScanWorker` executes on its own thread and is handed the controller's marshalled prompt, so
+/// the answer is chosen on the GUI thread through the shipped `BlockingQueuedConnection` and the
+/// settlement happens back on the worker thread, exactly as a user-driven scan does.
+QJsonObject observeRecoverySettlement(const QJsonObject& plan, const QString& scenarioId)
+{
+    QTemporaryDir root;
+    if (!root.isValid()) {
+        throw RunnerError("cannot create GUI recovery installation root");
+    }
+    copyPlanFixture(plan, QStringLiteral("mainYaml"),
+                    root.filePath(QStringLiteral("CLASSIC Data/databases/CLASSIC Main.yaml")));
+    copyPlanFixture(plan, QStringLiteral("gameYaml"),
+                    root.filePath(QStringLiteral("CLASSIC Data/databases/CLASSIC Fallout4.yaml")));
+    copyPlanFixture(plan, QStringLiteral("malformedLocalIgnoreYaml"),
+                    root.filePath(QStringLiteral("CLASSIC Data/CLASSIC Ignore.yaml")));
+    const QString crashLog = root.filePath(scenarioId + QStringLiteral(".log"));
+    copyPlanFixture(plan, QStringLiteral("validCrashLog"), crashLog);
+
+    const auto choice = settlementChoice(scenarioId);
+    // `settle-already-cancelled` cancels the run after it paused but before the worker reads its
+    // pending recovery (the pack's `before-pending-recovery` boundary).
+    const bool cancelBeforePendingRecovery = scenarioId == QStringLiteral("settle-already-cancelled");
+    ScanController controller(nullptr, nullptr);
+    QThread* const guiThread = QThread::currentThread();
+    QThread* promptThread = nullptr;
+    // Stays empty when the worker never prompts, which reads back as JSON null.
+    std::optional<classic::gui::ScanRunLocalIgnoreRecoveryChoice> selected;
+    controller.setLocalIgnoreRecoveryPrompt(
+        [&promptThread, &selected, choice](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation&) {
+            promptThread = QThread::currentThread();
+            selected = choice;
+            return choice;
+        });
+    const auto prompt = controller.makeLocalIgnoreRecoveryPrompt();
+
+    // No User Settings document is staged: Crash Log Scan Launch reads the defaults (Fallout 4,
+    // game version auto), which is the game the staged YAML Data describes.
+
+    // Everything below is written on the worker thread and read here only after it has finished.
+    std::optional<classic::gui::ScanRunInstalledYamlDataPresentation> settled;
+    QString terminal = QStringLiteral("none");
+    QThread workerThread;
+    QObject context;
+    context.moveToThread(&workerThread);
+    QObject::connect(&workerThread, &QThread::started, &context, [&]() {
+        // Constructed on the worker thread so the worker and its signals never change affinity.
+        ScanWorker worker(prompt);
+        // The worker publishes the paused run's Installed YAML Data on this thread, directly
+        // before it reads the pending recovery, so cancelling here lands exactly between the
+        // pause and that read. Cancellation is monotonic, so repeating it on the settled run's
+        // publication is inert.
+        QObject::connect(&worker, &ScanWorker::installedYamlDataResolved,
+                         [&settled, &worker, cancelBeforePendingRecovery](
+                             const classic::gui::ScanRunInstalledYamlDataPresentation& installed) {
+                             settled = installed;
+                             if (cancelBeforePendingRecovery) {
+                                 worker.requestCancel();
+                             }
+                         });
+        QObject::connect(&worker, &ScanWorker::finished,
+                         [&terminal](int, int, int, const QString&) { terminal = QStringLiteral("completed"); });
+        QObject::connect(&worker, &ScanWorker::cancelled,
+                         [&terminal](const QString&) { terminal = QStringLiteral("cancelled"); });
+        QObject::connect(&worker, &ScanWorker::noLogsFound,
+                         [&terminal](const QString&) { terminal = QStringLiteral("no-crash-logs-found"); });
+        QObject::connect(&worker, &ScanWorker::error,
+                         [&terminal](const QString&) { terminal = QStringLiteral("error"); });
+        worker.doScan(root.path(), {crashLog});
+        workerThread.quit();
+    });
+    workerThread.start();
+    // The launcher owns the outer timeout; keep pumping so the blocking prompt invoke can return.
+    while (!workerThread.wait(10)) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    }
+
+    if (!settled.has_value()) {
+        throw RunnerError("GUI recovery settlement published no Installed YAML Data");
+    }
+    return {
+        {QStringLiteral("scenarioId"), scenarioId},
+        {QStringLiteral("selected"),
+         selected.has_value() ? QJsonValue(recoveryChoiceToken(*selected)) : QJsonValue(QJsonValue::Null)},
+        {QStringLiteral("promptThread"),
+         promptThread == nullptr ? QStringLiteral("none")
+                                 : (promptThread == guiThread ? QStringLiteral("gui") : QStringLiteral("worker"))},
+        {QStringLiteral("settledDecision"), settledDecisionToken(*settled)},
+        {QStringLiteral("terminal"), terminal},
+    };
+}
+
+/// Observes one real settlement per scenario the recovery obligation names, in catalog order.
+QJsonArray observeRecoverySettlements(const QJsonObject& plan, const QJsonArray& scenarioIds)
+{
+    QJsonArray settlements;
+    for (const auto& scenarioId : scenarioIds) {
+        settlements.append(observeRecoverySettlement(plan, scenarioId.toString()));
+    }
+    return settlements;
+}
+
 /// Creates one serialized lifecycle event consumed by BatchProgressModel.
 scanner::ScanRunContractEvent logEvent(scanner::ScanRunContractEventKind kind,
                                        scanner::ScanRunContractProgressPhase phase, std::size_t discoveryIndex,
@@ -447,11 +610,29 @@ QJsonObject settingsObservation(const QJsonObject& plan, const QJsonObject& obli
         }
         const auto before = settingsBytes(path);
         const auto snapshot = GuiUserSettings::open(root);
-        const auto launch = snapshot.scanLaunchSettings(QStringLiteral("Fallout4"));
+        const QString game = QStringLiteral("Fallout4");
+        const bool unchanged = before == settingsBytes(path);
+
+        // Crash Log Scan Launch reads the saved scan values itself (`gui.scan-launch` observes
+        // that); the GUI still projects them for the Settings dialog, which lists the managed
+        // game's Rust-selected rows. A Fallout 4 VR user's rows are observed the same way rather
+        // than by naming the VR key here.
+        if (!QFile::remove(path)
+            || !QFile::copy(fixtures.value(QStringLiteral("vr_shared_and_legacy_formid_databases")).toString(),
+                            path)) {
+            throw RunnerError("cannot copy Fallout 4 VR GUI settings fixture");
+        }
+        const auto vrBefore = settingsBytes(path);
+        const auto vrSnapshot = GuiUserSettings::open(root);
+        const QString vrGame = vrSnapshot.gameSetup.managedGame;
+        const QJsonObject fallout4Vr{
+            {"game", vrGame},
+            {"formIdDatabasePaths", QJsonArray::fromStringList(vrSnapshot.scan.scanFormIdDatabases.value(vrGame))},
+            {"unchanged", vrBefore == settingsBytes(path)}};
         return {{"classification", snapshot.classification}, {"updateCheck", snapshot.update.updateCheck},
-                {"game", launch.game}, {"gameVersion", launch.gameVersion},
-                {"formIdDatabasePaths", QJsonArray::fromStringList(launch.formIdDatabasePaths)},
-                {"unchanged", before == settingsBytes(path)}};
+                {"game", game}, {"gameVersion", snapshot.scan.gameVersion},
+                {"formIdDatabasePaths", QJsonArray::fromStringList(snapshot.scan.scanFormIdDatabases.value(game))},
+                {"unchanged", unchanged}, {"fallout4Vr", fallout4Vr}};
     }
     if (id == QStringLiteral("gui.settings-explicit-bootstrap")) {
         GuiUserSettings::open(root);
@@ -489,6 +670,142 @@ QJsonObject settingsObservation(const QJsonObject& plan, const QJsonObject& obli
     throw RunnerError("unknown GUI User Settings obligation");
 }
 
+/// One Crash Log Scan Launch scenario as the GUI drives it: the saved settings and the intent.
+struct GuiLaunchScenario {
+    QString settingsFixtureRef;
+    QStringList targetedInputs;
+};
+
+/// Maps one launch scenario identity onto what the GUI does in this profile.
+///
+/// The plan carries no scenario semantics, so the GUI side of each scenario is restated here: which
+/// saved settings the user has, and whether they dropped Crash Logs on the window (Targeted) or
+/// pressed the scan button with none (Standard). The GUI supplies no per-run overrides.
+GuiLaunchScenario launchScenario(const QString& scenarioId)
+{
+    if (scenarioId == QStringLiteral("managed-game-saved-values")) {
+        return {QStringLiteral("managed-fallout4"), {}};
+    }
+    if (scenarioId == QStringLiteral("targeted-scans-exactly-its-inputs")) {
+        return {QStringLiteral("managed-fallout4"), {QStringLiteral("b.log"), QStringLiteral("a folder")}};
+    }
+    if (scenarioId == QStringLiteral("fcx-missing-setup-folders-still-launch")) {
+        return {QStringLiteral("fcx-saved-setup"), {}};
+    }
+    if (scenarioId == QStringLiteral("malformed-settings-launch-from-defaults")) {
+        return {QStringLiteral("malformed"), {}};
+    }
+    throw RunnerError(QStringLiteral("unsupported GUI launch scenario: %1").arg(scenarioId).toStdString());
+}
+
+/// Writes one launch settings fixture as the Installation Root's User Settings document.
+///
+/// Fixtures name the Installation Root through a placeholder every launch runner fills, because the
+/// saved FCX folders are absolute paths beneath a root that only exists for this run.
+void stageLaunchSettings(const QJsonObject& plan, const QString& fixtureRef, const QString& root)
+{
+    const auto fixtures = requiredObject(plan, QStringLiteral("fixtures"));
+    QFile source(fixtures.value(fixtureRef).toString());
+    if (!source.open(QIODevice::ReadOnly)) {
+        throw RunnerError(QStringLiteral("GUI launch profile cannot read fixture %1").arg(fixtureRef).toStdString());
+    }
+    QByteArray document = source.readAll();
+    document.replace("{{installationRoot}}", root.toUtf8());
+    QSaveFile settings(QDir(root).filePath(QStringLiteral("CLASSIC Settings.yaml")));
+    if (!settings.open(QIODevice::WriteOnly) || settings.write(document) != document.size() || !settings.commit()) {
+        throw RunnerError(QStringLiteral("GUI launch profile cannot stage fixture %1").arg(fixtureRef).toStdString());
+    }
+}
+
+/// Returns `path` relative to the Installation Root, with the root itself reading as `.`.
+QJsonValue rootRelative(const QString& root, const rust::String& path)
+{
+    const QString cleaned = QDir::cleanPath(classic::toQString(path));
+    if (cleaned.compare(QDir::cleanPath(root), Qt::CaseInsensitive) == 0) {
+        return QStringLiteral(".");
+    }
+    return QDir(root).relativeFilePath(cleaned);
+}
+
+/// Launches one scenario exactly as `ScanWorker::doScan` does and observes what the GUI got back.
+///
+/// The observation is the launched request's shape as the GUI consumes it: that a Standard scan's
+/// base folder is the Installation Root, that dropped inputs become a Targeted intent in order,
+/// that FCX Mode with missing saved folders still launches (the setup problem is the run's to
+/// report, not a refusal here), and how many Rust-rendered warning lines the user is shown.
+QJsonObject observeLaunch(const QJsonObject& plan, const QString& scenarioId)
+{
+    QTemporaryDir temporary;
+    if (!temporary.isValid()) {
+        throw RunnerError("cannot create GUI launch Installation Root");
+    }
+    const QString root = temporary.path();
+    const auto scenario = launchScenario(scenarioId);
+    stageLaunchSettings(plan, scenario.settingsFixtureRef, root);
+    QStringList inputs;
+    for (const auto& input : scenario.targetedInputs) {
+        inputs.append(QDir(root).filePath(input));
+    }
+
+    const auto launch = classic::gui::launchScanRun(root, inputs);
+    const auto error = scanner::scan_run_launch_error(*launch);
+    if (error.has_error) {
+        return {{QStringLiteral("scenarioId"), scenarioId}, {QStringLiteral("outcome"), QStringLiteral("error")}};
+    }
+    const auto view = scanner::scan_run_launch_view(*launch);
+    const bool standard = view.intent == scanner::ScanRunLaunchIntent::Standard;
+
+    QJsonValue targetedInputs = QJsonValue::Null;
+    if (!standard) {
+        QJsonArray relative;
+        for (const auto& input : view.targeted_source.inputs) {
+            relative.append(rootRelative(root, input));
+        }
+        targetedInputs = relative;
+    }
+    QJsonValue setupFolders = QJsonValue::Null;
+    if (view.fcx_enabled) {
+        const auto& setup = view.setup_context;
+        setupFolders = QJsonObject{
+            {QStringLiteral("gameRoot"), setup.has_game_root ? rootRelative(root, setup.game_root) : QJsonValue::Null},
+            {QStringLiteral("docsRoot"), setup.has_docs_root ? rootRelative(root, setup.docs_root) : QJsonValue::Null},
+            {QStringLiteral("gameRootExists"),
+             setup.has_game_root && QFileInfo(classic::toQString(setup.game_root)).isDir()},
+            {QStringLiteral("docsRootExists"),
+             setup.has_docs_root && QFileInfo(classic::toQString(setup.docs_root)).isDir()},
+        };
+    }
+
+    const auto warningLines = classic::gui::presentScanRunDisplayLines(view.display_lines).size();
+    if ((warningLines == 0) != classic::gui::formatScanRunLaunchWarning(view).isEmpty()) {
+        throw RunnerError("GUI launch warning disagrees with the launch's rendered diagnostics");
+    }
+    return {
+        {QStringLiteral("scenarioId"), scenarioId},
+        {QStringLiteral("outcome"), QStringLiteral("launched")},
+        {QStringLiteral("intent"), standard ? QStringLiteral("standard") : QStringLiteral("targeted")},
+        {QStringLiteral("baseDirectory"),
+         standard ? rootRelative(root, view.standard_source.base_directory) : QJsonValue::Null},
+        {QStringLiteral("targetedInputs"), targetedInputs},
+        {QStringLiteral("fcxEnabled"), view.fcx_enabled},
+        {QStringLiteral("setupFolders"), setupFolders},
+        {QStringLiteral("warningLines"), static_cast<qint64>(warningLines)},
+    };
+}
+
+/// Observes the GUI Crash Log Scan Launch obligation, one launch per scenario in catalog order.
+QJsonObject launchObservation(const QJsonObject& plan, const QJsonObject& obligation)
+{
+    if (obligation.value(QStringLiteral("id")).toString() != QStringLiteral("gui.scan-launch")) {
+        throw RunnerError("unknown GUI Crash Log Scan Launch obligation");
+    }
+    QJsonArray launches;
+    for (const auto& scenarioId : requiredArray(obligation, QStringLiteral("scenarioIds"))) {
+        launches.append(observeLaunch(plan, scenarioId.toString()));
+    }
+    return {{QStringLiteral("launches"), launches}};
+}
+
 /// Builds one obligation receipt after validating the plan-owned scenario denominator.
 QJsonObject obligationReceipt(const QJsonObject& plan, const QJsonObject& obligation,
                               const QtConsumerObservations& observations)
@@ -499,11 +816,20 @@ QJsonObject obligationReceipt(const QJsonObject& plan, const QJsonObject& obliga
         throw RunnerError("consumer obligation must have an id and at least one scenario");
     }
     try {
+        const QString family = plan.value(QStringLiteral("familyId")).toString();
+        QJsonObject observation = family == QStringLiteral("user-settings")
+                                      ? settingsObservation(plan, obligation)
+                                  : family == QStringLiteral("crash-log-scan-launch")
+                                      ? launchObservation(plan, obligation)
+                                      : obligationObservation(id, observations);
+        if (id == QStringLiteral("gui.recovery-interaction")) {
+            // The prompt choice is observed where it lands: in a real run the worker settles.
+            observation.insert(QStringLiteral("settlements"), observeRecoverySettlements(plan, scenarioIds));
+        }
         return {
             {QStringLiteral("id"), id},
             {QStringLiteral("executionStatus"), QStringLiteral("completed")},
-            {QStringLiteral("observation"), plan.value(QStringLiteral("familyId")) == QStringLiteral("user-settings")
-                ? settingsObservation(plan, obligation) : obligationObservation(id, observations)},
+            {QStringLiteral("observation"), observation},
             {QStringLiteral("failure"), QJsonValue::Null},
         };
     } catch (const std::exception& error) {
@@ -530,7 +856,8 @@ QJsonObject buildReceipt(const QJsonObject& plan)
     }
 
     const auto family = plan.value(QStringLiteral("familyId")).toString();
-    if ((family != QStringLiteral("crash-log-scan-run") && family != QStringLiteral("user-settings")) ||
+    if ((family != QStringLiteral("crash-log-scan-run") && family != QStringLiteral("user-settings") &&
+         family != QStringLiteral("crash-log-scan-launch")) ||
         plan.contains(QStringLiteral("scenarios")) || plan.contains(QStringLiteral("expected"))) {
         throw RunnerError("unsupported GUI consumer family or semantic input");
     }

@@ -985,6 +985,91 @@ def _observer_failure_cancellation_requested(
     ) == {"requested": True}
 
 
+def _observer_failure_continue_run(observation: Mapping[str, Any]) -> bool:
+    """Recognize the continue-run policy finishing the run after a reported failure.
+
+    Delivery stops at the refused discovery event, yet the log is analyzed and its report
+    written, nothing requested cancellation, and the result still reports the failure.
+    """
+
+    path = "Lifecycle/crash-observer-continue.log"
+    report = "Lifecycle/crash-observer-continue-AUTOSCAN.md"
+    return (
+        observation.get("run")
+        == {
+            "status": "completed",
+            "message": None,
+            "total": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+        }
+        and _discovery_paths(observation) == [path]
+        and observation.get("logs")
+        == [
+            {
+                "discoveryIndex": 0,
+                "crashLog": {"path": path},
+                "autoscanReport": {"path": report},
+                "disposition": "succeeded",
+                "failures": [],
+                "message": None,
+                "movedToUnsolvedLogs": False,
+            }
+        ]
+        and observation.get("events")
+        == {"run": ["discovery_completed"], "logs": [{"discoveryIndex": 0, "trace": []}]}
+        and _observer_failure_observed(observation)
+        and observation.get("pendingRecovery") is False
+        and observation.get("cancellation") == {"requested": False}
+        and observation.get("durableEffects")
+        == {
+            "reports": [{"path": report, "exists": True, "nonEmpty": True}],
+            "forbidden": [{"path": "Unsolved Logs", "exists": False}],
+        }
+    )
+
+
+def _observer_failure_before_pending_recovery(observation: Mapping[str, Any]) -> bool:
+    """Recognize Rust abandoning a recovery whose run already failed a delivery.
+
+    The run would have paused on the malformed Local Ignore; instead it finishes cancelled after
+    discovery, offers no pending recovery, and leaves no backup, report, or movement behind.
+    """
+
+    path = "Lifecycle/crash-observer-before-recovery.log"
+    return (
+        _observer_failure_status(observation)
+        and _discovery_paths(observation) == [path]
+        and observation.get("events")
+        == {"run": ["discovery_completed"], "logs": [{"discoveryIndex": 0, "trace": []}]}
+        and _observer_failure_observed(observation)
+        and observation.get("pendingRecovery") is False
+        and observation.get("cancellation") == {"requested": True}
+        and observation.get("durableEffects")
+        == {
+            "reports": [],
+            "forbidden": [
+                {"path": "CLASSIC Data/CLASSIC Ignore.yaml.prev", "exists": False},
+                {
+                    "path": "Lifecycle/crash-observer-before-recovery-AUTOSCAN.md",
+                    "exists": False,
+                },
+                {"path": "Unsolved Logs", "exists": False},
+            ],
+        }
+    )
+
+
+def _discovery_paths(observation: Mapping[str, Any]) -> list[str | None]:
+    """Returns the accepted Crash Log paths of a lifecycle observation's discovery."""
+
+    discovery = _mapping(observation.get("discovery"))
+    accepted = _sequence(discovery.get("acceptedLogs")) if discovery else None
+    return [_path(log) for log in accepted] if accepted is not None else []
+
+
 def _observer_failure_forbidden_effects(observation: Mapping[str, Any]) -> bool:
     """Recognize observer failure prevents reports and movement artifacts."""
 
@@ -1176,7 +1261,7 @@ def _proceed_replay(observation: Mapping[str, Any]) -> bool:
     return (
         replays is not None
         and len(replays) == 1
-        and _consumed_replay(replays[0], "resume", "proceed_without_ignore")
+        and _consumed_replay(replays[0], "settle", "proceed_without_ignore")
     )
 
 
@@ -1274,7 +1359,7 @@ def _reset_replay(observation: Mapping[str, Any]) -> bool:
     return (
         replays is not None
         and len(replays) == 1
-        and _consumed_replay(replays[0], "resume", "reset_to_default")
+        and _consumed_replay(replays[0], "settle", "reset_to_default")
     )
 
 
@@ -1559,16 +1644,10 @@ def _reset_post_critical_effects(observation: Mapping[str, Any]) -> bool:
     )
 
 
-def _abandon_initial(observation: Mapping[str, Any]) -> bool:
-    """Recognize the prepared abandonment snapshot and typed recovery prompt."""
-
-    return _initial_recovery_snapshot(
-        observation, "abandon"
-    ) and _initial_recovery_prompt(observation)
-
-
-def _abandon_terminal(observation: Mapping[str, Any]) -> bool:
-    """Recognize ordinary post-discovery cancellation without recovery state."""
+def _cancelled_after_discovery_terminal(
+    observation: Mapping[str, Any], stem: str
+) -> bool:
+    """Recognize ordinary post-discovery cancellation of one paused run's Crash Log."""
 
     terminal = _mapping(observation.get("terminal"))
     logs = _sequence(terminal.get("logs")) if terminal is not None else None
@@ -1584,11 +1663,11 @@ def _abandon_terminal(observation: Mapping[str, Any]) -> bool:
             "cancelled": 1,
             "effectiveConcurrency": None,
         }
-        and _compact_discovery(terminal.get("discovery"), "abandon")
+        and _compact_discovery(terminal.get("discovery"), stem)
         and terminal.get("installedYamlData") is None
         and logs is not None
         and len(logs) == 1
-        and _compact_log(logs[0], "abandon", "cancelled_before_start")
+        and _compact_log(logs[0], stem, "cancelled_before_start")
         and terminal.get("events")
         == {"run": [], "logs": [{"discoveryIndex": 0, "trace": []}]}
         and terminal.get("continuationAvailable") is False
@@ -1596,30 +1675,8 @@ def _abandon_terminal(observation: Mapping[str, Any]) -> bool:
     )
 
 
-def _abandon_cancellation(observation: Mapping[str, Any]) -> bool:
-    """Recognize abandonment as the sole source of monotonic cancellation."""
-
-    return _abandon_terminal(observation) and observation.get("cancellation") == {
-        "beforeTerminal": False,
-        "afterTerminal": True,
-        "afterReplays": True,
-    }
-
-
-def _abandon_shared_replay(observation: Mapping[str, Any]) -> bool:
-    """Recognize shared one-shot rejection through abandon and resume APIs."""
-
-    replays = _sequence(observation.get("replays"))
-    return (
-        replays is not None
-        and len(replays) == 2
-        and _consumed_replay(replays[0], "abandon", None)
-        and _consumed_replay(replays[1], "resume", "reset_to_default")
-    )
-
-
-def _abandon_durable_effects(observation: Mapping[str, Any]) -> bool:
-    """Recognize byte-exact abandonment with no reports, backups, or movement."""
+def _untouched_after_pause(observation: Mapping[str, Any], stem: str) -> bool:
+    """Recognize a paused run that ended with no reports, backups, or movement."""
 
     effects = _mapping(observation.get("durableEffects"))
     return (
@@ -1640,10 +1697,120 @@ def _abandon_durable_effects(observation: Mapping[str, Any]) -> bool:
             (
                 _LOCAL_IGNORE_PATH + ".prev",
                 "Unsolved Logs",
-                "Recovery/abandon-AUTOSCAN.md",
-                "Recovery/abandon-late-AUTOSCAN.md",
+                f"Recovery/{stem}-AUTOSCAN.md",
+                f"Recovery/{stem}-late-AUTOSCAN.md",
             ),
         )
+    )
+
+
+def _pending_recovery(
+    observation: Mapping[str, Any], *, cancellation_requested: bool
+) -> bool:
+    """Recognize the pending recovery a settling frontend reads at the pause.
+
+    Its prompt must be the same Display Content the paused envelope carries, and it
+    must say whether the run's cancellation was already requested.
+    """
+
+    initial = _mapping(observation.get("initial"))
+    return (
+        initial is not None
+        and _initial_recovery_prompt(observation)
+        and initial.get("pendingRecovery")
+        == {
+            "cancellationRequested": cancellation_requested,
+            "prompt": _RECOVERY_PROMPT,
+        }
+    )
+
+
+def _settle_pending_recovery(observation: Mapping[str, Any]) -> bool:
+    """Recognize a pending recovery whose frontend should prompt."""
+
+    return _pending_recovery(observation, cancellation_requested=False)
+
+
+def _settle_proceed_without_ignore(observation: Mapping[str, Any]) -> bool:
+    """Recognize settling with Proceed Without Ignore over the retained discovery."""
+
+    return (
+        _settle_pending_recovery(observation)
+        and _proceed_terminal(observation)
+        and _proceed_no_rediscovery(observation)
+        and _proceed_durable_effects(observation)
+    )
+
+
+def _settle_reset_to_default(observation: Mapping[str, Any]) -> bool:
+    """Recognize settling with Reset To Default: one backup, repair, then the same logs."""
+
+    return (
+        _settle_pending_recovery(observation)
+        and _reset_terminal(observation)
+        and _reset_no_rediscovery(observation)
+        and _reset_durable_effects(observation)
+    )
+
+
+def _settle_without_decision(observation: Mapping[str, Any]) -> bool:
+    """Recognize settling with no decision as abandonment: cancel, then touch nothing."""
+
+    return (
+        _settle_pending_recovery(observation)
+        and _cancelled_after_discovery_terminal(observation, "settle-abandon")
+        and observation.get("cancellation")
+        == {
+            "beforeTerminal": False,
+            "afterTerminal": True,
+            "afterReplays": True,
+        }
+        and _untouched_after_pause(observation, "settle-abandon")
+    )
+
+
+def _settle_already_cancelled(observation: Mapping[str, Any]) -> bool:
+    """Recognize a pending recovery that reports prior cancellation and settles inert."""
+
+    return (
+        _pending_recovery(observation, cancellation_requested=True)
+        and _initial_recovery_snapshot(observation, "settle-cancelled")
+        and _cancelled_after_discovery_terminal(observation, "settle-cancelled")
+        and observation.get("cancellation")
+        == {
+            "beforeTerminal": True,
+            "afterTerminal": True,
+            "afterReplays": True,
+        }
+        and _untouched_after_pause(observation, "settle-cancelled")
+    )
+
+
+def _settle_replay_rejected(observation: Mapping[str, Any]) -> bool:
+    """Recognize a second settlement rejected as a consumed continuation."""
+
+    replays = _sequence(observation.get("replays"))
+    first = _mapping(replays[0]) if replays else None
+    return (
+        first is not None
+        and first.get("operation") == "settle"
+        and _consumed_replay(first, "settle", first.get("decision"))
+    )
+
+
+def _settle_replay_rejects_every_decision(observation: Mapping[str, Any]) -> bool:
+    """Recognize one spent claim rejecting replays with no decision and with Reset To Default.
+
+    Reset To Default is the one decision that could write to disk had the claim survived, so
+    the abandoned run must reject it exactly as it rejects a second abandonment.
+    """
+
+    replays = _sequence(observation.get("replays"))
+    return (
+        replays is not None
+        and len(replays) == 2
+        and _consumed_replay(replays[0], "settle", None)
+        and _consumed_replay(replays[1], "settle", "reset_to_default")
     )
 
 
@@ -2109,6 +2276,25 @@ _OBSERVER_FAILURE_PREDICATES = (
     ),
 )
 
+_OBSERVER_FAILURE_POLICY_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.observer-failure.continue-run",
+        "scan-run.execute",
+        "scan-run.execute",
+        "observer-failure",
+        ("Observer", "ObserverFailurePolicy", "ObserverDeliveryFailure", "RunResult"),
+        _observer_failure_continue_run,
+    ),
+    CoveragePredicate(
+        "scan-run.observer-failure.before-pending-recovery",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("Observer", "ObserverDeliveryFailure", "PendingRecovery", "take_pending_recovery"),
+        _observer_failure_before_pending_recovery,
+    ),
+)
+
 _STRUCTURED_FAILURE_PREDICATES = (
     CoveragePredicate(
         "scan-run.failure.request-validation",
@@ -2235,7 +2421,7 @@ _RESUME_PREDICATES = (
         "scan-run.execute",
         "scan-run.execute",
         "recovery",
-        ("CrashLogScanRunContinuation", "LocalIgnoreRecoveryDecision"),
+        ("PendingRecovery", "LocalIgnoreRecoveryDecision"),
         lambda observation: (
             _initial_recovery_snapshot(observation, "proceed")
             or _initial_recovery_snapshot(observation, "reset")
@@ -2263,7 +2449,7 @@ _RESUME_PREDICATES = (
         "scan-run.execute",
         "scan-run.execute",
         "installed-yaml-data",
-        ("LocalIgnoreRecoveryDecision", "resume"),
+        ("LocalIgnoreRecoveryDecision", "settle"),
         _proceed_terminal,
     ),
     CoveragePredicate(
@@ -2359,7 +2545,7 @@ _RESUME_PREDICATES = (
         "scan-run.execute",
         "scan-run.execute",
         "recovery",
-        ("Cancellation", "CrashLogScanRunContinuation"),
+        ("Cancellation", "PendingRecovery"),
         _reset_pre_cancelled_terminal,
     ),
     CoveragePredicate(
@@ -2388,46 +2574,62 @@ _RESUME_PREDICATES = (
     ),
 )
 
-_ABANDON_PREDICATES = (
+_SETTLE_PREDICATES = (
     CoveragePredicate(
-        "scan-run.recovery.abandon-initial",
+        "scan-run.recovery.settle-pending-recovery",
         "scan-run.execute",
         "scan-run.execute",
         "recovery",
-        ("CrashLogScanRunContinuation",),
-        _abandon_initial,
+        ("PendingRecovery", "take_pending_recovery"),
+        _settle_pending_recovery,
     ),
     CoveragePredicate(
-        "scan-run.recovery.abandon-terminal",
+        "scan-run.recovery.settle-proceed-without-ignore",
         "scan-run.execute",
         "scan-run.execute",
         "log-outcomes",
-        ("CrashLogScanRunContinuation", "abandon"),
-        _abandon_terminal,
+        ("PendingRecovery", "settle", "SettledRunResult", "LocalIgnoreRecoveryDecision"),
+        _settle_proceed_without_ignore,
     ),
     CoveragePredicate(
-        "scan-run.recovery.abandon-cancellation",
-        "scan-run.execute",
-        "scan-run.execute",
-        "recovery",
-        ("CrashLogScanRunContinuation",),
-        _abandon_cancellation,
-    ),
-    CoveragePredicate(
-        "scan-run.recovery.abandon-shared-replay",
-        "scan-run.execute",
-        "scan-run.execute",
-        "replay",
-        ("CrashLogScanRunContinuation", "ResumeError"),
-        _abandon_shared_replay,
-    ),
-    CoveragePredicate(
-        "scan-run.recovery.abandon-forbidden-effects",
+        "scan-run.recovery.settle-reset-to-default",
         "scan-run.execute",
         "scan-run.execute",
         "durable-effects",
-        ("CrashLogScanRunContinuation",),
-        _abandon_durable_effects,
+        ("PendingRecovery", "settle", "SettledRunResult", "LocalIgnoreResetRunData"),
+        _settle_reset_to_default,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.settle-without-decision",
+        "scan-run.execute",
+        "scan-run.execute",
+        "cancellation",
+        ("PendingRecovery", "settle", "SettledRunResult", "Cancellation"),
+        _settle_without_decision,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.settle-already-cancelled",
+        "scan-run.execute",
+        "scan-run.execute",
+        "cancellation",
+        ("PendingRecovery", "take_pending_recovery", "settle", "Cancellation"),
+        _settle_already_cancelled,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.settle-replay-rejected",
+        "scan-run.execute",
+        "scan-run.execute",
+        "replay",
+        ("PendingRecovery", "settle", "ResumeError"),
+        _settle_replay_rejected,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.settle-replay-rejects-every-decision",
+        "scan-run.execute",
+        "scan-run.execute",
+        "replay",
+        ("PendingRecovery", "settle", "ResumeError"),
+        _settle_replay_rejects_every_decision,
     ),
 )
 
@@ -2612,6 +2814,28 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
     "observer-delivery-failure": tuple(
         sorted(predicate.id for predicate in _OBSERVER_FAILURE_PREDICATES)
     ),
+    # A finished one-log run has the generated-Ignore scenario's terminal status as well.
+    "observer-delivery-failure-continue-run": tuple(
+        sorted(
+            {
+                "scan-run.generated.status",
+                "scan-run.observer-failure.structured-observation",
+                "scan-run.observer-failure.continue-run",
+            }
+        )
+    ),
+    # The abandoned run is the same cancelled-after-discovery result the cancel-run policy
+    # produces, so those status, observation, and cancellation facts hold here as well.
+    "observer-delivery-failure-before-pending-recovery": tuple(
+        sorted(
+            {
+                "scan-run.observer-failure.status",
+                "scan-run.observer-failure.structured-observation",
+                "scan-run.observer-failure.cancellation",
+                "scan-run.observer-failure.before-pending-recovery",
+            }
+        )
+    ),
     "request-validation-failure": ("scan-run.failure.request-validation",),
     "discovery-failure": ("scan-run.failure.discovery",),
     "intake-failure": ("scan-run.failure.intake",),
@@ -2627,6 +2851,9 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
     "generated-local-ignore": tuple(
         sorted(predicate.id for predicate in _GENERATED_PREDICATES)
     ),
+    # The recovery scenarios below all settle a pending recovery: the separate resume and
+    # abandon entry points were removed (ADR-0009), so every one also pins the pending
+    # recovery a frontend reads at the pause and the typed consumed replay of settling.
     "proceed-without-ignore-recovery": tuple(
         sorted(
             {
@@ -2636,6 +2863,9 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
                 "scan-run.recovery.proceed-no-rediscovery",
                 "scan-run.recovery.proceed-no-mutation",
                 "scan-run.recovery.proceed-replay-rejected",
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-proceed-without-ignore",
+                "scan-run.recovery.settle-replay-rejected",
             }
         )
     ),
@@ -2648,6 +2878,9 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
                 "scan-run.recovery.reset-no-rediscovery",
                 "scan-run.recovery.reset-backup-and-repair",
                 "scan-run.recovery.reset-replay-rejected",
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-reset-to-default",
+                "scan-run.recovery.settle-replay-rejected",
             }
         )
     ),
@@ -2659,6 +2892,8 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
                 "scan-run.recovery.reset-conflict",
                 "scan-run.recovery.reset-conflict-forbidden-effects",
                 "scan-run.recovery.reset-replay-rejected",
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-replay-rejected",
             }
         )
     ),
@@ -2670,6 +2905,8 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
                 "scan-run.recovery.reset-operational-failure",
                 "scan-run.recovery.reset-operational-forbidden-effects",
                 "scan-run.recovery.reset-replay-rejected",
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-replay-rejected",
             }
         )
     ),
@@ -2681,6 +2918,8 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
                 "scan-run.recovery.reset-pre-cancelled",
                 "scan-run.recovery.reset-pre-cancelled-forbidden-effects",
                 "scan-run.recovery.reset-replay-rejected",
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-replay-rejected",
             }
         )
     ),
@@ -2692,11 +2931,61 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
                 "scan-run.recovery.reset-post-critical-cancelled",
                 "scan-run.recovery.reset-post-critical-durable-effects",
                 "scan-run.recovery.reset-replay-rejected",
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-replay-rejected",
             }
         )
     ),
-    "abandon-local-ignore-recovery": tuple(
-        sorted(predicate.id for predicate in _ABANDON_PREDICATES)
+    "settle-proceed-without-ignore": tuple(
+        sorted(
+            {
+                "scan-run.recovery.initial-retained-snapshot",
+                "scan-run.recovery.initial-prompt",
+                "scan-run.recovery.proceed-without-ignore",
+                "scan-run.recovery.proceed-no-rediscovery",
+                "scan-run.recovery.proceed-no-mutation",
+                "scan-run.recovery.proceed-replay-rejected",
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-proceed-without-ignore",
+                "scan-run.recovery.settle-replay-rejected",
+            }
+        )
+    ),
+    "settle-reset-to-default": tuple(
+        sorted(
+            {
+                "scan-run.recovery.initial-retained-snapshot",
+                "scan-run.recovery.initial-prompt",
+                "scan-run.recovery.reset-to-default",
+                "scan-run.recovery.reset-no-rediscovery",
+                "scan-run.recovery.reset-backup-and-repair",
+                "scan-run.recovery.reset-replay-rejected",
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-reset-to-default",
+                "scan-run.recovery.settle-replay-rejected",
+            }
+        )
+    ),
+    # Settling with no decision is the one abandonment operation; this scenario
+    # replaced the retired abandon scenario.
+    "settle-without-decision": tuple(
+        sorted(
+            {
+                "scan-run.recovery.settle-pending-recovery",
+                "scan-run.recovery.settle-without-decision",
+                "scan-run.recovery.settle-replay-rejected",
+                "scan-run.recovery.settle-replay-rejects-every-decision",
+            }
+        )
+    ),
+    "settle-already-cancelled": tuple(
+        sorted(
+            {
+                "scan-run.recovery.reset-replay-rejected",
+                "scan-run.recovery.settle-already-cancelled",
+                "scan-run.recovery.settle-replay-rejected",
+            }
+        )
     ),
 }
 """Exact centrally derived semantic fact IDs required by each v1 scenario."""
@@ -2709,11 +2998,12 @@ CRASH_LOG_SCAN_RUN_COVERAGE_POLICY = FamilyCoveragePolicy(
         + _QUEUED_CANCELLATION_PREDICATES
         + _ADMITTED_CANCELLATION_PREDICATES
         + _OBSERVER_FAILURE_PREDICATES
+        + _OBSERVER_FAILURE_POLICY_PREDICATES
         + _STRUCTURED_FAILURE_PREDICATES
         + _RUN_STATUS_PREDICATES
         + _GENERATED_PREDICATES
         + _RESUME_PREDICATES
-        + _ABANDON_PREDICATES
+        + _SETTLE_PREDICATES
         + _MOVEMENT_PREDICATES
         + _FACTORY_PREDICATES
     ),

@@ -1,7 +1,8 @@
 //! Crash Log Scan Run Display Content.
 //!
 //! This crate decides *what a Crash Log Scan Run says*. It turns a run result, a single run
-//! event, a run-wide infrastructure failure, or a resume failure into an ordered sequence of
+//! event, a run-wide infrastructure failure, a resume failure, or the diagnostics a Crash Log
+//! Scan Launch reported ([`render_launch_diagnostics`]) into an ordered sequence of
 //! [`DisplayLine`]s. Each line is a [`DisplaySeverity`] plus an ordered list of typed
 //! [`DisplaySegment`]s, so a frontend can style a path as a clickable link or emphasise a
 //! number without re-deciding the words around it. It also renders the one interactive
@@ -22,11 +23,14 @@
 //! translation from being a rewrite later, though CLASSIC stays single-language and this
 //! crate builds no message catalogue, locale plumbing, or runtime language selection.
 //!
-//! # Take the continuation out first
+//! # Take the pending recovery out first
 //!
 //! Every entry point borrows, because a [`RunResult`](classic_scanlog_core::scan_run::contract::RunResult)
-//! is not clonable — it retains a one-shot Crash Log Scan Run Continuation. Take the
-//! continuation out of the result **before** rendering; see [`render_run_result`].
+//! is not clonable — a paused run privately retains a one-shot Crash Log Scan Run
+//! Continuation. Take the pending recovery out of the result **before** rendering; see
+//! [`render_run_result`]. [`take_pending_recovery`] is the way to take it: it returns a
+//! [`PendingRecoveryWithPrompt`] that bundles the pending recovery with the recovery prompt this
+//! crate renders, which is the one pending-recovery object every binding hands its frontends.
 //!
 //! # Rules an adapter must follow
 //!
@@ -59,10 +63,14 @@
 //! surfaces follow.
 
 mod display;
+mod launch;
+mod pending;
 mod recovery;
 mod render;
 
 pub use display::{DisplayLine, DisplaySegment, DisplaySeverity};
+pub use launch::{render_launch_diagnostic, render_launch_diagnostics};
+pub use pending::{PendingRecoveryWithPrompt, take_pending_recovery};
 pub use recovery::{RecoveryDecisionDescription, RecoveryPrompt, render_local_ignore_recovery};
 pub use render::{
     render_event, render_infrastructure_error, render_resume_error, render_run_result,

@@ -14,6 +14,7 @@
 
 #include "core/rust_qt_bridge.h"
 
+#include "classic_cxx_bridge/config.h"
 #include "classic_cxx_bridge/message.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
@@ -28,29 +29,26 @@
 #include <windows.h>
 #endif
 
-/// Find the CLASSIC.ico icon by searching common locations.
+/// Finds `CLASSIC Data/graphics/CLASSIC.ico` under the Installation Root.
+///
+/// Config owns the one Installation Root search (the same one `MainWindow::findDataRoot()`
+/// uses), so the icon lookup supplies only the executable folder and working directory rather
+/// than keeping its own candidate list. Runs before the Rust runtime starts, which is fine:
+/// the locator only inspects the filesystem. Returns an empty string when there is no
+/// Installation Root or it holds no icon; the window then keeps Qt's default icon.
 static QString findIcon()
 {
-    QString iconRef = QStringLiteral("@Classic Data/graphics/CLASSIC.ico");
-    if (iconRef.startsWith(QLatin1Char('@'))) {
-        iconRef.remove(0, 1);
+    const QByteArray executableDir = QCoreApplication::applicationDirPath().toUtf8();
+    const QByteArray workingDir = QDir::currentPath().toUtf8();
+    const QString installationRoot = classic::toQString(classic::config::locate_installation_root(
+        rust::Str(executableDir.constData(), static_cast<std::size_t>(executableDir.size())),
+        rust::Str(workingDir.constData(), static_cast<std::size_t>(workingDir.size()))));
+    if (installationRoot.isEmpty()) {
+        return {};
     }
 
-    QDir cwd = QDir::current();
-    QString exeDir = QCoreApplication::applicationDirPath();
-    const QStringList candidates = {
-        cwd.filePath(iconRef),
-        QDir(exeDir).filePath(iconRef),
-        QDir(exeDir + "/..").filePath(iconRef),
-    };
-
-    for (const QString& iconPath : candidates) {
-        if (QFile::exists(iconPath)) {
-            return iconPath;
-        }
-    }
-
-    return {};
+    const QString iconPath = QDir(installationRoot).filePath(QStringLiteral("CLASSIC Data/graphics/CLASSIC.ico"));
+    return QFile::exists(iconPath) ? iconPath : QString{};
 }
 
 static std::string startupCorrelationId()

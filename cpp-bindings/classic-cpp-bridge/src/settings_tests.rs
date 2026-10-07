@@ -1035,6 +1035,9 @@ fn empty_user_settings_update() -> ffi::UserSettingsUpdateDto {
         has_formid_databases: false,
         formid_database_games: Vec::new(),
         formid_database_paths: Vec::new(),
+        has_formid_database_save: false,
+        formid_database_save_game: String::new(),
+        formid_database_save_paths: Vec::new(),
         has_move_unsolved_logs: false,
         move_unsolved_logs: false,
         has_unsolved_logs_destination: false,
@@ -1178,6 +1181,78 @@ fn test_user_settings_crash_log_scan_snapshot_is_typed_and_preserves_origins() {
         snapshot.diagnostics[0].code,
         "canonical_alias_conflict_custom_scan_folder"
     );
+}
+
+#[test]
+fn test_user_settings_crash_log_scan_snapshot_carries_game_aware_scan_formid_rows() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "vr_shared_and_legacy_formid_databases.yaml");
+
+    let snapshot = user_settings_open_crash_log_scan_settings(&root.path().display().to_string());
+    let rows = snapshot
+        .scan_formid_database_paths
+        .iter()
+        .map(|row| (row.game.as_str(), row.path.as_str()))
+        .collect::<Vec<_>>();
+
+    // Rows arrive grouped in supported-game order with the Fallout 4 VR read rule already applied.
+    assert_eq!(
+        rows,
+        vec![
+            ("Fallout4", "databases/Fallout4 FormIDs.db"),
+            ("Fallout4", "databases/Shared Extra FormIDs.db"),
+            ("Fallout4VR", "databases/Fallout4 FormIDs.db"),
+            ("Fallout4VR", "databases/Shared Extra FormIDs.db"),
+            ("Fallout4VR", "databases/Legacy VR FormIDs.db"),
+            ("Skyrim", "databases/Skyrim FormIDs.db"),
+        ]
+    );
+}
+
+#[test]
+fn test_user_settings_vr_formid_save_reports_the_legacy_key_removal_in_preview_and_commit() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "vr_shared_and_legacy_formid_databases.yaml");
+    let root_string = root.path().display().to_string();
+    let mut update = empty_user_settings_update();
+    update.has_formid_database_save = true;
+    update.formid_database_save_game = "Fallout4VR".to_string();
+    update.formid_database_save_paths = vec!["D:/VR.db".to_string()];
+
+    let preview = user_settings_preview_update(&root_string, &update);
+
+    assert!(preview.accepted);
+    let rows = preview
+        .formid_database_paths
+        .iter()
+        .map(|row| (row.game.as_str(), row.path.as_str()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rows,
+        vec![
+            ("Fallout4", "D:/VR.db"),
+            ("Skyrim", "databases/Skyrim FormIDs.db")
+        ]
+    );
+    let codes = |diagnostics: &[ffi::UserSettingsUpdateDiagnosticDto]| {
+        diagnostics
+            .iter()
+            .map(|diagnostic| (diagnostic.field_path.clone(), diagnostic.code.clone()))
+            .collect::<Vec<_>>()
+    };
+    let expected = vec![(
+        "/CLASSIC_Settings/FormID Databases".to_string(),
+        "legacy_formid_databases_key_removed".to_string(),
+    )];
+    assert_eq!(codes(&preview.diagnostics), expected);
+
+    let committed =
+        user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
+
+    assert_eq!(committed.status, "committed");
+    assert_eq!(codes(&committed.diagnostics), expected);
+    let reopened = user_settings_open_crash_log_scan_settings(&root_string);
+    assert_eq!(reopened.formid_database_games, vec!["Fallout4", "Skyrim"]);
 }
 
 #[test]

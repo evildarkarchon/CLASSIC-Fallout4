@@ -32,6 +32,8 @@ from resolve_python_rust_symbols import (
 RUST_TARGET_CRATES: dict[str, str] = {
     # Existing 3 (preserved for stability)
     "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
+    # Crash Log Scan Launch (ADR-0009), exposed on the classic_scanlog facade.
+    "classic-scan-launch": "business-logic/classic-scan-launch/src/lib.rs",
     "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
     "classic-user-settings-core": "business-logic/classic-user-settings-core/src/lib.rs",
     "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
@@ -58,6 +60,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
 
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
+    "classic-scan-launch": "scanlog",
     "classic-config-core": "config",
     "classic-user-settings-core": "user_settings",
     "classic-version-registry-core": "version_registry",
@@ -148,7 +151,8 @@ SQUAD_BY_OWNER: dict[str, str] = {
 # 'aux' label so adding a new crate to RUST_TARGET_CRATES automatically
 # propagates to the rendered report (LOW drift guard, enforced by
 # tests/test_owner_render_drift.py).
-_OWNER_RENDER_ORDER: tuple[str, ...] = tuple(RUST_OWNER_BY_CRATE.values()) + ("aux",)
+# dict.fromkeys de-duplicates owners shared by several crates while keeping first-seen order.
+_OWNER_RENDER_ORDER: tuple[str, ...] = tuple(dict.fromkeys(RUST_OWNER_BY_CRATE.values())) + ("aux",)
 
 PYTHON_PHASE3_ROUTE_FAMILIES: dict[str, dict[str, str]] = {
     "Fallout4Version": {

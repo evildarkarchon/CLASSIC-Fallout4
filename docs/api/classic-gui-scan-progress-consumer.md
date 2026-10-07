@@ -2,7 +2,7 @@
 
 Contributor-facing documentation for how the active Qt frontend consumes the final Rust-owned Crash Log Scan Run contract through:
 
-- [`classic-gui/src/workers/scanrequestbuilder.cpp`](../../classic-gui/src/workers/scanrequestbuilder.cpp)
+- [`classic-gui/src/workers/scanlaunch.cpp`](../../classic-gui/src/workers/scanlaunch.cpp)
 - [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp)
 - [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp)
 - [`classic-gui/src/workers/scanrunpresentation.cpp`](../../classic-gui/src/workers/scanrunpresentation.cpp)
@@ -20,7 +20,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 Use this page to understand:
 
-- how Qt constructs only valid tagged Standard or Targeted requests
+- how Qt launches a Standard or Targeted scan through Rust's Crash Log Scan Launch
 - where Rust-owned discovery, concurrency, and lifecycle events enter Qt
 - how `BatchProgressModel` projects serialized final-contract events into visible progress
 - how cancellation and terminal statuses become Qt signals
@@ -32,35 +32,44 @@ For the CXX observer contract, see [`classic-cpp-bridge-scan-progress-callback.m
 
 ## Request Construction Boundary
 
-`ScanController::startScan(...)` does not collect Crash Logs. It captures the immutable, revision-approved `CrashLogScanLaunchSettings`, the runtime FCX XSE-log hint, and the optional Targeted input list, then invokes `ScanWorker::doScan(...)` on a worker thread.
+The GUI builds no Crash Log Scan Run request itself (ADR-0009). `MainWindow::onScanCrashLogs()` checks only that an Installation Root was found, then calls `ScanController::startScan(installationRoot, targetedInputs)` with the dropped Targeted inputs, if any. It reads no saved scan setting, resolves no FCX folder, game executable, or XSE log, and refuses nothing: an FCX scan with a missing game or documents folder runs, and FCX setup validation reports the problem in the run's Crash Log Scan Setup Result, which reaches the user through the `SetupFailed` error dialog.
 
-`buildScanRunRequest(...)` projects those values into one opaque Rust-owned `ScanRunRequest`:
+On the worker thread, `ScanWorker::doScan(...)` calls `classic::gui::launchScanRun(...)` ([`scanlaunch.cpp`](../../classic-gui/src/workers/scanlaunch.cpp)), the GUI's whole share of request building:
 
-- no Targeted inputs constructs Standard intent with a `ScanRunStandardSourceDto`
-- one or more Targeted inputs constructs Targeted intent with a `ScanRunTargetedSourceDto`
-- Standard requests receive either `LeaveInPlace` or `MoveToConfiguredOrDefault` Unsolved Logs intent
-- Targeted constructors have no Unsolved Logs parameter, so persisted Standard movement settings cannot leak into a Targeted run
-- FCX requests use the corresponding `_with_fcx` constructor and must carry `ScanRunSetupContextDto`
-- a positive configured concurrency becomes an explicit value; a non-positive GUI setting omits it and selects Rust's adaptive policy
+- no Targeted inputs calls `scan_run_launch_standard(installationRoot, overrides)`; Rust makes the Installation Root the Standard base folder, so a Standard scan looks in `<Installation Root>/Crash Logs` (plus the saved custom scan folder), the same place the CLI and TUI look. `MainWindow::readCrashLogsDir()` follows it, so the Results tab and Open Crash Logs watch that folder too
+- one or more Targeted inputs calls `scan_run_launch_targeted(installationRoot, inputs, overrides)`, which scans exactly those inputs in order and has no Unsolved Logs capability
+- the overrides DTO is value-initialised: the GUI has no per-run overrides, so Rust applies the saved User Settings (managed game, game version, Fallout 4 VR FormID row rule, concurrency, Unsolved Logs policy, and with FCX Mode on the FCX setup context including the XSE log) unchanged
+
+Launching reads User Settings at the moment the scan starts, on the worker thread, so the scan uses what was last saved rather than the window's cached snapshot. A typed launch error (`scan_run_launch_error(...).has_error`, for example an XSE log location that cannot be inspected) ends the scan through `error` before any run starts. Otherwise the launch's diagnostics, which arrive as Rust-rendered Display Content lines (`ScanRunLaunchRequestDto.display_lines`), are laid out by `formatScanRunLaunchWarning(...)` and published once through `ScanWorker::launchWarning`; `ScanController` relays that as `scanWarning`, so a degraded User Settings document is reported in Rust's words while the scan goes ahead from defaults. The worker then takes the executable request with `scan_run_launch_request(...)`.
 
 The worker starts exactly one operation and moves out its result envelope:
 
 ```cpp
-auto operation = scan_run_contract_execute(*request, *m_cancellation, &observer);
+auto operation = scan_run_contract_execute(*request, *m_cancellation, &observer,
+                                           ScanRunObserverFailurePolicy::CancelRun);
 auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
 Rust owns discovery, Targeted rejection policy, effective-concurrency selection, scheduling, FCX setup evaluation, Autoscan Report persistence, Unsolved Logs finalization, cancellation admission seams, aggregate counts, and terminal ordering. Qt supplies facts and presents the resulting contract; it does not repeat those decisions.
 
-If that envelope reports `LocalIgnoreRecoveryRequired`, the operation still owns an opaque single-use continuation. `ScanWorker` publishes the retained malformed-file metadata, takes the continuation, and synchronously asks `MainWindow` for one explicit choice through `ScanController`. `ScanController::makeLocalIgnoreRecoveryPrompt()` builds that handoff: the returned callable runs on the worker thread, marshals only the message across a `Qt::BlockingQueuedConnection`, and returns a typed decision. The operation, continuation, cancellation control, and original observer remain live on the worker stack throughout, and every path that cannot reach a live controller resolves to `Cancel`. The worker then claims the continuation once, takes the resulting envelope, and presents it through the same terminal path.
+The recovery flow is four steps on the worker thread: execute, check for a pending recovery, lay out the prompt, settle.
 
-Which call it makes depends on the choice, and the mapping is an exhaustive `switch` producing a `std::optional<ScanRunLocalIgnoreRecoveryDecision>`. A decision calls `scan_run_continuation_resume(...)`; `Cancel` is *no decision* and calls `scan_run_continuation_abandon(...)`, the shared operation that cancels `m_cancellation` and claims the continuation without applying either recovery decision, touching nothing on disk. The worker no longer cancels first and no longer picks a placeholder decision — that sequence is Rust's now, written once for this frontend, the native CLI, and the TUI. The `optional` shape mirrors the `Option` the Node and Python bindings use, because `LocalIgnoreRecoveryDecision` deliberately carries no abandonment variant. Keeping the `switch` exhaustive means a choice added later trips `-Wswitch` here rather than silently resolving to Proceed Without Ignore.
+1. If `scan_run_contract_execution_has_pending_recovery(...)` is true, the run paused for Local Ignore recovery. `ScanWorker` publishes the retained malformed-file metadata and takes the pending recovery with `scan_run_contract_execution_take_pending_recovery(...)`.
+2. If `scan_run_pending_recovery_cancellation_requested(...)` already reports the run cancelled, the worker does not prompt. The fact is read live from the run's own control, so a cancel that lands after the pause but before the prompt is seen.
+3. Otherwise the worker synchronously asks `MainWindow` for one explicit choice through `ScanController`. `ScanController::makeLocalIgnoreRecoveryPrompt()` builds that handoff: the returned callable runs on the worker thread, marshals only the Qt-owned presentation across a `Qt::BlockingQueuedConnection`, and returns a typed choice. The operation, pending recovery, and observer remain live on the worker stack throughout, and every path that cannot reach a live controller resolves to `Cancel`.
+4. The worker settles once with `scan_run_pending_recovery_settle(...)` and presents the settled envelope through the same terminal path. A settled run cannot pause again, because Rust's settled result carries no continuation.
 
-Abandonment emits no observer event — cancellation short-circuits ahead of every stage that emits — so `deliveryFailed()` stays false on that path and an empty event stream is not a delivery failure.
+The choice becomes the settlement through an exhaustive `switch` producing a `std::optional<ScanRunLocalIgnoreRecoveryDecision>`. A decision is passed as `ScanRunLocalIgnoreRecoverySettlement{true, decision}`. `Cancel` is *no decision* and is passed with `has_decision = false`: Rust cancels the run's own control and finishes it cancelled after discovery, touching nothing on disk, so the worker never cancels first and never picks a placeholder decision. The `optional` shape mirrors the `Option` the Node and Python bindings use, because `LocalIgnoreRecoveryDecision` deliberately carries no abandonment variant. Keeping the `switch` exhaustive means a choice added later trips `-Wswitch` here rather than silently resolving to Proceed Without Ignore.
 
-The worker takes the continuation *before* it asks. That ordering means a prompt that throws drops the continuation instead of leaving the run resumable with an answer the user never gave, and it matches `execute_cli_scan_run(...)` in the native CLI.
+Every paused run is settled, never dropped. Each of these paths settles with no decision:
 
-Two adapter invariants are reported rather than guessed at: a recovery status with no retained continuation, and a configured-prompt-less worker. Both emit `error(...)` instead of choosing on the user's behalf, so a non-interactive `ScanWorker` can never make an implicit destructive choice.
+- a run already cancelled at the pause
+- a worker constructed without a prompt, which is what a non-interactive caller looks like
+- a prompt that throws; the worker settles first and then reports the exception through `error(...)`
+
+None of them can make an implicit destructive choice.
+
+The `gui.recovery-interaction` consumer obligation runs a real paused scan through `ScanWorker` for each settle scenario: `settle-proceed-without-ignore`, `settle-reset-to-default`, `settle-without-decision` (the prompt answers Cancel), and `settle-already-cancelled`, where the runner cancels the run after it paused but before the worker reads its pending recovery, and observes that the prompt is never shown, no decision is settled, and the run ends cancelled.
 
 ---
 
@@ -73,9 +82,9 @@ The observer:
 - receives `ScanRunContractEvent` values serially in execution order
 - owns a mutable `BatchProgressModel`
 - emits worker Qt signals from the synchronous worker-thread call
-- is `noexcept`, catches every Qt-side presentation exception, records delivery failure, and explicitly requests safe cancellation
+- is `noexcept`, catches every Qt-side presentation exception, and returns a failed `ScanRunObserverDelivery`; it records nothing and cancels nothing itself
 
-Observer delivery is non-controlling. A presentation failure does not become a Rust scan failure and no exception crosses CXX. After execution returns, `ScanWorker` checks `deliveryFailed()` and emits an adapter-local error instead of presenting a possibly incomplete event stream as a successful run.
+Observer delivery is non-controlling. A presentation failure does not become a Rust scan failure and no exception crosses CXX. `ScanWorker` executes and settles with `ScanRunObserverFailurePolicy::CancelRun`, so Rust itself cancels at the first failed delivery, stops delivering, reports it on the envelope (`has_observer_delivery_failure`), and abandons a pending recovery the failure preceded instead of handing it back. The worker reads that envelope fact, from the settled envelope when the run paused, and emits an adapter-local error instead of presenting a possibly incomplete event stream as a successful run. It keeps no delivery-failure state of its own.
 
 The worker owns one monotonic `ScanRunCancellation`. `requestCancel()` calls `scan_run_cancellation_cancel(...)`; the GUI does not poll or decide which queued work may still start.
 
@@ -177,9 +186,9 @@ Terminal mapping:
 - `Cancelled` emits `cancelled(...)` with completed and not-started counts
 - `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
 - `SetupFailed` emits `error(...)` with structured setup details
-- `LocalIgnoreRecoveryRequired` calls `promptLocalIgnoreRecoveryChoice(parent, recovery)`, a warning prompt whose buttons are built from `recovery.decisions` — one per decision, labelled with Rust's Display Label — plus a Cancel this frontend owns. `recovery.message` is the paused run rendered as rich text rather than a sentence about it, because Rust exposes the Installed YAML Data block this decision is about only as part of the rendered run — the same call the native CLI and the TUI made. `recovery.prompt` is Rust's own question, and each decision's `description` says what choosing it will do; the dialog writes neither. What stays the GUI's: that this is a modal dialog, that the descriptions sit under the question rather than on the buttons, and Cancel's affordance and wording. The dialog sets `Qt::TextBrowserInteraction` so the paths it shows can be opened. A decision resumes the retained run, while cancellation routes to the shared abandon operation so Rust returns the ordinary cancelled lifecycle without touching Local Ignore. Cancel is both the default and the escape button, so Return, Escape, and closing the window are all non-destructive
+- `LocalIgnoreRecoveryRequired` calls `promptLocalIgnoreRecoveryChoice(parent, recovery)`, a warning prompt whose buttons are built from `recovery.decisions` — one per decision, labelled with Rust's Display Label — plus a Cancel this frontend owns. `recovery.message` is the paused run rendered as rich text rather than a sentence about it, because Rust exposes the Installed YAML Data block this decision is about only as part of the rendered run — the same call the native CLI and the TUI made. `recovery.prompt` is Rust's own question, and each decision's `description` says what choosing it will do; the dialog writes neither. What stays the GUI's: that this is a modal dialog, that the descriptions sit under the question rather than on the buttons, and Cancel's affordance and wording. The dialog sets `Qt::TextBrowserInteraction` so the paths it shows can be opened. The worker settles the pending recovery with the chosen decision, or with no decision for Cancel, so Rust returns the ordinary cancelled lifecycle without touching Local Ignore. Cancel is both the default and the escape button, so Return, Escape, and closing the window are all non-destructive
   - `ScanRunLocalIgnoreRecoveryPresentation` is projected by `presentScanRunExecution` on the **worker thread**, from `execution.recovery_prompt` behind `has_recovery_prompt`. It holds only Qt-owned copies and no `rust::Box`, which is what makes the `Qt::BlockingQueuedConnection` hop in `ScanController::makeLocalIgnoreRecoveryPrompt` legal — the bridged envelope cannot cross that hop and cannot be re-rendered on the far side
-  - A decision whose `available` is false gets no button. `resume` claims the single-use continuation before validating the decision and then fails with a typed reset error: nothing on disk changes, but the run cannot be retried without starting over. Availability travels *on* the decision rather than as a separate flag, which is what makes offering an unavailable one impossible without ignoring a field already in hand — the shape that replaced `offersLocalIgnoreResetToDefault`, whose "silence is not a denial" rule now lives once in Rust's `render_local_ignore_recovery`. Why a decision is missing is stated among `recovery.prompt`'s lines, so the dialog explains no absence of its own
+  - A decision whose `available` is false gets no button. Settling claims the single-use continuation before validating the decision and then fails with a typed reset error: nothing on disk changes, but the run cannot be retried without starting over. Availability travels *on* the decision rather than as a separate flag, which is what makes offering an unavailable one impossible without ignoring a field already in hand — the shape that replaced `offersLocalIgnoreResetToDefault`, whose "silence is not a denial" rule now lives once in Rust's `render_local_ignore_recovery`. Why a decision is missing is stated among `recovery.prompt`'s lines, so the dialog explains no absence of its own
   - The window stays responsive throughout. `BlockingQueuedConnection` parks the *worker* thread while `QMessageBox::exec()` runs a *nested* loop on the GUI thread rather than suspending it; `classic-gui/tests/test_recoverypromptnonblocking.cpp` pins that with heartbeat, repaint, and input probes
 - typed continuation replay and Local Ignore reset conflict/backup/replacement errors emit `error(...)`; the stable code stays on `resume_error.code` for a consumer to match on and is deliberately absent from the rendered sentences, because a code is machine-facing identity rather than prose
 - a typed infrastructure error emits `error(...)` with the rendered failure block; the typed stage and path stay on `error` for a consumer
@@ -190,7 +199,7 @@ Cancellation after discovery does not interrupt admitted work. Rust finishes dur
 
 The presentation layer projects:
 
-- the envelope's `display_lines` into Qt-owned `ScanRunDisplayLinePresentation` values, plus the same sequence rendered as plain text (`message`) and as rich text (`richText`). One field covers all three payloads, because `scan_run_contract_execute` and `scan_run_continuation_resume` return the same envelope and the lines describe whichever payload the presence flags select
+- the envelope's `display_lines` into Qt-owned `ScanRunDisplayLinePresentation` values, plus the same sequence rendered as plain text (`message`) and as rich text (`richText`). One field covers all three payloads, because `scan_run_contract_execute` and `scan_run_pending_recovery_settle` return the same envelope and the lines describe whichever payload the presence flags select
 - the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors. This projection stays this frontend's, because the FCX Mode setup types have not adopted the shared vocabulary and `classic-scan-presentation` deliberately does not render them. It is grouped in *after* the rendered lines rather than spliced into them
 - optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`, `Generated`, `RecoveryRequired`, or `ProceedWithoutIgnore` Local Ignore state and exact identity; whether Reset To Default can succeed for this run; and diagnostic role/candidate/path/kind/message context
 - per-log `Succeeded`, `Failed`, and `CancelledBeforeStart` dispositions
@@ -270,7 +279,7 @@ Autoscan Report content.
 
 ## What Current Tests Assert
 
-[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) behavior-tests the tagged constructor boundary: one installation root and typed game cross the request seam, empty Targeted input creates Standard discovery, while Targeted input creates Targeted discovery with structured rejections and cannot express Standard movement.
+What a launch builds is pinned in Rust and by the `crash-log-scan-launch` conformance family; the GUI's `gui.scan-launch` consumer obligation (run by `run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch`) observes `launchScanRun` itself: the Installation Root as Standard base folder, dropped inputs becoming a Targeted intent in order, an FCX launch with missing saved folders still launching, and degraded settings producing warning lines. [`test_scanworker_launch.cpp`](../../classic-gui/tests/test_scanworker_launch.cpp) runs real scans through the worker: a Standard scan discovers Crash Logs under the Installation Root, an FCX scan with missing folders runs and reports its Crash Log Scan Setup Result instead of being refused, and launch diagnostics are published as a warning while the run continues.
 
 [`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) uses `ScanRunContractEvent` directly. It verifies discovery/concurrency initialization, monotonic serialized lifecycle progress, interleaved per-log advancement, late-phase suppression, and full work contribution for a failed `LogFinished` event.
 
@@ -278,7 +287,7 @@ Autoscan Report content.
 
 [`test_display_label_audit.cpp`](../../classic-gui/tests/test_display_label_audit.cpp) is the structural half of the same guarantee. It reads `classic-gui/src/` as text and asserts that no GUI source turns an audited enum into a string literal, counting occurrences rather than naming functions so a table written into an already-audited file is caught without anyone extending the test. It also asserts that the six rendered labels are still fetched from their bridge accessors, and carries a meta-test that fails when its own hand-written file list falls behind `src/`. Per-log disposition is audited negatively but not positively: the GUI renders no label for it, by the decision recorded at `presentLog`.
 
-[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation, that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error, that a completed shared-fixture run publishes typed Installed YAML Data with exact identities, and all three malformed Local Ignore choices. Reset preserves malformed bytes in a verified backup and finishes the same scan, Proceed Without Ignore finishes without changing the file, and Cancel emits the ordinary cancelled lifecycle without backup or mutation. It also pins the two adapter invariants: a worker with no configured prompt, and a prompt that throws, both fail the run with the malformed file and the backup directory untouched.
+[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation, that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error, that a completed shared-fixture run publishes typed Installed YAML Data with exact identities, and all three malformed Local Ignore choices. Reset preserves malformed bytes in a verified backup and finishes the same scan, Proceed Without Ignore finishes without changing the file, and Cancel emits the ordinary cancelled lifecycle without backup or mutation. It also pins the paths that settle with no decision. A run cancelled at the pause never prompts and ends cancelled. A worker with no configured prompt ends cancelled. A prompt that throws fails the run. A progress view that throws mid-scan ends the run through Rust's cancel-run policy without prompting. Each leaves the malformed file and the backup directory untouched.
 
 [`test_scancontroller_recovery.cpp`](../../classic-gui/tests/test_scancontroller_recovery.cpp) exercises `makeLocalIgnoreRecoveryPrompt()` across a real worker thread: an unconfigured controller answers `Cancel`, each configured decision round-trips with its message, a worker-thread request is answered on the controller's thread while the caller blocks, and a destroyed controller degrades to `Cancel` rather than replaying its old answer.
 
@@ -302,7 +311,7 @@ Autoscan Report content.
 
 ## Contributor Rule Of Thumb
 
-- Change request policy in Rust and its tagged constructors, not by adding GUI flag combinations.
+- Change request policy in Rust's Crash Log Scan Launch, not by adding GUI flag combinations or GUI-side settings reads.
 - When final observer tags or fields change, update the bridge observer documentation, `BatchProgressModel`, presentation tests, and this page together.
 - Debug totals and accepted paths from `DiscoveryCompleted`; debug concurrency from `EffectiveConcurrencySelected`; debug success/failure details from the terminal execution result.
 - Do not add a second progress DTO, caller-input correlation, completion-order result reconstruction, GUI discovery, or GUI-owned durable finalization to this flow.

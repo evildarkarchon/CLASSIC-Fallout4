@@ -24,10 +24,11 @@ import type {
     JsScanRunLogResult,
     JsScanRunRecoveryPrompt,
     JsScanRunResult,
+    JsScanRunSettledSuccess,
     JsScanRunSetupContext,
     JsScanRunSuccess,
     ScanRunCancellation,
-    ScanRunContinuation,
+    ScanRunPendingRecovery,
 } from "../index.js";
 
 const RUN_PLAN_ENV = "CLASSIC_CONFORMANCE_RUN_PLAN" as const;
@@ -88,7 +89,8 @@ interface ExecutionFlowInput {
         | "before-discovery"
         | "on-first-log-queued"
         | "on-first-log-started"
-        | "on-observer-failure";
+        | "on-observer-failure"
+        | "none";
     observerFailure?: ObserverFailureInput | null;
 }
 
@@ -96,23 +98,34 @@ interface ExecutionFlowInput {
 interface ObserverFailureInput {
     eventKind: "discovery_completed";
     message: string;
+    /** The observer failure policy, passed to the binding as `cancelOnObserverError`. */
+    policy: "cancel-run" | "continue-run";
 }
 
 /** Input-only instructions for one terminal continuation claim and its replays. */
 interface ContinuationFlowInput {
     action: ContinuationActionInput;
-    cancellation?: "before-resume" | "after-reset-critical-section";
+    cancellation?:
+        | "before-settle"
+        | "after-reset-critical-section"
+        | "before-pending-recovery";
     postPauseData: FixturePathInput[];
     replays: ContinuationActionInput[];
 }
 
-/** One public continuation operation and its decision when resuming. */
-type ContinuationActionInput =
-    | {
-    operation: "resume";
-    decision: "proceed-without-ignore" | "reset-to-default";
-}
-    | { operation: "abandon"; decision?: never };
+/**
+ * One public continuation operation and its optional decision.
+ *
+ * Settling is the only operation: the separate resume and abandon entry points were removed
+ * (ADR-0009), and an action naming either is rejected rather than silently skipped.
+ */
+type ContinuationActionInput = {
+    operation: "settle";
+    decision?: "proceed-without-ignore" | "reset-to-default";
+};
+
+/** Either successful envelope a continuation action resolves with. */
+type ContinuationSuccess = JsScanRunSuccess | JsScanRunSettledSuccess;
 
 /** The frozen Standard scenario input. */
 interface StandardScenarioInput extends CommonScenarioInput {
@@ -1223,10 +1236,10 @@ async function localIgnoreDurableEffects(
 }
 
 /** Reject adapter infrastructure or observer failures and return the public success envelope. */
-function requireSuccessfulExecution(
-    execution: JsScanRunSuccess | JsScanRunFailure,
+function requireSuccessfulExecution<T extends ContinuationSuccess>(
+    execution: T | JsScanRunFailure,
     label: string,
-): JsScanRunSuccess {
+): T {
     if (execution.observerError !== undefined) {
         throw new RunnerContractError(
             `${label} observer delivery failed: ${execution.observerError}`,
@@ -1263,7 +1276,7 @@ function compactRecoveryPrompt(prompt: JsScanRunRecoveryPrompt, root: string): J
 
 /** Project one initial or terminal Local Ignore phase without reading durable effects. */
 async function localIgnorePhase(
-    execution: JsScanRunSuccess | JsScanRunFailure,
+    execution: ContinuationSuccess | JsScanRunFailure,
     callbacks: JsScanRunEvent[],
     root: string,
     continuationAvailable: boolean,
@@ -1307,33 +1320,33 @@ async function localIgnorePhase(
     };
 }
 
-/** Invoke exactly one public continuation operation without deriving it from scenario names. */
+/** Settle the pending recovery for one plan action without deriving intent from scenario names. */
 async function runContinuationAction(
     classic: typeof import("../index.js"),
-    continuation: ScanRunContinuation,
+    pendingRecovery: ScanRunPendingRecovery,
     action: ContinuationActionInput,
-    cancellation: ScanRunCancellation,
     callbacks?: JsScanRunEvent[],
-): Promise<JsScanRunSuccess | JsScanRunFailure> {
+): Promise<ContinuationSuccess | JsScanRunFailure> {
+    if (action.operation !== "settle") {
+        throw new RunnerContractError(
+            `unsupported continuation operation: ${String(action.operation)}`,
+        );
+    }
     const observer =
         callbacks === undefined
             ? undefined
             : (event: JsScanRunEvent) => {
                 callbacks.push(event);
             };
-    if (action.operation === "abandon") {
-        return await classic.scanRunAbandon(continuation, cancellation, observer);
-    }
     const decision =
-        action.decision === "proceed-without-ignore"
-            ? classic.JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore
-            : classic.JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault;
-    return await classic.scanRunResume(
-        continuation,
-        decision,
-        cancellation,
-        observer,
-    );
+        action.decision === undefined
+            ? undefined
+            : action.decision === "proceed-without-ignore"
+                ? classic.JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore
+                : classic.JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault;
+    // Settling runs on the paused run's own control, which the pending recovery
+    // retains; no cancellation is handed over again.
+    return await classic.scanRunSettle(pendingRecovery, decision, observer);
 }
 
 /** Project one optional reset identity from a rejected public continuation. */
@@ -1470,7 +1483,7 @@ function replayError(
     return {
         operation: action.operation,
         decision:
-            action.operation === "resume" ? normalizedToken(action.decision) : null,
+            action.decision === undefined ? null : normalizedToken(action.decision),
         error: {
             kind,
             message:
@@ -1499,16 +1512,31 @@ async function continuationObservation(
         initialExecution,
         "initial scan run",
     );
-    const continuation = initialSuccess.result.continuation;
-    if (continuation === undefined) {
+    // A settling frontend reaches the paused run only through its pending recovery.
+    const pendingRecovery = initialSuccess.pendingRecovery;
+    if (pendingRecovery === undefined) {
         throw new RunnerContractError(
-            "continuationFlow initial result has no continuation",
+            "continuationFlow initial result has no pending recovery",
         );
     }
     if (initialSuccess.recoveryPrompt === undefined) {
         throw new RunnerContractError(
             "continuationFlow initial result has no recovery prompt",
         );
+    }
+    if (
+        flow.cancellation !== undefined &&
+        flow.cancellation !== "before-settle" &&
+        flow.cancellation !== "after-reset-critical-section" &&
+        flow.cancellation !== "before-pending-recovery"
+    ) {
+        throw new RunnerContractError(
+            "continuationFlow.cancellation is not a supported cancellation seam",
+        );
+    }
+    if (flow.cancellation === "before-pending-recovery") {
+        // The run already paused; cancel it before the frontend reads its pending recovery.
+        cancellation.cancel();
     }
     const initial = await localIgnorePhase(
         initialSuccess,
@@ -1517,38 +1545,29 @@ async function continuationObservation(
         true,
         initialSuccess.recoveryPrompt,
     );
+    initial.pendingRecovery = {
+        cancellationRequested: pendingRecovery.cancellationRequested,
+        prompt: compactRecoveryPrompt(pendingRecovery.prompt, root),
+    };
     await materializePostPauseData(plan, scenario, flow.postPauseData, root);
 
-    if (
-        flow.cancellation !== undefined &&
-        flow.cancellation !== "before-resume" &&
-        flow.cancellation !== "after-reset-critical-section"
-    ) {
-        throw new RunnerContractError(
-            "continuationFlow.cancellation is not a supported cancellation seam",
-        );
-    }
-    if (flow.cancellation === "before-resume") {
+    if (flow.cancellation === "before-settle") {
         cancellation.cancel();
     }
     const cancelledBeforeTerminal = cancellation.isCancelled;
     const terminalCallbacks: JsScanRunEvent[] = [];
-    let terminalExecution: JsScanRunSuccess | JsScanRunFailure | null = null;
+    let terminalExecution: ContinuationSuccess | JsScanRunFailure | null = null;
     let terminalError: JsonObject | null = null;
     if (flow.cancellation === "after-reset-critical-section") {
-        if (
-            flow.action.operation !== "resume" ||
-            flow.action.decision !== "reset-to-default"
-        ) {
+        if (flow.action.decision !== "reset-to-default") {
             throw new RunnerContractError(
                 "after-reset-critical-section cancellation requires Reset To Default",
             );
         }
         const pending = runContinuationAction(
             classic,
-            continuation,
+            pendingRecovery,
             flow.action,
-            cancellation,
             terminalCallbacks,
         ).then(
             (execution) => ({ok: true as const, execution}),
@@ -1576,9 +1595,8 @@ async function continuationObservation(
         try {
             terminalExecution = await runContinuationAction(
                 classic,
-                continuation,
+                pendingRecovery,
                 flow.action,
-                cancellation,
                 terminalCallbacks,
             );
         } catch (error) {
@@ -1586,7 +1604,7 @@ async function continuationObservation(
         }
     }
 
-    let terminalSuccess: JsScanRunSuccess | null = null;
+    let terminalSuccess: ContinuationSuccess | null = null;
     let terminal: JsonObject | null = null;
     if (terminalExecution !== null) {
         terminalSuccess = requireSuccessfulExecution(
@@ -1606,7 +1624,7 @@ async function continuationObservation(
     const replays: JsonObject[] = [];
     for (const action of flow.replays) {
         try {
-            await runContinuationAction(classic, continuation, action, cancellation);
+            await runContinuationAction(classic, pendingRecovery, action);
             throw new RunnerContractError(
                 "a replayed continuation action unexpectedly succeeded",
             );
@@ -1879,14 +1897,17 @@ async function lifecycleObservation(
         discovery: discovery(result.discovery, root),
         logs: logResults(result.logs, root),
         events: compactEvents(result, callbacks),
+        // Whether delivery failed, and its message, come from the Rust result; the event kind
+        // is the boundary the plan told this runner's observer to refuse.
         observerFailure:
-            expectedFailure === null
+            execution.observerError === undefined
                 ? null
                 : {
                     kind: "observer_delivery_failure",
-                    eventKind: expectedFailure.eventKind,
-                    messageNonEmpty: execution.observerError!.length > 0,
+                    eventKind: expectedFailure?.eventKind ?? null,
+                    messageNonEmpty: execution.observerError.trim().length > 0,
                 },
+        pendingRecovery: execution.pendingRecovery !== undefined,
         cancellation: {requested: cancellation.isCancelled},
         durableEffects: await lifecycleDurableEffects(result.logs, input, root),
     };
@@ -1926,10 +1947,13 @@ async function executeScenario(
                 "executionFlow requires the lifecycle observation profile",
             );
         }
-        if (flow?.cancellation === "on-observer-failure") {
+        if (
+            flow?.cancellation === "on-observer-failure" ||
+            flow?.cancellation === "none"
+        ) {
             if (flow.observerFailure === undefined || flow.observerFailure === null) {
                 throw new RunnerContractError(
-                    "on-observer-failure cancellation requires observerFailure",
+                    `${flow.cancellation} cancellation requires observerFailure`,
                 );
             }
             if (
@@ -1940,12 +1964,21 @@ async function executeScenario(
                     "observerFailure requires discovery_completed and a non-empty message",
                 );
             }
+            // Only the cancel-run policy may be the plan's source of cancellation, and the
+            // continue-run policy runs with no cancellation at all.
+            const expectedPolicy =
+                flow.cancellation === "none" ? "continue-run" : "cancel-run";
+            if (flow.observerFailure.policy !== expectedPolicy) {
+                throw new RunnerContractError(
+                    `${flow.cancellation} cancellation requires a ${expectedPolicy} observerFailure`,
+                );
+            }
         } else if (
             flow?.observerFailure !== undefined &&
             flow.observerFailure !== null
         ) {
             throw new RunnerContractError(
-                "observerFailure requires on-observer-failure cancellation",
+                "observerFailure requires on-observer-failure or no cancellation",
             );
         }
         if (flow?.cancellation === "before-discovery") {
@@ -1978,7 +2011,8 @@ async function executeScenario(
                     cancellation.cancel();
                 }
             },
-            flow?.cancellation === "on-observer-failure",
+            // The binding maps this option onto the Rust observer failure policy.
+            flow?.observerFailure?.policy === "cancel-run",
         );
         if (input.observationProfile === "failure") {
             return await failureObservation(execution, input, root);
@@ -2011,7 +2045,7 @@ async function executeScenario(
                     success,
                     callbacks,
                     root,
-                    success.result.continuation !== undefined,
+                    success.pendingRecovery !== undefined,
                     success.recoveryPrompt,
                 )),
                 durableEffects: await localIgnoreDurableEffects(

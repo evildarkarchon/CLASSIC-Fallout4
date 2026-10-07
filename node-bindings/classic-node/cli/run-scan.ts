@@ -1,18 +1,17 @@
-import {existsSync} from "node:fs";
 import {basename, dirname, join} from "node:path";
 import type {
     JsGameId,
-    JsScanRunConfiguration,
     JsScanRunDisplayLine,
     JsScanRunDisplaySegment,
     JsScanRunEvent,
+    JsScanRunLaunchOverrides,
 } from "../index.js";
 // `const enum` members are inlined by tsc and the import is erased, so naming these
 // here costs no runtime require of `../index.js`. That matters: this CLI resolves
 // the binding at run time through `loadClassicNode`, because `dist/cli/` sits at a
 // different depth than the source it was compiled from.
 import {JsScanRunDisplaySegmentKind, JsScanRunDisplaySeverity,} from "../index.js";
-import type {CliOptions, CliPaths, CliResult, JsonSummary, SupportedGame,} from "./types";
+import type {CliOptions, CliPaths, CliResult, JsonSummary} from "./types";
 
 type ClassicNodeModule = typeof import("../index.js");
 
@@ -32,24 +31,32 @@ export function resolvePackageRoot(cliDir: string): string {
     return basename(parent) === "dist" ? dirname(parent) : parent;
 }
 
-function findDataRoot(
+/**
+ * Locates the Installation Root through Config's shared locator.
+ *
+ * The CLI's own folder stands in for the executable folder: the Node executable lives
+ * wherever Node was installed, which says nothing about the CLASSIC installation. The
+ * locator's parent and grandparent candidates then cover the package root from both
+ * `cli/` and `dist/cli/`. There is deliberately no fallback, so a run from the wrong
+ * folder never scans it as if it were the installation.
+ *
+ * @throws Error whose message starts with "CLASSIC Data not found" and names both
+ *   search starts, when no candidate holds `CLASSIC Data`.
+ */
+function locateDataRoot(
+    classicNode: ClassicNodeModule,
     currentWorkingDirectory: string,
     cliDir: string,
 ): CliPaths {
-    const packageRoot = resolvePackageRoot(cliDir);
-    const cwdDataDir = join(currentWorkingDirectory, "CLASSIC Data");
-    if (existsSync(cwdDataDir)) {
-        return {root: currentWorkingDirectory, data: cwdDataDir};
+    const root = classicNode.locateInstallationRoot(cliDir, currentWorkingDirectory);
+    if (root === null) {
+        throw new Error(
+            "CLASSIC Data not found. Run the CLI from the CLASSIC installation folder, " +
+            "or place it next to the CLASSIC Data folder. " +
+            `(CLI folder: ${cliDir}; working directory: ${currentWorkingDirectory})`,
+        );
     }
-
-    const packageDataDir = join(packageRoot, "CLASSIC Data");
-    if (existsSync(packageDataDir)) {
-        return {root: packageRoot, data: packageDataDir};
-    }
-
-    throw new Error(
-        `Unable to resolve CLASSIC Data from ${currentWorkingDirectory} or ${packageRoot}`,
-    );
+    return {root, data: join(root, "CLASSIC Data")};
 }
 
 function toCliGameVersion(shortName: string): string | undefined {
@@ -92,32 +99,41 @@ export function getSupportedGameVersions(
     return [...supported];
 }
 
-export function normalizeSupportedGameVersion(
-    game: string,
-    requested: string,
-    cliDir: string,
-): string {
-    const supportedGameVersions = getSupportedGameVersions(game, cliDir);
-    const normalized = normalizeGameVersion(requested);
-    const supported = new Set(supportedGameVersions.map(normalizeGameVersion));
-    const isSupportedVersion = supported.has(normalized);
-    if (!isSupportedVersion) {
-        throw new Error(
-            `--game-version must be one of: ${supportedGameVersions.join(", ")}`,
-        );
+/**
+ * Projects the flags the user supplied onto Crash Log Scan Launch's override model.
+ *
+ * Only supplied flags become overrides; an absent flag leaves the saved User Setting in
+ * force, which Rust decides. `--game` (already limited to `Fallout4` by the argument
+ * parser, as in the native CLI) passes its `JsGameId` token straight through.
+ * `--max-concurrent 0` is an explicit request for adaptive
+ * concurrency, which the launch honours over a saved limit. The boolean flags are
+ * supplied-as-on: present means on for this run.
+ */
+function toLaunchOverrides(options: CliOptions): JsScanRunLaunchOverrides {
+    const overrides: JsScanRunLaunchOverrides = {};
+    if (options.game !== undefined) {
+        // `JsGameId` is a string enum whose values are the game tokens this flag takes.
+        overrides.game = options.game as JsGameId;
     }
-    return normalized;
-}
-
-/** Maps the CLI's supported-game vocabulary onto the binding's typed game enum. */
-function toJsGameId(
-    classicNode: ClassicNodeModule,
-    game: SupportedGame,
-): JsGameId {
-    switch (game) {
-        case "Fallout4":
-            return classicNode.JsGameId.Fallout4;
+    if (options.gameVersion !== undefined) {
+        overrides.gameVersion = normalizeGameVersion(options.gameVersion);
     }
+    if (options.scanPath !== undefined) {
+        overrides.scanPath = options.scanPath;
+    }
+    if (options.maxConcurrent !== undefined) {
+        overrides.maxConcurrent = options.maxConcurrent;
+    }
+    if (options.showFidValues) {
+        overrides.showFormidValues = true;
+    }
+    if (options.simplifyLogs) {
+        overrides.simplifyLogs = true;
+    }
+    if (options.fcxMode) {
+        overrides.fcxMode = true;
+    }
+    return overrides;
 }
 
 function countOrZero(count: number | undefined): number {
@@ -272,8 +288,9 @@ function emitJson(summary: JsonSummary): void {
 /**
  * Runs the CLI command using explicit flags as overrides over canonical User Settings.
  *
- * Scan settings are opened read-only from the discovered CLASSIC root. The native scan service
- * owns analysis and report writes; this function reports a stable process exit result.
+ * The request comes from Crash Log Scan Launch, which opens User Settings read-only from
+ * the located Installation Root and scans from that root. The native scan service owns
+ * analysis and report writes; this function reports a stable process exit result.
  */
 export async function runCli(
     options: CliOptions,
@@ -301,81 +318,45 @@ export async function runCli(
             return {exitCode: 0};
         }
 
-        const paths = findDataRoot(process.cwd(), cliDir);
-        const userSettings = classicNode.openUserSettings(paths.root);
-        const scanSettings = userSettings.crashLogScanSettings;
-        const normalizedGameVersion = normalizeSupportedGameVersion(
-            options.game,
-            options.gameVersion ?? scanSettings.gameVersionSelection,
-            cliDir,
+        const paths = locateDataRoot(classicNode, process.cwd(), cliDir);
+        // Crash Log Scan Launch owns the whole request: it reads User Settings read-only,
+        // lets each supplied flag win over its saved value, selects the scanned game's
+        // FormID rows (including the Fallout 4 VR read rule), applies the game-differs
+        // rule, and makes the Installation Root the Standard base folder. This CLI only
+        // says which flags the user supplied.
+        const launch = classicNode.ScanRunLaunch.standard(
+            paths.root,
+            toLaunchOverrides(options),
         );
-        const fcxMode = options.fcxMode ?? scanSettings.fcxMode;
-        const showFidValues =
-            options.showFidValues ?? scanSettings.formidValueLookup;
-        const simplifyLogs = options.simplifyLogs ?? scanSettings.simplifyLogs;
-        const scanPath = options.scanPath ?? scanSettings.customScanInput;
-        const requestedConcurrency =
-            options.maxConcurrent ?? scanSettings.maxConcurrentScans;
+        const configuration = launch.configuration;
+        const launchedGame: string = configuration.game;
+        const launchedGameVersion = configuration.gameVersion;
 
-        classicNode.registrySetGame(options.game);
+        classicNode.registrySetGame(launchedGame);
 
         if (!options.json) {
-            let modeSuffix = "";
-            if (normalizedGameVersion === "VR") {
-                modeSuffix += " VR";
-            } else if (normalizedGameVersion !== "auto") {
-                modeSuffix += ` ${normalizedGameVersion}`;
-            }
-            if (fcxMode) {
-                modeSuffix += " [FCX]";
-            }
+            const modeSuffix =
+                (launchedGameVersion !== "auto" ? ` ${launchedGameVersion}` : "") +
+                (launch.fcxEnabled ? " [FCX]" : "");
 
             console.log(
-                `CLASSIC v${version} - Crash Log Scanner (${options.game}${modeSuffix})\n`,
+                `CLASSIC v${version} - Crash Log Scanner (${launchedGame}${modeSuffix})\n`,
             );
             console.log(`Data root: ${paths.root}`);
             console.log(`Data dir:  ${paths.data}\n`);
+            // What the launch withheld or degraded, in Rust's words. Printed before the
+            // run because it describes the request the run is about to execute.
+            if (launch.displayLines.length > 0) {
+                printDisplayLines(launch.displayLines);
+                console.log("");
+            }
         }
-
-        const configuredConcurrency =
-            requestedConcurrency > 0 ? requestedConcurrency : undefined;
-        const configuration: JsScanRunConfiguration = {
-            installationRoot: paths.root,
-            game: toJsGameId(classicNode, options.game),
-            gameVersion: normalizedGameVersion,
-            showFormidValues: showFidValues,
-            simplifyLogs,
-            formidDatabasePaths:
-                scanSettings.formidDatabases[options.game] ?? [],
-            unsolvedLogsDestination: scanSettings.unsolvedLogsDestination,
-            maxConcurrent: configuredConcurrency,
-        };
-        const source = {
-            baseDirectory: process.cwd(),
-            customScanDirectory: scanPath,
-            configuredDocumentsRoot:
-            userSettings.gameSetupSettings.documentsRoot,
-        };
-        const unsolvedLogs = scanSettings.moveUnsolvedLogs
-            ? classicNode.ScanRunUnsolvedLogs.moveToConfiguredOrDefault()
-            : classicNode.ScanRunUnsolvedLogs.leaveInPlace();
-        const request = fcxMode
-            ? classicNode.ScanRunRequest.standardWithFcx(
-                configuration,
-                source,
-                unsolvedLogs,
-                {
-                    gameRoot: userSettings.gameSetupSettings.gameRoot,
-                    docsRoot: userSettings.gameSetupSettings.documentsRoot,
-                    gameExePath:
-                    userSettings.gameSetupSettings.gameExecutable,
-                },
-            )
-            : classicNode.ScanRunRequest.standard(
-                configuration,
-                source,
-                unsolvedLogs,
-            );
+        const launchDiagnostics = launch.diagnostics.map(({kind, code, message}) => ({
+            kind,
+            code,
+            message,
+        }));
+        const request = launch.request();
         const cancellation = new classicNode.ScanRunCancellation();
         // Which event kinds earn a durable console line is this frontend's choice and
         // is unchanged: the two that describe the run about to happen. Omitting whole
@@ -438,8 +419,9 @@ export async function runCli(
             const summary: JsonSummary = {
                 mode: "scan",
                 exitCode: 1,
-                game: options.game,
-                gameVersion: normalizedGameVersion,
+                game: launchedGame,
+                gameVersion: launchedGameVersion,
+                launchDiagnostics,
                 dataRoot: paths.root,
                 dataDir: paths.data,
                 logsFound: scanResult.total,
@@ -460,8 +442,8 @@ export async function runCli(
         }
 
         // Terminal for this CLI. The run paused before analysing anything and handed back a
-        // one-shot continuation that only an interactive caller can answer; this command never
-        // resumes it. Falling through to the generic summary below reported a clean exit 0 with
+        // one-shot pending recovery that only an interactive caller can answer; this command never
+        // settles it. Falling through to the generic summary below reported a clean exit 0 with
         // "0 logs" — indistinguishable from a healthy scan of an empty folder — while the real
         // cause was a malformed CLASSIC Ignore.yaml that nothing had told the user about.
         if (scanResult.status === "local_ignore_recovery_required") {
@@ -469,8 +451,9 @@ export async function runCli(
             const summary: JsonSummary = {
                 mode: "scan",
                 exitCode: 1,
-                game: options.game,
-                gameVersion: normalizedGameVersion,
+                game: launchedGame,
+                gameVersion: launchedGameVersion,
+                launchDiagnostics,
                 dataRoot: paths.root,
                 dataDir: paths.data,
                 logsFound: scanResult.total,
@@ -500,8 +483,9 @@ export async function runCli(
             const summary: JsonSummary = {
                 mode: "scan",
                 exitCode: 0,
-                game: options.game,
-                gameVersion: normalizedGameVersion,
+                game: launchedGame,
+                gameVersion: launchedGameVersion,
+                launchDiagnostics,
                 dataRoot: paths.root,
                 dataDir: paths.data,
                 logsFound: 0,
@@ -538,8 +522,9 @@ export async function runCli(
         const summary: JsonSummary = {
             mode: "scan",
             exitCode: scanErrors > 0 || reportFailures > 0 ? 1 : 0,
-            game: options.game,
-            gameVersion: normalizedGameVersion,
+            game: launchedGame,
+            gameVersion: launchedGameVersion,
+            launchDiagnostics,
             dataRoot: paths.root,
             dataDir: paths.data,
             logsFound: scanResult.total,
@@ -565,8 +550,13 @@ export async function runCli(
         const summary: JsonSummary = {
             mode: "fatal",
             exitCode: 2,
+            // What the user asked for; a fatal can precede the launch that would have
+            // settled the game and version, so absent flags stay absent.
             game: options.game,
-            gameVersion: normalizeGameVersion(options.gameVersion ?? "auto"),
+            gameVersion:
+                options.gameVersion === undefined
+                    ? undefined
+                    : normalizeGameVersion(options.gameVersion),
             message,
         };
 

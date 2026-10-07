@@ -3,8 +3,6 @@
 #include "core/threadmanager.h"
 #include "workers/scanworker.h"
 
-#include <QCoreApplication>
-#include <QDir>
 #include <QMetaObject>
 #include <QMetaType>
 #include <QPointer>
@@ -51,7 +49,7 @@ classic::gui::ScanRunLocalIgnoreRecoveryPrompt ScanController::makeLocalIgnoreRe
         }
 
         Choice choice = Choice::Cancel;
-        // Keep the Rust continuation and observer on the worker stack while the GUI owns the modal
+        // Keep the Rust pending recovery and observer on the worker stack while the GUI owns the modal
         // prompt. The payload is captured by value and carries only Qt-owned copies — no
         // continuation and no `rust::Box` — which is what makes copying it across the hop safe.
         // No metatype registration is needed because this is the functor overload of
@@ -68,9 +66,7 @@ classic::gui::ScanRunLocalIgnoreRecoveryPrompt ScanController::makeLocalIgnoreRe
     };
 }
 
-void ScanController::startScan(const QString& installationRoot,
-                               const classic::gui::CrashLogScanLaunchSettings& settings, const QString& setupXseLogPath,
-                               const QStringList& targetedInputs)
+void ScanController::startScan(const QString& installationRoot, const QStringList& targetedInputs)
 {
     if (m_scanning) {
         return;
@@ -82,14 +78,15 @@ void ScanController::startScan(const QString& installationRoot,
         emit m_signalHub->scanStarted();
     }
 
-    const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
-
     // Create worker and thread
     auto* worker = new ScanWorker(makeLocalIgnoreRecoveryPrompt());
     auto* thread = new QThread();
     m_currentWorker = worker;
 
     // Connect worker signals to controller slots
+    // Launch diagnostics surface through the same warning path as discovery rejections. The
+    // connection is queued, so the run does not wait for the user to read them.
+    connect(worker, &ScanWorker::launchWarning, this, &ScanController::scanWarning);
     connect(worker, &ScanWorker::progressDetailed, this, &ScanController::scanProgress);
     connect(
         worker, &ScanWorker::discoveryCompleted, this,
@@ -117,9 +114,7 @@ void ScanController::startScan(const QString& installationRoot,
 
     // Start the worker thread and invoke doScan once the thread is running
     connect(thread, &QThread::started, worker,
-            [worker, installationRoot, settings, baseDir, setupXseLogPath, targetedInputs]() {
-                worker->doScan(installationRoot, settings, baseDir, setupXseLogPath, targetedInputs);
-            });
+            [worker, installationRoot, targetedInputs]() { worker->doScan(installationRoot, targetedInputs); });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);
 }

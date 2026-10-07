@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 
 #include <cstdint>
-#include <filesystem>
 #include <limits>
 #include <QApplication>
 #include <QCoreApplication>
@@ -70,8 +69,6 @@
 #include <QTabBar>
 #include <QUrl>
 
-namespace fs = std::filesystem;
-
 namespace {
 QString format_elapsed_seconds(const QElapsedTimer& timer)
 {
@@ -121,30 +118,24 @@ void showScanRunMessage(QWidget* parent, QMessageBox::Icon icon, const QString& 
     box.exec();
 }
 
-/// Resolve an existing Fallout 4 script-extender log to use as a setup detection hint.
-/// The selected version controls preference, while checking both names keeps auto-detected VR installs working.
+/// Resolve an existing script-extender log to use as a setup detection hint.
+///
+/// Rust owns the XSE log location (XSE Folder precedence plus the selected version's Version
+/// Registry XSE log name, so Fallout 4 VR has its own log); an empty result means no log exists.
+/// The log is only a hint, so an operational failure is logged and the caller continues without it
+/// rather than blocking setup or a scan.
 QString resolveExistingXseLogPath(const QString& yamlData, const QString& game, const QString& selectedGameVersion,
                                   const QString& configuredDocsRoot)
 {
-    const auto resolvedFolder = classic::xse::resolve_xse_folder_for_scan(
-        classic::toRustString(yamlData), classic::toRustString(game), classic::toRustString(selectedGameVersion),
-        classic::toRustString(configuredDocsRoot));
-    if (resolvedFolder.empty()) {
+    try {
+        const auto resolvedLog = classic::xse::resolve_xse_log_for_scan(
+            classic::toRustString(yamlData), classic::toRustString(game), classic::toRustString(selectedGameVersion),
+            classic::toRustString(configuredDocsRoot));
+        return resolvedLog.empty() ? QString{} : QDir::cleanPath(classic::toQString(resolvedLog));
+    } catch (const rust::Error& error) {
+        classic::message::log_warning(std::string("XSE log lookup failed: ") + error.what());
         return {};
     }
-
-    const QDir xseFolder(classic::toQString(resolvedFolder));
-    const bool preferVrLog = selectedGameVersion.compare(QStringLiteral("VR"), Qt::CaseInsensitive) == 0;
-    const QStringList logNames = preferVrLog ? QStringList{QStringLiteral("f4sevr.log"), QStringLiteral("f4se.log")}
-                                             : QStringList{QStringLiteral("f4se.log"), QStringLiteral("f4sevr.log")};
-    for (const QString& logName : logNames) {
-        const QString logPath = QDir::cleanPath(xseFolder.filePath(logName));
-        if (QFileInfo(logPath).isFile()) {
-            return logPath;
-        }
-    }
-
-    return {};
 }
 
 void logUpdateCheckFailure(const QString& errorMessage)
@@ -1119,31 +1110,15 @@ void MainWindow::checkFirstRunPaths()
 
 QString MainWindow::findDataRoot() const
 {
-    std::error_code ec;
-
-    QString appDir = QCoreApplication::applicationDirPath();
-    fs::path appPath(appDir.toStdWString());
-    fs::path cwd = fs::current_path(ec);
-
-    std::vector<fs::path> candidates;
-    candidates.push_back(appPath);                             // deployed exe dir
-    candidates.push_back(cwd);                                 // launch cwd
-    candidates.push_back(appPath.parent_path());               // build dir parent
-    candidates.push_back(appPath.parent_path().parent_path()); // repo root from build/*
-    candidates.push_back(appPath.parent_path() / "install");   // classic-gui/install
-    candidates.push_back(cwd / "install");                     // cwd/install
-
-    for (const auto& base : candidates) {
-        if (base.empty()) {
-            continue;
-        }
-        if (fs::is_directory(base / "CLASSIC Data", ec)) {
-            return QString::fromStdWString(base.wstring());
-        }
-    }
-
-    // Fallback: return empty (caller should handle)
-    return QString();
+    // Config owns the one Installation Root search shared with the TUI and update-core, so the
+    // GUI only supplies its two process facts. A development build in classic-gui/build still
+    // resolves the repository root (the executable's grandparent). An empty result means no
+    // Installation Root; callers show their own "CLASSIC Data not found" dialogs.
+    const QByteArray executableDir = QCoreApplication::applicationDirPath().toUtf8();
+    const QByteArray workingDir = QDir::currentPath().toUtf8();
+    return classic::toQString(classic::config::locate_installation_root(
+        rust::Str(executableDir.constData(), static_cast<std::size_t>(executableDir.size())),
+        rust::Str(workingDir.constData(), static_cast<std::size_t>(workingDir.size()))));
 }
 
 // ── Per-tab window geometry ────────────────────────────────────────
@@ -1236,7 +1211,13 @@ void MainWindow::onTabChanged(int index)
 
 QString MainWindow::readCrashLogsDir() const
 {
-    return QDir::cleanPath(QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("Crash Logs")));
+    // A Standard scan's base folder is the Installation Root (Crash Log Scan Launch decides that),
+    // so this is where it looks for Crash Logs and where the Results tab must watch. No
+    // Installation Root means no Crash Logs folder; callers treat empty as "not configured".
+    if (m_dataRoot.isEmpty()) {
+        return {};
+    }
+    return QDir::cleanPath(QDir(m_dataRoot).filePath(QStringLiteral("Crash Logs")));
 }
 
 bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const
@@ -1386,31 +1367,10 @@ void MainWindow::onScanCrashLogs()
         return;
     }
 
-    auto launchSettings = m_guiSettings.scanLaunchSettings(m_guiSettings.gameSetup.managedGame);
-    QString setupGameRoot;
-    QString setupDocsPath;
-    QString setupGameExePath;
-    QString setupXseLogPath;
-    if (launchSettings.fcxMode) {
-        if (!loadValidatedGameAndDocsPaths(&setupGameRoot, &setupDocsPath)) {
-            QMessageBox::warning(this, QStringLiteral("FCX Mode Requires Paths"),
-                                 QStringLiteral("FCX mode requires valid game and INI folder paths.\n\n"
-                                                "Open Settings and configure both paths before scanning crash logs."));
-            return;
-        }
-
-        setupGameExePath = QDir::cleanPath(launchSettings.setupGameExecutable.trimmed());
-        const auto executableName =
-            classic::path::resolve_fallout4_exe_name(launchSettings.gameVersion.toStdString());
-        setupGameExePath = classic::gui::normalizeGameExecutablePath(
-            setupGameExePath, setupGameRoot, classic::toQString(executableName));
-        setupXseLogPath =
-            resolveExistingXseLogPath(m_dataDir, launchSettings.game, launchSettings.gameVersion, setupDocsPath);
-        launchSettings.setupGameRoot = setupGameRoot;
-        launchSettings.setupDocumentsRoot = setupDocsPath;
-        launchSettings.setupGameExecutable = setupGameExePath;
-    }
-
+    // Nothing about the saved settings is checked or resolved here. Crash Log Scan Launch reads them
+    // on the worker thread and fills in the FCX setup context (game folder, documents folder, game
+    // executable, XSE log) itself; an FCX scan with a missing folder runs and reports the problem in
+    // its Crash Log Scan Setup Result instead of being refused before it starts.
     m_btnScanCrashLogs->setEnabled(false);
     m_btnScanCrashLogs->setText(QStringLiteral("SCANNING..."));
     m_crashScanTotalLogs = 0;
@@ -1423,7 +1383,7 @@ void MainWindow::onScanCrashLogs()
     setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
-    m_scanController->startScan(m_dataRoot, launchSettings, setupXseLogPath, m_targetedInputPaths);
+    m_scanController->startScan(m_dataRoot, m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()

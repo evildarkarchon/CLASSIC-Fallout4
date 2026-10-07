@@ -5,7 +5,10 @@
 //! shared fixtures under isolated roots, drives the public `App` event and key paths, and records
 //! narrow layout observations without claiming semantic-adapter coverage.
 
-use classic_scan_presentation::{DisplayLine, DisplaySegment, DisplaySeverity, render_run_result};
+use classic_scan_launch::CrashLogScanLaunchRequest;
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, render_launch_diagnostics, render_run_result,
+};
 use classic_scanlog_core::scan_run::contract::{
     self, Cancellation, Configuration, Event, InfrastructureError, InfrastructureErrorStage,
     LocalIgnoreRecoveryDecision, Options, Request, RunResult,
@@ -40,9 +43,15 @@ const RUNNER_ID: &str = "classic-tui-scan-run-consumer";
 
 const DISPLAY_SCENARIOS: &[&str] = &["standard-happy-path"];
 const RECOVERY_SCENARIOS: &[&str] = &[
-    "proceed-without-ignore-recovery",
-    "reset-to-default-recovery",
-    "abandon-local-ignore-recovery",
+    "settle-proceed-without-ignore",
+    "settle-reset-to-default",
+    "settle-without-decision",
+    "settle-already-cancelled",
+];
+const SCAN_LAUNCH_SCENARIOS: &[&str] = &[
+    "managed-game-saved-values",
+    "settings-needing-migration-still-launch",
+    "targeted-scans-exactly-its-inputs",
 ];
 const CANCELLATION_SCENARIOS: &[&str] = &[
     "pre-discovery-cancelled",
@@ -192,7 +201,7 @@ fn validate_plan(plan: &RunPlan) -> RunnerResult<()> {
     if plan.schema_version != 1
         || !matches!(
             plan.family_id.as_str(),
-            "crash-log-scan-run" | "user-settings"
+            "crash-log-scan-run" | "user-settings" | "crash-log-scan-launch"
         )
         || plan.family_version != 1
         || plan.participant.id != "tui"
@@ -238,6 +247,14 @@ fn obligation_observation(plan: &RunPlan, obligation: &ObligationPlan) -> Runner
     if plan.family_id == "user-settings" {
         return observe_user_settings(plan, obligation);
     }
+    if plan.family_id == "crash-log-scan-launch" {
+        return match obligation.id.as_str() {
+            "tui.scan-launch" => observe_scan_launch(plan, obligation),
+            unknown => {
+                Err(invalid_data(format!("unknown TUI scan launch obligation {unknown}")).into())
+            }
+        };
+    }
     match obligation.id.as_str() {
         "tui.display-content-delivery" => observe_display_delivery(plan, obligation),
         "tui.ordering" => observe_ordering(plan, obligation),
@@ -264,6 +281,37 @@ fn observe_user_settings(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerR
                 "migrationPrompt": app.settings_overlay_text().contains("Press M"),
                 "unchanged": before == fs::read(&settings_path)?,
             }))
+        }
+        "tui.settings-scan-projection" => {
+            require_scenarios(
+                obligation,
+                &[
+                    "canonical-current-nested",
+                    "vr-shared-and-legacy-formid-databases",
+                ],
+            )?;
+            // Each launch observes the rows the request the TUI's Crash Logs scan launches through
+            // Crash Log Scan Launch carries for the managed game.
+            let observe = |fixture: &str| -> RunnerResult<Value> {
+                fs::copy(&plan.fixtures[fixture], &settings_path)?;
+                let before = fs::read(&settings_path)?;
+                let app = App::new_with_settings_root(root.path(), None);
+                let launch = app.prepare_crash_scan_launch(None)?;
+                let configuration = launch.request().configuration();
+                Ok(json!({
+                    "game": configuration.game.as_str(),
+                    "formIdDatabasePaths": configuration
+                        .scan_facts
+                        .formid_database_paths
+                        .iter()
+                        .map(|path| path.to_string_lossy().into_owned())
+                        .collect::<Vec<_>>(),
+                    "unchanged": before == fs::read(&settings_path)?,
+                }))
+            };
+            let mut observation = observe("canonical_current_nested")?;
+            observation["fallout4Vr"] = observe("vr_shared_and_legacy_formid_databases")?;
+            Ok(observation)
         }
         "tui.settings-explicit-save" => {
             require_scenarios(
@@ -328,6 +376,152 @@ fn observe_user_settings(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerR
     }
 }
 
+/// Drives the TUI's scan start through Crash Log Scan Launch for each planned launch case.
+///
+/// The Standard case types a one-off custom scan folder and observes it in the launched request;
+/// the migration case starts a real Standard scan from a document that needs migration and
+/// observes the launch diagnostics in the Last Scan overlay; the Targeted case observes the
+/// selected inputs. Every case records whether the User Settings document stayed byte-identical,
+/// because starting a scan must never save anything.
+fn observe_scan_launch(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerResult<Value> {
+    require_scenarios(obligation, SCAN_LAUNCH_SCENARIOS)?;
+
+    let (standard_root, mut standard_app, standard_before) =
+        launch_installation(plan, "managed-fallout4")?;
+    let one_off = standard_root.path().join("One-off Logs");
+    fs::create_dir(&one_off)?;
+    standard_app
+        .custom_scan_input
+        .set_value(one_off.to_string_lossy().into_owned());
+    let standard = standard_app.prepare_crash_scan_launch(None)?;
+    let Request::Standard(standard_request) = standard.request() else {
+        return Err(invalid_data("a TUI Standard scan launched a non-Standard request").into());
+    };
+    let standard_observation = json!({
+        "intent": "standard",
+        "game": standard_request.configuration().game.as_str(),
+        "gameVersion": standard_request.configuration().game_version,
+        "formIdDatabasePaths": standard_request
+            .configuration()
+            .scan_facts
+            .formid_database_paths
+            .iter()
+            .map(|path| path.to_string_lossy().into_owned())
+            .collect::<Vec<_>>(),
+        // "." is the Installation Root itself, as the launch pack writes it.
+        "baseDirectory": if standard_request.source().base_directory == standard_root.path() {
+            ".".to_string()
+        } else {
+            observed_path(standard_root.path(), &standard_request.source().base_directory)
+        },
+        "customScanDirectory": standard_request
+            .source()
+            .custom_scan_directory
+            .as_deref()
+            .map(|path| observed_path(standard_root.path(), path)),
+        "diagnosticCodes": diagnostic_codes(&standard),
+        "unchanged": standard_before == fs::read(settings_path(standard_root.path()))?,
+    });
+
+    let (migration_root, mut migration_app, migration_before) =
+        launch_installation(plan, "needs-migration")?;
+    let migration_launch = migration_app.prepare_crash_scan_launch(None)?;
+    let rendered = render_launch_diagnostics(migration_launch.diagnostics())
+        .iter()
+        .map(|line| (line.severity, flatten_line(line)))
+        .collect::<Vec<_>>();
+    migration_app.start_or_cancel_crash_scan();
+    let scan_started = migration_app.scan_in_progress;
+    if scan_started {
+        pump_until_scan_finished(&mut migration_app)?;
+    }
+    // The launch diagnostics must open the Last Scan overlay, in core's order and words.
+    let summary = migration_app
+        .scan_run_summary_lines()
+        .into_iter()
+        .map(|line| (line.severity, line.text))
+        .collect::<Vec<_>>();
+    let migration_observation = json!({
+        "scanStarted": scan_started,
+        "diagnosticCodes": diagnostic_codes(&migration_launch),
+        "diagnosticsShown": !rendered.is_empty() && summary.starts_with(&rendered),
+        "unchanged": migration_before == fs::read(settings_path(migration_root.path()))?,
+    });
+
+    let (targeted_root, targeted_app, targeted_before) =
+        launch_installation(plan, "managed-fallout4")?;
+    let targeted = targeted_app.prepare_crash_scan_launch(Some(vec![
+        targeted_root.path().join("b.log"),
+        targeted_root.path().join("a folder"),
+    ]))?;
+    let Request::Targeted(targeted_request) = targeted.request() else {
+        return Err(invalid_data("a TUI Targeted scan launched a non-Targeted request").into());
+    };
+    let targeted_observation = json!({
+        "intent": "targeted",
+        "targetedInputs": targeted_request
+            .source()
+            .inputs
+            .iter()
+            .map(|path| observed_path(targeted_root.path(), path))
+            .collect::<Vec<_>>(),
+        "unchanged": targeted_before == fs::read(settings_path(targeted_root.path()))?,
+    });
+
+    Ok(json!({
+        "standard": standard_observation,
+        "settingsNeedingMigration": migration_observation,
+        "targeted": targeted_observation,
+    }))
+}
+
+/// Creates a fresh Installation Root holding one launch-pack User Settings fixture.
+///
+/// Returns the root, a filesystem-backed App opened against it, and the document's bytes so the
+/// caller can prove a scan start left them alone.
+fn launch_installation(plan: &RunPlan, fixture: &str) -> RunnerResult<(TempDir, App, Vec<u8>)> {
+    let root = tempdir()?;
+    let source = plan
+        .fixtures
+        .get(fixture)
+        .ok_or_else(|| invalid_data(format!("unknown fixture reference {fixture}")))?;
+    fs::copy(source, settings_path(root.path()))?;
+    let before = fs::read(settings_path(root.path()))?;
+    let app = App::new_with_settings_root(root.path(), None);
+    Ok((root, app, before))
+}
+
+/// Returns the canonical User Settings document path under one Installation Root.
+fn settings_path(root: &Path) -> PathBuf {
+    root.join("CLASSIC Settings.yaml")
+}
+
+/// Returns each launch diagnostic's stable code, in launch order, never its prose.
+fn diagnostic_codes(launch: &CrashLogScanLaunchRequest) -> Vec<String> {
+    launch
+        .diagnostics()
+        .iter()
+        .map(|diagnostic| diagnostic.code().to_string())
+        .collect()
+}
+
+/// Drains background messages until the TUI's launched run reports its outcome.
+fn pump_until_scan_finished(app: &mut App) -> RunnerResult<()> {
+    loop {
+        let message = get_runtime()
+            .block_on(async {
+                tokio::time::timeout(Duration::from_secs(30), app.async_rx.recv()).await
+            })
+            .map_err(|_| invalid_data("TUI scan did not finish within 30 seconds"))?
+            .ok_or_else(|| invalid_data("TUI async channel closed before the scan finished"))?;
+        let finished = matches!(message, AsyncMessage::ScanFinished(_));
+        app.handle_async_message(message);
+        if finished {
+            return Ok(());
+        }
+    }
+}
+
 /// Observes complete line delivery and the typed path/count handoff before TUI layout.
 fn observe_display_delivery(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerResult<Value> {
     require_scenarios(obligation, DISPLAY_SCENARIOS)?;
@@ -388,12 +582,13 @@ fn observe_styling_categories(plan: &RunPlan, obligation: &ObligationPlan) -> Ru
     let standard_lines = standard_app.scan_run_summary_lines();
 
     let (recovery, initial_log, late_log) =
-        materialize_recovery(plan, "proceed-without-ignore-recovery")?;
+        materialize_recovery(plan, "settle-proceed-without-ignore")?;
     let cancellation = Cancellation::new();
     let paused = get_runtime().block_on(contract::execute(
         targeted_request(&recovery.root, vec![initial_log, late_log], 1),
         &cancellation,
         None,
+        classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
     ))?;
     let mut recovery_app = App::new_for_testing();
     recovery_app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(paused))));
@@ -405,6 +600,7 @@ fn observe_styling_categories(plan: &RunPlan, obligation: &ObligationPlan) -> Ru
             stage: InfrastructureErrorStage::Intake,
             message: "consumer style fixture".to_string(),
             path: None,
+            observer_delivery_failure: None,
         },
     ))));
     let failure_lines = failure_app.scan_run_summary_lines();
@@ -509,7 +705,7 @@ fn find_rendered_line_color(buffer: &Buffer, text: &str) -> RunnerResult<Color> 
     Err(invalid_data(format!("rendered overlay omitted expected line {text:?}")).into())
 }
 
-/// Drives Proceed, Reset, and explicit abandonment through the ordinary TUI key path.
+/// Drives Proceed, Reset, Dismiss, and an already-cancelled pause through the ordinary TUI paths.
 fn observe_recovery_interactions(
     plan: &RunPlan,
     obligation: &ObligationPlan,
@@ -528,7 +724,12 @@ fn observe_recovery_interaction(plan: &RunPlan, scenario_id: &str) -> RunnerResu
     let (scenario, initial_log, late_log) = materialize_recovery(plan, scenario_id)?;
     let cancellation = Cancellation::new();
     let request = targeted_request(&scenario.root, vec![initial_log, late_log.clone()], 1);
-    let paused = get_runtime().block_on(contract::execute(request, &cancellation, None))?;
+    let paused = get_runtime().block_on(contract::execute(
+        request,
+        &cancellation,
+        None,
+        classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
+    ))?;
     copy_fixture(
         &plan.fixtures,
         "malformedLocalIgnoreYaml",
@@ -543,28 +744,29 @@ fn observe_recovery_interaction(plan: &RunPlan, scenario_id: &str) -> RunnerResu
     )?;
     copy_fixture_at(&plan.fixtures, "validCrashLog", &late_log)?;
 
+    let key = recovery_key(scenario_id)?;
+    if key.is_none() {
+        // The pack's `before-pending-recovery` boundary: the user cancelled after the run paused
+        // but before the TUI took its pending recovery, so the TUI must not ask at all.
+        cancellation.cancel();
+    }
     let mut app = App::new_for_testing();
     app.scan_cancellation = Some(cancellation);
     app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(paused))));
+    let overlay_shown = app.active_overlay == Some(Overlay::LocalIgnoreRecovery);
     let offered_decisions = [
-        (
-            LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            "proceed-without-ignore",
-        ),
-        (
-            LocalIgnoreRecoveryDecision::ResetToDefault,
-            "reset-to-default",
-        ),
+        LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        LocalIgnoreRecoveryDecision::ResetToDefault,
     ]
     .into_iter()
-    .filter_map(|(decision, token)| {
-        app.local_ignore_decision_available(decision)
-            .then_some(token)
-    })
+    .filter(|decision| app.local_ignore_decision_available(*decision))
+    .map(decision_token)
     .collect::<Vec<_>>();
-    let (key, key_token) = recovery_key(scenario_id)?;
-    press(&mut app, key);
-    pump_until_resume_finished(&mut app)?;
+    let key_token = key.map(|(code, token)| {
+        press(&mut app, code);
+        token
+    });
+    let settled_decision = pump_until_settled(&mut app)?;
     let terminal_status = terminal_result(&app)?.status.as_str();
     let overlay = match app.active_overlay {
         None => "none",
@@ -575,10 +777,20 @@ fn observe_recovery_interaction(plan: &RunPlan, scenario_id: &str) -> RunnerResu
         "scenarioId": scenario_id,
         "key": key_token,
         "offeredDecisions": offered_decisions,
+        "overlayShown": overlay_shown,
+        "settledDecision": settled_decision.map(decision_token),
         "terminalStatus": terminal_status,
         "overlayAfterSelection": overlay,
-        "remainingContinuationCount": usize::from(app.pending_local_ignore_recovery.is_some()),
+        "remainingPendingRecoveryCount": usize::from(app.pending_local_ignore_recovery.is_some()),
     }))
+}
+
+/// Returns the obligation token for one Local Ignore Recovery Decision.
+const fn decision_token(decision: LocalIgnoreRecoveryDecision) -> &'static str {
+    match decision {
+        LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => "proceed-without-ignore",
+        LocalIgnoreRecoveryDecision::ResetToDefault => "reset-to-default",
+    }
 }
 
 /// Drives each lifecycle boundary through the TUI cancellation control.
@@ -628,6 +840,7 @@ fn observe_cancellation_interaction(plan: &RunPlan, scenario_id: &str) -> Runner
             request,
             &cancellation,
             Some(&mut observer),
+            classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
         ))?
     };
     app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(result))));
@@ -672,7 +885,12 @@ fn execute_standard(plan: &RunPlan) -> RunnerResult<(MaterializedScenario, RunRe
         StandardUnsolvedLogsIntent::LeaveInPlace,
     );
     let cancellation = Cancellation::new();
-    let result = get_runtime().block_on(contract::execute(request, &cancellation, None))?;
+    let result = get_runtime().block_on(contract::execute(
+        request,
+        &cancellation,
+        None,
+        classic_scanlog_core::scan_run::contract::ObserverFailurePolicy::ContinueRun,
+    ))?;
     Ok((scenario, result))
 }
 
@@ -682,9 +900,10 @@ fn materialize_recovery(
     scenario_id: &str,
 ) -> RunnerResult<(MaterializedScenario, PathBuf, PathBuf)> {
     let stem = match scenario_id {
-        "proceed-without-ignore-recovery" => "proceed",
-        "reset-to-default-recovery" => "reset",
-        "abandon-local-ignore-recovery" => "abandon",
+        "settle-proceed-without-ignore" => "proceed",
+        "settle-reset-to-default" => "reset",
+        "settle-without-decision" => "settle-abandon",
+        "settle-already-cancelled" => "settle-cancelled",
         _ => return Err(invalid_data(format!("unknown recovery scenario {scenario_id}")).into()),
     };
     let scenario = materialize_common(plan, "malformedLocalIgnoreYaml")?;
@@ -872,11 +1091,15 @@ fn color_token(color: ratatui::style::Color) -> String {
 }
 
 /// Resolves a recovery scenario to its ordinary terminal key.
-fn recovery_key(scenario_id: &str) -> RunnerResult<(KeyCode, &'static str)> {
+///
+/// `None` for the already-cancelled pause, where the TUI must not show the overlay, so there is
+/// no key to press.
+fn recovery_key(scenario_id: &str) -> RunnerResult<Option<(KeyCode, &'static str)>> {
     match scenario_id {
-        "proceed-without-ignore-recovery" => Ok((KeyCode::Char('p'), "p")),
-        "reset-to-default-recovery" => Ok((KeyCode::Char('r'), "r")),
-        "abandon-local-ignore-recovery" => Ok((KeyCode::Esc, "escape")),
+        "settle-proceed-without-ignore" => Ok(Some((KeyCode::Char('p'), "p"))),
+        "settle-reset-to-default" => Ok(Some((KeyCode::Char('r'), "r"))),
+        "settle-without-decision" => Ok(Some((KeyCode::Esc, "escape"))),
+        "settle-already-cancelled" => Ok(None),
         _ => Err(invalid_data(format!("unknown recovery scenario {scenario_id}")).into()),
     }
 }
@@ -886,8 +1109,11 @@ fn press(app: &mut App, code: KeyCode) {
     app.handle_event(TerminalEvent::Key(KeyEvent::new(code, KeyModifiers::NONE)));
 }
 
-/// Drains background messages until a resumed or abandoned continuation finishes.
-fn pump_until_resume_finished(app: &mut App) -> RunnerResult<()> {
+/// Drains background messages until the TUI's settle worker finishes.
+///
+/// Returns the decision the worker passed to settling, read from its completion message before
+/// the App applies it: that message is the TUI's own record of what it settled with.
+fn pump_until_settled(app: &mut App) -> RunnerResult<Option<LocalIgnoreRecoveryDecision>> {
     loop {
         let message = get_runtime()
             .block_on(async {
@@ -895,10 +1121,13 @@ fn pump_until_resume_finished(app: &mut App) -> RunnerResult<()> {
             })
             .map_err(|_| invalid_data("TUI recovery worker did not finish within 30 seconds"))?
             .ok_or_else(|| invalid_data("TUI async channel closed before recovery finished"))?;
-        let finished = matches!(message, AsyncMessage::ScanResumeFinished(_));
+        let settled = match &message {
+            AsyncMessage::ScanSettleFinished { decision, .. } => Some(*decision),
+            _ => None,
+        };
         app.handle_async_message(message);
-        if finished {
-            return Ok(());
+        if let Some(decision) = settled {
+            return Ok(decision);
         }
     }
 }

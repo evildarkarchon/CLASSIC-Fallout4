@@ -799,6 +799,8 @@ struct ExecutionFlow {
     struct ObserverFailure {
         std::string event_kind;
         std::string message;
+        /// `cancel-run` or `continue-run`, passed to Rust as the observer failure policy.
+        std::string policy;
     };
 
     std::string cancellation;
@@ -825,20 +827,28 @@ std::optional<ExecutionFlow> parse_execution_flow(const json& input, std::string
     }
     ExecutionFlow flow{.cancellation = value.at("cancellation").get<std::string>(), .observer_failure = std::nullopt};
     if (flow.cancellation != "before-discovery" && flow.cancellation != "on-first-log-queued" &&
-        flow.cancellation != "on-first-log-started" && flow.cancellation != "on-observer-failure") {
+        flow.cancellation != "on-first-log-started" && flow.cancellation != "on-observer-failure" &&
+        flow.cancellation != "none") {
         throw RunnerError("unsupported executionFlow cancellation boundary: " + flow.cancellation);
     }
 
+    // Only the cancel-run policy may be the plan's source of cancellation, and the continue-run
+    // policy runs with no cancellation at all; any other pairing is a malformed plan.
     const auto failure_iterator = value.find("observerFailure");
     const bool has_failure = failure_iterator != value.end() && !failure_iterator->is_null();
-    if (flow.cancellation != "on-observer-failure") {
+    const bool failure_boundary = flow.cancellation == "on-observer-failure" || flow.cancellation == "none";
+    if (!failure_boundary) {
         if (has_failure) {
-            throw RunnerError("observerFailure requires on-observer-failure cancellation");
+            throw RunnerError("observerFailure requires on-observer-failure or no cancellation");
         }
         return flow;
     }
     if (!has_failure || !failure_iterator->is_object()) {
-        throw RunnerError("on-observer-failure cancellation requires observerFailure");
+        throw RunnerError(flow.cancellation + " cancellation requires observerFailure");
+    }
+    const std::string expected_policy = flow.cancellation == "none" ? "continue-run" : "cancel-run";
+    if (failure_iterator->value("policy", "") != expected_policy) {
+        throw RunnerError(flow.cancellation + " cancellation requires a " + expected_policy + " observerFailure");
     }
     const json& failure = *failure_iterator;
     if (failure.value("eventKind", "") != "discovery_completed") {
@@ -849,8 +859,18 @@ std::optional<ExecutionFlow> parse_execution_flow(const json& input, std::string
         throw RunnerError("observer failure message must be a non-empty string");
     }
     flow.observer_failure = ExecutionFlow::ObserverFailure{.event_kind = failure.at("eventKind").get<std::string>(),
-                                                           .message = failure.at("message").get<std::string>()};
+                                                           .message = failure.at("message").get<std::string>(),
+                                                           .policy = failure.at("policy").get<std::string>()};
     return flow;
+}
+
+/// Maps the plan's observer failure policy token onto the bridge policy.
+scanner::ScanRunObserverFailurePolicy observer_failure_policy(const std::optional<ExecutionFlow>& flow) {
+    if (flow.has_value() && flow->observer_failure.has_value() && flow->observer_failure->policy == "cancel-run") {
+        return scanner::ScanRunObserverFailurePolicy::CancelRun;
+    }
+    // Without a planned failure the policy is moot, so continue-run is never consulted.
+    return scanner::ScanRunObserverFailurePolicy::ContinueRun;
 }
 
 /// Snapshots borrowed generated events into CXX-owned normalized JSON.
@@ -864,10 +884,13 @@ public:
         , flow_(flow) {}
 
     /// Traverses every borrowed DTO field before the synchronous callback returns.
-    void on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
+    ///
+    /// The planned observer failure is returned as a failed delivery, never thrown: Rust applies
+    /// the plan's policy and reports the failure in the envelope.
+    scanner::ScanRunObserverDelivery on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
         std::lock_guard lock(mutex_);
-        if (!error_.empty() || delivery_failed_) {
-            return;
+        if (!error_.empty()) {
+            return {};
         }
         try {
             json value{{"displayContent", serialize_display(event.display_lines, root_)}};
@@ -875,14 +898,12 @@ public:
             case scanner::ScanRunContractEventKind::DiscoveryCompleted:
                 value["kind"] = "discovery_completed";
                 run_events_.push_back(std::move(value));
-                apply_execution_flow("discovery_completed", event.discovery_index);
-                return;
+                return apply_execution_flow("discovery_completed", event.discovery_index);
             case scanner::ScanRunContractEventKind::EffectiveConcurrencySelected:
                 value["kind"] = "effective_concurrency_selected";
                 value["effectiveConcurrency"] = event.effective_concurrency;
                 run_events_.push_back(std::move(value));
-                apply_execution_flow("effective_concurrency_selected", event.discovery_index);
-                return;
+                return apply_execution_flow("effective_concurrency_selected", event.discovery_index);
             case scanner::ScanRunContractEventKind::LogQueued:
                 value["kind"] = "log_queued";
                 break;
@@ -906,12 +927,16 @@ public:
                 throw RunnerError("event Crash Log identity changed within one discovery index");
             }
             stream.trace.push_back(std::move(value));
-            apply_execution_flow(stream.trace.back().at("kind").get_ref<const std::string&>(), event.discovery_index);
+            return apply_execution_flow(stream.trace.back().at("kind").get_ref<const std::string&>(),
+                                        event.discovery_index);
         } catch (const std::exception& error) {
             error_ = error.what();
         } catch (...) {
             error_ = "unknown CXX observer serialization failure";
         }
+        // A serialization failure is the runner's own bug, reported by `observation`; it is not
+        // a planned delivery failure, so the run is not told about it.
+        return {};
     }
 
     /// Returns partitioned run and per-log traces in result discovery order.
@@ -965,18 +990,24 @@ public:
         return json{{"run", std::move(run)}, {"logs", std::move(logs)}};
     }
 
-    /// Returns a structured downstream failure, distinct from observer serialization errors.
-    json delivery_failure() const {
+    /// Projects the delivery failure the envelope reports, never one this observer tracked.
+    ///
+    /// The event kind is the boundary the plan told this observer to refuse; whether a failure
+    /// happened at all, and its message, come from Rust.
+    json delivery_failure(const scanner::ScanRunContractExecutionResult& execution) const {
         std::lock_guard lock(mutex_);
         if (!error_.empty()) {
             throw RunnerError("observer delivery failed: " + error_);
         }
-        if (!delivery_failed_) {
+        if (!execution.has_observer_delivery_failure) {
             return nullptr;
         }
+        const std::string message = owned_string(execution.observer_delivery_failure_message);
         return json{{"kind", "observer_delivery_failure"},
-                    {"eventKind", delivery_failure_event_},
-                    {"messageNonEmpty", !delivery_failure_message_.empty()}};
+                    {"eventKind", flow_ != nullptr && flow_->observer_failure.has_value()
+                                      ? json(flow_->observer_failure->event_kind)
+                                      : json(nullptr)},
+                    {"messageNonEmpty", message.find_first_not_of(" \t\r\n") != std::string::npos}};
     }
 
     /// Rejects an error observation if the continuation emitted any callback side effect.
@@ -991,31 +1022,30 @@ public:
     }
 
 private:
-    /// Applies the configured seam only after the triggering event has been retained.
-    void apply_execution_flow(std::string_view event_kind, std::size_t discovery_index) const {
+    /// Applies the configured seam only after the triggering event has been retained, and
+    /// returns the delivery outcome for that event.
+    scanner::ScanRunObserverDelivery apply_execution_flow(std::string_view event_kind,
+                                                          std::size_t discovery_index) const {
         if (flow_ == nullptr) {
-            return;
+            return {};
         }
         if (cancellation_ == nullptr) {
             throw RunnerError("executionFlow observer has no cancellation control");
         }
         if (flow_->observer_failure.has_value() && flow_->observer_failure->event_kind == event_kind) {
-            // The CXX callback is noexcept; retain adapter failure data here and use
-            // cancellation to stop future work without throwing across the bridge.
-            delivery_failure_event_ = flow_->observer_failure->event_kind;
-            delivery_failure_message_ = flow_->observer_failure->message;
-            delivery_failed_ = true;
-            scanner::scan_run_cancellation_cancel(*cancellation_);
-            return;
+            // Reported by return value: the callback is noexcept, and cancelling is the policy's
+            // job, not this observer's.
+            return {true, rust::String(flow_->observer_failure->message)};
         }
         if (boundary_triggered_) {
-            return;
+            return {};
         }
         if ((flow_->cancellation == "on-first-log-queued" && event_kind == "log_queued") ||
             (flow_->cancellation == "on-first-log-started" && event_kind == "log_started" && discovery_index == 0)) {
             boundary_triggered_ = true;
             scanner::scan_run_cancellation_cancel(*cancellation_);
         }
+        return {};
     }
 
     struct LogEventStream {
@@ -1029,9 +1059,6 @@ private:
     mutable std::mutex mutex_;
     mutable std::string error_;
     mutable bool boundary_triggered_ = false;
-    mutable bool delivery_failed_ = false;
-    mutable std::string delivery_failure_event_;
-    mutable std::string delivery_failure_message_;
     mutable json run_events_ = json::array();
     mutable std::map<std::size_t, LogEventStream> log_events_;
 };
@@ -1359,6 +1386,20 @@ json project_local_ignore_effects(const fs::path& root, const json& input,
                 {"forbidden", std::move(forbidden)}};
 }
 
+/// Projects one public recovery prompt: its lines, and each decision with its availability.
+json project_recovery_prompt(const scanner::ScanRunRecoveryPrompt& recovery_prompt, const fs::path& root) {
+    json decisions = json::array();
+    for (const auto& decision : recovery_prompt.decisions) {
+        decisions.push_back(json{{"decision", recovery_decision_token(decision.decision)},
+                                 {"label", owned_string(decision.label)},
+                                 {"description", serialize_display_segments(decision.description, root)},
+                                 {"available", decision.available}});
+    }
+    return json{{"displaySeverities", display_severities(recovery_prompt.lines)},
+                {"displayContent", serialize_display(recovery_prompt.lines, root)},
+                {"decisions", std::move(decisions)}};
+}
+
 /// Projects one initial or terminal Local Ignore envelope without reading durable effects.
 json project_local_ignore_phase(const scanner::ScanRunContractExecutionResult& execution,
                                 const RecordingObserver& observer, const fs::path& root, bool continuation_available,
@@ -1386,16 +1427,7 @@ json project_local_ignore_phase(const scanner::ScanRunContractExecutionResult& e
         if (!execution.has_recovery_prompt) {
             throw RunnerError("Local Ignore recovery result omitted its public recovery prompt");
         }
-        json decisions = json::array();
-        for (const auto& decision : execution.recovery_prompt.decisions) {
-            decisions.push_back(json{{"decision", recovery_decision_token(decision.decision)},
-                                     {"label", owned_string(decision.label)},
-                                     {"description", serialize_display_segments(decision.description, root)},
-                                     {"available", decision.available}});
-        }
-        prompt = json{{"displaySeverities", display_severities(execution.recovery_prompt.lines)},
-                      {"displayContent", serialize_display(execution.recovery_prompt.lines, root)},
-                      {"decisions", std::move(decisions)}};
+        prompt = project_recovery_prompt(execution.recovery_prompt, root);
     }
 
     return json{{"run", json{{"status", status_token(result.status)},
@@ -1461,7 +1493,7 @@ json project_terminal_resume_error(const scanner::ScanRunContractExecutionResult
 /// Maps one validated plan decision to the generated public CXX enumeration.
 scanner::ScanRunLocalIgnoreRecoveryDecision parse_recovery_decision(const json& action) {
     if (!action.contains("decision") || !action.at("decision").is_string()) {
-        throw RunnerError("Resume continuation action has no recovery decision");
+        throw RunnerError("continuation action has no recovery decision");
     }
     const std::string decision = action.at("decision").get<std::string>();
     if (decision == "proceed-without-ignore") {
@@ -1473,23 +1505,34 @@ scanner::ScanRunLocalIgnoreRecoveryDecision parse_recovery_decision(const json& 
     throw RunnerError("unsupported Local Ignore recovery decision: " + decision);
 }
 
-/// Invokes one public continuation action without inferring intent from a scenario identifier.
-rust::Box<scanner::ScanRunContractExecution> run_continuation_action(const scanner::ScanRunContinuation& continuation,
-                                                                     const json& action,
-                                                                     const scanner::ScanRunCancellation& cancellation,
-                                                                     const scanner::ScanRunObserver* observer) {
+/// Returns whether one plan action names a recovery decision.
+bool has_recovery_decision(const json& action) {
+    return action.contains("decision") && !action.at("decision").is_null();
+}
+
+/// Builds the bridge's optional-decision settlement from one settle action.
+scanner::ScanRunLocalIgnoreRecoverySettlement parse_recovery_settlement(const json& action) {
+    scanner::ScanRunLocalIgnoreRecoverySettlement settlement{};
+    settlement.has_decision = has_recovery_decision(action);
+    // `decision` is read only beside `has_decision`; any in-range value keeps the struct well formed.
+    settlement.decision = settlement.has_decision ? parse_recovery_decision(action)
+                                                  : scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+    return settlement;
+}
+
+/// Settles the pending recovery for one plan action without inferring intent from a scenario id.
+///
+/// `settle` is the only operation: the separate resume and abandon entry points were removed
+/// (ADR-0009), so a plan naming either is rejected rather than silently skipped.
+scanner::ScanRunContractExecutionResult run_continuation_action(const scanner::ScanRunPendingRecovery& pending,
+                                                                const json& action,
+                                                                const scanner::ScanRunObserver* observer) {
     const std::string operation = action.at("operation").get<std::string>();
-    if (operation == "resume") {
-        return scanner::scan_run_continuation_resume(continuation, parse_recovery_decision(action), cancellation,
-                                                     observer);
+    if (operation != "settle") {
+        throw RunnerError("unsupported continuation operation: " + operation);
     }
-    if (operation == "abandon") {
-        if (action.contains("decision") && !action.at("decision").is_null()) {
-            throw RunnerError("Abandon continuation action must not have a recovery decision");
-        }
-        return scanner::scan_run_continuation_abandon(continuation, cancellation, observer);
-    }
-    throw RunnerError("unsupported continuation operation: " + operation);
+    return scanner::scan_run_pending_recovery_settle(pending, parse_recovery_settlement(action), observer,
+                                                     scanner::ScanRunObserverFailurePolicy::ContinueRun);
 }
 
 /// Projects one typed consumed-continuation replay through the public CXX presentation envelope.
@@ -1499,7 +1542,7 @@ json project_replay(const json& action, const scanner::ScanRunContractExecutionR
     }
     const std::string operation = action.at("operation").get<std::string>();
     json decision = nullptr;
-    if (operation == "resume") {
+    if (has_recovery_decision(action)) {
         decision = recovery_decision_token(parse_recovery_decision(action));
     }
     return json{{"operation", operation},
@@ -1513,7 +1556,8 @@ json project_replay(const json& action, const scanner::ScanRunContractExecutionR
 /// Projects cancellation seams, observer delivery failure, and their durable effects.
 json project_lifecycle_observation(const scanner::ScanRunContractExecutionResult& execution,
                                    const RecordingObserver& observer, const scanner::ScanRunCancellation& cancellation,
-                                   const ExecutionFlow& flow, const fs::path& root, const json& input) {
+                                   const ExecutionFlow& flow, const fs::path& root, const json& input,
+                                   bool pending_recovery) {
     if (execution.has_error) {
         throw RunnerError("CXX scan returned infrastructure error: " + owned_string(execution.error.message));
     }
@@ -1524,7 +1568,7 @@ json project_lifecycle_observation(const scanner::ScanRunContractExecutionResult
         throw RunnerError("CXX scan returned no result or error");
     }
     const auto& result = execution.result;
-    const json observer_failure = observer.delivery_failure();
+    const json observer_failure = observer.delivery_failure(execution);
     if (flow.observer_failure.has_value() != !observer_failure.is_null()) {
         throw RunnerError(flow.observer_failure.has_value() ? "expected observer delivery failure was not reported"
                                                             : "unexpected observer delivery failure was reported");
@@ -1567,6 +1611,7 @@ json project_lifecycle_observation(const scanner::ScanRunContractExecutionResult
                 {"logs", std::move(logs)},
                 {"events", observer.compact_observation(result)},
                 {"observerFailure", observer_failure},
+                {"pendingRecovery", pending_recovery},
                 {"cancellation", json{{"requested", scanner::scan_run_cancellation_is_cancelled(cancellation)}}},
                 {"durableEffects", json{{"reports", std::move(reports)}, {"forbidden", std::move(forbidden)}}}};
 }
@@ -1802,17 +1847,15 @@ json execute_scenario(const json& plan, const json& scenario) {
     }
     const RecordingObserver observer(temporary.path(), &*cancellation,
                                      execution_flow.has_value() ? &*execution_flow : nullptr);
-    auto operation = scanner::scan_run_contract_execute(*request, *cancellation, &observer);
-    const bool continuation_available = scanner::scan_run_contract_execution_has_continuation(*operation);
+    auto operation = scanner::scan_run_contract_execute(*request, *cancellation, &observer,
+                                                        observer_failure_policy(execution_flow));
+    const bool pending_recovery = scanner::scan_run_contract_execution_has_pending_recovery(*operation);
     const auto execution = scanner::scan_run_contract_execution_take_result(*operation);
     if (input.contains("continuationFlow") && !input.at("continuationFlow").is_null()) {
-        if (!continuation_available) {
-            throw RunnerError("continuationFlow initial result has no continuation");
+        if (!pending_recovery) {
+            throw RunnerError("continuationFlow initial result has no pending recovery");
         }
-        const json initial = project_local_ignore_phase(execution, observer, temporary.path(), true, true);
-        auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
         const json& flow = input.at("continuationFlow");
-        materialize_post_pause_data(plan, scenario, flow, temporary.path());
 
         std::string cancellation_mode;
         if (flow.contains("cancellation") && !flow.at("cancellation").is_null()) {
@@ -1820,24 +1863,39 @@ json execute_scenario(const json& plan, const json& scenario) {
                 throw RunnerError("continuationFlow.cancellation must be a string or null");
             }
             cancellation_mode = flow.at("cancellation").get<std::string>();
-            if (cancellation_mode != "before-resume" && cancellation_mode != "after-reset-critical-section") {
+            if (cancellation_mode != "before-settle" && cancellation_mode != "after-reset-critical-section" &&
+                cancellation_mode != "before-pending-recovery") {
                 throw RunnerError("unsupported continuationFlow cancellation boundary: " + cancellation_mode);
             }
             if (cancellation_mode == "after-reset-critical-section" &&
-                (flow.at("action").at("operation") != "resume" ||
-                 flow.at("action").at("decision") != "reset-to-default")) {
+                flow.at("action").value("decision", json(nullptr)) != "reset-to-default") {
                 throw RunnerError("after-reset-critical-section cancellation requires Reset To Default");
             }
         }
-        if (cancellation_mode == "before-resume") {
+        // The run already paused; this boundary cancels its control before anything reads the pause.
+        if (cancellation_mode == "before-pending-recovery") {
+            scanner::scan_run_cancellation_cancel(*cancellation);
+        }
+
+        json initial = project_local_ignore_phase(execution, observer, temporary.path(), true, true);
+        // The flow reaches the pause through the pending recovery, exactly as a frontend does.
+        const auto pending = scanner::scan_run_contract_execution_take_pending_recovery(*operation);
+        initial["pendingRecovery"] =
+            json{{"cancellationRequested", scanner::scan_run_pending_recovery_cancellation_requested(*pending)},
+                 {"prompt", project_recovery_prompt(scanner::scan_run_pending_recovery_prompt(*pending),
+                                                    temporary.path())}};
+        materialize_post_pause_data(plan, scenario, flow, temporary.path());
+
+        if (cancellation_mode == "before-settle") {
             scanner::scan_run_cancellation_cancel(*cancellation);
         }
 
         const bool cancelled_before_terminal = scanner::scan_run_cancellation_is_cancelled(*cancellation);
         const RecordingObserver terminal_observer(temporary.path());
-        auto terminal_operation = [&]() -> rust::Box<scanner::ScanRunContractExecution> {
+        const auto terminal_execution = [&]() -> scanner::ScanRunContractExecutionResult {
             if (cancellation_mode != "after-reset-critical-section") {
-                return run_continuation_action(*continuation, flow.at("action"), *cancellation, &terminal_observer);
+                return run_continuation_action(*pending, flow.at("action"),
+                                               &terminal_observer);
             }
 
             const fs::path reset_lock = temporary.path() / ".classic-local-ignore-reset.lock";
@@ -1854,14 +1912,14 @@ json execute_scenario(const json& plan, const json& scenario) {
                     scanner::scan_run_cancellation_cancel(*cancellation);
                 }
             });
-            auto result = run_continuation_action(*continuation, flow.at("action"), *cancellation, &terminal_observer);
+            auto result = run_continuation_action(*pending, flow.at("action"),
+                                                  &terminal_observer);
             cancel_after_reset_entry.join();
             if (!observed_reset_entry.load(std::memory_order_acquire)) {
                 throw RunnerError("reset critical-section cancellation boundary was not observed");
             }
             return result;
         }();
-        const auto terminal_execution = scanner::scan_run_contract_execution_take_result(*terminal_operation);
         const bool cancelled_after_terminal = scanner::scan_run_cancellation_is_cancelled(*cancellation);
         json terminal = nullptr;
         json terminal_error = nullptr;
@@ -1881,8 +1939,8 @@ json execute_scenario(const json& plan, const json& scenario) {
 
         json replays = json::array();
         for (const auto& action : flow.value("replays", json::array())) {
-            auto replay_operation = run_continuation_action(*continuation, action, *cancellation, nullptr);
-            const auto replay_execution = scanner::scan_run_contract_execution_take_result(*replay_operation);
+            const auto replay_execution =
+                run_continuation_action(*pending, action, nullptr);
             replays.push_back(project_replay(action, replay_execution, temporary.path()));
         }
         return json{
@@ -1896,11 +1954,11 @@ json execute_scenario(const json& plan, const json& scenario) {
             {"durableEffects", project_local_ignore_effects(temporary.path(), input, terminal_result)}};
     }
     if (profile == "local-ignore") {
-        return project_local_ignore_observation(execution, observer, temporary.path(), input, continuation_available);
+        return project_local_ignore_observation(execution, observer, temporary.path(), input, pending_recovery);
     }
     if (profile == "lifecycle") {
         return project_lifecycle_observation(execution, observer, *cancellation, *execution_flow, temporary.path(),
-                                             input);
+                                             input, pending_recovery);
     }
     if (profile == "failure") {
         return project_failure_observation(execution, temporary.path(), input);
@@ -1953,6 +2011,7 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_game_setup_intake_conformance.h"
 #include "classic_cxx_yaml_update_operations_conformance.h"
 #include "classic_cxx_vocabulary_conformance.h"
+#include "classic_cxx_crash_log_scan_launch_conformance.h"
 
 /// Executes one planned case while retaining runner failures as receipt evidence.
 json scenario_receipt(const json& plan, const json& scenario) {
@@ -2000,6 +2059,8 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                     : plan.at("familyId") == "settings-validation" ? execute_settings_validation_scenario(plan, scenario)
                                     : plan.at("familyId") == "installed-yaml-data"
                                         ? execute_installed_yaml_data_scenario(plan, scenario)
+                                    : plan.at("familyId") == "crash-log-scan-launch"
+                                        ? execute_crash_log_scan_launch_scenario(plan, scenario)
                                     : plan.at("familyId") == "user-settings"
                                         ? execute_user_settings_scenario(plan, scenario)
                                         : execute_scenario(plan, scenario)},
@@ -2017,6 +2078,7 @@ json scenario_receipt(const json& plan, const json& scenario) {
 void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
         (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings" &&
+         plan.at("familyId") != "crash-log-scan-launch" &&
          plan.at("familyId") != "installed-yaml-data" && plan.at("familyId") != "autoscan-report" &&
          plan.at("familyId") != "game-integrity" && plan.at("familyId") != "game-setup-intake" &&
          plan.at("familyId") != "yaml-update-operations" && plan.at("familyId") != "path-backups" &&

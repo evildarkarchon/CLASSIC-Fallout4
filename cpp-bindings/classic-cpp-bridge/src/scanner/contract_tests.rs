@@ -456,7 +456,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         plugin_count: 4,
         suspect_count: 5,
     };
-    let dto = run_result_to_dto(contract::RunResult {
+    let dto = run_result_to_dto(contract::RunResult::from(contract::SettledRunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: Some(discovery),
         setup: None,
@@ -468,8 +468,8 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         failed: 1,
         cancelled: 0,
         logs: vec![log],
-        continuation: None,
-    });
+        observer_delivery_failure: None,
+    }));
 
     assert!(dto.has_discovery);
     assert_eq!(
@@ -506,6 +506,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
         message: "database unavailable".to_string(),
         path: Some(PathBuf::from("database-é.db")),
+        observer_delivery_failure: None,
     });
     assert_eq!(
         error.stage,
@@ -635,6 +636,7 @@ fn shared_failure_fixture_maps_every_cxx_failure_field() {
             stage: core_stage,
             message: expected["message"].as_str().unwrap().to_string(),
             path: expected["path"].as_str().map(PathBuf::from),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, cxx_stage);
         assert_eq!(mapped.message, expected["message"].as_str().unwrap());
@@ -719,7 +721,7 @@ fn execute_without_observer_returns_targeted_rejections_as_a_terminal_result() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation =
-        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run") };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_result);
@@ -782,7 +784,7 @@ fn explicit_zero_concurrency_reaches_typed_request_validation_error() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
@@ -824,7 +826,7 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut no_logs_operation =
-        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run") };
     let no_logs = scan_run_contract_execution_take_result(&mut no_logs_operation);
     assert!(no_logs.has_result, "{}", no_logs.error.message);
     assert_eq!(
@@ -843,7 +845,7 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
     scan_run_cancellation_cancel(&cancelled);
     // SAFETY: null is the documented representation of an omitted observer.
     let mut cancelled_operation =
-        unsafe { scan_run_contract_execute(&request, &cancelled, std::ptr::null()) };
+        unsafe { scan_run_contract_execute(&request, &cancelled, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run") };
     let cancelled_result = scan_run_contract_execution_take_result(&mut cancelled_operation);
     assert_eq!(
         cancelled_result.result.status,
@@ -947,7 +949,7 @@ fn execute_retains_structured_setup_result_data() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
@@ -1019,7 +1021,7 @@ fn execute_projects_generated_local_ignore_metadata_and_diagnostic_at_the_final_
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
@@ -1050,7 +1052,7 @@ fn execute_projects_generated_local_ignore_metadata_and_diagnostic_at_the_final_
 }
 
 #[test]
-fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_failure() {
+fn cxx_settlement_resumes_retained_recovery_once_and_projects_typed_replay_failure() {
     let temp = tempdir().expect("create Local Ignore recovery fixture root");
     let data = temp.path().join("CLASSIC Data");
     write_minimal_scan_yaml_tree(temp.path(), &data);
@@ -1070,9 +1072,9 @@ fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_fai
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut initial_operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
-    assert!(scan_run_contract_execution_has_continuation(
+    assert!(scan_run_contract_execution_has_pending_recovery(
         &initial_operation
     ));
     let initial = scan_run_contract_execution_take_result(&mut initial_operation);
@@ -1112,41 +1114,37 @@ fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_fai
     let retained_discovery = initial.result.discovery.accepted_logs.clone();
     let retained_main_identity = initial.result.installed_yaml_data.main.sha256.clone();
     let retained_game_identity = initial.result.installed_yaml_data.game_file.sha256.clone();
-    let continuation = scan_run_contract_execution_take_continuation(&mut initial_operation)
-        .expect("recovery result must expose its opaque continuation");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut initial_operation)
+        .expect("recovery result must offer its pending recovery");
 
     // CXX enums can carry a non-exhaustive sentinel; rejecting it must not claim retained work.
-    let invalid_decision = ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX };
+    let invalid_settlement = ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: true,
+        decision: ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX },
+    };
     // SAFETY: null is the documented representation of an omitted observer.
     let invalid_error = unsafe {
-        scan_run_continuation_resume(
-            &continuation,
-            invalid_decision,
-            &scan_run_cancellation_new(),
+        scan_run_pending_recovery_settle(
+            &pending,
+            invalid_settlement,
             std::ptr::null(),
+            ffi::ScanRunObserverFailurePolicy::ContinueRun,
         )
     }
     .err()
     .expect("an unknown recovery decision must be rejected");
     assert!(invalid_error.contains("unsupported ScanRunLocalIgnoreRecoveryDecision discriminant"));
 
-    // The resumed operation must use the retained snapshot rather than reading the now-invalid file.
+    // The settled run must use the retained snapshot rather than reading the now-invalid file.
     std::fs::write(
         data.join("databases").join("CLASSIC Main.yaml"),
         b"invalid: [unterminated",
     )
     .expect("mutate selected Main YAML after pause");
-    // SAFETY: null is the documented representation of an omitted observer.
-    let mut resumed_operation = unsafe {
-        scan_run_continuation_resume(
-            &continuation,
-            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            &scan_run_cancellation_new(),
-            std::ptr::null(),
-        )
-    }
-    .expect("the explicit recovery decision must resume retained work");
-    let resumed = scan_run_contract_execution_take_result(&mut resumed_operation);
+    let resumed = settle(
+        &pending,
+        Some(ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+    );
     assert!(resumed.has_result, "{}", resumed.error.message);
     assert_eq!(resumed.result.status, ffi::ScanRunContractStatus::Completed);
     assert_eq!(resumed.result.discovery.accepted_logs, retained_discovery);
@@ -1167,130 +1165,10 @@ fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_fai
         malformed_ignore
     );
 
-    // SAFETY: null is the documented representation of an omitted observer.
-    let mut replay_operation = unsafe {
-        scan_run_continuation_resume(
-            &continuation,
-            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-            &scan_run_cancellation_new(),
-            std::ptr::null(),
-        )
-    }
-    .expect("the explicit recovery decision must reach the typed replay envelope");
-    let replay = scan_run_contract_execution_take_result(&mut replay_operation);
-    assert!(!replay.has_result);
-    assert!(!replay.has_error);
-    assert!(replay.has_resume_error);
-    assert_eq!(
-        replay.resume_error.kind,
-        ffi::ScanRunContractResumeErrorKind::ContinuationConsumed
-    );
-    assert_eq!(replay.resume_error.code, "scan_run_continuation_consumed");
-}
-
-/// Abandonment crosses the bridge as the ordinary cancelled result and touches nothing on disk.
-///
-/// This is the C++ frontends' whole cancel path in one call, so the assertions are the ones a
-/// user would notice: the run reads as cancelled, the malformed Local Ignore they were asked
-/// about is byte-identical, neither half of the reset ran, no Autoscan Report was written, and
-/// the spent continuation reports the same typed replay envelope `resume` does.
-///
-/// The observer is deliberately absent here. `ScanRunObserver` is a C++ virtual class that Rust
-/// cannot implement, so "an abandoned run emits nothing" is assertable only from C++; it is pinned
-/// in `classic-cli/tests/test_scan_run_contract.cpp` instead.
-#[test]
-fn cxx_continuation_abandons_retained_recovery_without_touching_disk() {
-    let temp = tempdir().expect("create Local Ignore abandonment fixture root");
-    let data = temp.path().join("CLASSIC Data");
-    write_minimal_scan_yaml_tree(temp.path(), &data);
-    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
-    let ignore_path = data.join("CLASSIC Ignore.yaml");
-    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
-    let log = temp.path().join("crash-bridge-abandon.log");
-    std::fs::write(&log, FIXTURE_LOG_SMALL).expect("write accepted Crash Log fixture");
-    let mut configuration = sample_configuration();
-    configuration.installation_root = temp.path().to_string_lossy().into_owned();
-    configuration.game_version = "Original".to_string();
-    let source = ffi::ScanRunTargetedSourceDto {
-        inputs: vec![log.to_string_lossy().into_owned()],
-    };
-    let request = scan_run_request_targeted(&configuration, &source)
-        .expect("valid recovery request should be constructible");
-
-    // SAFETY: null is the documented representation of an omitted observer.
-    let mut initial_operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
-    };
-    let initial = scan_run_contract_execution_take_result(&mut initial_operation);
-    assert_eq!(
-        initial.result.status,
-        ffi::ScanRunContractStatus::LocalIgnoreRecoveryRequired
-    );
-    let retained_discovery = initial.result.discovery.accepted_logs.clone();
-    let continuation = scan_run_contract_execution_take_continuation(&mut initial_operation)
-        .expect("recovery result must expose its opaque continuation");
-
-    // The frontends share one control across the paused run and its abandonment, so the test does
-    // too. `abandon` is what cancels it; the caller never asks for cancellation itself.
-    let cancellation = scan_run_cancellation_new();
-    assert!(!scan_run_cancellation_is_cancelled(&cancellation));
-    // SAFETY: null is the documented representation of an omitted observer.
-    let mut abandoned_operation =
-        unsafe { scan_run_continuation_abandon(&continuation, &cancellation, std::ptr::null()) };
-    let abandoned = scan_run_contract_execution_take_result(&mut abandoned_operation);
-
-    assert!(abandoned.has_result, "{}", abandoned.error.message);
-    assert_eq!(
-        abandoned.result.status,
-        ffi::ScanRunContractStatus::Cancelled
-    );
-    assert_eq!(abandoned.result.discovery.accepted_logs, retained_discovery);
-    assert!(scan_run_cancellation_is_cancelled(&cancellation));
-    // A cancelled run still describes itself; the C++ frontends render these rather than
-    // composing a cancellation sentence of their own.
-    assert!(!abandoned.display_lines.is_empty());
-    assert_eq!(
-        std::fs::read(&ignore_path).expect("read malformed Local Ignore after abandonment"),
-        malformed_ignore
-    );
-    // `report::autoscan_report_path` is crate-private to core, so the absence of analysis output is
-    // asserted the way a user would see it: no Autoscan Report exists beside the Crash Log.
-    assert!(
-        std::fs::read_dir(temp.path())
-            .expect("read abandonment fixture root")
-            .filter_map(Result::ok)
-            .all(|entry| !entry.file_name().to_string_lossy().contains("AUTOSCAN"))
-    );
-    assert_eq!(
-        abandoned.result.logs.len(),
-        1,
-        "abandonment keeps the retained discovery result"
-    );
-    assert_eq!(
-        abandoned.result.logs[0].disposition,
-        ffi::ScanRunContractLogDisposition::CancelledBeforeStart
-    );
-    // Neither half of Reset To Default ran: the backup directory is what the durable half would
-    // have created first, so its absence is the cheapest proof the transaction never opened.
-    assert!(!temp.path().join("CLASSIC Backup").exists());
-
-    // SAFETY: null is the documented representation of an omitted observer.
-    let mut replay_operation = unsafe {
-        scan_run_continuation_abandon(
-            &continuation,
-            &scan_run_cancellation_new(),
-            std::ptr::null(),
-        )
-    };
-    let replay = scan_run_contract_execution_take_result(&mut replay_operation);
-    assert!(!replay.has_result);
-    assert!(!replay.has_error);
-    assert!(replay.has_resume_error);
-    assert_eq!(
-        replay.resume_error.kind,
-        ffi::ScanRunContractResumeErrorKind::ContinuationConsumed
-    );
-    assert_eq!(replay.resume_error.code, "scan_run_continuation_consumed");
+    assert_consumed_replay(&settle(
+        &pending,
+        Some(ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+    ));
 }
 
 /// Reset backup and replacement failures retain stable CXX path and publication metadata.
@@ -1398,7 +1276,7 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
-        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
     };
     let execution = scan_run_contract_execution_take_result(&mut operation);
 
@@ -1739,6 +1617,7 @@ fn an_infrastructure_error_envelope_carries_the_lines_core_rendered() {
         stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
         message: "database unavailable".to_string(),
         path: Some(PathBuf::from("database.db")),
+        observer_delivery_failure: None,
     };
     let expected = display_lines_to_dto(&render_infrastructure_error(&build()));
     let envelope = infrastructure_execution_result_dto(build());
@@ -1749,7 +1628,7 @@ fn an_infrastructure_error_envelope_carries_the_lines_core_rendered() {
 
 /// Builds one resume failure of every kind, so no variant reaches C++ untested.
 ///
-/// `Infrastructure` is deliberately absent: `execution_from_resume_result` routes it into the
+/// `Infrastructure` is deliberately absent: `execution_result_from_settled` routes it into the
 /// infrastructure arm rather than the resume arm, and
 /// [`an_infrastructure_error_envelope_carries_the_lines_core_rendered`] covers that path.
 fn every_resume_failure() -> Vec<contract::ResumeError> {
@@ -1803,16 +1682,16 @@ fn every_resume_error_envelope_carries_the_lines_core_rendered_without_the_code(
     for error in every_resume_failure() {
         let code = error.kind().as_str();
         let expected = display_lines_to_dto(&render_resume_error(&error));
-        let execution = execution_from_resume_result(Err(error));
+        let envelope = execution_result_from_settled(Err(error));
 
-        assert!(execution.result.has_resume_error, "{code} lost its payload");
-        assert_eq!(execution.result.resume_error.code, code);
+        assert!(envelope.has_resume_error, "{code} lost its payload");
+        assert_eq!(envelope.resume_error.code, code);
         assert!(
-            !execution.result.display_lines.is_empty(),
+            !envelope.display_lines.is_empty(),
             "{code} reached C++ with nothing to say"
         );
-        assert_display_lines_match(&execution.result.display_lines, &expected);
-        for line in &execution.result.display_lines {
+        assert_display_lines_match(&envelope.display_lines, &expected);
+        for line in &envelope.display_lines {
             for segment in &line.segments {
                 assert_ne!(
                     segment.text, code,
@@ -1882,7 +1761,7 @@ fn assert_display_lines_match(
 #[test]
 /// A run paused on Local Ignore recovery crosses with the prompt Rust rendered for it.
 fn a_recovery_required_envelope_carries_the_prompt_core_rendered() {
-    let build = || contract::RunResult {
+    let build = || contract::RunResult::from(contract::SettledRunResult {
         status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
         discovery: None,
         setup: None,
@@ -1894,8 +1773,8 @@ fn a_recovery_required_envelope_carries_the_prompt_core_rendered() {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
-        continuation: None,
-    };
+        observer_delivery_failure: None,
+    });
     let expected = recovery_prompt_to_dto(&render_local_ignore_recovery(None));
     let envelope = success_execution_result_dto(build());
 
@@ -1907,7 +1786,7 @@ fn a_recovery_required_envelope_carries_the_prompt_core_rendered() {
 #[test]
 /// A run that is not waiting on a decision carries no prompt for a frontend to show.
 fn a_terminal_envelope_carries_no_recovery_prompt() {
-    let result = success_execution_result_dto(contract::RunResult {
+    let result = success_execution_result_dto(contract::RunResult::from(contract::SettledRunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: None,
         setup: None,
@@ -1919,8 +1798,8 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
-        continuation: None,
-    });
+        observer_delivery_failure: None,
+    }));
 
     assert!(!result.has_recovery_prompt);
     assert!(result.recovery_prompt.lines.is_empty());
@@ -1930,6 +1809,7 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
         stage: contract::InfrastructureErrorStage::Discovery,
         message: "discovery failed".to_string(),
         path: None,
+        observer_delivery_failure: None,
     });
     assert!(!failed.has_recovery_prompt);
     assert!(!empty_execution_result_dto().has_recovery_prompt);
@@ -2078,4 +1958,395 @@ fn assert_decisions_match(
             );
         }
     }
+}
+
+/// One targeted run paused on a malformed Local Ignore, with the control it was started under.
+struct PausedCxxRun {
+    temp: tempfile::TempDir,
+    ignore_path: std::path::PathBuf,
+    malformed_ignore: &'static [u8],
+    cancellation: Box<ScanRunCancellation>,
+    execution: Box<ScanRunContractExecution>,
+    initial: ffi::ScanRunContractExecutionResult,
+}
+
+/// Executes a targeted run over a malformed Local Ignore until it pauses for recovery.
+fn paused_cxx_run(log_name: &str) -> PausedCxxRun {
+    let temp = tempdir().expect("create pending recovery fixture root");
+    let data = temp.path().join("CLASSIC Data");
+    write_minimal_scan_yaml_tree(temp.path(), &data);
+    let malformed_ignore: &'static [u8] = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
+    let log = temp.path().join(log_name);
+    std::fs::write(&log, FIXTURE_LOG_SMALL).expect("write accepted Crash Log fixture");
+    let mut configuration = sample_configuration();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
+    configuration.game_version = "Original".to_string();
+    let source = ffi::ScanRunTargetedSourceDto {
+        inputs: vec![log.to_string_lossy().into_owned()],
+    };
+    let request = scan_run_request_targeted(&configuration, &source)
+        .expect("valid recovery request should be constructible");
+    let cancellation = scan_run_cancellation_new();
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut execution =
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run") };
+    let initial = scan_run_contract_execution_take_result(&mut execution);
+    assert_eq!(
+        initial.result.status,
+        ffi::ScanRunContractStatus::LocalIgnoreRecoveryRequired,
+        "{}",
+        initial.error.message
+    );
+    PausedCxxRun {
+        temp,
+        ignore_path,
+        malformed_ignore,
+        cancellation,
+        execution,
+        initial,
+    }
+}
+
+/// Builds the bridge's optional-decision settlement value.
+fn settlement(
+    decision: Option<ffi::ScanRunLocalIgnoreRecoveryDecision>,
+) -> ffi::ScanRunLocalIgnoreRecoverySettlement {
+    ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: decision.is_some(),
+        // Ignored when `has_decision` is false; any in-range value keeps the struct well formed.
+        decision: decision.unwrap_or(ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+    }
+}
+
+/// Settles through the bridge with no observer.
+fn settle(
+    pending: &ScanRunPendingRecovery,
+    decision: Option<ffi::ScanRunLocalIgnoreRecoveryDecision>,
+) -> ffi::ScanRunContractExecutionResult {
+    // SAFETY: null is the documented representation of an omitted observer.
+    unsafe { scan_run_pending_recovery_settle(pending, settlement(decision), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun) }
+        .expect("an in-range settlement should reach an envelope")
+}
+
+/// Asserts an envelope is the typed consumed-continuation replay.
+fn assert_consumed_replay(envelope: &ffi::ScanRunContractExecutionResult) {
+    assert!(!envelope.has_result);
+    assert!(!envelope.has_error);
+    assert!(envelope.has_resume_error);
+    assert_eq!(
+        envelope.resume_error.kind,
+        ffi::ScanRunContractResumeErrorKind::ContinuationConsumed
+    );
+    assert_eq!(envelope.resume_error.code, "scan_run_continuation_consumed");
+}
+
+/// Asserts no Autoscan Report and no Local Ignore backup exist below the fixture root.
+fn assert_nothing_written(paused: &PausedCxxRun) {
+    assert_eq!(
+        std::fs::read(&paused.ignore_path).expect("read malformed Local Ignore"),
+        paused.malformed_ignore
+    );
+    assert!(
+        std::fs::read_dir(paused.temp.path())
+            .expect("read fixture root")
+            .filter_map(Result::ok)
+            .all(|entry| !entry.file_name().to_string_lossy().contains("AUTOSCAN"))
+    );
+    assert!(!paused.temp.path().join("CLASSIC Backup").exists());
+}
+
+#[test]
+/// A paused run offers a pending recovery whose prompt is the one Rust rendered for the pause.
+fn cxx_pending_recovery_carries_the_rendered_prompt() {
+    let mut paused = paused_cxx_run("crash-bridge-pending.log");
+
+    assert!(scan_run_contract_execution_has_pending_recovery(
+        &paused.execution
+    ));
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+    assert!(!scan_run_contract_execution_has_pending_recovery(
+        &paused.execution
+    ));
+    assert!(
+        scan_run_contract_execution_take_pending_recovery(&mut paused.execution).is_err(),
+        "the pending recovery is offered once"
+    );
+
+    let prompt = scan_run_pending_recovery_prompt(&pending);
+    assert!(paused.initial.has_recovery_prompt);
+    assert_display_lines_match(&prompt.lines, &paused.initial.recovery_prompt.lines);
+    assert_decisions_match(&prompt.decisions, &paused.initial.recovery_prompt.decisions);
+    assert!(!scan_run_pending_recovery_cancellation_requested(&pending));
+}
+
+#[test]
+/// A run that did not pause offers no pending recovery, and taking one throws.
+fn cxx_execution_without_a_pause_offers_no_pending_recovery() {
+    let root = tempdir().expect("create empty root");
+    let mut configuration = sample_configuration();
+    configuration.installation_root = root.path().to_string_lossy().into_owned();
+    let request = scan_run_request_targeted(&configuration, &sample_targeted_source())
+        .expect("valid request should be constructible");
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut execution = unsafe {
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun).expect("a valid observer failure policy should run")
+    };
+
+    assert!(!scan_run_contract_execution_has_pending_recovery(&execution));
+    let error = scan_run_contract_execution_take_pending_recovery(&mut execution)
+        .err()
+        .expect("a run that did not pause has no pending recovery");
+    assert!(error.contains("no pending recovery"));
+}
+
+#[test]
+/// Settling with each decision resumes the same discovered Crash Logs into a terminal envelope.
+fn cxx_settling_with_each_decision_resumes_the_same_crash_logs() {
+    for (decision, state) in [
+        (
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore,
+        ),
+        (
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+            ffi::ScanRunLocalIgnoreYamlDataState::ResetToDefault,
+        ),
+    ] {
+        let mut paused = paused_cxx_run("crash-bridge-settle.log");
+        let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+            .expect("a paused run should offer its pending recovery");
+
+        let settled = settle(&pending, Some(decision));
+
+        assert!(settled.has_result, "{}", settled.error.message);
+        assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Completed);
+        assert_eq!(
+            settled.result.discovery.accepted_logs,
+            paused.initial.result.discovery.accepted_logs
+        );
+        assert_eq!(settled.result.installed_yaml_data.local_ignore_state, state);
+        // A settled envelope is never waiting on a decision again.
+        assert!(!settled.has_recovery_prompt);
+        assert!(!settled.display_lines.is_empty());
+        assert!(!scan_run_cancellation_is_cancelled(&paused.cancellation));
+    }
+}
+
+#[test]
+/// Settling with no decision is abandonment: the run's own control is cancelled, nothing written.
+///
+/// This is the C++ frontends' whole cancel path in one call, so the assertions are the ones a
+/// user would notice: the run reads as cancelled over the retained discovery, it still describes
+/// itself, nothing on disk changed, and the spent claim reports the typed replay envelope. The
+/// observer is absent because `ScanRunObserver` is a C++ virtual class Rust cannot implement;
+/// "an abandoned run emits nothing" is pinned in `classic-cli/tests/test_scan_run_contract.cpp`.
+fn cxx_settling_without_a_decision_cancels_the_run_and_touches_nothing() {
+    let mut paused = paused_cxx_run("crash-bridge-settle-abandon.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+
+    let settled = settle(&pending, None);
+
+    assert!(settled.has_result, "{}", settled.error.message);
+    assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
+    assert_eq!(
+        settled.result.discovery.accepted_logs,
+        paused.initial.result.discovery.accepted_logs
+    );
+    assert_eq!(settled.result.logs.len(), 1);
+    assert_eq!(
+        settled.result.logs[0].disposition,
+        ffi::ScanRunContractLogDisposition::CancelledBeforeStart
+    );
+    // A cancelled run still describes itself; the C++ frontends render these rather than
+    // composing a cancellation sentence of their own.
+    assert!(!settled.display_lines.is_empty());
+    // The control the caller handed to `scan_run_contract_execute`, not a fresh one.
+    assert!(scan_run_cancellation_is_cancelled(&paused.cancellation));
+    assert!(scan_run_pending_recovery_cancellation_requested(&pending));
+    assert_nothing_written(&paused);
+    assert_consumed_replay(&settle(&pending, None));
+}
+
+#[test]
+/// A run cancelled before its pending recovery is read says so, and settling then writes nothing.
+fn cxx_pending_recovery_reports_an_already_cancelled_run() {
+    let mut paused = paused_cxx_run("crash-bridge-settle-cancelled.log");
+    scan_run_cancellation_cancel(&paused.cancellation);
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+
+    assert!(scan_run_pending_recovery_cancellation_requested(&pending));
+    // Reset To Default is the one decision that could write; cancellation still wins.
+    let settled = settle(
+        &pending,
+        Some(ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault),
+    );
+
+    assert!(settled.has_result, "{}", settled.error.message);
+    assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
+    assert_nothing_written(&paused);
+}
+
+#[test]
+/// Replaying a settlement, with or without a decision, is the consumed envelope.
+fn cxx_settling_twice_reports_the_consumed_envelope() {
+    let mut paused = paused_cxx_run("crash-bridge-settle-replay.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+
+    let settled = settle(
+        &pending,
+        Some(ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore),
+    );
+    assert!(settled.has_result, "{}", settled.error.message);
+
+    assert_consumed_replay(&settle(&pending, None));
+    // Reset To Default is the one decision that could write had the claim survived.
+    assert_consumed_replay(&settle(
+        &pending,
+        Some(ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault),
+    ));
+}
+
+#[test]
+/// An out-of-range decision is rejected before it can spend the pending recovery.
+fn cxx_settling_rejects_an_out_of_range_decision_without_claiming() {
+    let mut paused = paused_cxx_run("crash-bridge-settle-invalid.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+    let invalid = ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: true,
+        decision: ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX },
+    };
+
+    // SAFETY: null is the documented representation of an omitted observer.
+    let error = unsafe { scan_run_pending_recovery_settle(&pending, invalid, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun) }
+        .err()
+        .expect("an unknown recovery decision must be rejected");
+    assert!(error.contains("unsupported ScanRunLocalIgnoreRecoveryDecision discriminant"));
+
+    // An out-of-range value is ignored when no decision is claimed, like any other `has_` pair.
+    let ignored = ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: false,
+        decision: ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX },
+    };
+    // SAFETY: null is the documented representation of an omitted observer.
+    let settled = unsafe { scan_run_pending_recovery_settle(&pending, ignored, std::ptr::null(), ffi::ScanRunObserverFailurePolicy::ContinueRun) }
+        .expect("no decision has nothing out of range to reject");
+    assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
+}
+
+// --- Observer delivery failure ---------------------------------------------------------
+//
+// `ScanRunObserver` is a C++ virtual class Rust cannot implement, so the C++ suites own the
+// end-to-end delivery tests. These pin the envelope projection and the policy mapping.
+
+#[test]
+/// A delivery failure Rust reports crosses on the envelope, whatever its payload.
+fn the_envelope_reports_a_delivery_failure_from_a_result_or_an_infrastructure_error() {
+    let failure = || Some(contract::ObserverDeliveryFailure::new("progress view lost"));
+    let completed = success_execution_result_dto(contract::RunResult::from(contract::SettledRunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        effective_concurrency: None,
+        message: None,
+        total: 0,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+        observer_delivery_failure: failure(),
+    }));
+    assert!(completed.has_observer_delivery_failure);
+    assert_eq!(
+        completed.observer_delivery_failure_message,
+        "progress view lost"
+    );
+
+    let failed = infrastructure_execution_result_dto(contract::InfrastructureError {
+        stage: contract::InfrastructureErrorStage::Intake,
+        message: "intake failed".to_string(),
+        path: None,
+        observer_delivery_failure: failure(),
+    });
+    assert!(failed.has_observer_delivery_failure);
+    assert_eq!(failed.observer_delivery_failure_message, "progress view lost");
+
+    let empty = empty_execution_result_dto();
+    assert!(!empty.has_observer_delivery_failure);
+    assert!(empty.observer_delivery_failure_message.is_empty());
+}
+
+#[test]
+/// An envelope whose run delivered every event reports no delivery failure.
+fn the_envelope_reports_no_delivery_failure_when_none_happened() {
+    let request = scan_run_request_targeted(&sample_configuration(), &sample_targeted_source())
+        .expect("sample request should be constructible");
+    let cancellation = scan_run_cancellation_new();
+    scan_run_cancellation_cancel(&cancellation);
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut operation = unsafe {
+        scan_run_contract_execute(
+            &request,
+            &cancellation,
+            std::ptr::null(),
+            ffi::ScanRunObserverFailurePolicy::CancelRun,
+        )
+    }
+    .expect("a valid policy should run");
+    let envelope = scan_run_contract_execution_take_result(&mut operation);
+    assert!(!envelope.has_observer_delivery_failure);
+    assert!(envelope.observer_delivery_failure_message.is_empty());
+}
+
+#[test]
+/// An out-of-range policy is rejected before the run starts or the pending recovery is spent.
+fn an_out_of_range_observer_failure_policy_is_rejected_before_anything_runs() {
+    let request = scan_run_request_targeted(&sample_configuration(), &sample_targeted_source())
+        .expect("sample request should be constructible");
+    let invalid = ffi::ScanRunObserverFailurePolicy { repr: u8::MAX };
+    // SAFETY: null is the documented representation of an omitted observer.
+    let error = unsafe {
+        scan_run_contract_execute(
+            &request,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+            invalid,
+        )
+    }
+    .err()
+    .expect("an unknown policy must be rejected");
+    assert!(error.contains("unsupported ScanRunObserverFailurePolicy discriminant"));
+
+    let mut paused = paused_cxx_run("crash-bridge-settle-invalid-policy.log");
+    let pending = scan_run_contract_execution_take_pending_recovery(&mut paused.execution)
+        .expect("a paused run should offer its pending recovery");
+    let no_decision = || ffi::ScanRunLocalIgnoreRecoverySettlement {
+        has_decision: false,
+        decision: ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+    };
+    // SAFETY: null is the documented representation of an omitted observer.
+    let rejected =
+        unsafe { scan_run_pending_recovery_settle(&pending, no_decision(), std::ptr::null(), invalid) }
+            .err()
+            .expect("an unknown policy must be rejected when settling");
+    assert!(rejected.contains("unsupported ScanRunObserverFailurePolicy discriminant"));
+    // Nothing was claimed, so the pending recovery still settles.
+    // SAFETY: null is the documented representation of an omitted observer.
+    let settled = unsafe {
+        scan_run_pending_recovery_settle(
+            &pending,
+            no_decision(),
+            std::ptr::null(),
+            ffi::ScanRunObserverFailurePolicy::ContinueRun,
+        )
+    }
+    .expect("a valid policy should settle");
+    assert_eq!(settled.result.status, ffi::ScanRunContractStatus::Cancelled);
 }

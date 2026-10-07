@@ -19,6 +19,7 @@ pub mod explicit_yaml_data;
 pub(crate) mod game_data;
 pub mod game_local;
 pub mod generation;
+pub mod installation_root;
 pub mod installed_yaml_data;
 // Private: shippable selection is implementation machinery owned by
 // `installed_yaml_data`. Its public diagnostics and the version reader for
@@ -52,6 +53,8 @@ pub use game_local::{
 pub use generation::{
     FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
 };
+// The one Installation Root search shared by every frontend (#275).
+pub use installation_root::locate_installation_root;
 pub use installed_yaml_data::{
     InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind,
     InstalledYamlDataInspection, InstalledYamlDataInspectionError,

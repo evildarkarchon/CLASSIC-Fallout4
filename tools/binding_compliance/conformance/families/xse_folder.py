@@ -32,6 +32,37 @@ _FOLDER_FACTS = (
     ("absent", None),
 )
 
+def _matches_log(log, error, observation):
+    """Require the located log, its absence, or the typed operational failure."""
+    return observation == {"log": log, "error": error}
+
+
+#: XSE log facts (``xse-folder.log``): Fallout 4's and Fallout 4 VR's own logs
+#: in the shared ``F4SE`` folder, the explicit folder winning precedence,
+#: absence, and the typed operational failure.
+_LOG_FACTS = (
+    ("fallout4", "configured-docs/F4SE/f4se.log", None),
+    ("vr", "configured-docs/F4SE/f4sevr.log", None),
+    ("explicit", "explicit-xse/f4se.log", None),
+    ("absent", None, None),
+    ("uninspectable", None, "inspect"),
+)
+
+#: The YAML ``\0`` escape (backslash and zero, not a raw NUL byte) records an
+#: XSE Folder no platform can inspect, which stands in for any operational
+#: failure without touching host folders or permissions.
+_UNINSPECTABLE_LOCAL_YAML = 'Game_Info:\n  Docs_Folder_XSE: "bad\\0xse"\n'
+
+#: The only log files a log fixture may create under its owned root.
+_CONTROLLED_LOG_FILES = frozenset(
+    {
+        "configured-docs/F4SE/f4se.log",
+        "configured-docs/F4SE/f4sevr.log",
+        "local-docs/F4SE/f4se.log",
+        "explicit-xse/f4se.log",
+    }
+)
+
 #: ``xse-folder.derive`` is XSE's own derivation from supplied Game Local facts
 #: (the pack's domain owner, classic-xse-core). ``xse-folder.resolve`` is
 #: scangame's composition that reads those facts from Local.yaml first; its
@@ -61,6 +92,22 @@ XSE_FOLDER_COVERAGE_POLICY = FamilyCoveragePolicy(
             matches=partial(_matches, folder),
         )
         for name, folder in _FOLDER_FACTS
+    )
+    + tuple(
+        CoveragePredicate(
+            id=f"xse-folder.log-{name}",
+            capability_id="xse-folder.log",
+            action="xse-folder.log",
+            observation_family="values",
+            rust_symbols=("resolve_xse_log_for_scan",),
+            runtime_operations=(
+                None,
+                "resolve_xse_log_for_scan",
+                "resolveXseLogForScan",
+            ),
+            matches=partial(_matches_log, log, error),
+        )
+        for name, log, error in _LOG_FACTS
     ),
 )
 
@@ -94,13 +141,15 @@ def validate_xse_folder_pack(document, root):
         source_key = (
             "gameLocalFacts" if case["action"] == "xse-folder.derive" else "localYaml"
         )
+        # Log cases also name the empty log files to create under the owned root.
+        is_log = case["action"] == "xse-folder.log"
         if set(fixture) != {
             "registryYaml",
             "game",
             "selectedVersion",
             source_key,
             "configuredDocs",
-        }:
+        } | ({"logFiles"} if is_log else set()):
             raise ValueError("unsupported XSE folder fixture")
         if registry is not None and fixture["registryYaml"] != registry:
             raise ValueError("XSE folder singleton requires identical registry bytes")
@@ -132,8 +181,22 @@ def validate_xse_folder_pack(document, root):
             "[invalid: yaml",
             'Game_Info:\n  Docs_Folder_XSE: " explicit-xse "\n  Root_Folder_Docs: local-docs\n',
             'Game_Info:\n  Docs_Folder_XSE: " "\n  Root_Folder_Docs: local-docs\n',
-        }:
+        } | ({_UNINSPECTABLE_LOCAL_YAML} if is_log else set()):
             raise ValueError("XSE folder requires controlled local paths")
+        if is_log:
+            # Log cases observe only the located log or typed failure; the
+            # runner creates the listed empty logs, so they must stay closed.
+            log_files = fixture["logFiles"]
+            if (
+                not isinstance(log_files, list)
+                or len(set(log_files)) != len(log_files)
+                or not set(log_files) <= _CONTROLLED_LOG_FILES
+            ):
+                raise ValueError("XSE log requires controlled log files")
+            if set(case["expected"]) != {"log", "error"}:
+                raise ValueError("XSE log expectation must be a log or typed error")
+            paths.append(path)
+            continue
         inventory = [{"path": "CLASSIC Main.yaml", "content": registry}]
         if fixture.get("localYaml") is not None:
             inventory.append(

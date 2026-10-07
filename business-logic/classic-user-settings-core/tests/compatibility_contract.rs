@@ -166,6 +166,38 @@ fn collect_semantic_differences(
     }
 }
 
+/// Canonical pointer of the FormID Databases mapping.
+const FORMID_DATABASES_POINTER: &str = "/CLASSIC_Settings/FormID Databases";
+
+/// Returns whether a scenario requests a game-aware FormID database save.
+///
+/// A requested pointer below the mapping (`.../FormID Databases/<game>`) names the save for that
+/// game instead of a raw key write.
+fn requests_formid_database_save(scenario: &Value) -> bool {
+    scenario["requested_update"]
+        .as_object()
+        .is_some_and(|requested| {
+            requested
+                .keys()
+                .any(|pointer| pointer.starts_with(&format!("{FORMID_DATABASES_POINTER}/")))
+        })
+}
+
+/// Returns the document pointers an accepted request selector is allowed to change.
+///
+/// Raw fields change exactly their own pointer. The game-aware FormID save for Fallout 4 VR
+/// writes the shared `Fallout4` key and removes the legacy `Fallout4VR` key; a save for any
+/// other game changes only that game's key.
+fn written_pointers(pointer: &str) -> Vec<String> {
+    match pointer.strip_prefix(&format!("{FORMID_DATABASES_POINTER}/")) {
+        Some("Fallout4VR") => vec![
+            format!("{FORMID_DATABASES_POINTER}/Fallout4"),
+            format!("{FORMID_DATABASES_POINTER}/Fallout4VR"),
+        ],
+        _ => vec![pointer.to_string()],
+    }
+}
+
 mod compatibility_contract_tests {
     use super::*;
 
@@ -261,6 +293,7 @@ mod compatibility_contract_tests {
                 "tui_remembered_state",
                 "unknown_nested_entries",
                 "unknown_root_entries",
+                "vr_formid_database_read_rule",
             ])
         );
 
@@ -446,10 +479,25 @@ mod compatibility_contract_tests {
                 }
                 "proposed_update" => {
                     assert!(!writes_document, "scenario {id} preview must not write");
-                    assert_eq!(
-                        scenario["requested_update"], scenario["expected_preview"],
-                        "scenario {id} preview must name every requested field and no unrelated field"
-                    );
+                    if requests_formid_database_save(scenario) {
+                        // A game-aware save previews the one complete mapping it publishes.
+                        let preview: BTreeSet<_> = scenario["expected_preview"]
+                            .as_object()
+                            .expect("expected_preview must be an object")
+                            .keys()
+                            .map(String::as_str)
+                            .collect();
+                        assert_eq!(
+                            preview,
+                            BTreeSet::from([FORMID_DATABASES_POINTER]),
+                            "scenario {id} save must preview only the FormID Databases mapping"
+                        );
+                    } else {
+                        assert_eq!(
+                            scenario["requested_update"], scenario["expected_preview"],
+                            "scenario {id} preview must name every requested field and no unrelated field"
+                        );
+                    }
                 }
                 "accepted_commit" => {
                     assert!(
@@ -514,7 +562,7 @@ mod compatibility_contract_tests {
                         .as_object()
                         .expect("requested_update must be an object")
                         .keys()
-                        .cloned()
+                        .flat_map(|pointer| written_pointers(pointer))
                         .collect();
                     assert_eq!(
                         requested, expected_differences,

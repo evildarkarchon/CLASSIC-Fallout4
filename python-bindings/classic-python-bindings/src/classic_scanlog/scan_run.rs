@@ -10,9 +10,9 @@ use classic_config_core::{
     YamlDataContentIdentity,
 };
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
-    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
-    render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, PendingRecoveryWithPrompt, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result, take_pending_recovery,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -26,7 +26,7 @@ use pyo3::create_exception;
 use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 create_exception!(
@@ -111,7 +111,7 @@ impl PyScanRunConfiguration {
 }
 
 /// Converts an authentic `classic_shared.GameId` without reparsing its display text.
-fn typed_game_id_to_core(game: &Bound<'_, PyAny>) -> PyResult<GameId> {
+pub(super) fn typed_game_id_to_core(game: &Bound<'_, PyAny>) -> PyResult<GameId> {
     let shared = PyModule::import(game.py(), "classic_shared")?;
     let game_id_type = shared.getattr("GameId")?;
     if !game.is_instance(&game_id_type)? {
@@ -810,10 +810,36 @@ pub enum PyScanRunLocalIgnoreRecoveryDecision {
     ResetToDefault = 1,
 }
 
-/// Opaque process-local carrier for one paused Crash Log Scan Run.
-#[pyclass(name = "ScanRunContinuation", frozen, skip_from_py_object)]
-pub struct PyScanRunContinuation {
-    inner: Arc<contract::CrashLogScanRunContinuation>,
+/// A paused Crash Log Scan Run waiting to be settled exactly once.
+///
+/// Bundles the single-use continuation with the recovery prompt Rust rendered and with whether
+/// the run's cancellation was already requested. Settle it with [`scan_run_settle`]; that is
+/// the only way to answer the paused run (ADR-0009).
+#[pyclass(name = "ScanRunPendingRecovery", frozen, skip_from_py_object)]
+pub struct PyScanRunPendingRecovery {
+    inner: Arc<PendingRecoveryWithPrompt>,
+}
+
+#[pymethods]
+impl PyScanRunPendingRecovery {
+    /// Returns what to ask the user, and which answers this run can honor.
+    ///
+    /// The same Display Content as the paused execution's `recovery_prompt`, rendered from
+    /// this pending recovery's own facts, so Reset To Default is unavailable here exactly
+    /// when settling with it could not succeed.
+    #[getter]
+    pub fn prompt(&self) -> PyScanRunRecoveryPrompt {
+        recovery_prompt_to_py(self.inner.prompt())
+    }
+
+    /// Returns whether cancellation of the paused run was already requested.
+    ///
+    /// Read live from the control the run was executed with. When `True`, do not prompt:
+    /// settle with no decision, which finishes cancelled after discovery and touches nothing.
+    #[getter]
+    pub fn cancellation_requested(&self) -> bool {
+        self.inner.cancellation_requested()
+    }
 }
 
 /// Complete terminal Crash Log Scan Run result.
@@ -823,7 +849,6 @@ pub struct PyScanRunResult {
     discovery: Option<PyScanRunDiscoveryResult>,
     setup: Option<PyScanRunSetupResult>,
     installed_yaml_data: Option<PyScanRunInstalledYamlDataRunData>,
-    continuation: Option<Py<PyScanRunContinuation>>,
     effective_concurrency: Option<usize>,
     message: Option<String>,
     total: usize,
@@ -857,14 +882,6 @@ impl PyScanRunResult {
     #[getter]
     pub fn installed_yaml_data(&self) -> Option<PyScanRunInstalledYamlDataRunData> {
         self.installed_yaml_data.clone()
-    }
-
-    /// Returns the opaque one-shot continuation for Local Ignore Recovery Required.
-    #[getter]
-    pub fn continuation(&self, py: Python<'_>) -> Option<Py<PyScanRunContinuation>> {
-        self.continuation
-            .as_ref()
-            .map(|continuation| continuation.clone_ref(py))
     }
 
     /// Returns Rust-selected concurrency once scheduling was reached.
@@ -966,7 +983,7 @@ pub struct PyScanRunDisplaySegment {
     /// noun Rust already resolved to agree with `count`, so no consumer re-decides
     /// pluralization and no user reads "1 logs". Empty for `path`.
     #[pyo3(get)]
-    text: String,
+    pub(crate) text: String,
     /// Payload for `path`, whole and untruncated. Truncation is the consumer's
     /// choice. Empty otherwise.
     #[pyo3(get)]
@@ -988,10 +1005,10 @@ pub struct PyScanRunDisplayLine {
     /// or `success`. Rust names no colour, text attribute, or widget — a plain,
     /// pipeable frontend may map every severity onto nothing at all and stay correct.
     #[pyo3(get)]
-    severity: String,
+    pub(crate) severity: String,
     /// The line's content, in reading order.
     #[pyo3(get)]
-    segments: Vec<PyScanRunDisplaySegment>,
+    pub(crate) segments: Vec<PyScanRunDisplaySegment>,
 }
 
 /// One Local Ignore recovery decision, named and explained, with its availability
@@ -1010,10 +1027,10 @@ pub struct PyScanRunDisplayLine {
 )]
 #[derive(Clone)]
 pub struct PyScanRunRecoveryDecisionDescription {
-    /// The decision to hand straight back to `scan_run_resume`.
+    /// The decision to hand straight back to `scan_run_settle`.
     ///
     /// The enum rather than a snake_case token, unlike every other tag this surface
-    /// publishes on an output. `scan_run_resume` takes the enum, so a token here would
+    /// publishes on an output. `scan_run_settle` takes the enum, so a token here would
     /// make a consumer map it back — and a mapping table written by a consumer is the
     /// drift this whole effort removes.
     #[pyo3(get)]
@@ -1037,8 +1054,8 @@ pub struct PyScanRunRecoveryDecisionDescription {
 /// asks the question. The descriptions themselves are not.
 ///
 /// Backing out appears nowhere here. `ScanRunLocalIgnoreRecoveryDecision` has exactly two
-/// variants by design, and abandonment is spelled as the absence of a decision through
-/// `scan_run_abandon`.
+/// variants by design, and abandonment is spelled as the absence of a decision when settling
+/// through `scan_run_settle`.
 #[pyclass(name = "ScanRunRecoveryPrompt", frozen, skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyScanRunRecoveryPrompt {
@@ -1158,10 +1175,22 @@ pub struct PyScanRunExecution {
     observer_error: Option<String>,
     display_lines: Vec<PyScanRunDisplayLine>,
     recovery_prompt: Option<PyScanRunRecoveryPrompt>,
+    pending_recovery: Option<Py<PyScanRunPendingRecovery>>,
 }
 
 #[pymethods]
 impl PyScanRunExecution {
+    /// Returns the pending recovery a paused run offers, to settle with `scan_run_settle`.
+    ///
+    /// Present exactly when the run paused on Local Ignore recovery and retains a continuation
+    /// to answer with; `None` for every other run.
+    #[getter]
+    pub fn pending_recovery(&self, py: Python<'_>) -> Option<Py<PyScanRunPendingRecovery>> {
+        self.pending_recovery
+            .as_ref()
+            .map(|pending| pending.clone_ref(py))
+    }
+
     /// Returns a terminal result when core execution succeeded.
     #[getter]
     pub fn result(&self, py: Python<'_>) -> Option<Py<PyScanRunResult>> {
@@ -1185,9 +1214,9 @@ impl PyScanRunExecution {
     /// One field covers both payloads, describing whichever of `result` and `error`
     /// is present — the same call the C++ bridge's single execution envelope makes,
     /// and for the same reason: putting it on each payload would mean two fields
-    /// saying the same thing and two baseline rows rather than one. `scan_run_resume`
-    /// resolves the same envelope, so the initial run and the continuation resume
-    /// share this field rather than each growing their own.
+    /// saying the same thing and two baseline rows rather than one. `scan_run_settle`
+    /// publishes the same field on its settled envelope, so the initial run and the
+    /// settled run state themselves the same way.
     ///
     /// Empty only when this surface built an envelope for neither payload, which the
     /// two entry points do not do.
@@ -1199,7 +1228,7 @@ impl PyScanRunExecution {
     /// Returns what to ask the user, and which answers this run can honor.
     ///
     /// Present only when `result.status` is `"local_ignore_recovery_required"`, which is
-    /// also exactly when the run retains a continuation to answer with. `None` rather
+    /// also exactly when the run offers a pending recovery to answer with. `None` rather
     /// than an empty prompt, because a run with nothing to ask has no prompt rather than
     /// an empty one — and `None` is what a Python consumer already reads as "not
     /// present" everywhere else on this surface.
@@ -1209,6 +1238,45 @@ impl PyScanRunExecution {
     #[getter]
     pub fn recovery_prompt(&self) -> Option<PyScanRunRecoveryPrompt> {
         self.recovery_prompt.clone()
+    }
+}
+
+/// Envelope returned by `scan_run_settle`: the settled run, which can never ask again.
+///
+/// Deliberately has no `recovery_prompt` and no `pending_recovery`. A settled run carries no
+/// continuation, so a second recovery request is not something this type can express.
+#[pyclass(name = "ScanRunSettledExecution", skip_from_py_object)]
+pub struct PyScanRunSettledExecution {
+    result: Option<Py<PyScanRunResult>>,
+    error: Option<PyScanRunInfrastructureError>,
+    observer_error: Option<String>,
+    display_lines: Vec<PyScanRunDisplayLine>,
+}
+
+#[pymethods]
+impl PyScanRunSettledExecution {
+    /// Returns the settled terminal result when the resumed run produced one.
+    #[getter]
+    pub fn result(&self, py: Python<'_>) -> Option<Py<PyScanRunResult>> {
+        self.result.as_ref().map(|result| result.clone_ref(py))
+    }
+
+    /// Returns a typed infrastructure failure when the resumed run produced no result.
+    #[getter]
+    pub fn error(&self) -> Option<PyScanRunInfrastructureError> {
+        self.error.clone()
+    }
+
+    /// Returns the first adapter-only observer delivery failure while settling.
+    #[getter]
+    pub fn observer_error(&self) -> Option<String> {
+        self.observer_error.clone()
+    }
+
+    /// Returns what the settled run says, in Rust's words, for whichever payload is present.
+    #[getter]
+    pub fn display_lines(&self) -> Vec<PyScanRunDisplayLine> {
+        self.display_lines.clone()
     }
 }
 
@@ -1259,23 +1327,29 @@ fn setup_context_to_core(value: &PyScanRunSetupContext) -> CrashLogScanSetupCont
     }
 }
 
-/// Validates required path text at the adapter boundary.
-fn required_path(value: String, label: &str) -> PyResult<PathBuf> {
-    if value.trim().is_empty() {
+/// Validates required path text at the adapter boundary and builds the path from it trimmed.
+///
+/// Trimming matches the CXX and Node adapters, so the same text names the same folder in every
+/// binding. Raises `ValueError` when the text is blank.
+pub(crate) fn required_path(value: String, label: &str) -> PyResult<PathBuf> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
         return Err(PyValueError::new_err(format!("{label} must not be blank")));
     }
-    Ok(PathBuf::from(value))
+    Ok(PathBuf::from(trimmed))
 }
 
-/// Converts optional path text while treating blank binding sentinels as absent.
+/// Converts optional path text, trimmed like `required_path`, treating blank sentinels as absent.
 fn optional_path(value: Option<&str>) -> Option<PathBuf> {
     value
-        .filter(|path| !path.trim().is_empty())
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .map(PathBuf::from)
 }
 
-fn path_to_string(path: PathBuf) -> String {
-    path.to_string_lossy().into_owned()
+/// Renders a path for Python without failing on non-UTF-8 components.
+pub(crate) fn path_to_string(path: impl AsRef<Path>) -> String {
+    path.as_ref().to_string_lossy().into_owned()
 }
 
 /// Maps discovery while preserving all accepted, rejected, and searched paths.
@@ -1676,19 +1750,11 @@ fn installed_yaml_data_to_py(
     }
 }
 
-/// Maps the complete terminal result while preserving one opaque continuation object.
+/// Maps the complete terminal result.
+///
+/// A paused run's pending recovery is taken out before this runs (see [`success_execution`]);
+/// the projected result never carries a continuation.
 fn run_result_to_py(py: Python<'_>, value: contract::RunResult) -> PyResult<Py<PyScanRunResult>> {
-    let continuation = value
-        .continuation
-        .map(|continuation| {
-            Py::new(
-                py,
-                PyScanRunContinuation {
-                    inner: Arc::new(continuation),
-                },
-            )
-        })
-        .transpose()?;
     Py::new(
         py,
         PyScanRunResult {
@@ -1696,7 +1762,6 @@ fn run_result_to_py(py: Python<'_>, value: contract::RunResult) -> PyResult<Py<P
             discovery: value.discovery.map(discovery_to_py),
             setup: value.setup.map(setup_to_py),
             installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_to_py),
-            continuation,
             effective_concurrency: value.effective_concurrency,
             message: value.message,
             total: value.total,
@@ -1747,7 +1812,7 @@ fn log_event_to_py(value: contract::LogEvent) -> PyScanRunLogEvent {
 /// idiomatic Python and worse parity — a consumer reading two bindings would read
 /// the same segment two ways, and the taxonomy is frozen precisely so that cannot
 /// happen.
-fn display_lines_to_py(lines: &[DisplayLine]) -> Vec<PyScanRunDisplayLine> {
+pub(crate) fn display_lines_to_py(lines: &[DisplayLine]) -> Vec<PyScanRunDisplayLine> {
     lines
         .iter()
         .map(|line| PyScanRunDisplayLine {
@@ -1844,7 +1909,7 @@ fn recovery_prompt_to_py(prompt: &RecoveryPrompt) -> PyScanRunRecoveryPrompt {
 
 /// Maps a Rust-owned recovery decision onto its Python twin.
 ///
-/// The outbound half of the mapping whose inbound half is inlined in `scan_run_resume`.
+/// The outbound half of the mapping whose inbound half is inlined in `scan_run_settle`.
 /// Written separately because Rust cannot invert a `match`, and exhaustive so that a
 /// third variant added to the contract stops this from compiling rather than silently
 /// describing itself as one of the two that exist.
@@ -1863,18 +1928,19 @@ const fn local_ignore_recovery_decision_to_py(
 
 /// Builds the success envelope, rendering the run before projecting it.
 ///
-/// The order is load-bearing. `run_result_to_py` consumes the result — including
-/// moving its one-shot continuation into the opaque carrier — so the render has to
-/// happen while the Rust value is still borrowable. Rendering afterwards would have
-/// nothing left to render, and writing it that way does not compile.
+/// The order is load-bearing. `run_result_to_py` consumes the result, so the render has to
+/// happen while the Rust value is still borrowable. Rendering afterwards would have nothing
+/// left to render, and writing it that way does not compile.
 ///
-/// `scan_run_execute` and `scan_run_resume` both build this envelope, which is why
-/// one builder serves the initial run and the continuation resume alike.
+/// The pending recovery is taken out first, which is the presentation crate's documented
+/// ordering: rendering only borrows, and the continuation must not be left in a value that is
+/// about to be consumed. `pending_recovery` is then the only handle on the paused run.
 fn success_execution(
     py: Python<'_>,
-    result: contract::RunResult,
-    observer_error: Option<String>,
+    mut result: contract::RunResult,
 ) -> PyResult<PyScanRunExecution> {
+    let observer_error = observer_error_to_py(result.observer_delivery_failure.take());
+    let pending = take_pending_recovery(&mut result).map(Arc::new);
     let display_lines = display_lines_to_py(&render_run_result(&result));
     // Rendered only for the one status that pauses for an answer. Every other status has
     // nothing to ask, and a prompt attached to a finished run would invite a consumer to
@@ -1885,21 +1951,56 @@ fn success_execution(
                 result.installed_yaml_data.as_ref(),
             ))
         });
+    let pending_recovery = pending
+        .map(|inner| Py::new(py, PyScanRunPendingRecovery { inner }))
+        .transpose()?;
     Ok(PyScanRunExecution {
         result: Some(run_result_to_py(py, result)?),
         error: None,
         observer_error,
         display_lines,
         recovery_prompt,
+        pending_recovery,
+    })
+}
+
+/// Builds the envelope `scan_run_settle` returns from a settled run or its run-wide failure.
+///
+/// The settled result is widened into the run result shape only to share one projection; it
+/// carries no continuation, and this envelope has nowhere to put one.
+fn settled_execution(
+    py: Python<'_>,
+    outcome: Result<contract::SettledRunResult, contract::InfrastructureError>,
+) -> PyResult<PyScanRunSettledExecution> {
+    Ok(match outcome {
+        Ok(settled) => {
+            let mut result = contract::RunResult::from(settled);
+            let observer_error = observer_error_to_py(result.observer_delivery_failure.take());
+            let display_lines = display_lines_to_py(&render_run_result(&result));
+            PyScanRunSettledExecution {
+                result: Some(run_result_to_py(py, result)?),
+                error: None,
+                observer_error,
+                display_lines,
+            }
+        }
+        Err(mut error) => {
+            let display_lines = display_lines_to_py(&render_infrastructure_error(&error));
+            let observer_error = observer_error_to_py(error.observer_delivery_failure.take());
+            PyScanRunSettledExecution {
+                result: None,
+                error: Some(infrastructure_error_to_py(error)),
+                observer_error,
+                display_lines,
+            }
+        }
     })
 }
 
 /// Builds the failure envelope, rendering the failure before projecting it.
-fn failure_execution(
-    error: contract::InfrastructureError,
-    observer_error: Option<String>,
-) -> PyScanRunExecution {
+fn failure_execution(mut error: contract::InfrastructureError) -> PyScanRunExecution {
     let display_lines = display_lines_to_py(&render_infrastructure_error(&error));
+    let observer_error = observer_error_to_py(error.observer_delivery_failure.take());
     PyScanRunExecution {
         result: None,
         error: Some(infrastructure_error_to_py(error)),
@@ -1907,6 +2008,7 @@ fn failure_execution(
         display_lines,
         // A run that failed run-wide never reached a decision to pause on.
         recovery_prompt: None,
+        pending_recovery: None,
     }
 }
 
@@ -1988,46 +2090,50 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
     event
 }
 
-struct PyObserverAdapter {
-    callback: Py<PyAny>,
-    cancellation: contract::Cancellation,
-    cancel_on_error: bool,
-    delivery_error: Option<String>,
-    delivery_failed: bool,
+/// Projects the Rust-reported delivery failure onto the envelope's `observer_error` message.
+fn observer_error_to_py(failure: Option<contract::ObserverDeliveryFailure>) -> Option<String> {
+    failure.map(|failure| failure.message)
 }
 
-impl PyObserverAdapter {
-    /// Records only the first adapter delivery failure and optionally requests cancellation.
-    fn record_failure(&mut self, message: String) {
-        self.delivery_failed = true;
-        if self.delivery_error.is_none() {
-            self.delivery_error = Some(message);
-        }
-        if self.cancel_on_error {
-            self.cancellation.cancel();
-        }
+/// Maps the binding's `cancel_on_observer_error` flag onto the Rust observer failure policy.
+const fn observer_failure_policy(
+    cancel_on_observer_error: bool,
+) -> contract::ObserverFailurePolicy {
+    if cancel_on_observer_error {
+        contract::ObserverFailurePolicy::CancelRun
+    } else {
+        contract::ObserverFailurePolicy::ContinueRun
     }
+}
+
+/// Delivers Rust events to one Python callable and reports an exception as a failed delivery.
+///
+/// Holds no failure state: Rust stops delivering after the first failure, applies the policy,
+/// and reports the failure in the result.
+struct PyObserverAdapter {
+    callback: Py<PyAny>,
 }
 
 impl contract::Observer for PyObserverAdapter {
     /// Reacquires the GIL for exactly one serialized callback delivery.
-    fn on_event(&mut self, event: contract::Event) {
-        if self.delivery_failed {
-            return;
-        }
-
-        let result = Python::attach(|py| self.callback.call1(py, (event_to_py(event),)));
-        if let Err(error) = result {
-            self.record_failure(error.to_string());
-        }
+    fn on_event(
+        &mut self,
+        event: contract::Event,
+    ) -> Result<(), contract::ObserverDeliveryFailure> {
+        Python::attach(|py| self.callback.call1(py, (event_to_py(event),)))
+            .map(|_| ())
+            .map_err(|error| contract::ObserverDeliveryFailure::new(error.to_string()))
     }
 }
 
 /// Executes one final-contract request with optional serialized observation.
 ///
-/// Observer exceptions are adapter-only data. Delivery stops after the first
-/// exception, while `cancel_on_observer_error` determines whether the adapter
-/// also requests safe stopping through the separate cancellation control.
+/// An observer exception is a failed delivery: Rust stops delivering after the
+/// first one and reports it as `observer_error`. `cancel_on_observer_error` is the
+/// observer failure policy Rust applies: `True` cancels the run at the failure,
+/// `False` (the default) lets it finish. A failure before the run pauses for Local
+/// Ignore recovery abandons that recovery either way, so such a run finishes
+/// cancelled with no `pending_recovery` and no filesystem work.
 #[pyfunction]
 #[pyo3(signature = (request, cancellation, observer=None, cancel_on_observer_error=false))]
 pub fn scan_run_execute(
@@ -2040,14 +2146,8 @@ pub fn scan_run_execute(
     let request = request.inner.clone();
     let cancellation = cancellation.inner.clone();
     let result = without_gil_block_on(py, || async move {
-        let mut observer = observer.map(|callback| PyObserverAdapter {
-            callback,
-            cancellation: cancellation.clone(),
-            cancel_on_error: cancel_on_observer_error,
-            delivery_error: None,
-            delivery_failed: false,
-        });
-        let result = contract::execute_in_scopes(
+        let mut observer = observer.map(|callback| PyObserverAdapter { callback });
+        contract::execute_in_scopes(
             request,
             crate::classic_scanlog::SCANLOG_VERSION_REGISTRY_SCOPE.clone(),
             crate::classic_scanlog::SCANLOG_HASH_SCOPE.clone(),
@@ -2056,16 +2156,14 @@ pub fn scan_run_execute(
             observer
                 .as_mut()
                 .map(|adapter| adapter as &mut dyn contract::Observer),
+            observer_failure_policy(cancel_on_observer_error),
         )
-        .await;
-        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
-        (result, observer_error)
+        .await
     });
 
-    let (result, observer_error) = result;
     match result {
-        Ok(result) => success_execution(py, result, observer_error),
-        Err(error) => Ok(failure_execution(error, observer_error)),
+        Ok(result) => success_execution(py, result),
+        Err(error) => Ok(failure_execution(error)),
     }
 }
 
@@ -2204,128 +2302,59 @@ fn scan_run_resume_error_body(
     }
 }
 
-/// Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
+/// Settles one paused Crash Log Scan Run once, with a recovery decision or with none.
 ///
-/// The GIL is released while the shared runtime executes. Sequential or concurrent replay raises
-/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`. Reset conflict,
-/// backup failure, replacement failure, and replacement durability uncertainty raise dedicated
-/// typed exceptions with applicable identity, path, stage, and recovery-receipt metadata. Resumed
-/// infrastructure failures retain the same execution envelope as [`scan_run_execute`].
+/// `decision` resumes the same discovered Crash Logs without rediscovery; `None` abandons the
+/// run, cancelling its own control and finishing cancelled after discovery with no filesystem
+/// work. If `pending_recovery.cancellation_requested` is already `True`, either form finishes
+/// cancelled after discovery. The GIL is released while the shared runtime executes, and
+/// `cancel_on_observer_error` is the observer failure policy Rust applies to the run's own
+/// control; `observer_error` reports the failure either way.
+///
+/// Abandonment is modelled as the absence of a decision rather than as a third variant, because
+/// that is what it is (ADR-0007): [`contract::LocalIgnoreRecoveryDecision`] deliberately carries
+/// none, and adding one would reshape a type crossing five binding surfaces.
+///
+/// Returns a [`PyScanRunSettledExecution`], which has no continuation and no pending recovery.
+/// Sequential or concurrent replay raises [`ScanRunContinuationConsumedError`] with code
+/// `scan_run_continuation_consumed`; Reset To Default conflict, backup failure, replacement
+/// failure, and replacement durability uncertainty raise dedicated typed exceptions with
+/// applicable identity, path, stage, and recovery-receipt metadata. A run-wide failure of the
+/// resumed run resolves as the envelope's `error`.
 #[pyfunction]
-#[pyo3(signature = (continuation, decision, cancellation, observer=None, cancel_on_observer_error=false))]
-pub fn scan_run_resume(
+#[pyo3(signature = (pending_recovery, decision=None, observer=None, cancel_on_observer_error=false))]
+pub fn scan_run_settle(
     py: Python<'_>,
-    continuation: PyRef<'_, PyScanRunContinuation>,
-    decision: PyScanRunLocalIgnoreRecoveryDecision,
-    cancellation: PyRef<'_, PyScanRunCancellation>,
+    pending_recovery: PyRef<'_, PyScanRunPendingRecovery>,
+    decision: Option<PyScanRunLocalIgnoreRecoveryDecision>,
     observer: Option<Py<PyAny>>,
     cancel_on_observer_error: bool,
-) -> PyResult<PyScanRunExecution> {
-    let decision = match decision {
+) -> PyResult<PyScanRunSettledExecution> {
+    let decision = decision.map(|decision| match decision {
         PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
         }
         PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault => {
             contract::LocalIgnoreRecoveryDecision::ResetToDefault
         }
-    };
-    claim_continuation(
-        py,
-        Arc::clone(&continuation.inner),
-        Some(decision),
-        cancellation.inner.clone(),
-        observer,
-        cancel_on_observer_error,
-    )
-}
-
-/// Abandons one retained Crash Log Scan Run without applying either recovery decision.
-///
-/// Requests cancellation on `cancellation` and then claims the continuation, returning the ordinary
-/// post-discovery cancelled execution. No backup is taken, nothing is published, and the malformed
-/// Local Ignore file is left exactly as it was. Prefer this over cancelling and then calling
-/// [`scan_run_resume`] with a placeholder decision: that sequence is what this replaces, and getting
-/// its ordering wrong spends the one-shot continuation on a real recovery attempt.
-///
-/// `cancellation` is left cancelled afterwards, which is what abandoning the run means. The GIL is
-/// released while the shared runtime executes. Sequential or concurrent replay raises
-/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`, exactly as
-/// [`scan_run_resume`] does. The reset and infrastructure failures resume can raise are unreachable
-/// here, because cancellation short-circuits ahead of every stage that produces them.
-#[pyfunction]
-#[pyo3(signature = (continuation, cancellation, observer=None, cancel_on_observer_error=false))]
-pub fn scan_run_abandon(
-    py: Python<'_>,
-    continuation: PyRef<'_, PyScanRunContinuation>,
-    cancellation: PyRef<'_, PyScanRunCancellation>,
-    observer: Option<Py<PyAny>>,
-    cancel_on_observer_error: bool,
-) -> PyResult<PyScanRunExecution> {
-    claim_continuation(
-        py,
-        Arc::clone(&continuation.inner),
-        None,
-        cancellation.inner.clone(),
-        observer,
-        cancel_on_observer_error,
-    )
-}
-
-/// Claims a continuation once on the shared runtime and projects its outcome to Python.
-///
-/// `decision` is `None` to abandon the run. Abandonment is modelled as the absence of a decision
-/// rather than as a third variant, because [`contract::LocalIgnoreRecoveryDecision`] deliberately
-/// carries none — adding one would reshape a type crossing five binding surfaces. Sharing one body
-/// keeps `scan_run_abandon` and [`scan_run_resume`] on the same observer adapter, the same GIL
-/// release, and the same exception mapping, so the two cannot drift.
-fn claim_continuation(
-    py: Python<'_>,
-    continuation: Arc<contract::CrashLogScanRunContinuation>,
-    decision: Option<contract::LocalIgnoreRecoveryDecision>,
-    cancellation: contract::Cancellation,
-    observer: Option<Py<PyAny>>,
-    cancel_on_observer_error: bool,
-) -> PyResult<PyScanRunExecution> {
-    let (result, observer_error) = without_gil_block_on(py, || async move {
-        let mut observer = observer.map(|callback| PyObserverAdapter {
-            callback,
-            cancellation: cancellation.clone(),
-            cancel_on_error: cancel_on_observer_error,
-            delivery_error: None,
-            delivery_failed: false,
-        });
-        let result = match decision {
-            Some(decision) => {
-                continuation
-                    .resume(
-                        decision,
-                        &cancellation,
-                        observer
-                            .as_mut()
-                            .map(|adapter| adapter as &mut dyn contract::Observer),
-                    )
-                    .await
-            }
-            None => {
-                continuation
-                    .abandon(
-                        &cancellation,
-                        observer
-                            .as_mut()
-                            .map(|adapter| adapter as &mut dyn contract::Observer),
-                    )
-                    .await
-            }
-        };
-        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
-        (result, observer_error)
+    });
+    let pending = Arc::clone(&pending_recovery.inner);
+    let result = without_gil_block_on(py, || async move {
+        let mut observer = observer.map(|callback| PyObserverAdapter { callback });
+        pending
+            .settle(
+                decision,
+                observer
+                    .as_mut()
+                    .map(|adapter| adapter as &mut dyn contract::Observer),
+                observer_failure_policy(cancel_on_observer_error),
+            )
+            .await
     });
 
     match result {
-        Ok(result) => success_execution(py, result, observer_error),
-        Err(contract::ResumeError::Infrastructure(error)) => {
-            Ok(failure_execution(error, observer_error))
-        }
+        Ok(settled) => settled_execution(py, Ok(settled)),
+        Err(contract::ResumeError::Infrastructure(error)) => settled_execution(py, Err(error)),
         Err(error) => Err(scan_run_resume_error_to_py(py, error)),
     }
 }

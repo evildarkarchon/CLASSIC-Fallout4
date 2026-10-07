@@ -98,16 +98,17 @@ TEST_CASE("App update rejects an invalid working-directory fallback",
         fs::temp_directory_path() / ("classic-cli-app-update-invalid-" + unique_suffix);
     fs::create_directories(root);
 
-    int exit_code = -1;
-    {
-        const ScopedCurrentPath cwd(root);
-        exit_code = run_check_app_update(CliArgs{});
-    }
+    // The working directory is the only search start, so the build folder this
+    // test binary runs from cannot supply a CLASSIC Data match.
+    const int exit_code = run_check_app_update(CliArgs{}, CliProcessLocation{"", root.string()});
+    const bool settings_created = fs::exists(root / "CLASSIC Settings.yaml");
 
     std::error_code ec;
     fs::remove_all(root, ec);
 
-    // The invalid test version would fail if root resolution reached the
-    // settings and notification pipeline instead of failing closed.
-    REQUIRE(exit_code == 0);
+    // A folder without CLASSIC Data is not an installation: the check fails
+    // with "CLASSIC Data not found" instead of quietly reporting a disabled
+    // policy, and never reaches User Settings or the notification pipeline.
+    REQUIRE(exit_code == kCliInstallationRootNotFoundExitCode);
+    REQUIRE_FALSE(settings_created);
 }

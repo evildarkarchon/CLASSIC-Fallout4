@@ -568,6 +568,155 @@ class ScanRunRequest:
     ) -> ScanRunRequest: ...
 
 
+class ScanRunLaunchError(ValueError):
+    """A Crash Log Scan Launch could not produce a request; each launch error kind is a subclass."""
+
+
+class ScanRunLaunchTargetedWithoutInputsError(ScanRunLaunchError):
+    """A Targeted Crash Log Scan Launch named no inputs."""
+
+
+class ScanRunLaunchXseLogInspectError(ScanRunLaunchError):
+    """FCX Mode is on and the XSE log location could not be inspected (not mere absence)."""
+
+
+class ScanRunLaunchOverrides:
+    """Optional per-run values that win over saved User Settings for one launch.
+
+    ``game_version`` takes a User Settings game-version token. ``max_concurrent=0``
+    explicitly requests adaptive concurrency, overriding a saved limit.
+    ``show_formid_values``, ``simplify_logs`` and ``fcx_mode`` are supplied-as-on:
+    ``True`` turns the option on for this run, ``False`` keeps the saved value.
+    ``no_scan_path=True`` scans no custom scan folder for this run, withholding a saved
+    one (a cleared custom scan folder input).
+    """
+
+    def __init__(
+            self,
+            game: GameId | None = None,
+            game_version: str | None = None,
+            scan_path: str | None = None,
+            max_concurrent: int | None = None,
+            show_formid_values: bool = False,
+            simplify_logs: bool = False,
+            fcx_mode: bool = False,
+            no_scan_path: bool = False,
+    ) -> None:
+        """Create overrides; every argument is optional and absent values keep the saved ones.
+
+        Args:
+            game: Game to scan instead of the saved managed game.
+            game_version: User Settings game-version token to use instead of the saved one.
+            scan_path: Folder to scan as the custom scan folder instead of the saved one.
+            max_concurrent: Max Concurrent Scans for this run; ``0`` requests adaptive.
+            show_formid_values: ``True`` turns FormID value lookup on for this run.
+            simplify_logs: ``True`` turns simplify logs on for this run.
+            fcx_mode: ``True`` turns FCX Mode on for this run.
+            no_scan_path: ``True`` scans no custom scan folder, whatever is saved.
+
+        Raises:
+            TypeError: ``game`` is not a ``classic_shared.GameId``.
+            ValueError: ``game_version`` is not a known token, ``scan_path`` is blank, or
+                ``scan_path`` is combined with ``no_scan_path=True``.
+
+        """
+
+
+class ScanRunLaunchDiagnostic:
+    """One non-fatal launch diagnostic; the launch still produced a scannable request."""
+
+    kind: Literal[
+        "user_settings",
+        "game_version_not_applied",
+        "fcx_mode_not_applied",
+        "custom_scan_folder_not_applied",
+        "setup_folders_not_applied",
+    ]
+    code: str
+    message: str
+
+
+class ScanRunLaunch:
+    """The Crash Log Scan Run request a launch built, with its launch diagnostics.
+
+    Launching opens User Settings read-only and never writes them. A Standard scan's
+    base folder is always the Installation Root. Degraded User Settings still produce a
+    launch, with their diagnostics. Scanning a game other than the managed game withholds
+    the managed game's saved game version, FCX Mode, custom scan folder and setup folders,
+    reporting each one withheld. With FCX Mode on, ``setup_context`` carries the game
+    folder, documents folder, game executable and XSE log; missing folders are not an
+    error. Every launch raises :class:`ScanRunLaunchXseLogInspectError` when FCX Mode is
+    on and the XSE log location cannot be inspected.
+    """
+
+    intent: Literal["standard", "targeted"]
+    game: GameId
+    game_version: str
+    show_formid_values: bool
+    simplify_logs: bool
+    formid_database_paths: list[str]
+    unsolved_logs_destination: str | None
+    max_concurrent: int | None
+    base_directory: str | None
+    custom_scan_directory: str | None
+    configured_documents_root: str | None
+    unsolved_logs: Literal["leave_in_place", "move_to_configured_or_default", "move_to_custom"] | None
+    targeted_inputs: list[str] | None
+    fcx_enabled: bool
+    setup_context: ScanRunSetupContext | None
+    diagnostics: list[ScanRunLaunchDiagnostic]
+    display_lines: list[ScanRunDisplayLine]
+    """The diagnostics rendered as Display Content, one line per diagnostic in order."""
+
+    @staticmethod
+    def standard(
+            installation_root: str,
+            overrides: ScanRunLaunchOverrides | None = None,
+    ) -> ScanRunLaunch:
+        """Launch a Standard Crash Log Scan from saved User Settings and ``overrides``.
+
+        Args:
+            installation_root: The Installation Root; also the Standard base folder.
+            overrides: Per-run values that win over the saved ones, or ``None``.
+
+        Returns:
+            The launched request and its diagnostics.
+
+        Raises:
+            ValueError: ``installation_root`` is blank.
+            ScanRunLaunchXseLogInspectError: FCX Mode is on and the XSE log location
+                cannot be inspected for a reason other than absence.
+
+        """
+
+    @staticmethod
+    def targeted(
+            installation_root: str,
+            inputs: list[str],
+            overrides: ScanRunLaunchOverrides | None = None,
+    ) -> ScanRunLaunch:
+        """Launch a Targeted Crash Log Scan of exactly ``inputs``, in order.
+
+        Args:
+            installation_root: The Installation Root whose User Settings apply.
+            inputs: The Crash Log files or folders to scan, in order.
+            overrides: Per-run values that win over the saved ones, or ``None``.
+
+        Returns:
+            The launched request and its diagnostics.
+
+        Raises:
+            ValueError: ``installation_root`` is blank.
+            ScanRunLaunchTargetedWithoutInputsError: ``inputs`` is empty.
+            ScanRunLaunchXseLogInspectError: FCX Mode is on and the XSE log location
+                cannot be inspected for a reason other than absence.
+
+        """
+
+    def request(self) -> ScanRunRequest:
+        """Return an executable copy of the launched request for ``scan_run_execute``."""
+
+
 class ScanRunCancellation:
     """Opaque monotonic cancellation control for one scan run."""
 
@@ -721,10 +870,6 @@ class ScanRunLocalIgnoreRecoveryDecision:
     ResetToDefault: ScanRunLocalIgnoreRecoveryDecision
 
 
-class ScanRunContinuation:
-    """Opaque process-local carrier for one paused Crash Log Scan Run."""
-
-
 class ScanRunContinuationConsumedError(RuntimeError):
     """Raised when a recovery continuation is consumed more than once.
 
@@ -808,7 +953,6 @@ class ScanRunResult:
     discovery: ScanRunDiscoveryResult | None
     setup: ScanRunSetupResult | None
     installed_yaml_data: ScanRunInstalledYamlDataRunData | None
-    continuation: ScanRunContinuation | None
     effective_concurrency: int | None
     message: str | None
     total: int
@@ -871,7 +1015,7 @@ class ScanRunRecoveryDecisionDescription:
     continuation, so the user is left with no scan and no second attempt.
 
     ``decision`` is the enum rather than a token, unlike every other tag this
-    surface publishes on an output, because ``scan_run_resume`` takes the enum:
+    surface publishes on an output, because ``scan_run_settle`` takes the enum:
     a consumer answers with exactly what it was offered.
     """
 
@@ -890,7 +1034,7 @@ class ScanRunRecoveryPrompt:
     themselves are not.
 
     Backing out appears nowhere here: it is spelled as the absence of a decision
-    through ``scan_run_abandon``.
+    when settling through ``scan_run_settle``.
     """
 
     lines: list[ScanRunDisplayLine]
@@ -926,13 +1070,44 @@ class ScanRunEvent:
 
 
 class ScanRunExecution:
-    """Final operation envelope with adapter-only observer failure data."""
+    """Final operation envelope.
+
+    ``observer_error`` is the first observer delivery failure Rust reported for
+    the run, whether or not ``cancel_on_observer_error`` asked Rust to cancel.
+    """
 
     result: ScanRunResult | None
     error: ScanRunInfrastructureError | None
     observer_error: str | None
     display_lines: list[ScanRunDisplayLine]
     recovery_prompt: ScanRunRecoveryPrompt | None
+    pending_recovery: ScanRunPendingRecovery | None
+
+
+class ScanRunPendingRecovery:
+    """A paused Crash Log Scan Run waiting to be settled exactly once.
+
+    Bundles the single-use continuation with the recovery prompt Rust rendered
+    and whether the run's cancellation was already requested. Settle it with
+    :func:`scan_run_settle`. When ``cancellation_requested`` is ``True``, do not
+    prompt: settle with no decision.
+    """
+
+    prompt: ScanRunRecoveryPrompt
+    cancellation_requested: bool
+
+
+class ScanRunSettledExecution:
+    """Envelope returned by :func:`scan_run_settle`.
+
+    A settled run carries no continuation, so this envelope has no
+    ``recovery_prompt`` and no ``pending_recovery``.
+    """
+
+    result: ScanRunResult | None
+    error: ScanRunInfrastructureError | None
+    observer_error: str | None
+    display_lines: list[ScanRunDisplayLine]
 
 
 def scan_run_execute(
@@ -941,37 +1116,34 @@ def scan_run_execute(
         observer: Callable[[ScanRunEvent], None] | None = None,
         cancel_on_observer_error: bool = False,
 ) -> ScanRunExecution:
-    """Execute one final-contract Crash Log Scan Run."""
+    """Execute one final-contract Crash Log Scan Run.
+
+    An exception raised by ``observer`` is a failed delivery: Rust delivers no
+    further events to it and reports the failure as ``observer_error``.
+    ``cancel_on_observer_error`` is the observer failure policy Rust applies:
+    ``True`` cancels the run at the failure, ``False`` lets it finish. A failure
+    before the run pauses for Local Ignore recovery abandons that recovery either
+    way, so the run finishes cancelled with no ``pending_recovery`` and no
+    filesystem work.
+    """
 
 
-def scan_run_resume(
-        continuation: ScanRunContinuation,
-        decision: ScanRunLocalIgnoreRecoveryDecision,
-        cancellation: ScanRunCancellation,
+def scan_run_settle(
+        pending_recovery: ScanRunPendingRecovery,
+        decision: ScanRunLocalIgnoreRecoveryDecision | None = None,
         observer: Callable[[ScanRunEvent], None] | None = None,
         cancel_on_observer_error: bool = False,
-) -> ScanRunExecution:
-    """Resume retained work without repeating discovery or YAML Data selection."""
+) -> ScanRunSettledExecution:
+    """Settle one paused run once, with a recovery decision or with none.
 
+    A decision resumes the same discovered Crash Logs without rediscovery. No
+    decision abandons the run: it cancels the run's own control and finishes
+    cancelled after discovery with no filesystem work. Settling is the only way
+    to answer a paused run. Replay raises
+    :class:`ScanRunContinuationConsumedError`.
 
-def scan_run_abandon(
-        continuation: ScanRunContinuation,
-        cancellation: ScanRunCancellation,
-        observer: Callable[[ScanRunEvent], None] | None = None,
-        cancel_on_observer_error: bool = False,
-) -> ScanRunExecution:
-    """Abandon retained work without applying either recovery decision.
-
-    Requests cancellation on ``cancellation`` and then claims the continuation,
-    returning the ordinary post-discovery cancelled execution. Nothing on disk
-    is touched. Prefer this over cancelling and then calling
-    :func:`scan_run_resume` with a placeholder decision; that sequence is what
-    this replaces, and getting its ordering wrong spends the one-shot
-    continuation on a real recovery attempt.
-
-    ``cancellation`` is left cancelled afterwards. Replay raises
-    :class:`ScanRunContinuationConsumedError`, exactly as
-    :func:`scan_run_resume` does.
+    ``cancel_on_observer_error`` is the observer failure policy Rust applies to
+    the settled run, exactly as for :func:`scan_run_execute`.
     """
 
 

@@ -30,12 +30,11 @@ import {
     parseCrashgenVersion,
     parseLogSegments,
     parseXseLog,
-    scanRunAbandon,
     ScanRunCancellation,
     scanRunExecute,
     scanRunInfrastructureErrorStageLabel,
     ScanRunRequest,
-    scanRunResume,
+    scanRunSettle,
     ScanRunUnsolvedLogs,
 } from "../index.js";
 
@@ -250,6 +249,16 @@ const requireScanRunSuccess = (execution: ScanRunExecution): ScanRunSuccess => {
         throw new Error(`Expected scan success, received ${execution.error.stage}`);
     }
     return execution;
+};
+
+type ScanRunSettlement = Awaited<ReturnType<typeof scanRunSettle>>;
+type ScanRunSettledSuccess = Extract<ScanRunSettlement, { result: unknown }>;
+
+const requireScanRunSettled = (settlement: ScanRunSettlement): ScanRunSettledSuccess => {
+    if (!("result" in settlement)) {
+        throw new Error(`Expected settled success, received ${settlement.error.stage}`);
+    }
+    return settlement;
 };
 
 const requireScanRunFailure = (execution: ScanRunExecution): ScanRunFailure => {
@@ -663,7 +672,7 @@ describe("final Crash Log Scan Run contract", () => {
         }
     });
 
-    test("shared Local Ignore recovery continuation retains snapshots and rejects replay", async () => {
+    test("shared Local Ignore pending recovery retains snapshots and rejects replay", async () => {
         const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
         const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-recovery");
         const crashLog = writeSharedScanRunLog(root, fixture.input);
@@ -712,33 +721,34 @@ describe("final Crash Log Scan Run contract", () => {
                 JsScanRunInstalledYamlDataDiagnosticKind.Parse,
             );
             expect(initialEvents.map((event) => event.kind)).toEqual(["discovery_completed"]);
-            const continuation = initial.continuation;
-            expect(continuation).toBeDefined();
+            const pendingRecovery = initialEnvelope.pendingRecovery;
+            expect(pendingRecovery).toBeDefined();
+            // The separate resume and abandon entry points and the continuation field are gone
+            // (ADR-0009): settling the pending recovery is the only way to answer the pause.
+            expect("continuation" in initial).toBe(false);
 
             writeFileSync(
                 join(root, "CLASSIC Data", "databases", "CLASSIC Main.yaml"),
                 "invalid: [unterminated",
             );
             const resumedEvents: JsScanRunEvent[] = [];
-            const resumedEnvelope = requireScanRunSuccess(
-                await scanRunResume(
-                    continuation!,
+            const resumedEnvelope = requireScanRunSettled(
+                await scanRunSettle(
+                    pendingRecovery!,
                     JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
-                    new ScanRunCancellation(),
                     resumedEvents.push.bind(resumedEvents),
                 ),
             );
             const resumed = resumedEnvelope.result;
 
-            // A resumed run says what it did, in the same words an unpaused one would.
-            // `scanRunExecute` and `scanRunResume` resolve the same envelope, so this is
-            // the one field covering both — but only a real resume proves it arrives.
+            // A settled run says what it did, in the same words an unpaused one would; only a
+            // real settlement proves the field arrives.
             expectWellFormedDisplayLines(resumedEnvelope.displayLines);
             for (const event of resumedEvents) {
                 expectWellFormedDisplayLines(event.displayLines);
             }
             // The decision has been made, so there is nothing left to ask.
-            expect(resumedEnvelope.recoveryPrompt).toBeUndefined();
+            expect("recoveryPrompt" in resumedEnvelope).toBe(false);
 
             expect(resumed.status).toBe("completed");
             expect(resumed.discovery).toEqual(initial.discovery);
@@ -754,19 +764,17 @@ describe("final Crash Log Scan Run contract", () => {
             expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
 
             await expect(
-                scanRunResume(
-                    continuation!,
+                scanRunSettle(
+                    pendingRecovery!,
                     JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
-                    new ScanRunCancellation(),
                 ),
             ).rejects.toMatchObject({code: "scan_run_continuation_consumed"});
 
-            // A rejected resume carries what it says alongside its stable code, so a
+            // A rejected settlement carries what it says alongside its stable code, so a
             // consumer reporting the replay does not have to write the sentence.
-            const replay = await scanRunResume(
-                continuation!,
+            const replay = await scanRunSettle(
+                pendingRecovery!,
                 JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
-                new ScanRunCancellation(),
             ).catch((error: unknown) => error as { displayLines: JsScanRunDisplayLine[] });
             expectWellFormedDisplayLines(replay.displayLines);
         } finally {
@@ -774,64 +782,191 @@ describe("final Crash Log Scan Run contract", () => {
         }
     });
 
-    test("abandoning a paused run returns the cancelled result and touches nothing", async () => {
+    /** Pauses one shared-fixture run on a malformed Local Ignore under the caller's control. */
+    const pausedRecovery = async (name: string, cancellation: ScanRunCancellation) => {
         const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
-        const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-abandon");
+        const root = writeSharedScanRunDataRoot(name);
         const crashLog = writeSharedScanRunLog(root, fixture.input);
         const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
-        const request = ScanRunRequest.targeted(scanRunConfiguration(root), {inputs: [crashLog]});
+        writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+        const envelope = requireScanRunSuccess(
+            await scanRunExecute(
+                ScanRunRequest.targeted(scanRunConfiguration(root), {inputs: [crashLog]}),
+                cancellation,
+            ),
+        );
+        return {fixture, root, ignorePath, envelope};
+    };
 
+    test("a paused run offers one pending recovery carrying its rendered prompt", async () => {
+        const cancellation = new ScanRunCancellation();
+        const {root, envelope} = await pausedRecovery("classic-node-scan-run-pending", cancellation);
         try {
-            writeFileSync(ignorePath, fixture.malformedLocalIgnore);
-            const initial = requireScanRunSuccess(
-                await scanRunExecute(request, new ScanRunCancellation()),
-            ).result;
-            expect(initial.status).toBe("local_ignore_recovery_required");
-            const continuation = initial.continuation;
-            expect(continuation).toBeDefined();
+            expect(envelope.result.status).toBe("local_ignore_recovery_required");
+            const pending = envelope.pendingRecovery;
+            expect(pending).toBeDefined();
+            // The same Display Content the envelope carries, rendered by Rust once.
+            expect(pending!.prompt).toEqual(envelope.recoveryPrompt!);
+            expect(pending!.cancellationRequested).toBe(false);
+            // Read live from the run's own control, not copied when the run paused.
+            cancellation.cancel();
+            expect(pending!.cancellationRequested).toBe(true);
+        } finally {
+            rmSync(root, {recursive: true, force: true});
+        }
+    });
 
-            // One control spans the paused run and its abandonment, as a real frontend's does.
-            // `scanRunAbandon` is what cancels it; nothing here asks for cancellation first.
-            const cancellation = new ScanRunCancellation();
-            expect(cancellation.isCancelled).toBe(false);
-            const abandonedEvents: JsScanRunEvent[] = [];
-            const abandonedEnvelope = requireScanRunSuccess(
-                await scanRunAbandon(
-                    continuation!,
-                    cancellation,
-                    abandonedEvents.push.bind(abandonedEvents),
+    test("a run that did not pause offers no pending recovery", async () => {
+        const root = writeSharedScanRunDataRoot("classic-node-scan-run-no-pending");
+        const crashLog = writeSharedScanRunLog(
+            root,
+            SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData.input,
+        );
+        try {
+            const envelope = requireScanRunSuccess(
+                await scanRunExecute(
+                    ScanRunRequest.targeted(scanRunConfiguration(root), {inputs: [crashLog]}),
+                    new ScanRunCancellation(),
                 ),
             );
-            const abandoned = abandonedEnvelope.result;
+            expect(envelope.result.status).toBe("completed");
+            expect(envelope.pendingRecovery).toBeUndefined();
+        } finally {
+            rmSync(root, {recursive: true, force: true});
+        }
+    });
 
-            expect(abandoned.status).toBe("cancelled");
-            expect(abandoned.cancelled).toBe(abandoned.total);
-            expect(abandoned.discovery).toEqual(initial.discovery);
-            expect(abandoned.logs.every((log) => log.disposition === "cancelled_before_start")).toBe(true);
+    test("settling with Proceed Without Ignore resumes the same run once", async () => {
+        const {fixture, root, ignorePath, envelope} = await pausedRecovery(
+            "classic-node-scan-run-settle-proceed",
+            new ScanRunCancellation(),
+        );
+        try {
+            const events: JsScanRunEvent[] = [];
+            const settled = requireScanRunSettled(
+                await scanRunSettle(
+                    envelope.pendingRecovery!,
+                    JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+                    events.push.bind(events),
+                ),
+            );
+
+            expect(settled.result.status).toBe("completed");
+            expect(settled.result.discovery).toEqual(envelope.result.discovery);
+            expect(settled.result.installedYamlData?.localIgnoreState).toBe(
+                JsScanRunLocalIgnoreState.ProceedWithoutIgnore,
+            );
+            expect(events.some((event) => event.kind === "discovery_completed")).toBe(false);
+            expectWellFormedDisplayLines(settled.displayLines);
+            // A settled run has nothing left to ask and nothing left to settle.
+            expect("pendingRecovery" in settled).toBe(false);
+            expect("recoveryPrompt" in settled).toBe(false);
+            expect("continuation" in settled.result).toBe(false);
+            expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+
+            await expect(
+                scanRunSettle(
+                    envelope.pendingRecovery!,
+                    JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+                ),
+            ).rejects.toMatchObject({code: "scan_run_continuation_consumed"});
+        } finally {
+            rmSync(root, {recursive: true, force: true});
+        }
+    });
+
+    test("settling with Reset To Default repairs Local Ignore and resumes the same run", async () => {
+        const {fixture, root, ignorePath, envelope} = await pausedRecovery(
+            "classic-node-scan-run-settle-reset",
+            new ScanRunCancellation(),
+        );
+        try {
+            const settled = requireScanRunSettled(
+                await scanRunSettle(
+                    envelope.pendingRecovery!,
+                    JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+                ),
+            );
+
+            expect(settled.result.status).toBe("completed");
+            expect(settled.result.discovery).toEqual(envelope.result.discovery);
+            const metadata = settled.result.installedYamlData?.localIgnoreReset;
+            expect(metadata).toBeDefined();
+            expect(readFileSync(metadata!.backupPath, "utf8")).toBe(fixture.malformedLocalIgnore);
+            expect(readFileSync(ignorePath, "utf8")).not.toBe(fixture.malformedLocalIgnore);
+            await expect(scanRunSettle(envelope.pendingRecovery!)).rejects.toMatchObject({
+                code: fixture.resetOutcomes.consumedCode,
+            });
+        } finally {
+            rmSync(root, {recursive: true, force: true});
+        }
+    });
+
+    test("settling without a decision abandons the run on its own control and touches nothing", async () => {
+        const cancellation = new ScanRunCancellation();
+        const {fixture, root, ignorePath, envelope} = await pausedRecovery(
+            "classic-node-scan-run-settle-none",
+            cancellation,
+        );
+        try {
+            const events: JsScanRunEvent[] = [];
+            const settled = requireScanRunSettled(
+                await scanRunSettle(envelope.pendingRecovery!, undefined, events.push.bind(events)),
+            );
+
+            expect(settled.result.status).toBe("cancelled");
+            expect(settled.result.cancelled).toBe(settled.result.total);
+            expect(settled.result.discovery).toEqual(envelope.result.discovery);
+            expect(settled.result.logs.every((log) => log.disposition === "cancelled_before_start")).toBe(true);
             // `autoscanReport` is optional on this surface, so an unwritten report is absent rather
             // than null. Nothing was analyzed, so nothing carries one.
-            expect(abandoned.logs.every((log) => log.autoscanReport === undefined)).toBe(true);
-            expect(abandonedEvents).toEqual([]);
+            expect(settled.result.logs.every((log) => log.autoscanReport === undefined)).toBe(true);
+            expect(events).toEqual([]);
+            // No decision cancels the control the run was started with.
             expect(cancellation.isCancelled).toBe(true);
             // A cancelled run still describes itself, so a consumer never writes the sentence.
-            expectWellFormedDisplayLines(abandonedEnvelope.displayLines);
+            expectWellFormedDisplayLines(settled.displayLines);
             // Nothing on disk moved: the malformed file the user was asked about is byte-identical
             // and no backup directory was created, because no recovery stage ever ran.
             expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
             expect(existsSync(join(root, "CLASSIC Backup"))).toBe(false);
-
-            // The claim is shared with resume, so a spent continuation closes both seams.
-            await expect(scanRunAbandon(continuation!, new ScanRunCancellation())).rejects.toMatchObject({
+            await expect(scanRunSettle(envelope.pendingRecovery!)).rejects.toMatchObject({
                 code: "scan_run_continuation_consumed",
             });
+            // The spent claim also rejects Reset To Default, the one decision that could write.
             await expect(
-                scanRunResume(
-                    continuation!,
+                scanRunSettle(
+                    envelope.pendingRecovery!,
                     JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
-                    new ScanRunCancellation(),
                 ),
             ).rejects.toMatchObject({code: "scan_run_continuation_consumed"});
             expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+        } finally {
+            rmSync(root, {recursive: true, force: true});
+        }
+    });
+
+    test("a pending recovery whose run was already cancelled says so and settles inert", async () => {
+        const cancellation = new ScanRunCancellation();
+        const {fixture, root, ignorePath, envelope} = await pausedRecovery(
+            "classic-node-scan-run-settle-cancelled",
+            cancellation,
+        );
+        try {
+            cancellation.cancel();
+            expect(envelope.pendingRecovery!.cancellationRequested).toBe(true);
+
+            // Even the one decision that writes is inert once the run is cancelled.
+            const settled = requireScanRunSettled(
+                await scanRunSettle(
+                    envelope.pendingRecovery!,
+                    JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+                ),
+            );
+
+            expect(settled.result.status).toBe("cancelled");
+            expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+            expect(existsSync(join(root, "CLASSIC Backup"))).toBe(false);
         } finally {
             rmSync(root, {recursive: true, force: true});
         }
@@ -850,9 +985,10 @@ describe("final Crash Log Scan Run contract", () => {
             ).result;
             const baselineReport = readFileSync(baseline.logs[0]!.autoscanReport!);
             writeFileSync(ignorePath, fixture.malformedLocalIgnore);
-            const initial = requireScanRunSuccess(
+            const initialEnvelope = requireScanRunSuccess(
                 await scanRunExecute(request, new ScanRunCancellation()),
-            ).result;
+            );
+            const initial = initialEnvelope.result;
             const retainedMain = initial.installedYamlData?.main.sha256;
             const retainedGame = initial.installedYamlData?.gameFile.sha256;
             writeFileSync(
@@ -865,11 +1001,10 @@ describe("final Crash Log Scan Run contract", () => {
             );
 
             const resumedEvents: JsScanRunEvent[] = [];
-            const reset = requireScanRunSuccess(
-                await scanRunResume(
-                    initial.continuation!,
+            const reset = requireScanRunSettled(
+                await scanRunSettle(
+                    initialEnvelope.pendingRecovery!,
                     JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
-                    new ScanRunCancellation(),
                     resumedEvents.push.bind(resumedEvents),
                 ),
             ).result;
@@ -892,10 +1027,9 @@ describe("final Crash Log Scan Run contract", () => {
             expect(readFileSync(reset.logs[0]!.autoscanReport!)).toEqual(baselineReport);
             expect(resumedEvents.some((event) => event.kind === "discovery_completed")).toBe(false);
             await expect(
-                scanRunResume(
-                    initial.continuation!,
+                scanRunSettle(
+                    initialEnvelope.pendingRecovery!,
                     JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
-                    new ScanRunCancellation(),
                 ),
             ).rejects.toMatchObject({code: fixture.resetOutcomes.consumedCode});
         } finally {
@@ -915,9 +1049,9 @@ describe("final Crash Log Scan Run contract", () => {
                     ScanRunRequest.targeted(scanRunConfiguration(root), {inputs: [crashLog]}),
                     new ScanRunCancellation(),
                 ),
-            ).result;
+            );
             mutate(root, ignorePath);
-            return {root, ignorePath, continuation: initial.continuation!};
+            return {root, ignorePath, pendingRecovery: initial.pendingRecovery!};
         };
 
         const conflict = await runCase(
@@ -926,10 +1060,9 @@ describe("final Crash Log Scan Run contract", () => {
         );
         try {
             await expect(
-                scanRunResume(
-                    conflict.continuation,
+                scanRunSettle(
+                    conflict.pendingRecovery,
                     JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
-                    new ScanRunCancellation(),
                 ),
             ).rejects.toMatchObject({
                 code: fixture.resetOutcomes.conflictCode,
@@ -945,10 +1078,9 @@ describe("final Crash Log Scan Run contract", () => {
         );
         try {
             await expect(
-                scanRunResume(
-                    backupFailure.continuation,
+                scanRunSettle(
+                    backupFailure.pendingRecovery,
                     JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
-                    new ScanRunCancellation(),
                 ),
             ).rejects.toMatchObject({
                 code: fixture.resetOutcomes.backupFailureCode,
@@ -962,7 +1094,7 @@ describe("final Crash Log Scan Run contract", () => {
         }
     });
 
-    test("pre-resume cancellation wins without changing malformed Local Ignore", async () => {
+    test("pre-settle cancellation wins without changing malformed Local Ignore", async () => {
         const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
         const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-recovery-cancelled");
         const crashLog = writeSharedScanRunLog(root, fixture.input);
@@ -970,20 +1102,21 @@ describe("final Crash Log Scan Run contract", () => {
         writeFileSync(ignorePath, fixture.malformedLocalIgnore);
 
         try {
+            // Settling runs under the paused run's own control, so the run is started with the
+            // control that is then cancelled after the pause.
+            const cancellation = new ScanRunCancellation();
             const initial = requireScanRunSuccess(
                 await scanRunExecute(
                     ScanRunRequest.targeted(scanRunConfiguration(root), {inputs: [crashLog]}),
-                    new ScanRunCancellation(),
+                    cancellation,
                 ),
-            ).result;
-            const cancellation = new ScanRunCancellation();
+            );
             cancellation.cancel();
             const resumedEvents: JsScanRunEvent[] = [];
-            const resumed = requireScanRunSuccess(
-                await scanRunResume(
-                    initial.continuation!,
+            const resumed = requireScanRunSettled(
+                await scanRunSettle(
+                    initial.pendingRecovery!,
                     JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
-                    cancellation,
                     resumedEvents.push.bind(resumedEvents),
                 ),
             ).result;
@@ -1008,20 +1141,20 @@ describe("final Crash Log Scan Run contract", () => {
         const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
         const largeMalformedIgnore = fixture.malformedLocalIgnore + "x".repeat(16 * 1024 * 1024);
         writeFileSync(ignorePath, largeMalformedIgnore);
+        // The racing cancel must land on the run's own control, which settling runs under.
+        const cancellation = new ScanRunCancellation();
         const initial = requireScanRunSuccess(
             await scanRunExecute(
                 ScanRunRequest.targeted(scanRunConfiguration(root), {inputs: [crashLog]}),
-                new ScanRunCancellation(),
+                cancellation,
             ),
-        ).result;
-        const cancellation = new ScanRunCancellation();
+        );
         const resetLock = join(root, ".classic-local-ignore-reset.lock");
 
         try {
-            const resume = scanRunResume(
-                initial.continuation!,
+            const resume = scanRunSettle(
+                initial.pendingRecovery!,
                 JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
-                cancellation,
             );
             const deadline = Date.now() + 5_000;
             while (!existsSync(resetLock) && Date.now() < deadline) {
@@ -1029,7 +1162,7 @@ describe("final Crash Log Scan Run contract", () => {
             }
             expect(existsSync(resetLock)).toBe(true);
             cancellation.cancel();
-            const cancelled = requireScanRunSuccess(await resume).result;
+            const cancelled = requireScanRunSettled(await resume).result;
 
             expect(cancelled.status).toBe(fixture.resetOutcomes.postCriticalCancellationStatus);
             expect(cancelled.logs.every((log) => log.autoscanReport === undefined)).toBe(true);
@@ -1212,6 +1345,66 @@ describe("final Crash Log Scan Run contract", () => {
             expect(cancellingControl.isCancelled).toBe(true);
         } finally {
             rmSync(root, {recursive: true, force: true});
+        }
+    });
+
+    test("an observer failure before a pending recovery makes Rust abandon it", async () => {
+        const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+        const root = writeSharedScanRunDataRoot("classic-node-scan-run-observer-before-recovery");
+        const crashLog = writeSharedScanRunLog(root, fixture.input);
+        const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+        writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+        try {
+            const cancellation = new ScanRunCancellation();
+            let deliveries = 0;
+            // `false` lets the run continue past the failure; abandonment still happens.
+            const execution = requireScanRunSuccess(
+                await scanRunExecute(
+                    ScanRunRequest.targeted(scanRunConfiguration(root), {inputs: [crashLog]}),
+                    cancellation,
+                    () => {
+                        deliveries += 1;
+                        throw new Error("progress view closed");
+                    },
+                    false,
+                ),
+            );
+
+            expect(deliveries).toBe(1);
+            expect(execution.result.status).toBe("cancelled");
+            expect(execution.pendingRecovery).toBeUndefined();
+            expect(execution.recoveryPrompt).toBeUndefined();
+            expect(execution.observerError).toMatch(/progress view closed/);
+            expect(cancellation.isCancelled).toBe(true);
+            expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+        } finally {
+            rmSync(root, {recursive: true, force: true});
+        }
+    });
+
+    test("settling applies cancelOnObserverError as the Rust observer failure policy", async () => {
+        for (const cancelOnObserverError of [true, false]) {
+            const {root, envelope} = await pausedRecovery(
+                `classic-node-scan-run-settle-observer-${cancelOnObserverError}`,
+                new ScanRunCancellation(),
+            );
+            try {
+                const settled = requireScanRunSettled(
+                    await scanRunSettle(
+                        envelope.pendingRecovery!,
+                        JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+                        () => {
+                            throw new Error("settle view closed");
+                        },
+                        cancelOnObserverError,
+                    ),
+                );
+                expect(settled.observerError).toMatch(/settle view closed/);
+                expect(settled.result.status).toBe(cancelOnObserverError ? "cancelled" : "completed");
+                expect(envelope.pendingRecovery!.cancellationRequested).toBe(cancelOnObserverError);
+            } finally {
+                rmSync(root, {recursive: true, force: true});
+            }
         }
     });
 

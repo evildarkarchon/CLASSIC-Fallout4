@@ -51,9 +51,9 @@ pub enum DisplaySegment {
     Path(PathBuf),
     /// The name of a domain entity that is not a filesystem path.
     ///
-    /// No render path emits one yet. The variant exists because the taxonomy is fixed for
-    /// this version and a later addition is a deliberate, baseline-touching decision — so
-    /// the kind a non-path name will need is declared now rather than bolted on then.
+    /// Launch diagnostics emit one per game they name. The variant was declared before any
+    /// render path used it because the taxonomy is fixed for this version and a later
+    /// addition is a deliberate, baseline-touching decision.
     Name(String),
     /// A value core wants set apart from the prose around it: a free-text diagnostic, an
     /// ordinal position, a content hash.

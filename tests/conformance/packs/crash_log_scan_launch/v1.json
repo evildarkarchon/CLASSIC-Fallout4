@@ -1,0 +1,1109 @@
+{
+  "schemaVersion": 1,
+  "familyId": "crash-log-scan-launch",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scan-launch"
+  },
+  "fixtureRoot": "tests/fixtures/crash_log_scan_launch_conformance",
+  "fixtures": {
+    "managed-fallout4": "managed_fallout4.yaml",
+    "saved-options-off": "saved_options_off.yaml",
+    "vr-shared-and-legacy": "vr_shared_and_legacy.yaml",
+    "malformed": "malformed.yaml",
+    "newer-major": "newer_major.yaml",
+    "needs-migration": "needs_migration.yaml",
+    "managed-fallout4-game-specific": "managed_fallout4_game_specific.yaml",
+    "fcx-saved-setup": "fcx_saved_setup.yaml",
+    "fcx-vr-setup": "fcx_vr_setup.yaml",
+    "fcx-off-with-setup": "fcx_off_with_setup.yaml",
+    "fcx-uninspectable-documents": "fcx_uninspectable_documents.yaml",
+    "saved-custom-scan-folder": "saved_custom_scan_folder.yaml"
+  },
+  "capabilities": [
+    {
+      "id": "crash-log-scan-launch.prepare",
+      "rustSymbols": [
+        "prepare_launch",
+        "CrashLogScanIntent",
+        "CrashLogScanLaunchOverrides",
+        "CrashLogScanLaunchRequest",
+        "CrashLogScanLaunchDiagnostic",
+        "CrashLogScanLaunchDiagnosticKind",
+        "CrashLogScanLaunchError",
+        "CrashLogScanLaunchErrorKind",
+        "SavedGameSpecificValue"
+      ],
+      "observationFamilies": [
+        "launch-request"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "managed-game-saved-values",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "NextGen",
+          "showFormidValues": true,
+          "simplifyLogs": true,
+          "formidDatabasePaths": [
+            "databases/Fallout4 FormIDs.db"
+          ],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 3,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "explicit-value-overrides-win",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {
+          "gameVersion": "AnniversaryEdition",
+          "scanPath": "One-off Logs",
+          "maxConcurrent": 7
+        },
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "AnniversaryEdition",
+          "showFormidValues": true,
+          "simplifyLogs": true,
+          "formidDatabasePaths": [
+            "databases/Fallout4 FormIDs.db"
+          ],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 7,
+          "baseDirectory": ".",
+          "customScanDirectory": "One-off Logs",
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "saved-custom-scan-folder-applies",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "saved-custom-scan-folder"
+      ],
+      "input": {
+        "settingsFixtureRef": "saved-custom-scan-folder",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "auto",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": "Saved Custom Logs",
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "no-scan-path-override-withholds-the-saved-custom-scan-folder",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "saved-custom-scan-folder"
+      ],
+      "input": {
+        "settingsFixtureRef": "saved-custom-scan-folder",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {
+          "noScanPath": true
+        },
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "auto",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "supplied-as-on-overrides",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "saved-options-off"
+      ],
+      "input": {
+        "settingsFixtureRef": "saved-options-off",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {
+          "showFormidValues": true,
+          "simplifyLogs": true
+        },
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "auto",
+          "showFormidValues": true,
+          "simplifyLogs": true,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "move_to_configured_or_default",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "adaptive-concurrency-override-beats-saved-limit",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {
+          "maxConcurrent": 0
+        },
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "NextGen",
+          "showFormidValues": true,
+          "simplifyLogs": true,
+          "formidDatabasePaths": [
+            "databases/Fallout4 FormIDs.db"
+          ],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "fallout4-vr-reads-shared-then-legacy-rows",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "vr-shared-and-legacy"
+      ],
+      "input": {
+        "settingsFixtureRef": "vr-shared-and-legacy",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4VR",
+          "gameVersion": "VR",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [
+            "databases/Fallout4 FormIDs.db",
+            "databases/Shared Extra FormIDs.db",
+            "databases/Legacy VR FormIDs.db"
+          ],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "move_to_configured_or_default",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "malformed-settings-launch-from-defaults",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "malformed"
+      ],
+      "input": {
+        "settingsFixtureRef": "malformed",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "auto",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [
+          {
+            "kind": "user_settings",
+            "code": "malformed_document"
+          },
+          {
+            "kind": "user_settings",
+            "code": "commit_blocked_untrusted_document"
+          }
+        ],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "newer-settings-launch-from-defaults",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "newer-major"
+      ],
+      "input": {
+        "settingsFixtureRef": "newer-major",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "auto",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [
+          {
+            "kind": "user_settings",
+            "code": "unsupported_future_major_schema"
+          },
+          {
+            "kind": "user_settings",
+            "code": "commit_blocked_untrusted_document"
+          }
+        ],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "settings-needing-migration-still-launch",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "needs-migration"
+      ],
+      "input": {
+        "settingsFixtureRef": "needs-migration",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "Original",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 2,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "move_to_configured_or_default",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [
+          {
+            "kind": "user_settings",
+            "code": "migration_required_unversioned_document"
+          }
+        ],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "targeted-scans-exactly-its-inputs",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4",
+        "intent": "targeted",
+        "targetedInputs": [
+          "b.log",
+          "a folder"
+        ],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "targeted",
+          "game": "Fallout4",
+          "gameVersion": "NextGen",
+          "showFormidValues": true,
+          "simplifyLogs": true,
+          "formidDatabasePaths": [
+            "databases/Fallout4 FormIDs.db"
+          ],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 3,
+          "baseDirectory": null,
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": null,
+          "targetedInputs": [
+            "b.log",
+            "a folder"
+          ],
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "targeted-without-inputs-is-a-typed-error",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4",
+        "intent": "targeted",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "error",
+        "errorKind": "targeted_without_inputs",
+        "request": null,
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "non-managed-game-withholds-saved-game-specific-values",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4-game-specific"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4-game-specific",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {
+          "game": "Fallout4VR"
+        },
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4VR",
+          "gameVersion": "auto",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [
+          {
+            "kind": "game_version_not_applied",
+            "code": "game_version_not_applied"
+          },
+          {
+            "kind": "fcx_mode_not_applied",
+            "code": "fcx_mode_not_applied"
+          },
+          {
+            "kind": "custom_scan_folder_not_applied",
+            "code": "custom_scan_folder_not_applied"
+          },
+          {
+            "kind": "setup_folders_not_applied",
+            "code": "setup_folders_not_applied"
+          }
+        ],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "non-managed-game-explicit-overrides-still-win",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4-game-specific"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4-game-specific",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {
+          "game": "Fallout4VR",
+          "gameVersion": "VR",
+          "scanPath": "One-off Logs"
+        },
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4VR",
+          "gameVersion": "VR",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": ".",
+          "customScanDirectory": "One-off Logs",
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [
+          {
+            "kind": "fcx_mode_not_applied",
+            "code": "fcx_mode_not_applied"
+          },
+          {
+            "kind": "setup_folders_not_applied",
+            "code": "setup_folders_not_applied"
+          }
+        ],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "non-managed-game-targeted-withholds-saved-fcx-mode",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4-game-specific"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4-game-specific",
+        "intent": "targeted",
+        "targetedInputs": [
+          "crash.log"
+        ],
+        "overrides": {
+          "game": "Fallout4VR"
+        },
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "targeted",
+          "game": "Fallout4VR",
+          "gameVersion": "auto",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": null,
+          "baseDirectory": null,
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": null,
+          "targetedInputs": [
+            "crash.log"
+          ],
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [
+          {
+            "kind": "game_version_not_applied",
+            "code": "game_version_not_applied"
+          },
+          {
+            "kind": "fcx_mode_not_applied",
+            "code": "fcx_mode_not_applied"
+          },
+          {
+            "kind": "setup_folders_not_applied",
+            "code": "setup_folders_not_applied"
+          }
+        ],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "managed-game-named-explicitly-is-not-a-game-difference",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "managed-fallout4"
+      ],
+      "input": {
+        "settingsFixtureRef": "managed-fallout4",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {
+          "game": "Fallout4"
+        },
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "NextGen",
+          "showFormidValues": true,
+          "simplifyLogs": true,
+          "formidDatabasePaths": [
+            "databases/Fallout4 FormIDs.db"
+          ],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 3,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": false,
+          "setupContext": null
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "fcx-saved-setup-context",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "fcx-saved-setup"
+      ],
+      "input": {
+        "settingsFixtureRef": "fcx-saved-setup",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": [
+          "Fallout 4/Fallout4.exe",
+          "Documents/F4SE/f4se.log"
+        ]
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "NextGen",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 2,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": "Documents",
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": true,
+          "setupContext": {
+            "gameRoot": "Fallout 4",
+            "docsRoot": "Documents",
+            "gameExePath": "Fallout 4/Fallout4.exe",
+            "xseLogPath": "Documents/F4SE/f4se.log"
+          }
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "fcx-fallout4-vr-reads-its-own-xse-log",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "fcx-vr-setup"
+      ],
+      "input": {
+        "settingsFixtureRef": "fcx-vr-setup",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": [
+          "Documents/F4SE/f4se.log",
+          "Documents/F4SE/f4sevr.log"
+        ]
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4VR",
+          "gameVersion": "VR",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 2,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": "Documents",
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": true,
+          "setupContext": {
+            "gameRoot": "Fallout 4 VR",
+            "docsRoot": "Documents",
+            "gameExePath": "Fallout 4 VR/Fallout4VR.exe",
+            "xseLogPath": "Documents/F4SE/f4sevr.log"
+          }
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "fcx-missing-setup-folders-still-launch",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "fcx-saved-setup"
+      ],
+      "input": {
+        "settingsFixtureRef": "fcx-saved-setup",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "standard",
+          "game": "Fallout4",
+          "gameVersion": "NextGen",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 2,
+          "baseDirectory": ".",
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": "Documents",
+          "unsolvedLogs": "leave_in_place",
+          "targetedInputs": null,
+          "fcxEnabled": true,
+          "setupContext": {
+            "gameRoot": "Fallout 4",
+            "docsRoot": "Documents",
+            "gameExePath": "Fallout 4/Fallout4.exe",
+            "xseLogPath": null
+          }
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "fcx-mode-override-gives-targeted-a-setup-context",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "fcx-off-with-setup"
+      ],
+      "input": {
+        "settingsFixtureRef": "fcx-off-with-setup",
+        "intent": "targeted",
+        "targetedInputs": [
+          "crash-one.log"
+        ],
+        "overrides": {
+          "fcxMode": true
+        },
+        "files": [
+          "Documents/F4SE/f4se.log"
+        ]
+      },
+      "expected": {
+        "outcome": "launched",
+        "errorKind": null,
+        "request": {
+          "intent": "targeted",
+          "game": "Fallout4",
+          "gameVersion": "NextGen",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "formidDatabasePaths": [],
+          "unsolvedLogsDestination": null,
+          "maxConcurrent": 2,
+          "baseDirectory": null,
+          "customScanDirectory": null,
+          "configuredDocumentsRoot": null,
+          "unsolvedLogs": null,
+          "targetedInputs": [
+            "crash-one.log"
+          ],
+          "fcxEnabled": true,
+          "setupContext": {
+            "gameRoot": "Fallout 4",
+            "docsRoot": "Documents",
+            "gameExePath": "Fallout 4/Fallout4.exe",
+            "xseLogPath": "Documents/F4SE/f4se.log"
+          }
+        },
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "fcx-xse-log-inspection-failure-is-a-typed-error",
+      "action": "crash-log-scan-launch.prepare",
+      "capabilityIds": [
+        "crash-log-scan-launch.prepare"
+      ],
+      "fixtureRefs": [
+        "fcx-uninspectable-documents"
+      ],
+      "input": {
+        "settingsFixtureRef": "fcx-uninspectable-documents",
+        "intent": "standard",
+        "targetedInputs": [],
+        "overrides": {},
+        "files": []
+      },
+      "expected": {
+        "outcome": "error",
+        "errorKind": "xse_log_inspect",
+        "request": null,
+        "diagnostics": [],
+        "settingsUnchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": [
+    {
+      "id": "cli.scan-launch"
+    },
+    {
+      "id": "gui.scan-launch"
+    },
+    {
+      "id": "tui.scan-launch"
+    }
+  ]
+}

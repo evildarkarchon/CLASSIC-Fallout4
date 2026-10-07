@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T03:59:08.385749+00:00",
+  "generated_at_utc": "2026-10-06T16:25:35.284492+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -1757,6 +1757,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_config/__init__.pyi",
       "signature": "def local_ignore_yaml_data_state_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_config",
+      "export": "locate_installation_root",
+      "export_path": "locate_installation_root",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_config/__init__.pyi",
+      "signature": "def locate_installation_root( executable_dir: str | Path | None = None, working_dir: str | Path | None = None, ) -> str | None:"
     },
     {
       "module": "classic_config",
@@ -9828,16 +9839,6 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "ScanRunContinuation",
-      "export_path": "ScanRunContinuation",
-      "kind": "class",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "class ScanRunContinuation:"
-    },
-    {
-      "module": "classic_scanlog",
       "export": "ScanRunContinuationConsumedError",
       "export_path": "ScanRunContinuationConsumedError",
       "kind": "class",
@@ -9938,6 +9939,114 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "ScanRunLaunch",
+      "export_path": "ScanRunLaunch",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunch:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "request",
+      "export_path": "ScanRunLaunch.request",
+      "parent_class": "ScanRunLaunch",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def request(self) -> ScanRunRequest:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "standard",
+      "export_path": "ScanRunLaunch.standard",
+      "parent_class": "ScanRunLaunch",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def standard( installation_root: str, overrides: ScanRunLaunchOverrides | None = None, ) -> ScanRunLaunch:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "targeted",
+      "export_path": "ScanRunLaunch.targeted",
+      "parent_class": "ScanRunLaunch",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def targeted( installation_root: str, inputs: list[str], overrides: ScanRunLaunchOverrides | None = None, ) -> ScanRunLaunch:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchDiagnostic",
+      "export_path": "ScanRunLaunchDiagnostic",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchDiagnostic:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchError",
+      "export_path": "ScanRunLaunchError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchError(ValueError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchOverrides",
+      "export_path": "ScanRunLaunchOverrides",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchOverrides:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ScanRunLaunchOverrides.__init__",
+      "parent_class": "ScanRunLaunchOverrides",
+      "kind": "method",
+      "arity": 8,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "def __init__( self, game: GameId | None = None, game_version: str | None = None, scan_path: str | None = None, max_concurrent: int | None = None, show_formid_values: bool = False, simplify_logs: bool = False, fcx_mode: bool = False, no_scan_path: bool = False, ) -> None:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchTargetedWithoutInputsError",
+      "export_path": "ScanRunLaunchTargetedWithoutInputsError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchTargetedWithoutInputsError(ScanRunLaunchError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLaunchXseLogInspectError",
+      "export_path": "ScanRunLaunchXseLogInspectError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunLaunchXseLogInspectError(ScanRunLaunchError):"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "ScanRunLocalIgnoreRecoveryDecision",
       "export_path": "ScanRunLocalIgnoreRecoveryDecision",
       "kind": "class",
@@ -10025,6 +10134,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
       "signature": "class ScanRunLogResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunPendingRecovery",
+      "export_path": "ScanRunPendingRecovery",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunPendingRecovery:"
     },
     {
       "module": "classic_scanlog",
@@ -10123,6 +10242,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
       "signature": "class ScanRunResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunSettledExecution",
+      "export_path": "ScanRunSettledExecution",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
+      "signature": "class ScanRunSettledExecution:"
     },
     {
       "module": "classic_scanlog",
@@ -10398,17 +10527,6 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "scan_run_abandon",
-      "export_path": "scan_run_abandon",
-      "kind": "function",
-      "arity": 4,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "def scan_run_abandon( continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
-    },
-    {
-      "module": "classic_scanlog",
       "export": "scan_run_execute",
       "export_path": "scan_run_execute",
       "kind": "function",
@@ -10486,14 +10604,14 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "scan_run_resume",
-      "export_path": "scan_run_resume",
+      "export": "scan_run_settle",
+      "export_path": "scan_run_settle",
       "kind": "function",
-      "arity": 5,
+      "arity": 4,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-      "signature": "def scan_run_resume( continuation: ScanRunContinuation, decision: ScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
+      "signature": "def scan_run_settle( pending_recovery: ScanRunPendingRecovery, decision: ScanRunLocalIgnoreRecoveryDecision | None = None, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunSettledExecution:"
     },
     {
       "module": "classic_scanlog",
@@ -12159,6 +12277,17 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "scan_formid_databases",
+      "export_path": "CrashLogScanSettings.scan_formid_databases",
+      "parent_class": "CrashLogScanSettings",
+      "kind": "property",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
+      "signature": "def scan_formid_databases(self) -> dict[str, list[str]]:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "show_statistics",
       "export_path": "CrashLogScanSettings.show_statistics",
       "parent_class": "CrashLogScanSettings",
@@ -13058,6 +13187,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
       "signature": "def actual_revision(self) -> str | None: ..."
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "diagnostics",
+      "export_path": "UserSettingsCommitOutcome.diagnostics",
+      "parent_class": "UserSettingsCommitOutcome",
+      "kind": "property",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
+      "signature": "def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]:"
     },
     {
       "module": "classic_user_settings",
@@ -14003,6 +14143,18 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
       "signature": "def set_formid_databases(self, value: dict[str, list[str]]) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_formid_databases_for_game",
+      "export_path": "UserSettingsUpdate.set_formid_databases_for_game",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_user_settings/__init__.pyi",
+      "signature": "def set_formid_databases_for_game(self, game: str, paths: list[str]) -> None:"
     },
     {
       "module": "classic_user_settings",
@@ -16509,6 +16661,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-python-bindings/python/classic_xse/__init__.pyi",
       "signature": "def parse_xse_type(type_name: str) -> XseType:"
+    },
+    {
+      "module": "classic_xse",
+      "export": "resolve_xse_log_for_scan",
+      "export_path": "resolve_xse_log_for_scan",
+      "kind": "function",
+      "arity": 4,
+      "owner_module": "xse",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-python-bindings/python/classic_xse/__init__.pyi",
+      "signature": "def resolve_xse_log_for_scan( yaml_dir_data: str, game: str, selected_game_version: str, configured_docs_root: str | None = None, ) -> str | None:"
     }
   ]
 }

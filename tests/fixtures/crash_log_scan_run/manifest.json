@@ -266,6 +266,11 @@
       "category": "resume_error_kind",
       "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "name": "ResumeErrorKind"
+    },
+    {
+      "category": "observer_failure_policy",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "ObserverFailurePolicy"
     }
   ],
   "contractVariants": [
@@ -332,6 +337,8 @@
     "resume_error_kind.local_ignore_reset_replacement_failure",
     "resume_error_kind.local_ignore_reset_durability_unknown",
     "resume_error_kind.infrastructure",
+    "observer_failure_policy.continue_run",
+    "observer_failure_policy.cancel_run",
     "recovery_continuation.retained_snapshot",
     "recovery_continuation.single_use",
     "recovery_continuation.pre_resume_cancelled",
@@ -351,6 +358,17 @@
   ],
   "forbiddenExports": {
     "rust": [
+      {
+        "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+        "symbols": [
+          "pub struct CrashLogScanRunContinuation",
+          "pub async fn resume",
+          "pub async fn abandon",
+          "pub continuation:",
+          "pub const fn continuation",
+          "pub fn continuation"
+        ]
+      },
       {
         "path": "business-logic/classic-scanlog-core/src/lib.rs",
         "symbols": [
@@ -424,7 +442,12 @@
           "scan_cancellation_token_new",
           "scan_cancellation_token_cancel",
           "scan_cancellation_token_reset",
-          "scan_run_execute"
+          "scan_run_execute",
+          "scan_run_continuation_resume",
+          "scan_run_continuation_abandon",
+          "scan_run_contract_execution_has_continuation",
+          "scan_run_contract_execution_take_continuation",
+          "ScanRunContinuation"
         ]
       },
       {
@@ -468,7 +491,46 @@
           "scan_cancellation_token_new",
           "scan_cancellation_token_cancel",
           "scan_cancellation_token_reset",
-          "scan_run_execute"
+          "scan_run_execute",
+          "scan_run_continuation_resume",
+          "scan_run_continuation_abandon",
+          "scan_run_contract_execution_has_continuation",
+          "scan_run_contract_execution_take_continuation",
+          "ScanRunContinuation",
+          "CrashLogScanRunContinuation"
+        ]
+      },
+      {
+        "path": "cpp-bindings/classic-cpp-bridge/src/scanner/contract.rs",
+        "symbols": [
+          "scan_run_continuation_resume",
+          "scan_run_continuation_abandon",
+          "scan_run_contract_execution_has_continuation",
+          "scan_run_contract_execution_take_continuation",
+          "ScanRunContinuation",
+          "CrashLogScanRunContinuation"
+        ]
+      },
+      {
+        "path": "docs/implementation/cxx_api_parity/baseline/rust_api_surface.json",
+        "symbols": [
+          "scan_run_continuation_resume",
+          "scan_run_continuation_abandon",
+          "scan_run_contract_execution_has_continuation",
+          "scan_run_contract_execution_take_continuation",
+          "ScanRunContinuation",
+          "CrashLogScanRunContinuation"
+        ]
+      },
+      {
+        "path": "tools/cxx_api_parity/canonical_mappings.json",
+        "symbols": [
+          "scan_run_continuation_resume",
+          "scan_run_continuation_abandon",
+          "scan_run_contract_execution_has_continuation",
+          "scan_run_contract_execution_take_continuation",
+          "ScanRunContinuation",
+          "CrashLogScanRunContinuation"
         ]
       }
     ],
@@ -512,7 +574,10 @@
           "writeAutoscanReport",
           "JsAnalysisConfig",
           "JsAnalysisResult",
-          "yamlDirs"
+          "yamlDirs",
+          "scanRunResume",
+          "scanRunAbandon",
+          "ScanRunContinuation"
         ]
       },
       {
@@ -530,7 +595,34 @@
           "OrchestratorCore",
           "FcxModeHandler",
           "FcxResetError",
-          "resolve_batch_concurrency"
+          "resolve_batch_concurrency",
+          "scanRunResume",
+          "scanRunAbandon",
+          "ScanRunContinuation",
+          "CrashLogScanRunContinuation"
+        ]
+      },
+      {
+        "path": "node-bindings/classic-node/src/scan_run.rs",
+        "symbols": [
+          "scan_run_resume",
+          "scan_run_abandon",
+          "ScanRunContinuation",
+          "ScanRunClaimTask"
+        ]
+      },
+      {
+        "path": "docs/implementation/node_api_parity/baseline/node_api_surface.json",
+        "symbols": [
+          "scanRunResume",
+          "scanRunAbandon",
+          "ScanRunContinuation"
+        ]
+      },
+      {
+        "path": "docs/implementation/node_api_parity/baseline/rust_api_surface.json",
+        "symbols": [
+          "CrashLogScanRunContinuation"
         ]
       }
     ],
@@ -562,7 +654,11 @@
           "PyRustOrchestrator",
           "PyCancellationToken",
           "PyFcxModeHandler",
-          "FcxResetError"
+          "FcxResetError",
+          "scan_run_resume",
+          "scan_run_abandon",
+          "ScanRunContinuation",
+          "PyScanRunContinuation"
         ]
       },
       {
@@ -588,7 +684,10 @@
           "process_log",
           "process_logs_parallel",
           "process_logs_batch",
-          "write_reports_batch"
+          "write_reports_batch",
+          "scan_run_resume",
+          "scan_run_abandon",
+          "ScanRunContinuation"
         ]
       },
       {
@@ -603,7 +702,10 @@
           "process_log",
           "process_logs_parallel",
           "process_logs_batch",
-          "write_reports_batch"
+          "write_reports_batch",
+          "scan_run_resume",
+          "scan_run_abandon",
+          "ScanRunContinuation"
         ]
       },
       {
@@ -620,7 +722,11 @@
           "process_logs_parallel",
           "process_logs_batch",
           "write_reports_batch",
-          "resolve_batch_concurrency"
+          "resolve_batch_concurrency",
+          "scan_run_resume",
+          "scan_run_abandon",
+          "ScanRunContinuation",
+          "CrashLogScanRunContinuation"
         ]
       },
       {
@@ -661,6 +767,30 @@
           "GLOBAL_FCX_HANDLER",
           "fcx_handler",
           "orchestrator"
+        ]
+      },
+      {
+        "path": "python-bindings/classic-python-bindings/src/classic_scanlog/scan_run.rs",
+        "symbols": [
+          "scan_run_resume",
+          "scan_run_abandon",
+          "ScanRunContinuation",
+          "PyScanRunContinuation",
+          "CrashLogScanRunContinuation"
+        ]
+      },
+      {
+        "path": "docs/implementation/python_api_parity/baseline/python_api_surface.json",
+        "symbols": [
+          "scan_run_resume",
+          "scan_run_abandon",
+          "ScanRunContinuation"
+        ]
+      },
+      {
+        "path": "docs/implementation/python_api_parity/baseline/rust_api_surface.json",
+        "symbols": [
+          "CrashLogScanRunContinuation"
         ]
       }
     ]

@@ -64,6 +64,16 @@ class CrashLogScanSettings:
     def formid_databases_origin(self) -> str: ...
 
     @property
+    def scan_formid_databases(self) -> dict[str, list[str]]:
+        """FormID database rows that apply to each game's Crash Log Scan.
+
+        Fallout 4 VR reads the shared ``Fallout4`` rows followed by legacy
+        ``Fallout4VR`` rows, de-duplicated; every other game reads its own rows
+        exactly. Games whose scan reads no rows are absent.
+        """
+        ...
+
+    @property
     def move_unsolved_logs(self) -> bool: ...
 
     @property
@@ -306,6 +316,14 @@ class UserSettingsUpdate:
     def set_formid_databases(self, value: dict[str, list[str]]) -> None:
         """Request replacement FormID database paths keyed by managed game."""
 
+    def set_formid_databases_for_game(self, game: str, paths: list[str]) -> None:
+        """Request a game-aware save of the FormID database rows game's scans read.
+
+        Fallout 4 VR rows are stored under Fallout4 and a legacy Fallout4VR key is
+        removed, reported as ``legacy_formid_databases_key_removed`` in the preview
+        and commit diagnostics. Any other game replaces only its own rows.
+        """
+
     def set_move_unsolved_logs(self, value: bool) -> None:
         """Request a new Move Unsolved Logs preference."""
 
@@ -323,7 +341,7 @@ class UserSettingsUpdate:
 
 
 class UserSettingsUpdateDiagnostic:
-    """One field-specific diagnostic from a rejected update preview."""
+    """One update diagnostic: a rejection reason, or an accepted update's effect report."""
 
     @property
     def field_path(self) -> str | None: ...
@@ -378,6 +396,14 @@ class UserSettingsCommitOutcome:
 
     @property
     def actual_revision(self) -> str | None: ...
+
+    @property
+    def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]:
+        """Non-blocking effect diagnostics carried over from the accepted preview.
+
+        For example ``legacy_formid_databases_key_removed``. Empty for ``conflict`` and
+        for ordinary updates.
+        """
 
 
 class UserSettingsFrontendTransitionOutcome:

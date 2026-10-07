@@ -6,6 +6,7 @@ use classic_config_core::{
 use classic_scan_presentation::{
     DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, RecoveryPrompt,
     render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -28,11 +29,11 @@ use super::{
     installed_yaml_data_provenance_to_string, installed_yaml_data_role_to_string,
     local_ignore_recovery_decision_to_py, local_ignore_state_to_string,
     log_failure_stage_to_string, log_result_to_py, phase_to_string, recovery_prompt_to_py,
-    reset_failure_stage_to_string, run_result_to_py, run_status_to_string,
+    required_path, reset_failure_stage_to_string, run_result_to_py, run_status_to_string,
     scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
     scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_resume_error_to_py,
-    setup_to_py, success_execution,
+    settled_execution, setup_to_py, success_execution,
 };
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
@@ -93,6 +94,33 @@ fn configuration_conversion_treats_blank_destination_as_absent() {
     assert_eq!(converted.installation_root, PathBuf::from("C:/CLASSIC"));
     assert_eq!(converted.game, classic_shared_core::GameId::Fallout4);
     assert!(converted.scan_facts.unsolved_logs_destination.is_none());
+}
+
+#[test]
+fn path_conversion_trims_surrounding_whitespace_like_the_other_bindings() {
+    // The CXX bridge builds paths from trimmed text; identical input must name the same folder here.
+    assert_eq!(
+        required_path(" \tC:/CLASSIC  ".to_string(), "installation_root")
+            .expect("padded path text should convert"),
+        PathBuf::from("C:/CLASSIC")
+    );
+    let configuration = PyScanRunConfiguration {
+        installation_root: "  C:/CLASSIC ".to_string(),
+        game: classic_shared_core::GameId::Fallout4,
+        game_version: "auto".to_string(),
+        show_formid_values: false,
+        simplify_logs: false,
+        formid_database_paths: Vec::new(),
+        unsolved_logs_destination: Some(" D:/Unsolved Logs\t".to_string()),
+        max_concurrent: None,
+    };
+
+    let converted = configuration_to_core(&configuration).expect("configuration should convert");
+    assert_eq!(converted.installation_root, PathBuf::from("C:/CLASSIC"));
+    assert_eq!(
+        converted.scan_facts.unsolved_logs_destination,
+        Some(PathBuf::from("D:/Unsolved Logs"))
+    );
 }
 
 #[test]
@@ -371,6 +399,7 @@ fn maps_every_infrastructure_stage_and_optional_path() {
             stage,
             message: format!("failure {index}"),
             path: path.clone(),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, stage.as_str());
         assert_eq!(mapped.message, format!("failure {index}"));
@@ -590,6 +619,7 @@ fn shared_failure_fixture_maps_every_python_failure_field() {
             stage,
             message: expected["message"].as_str().unwrap().to_string(),
             path: expected["path"].as_str().map(PathBuf::from),
+            observer_delivery_failure: None,
         });
         assert_eq!(mapped.stage, expected["stage"].as_str().unwrap());
         assert_eq!(mapped.message, expected["message"].as_str().unwrap());
@@ -627,7 +657,7 @@ fn maps_setup_and_run_optional_fields_without_loss() {
     Python::attach(|py| {
         let with_values = run_result_to_py(
             py,
-            contract::RunResult {
+            contract::RunResult::from(contract::SettledRunResult {
                 status: CrashLogScanRunStatus::SetupFailed,
                 discovery: Some(discovery()),
                 setup: Some(CrashLogScanSetupResult {
@@ -641,7 +671,6 @@ fn maps_setup_and_run_optional_fields_without_loss() {
                     rendered_report: setup.rendered_report.clone(),
                 }),
                 installed_yaml_data: None,
-                continuation: None,
                 effective_concurrency: Some(2),
                 message: Some("run message".to_string()),
                 total: 4,
@@ -649,7 +678,8 @@ fn maps_setup_and_run_optional_fields_without_loss() {
                 failed: 2,
                 cancelled: 1,
                 logs: Vec::new(),
-            },
+                observer_delivery_failure: None,
+            }),
         )
         .expect("mapped result should allocate");
         let with_values = with_values.borrow(py);
@@ -670,12 +700,11 @@ fn maps_setup_and_run_optional_fields_without_loss() {
 
         let without_values = run_result_to_py(
             py,
-            contract::RunResult {
+            contract::RunResult::from(contract::SettledRunResult {
                 status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
                 discovery: None,
                 setup: None,
                 installed_yaml_data: None,
-                continuation: None,
                 effective_concurrency: None,
                 message: None,
                 total: 0,
@@ -683,7 +712,8 @@ fn maps_setup_and_run_optional_fields_without_loss() {
                 failed: 0,
                 cancelled: 0,
                 logs: Vec::new(),
-            },
+                observer_delivery_failure: None,
+            }),
         )
         .expect("mapped result should allocate");
         let without_values = without_values.borrow(py);
@@ -919,9 +949,10 @@ fn an_infrastructure_failure_carries_lines_beside_its_frozen_token() {
         stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
         message: "database is locked".to_string(),
         path: None,
+        observer_delivery_failure: None,
     };
     let expected = display_lines_to_py(&render_infrastructure_error(&facts()));
-    let execution = super::failure_execution(facts(), None);
+    let execution = super::failure_execution(facts());
 
     assert!(!expected.is_empty(), "a failure must say something");
     assert_eq!(execution.display_lines.len(), expected.len());
@@ -1122,7 +1153,7 @@ fn a_recovery_decision_description_flattens_like_any_other_segments() {
 /// Both contract decisions cross as distinct Python twins.
 ///
 /// The enum crosses rather than a token, unlike every other tag on this surface,
-/// because `scan_run_resume` takes the enum: a consumer answers with exactly what it
+/// because `scan_run_settle` takes the enum: a consumer answers with exactly what it
 /// was offered rather than mapping a string back.
 fn every_recovery_decision_crosses_as_its_own_python_twin() {
     assert_eq!(
@@ -1141,12 +1172,11 @@ fn every_recovery_decision_crosses_as_its_own_python_twin() {
 /// A run paused on Local Ignore recovery carries the prompt Rust rendered for it.
 fn the_execution_envelope_carries_the_recovery_prompt_core_rendered() {
     Python::attach(|py| {
-        let build = || contract::RunResult {
+        let build = || contract::RunResult::from(contract::SettledRunResult {
             status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
             discovery: None,
             setup: None,
             installed_yaml_data: None,
-            continuation: None,
             effective_concurrency: None,
             message: Some("Local Ignore requires a recovery decision".to_string()),
             total: 0,
@@ -1154,9 +1184,10 @@ fn the_execution_envelope_carries_the_recovery_prompt_core_rendered() {
             failed: 0,
             cancelled: 0,
             logs: Vec::new(),
-        };
+            observer_delivery_failure: None,
+        });
         let expected = recovery_prompt_to_py(&render_local_ignore_recovery(None));
-        let execution = success_execution(py, build(), None).expect("envelope should build");
+        let execution = success_execution(py, build()).expect("envelope should build");
 
         let prompt = execution
             .recovery_prompt()
@@ -1177,12 +1208,11 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
     Python::attach(|py| {
         let completed = success_execution(
             py,
-            contract::RunResult {
+            contract::RunResult::from(contract::SettledRunResult {
                 status: CrashLogScanRunStatus::Completed,
                 discovery: None,
                 setup: None,
                 installed_yaml_data: None,
-                continuation: None,
                 effective_concurrency: None,
                 message: None,
                 total: 0,
@@ -1190,8 +1220,8 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
                 failed: 0,
                 cancelled: 0,
                 logs: Vec::new(),
-            },
-            None,
+                observer_delivery_failure: None,
+            }),
         )
         .expect("envelope should build");
         assert!(completed.recovery_prompt().is_none());
@@ -1201,9 +1231,186 @@ fn a_terminal_envelope_carries_no_recovery_prompt() {
                 stage: contract::InfrastructureErrorStage::Discovery,
                 message: "discovery failed".to_string(),
                 path: None,
+                observer_delivery_failure: None,
             },
-            None,
         );
         assert!(failed.recovery_prompt().is_none());
+        assert!(failed.pending_recovery(py).is_none());
     });
+}
+
+#[test]
+/// Only a run that retains a continuation offers a pending recovery to settle.
+///
+/// A hand-built result cannot carry a continuation (core alone constructs one), so this pins
+/// the absent side; the Python contract tests drive a real paused run for the present side.
+fn an_envelope_without_a_retained_continuation_offers_no_pending_recovery() {
+    Python::attach(|py| {
+        let execution = success_execution(
+            py,
+            contract::RunResult::from(contract::SettledRunResult {
+                status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+                discovery: None,
+                setup: None,
+                installed_yaml_data: None,
+                effective_concurrency: None,
+                message: None,
+                total: 0,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 0,
+                logs: Vec::new(),
+                observer_delivery_failure: None,
+            }),
+        )
+        .expect("envelope should build");
+
+        assert!(execution.pending_recovery(py).is_none());
+    });
+}
+
+#[test]
+/// A settled envelope states the settled run and carries nothing that could ask again.
+fn a_settled_envelope_projects_the_settled_result_and_its_lines() {
+    Python::attach(|py| {
+        let settled = contract::SettledRunResult {
+            status: CrashLogScanRunStatus::Cancelled,
+            discovery: Some(discovery()),
+            setup: None,
+            installed_yaml_data: None,
+            effective_concurrency: None,
+            message: Some("Cancelled after crash log discovery".to_string()),
+            total: 1,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 1,
+            logs: Vec::new(),
+            observer_delivery_failure: None,
+        };
+        let expected_lines = render_run_result(&contract::RunResult::from(
+            contract::SettledRunResult {
+                status: CrashLogScanRunStatus::Cancelled,
+                discovery: Some(discovery()),
+                setup: None,
+                installed_yaml_data: None,
+                effective_concurrency: None,
+                message: Some("Cancelled after crash log discovery".to_string()),
+                total: 1,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 1,
+                logs: Vec::new(),
+                observer_delivery_failure: None,
+            },
+        ));
+
+        // The observer outcome is the one Rust reported on the settled result.
+        let settled = contract::SettledRunResult {
+            observer_delivery_failure: Some(contract::ObserverDeliveryFailure::new(
+                "observer failed",
+            )),
+            ..settled
+        };
+        let execution =
+            settled_execution(py, Ok(settled)).expect("settled envelope should build");
+
+        let result = execution
+            .result(py)
+            .expect("a settled run carries its result");
+        let result = result.borrow(py);
+        assert_eq!(result.status(), "cancelled");
+        assert!(execution.error().is_none());
+        assert_eq!(execution.observer_error().as_deref(), Some("observer failed"));
+        assert_eq!(
+            execution.display_lines().len(),
+            display_lines_to_py(&expected_lines).len()
+        );
+    });
+}
+
+#[test]
+/// A settled run that failed run-wide resolves as the infrastructure half of the envelope.
+fn a_settled_infrastructure_failure_resolves_as_the_error_half() {
+    Python::attach(|py| {
+        let execution = settled_execution(
+            py,
+            Err(contract::InfrastructureError {
+                stage: contract::InfrastructureErrorStage::Intake,
+                message: "intake failed".to_string(),
+                path: None,
+                observer_delivery_failure: None,
+            }),
+        )
+        .expect("settled envelope should build");
+
+        assert!(execution.result(py).is_none());
+        assert_eq!(
+            execution.error().expect("the failure is carried").stage,
+            "intake"
+        );
+        assert!(!execution.display_lines().is_empty());
+    });
+}
+
+#[test]
+/// `observer_error` is the delivery failure Rust reported, on success and failure envelopes alike.
+fn observer_error_is_read_from_the_rust_result_not_tracked_by_the_binding() {
+    Python::attach(|py| {
+        let reported = || Some(contract::ObserverDeliveryFailure::new("callback raised"));
+        let completed = success_execution(
+            py,
+            contract::RunResult::from(contract::SettledRunResult {
+                status: CrashLogScanRunStatus::Completed,
+                discovery: None,
+                setup: None,
+                installed_yaml_data: None,
+                effective_concurrency: None,
+                message: None,
+                total: 0,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 0,
+                logs: Vec::new(),
+                observer_delivery_failure: reported(),
+            }),
+        )
+        .expect("envelope should build");
+        assert_eq!(completed.observer_error().as_deref(), Some("callback raised"));
+
+        let failed = failure_execution(contract::InfrastructureError {
+            stage: contract::InfrastructureErrorStage::Intake,
+            message: "intake failed".to_string(),
+            path: None,
+            observer_delivery_failure: reported(),
+        });
+        assert_eq!(failed.observer_error().as_deref(), Some("callback raised"));
+
+        let settled_failure = settled_execution(
+            py,
+            Err(contract::InfrastructureError {
+                stage: contract::InfrastructureErrorStage::Intake,
+                message: "intake failed".to_string(),
+                path: None,
+                observer_delivery_failure: reported(),
+            }),
+        )
+        .expect("settled envelope should build");
+        assert_eq!(
+            settled_failure.observer_error().as_deref(),
+            Some("callback raised")
+        );
+    });
+}
+
+#[test]
+/// `cancel_on_observer_error` is the Rust observer failure policy.
+fn cancel_on_observer_error_maps_onto_the_rust_policy() {
+    assert_eq!(
+        super::observer_failure_policy(true),
+        contract::ObserverFailurePolicy::CancelRun
+    );
+    assert_eq!(
+        super::observer_failure_policy(false),
+        contract::ObserverFailurePolicy::ContinueRun
+    );
 }

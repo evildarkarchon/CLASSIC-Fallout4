@@ -126,6 +126,8 @@ private slots:
     void ok_bootstraps_missing_settings_with_the_selected_vr_executable();
     void validation_failure_keeps_the_original_document();
     void concurrent_change_surfaces_conflict_and_preserves_newer_values();
+    /// A VR user sees legacy Fallout4VR rows through the Rust read and is told when saving moves them.
+    void vr_dialog_shows_legacy_formid_rows_and_reports_their_move_on_save();
     void formid_add_button_accepts_multiple_files_and_deduplicates_paths();
     void reset_uses_rust_owned_defaults_and_clears_dependent_executable();
     /// Verifies that rollback invalidates the reviewed update decision and disables Apply.
@@ -220,7 +222,7 @@ void SettingsDialogBehaviorTests::ok_commits_visible_settings_through_the_typed_
     QCOMPARE(reopened.gameSetup.gameRoot.value(), QStringLiteral("E:/Games/Fallout4"));
     QCOMPARE(reopened.gameSetup.documentsRoot.value(), QStringLiteral("E:/Documents/Fallout4"));
     QCOMPARE(reopened.gameSetup.gameExecutable.value(), QStringLiteral("E:/Games/Fallout4/Fallout4.exe"));
-    QCOMPARE(reopened.scan.formIdDatabases.value(QStringLiteral("Fallout4")),
+    QCOMPARE(reopened.scan.scanFormIdDatabases.value(QStringLiteral("Fallout4")),
              QStringList({QStringLiteral("E:/Databases/community.db")}));
     QFile persisted(root.filePath(QStringLiteral("CLASSIC Settings.yaml")));
     QVERIFY(persisted.open(QIODevice::ReadOnly));
@@ -304,6 +306,43 @@ void SettingsDialogBehaviorTests::concurrent_change_surfaces_conflict_and_preser
     QCOMPARE(classic::gui::GuiUserSettings::open(root.path()).scan.maxConcurrentScans, 4);
 }
 
+void SettingsDialogBehaviorTests::vr_dialog_shows_legacy_formid_rows_and_reports_their_move_on_save()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    writeSettings(root.path(), QByteArrayLiteral("schema_version: \"1.0\"\n"
+                                                 "CLASSIC_Settings:\n"
+                                                 "  Managed Game: Fallout 4 VR\n"
+                                                 "  Game Version: VR\n"
+                                                 "  FormID Databases:\n"
+                                                 "    Fallout4VR:\n"
+                                                 "      - databases/Legacy VR FormIDs.db\n"));
+    SettingsDialog dialog(root.path(), nullptr);
+    auto* databases = dialog.findChild<QListWidget*>(QStringLiteral("settings.formIdDatabases"));
+    auto* ok = dialog.findChild<QPushButton*>(QStringLiteral("settings.okButton"));
+    QVERIFY(databases);
+    QVERIFY(ok);
+    QCOMPARE(databases->count(), 1);
+    QCOMPARE(databases->item(0)->text(), QStringLiteral("databases/Legacy VR FormIDs.db"));
+    databases->addItem(QStringLiteral("E:/Databases/vr-extra.db"));
+    QString title;
+    QString message;
+    closeNextMessageBox(&title, &message);
+
+    QTest::mouseClick(ok, Qt::LeftButton);
+
+    QCOMPARE(dialog.result(), static_cast<int>(QDialog::Accepted));
+    QVERIFY(message.contains(QStringLiteral("legacy_formid_databases_key_removed")));
+    const auto reopened = classic::gui::GuiUserSettings::open(root.path());
+    QCOMPARE(reopened.scan.scanFormIdDatabases.value(QStringLiteral("Fallout4")),
+             QStringList({QStringLiteral("databases/Legacy VR FormIDs.db"), QStringLiteral("E:/Databases/vr-extra.db")}));
+    // The legacy key is checked in the persisted document itself: the snapshot only projects
+    // the rows each game's scan reads, which cannot show which stored key held them.
+    QFile persisted(root.filePath(QStringLiteral("CLASSIC Settings.yaml")));
+    QVERIFY(persisted.open(QIODevice::ReadOnly));
+    QVERIFY(!persisted.readAll().contains("Fallout4VR:"));
+}
+
 void SettingsDialogBehaviorTests::formid_add_button_accepts_multiple_files_and_deduplicates_paths()
 {
     QTemporaryDir root;
@@ -359,7 +398,7 @@ void SettingsDialogBehaviorTests::reset_uses_rust_owned_defaults_and_clears_depe
     QCOMPARE(reopened.scan.moveUnsolvedLogs, defaults.scan.moveUnsolvedLogs);
     QCOMPARE(reopened.scan.unsolvedLogsDestination, defaults.scan.unsolvedLogsDestination);
     QCOMPARE(reopened.scan.maxConcurrentScans, defaults.scan.maxConcurrentScans);
-    QVERIFY(reopened.scan.formIdDatabases.value(reopened.gameSetup.managedGame).isEmpty());
+    QVERIFY(reopened.scan.scanFormIdDatabases.value(reopened.gameSetup.managedGame).isEmpty());
     QCOMPARE(reopened.gameSetup.gameRoot, defaults.gameSetup.gameRoot);
     QCOMPARE(reopened.gameSetup.gameExecutable, defaults.gameSetup.gameExecutable);
     QCOMPARE(reopened.gameSetup.documentsRoot, defaults.gameSetup.documentsRoot);

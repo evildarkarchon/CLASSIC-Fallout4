@@ -16,9 +16,9 @@ use crate::installed_yaml_data::{
 use crate::scanlog::JsFcxConfigIssue;
 use crate::shared::{JsGameId, js_to_core_game_id};
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
-    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
-    render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, PendingRecoveryWithPrompt, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result, take_pending_recovery,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -32,8 +32,8 @@ use napi::threadsafe_function::{
     ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue,
 };
 use napi::{Env, JsError, JsValue, Status, Task};
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex, mpsc};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, mpsc};
 
 /// JavaScript configuration shared by Standard and Targeted requests.
 #[napi(object)]
@@ -126,6 +126,13 @@ impl ScanRunUnsolvedLogs {
 #[napi]
 pub struct ScanRunRequest {
     inner: contract::Request,
+}
+
+impl ScanRunRequest {
+    /// Wraps a request the Crash Log Scan Launch already built, so it executes unchanged.
+    pub(crate) fn from_core(inner: contract::Request) -> Self {
+        Self { inner }
+    }
 }
 
 #[napi]
@@ -335,10 +342,35 @@ pub enum JsScanRunLocalIgnoreRecoveryDecision {
     ResetToDefault,
 }
 
-/// Opaque process-local carrier for one paused Crash Log Scan Run.
+/// The pending recovery a paused Crash Log Scan Run offers: one object to prompt from and
+/// settle.
+///
+/// It carries the recovery prompt Rust already rendered and whether the run's cancellation
+/// was already requested. When `cancellationRequested` is true, do not prompt: settle with no
+/// decision. Settle it once with `scanRunSettle`.
 #[napi]
-pub struct ScanRunContinuation {
-    inner: Arc<contract::CrashLogScanRunContinuation>,
+pub struct ScanRunPendingRecovery {
+    inner: Arc<PendingRecoveryWithPrompt>,
+}
+
+#[napi]
+impl ScanRunPendingRecovery {
+    /// What to ask the user, and which answers this run can honor.
+    ///
+    /// The same Display Content the paused envelope's `recoveryPrompt` carries, including
+    /// Reset To Default's availability.
+    #[napi(getter)]
+    pub fn prompt(&self) -> JsScanRunRecoveryPrompt {
+        recovery_prompt_to_js(self.inner.prompt())
+    }
+
+    /// Whether cancellation of the paused run was already requested.
+    ///
+    /// Read live from the control the run was started with, each time it is read.
+    #[napi(getter)]
+    pub fn cancellation_requested(&self) -> bool {
+        self.inner.cancellation_requested()
+    }
 }
 
 /// Stable diagnostic categories emitted by valid-or-generated scan-run intake.
@@ -534,7 +566,7 @@ pub struct JsScanRunDisplayLine {
 // readable-from-JavaScript form and no consumer-constructible shape is widened.
 #[napi(object, object_from_js = false)]
 pub struct JsScanRunRecoveryDecisionDescription {
-    /// The decision to hand back to `scanRunResume`.
+    /// The decision to hand back to `scanRunSettle`.
     pub decision: JsScanRunLocalIgnoreRecoveryDecision,
     /// The decision's Display Label.
     pub label: String,
@@ -553,7 +585,7 @@ pub struct JsScanRunRecoveryDecisionDescription {
 ///
 /// Backing out appears nowhere here. `JsScanRunLocalIgnoreRecoveryDecision` has
 /// exactly two variants by design, and abandonment is spelled as the absence of a
-/// decision through `scanRunAbandon`.
+/// decision: `scanRunSettle` with no decision.
 #[napi(object, object_from_js = false)]
 pub struct JsScanRunRecoveryPrompt {
     /// Why the run paused and what is being decided about, in reading order.
@@ -573,8 +605,6 @@ pub struct JsScanRunResult {
     pub setup: Option<JsScanRunSetupResult>,
     /// Installed YAML Data selected after discovery, absent when intake was not reached.
     pub installed_yaml_data: Option<JsInstalledYamlDataRunData>,
-    /// Opaque one-shot continuation populated only for Local Ignore Recovery Required.
-    pub continuation: Option<ScanRunContinuation>,
     pub effective_concurrency: Option<u32>,
     pub message: Option<String>,
     pub total: u32,
@@ -632,10 +662,14 @@ pub struct JsScanRunEvent {
     pub display_lines: Vec<JsScanRunDisplayLine>,
 }
 
-/// Successful final operation envelope with adapter-only observation failure data.
+/// Successful final operation envelope.
 #[napi(object, object_from_js = false)]
 pub struct JsScanRunSuccess {
     pub result: JsScanRunResult,
+    /// The first observer delivery failure Rust reported for this run, if any.
+    ///
+    /// Read from the Rust result, not tracked by this binding, and reported whether or not
+    /// `cancelOnObserverError` asked Rust to cancel.
     pub observer_error: Option<String>,
     /// What this run says, in Rust's words.
     ///
@@ -644,13 +678,13 @@ pub struct JsScanRunSuccess {
     /// consumer states the run from these lines rather than composing sentences
     /// of its own; `result` stays the machine-facing surface it matches on.
     ///
-    /// `scanRunExecute` and `scanRunResume` resolve the same envelope, so this
-    /// one field covers the initial run and the continuation resume alike.
+    /// `scanRunSettle` resolves the same field on its settled envelope, so it covers
+    /// the initial run and the settled run alike.
     pub display_lines: Vec<JsScanRunDisplayLine>,
     /// What to ask the user, and which answers this run can honor.
     ///
     /// Present only when `result.status` is `local_ignore_recovery_required`, which
-    /// is also exactly when the run retains a continuation to answer with. Absent
+    /// is also exactly when the run offers a pending recovery to answer with. Absent
     /// rather than empty, because a run with nothing to ask has no prompt rather
     /// than an empty one — and `undefined` is what a JavaScript consumer already
     /// reads as "not present" everywhere else on this surface.
@@ -658,12 +692,31 @@ pub struct JsScanRunSuccess {
     /// Rendered here for the reason `displayLines` is: JavaScript receives a
     /// projected copy of the run and cannot render from the Rust value later.
     pub recovery_prompt: Option<JsScanRunRecoveryPrompt>,
+    /// The pending recovery to prompt from and settle with `scanRunSettle`.
+    ///
+    /// Present exactly when the run paused and retains a continuation to settle. Settling
+    /// it is the only way to answer the paused run (ADR-0009).
+    pub pending_recovery: Option<ScanRunPendingRecovery>,
 }
 
-/// Failed final operation envelope with adapter-only observation failure data.
+/// Successful envelope of a settled Crash Log Scan Run.
+///
+/// Deliberately has no `recoveryPrompt` and no `pendingRecovery`: a settled run cannot ask
+/// for a second recovery, so this type has nowhere to put one.
+#[napi(object, object_from_js = false)]
+pub struct JsScanRunSettledSuccess {
+    pub result: JsScanRunResult,
+    /// The first observer delivery failure Rust reported while settling, if any.
+    pub observer_error: Option<String>,
+    /// What the settled run says, in Rust's words.
+    pub display_lines: Vec<JsScanRunDisplayLine>,
+}
+
+/// Failed final operation envelope.
 #[napi(object)]
 pub struct JsScanRunFailure {
     pub error: JsScanRunInfrastructureError,
+    /// The first observer delivery failure Rust reported before the run failed, if any.
     pub observer_error: Option<String>,
     /// What this failure says, in Rust's words.
     ///
@@ -695,7 +748,7 @@ pub struct ScanRunTask {
     request: contract::Request,
     cancellation: contract::Cancellation,
     observer: Option<JsObserverFunction>,
-    cancel_on_observer_error: bool,
+    observer_failure_policy: contract::ObserverFailurePolicy,
 }
 
 impl Task for ScanRunTask {
@@ -704,31 +757,22 @@ impl Task for ScanRunTask {
 
     /// Executes the core future without constructing an independent runtime.
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        let observer_error = Arc::new(Mutex::new(None));
-        let mut adapter = self.observer.take().map(|callback| JsObserverAdapter {
-            callback,
-            cancellation: self.cancellation.clone(),
-            cancel_on_error: self.cancel_on_observer_error,
-            delivery_error: Arc::clone(&observer_error),
-            delivery_failed: false,
-        });
+        let mut adapter = self
+            .observer
+            .take()
+            .map(|callback| JsObserverAdapter { callback });
         let result = classic_shared_core::get_runtime().block_on(contract::execute(
             self.request.clone(),
             &self.cancellation,
             adapter
                 .as_mut()
                 .map(|observer| observer as &mut dyn contract::Observer),
+            self.observer_failure_policy,
         ));
-        let observer_error = observer_error
-            .lock()
-            .map_err(|_| napi::Error::from_reason("scan-run observer error state was poisoned"))?
-            .clone();
 
         Ok(match result {
-            Ok(result) => {
-                ScanRunTaskOutput::Success(Box::new(success_envelope(result, observer_error)))
-            }
-            Err(error) => ScanRunTaskOutput::Failure(failure_envelope(error, observer_error)),
+            Ok(result) => ScanRunTaskOutput::Success(Box::new(success_envelope(result))),
+            Err(error) => ScanRunTaskOutput::Failure(failure_envelope(error)),
         })
     }
 
@@ -743,10 +787,12 @@ impl Task for ScanRunTask {
 
 /// Executes one final-contract request with optional serialized observation.
 ///
-/// The observer is non-controlling. If it throws or cannot be delivered, the
-/// failure is returned only through `observerError`; `cancelOnObserverError`
-/// controls whether that adapter failure also uses the separate cancellation
-/// control to request safe stopping.
+/// If the observer throws or cannot be delivered, Rust stops delivering to it and
+/// reports the first failure as `observerError`. `cancelOnObserverError` is the
+/// observer failure policy Rust applies: `true` cancels the run at the failure,
+/// `false` (the default) lets it finish. A failure before the run pauses for Local
+/// Ignore recovery abandons that recovery either way, so such a run resolves
+/// cancelled with no `pendingRecovery` and no filesystem work.
 #[napi(ts_return_type = "Promise<JsScanRunSuccess | JsScanRunFailure>")]
 pub fn scan_run_execute(
     request: &ScanRunRequest,
@@ -776,202 +822,108 @@ pub fn scan_run_execute(
         request,
         cancellation,
         observer,
-        cancel_on_observer_error: cancel_on_observer_error.unwrap_or(false),
+        observer_failure_policy: observer_failure_policy(cancel_on_observer_error),
     }))
 }
 
-/// Internal continuation-claim output retained until JavaScript-thread resolution.
-pub enum ScanRunClaimTaskOutput {
-    /// The retained run produced normal terminal result data.
-    Success(Box<JsScanRunSuccess>),
-    /// The retained run encountered an infrastructure failure.
+/// Internal settlement output retained until JavaScript-thread resolution.
+pub enum ScanRunSettleTaskOutput {
+    /// The settled run produced normal terminal result data.
+    Success(Box<JsScanRunSettledSuccess>),
+    /// The settled run encountered an infrastructure failure.
     Failure(JsScanRunFailure),
-    /// Another sequential or concurrent caller already claimed the continuation.
-    ContinuationConsumed,
-    /// Reset conflict or operational failure rejected with stable structured metadata.
-    LocalIgnoreResetError(contract::ResumeError),
+    /// Reset conflict, operational failure, or a consumed continuation, rejected with metadata.
+    Rejected(contract::ResumeError),
 }
 
-/// Background task that claims one Rust-owned continuation on the shared runtime.
+/// Background task that settles one pending recovery on the shared runtime.
 ///
-/// Named for the claim rather than for `resume`, because both `scanRunResume` and `scanRunAbandon`
-/// run through it and the one-shot claim is what they share. It reaches no TypeScript declaration —
-/// both entry points override their return type — so the name costs no baseline row.
-pub struct ScanRunClaimTask {
-    continuation: Arc<contract::CrashLogScanRunContinuation>,
-    /// The recovery decision to claim the continuation with, or `None` to abandon the run.
+/// It reaches no TypeScript declaration — `scanRunSettle` overrides its return type — so
+/// the name costs no baseline row.
+pub struct ScanRunSettleTask {
+    pending: Arc<PendingRecoveryWithPrompt>,
+    /// The recovery decision to settle with, or `None` to abandon the run.
     ///
     /// Abandonment is modelled as the absence of a decision rather than as a third variant,
-    /// because that is what it is: `LocalIgnoreRecoveryDecision` deliberately carries no
-    /// abandonment variant, and adding one would reshape a type crossing five binding surfaces.
-    /// Sharing one task keeps `scanRunAbandon` and `scanRunResume` on the same observer adapter,
-    /// the same envelope builders, and the same rejection routing.
+    /// because that is what it is (ADR-0007): `LocalIgnoreRecoveryDecision` deliberately carries
+    /// no abandonment variant, and adding one would reshape a type crossing five binding
+    /// surfaces.
     decision: Option<contract::LocalIgnoreRecoveryDecision>,
-    cancellation: contract::Cancellation,
     observer: Option<JsObserverFunction>,
-    cancel_on_observer_error: bool,
+    observer_failure_policy: contract::ObserverFailurePolicy,
 }
 
-impl Task for ScanRunClaimTask {
-    type Output = ScanRunClaimTaskOutput;
-    type JsValue = Either<JsScanRunSuccess, JsScanRunFailure>;
+impl Task for ScanRunSettleTask {
+    type Output = ScanRunSettleTaskOutput;
+    type JsValue = Either<JsScanRunSettledSuccess, JsScanRunFailure>;
 
-    /// Claims the core continuation without constructing another runtime.
+    /// Settles through Rust without constructing another runtime.
     ///
-    /// A `None` decision abandons the run through the shared core operation rather than
-    /// cancelling here and resuming with a placeholder; that sequence is Rust's to own.
+    /// Settling runs on the paused run's own control, so the cancel policy cancels that
+    /// same control when an observer delivery fails.
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        let observer_error = Arc::new(Mutex::new(None));
-        let mut adapter = self.observer.take().map(|callback| JsObserverAdapter {
-            callback,
-            cancellation: self.cancellation.clone(),
-            cancel_on_error: self.cancel_on_observer_error,
-            delivery_error: Arc::clone(&observer_error),
-            delivery_failed: false,
-        });
-        let runtime = classic_shared_core::get_runtime();
-        let result = match self.decision {
-            Some(decision) => runtime.block_on(
-                self.continuation.resume(
-                    decision,
-                    &self.cancellation,
-                    adapter
-                        .as_mut()
-                        .map(|observer| observer as &mut dyn contract::Observer),
-                ),
+        let mut adapter = self
+            .observer
+            .take()
+            .map(|callback| JsObserverAdapter { callback });
+        let result = classic_shared_core::get_runtime().block_on(
+            self.pending.settle(
+                self.decision,
+                adapter
+                    .as_mut()
+                    .map(|observer| observer as &mut dyn contract::Observer),
+                self.observer_failure_policy,
             ),
-            None => runtime.block_on(
-                self.continuation.abandon(
-                    &self.cancellation,
-                    adapter
-                        .as_mut()
-                        .map(|observer| observer as &mut dyn contract::Observer),
-                ),
-            ),
-        };
-        let observer_error = observer_error
-            .lock()
-            .map_err(|_| napi::Error::from_reason("scan-run observer error state was poisoned"))?
-            .clone();
+        );
 
         Ok(match result {
-            Ok(result) => {
-                ScanRunClaimTaskOutput::Success(Box::new(success_envelope(result, observer_error)))
-            }
+            Ok(settled) => ScanRunSettleTaskOutput::Success(Box::new(settled_envelope(settled))),
             Err(contract::ResumeError::Infrastructure(error)) => {
-                ScanRunClaimTaskOutput::Failure(failure_envelope(error, observer_error))
+                ScanRunSettleTaskOutput::Failure(failure_envelope(error))
             }
-            Err(contract::ResumeError::ContinuationConsumed) => {
-                ScanRunClaimTaskOutput::ContinuationConsumed
-            }
-            Err(error) => ScanRunClaimTaskOutput::LocalIgnoreResetError(error),
+            Err(error) => ScanRunSettleTaskOutput::Rejected(error),
         })
     }
 
     /// Resolves normal envelopes and rejects replay or reset failures with stable metadata.
     fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         match output {
-            ScanRunClaimTaskOutput::Success(result) => Ok(Either::A(*result)),
-            ScanRunClaimTaskOutput::Failure(error) => Ok(Either::B(error)),
-            // Routed through the shared rejection builder rather than rebuilding
-            // the code and message by hand. The pair written here was already
-            // byte-identical to `ResumeErrorKind::as_str` and `ResumeError`'s
-            // `Display`, so it recorded the agreement instead of checking it —
-            // and it is what kept this one rejection from carrying the rendered
-            // lines every other one now does.
-            ScanRunClaimTaskOutput::ContinuationConsumed => Err(scan_run_resume_error_to_napi(
-                env,
-                contract::ResumeError::ContinuationConsumed,
-            )),
-            ScanRunClaimTaskOutput::LocalIgnoreResetError(error) => {
+            ScanRunSettleTaskOutput::Success(result) => Ok(Either::A(*result)),
+            ScanRunSettleTaskOutput::Failure(error) => Ok(Either::B(error)),
+            ScanRunSettleTaskOutput::Rejected(error) => {
                 Err(scan_run_resume_error_to_napi(env, error))
             }
         }
     }
 }
 
-/// Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
+/// Settles one paused Crash Log Scan Run once, with a recovery decision or with none.
 ///
-/// Replay and concurrent double consumption reject with JavaScript error code
-/// `scan_run_continuation_consumed`. Reset conflict, backup failure, and replacement failure
-/// reject with their stable codes plus applicable identity, path, and publication-stage metadata.
-/// Infrastructure failures retain the same resolved envelope used by [`scan_run_execute`].
-#[napi(ts_return_type = "Promise<JsScanRunSuccess | JsScanRunFailure>")]
-pub fn scan_run_resume(
-    continuation: &ScanRunContinuation,
-    decision: JsScanRunLocalIgnoreRecoveryDecision,
-    cancellation: &ScanRunCancellation,
-    // Same narrowing as `scan_run_execute`, minus `discovery_completed`: a resumed
-    // run replays the discovery it already made rather than observing it again.
+/// A decision resumes the same discovered Crash Logs without rediscovery. No decision
+/// (`undefined` or `null`) abandons the run: it cancels the run's own control and resolves
+/// with the ordinary cancelled-after-discovery envelope, touching nothing on disk. When
+/// `pendingRecovery.cancellationRequested` is already true, every settlement resolves
+/// cancelled, so do not prompt; settle with no decision.
+///
+/// The resolved success has no recovery prompt and no pending recovery, so a settled run
+/// cannot ask again. Replay and concurrent double consumption reject with code
+/// `scan_run_continuation_consumed`; Reset To Default conflicts and failures reject with their
+/// stable codes plus applicable identity, path, and publication-stage metadata. Infrastructure
+/// failures resolve the same failure envelope `scanRunExecute` uses.
+#[napi(ts_return_type = "Promise<JsScanRunSettledSuccess | JsScanRunFailure>")]
+pub fn scan_run_settle(
+    pending_recovery: &ScanRunPendingRecovery,
+    decision: Option<JsScanRunLocalIgnoreRecoveryDecision>,
+    // Same narrowing as `scan_run_execute`, minus `discovery_completed`: a settled run replays
+    // the discovery it already made rather than observing it again. `napi`'s attribute takes a
+    // literal, so this cannot be hoisted into a shared constant; `bun run test:types` and
+    // `bun run build:cli` are what catch a divergence.
     #[napi(
         ts_arg_type = "(event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void"
     )]
     observer: Option<Function<'_, FnArgs<(JsScanRunEvent,)>, UnknownReturnValue>>,
     cancel_on_observer_error: Option<bool>,
-) -> napi::Result<AsyncTask<ScanRunClaimTask>> {
-    claim_continuation_task(
-        continuation,
-        Some(local_ignore_recovery_decision_to_core(decision)),
-        cancellation,
-        observer,
-        cancel_on_observer_error,
-    )
-}
-
-/// Abandons one retained Crash Log Scan Run without applying either recovery decision.
-///
-/// Requests cancellation on `cancellation` and then claims the continuation, resolving with the
-/// ordinary post-discovery cancelled envelope. No backup is taken, nothing is published, and the
-/// malformed Local Ignore file is left exactly as it was. Prefer this over cancelling and then
-/// calling [`scan_run_resume`] with a placeholder decision: that sequence is what this replaces,
-/// and getting its ordering wrong spends the one-shot continuation on a real recovery attempt.
-///
-/// `cancellation` is left cancelled afterwards, which is what abandoning the run means. Replay and
-/// concurrent double consumption reject with JavaScript error code
-/// `scan_run_continuation_consumed`, exactly as [`scan_run_resume`] does. The recovery-plan and
-/// infrastructure failures resume can reject with are unreachable here, because cancellation
-/// short-circuits ahead of every stage that produces them.
-#[napi(ts_return_type = "Promise<JsScanRunSuccess | JsScanRunFailure>")]
-pub fn scan_run_abandon(
-    continuation: &ScanRunContinuation,
-    cancellation: &ScanRunCancellation,
-    // Byte-identical to `scan_run_resume`'s narrowing, and deliberately so: under
-    // `strictFunctionTypes` a callback typed for that union is not assignable to a wider parameter,
-    // so a consumer wiring one observer across both entry points needs the two to agree exactly.
-    // `napi`'s attribute takes a literal, so this cannot be hoisted into a shared constant;
-    // `bun run test:types` and `bun run build:cli` are what catch a divergence.
-    //
-    // An abandoned run observes nothing in practice — cancellation short-circuits ahead of every
-    // stage that emits — but the parameter stays for that assignability, and for symmetry with the
-    // CXX and Python surfaces, which both accept an observer here too.
-    #[napi(
-        ts_arg_type = "(event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void"
-    )]
-    observer: Option<Function<'_, FnArgs<(JsScanRunEvent,)>, UnknownReturnValue>>,
-    cancel_on_observer_error: Option<bool>,
-) -> napi::Result<AsyncTask<ScanRunClaimTask>> {
-    claim_continuation_task(
-        continuation,
-        None,
-        cancellation,
-        observer,
-        cancel_on_observer_error,
-    )
-}
-
-/// Builds the background task that claims a continuation exactly once.
-///
-/// `decision` is `None` to abandon the run. Sharing one builder keeps [`scan_run_resume`] and
-/// [`scan_run_abandon`] on the same threadsafe-observer construction and the same task fields, so
-/// the two cannot drift in how they reach the core — which is the whole point of the shared
-/// abandonment operation they both call into.
-fn claim_continuation_task(
-    continuation: &ScanRunContinuation,
-    decision: Option<contract::LocalIgnoreRecoveryDecision>,
-    cancellation: &ScanRunCancellation,
-    observer: Option<Function<'_, FnArgs<(JsScanRunEvent,)>, UnknownReturnValue>>,
-    cancel_on_observer_error: Option<bool>,
-) -> napi::Result<AsyncTask<ScanRunClaimTask>> {
+) -> napi::Result<AsyncTask<ScanRunSettleTask>> {
     let observer = observer
         .map(|observer| {
             observer
@@ -980,12 +932,11 @@ fn claim_continuation_task(
                 .build_callback(|context| Ok((context.value,).into()))
         })
         .transpose()?;
-    Ok(AsyncTask::new(ScanRunClaimTask {
-        continuation: Arc::clone(&continuation.inner),
-        decision,
-        cancellation: cancellation.inner.clone(),
+    Ok(AsyncTask::new(ScanRunSettleTask {
+        pending: Arc::clone(&pending_recovery.inner),
+        decision: decision.map(local_ignore_recovery_decision_to_core),
         observer,
-        cancel_on_observer_error: cancel_on_observer_error.unwrap_or(false),
+        observer_failure_policy: observer_failure_policy(cancel_on_observer_error),
     }))
 }
 
@@ -1003,36 +954,33 @@ const fn local_ignore_recovery_decision_to_core(
     }
 }
 
-struct JsObserverAdapter {
-    callback: JsObserverFunction,
-    cancellation: contract::Cancellation,
-    cancel_on_error: bool,
-    delivery_error: Arc<Mutex<Option<String>>>,
-    delivery_failed: bool,
+/// Maps the binding's `cancelOnObserverError` option onto the Rust observer failure policy.
+///
+/// Absent means `false`, which lets the run finish; the result reports the failure either way.
+fn observer_failure_policy(
+    cancel_on_observer_error: Option<bool>,
+) -> contract::ObserverFailurePolicy {
+    if cancel_on_observer_error.unwrap_or(false) {
+        contract::ObserverFailurePolicy::CancelRun
+    } else {
+        contract::ObserverFailurePolicy::ContinueRun
+    }
 }
 
-impl JsObserverAdapter {
-    /// Records the first adapter delivery failure and optionally requests cancellation.
-    fn record_failure(&mut self, message: String) {
-        self.delivery_failed = true;
-        if let Ok(mut error) = self.delivery_error.lock()
-            && error.is_none()
-        {
-            *error = Some(message);
-        }
-        if self.cancel_on_error {
-            self.cancellation.cancel();
-        }
-    }
+/// Delivers Rust events to one JavaScript callback and reports a throw as a failed delivery.
+///
+/// Holds no failure state: Rust stops delivering after the first failure, applies the policy,
+/// and reports the failure in the result.
+struct JsObserverAdapter {
+    callback: JsObserverFunction,
 }
 
 impl contract::Observer for JsObserverAdapter {
     /// Delivers one event and waits for the callback result to preserve serialization.
-    fn on_event(&mut self, event: contract::Event) {
-        if self.delivery_failed {
-            return;
-        }
-
+    fn on_event(
+        &mut self,
+        event: contract::Event,
+    ) -> Result<(), contract::ObserverDeliveryFailure> {
         let (sender, receiver) = mpsc::sync_channel(1);
         let status = self.callback.call_with_return_value(
             event_to_js(event),
@@ -1044,14 +992,17 @@ impl contract::Observer for JsObserverAdapter {
             },
         );
         if status != Status::Ok {
-            self.record_failure(format!("observer delivery failed: {status}"));
-            return;
+            return Err(contract::ObserverDeliveryFailure::new(format!(
+                "observer delivery failed: {status}"
+            )));
         }
 
         match receiver.recv() {
-            Ok(Ok(())) => {}
-            Ok(Err(error)) => self.record_failure(error),
-            Err(error) => self.record_failure(format!("observer delivery failed: {error}")),
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(error)) => Err(contract::ObserverDeliveryFailure::new(error)),
+            Err(error) => Err(contract::ObserverDeliveryFailure::new(format!(
+                "observer delivery failed: {error}"
+            ))),
         }
     }
 }
@@ -1323,7 +1274,7 @@ enum ScanRunResumeErrorMetadata {
 }
 
 /// Stable code, message, rendered lines, and optional metadata for one rejected
-/// continuation resume.
+/// settlement.
 struct ScanRunResumeErrorProjection {
     code: &'static str,
     message: String,
@@ -1498,25 +1449,33 @@ fn setup_context_to_core(value: JsScanRunSetupContext) -> CrashLogScanSetupConte
     }
 }
 
-fn required_path(value: String, label: &str) -> napi::Result<PathBuf> {
-    if value.trim().is_empty() {
+/// Rejects blank path text, which cannot name a file or folder, and builds the path trimmed.
+///
+/// Trimming matches the CXX and Python adapters, so the same text names the same folder in every
+/// binding. Fails with `InvalidArg` when the text is blank.
+pub(crate) fn required_path(value: String, label: &str) -> napi::Result<PathBuf> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
         return Err(napi::Error::new(
             Status::InvalidArg,
             format!("{label} must not be blank"),
         ));
     }
-    Ok(PathBuf::from(value))
+    Ok(PathBuf::from(trimmed))
 }
 
-/// Converts optional path text while treating blank binding sentinels as absent.
+/// Converts optional path text, trimmed like `required_path`, treating blank sentinels as absent.
 fn optional_path(value: Option<String>) -> Option<PathBuf> {
     value
-        .filter(|path| !path.trim().is_empty())
+        .as_deref()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .map(PathBuf::from)
 }
 
-fn path_to_string(path: PathBuf) -> String {
-    path.to_string_lossy().into_owned()
+/// Renders a path for JavaScript without failing on non-UTF-8 components.
+pub(crate) fn path_to_string(path: impl AsRef<Path>) -> String {
+    path.as_ref().to_string_lossy().into_owned()
 }
 
 fn usize_to_u32(value: usize) -> u32 {
@@ -1616,6 +1575,9 @@ fn log_result_to_js(value: contract::LogResult) -> JsScanRunLogResult {
 }
 
 /// Maps the complete terminal result including Rust-selected concurrency.
+///
+/// Callers take a paused run's pending recovery out first (see [`success_envelope`]); the
+/// projected result never carries a continuation.
 fn run_result_to_js(value: contract::RunResult) -> JsScanRunResult {
     JsScanRunResult {
         // Delegated rather than restated, like the per-log disposition and failure
@@ -1627,9 +1589,6 @@ fn run_result_to_js(value: contract::RunResult) -> JsScanRunResult {
         discovery: value.discovery.map(discovery_to_js),
         setup: value.setup.map(setup_to_js),
         installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_run_to_js),
-        continuation: value.continuation.map(|continuation| ScanRunContinuation {
-            inner: Arc::new(continuation),
-        }),
         effective_concurrency: value.effective_concurrency.map(usize_to_u32),
         message: value.message,
         total: usize_to_u32(value.total),
@@ -1642,17 +1601,19 @@ fn run_result_to_js(value: contract::RunResult) -> JsScanRunResult {
 
 /// Builds the resolved success envelope, rendering the run before projecting it.
 ///
-/// The order is load-bearing. `run_result_to_js` consumes the result — including
-/// moving its one-shot continuation into the opaque carrier — so the render has
-/// to happen while the Rust value is still borrowable. Rendering afterwards would
-/// have nothing left to render, and writing it that way does not compile.
-///
-/// `scanRunExecute` and `scanRunResume` both resolve this envelope, which is why
-/// one builder serves the initial run and the continuation resume alike.
-fn success_envelope(
-    result: contract::RunResult,
-    observer_error: Option<String>,
-) -> JsScanRunSuccess {
+/// The order is load-bearing. The pending recovery is taken out of the result first —
+/// `render_run_result` borrows the result, so taking it afterwards would borrow across the
+/// mutation — and `run_result_to_js` then consumes the result, so the render has to happen
+/// while the Rust value is still borrowable. Rendering afterwards would have nothing left to
+/// render, and writing it that way does not compile.
+fn success_envelope(mut result: contract::RunResult) -> JsScanRunSuccess {
+    // Taken through the presentation crate so the pending recovery carries the prompt it
+    // rendered; settling it is the only way to answer the paused run.
+    let pending_recovery =
+        take_pending_recovery(&mut result).map(|pending| ScanRunPendingRecovery {
+            inner: Arc::new(pending),
+        });
+    let observer_error = observer_error_to_js(result.observer_delivery_failure.take());
     let display_lines = display_lines_to_js(&render_run_result(&result));
     // Rendered only for the one status that pauses for an answer. Every other status
     // has nothing to ask, and a prompt attached to a finished run would invite a
@@ -1668,20 +1629,39 @@ fn success_envelope(
         observer_error,
         display_lines,
         recovery_prompt,
+        pending_recovery,
+    }
+}
+
+/// Builds the resolved envelope of a settled run.
+///
+/// The settled result is widened into a run result only to share one projection; it has no
+/// continuation and so no pending recovery.
+fn settled_envelope(result: contract::SettledRunResult) -> JsScanRunSettledSuccess {
+    let mut result = contract::RunResult::from(result);
+    let observer_error = observer_error_to_js(result.observer_delivery_failure.take());
+    let display_lines = display_lines_to_js(&render_run_result(&result));
+    JsScanRunSettledSuccess {
+        result: run_result_to_js(result),
+        observer_error,
+        display_lines,
     }
 }
 
 /// Builds the resolved failure envelope, rendering the failure before projecting it.
-fn failure_envelope(
-    error: contract::InfrastructureError,
-    observer_error: Option<String>,
-) -> JsScanRunFailure {
+fn failure_envelope(mut error: contract::InfrastructureError) -> JsScanRunFailure {
     let display_lines = display_lines_to_js(&render_infrastructure_error(&error));
+    let observer_error = observer_error_to_js(error.observer_delivery_failure.take());
     JsScanRunFailure {
         error: infrastructure_error_to_js(error),
         observer_error,
         display_lines,
     }
+}
+
+/// Projects the Rust-reported delivery failure onto the envelope's `observerError` message.
+fn observer_error_to_js(failure: Option<contract::ObserverDeliveryFailure>) -> Option<String> {
+    failure.map(|failure| failure.message)
 }
 
 /// Flattens rendered Display Content into the JavaScript mirror types.
@@ -1692,7 +1672,7 @@ fn failure_envelope(
 /// idiomatic JavaScript and worse parity — a consumer reading two bindings would
 /// read the same segment two ways, and the taxonomy is frozen precisely so that
 /// cannot happen.
-fn display_lines_to_js(lines: &[DisplayLine]) -> Vec<JsScanRunDisplayLine> {
+pub(crate) fn display_lines_to_js(lines: &[DisplayLine]) -> Vec<JsScanRunDisplayLine> {
     lines
         .iter()
         .map(|line| JsScanRunDisplayLine {

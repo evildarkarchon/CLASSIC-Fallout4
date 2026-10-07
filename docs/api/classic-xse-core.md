@@ -51,6 +51,8 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 - `get_xse_info()` - combined installation + optional version probe
 - `XseGameLocalFacts` - XSE's narrow input for config-owned Game Local facts (`docs_folder_xse`, `root_folder_docs`)
 - `resolve_xse_folder_from_game_local_facts()` / `resolve_xse_folder_from_game_local_facts_in_version_registry_scope()` - fail-soft XSE Folder derivation from caller-supplied Game Local facts, reading Version Registry metadata from the default snapshot or a caller-selected scope
+- `resolve_xse_log_from_game_local_facts()` / `resolve_xse_log_from_game_local_facts_in_version_registry_scope()` - locate the XSE log inside the XSE Folder the same precedence selects; `Ok(None)` for absence, `XseLogError` for operational failure (see [XSE log](#xse-log-from-game-local-facts))
+- `XseLogError` - the XSE log resolvers' typed operational failure (`Inspect { path, source }`)
 - `xse_folder_name(acronym)` - the sole owner of the on-disk XSE folder-name rule: maps a Version Registry XSE acronym to the folder used both under the documents root (the XSE Folder) and under `Data/<folder>/Plugins`; `F4SEVR` maps to the shared `F4SE` folder, every other acronym (trimmed) is its own folder. Game Setup Intake's `plugins_path` uses it. Rust-only: no CXX, Node, or Python export
 - `XseError`, `XseResult<T>` - crate-specific error model
 
@@ -197,6 +199,18 @@ Callers that start from an installation's `CLASSIC Data` directory use [`classic
 
 This crate is the `domainOwner` of the `xse-folder` Binding Compliance Suite family. Its `xse-folder.derive` capability exercises `resolve_xse_folder_from_game_local_facts` directly with supplied facts (Rust only; no binding exposes the facts resolver). The Local.yaml composition is credited separately to `classic-scangame-core` as `xse-folder.resolve`.
 
+## XSE log from Game Local facts
+
+`resolve_xse_log_from_game_local_facts(&facts, game, selected_game_version, configured_docs_root) -> Result<Option<PathBuf>, XseLogError>` is the one Rust owner of the XSE log location (#283). Before it, only the GUI knew the log, through hard-coded `f4se.log`/`f4sevr.log` names and a VR-first probe.
+
+- The log is looked for only in the XSE Folder that `resolve_xse_folder_from_game_local_facts` selects, with the same precedence. A log in a lower-precedence folder is never used instead.
+- The file name is the selected version's Version Registry XSE acronym, trimmed and lower-cased, plus `.log`. Fallout 4 gets `F4SE/f4se.log`; Fallout 4 VR (`Fallout4VR` with `auto`, or `VR`) gets its own `F4SE/f4sevr.log` in the shared folder. An edition never borrows the other edition's log.
+- `Ok(Some(path))` is an existing log file. `Ok(None)` means no XSE Folder resolved, the version has no XSE metadata (for example an explicit folder for an unknown game), or the folder or log is missing; a directory named like the log is not a log.
+- `Err(XseLogError::Inspect { path, source })` means the candidate log could not be inspected for a reason other than absence (for example access denied, or a path that is not a valid file name). Its message starts with `cannot inspect XSE log `.
+- `resolve_xse_log_from_game_local_facts_in_version_registry_scope(..., &VersionRegistryScope)` reads Version Registry metadata only from the caller's scope.
+
+Callers that start from `CLASSIC Data` use [`classic_scangame_core::resolve_xse_log_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document), which is what CXX (`classic::xse::resolve_xse_log_for_scan`), Node (`resolveXseLogForScan`) and Python (`classic_xse.resolve_xse_log_for_scan`) expose. The `xse-folder` family's `xse-folder.log` capability runs those on all four adapters.
+
 ## Version helpers
 
 The crate does not re-export version helpers. When a caller wants to compare a detected XSE version with version strings resolved elsewhere, it uses `parse_version()` and `compare_versions()` from [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) directly. `classic-xse-core` does not currently expose its own higher-level compatibility-check function.
@@ -245,6 +259,8 @@ What contributors should know:
 - `IoError` exists through `#[from] std::io::Error`, but the current `detect_xse_version()` implementation swallows `read_dir()` failure by using `if let Ok(entries) = ...`; not every directory-read problem becomes an error today
 - `PathError` is part of the public API; XSE Folder discovery uses `DocsPathFinder` but returns `None` rather than exposing path-discovery errors
 - `IncompatibleVersion` is public API surface, but current `src/lib.rs` does not construct it anywhere
+
+The XSE log resolvers use their own `XseLogError` instead, so absence (`Ok(None)`) and operational failure stay distinct; see [XSE log](#xse-log-from-game-local-facts).
 
 That means the public error enum is slightly broader than the behavior currently exercised by the main functions.
 

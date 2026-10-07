@@ -1140,16 +1140,21 @@ def _lifecycle_observation(
         "discovery": _discovery(result.discovery, root),
         "logs": _log_results(result.logs, root),
         "events": _compact_events(result, callbacks, root),
+        # Whether delivery failed, and its message, come from the Rust result; the event kind
+        # is the boundary the plan told this runner's observer to refuse.
         "observerFailure": None
-        if expected_failure is None
+        if execution.observer_error is None
         else {
             "kind": "observer_delivery_failure",
-            "eventKind": _require_string(
+            "eventKind": None
+            if expected_failure is None
+            else _require_string(
                 expected_failure.get("eventKind"),
                 "executionFlow.observerFailure.eventKind",
             ),
-            "messageNonEmpty": bool(execution.observer_error),
+            "messageNonEmpty": bool(execution.observer_error.strip()),
         },
+        "pendingRecovery": execution.pending_recovery is not None,
         "cancellation": {"requested": bool(cancellation.is_cancelled)},
         "durableEffects": _lifecycle_durable_effects(result.logs, inputs, root),
     }
@@ -1176,14 +1181,25 @@ def _execution_flow(
         "on-first-log-queued",
         "on-first-log-started",
         "on-observer-failure",
+        "none",
     }
     if cancellation not in supported:
         raise RunnerContractError(
             "executionFlow.cancellation is not a supported lifecycle boundary"
         )
     raw_failure = flow.get("observerFailure")
-    if cancellation == "on-observer-failure":
+    if cancellation in {"on-observer-failure", "none"}:
         failure = _require_mapping(raw_failure, "executionFlow.observerFailure")
+        # Only the cancel-run policy may be the plan's source of cancellation, and the
+        # continue-run policy runs with no cancellation at all.
+        expected_policy = "continue-run" if cancellation == "none" else "cancel-run"
+        if (
+                _require_string(failure.get("policy"), "executionFlow.observerFailure.policy")
+                != expected_policy
+        ):
+            raise RunnerContractError(
+                f"{cancellation} cancellation requires a {expected_policy} observerFailure"
+            )
         if (
                 _require_string(
                     failure.get("eventKind"),
@@ -1200,7 +1216,7 @@ def _execution_flow(
             raise RunnerContractError("observer failure message must be non-empty")
     elif raw_failure is not None:
         raise RunnerContractError(
-            "observerFailure requires on-observer-failure cancellation"
+            "observerFailure requires on-observer-failure or no cancellation"
         )
     return flow
 
@@ -1302,7 +1318,7 @@ def _local_ignore_observation(
         execution,
         callbacks,
         root,
-        continuation_available=result.continuation is not None,
+        continuation_available=execution.pending_recovery is not None,
         recovery_prompt=execution.recovery_prompt,
     )
     observation["durableEffects"] = _local_ignore_durable_effects(result, inputs, root)
@@ -1310,7 +1326,11 @@ def _local_ignore_observation(
 
 
 def _continuation_action(raw_action: object, label: str) -> tuple[str, str | None]:
-    """Validate one continuation operation and its optional plan decision."""
+    """Validate one continuation operation and its optional plan decision.
+
+    Settling is the only operation: the separate resume and abandon entry points were
+    removed (ADR-0009), so a plan naming either is rejected rather than silently skipped.
+    """
 
     action = _require_mapping(raw_action, label)
     operation = _require_string(action.get("operation"), f"{label}.operation")
@@ -1318,42 +1338,30 @@ def _continuation_action(raw_action: object, label: str) -> tuple[str, str | Non
     decision = None
     if raw_decision is not None:
         decision = _require_string(raw_decision, f"{label}.decision")
-    if operation == "resume" and decision in {
-        "proceed-without-ignore",
-        "reset-to-default",
-    }:
-        return operation, decision
-    if operation == "abandon" and decision is None:
-        return operation, None
-    if operation == "resume":
+    if operation != "settle":
+        raise RunnerContractError(f"{label}.operation must be settle")
+    # Settling takes an optional decision: none is abandonment, not a third decision.
+    if decision not in {None, "proceed-without-ignore", "reset-to-default"}:
         raise RunnerContractError(f"{label} has no supported recovery decision")
-    if operation == "abandon":
-        raise RunnerContractError(f"{label} abandon operation must not have a decision")
-    raise RunnerContractError(f"{label}.operation must be resume or abandon")
+    return operation, decision
 
 
 def _run_continuation_action(
         classic_scanlog: Any,
-        continuation: Any,
-        cancellation: Any,
+        pending_recovery: Any,
         raw_action: object,
         label: str,
         callbacks: list[Any] | None,
 ) -> Any:
-    """Invoke one public resume or abandon operation on the retained continuation."""
+    """Settle the retained run's pending recovery for one plan action."""
 
-    operation, decision = _continuation_action(raw_action, label)
+    _, decision = _continuation_action(raw_action, label)
     observer = None if callbacks is None else callbacks.append
-    if operation == "resume":
-        return classic_scanlog.scan_run_resume(
-            continuation,
-            _recovery_decision(classic_scanlog, decision, f"{label}.decision"),
-            cancellation,
-            observer,
-        )
-    return classic_scanlog.scan_run_abandon(
-        continuation,
-        cancellation,
+    return classic_scanlog.scan_run_settle(
+        pending_recovery,
+        None
+        if decision is None
+        else _recovery_decision(classic_scanlog, decision, f"{label}.decision"),
         observer,
     )
 
@@ -1494,19 +1502,25 @@ def _execute_continuation_flow(
             cancellation_boundary, "continuationFlow.cancellation"
         )
         if cancellation_boundary not in {
-            "before-resume",
+            "before-settle",
             "after-reset-critical-section",
+            "before-pending-recovery",
         }:
             raise RunnerContractError(
-                "continuationFlow.cancellation must be before-resume or "
-                "after-reset-critical-section"
+                "continuationFlow.cancellation must be before-settle, "
+                "after-reset-critical-section, or before-pending-recovery"
             )
+    if cancellation_boundary == "before-pending-recovery":
+        # The run's own control, cancelled after the pause and before the frontend reads
+        # its pending recovery.
+        cancellation.cancel()
 
-    initial_result = _result_or_raise(initial_execution)
-    continuation = initial_result.continuation
-    if continuation is None:
+    _result_or_raise(initial_execution)
+    # A settling frontend reaches the paused run only through its pending recovery.
+    pending_recovery = initial_execution.pending_recovery
+    if pending_recovery is None:
         raise RunnerContractError(
-            "continuationFlow initial result has no retained continuation"
+            "continuationFlow initial execution has no pending recovery"
         )
     prompt = initial_execution.recovery_prompt
     if prompt is None:
@@ -1521,6 +1535,12 @@ def _execute_continuation_flow(
         continuation_available=True,
         recovery_prompt=prompt,
     )
+    initial["pendingRecovery"] = {
+        "cancellationRequested": bool(pending_recovery.cancellation_requested),
+        "prompt": _project_recovery_prompt(
+            classic_scanlog, pending_recovery.prompt, root
+        ),
+    }
 
     _materialize_post_pause_data(
         plan,
@@ -1530,11 +1550,11 @@ def _execute_continuation_flow(
     )
     reset_entry_observed: threading.Event | None = None
     canceller: threading.Thread | None = None
-    if cancellation_boundary == "before-resume":
+    if cancellation_boundary == "before-settle":
         cancellation.cancel()
     elif cancellation_boundary == "after-reset-critical-section":
-        operation, decision = _continuation_action(action, "continuationFlow.action")
-        if operation != "resume" or decision != "reset-to-default":
+        _, decision = _continuation_action(action, "continuationFlow.action")
+        if decision != "reset-to-default":
             raise RunnerContractError(
                 "after-reset-critical-section cancellation requires reset-to-default"
             )
@@ -1562,8 +1582,7 @@ def _execute_continuation_flow(
     try:
         terminal_execution = _run_continuation_action(
             classic_scanlog,
-            continuation,
-            cancellation,
+            pending_recovery,
             action,
             "continuationFlow.action",
             terminal_callbacks,
@@ -1595,8 +1614,7 @@ def _execute_continuation_flow(
         try:
             _run_continuation_action(
                 classic_scanlog,
-                continuation,
-                cancellation,
+                pending_recovery,
                 replay,
                 label,
                 None,
@@ -1738,7 +1756,9 @@ def _execute_scenario(
                 request,
                 cancellation,
                 observe,
-                cancel_on_observer_error=boundary == "on-observer-failure",
+                # The binding maps this flag onto the Rust observer failure policy.
+                cancel_on_observer_error=observer_failure is not None
+                and observer_failure.get("policy") == "cancel-run",
             )
             continuation_flow = inputs.get("continuationFlow")
             if continuation_flow is not None:

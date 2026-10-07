@@ -102,10 +102,23 @@ pub fn render_event(event: &Event) -> Vec<DisplayLine>;
 pub fn render_infrastructure_error(error: &InfrastructureError) -> Vec<DisplayLine>;
 pub fn render_resume_error(error: &ResumeError) -> Vec<DisplayLine>;
 pub fn render_local_ignore_recovery(data: Option<&InstalledYamlDataRunData>) -> RecoveryPrompt;
+pub fn render_launch_diagnostics(diagnostics: &[CrashLogScanLaunchDiagnostic]) -> Vec<DisplayLine>;
+pub fn render_launch_diagnostic(diagnostic: &CrashLogScanLaunchDiagnostic) -> DisplayLine;
 ```
 
-All five entry points are pure over a borrowed contract value, so wording can be pinned without
-running a scan.
+All of these entry points are pure over a borrowed value, so wording can be pinned without running
+a scan.
+
+### Launch diagnostics
+
+`render_launch_diagnostics` renders what a Crash Log Scan Launch reported
+([`classic-scan-launch.md`](classic-scan-launch.md), ADR-0009), one line per diagnostic in launch
+order. A User Settings diagnostic surfaced by the launch is a `Warning` line: the `User Settings`
+Display Label, then its free-text message as `Emphasis`; its machine code stays on the typed
+diagnostic. A saved value the game-differs rule withheld is a `Notice` line: the kind's Display Label
+(`saved FCX Mode not applied`, …), then the scanned game and the managed game as `Name` segments; the
+game-version line also says the version is detected automatically. Every binding carries these lines
+beside the typed diagnostics on its launch surface.
 
 ### The Local Ignore recovery prompt
 
@@ -139,8 +152,9 @@ second line is a prompt line rather than part of the withheld decision's `descri
 description says what a decision *does* and stays true whether or not this run can honor it.
 
 **Backing out is not a decision.** `LocalIgnoreRecoveryDecision` has exactly two variants by design;
-abandonment is spelled as the *absence* of a decision and reaches the contract through
-`CrashLogScanRunContinuation::abandon`. The cancel affordance and its wording stay each frontend's.
+abandonment is spelled as the *absence* of a decision and reaches the contract by settling a pending
+recovery with no decision, the one abandonment operation. The cancel affordance and its wording stay
+each frontend's.
 
 **The argument is optional** because a caller holding `RunResult::installed_yaml_data` holds an
 `Option` and must do something when it is absent. All three native frontends independently decided
@@ -152,8 +166,8 @@ for itself. Taking the `Option` here makes it one rule rather than three.
 
 Six kinds, fixed for this version. Each addition touches three binding parity baselines, so growth
 must be a deliberate decision rather than incidental. `Name` carries a domain entity that is not a
-filesystem path; no render path emits one yet, and the variant exists so the kind a non-path name
-will need is declared now rather than bolted on later.
+filesystem path; launch diagnostics are its first emitter, naming games by their display names. It
+was declared before any render path used it so that kind did not have to be bolted on later.
 
 ### Severity is not colour
 
@@ -175,20 +189,57 @@ for one of them to pass the arguments the wrong way round.
 This is also what keeps translation from being a rewrite later. CLASSIC stays single-language; the
 crate builds no message catalogue, no locale plumbing, and no runtime language selection.
 
-## Take the continuation out before rendering
+## Take the pending recovery out before rendering
 
-A `RunResult` is not clonable — it retains a one-shot Crash Log Scan Run Continuation. Every entry
-point therefore borrows, and every adapter must take the continuation out of the result **before**
-rendering:
+A `RunResult` is not clonable — a paused run privately retains a one-shot Crash Log Scan Run
+Continuation, reachable only as its pending recovery. Every entry point therefore borrows, and every
+adapter must take the pending recovery out of the result **before** rendering:
 
 ```rust
-let continuation = result.continuation.take();
+let pending = take_pending_recovery(&mut result);
 let lines = render_run_result(&result);
 ```
 
-Rendering first and moving the continuation afterwards borrows the result across the move and will
-not compile. All three native frontends already sequence it this way; documenting it makes the
+Rendering first and taking the pending recovery afterwards borrows the result across the mutation and
+will not compile. All three native frontends already sequence it this way; documenting it makes the
 ordering a contract rather than a coincidence.
+
+## The pending recovery a frontend receives
+
+```rust
+pub fn take_pending_recovery(result: &mut RunResult) -> Option<PendingRecoveryWithPrompt>;
+
+impl PendingRecoveryWithPrompt {
+    pub fn new(recovery: PendingRecovery) -> Self;
+    pub fn prompt(&self) -> &RecoveryPrompt;
+    pub fn cancellation_requested(&self) -> bool;
+    pub fn recovery(&self) -> &PendingRecovery;
+    pub async fn settle(
+        &self,
+        decision: Option<LocalIgnoreRecoveryDecision>,
+        observer: Option<&mut dyn Observer>,
+        observer_failure_policy: ObserverFailurePolicy,
+    ) -> Result<SettledRunResult, ResumeError>;
+}
+```
+
+`observer_failure_policy` is passed straight through to `PendingRecovery::settle`; see the
+[observer delivery failure policy](classic-scanlog-core.md#observer-delivery-failure-policy).
+
+ADR-0009 gives a paused run one pending-recovery object: the single-use continuation, the recovery
+prompt already rendered as Display Content, and whether cancellation was already requested. The
+scanlog core crate owns the mechanics in `PendingRecovery` but cannot render the prompt, because it
+must never depend on this crate. `take_pending_recovery` is the bundling step: it takes the contract's
+pending recovery out of a paused result (the same take-before-render ordering as above) and renders
+its prompt once with `render_local_ignore_recovery`, so the prompt always agrees with what settling
+can honour, including whether Reset To Default is available.
+
+When `cancellation_requested()` is `true`, do not prompt: settle with no decision. `settle(None, ..)`
+is abandonment, not a third decision. Every binding projects this bundle as its pending-recovery
+object, which is the only way it answers a paused run: the separate resume and abandon surfaces and
+the run result's continuation field were removed (#282). `tests/pending_recovery.rs` pins the
+prompt against
+`render_local_ignore_recovery`, with and without retained defaults.
 
 ## Rules an adapter must follow
 
@@ -206,7 +257,8 @@ ordering a contract rather than a coincidence.
 
 **Locked** — byte-identical everywhere, pinned by the tests in `src/lib_tests.rs`: terminal status
 prose, infrastructure error prose, resume error prose, the per-log outcome line, the Installed YAML
-Data block, the per-event progress line, and the Local Ignore recovery decision descriptions.
+Data block, the per-event progress line, the Local Ignore recovery decision descriptions, and the
+launch diagnostic lines.
 
 **Free, and expected to differ** — line ordering and grouping, section headers, colour and emphasis
 mapping, truncation and wrapping, widget choice, collapsibility, and whether a section is shown at
@@ -243,8 +295,9 @@ Two consequences worth naming, because they look like omissions:
 
 ## Dependencies and direction
 
-Depends on `classic-scanlog-core`, `classic-vocabulary`, and `classic-config-core`, one way only.
-`classic-scanlog-core` gains **no** dependency on this crate.
+Depends on `classic-scanlog-core`, `classic-vocabulary`, `classic-config-core`, and
+`classic-scan-launch` (whose diagnostics it renders), one way only. Neither `classic-scanlog-core`
+nor `classic-scan-launch` gains a dependency on this crate.
 
 It is deliberately not a module inside `classic-scanlog-core`: that crate already carries a mutual
 dependency between its `scan_run` engine and its `scan_run::contract`, and presentation placed inside
@@ -298,11 +351,14 @@ Where the seams differ is only in where the field can sit and how each language 
 - **Python** has one envelope like the bridge, so one `display_lines` covers `result` and `error`
   alike, plus one on each of the five resume exceptions.
 
-Events carry it identically on all three.
+Events carry it identically on all three, and so does a launch: the bridge's
+`ScanRunLaunchRequestDto.display_lines`, Node's `ScanRunLaunch.displayLines`, and Python's
+`ScanRunLaunch.display_lines` each hold one line per launch diagnostic, in the same order as the
+typed `diagnostics` beside them.
 
 The recovery prompt rides the same seams and is rendered under the same rule — while the Rust value
 is live — but only for a run whose status is Local Ignore Recovery Required, which is exactly when
-the execution retains a continuation to answer with. Every other run carries no prompt rather than an
+the execution offers a pending recovery to answer with. Every other run carries no prompt rather than an
 empty one, so a consumer cannot mistake "nothing to ask" for "ask with no options":
 
 - **The bridge** carries `has_recovery_prompt` beside a `ScanRunRecoveryPrompt`, because `cxx` has no
@@ -311,6 +367,11 @@ empty one, so a consumer cannot mistake "nothing to ask" for "ask with no option
   a `recovery_prompt: ScanRunRecoveryPrompt | None` getter on `ScanRunExecution`. Both languages have
   a native absent form, and `undefined`/`None` is what a consumer on each surface already reads as
   "not present".
+
+Each surface also offers the same prompt through its pending-recovery object, which is what a
+settling frontend reads: `scan_run_pending_recovery_prompt` on the bridge, the
+`ScanRunPendingRecovery.prompt` getter on Node, and the `ScanRunPendingRecovery.prompt` property on
+Python. It is the same rendering as the envelope's prompt, taken from the bundle described above.
 
 A decision's `description` is an ordinary segment list on all three, flattened exactly as the lines
 beside it are, so a consumer renders one with the renderer it already has. The `decision` itself

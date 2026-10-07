@@ -1353,9 +1353,80 @@ export declare class ScanRunCancellation {
   get isCancelled(): boolean
 }
 
-/** Opaque process-local carrier for one paused Crash Log Scan Run. */
-export declare class ScanRunContinuation {
+/**
+ * The Crash Log Scan Run request a launch built, with its launch diagnostics.
+ *
+ * The read-only getters show exactly what the launch decided; `request()` returns an
+ * executable `ScanRunRequest` for `scanRunExecute`.
+ */
+export declare class ScanRunLaunch {
+  /**
+   * Launches a Standard Crash Log Scan from saved User Settings and `overrides`.
+   *
+   * Opens User Settings under `installationRoot` read-only and never writes them; the
+   * Standard base folder is always `installationRoot`. Degraded User Settings still
+   * produce a launch, with their diagnostics. Throws `InvalidArg` for an unrepresentable
+   * input (a blank root or scan path, or an unknown game-version token). With FCX Mode
+   * on, `setupContext` carries the game folder, documents folder, game executable and
+   * XSE log; when the XSE log location cannot be inspected (not mere absence) it throws
+   * the typed launch error whose `code` and `kind` are `xse_log_inspect`.
+   */
+  static standard(installationRoot: string, overrides?: JsScanRunLaunchOverrides | undefined | null): ScanRunLaunch
+  /**
+   * Launches a Targeted Crash Log Scan of exactly `inputs`, in order.
+   *
+   * An empty `inputs` list throws the typed launch error whose `code` and `kind` are
+   * `targeted_without_inputs`. Otherwise behaves like `standard`.
+   */
+  static targeted(installationRoot: string, inputs: Array<string>, overrides?: JsScanRunLaunchOverrides | undefined | null): ScanRunLaunch
+  /** Returns which Crash Logs the request scans. */
+  get intent(): 'standard' | 'targeted'
+  /** Returns the run configuration the launch built. */
+  get configuration(): JsScanRunConfiguration
+  /** Returns the Standard discovery source, or `null` for a Targeted request. */
+  get standardSource(): JsScanRunStandardSource | null
+  /** Returns the Standard Unsolved Logs intent, or `null` for a Targeted request. */
+  get unsolvedLogs(): 'leaveInPlace' | 'moveToConfiguredOrDefault' | 'moveToCustom' | null
+  /** Returns the Targeted discovery source, or `null` for a Standard request. */
+  get targetedSource(): JsScanRunTargetedSource | null
+  /** Returns whether the request enables FCX Mode. */
+  get fcxEnabled(): boolean
+  /** Returns the Crash Log Scan Setup Context when FCX Mode is enabled, otherwise `null`. */
+  get setupContext(): JsScanRunSetupContext | null
+  /** Returns the launch diagnostics, in the order they were produced. */
+  get diagnostics(): Array<JsScanRunLaunchDiagnostic>
+  /**
+   * Returns the launch diagnostics rendered as Display Content, one line per
+   * diagnostic in the same order. Show these rather than phrasing `diagnostics` in
+   * JavaScript.
+   */
+  get displayLines(): Array<JsScanRunDisplayLine>
+  /** Returns an executable copy of the launched request. */
+  request(): ScanRunRequest
+}
 
+/**
+ * The pending recovery a paused Crash Log Scan Run offers: one object to prompt from and
+ * settle.
+ *
+ * It carries the recovery prompt Rust already rendered and whether the run's cancellation
+ * was already requested. When `cancellationRequested` is true, do not prompt: settle with no
+ * decision. Settle it once with `scanRunSettle`.
+ */
+export declare class ScanRunPendingRecovery {
+  /**
+   * What to ask the user, and which answers this run can honor.
+   *
+   * The same Display Content the paused envelope's `recoveryPrompt` carries, including
+   * Reset To Default's availability.
+   */
+  get prompt(): JsScanRunRecoveryPrompt
+  /**
+   * Whether cancellation of the paused run was already requested.
+   *
+   * Read live from the control the run was started with, each time it is read.
+   */
+  get cancellationRequested(): boolean
 }
 
 /** Opaque invariant-preserving request for the final scan-run operation. */
@@ -3062,6 +3133,15 @@ export interface JsCrashLogScanSettings {
   formidDatabases: Record<string, Array<string>>
   /** Provenance token for FormID Databases. */
   formidDatabasesOrigin: string
+  /**
+   * FormID database rows that apply to each supported game's Crash Log Scan.
+   *
+   * Rust applies the game-aware read: Fallout 4 VR reads the shared `Fallout4` rows followed
+   * by legacy `Fallout4VR` rows, de-duplicated; every other game reads its own rows exactly.
+   * Games whose scan reads no rows are absent. Scan launch reads this map, never
+   * `formidDatabases`.
+   */
+  scanFormidDatabases: Record<string, Array<string>>
   /** Whether a standard scan may move Unsolved Logs. */
   moveUnsolvedLogs: boolean
   /** Provenance token for Move Unsolved Logs. */
@@ -3272,6 +3352,14 @@ export interface JsFileOperationResult {
   filesAffected: number
   /** Error messages for any failures encountered (non-fatal). */
   errors: Array<string>
+}
+
+/** One game's FormID database rows for a game-aware User Settings save. */
+export interface JsFormIdDatabaseSave {
+  /** Game whose Crash Log Scans read these rows. */
+  game: JsGameId
+  /** Complete replacement rows, exactly as they should be persisted. */
+  paths: Array<string>
 }
 
 /** One distinct semantic FormID Finding. */
@@ -4629,9 +4717,10 @@ export interface JsScanRunEvent {
   displayLines: Array<JsScanRunDisplayLine>
 }
 
-/** Failed final operation envelope with adapter-only observation failure data. */
+/** Failed final operation envelope. */
 export interface JsScanRunFailure {
   error: JsScanRunInfrastructureError
+  /** The first observer delivery failure Rust reported before the run failed, if any. */
   observerError?: string
   /**
    * What this failure says, in Rust's words.
@@ -4687,6 +4776,53 @@ export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {
   LocalIgnoreGenerated = 'LocalIgnoreGenerated',
   /** Malformed Local Ignore YAML Data was reset from retained selected-Main defaults. */
   LocalIgnoreReset = 'LocalIgnoreReset'
+}
+
+/** One non-fatal launch diagnostic; the launch still produced a scannable request. */
+export interface JsScanRunLaunchDiagnostic {
+  /** Which launch rule produced it, as a camelCase Vocabulary Token. */
+  kind: 'userSettings' | 'gameVersionNotApplied' | 'fcxModeNotApplied' | 'customScanFolderNotApplied' | 'setupFoldersNotApplied'
+  /**
+   * Stable machine-readable code (the User Settings code for `userSettings`, the
+   * kind's snake_case token otherwise).
+   */
+  code: string
+  /** Human-readable context. Prose; branch on `kind` and `code` instead. */
+  message: string
+}
+
+/**
+ * Optional per-run values that win over saved User Settings for one launch.
+ *
+ * Every field is optional. `gameVersion` takes a User Settings game-version token
+ * (`auto`, `Original`, `NextGen`, `AnniversaryEdition`, `VR`). `maxConcurrent` zero
+ * explicitly requests adaptive concurrency, which overrides a saved limit.
+ * `showFormidValues`, `simplifyLogs` and `fcxMode` are supplied-as-on: `true` turns the
+ * option on for this run; `false` or absence keeps the saved value.
+ */
+export interface JsScanRunLaunchOverrides {
+  /** Game to scan instead of the saved managed game; absent scans the managed game. */
+  game?: JsGameId
+  /** User Settings game-version token to use instead of the saved selection. */
+  gameVersion?: string
+  /**
+   * Folder to scan as the custom scan folder instead of the saved one (Standard only).
+   * Must not be blank, and cannot be combined with `noScanPath`.
+   */
+  scanPath?: string
+  /**
+   * `true` scans no custom scan folder for this run, withholding a saved one (a cleared
+   * custom scan folder input). `false` or absence supplies nothing.
+   */
+  noScanPath?: boolean
+  /** Max Concurrent Scans for this run; `0` explicitly requests adaptive concurrency. */
+  maxConcurrent?: number
+  /** `true` turns FormID value lookup on for this run; otherwise the saved value applies. */
+  showFormidValues?: boolean
+  /** `true` turns simplify logs on for this run; otherwise the saved value applies. */
+  simplifyLogs?: boolean
+  /** `true` turns FCX Mode on for this run; otherwise the saved value applies. */
+  fcxMode?: boolean
 }
 
 /** Explicit Local Ignore recovery decisions owned by Rust scan coordination. */
@@ -4762,7 +4898,7 @@ export interface JsScanRunLogResult {
  * while the fact lived beside the prompt instead of on the decision.
  */
 export interface JsScanRunRecoveryDecisionDescription {
-  /** The decision to hand back to `scanRunResume`. */
+  /** The decision to hand back to `scanRunSettle`. */
   decision: JsScanRunLocalIgnoreRecoveryDecision
   /** The decision's Display Label. */
   label: string
@@ -4782,7 +4918,7 @@ export interface JsScanRunRecoveryDecisionDescription {
  *
  * Backing out appears nowhere here. `JsScanRunLocalIgnoreRecoveryDecision` has
  * exactly two variants by design, and abandonment is spelled as the absence of a
- * decision through `scanRunAbandon`.
+ * decision: `scanRunSettle` with no decision.
  */
 export interface JsScanRunRecoveryPrompt {
   /** Why the run paused and what is being decided about, in reading order. */
@@ -4804,8 +4940,6 @@ export interface JsScanRunResult {
   setup?: JsScanRunSetupResult
   /** Installed YAML Data selected after discovery, absent when intake was not reached. */
   installedYamlData?: JsInstalledYamlDataRunData
-  /** Opaque one-shot continuation populated only for Local Ignore Recovery Required. */
-  continuation?: ScanRunContinuation
   effectiveConcurrency?: number
   message?: string
   total: number
@@ -4813,6 +4947,20 @@ export interface JsScanRunResult {
   failed: number
   cancelled: number
   logs: Array<JsScanRunLogResult>
+}
+
+/**
+ * Successful envelope of a settled Crash Log Scan Run.
+ *
+ * Deliberately has no `recoveryPrompt` and no `pendingRecovery`: a settled run cannot ask
+ * for a second recovery, so this type has nowhere to put one.
+ */
+export interface JsScanRunSettledSuccess {
+  result: JsScanRunResult
+  /** The first observer delivery failure Rust reported while settling, if any. */
+  observerError?: string
+  /** What the settled run says, in Rust's words. */
+  displayLines: Array<JsScanRunDisplayLine>
 }
 
 /** JavaScript-compatible setup check. */
@@ -4859,9 +5007,15 @@ export interface JsScanRunStandardSource {
   configuredDocumentsRoot?: string
 }
 
-/** Successful final operation envelope with adapter-only observation failure data. */
+/** Successful final operation envelope. */
 export interface JsScanRunSuccess {
   result: JsScanRunResult
+  /**
+   * The first observer delivery failure Rust reported for this run, if any.
+   *
+   * Read from the Rust result, not tracked by this binding, and reported whether or not
+   * `cancelOnObserverError` asked Rust to cancel.
+   */
   observerError?: string
   /**
    * What this run says, in Rust's words.
@@ -4871,15 +5025,15 @@ export interface JsScanRunSuccess {
    * consumer states the run from these lines rather than composing sentences
    * of its own; `result` stays the machine-facing surface it matches on.
    *
-   * `scanRunExecute` and `scanRunResume` resolve the same envelope, so this
-   * one field covers the initial run and the continuation resume alike.
+   * `scanRunSettle` resolves the same field on its settled envelope, so it covers
+   * the initial run and the settled run alike.
    */
   displayLines: Array<JsScanRunDisplayLine>
   /**
    * What to ask the user, and which answers this run can honor.
    *
    * Present only when `result.status` is `local_ignore_recovery_required`, which
-   * is also exactly when the run retains a continuation to answer with. Absent
+   * is also exactly when the run offers a pending recovery to answer with. Absent
    * rather than empty, because a run with nothing to ask has no prompt rather
    * than an empty one — and `undefined` is what a JavaScript consumer already
    * reads as "not present" everywhere else on this surface.
@@ -4888,6 +5042,13 @@ export interface JsScanRunSuccess {
    * projected copy of the run and cannot render from the Rust value later.
    */
   recoveryPrompt?: JsScanRunRecoveryPrompt
+  /**
+   * The pending recovery to prompt from and settle with `scanRunSettle`.
+   *
+   * Present exactly when the run paused and retains a continuation to settle. Settling
+   * it is the only way to answer the paused run (ADR-0009).
+   */
+  pendingRecovery?: ScanRunPendingRecovery
 }
 
 /** Targeted discovery inputs for one request. */
@@ -5034,7 +5195,10 @@ export interface JsUserSettingsCommitResult {
   expectedRevision: string
   /** Latest document revision, present only when a conflict is detected. */
   actualRevision?: string
-  /** Validation diagnostics, populated only when the update is rejected. */
+  /**
+   * Validation diagnostics when rejected; the accepted preview's effect diagnostics when
+   * committed.
+   */
   diagnostics: Array<JsUserSettingsUpdateDiagnostic>
 }
 
@@ -5202,6 +5366,14 @@ export interface JsUserSettingsUpdate {
   formidValueLookup?: boolean
   /** Requested replacement FormID database mapping. */
   formidDatabases?: Record<string, Array<string>>
+  /**
+   * Requested game-aware save of one game's FormID database rows.
+   *
+   * Rust stores Fallout 4 VR rows under `Fallout4` and removes a legacy `Fallout4VR` key,
+   * reporting the removal in the preview and commit `diagnostics`; any other game replaces
+   * only its own rows. Applied on top of `formidDatabases` when both are requested.
+   */
+  formidDatabasesForGame?: JsFormIdDatabaseSave
   /** Requested Move Unsolved Logs preference. */
   moveUnsolvedLogs?: boolean
   /** Requested Unsolved Logs destination; `null` explicitly selects the default. */
@@ -5214,7 +5386,10 @@ export interface JsUserSettingsUpdate {
   maxConcurrentScans?: number
 }
 
-/** Field-specific reason that a User Settings Update preview was rejected. */
+/**
+ * Field-specific User Settings Update diagnostic: a rejection reason, or a non-rejecting
+ * effect report on an accepted preview or committed result.
+ */
 export interface JsUserSettingsUpdateDiagnostic {
   /** Rejected canonical field path, absent for a preview-level failure. */
   fieldPath?: string
@@ -5240,7 +5415,10 @@ export interface JsUserSettingsUpdatePreview {
   baseRevision?: string
   /** Only the explicitly requested canonical fields, empty when rejected. */
   fields: Array<JsUserSettingsUpdateField>
-  /** All rejection diagnostics, empty when accepted. */
+  /**
+   * Rejection diagnostics when rejected; non-rejecting effect diagnostics (such as
+   * `legacy_formid_databases_key_removed`) when accepted.
+   */
   diagnostics: Array<JsUserSettingsUpdateDiagnostic>
 }
 
@@ -5696,6 +5874,22 @@ export declare function loadSettingsSync(key: string, path: string): any
 export declare function localIgnoreYamlDataStateLabel(state: JsLocalIgnoreYamlDataState): string
 
 /**
+ * Locate the Installation Root from an executable folder and a working directory.
+ *
+ * Delegates to config's one shared candidate search (executable folder, working
+ * directory, executable parent, executable grandparent, the executable parent's
+ * `install` folder, the working directory's `install` folder) and returns the
+ * first candidate holding `CLASSIC Data`. Synchronous because it only inspects
+ * directory metadata.
+ *
+ * @param executableDir - Folder of the running executable; omitted/`null` skips its candidates.
+ * @param workingDir - Process working directory; omitted/`null` skips its candidates.
+ * @returns The matching root built from the given input, or `null` when none holds
+ *   `CLASSIC Data` (there is no fallback; the caller reports "CLASSIC Data not found").
+ */
+export declare function locateInstallationRoot(executableDir?: string | undefined | null, workingDir?: string | undefined | null): string | null
+
+/**
  * Match a detected version to the nearest known version in the registry.
  *
  * Uses intelligent matching with fallback:
@@ -5977,6 +6171,24 @@ export declare function resetHashCacheStats(): void
 /** Reset the cache hit/miss counters to zero. */
 export declare function resetSettingsCacheStats(): void
 
+/**
+ * Locate the XSE log for a game and game version from an installation's
+ * `CLASSIC Data` directory.
+ *
+ * Rust owns the location: the log is looked for only in the XSE Folder that
+ * XSE Folder precedence selects (recorded Game Local facts, then
+ * `configuredDocsRoot`, then platform discovery), under the selected
+ * version's Version Registry XSE log name, so Fallout 4 VR has its own log.
+ *
+ * @param yamlDirData - The installation's `CLASSIC Data` directory.
+ * @param game - The game identifier (e.g., "Fallout4", "Fallout4VR").
+ * @param selectedGameVersion - The selected game version (e.g., "auto", "VR").
+ * @param configuredDocsRoot - The configured documents root; empty or omitted means none.
+ * @returns The existing log path, or null when the XSE Folder or log is missing.
+ * @throws With a "cannot inspect XSE log" message when the log cannot be inspected.
+ */
+export declare function resolveXseLogForScan(yamlDirData: string, game: string, selectedGameVersion: string, configuredDocsRoot?: string | undefined | null): string | null
+
 /** Resource type count entry. */
 export interface ResourceCount {
   /** Resource type name (e.g. "texture", "plugin") */
@@ -6079,29 +6291,14 @@ export declare function scanAllBa2Archives(rootPath: string): Array<JsBa2ScanRes
 export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult
 
 /**
- * Abandons one retained Crash Log Scan Run without applying either recovery decision.
- *
- * Requests cancellation on `cancellation` and then claims the continuation, resolving with the
- * ordinary post-discovery cancelled envelope. No backup is taken, nothing is published, and the
- * malformed Local Ignore file is left exactly as it was. Prefer this over cancelling and then
- * calling [`scan_run_resume`] with a placeholder decision: that sequence is what this replaces,
- * and getting its ordering wrong spends the one-shot continuation on a real recovery attempt.
- *
- * `cancellation` is left cancelled afterwards, which is what abandoning the run means. Replay and
- * concurrent double consumption reject with JavaScript error code
- * `scan_run_continuation_consumed`, exactly as [`scan_run_resume`] does. The recovery-plan and
- * infrastructure failures resume can reject with are unreachable here, because cancellation
- * short-circuits ahead of every stage that produces them.
- */
-export declare function scanRunAbandon(continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
-
-/**
  * Executes one final-contract request with optional serialized observation.
  *
- * The observer is non-controlling. If it throws or cannot be delivered, the
- * failure is returned only through `observerError`; `cancelOnObserverError`
- * controls whether that adapter failure also uses the separate cancellation
- * control to request safe stopping.
+ * If the observer throws or cannot be delivered, Rust stops delivering to it and
+ * reports the first failure as `observerError`. `cancelOnObserverError` is the
+ * observer failure policy Rust applies: `true` cancels the run at the failure,
+ * `false` (the default) lets it finish. A failure before the run pauses for Local
+ * Ignore recovery abandons that recovery either way, so such a run resolves
+ * cancelled with no `pendingRecovery` and no filesystem work.
  */
 export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 
@@ -6195,14 +6392,21 @@ export declare function scanRunLogDispositionLabel(token: string): string
 export declare function scanRunLogFailureStageLabel(token: string): string
 
 /**
- * Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
+ * Settles one paused Crash Log Scan Run once, with a recovery decision or with none.
  *
- * Replay and concurrent double consumption reject with JavaScript error code
- * `scan_run_continuation_consumed`. Reset conflict, backup failure, and replacement failure
- * reject with their stable codes plus applicable identity, path, and publication-stage metadata.
- * Infrastructure failures retain the same resolved envelope used by [`scan_run_execute`].
+ * A decision resumes the same discovered Crash Logs without rediscovery. No decision
+ * (`undefined` or `null`) abandons the run: it cancels the run's own control and resolves
+ * with the ordinary cancelled-after-discovery envelope, touching nothing on disk. When
+ * `pendingRecovery.cancellationRequested` is already true, every settlement resolves
+ * cancelled, so do not prompt; settle with no decision.
+ *
+ * The resolved success has no recovery prompt and no pending recovery, so a settled run
+ * cannot ask again. Replay and concurrent double consumption reject with code
+ * `scan_run_continuation_consumed`; Reset To Default conflicts and failures reject with their
+ * stable codes plus applicable identity, path, and publication-stage metadata. Infrastructure
+ * failures resolve the same failure envelope `scanRunExecute` uses.
  */
-export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
+export declare function scanRunSettle(pendingRecovery: ScanRunPendingRecovery, decision?: JsScanRunLocalIgnoreRecoveryDecision | undefined | null, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSettledSuccess | JsScanRunFailure>
 
 /**
  * Convenience function to scan for unpacked files.

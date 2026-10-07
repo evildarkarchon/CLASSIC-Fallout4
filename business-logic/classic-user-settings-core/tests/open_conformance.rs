@@ -1,10 +1,11 @@
 //! Input-only receipt runner for public User Settings opening, updates, and migrations.
 
+use classic_shared_core::GameId;
 use classic_user_settings_core::{
-    GuiWindow, MigrationEndpoint, MigrationPlanningOutcome, Revision, UserSettings,
-    UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan,
-    UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome, UserSettingsUpdate,
-    UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry,
+    GuiWindow, MigrationEndpoint, MigrationPlanningOutcome, Revision, UpdateDiagnostic,
+    UserSettings, UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome,
+    UserSettingsMigrationPlan, UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome,
+    UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry,
 };
 use classic_vocabulary::Vocabulary;
 use serde_json::{Map, Value, json};
@@ -20,6 +21,9 @@ use tempfile::{NamedTempFile, tempdir};
 mod defaults_conformance;
 
 type RunnerResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
+
+/// Request selector prefix naming a game-aware FormID database save for the trailing game.
+const FORMID_DATABASE_SAVE_PREFIX: &str = "/CLASSIC_Settings/FormID Databases/";
 
 /// Rejects malformed private invocation data with an attributable error.
 fn invalid(message: impl Into<String>) -> io::Error {
@@ -104,6 +108,21 @@ fn view(settings: &UserSettings, fields: &[Value]) -> RunnerResult<Value> {
             "move_unsolved_logs" => json!(scan.move_unsolved_logs()),
             "max_concurrent_scans" => json!(scan.max_concurrent_scans()),
             "formid_databases" => json!(scan.formid_databases()),
+            // Games whose scan reads no rows are omitted so every adapter reports the same shape,
+            // including CXX whose flattened rows cannot carry an empty game.
+            "scan_formid_databases" => Value::Object(
+                GameId::all()
+                    .into_iter()
+                    .map(|game| {
+                        (
+                            game.as_str().to_string(),
+                            scan.formid_databases_for_game(game),
+                        )
+                    })
+                    .filter(|(_, rows)| !rows.is_empty())
+                    .map(|(game, rows)| (game, json!(rows)))
+                    .collect(),
+            ),
             "main_tab_width" => json!(windows.main_tab().width()),
             "main_tab_maximized" => json!(windows.main_tab().maximized()),
             "custom_scan_folder" => json!(scan.custom_scan_input()),
@@ -276,6 +295,12 @@ fn operation_update(input: &Value) -> RunnerResult<UserSettingsUpdate> {
             "/CLASSIC_Settings/Max Concurrent Scans" => update.with_max_concurrent_scans(
                 value.as_i64().ok_or_else(|| invalid("expected integer"))?,
             ),
+            // A pointer below the mapping names one game's game-aware save, not a raw key write.
+            selector if selector.starts_with(FORMID_DATABASE_SAVE_PREFIX) => update
+                .with_formid_databases_for_game(
+                    &selector[FORMID_DATABASE_SAVE_PREFIX.len()..],
+                    serde_json::from_value::<Vec<String>>(value.clone())?,
+                ),
             _ => {
                 return Err(
                     invalid(format!("unsupported operation request selector {path}")).into(),
@@ -319,6 +344,18 @@ fn accepted_field(field: &UserSettingsUpdateField) -> RunnerResult<Value> {
     Ok(json!({"fieldPath": field.canonical_path(), "value": value}))
 }
 
+/// Projects ordered update diagnostics, rejecting or not, into the shared observation shape.
+fn update_diagnostics(diagnostics: &[UpdateDiagnostic]) -> Vec<Value> {
+    diagnostics
+        .iter()
+        .map(|diagnostic| {
+            json!({
+                "fieldPath": diagnostic.field_path(), "code": diagnostic.code(), "message": diagnostic.message()
+            })
+        })
+        .collect()
+}
+
 /// Observes preview before caller consent or an external edit, then optionally commits its artifact.
 fn execute_operation(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     let temporary = tempdir()?;
@@ -345,13 +382,11 @@ fn execute_operation(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
         UserSettingsUpdatePreview::Accepted(accepted) => json!({
             "status": "accepted", "baseRevision": accepted.base_revision().token(),
             "acceptedFields": accepted.fields().iter().map(accepted_field).collect::<RunnerResult<Vec<_>>>()?,
-            "diagnostics": [],
+            "diagnostics": update_diagnostics(accepted.diagnostics()),
         }),
         UserSettingsUpdatePreview::Rejected(diagnostics) => json!({
             "status": "rejected", "baseRevision": null, "acceptedFields": [],
-            "diagnostics": diagnostics.iter().map(|diagnostic| json!({
-                "fieldPath": diagnostic.field_path(), "code": diagnostic.code(), "message": diagnostic.message()
-            })).collect::<Vec<_>>(),
+            "diagnostics": update_diagnostics(diagnostics),
         }),
     };
     let after_preview = operation_tree(&root)?;
@@ -359,16 +394,20 @@ fn execute_operation(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
         install_fixture(plan, scenario, &root, &input["externalEdit"])?;
     }
     let mut commit = json!({"status": "not-attempted", "revision": null,
-        "expectedRevision": null, "actualRevision": null});
+        "expectedRevision": null, "actualRevision": null, "diagnostics": []});
     if input["commit"]
         .as_bool()
         .ok_or_else(|| invalid("commit must be boolean"))?
         && let UserSettingsUpdatePreview::Accepted(accepted) = preview
     {
         match accepted.commit(&root)? {
-            UserSettingsCommitOutcome::Committed { revision } => {
+            UserSettingsCommitOutcome::Committed {
+                revision,
+                diagnostics,
+            } => {
                 commit["status"] = json!("committed");
                 commit["revision"] = json!(revision.token());
+                commit["diagnostics"] = json!(update_diagnostics(&diagnostics));
             }
             UserSettingsCommitOutcome::Conflict {
                 expected_revision,

@@ -535,6 +535,7 @@ fn user_settings_crash_log_scan_settings_dto(
         formid_database_games,
         formid_database_paths,
         formid_databases_origin: scan.formid_databases_origin().as_str().to_string(),
+        scan_formid_database_paths: scan_formid_database_paths(scan),
         move_unsolved_logs: scan.move_unsolved_logs(),
         move_unsolved_logs_origin: scan.move_unsolved_logs_origin().as_str().to_string(),
         has_unsolved_logs_destination,
@@ -771,7 +772,11 @@ fn user_settings_update_preview_dto(
                     .collect(),
                 formid_database_games,
                 formid_database_paths,
-                diagnostics: Vec::new(),
+                diagnostics: accepted
+                    .diagnostics()
+                    .iter()
+                    .map(update_diagnostic_dto)
+                    .collect(),
             }
         }
         CoreUserSettingsUpdatePreview::Rejected(diagnostics) => {
@@ -1056,15 +1061,16 @@ fn commit_user_settings_update(
     };
 
     match accepted.commit(Path::new(classic_root)) {
-        Ok(CoreUserSettingsCommitOutcome::Committed { revision }) => {
-            Ok(ffi::UserSettingsCommitResultDto {
-                status: "committed".to_string(),
-                revision: revision.token(),
-                expected_revision: base_revision.to_string(),
-                actual_revision: String::new(),
-                diagnostics: Vec::new(),
-            })
-        }
+        Ok(CoreUserSettingsCommitOutcome::Committed {
+            revision,
+            diagnostics,
+        }) => Ok(ffi::UserSettingsCommitResultDto {
+            status: "committed".to_string(),
+            revision: revision.token(),
+            expected_revision: base_revision.to_string(),
+            actual_revision: String::new(),
+            diagnostics: diagnostics.iter().map(update_diagnostic_dto).collect(),
+        }),
         Ok(CoreUserSettingsCommitOutcome::Conflict {
             expected_revision,
             actual_revision,
@@ -1079,7 +1085,8 @@ fn commit_user_settings_update(
     }
 }
 
-/// Converts one update rejection into its shared CXX representation.
+/// Converts one update diagnostic, a rejection reason or an accepted update's non-blocking
+/// effect report, into its shared CXX representation.
 fn update_diagnostic_dto(
     diagnostic: &classic_user_settings_core::UpdateDiagnostic,
 ) -> ffi::UserSettingsUpdateDiagnosticDto {
@@ -1193,6 +1200,12 @@ fn core_user_settings_update(
         }
         core = core.with_formid_databases(databases);
     }
+    if update.has_formid_database_save {
+        core = core.with_formid_databases_for_game(
+            update.formid_database_save_game.clone(),
+            update.formid_database_save_paths.clone(),
+        );
+    }
     if update.has_move_unsolved_logs {
         core = core.with_move_unsolved_logs(update.move_unsolved_logs);
     }
@@ -1251,6 +1264,26 @@ fn flatten_formid_databases(
         })
         .collect();
     (games, paths)
+}
+
+/// Projects the Rust-owned game-aware scan read for every supported game as CXX-safe rows.
+///
+/// Each game's rows come from `CrashLogScanSettings::formid_databases_for_game`, so the
+/// Fallout 4 VR read rule stays in Rust and C++ frontends only filter by the scanned game.
+fn scan_formid_database_paths(
+    scan: &classic_user_settings_core::CrashLogScanSettings,
+) -> Vec<ffi::FormIdDatabasePathDto> {
+    classic_shared_core::GameId::all()
+        .into_iter()
+        .flat_map(|game| {
+            scan.formid_databases_for_game(game)
+                .into_iter()
+                .map(move |path| ffi::FormIdDatabasePathDto {
+                    game: game.as_str().to_string(),
+                    path: path.to_string(),
+                })
+        })
+        .collect()
 }
 
 /// Converts one accepted typed field into a flat tagged DTO suitable for a CXX vector.
@@ -1911,6 +1944,14 @@ mod ffi {
         formid_database_games: Vec<String>,
         formid_database_paths: Vec<FormIdDatabasePathDto>,
         formid_databases_origin: String,
+        /// FormID database rows that apply to each supported game's Crash Log Scan.
+        ///
+        /// Rust applies the game-aware read rule (`formid_databases_for_game`): a Fallout 4 VR
+        /// row set is the shared `Fallout4` rows followed by legacy `Fallout4VR` rows,
+        /// de-duplicated; every other game carries its own rows exactly. Rows are grouped in
+        /// supported-game order. Scan launch selects rows whose `game` equals the scanned game
+        /// and must never read `formid_database_paths` for that purpose.
+        scan_formid_database_paths: Vec<FormIdDatabasePathDto>,
         move_unsolved_logs: bool,
         move_unsolved_logs_origin: String,
         has_unsolved_logs_destination: bool,
@@ -2075,6 +2116,14 @@ mod ffi {
         has_formid_databases: bool,
         formid_database_games: Vec<String>,
         formid_database_paths: Vec<FormIdDatabasePathDto>,
+        /// Requests the game-aware FormID database save
+        /// (`UserSettingsUpdate::with_formid_databases_for_game`) for
+        /// `formid_database_save_game`, replacing that game's rows with
+        /// `formid_database_save_paths`. Rust stores Fallout 4 VR rows under `Fallout4` and
+        /// removes a legacy `Fallout4VR` key, reporting the removal as a diagnostic.
+        has_formid_database_save: bool,
+        formid_database_save_game: String,
+        formid_database_save_paths: Vec<String>,
         has_move_unsolved_logs: bool,
         move_unsolved_logs: bool,
         has_unsolved_logs_destination: bool,
@@ -2101,7 +2150,8 @@ mod ffi {
         u32_value: u32,
     }
 
-    /// One field-specific or preview-level update rejection diagnostic.
+    /// One field-specific or preview-level update diagnostic: a rejection reason, or a
+    /// non-rejecting effect report on an accepted preview or committed result.
     struct UserSettingsUpdateDiagnosticDto {
         has_field_path: bool,
         field_path: String,
@@ -2113,6 +2163,8 @@ mod ffi {
     ///
     /// Accepted previews contain a base revision and only explicitly requested
     /// fields. Rejected previews contain no partial fields or base revision.
+    /// `diagnostics` holds the rejection reasons when rejected, and the non-rejecting
+    /// effect diagnostics (such as `legacy_formid_databases_key_removed`) when accepted.
     struct UserSettingsUpdatePreviewDto {
         accepted: bool,
         base_revision: String,
@@ -2125,7 +2177,9 @@ mod ffi {
     /// Structured result of committing a previously accepted User Settings Update.
     ///
     /// `status` is `committed`, `conflict`, or `rejected`; fields unrelated to the selected
-    /// status are returned empty. Operational failures propagate as `rust::Error`.
+    /// status are returned empty. `diagnostics` holds rejection reasons for `rejected` and the
+    /// accepted preview's effect diagnostics for `committed`. Operational failures propagate
+    /// as `rust::Error`.
     struct UserSettingsCommitResultDto {
         status: String,
         revision: String,
