@@ -13,6 +13,7 @@ As of the current codebase, CLASSIC is a **native C++ + Rust application**:
 - **Business logic crates:** `business-logic/`
 - **C++ ↔ Rust bridge:** `cpp-bindings/classic-cpp-bridge/`
 - **Rust TUI app:** `ui-applications/classic-tui/`
+- **Repository tooling:** `xtask/` (`cargo xtask <command>`)
 
 Rust owns typed, preservation-aware User Settings, including widget-independent frontend preferences, GUI geometry, and a canonical TUI remembered-state namespace. Game Setup Intake can be prepared from an already-opened typed settings group, while discovered paths remain caller-reviewed proposals and are never persisted by intake itself.
 
@@ -206,6 +207,7 @@ The [validated 43-crate baseline](docs/implementation/workspace_layout/baseline/
 - `business-logic/` — Rust business logic crates
 - `cpp-bindings/classic-cpp-bridge/` — C++ bridge into Rust
 - `ui-applications/classic-tui/` — Rust TUI app
+- `xtask/` — Rust repository tooling, run as `cargo xtask <command>`
 - `CLASSIC Data/` — runtime data, databases, help, graphics
 
 ---
