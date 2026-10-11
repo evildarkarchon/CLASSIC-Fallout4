@@ -54,3 +54,13 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 Each skipped step has a distinct failure mode: skipping step 1 makes cargo's pyo3-build-config chase a stale `VIRTUAL_ENV`; skipping `--inexact` in step 2 wipes the `classic-python-bindings` wheel from the venv on each re-sync; skipping step 3 produces `ModuleNotFoundError` at pytest collection time.
 
 For deeper context (why `.cargo/config.toml` intentionally omits a global PyO3 pin, how step 3 builds the one `classic-python-bindings` wheel behind all 18 `classic_*` facades, or how the parity gates fit on top), see the Python binding test rule and the PyO3 Quick Note in `AGENTS.md`, plus `docs/implementation/python_api_parity/`.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

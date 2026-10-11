@@ -376,3 +376,4 @@ Architecture review*_files/
 .pytest-tmp/
 .pytest-215-*
 .codegraph/
+.claude/
