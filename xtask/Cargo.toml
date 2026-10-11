@@ -1,0 +1,25 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "CLASSIC repository tooling, run as `cargo xtask <command>`"
+
+# The workspace lint table does not set `missing_docs`, so it stays off here.
+# Cargo forbids per-crate lint overrides next to `workspace = true`.
+[lints]
+workspace = true
+
+# xtask links no CLASSIC product crate at run time: it reads the repository as
+# text and source, never through product APIs.
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+# `span-locations` gives real line numbers for spans parsed outside a proc
+# macro, which findings need for their `path:line` prefix.
+proc-macro2 = { workspace = true, features = ["span-locations"] }
+syn = { workspace = true, features = ["full", "visit"] }
+walkdir = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

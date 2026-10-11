@@ -8,6 +8,8 @@
 flame = "flamegraph"
 flame-bench = "flamegraph --bench"
 profile-build = "build --profile release-with-debug"
+# Repository tooling: `cargo xtask <command>` (see `cargo xtask --help`).
+xtask = "run --package xtask --"
 
 [build]
 # Note: The release-with-debug profile is defined in Cargo.toml
