@@ -1,3 +1,6 @@
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use super::*;
 use serial_test::serial;
 use std::io::Write;

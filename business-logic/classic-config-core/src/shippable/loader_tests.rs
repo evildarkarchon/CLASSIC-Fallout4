@@ -1,3 +1,6 @@
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use super::*;
 use crate::yaml_cache::ensure_yaml_cache_dir_with_env;
 use classic_shared_core::yaml::clear_global_yaml_cache;

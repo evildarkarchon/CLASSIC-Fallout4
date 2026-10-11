@@ -639,8 +639,8 @@ Commands are run from the repository root unless a working directory is stated. 
 Tooling and source compliance:
 
 ```powershell
-uv sync --project python-bindings --inexact
-uv run --project python-bindings python -m pytest tools/binding_compliance/tests -q
+uv sync --project tools
+uv run --project tools python -m pytest tools/binding_compliance/tests -q
 python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
 python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 python tools/node_api_parity/check_parity_gate.py --repo-root .

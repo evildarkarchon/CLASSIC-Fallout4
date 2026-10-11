@@ -157,7 +157,7 @@ Maintainers can exercise the publish ordering without pushing an `app-notificati
 
 ```powershell
 $publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-uv run --project python-bindings python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v9.2.0 --published-at $publishedAt
+uv run --project tools python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v9.2.0 --published-at $publishedAt
 ```
 
 The harness validates the workflow tag before reading the source artifact, validates [`CLASSIC Data/app-notification.yaml`](../../CLASSIC%20Data/app-notification.yaml), generates the same `manifest.json` bytes as the workflow, stages a local `releases/download/<tag>/manifest.json`, and stages `gh-pages/app-notification/manifest-latest.json` plus `manifest-<tag>.json` under the reported output directory. It then serves those files from localhost and reuses `tools/publish_app_notification/verify_release_asset.py` and `tools/publish_yaml_data/smoke_test_pages.py --base-url` against the staged bytes.

@@ -68,6 +68,9 @@ fn test_runtime_config_apply_to_builder() {
     ];
 
     for config in configs {
+        // Exercises RuntimeConfig against a fresh builder; nothing is built,
+        // so no second runtime ever runs.
+        #[allow(clippy::disallowed_methods)]
         let builder = tokio::runtime::Builder::new_multi_thread();
         let _ = config.apply_to_builder(builder);
         // Just verify it doesn't panic

@@ -173,6 +173,9 @@ pub(crate) static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
     let config = RuntimeConfig::default();
 
     // Build runtime with configuration
+    // This is the one sanctioned Tokio runtime in CLASSIC; the workspace
+    // clippy.toml disallows runtime construction everywhere else.
+    #[allow(clippy::disallowed_methods)]
     let builder = tokio::runtime::Builder::new_multi_thread();
     let mut builder = config.apply_to_builder(builder);
 

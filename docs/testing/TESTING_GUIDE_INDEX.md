@@ -71,10 +71,10 @@ bun run test:node
 ```powershell
 # python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
 # `--inexact` stops uv from pruning maturin-built classic-*-py wheels.
-# ruamel.yaml (for schema_version_gate.py) is a default dependency, so this installs it.
+# Repository tooling under tools/ (schema_version_gate.py, cxx_api_parity) uses the tools-only uv project (uv sync --project tools).
 uv sync --project python-bindings --inexact
 uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
-uv run --project python-bindings python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+uv run --project tools python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
 uv run --project python-bindings python -m pytest python-bindings/tests -q

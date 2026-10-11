@@ -26,6 +26,9 @@ fn main_load_routes_through_shippable_loader() {
 
     classic_shared_core::yaml::clear_global_yaml_cache();
     std::env::set_current_dir(work_dir.path()).unwrap();
+    // Test-local runtime that drives one async load from this sync test; it is
+    // dropped at the end of the test and never escapes into product code.
+    #[allow(clippy::disallowed_methods)]
     let runtime = tokio::runtime::Runtime::new().unwrap();
     let result = runtime.block_on(async { YamlSource::Main.load("").await });
     std::env::set_current_dir(original_dir).unwrap();
