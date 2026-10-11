@@ -17,6 +17,13 @@ def test_papyrus_predicates_reject_stale_tail_and_missing_fields() -> None:
     ).document()
     for scenario in pack["scenarios"]:
         expected = scenario["expected"]
+        if scenario["action"] == "papyrus-monitor.full":
+            # The full-file fact only credited the retired Node row; these
+            # scenarios still compare exactly but grant no row coverage.
+            assert not derive_observed_fact_ids(
+                pack, scenario, expected, PAPYRUS_MONITOR_COVERAGE_POLICY
+            )
+            continue
         assert derive_observed_fact_ids(
             pack, scenario, expected, PAPYRUS_MONITOR_COVERAGE_POLICY
         )

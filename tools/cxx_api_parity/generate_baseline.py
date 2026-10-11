@@ -55,7 +55,7 @@ class CanonicalMappingError(ValueError):
     """Raised when canonical CXX mapping metadata is missing, stale, or invalid."""
 
 
-# ---- JSON helper (mirrors tools/python_api_parity/generate_baseline.write_json) ----
+# ---- JSON helper (once mirrored the retired Python parity generator's write_json) ----
 
 
 # ---- build.rs parser (D-07) ----

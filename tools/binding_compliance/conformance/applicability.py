@@ -131,8 +131,6 @@ class ApplicabilityMatrix:
 DEFAULT_EXECUTION_INSTANCES: Mapping[str, tuple[str, ...]] = {
     "rust": ("rust",),
     "cxx": ("windows-clang-cl", "windows-msvc"),
-    "node": ("node",),
-    "python": ("python",),
 }
 
 

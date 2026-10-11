@@ -35,12 +35,12 @@ def test_forbidden_export_inventory_keeps_live_sources_after_metadata_retirement
     paths = {entry["path"] for entries in surfaces.values() for entry in entries}
     assert not any("runtime_coverage_registry" in path for path in paths)
     assert {
-               "node-bindings/classic-node/index.d.ts",
-               "docs/implementation/node_api_parity/baseline/parity_contract.json",
-               "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.pyi",
-               "python-bindings/classic-python-bindings/python/classic_scanlog/__init__.py",
-               "docs/implementation/python_api_parity/baseline/parity_contract.json",
+               "cpp-bindings/classic-cpp-bridge/src/scanner/contract.rs",
+               "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
+               "docs/implementation/cxx_api_parity/baseline/rust_api_surface.json",
+               "tools/cxx_api_parity/canonical_mappings.json",
            } <= paths
+    assert set(surfaces) == {"rust", "cxx"}
 
 
 def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:

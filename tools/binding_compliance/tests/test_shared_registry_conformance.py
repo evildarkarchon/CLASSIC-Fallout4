@@ -21,45 +21,6 @@ from conformance.receipts import validate_prepared_run
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_python_string_wrapper_methods_have_core_owner_and_executable_predicates() -> (
-        None
-):
-    """Foundation wrappers must resolve their actual Rust owner and exercised calls."""
-    methods = {
-        "__init__",
-        "intern",
-        "intern_batch",
-        "normalize",
-        "process_batch",
-        "process_batch_fast",
-        "split_lines",
-        "split_lines_fast",
-        "join_lines",
-        "common_prefix",
-        "pool_stats",
-        "clear_pool",
-    }
-    rows = [
-        row
-        for row in load_source_parity_rows(ROOT)
-        if row.obligation_id.startswith("parity:python:shared.strings.StringProcessor")
-    ]
-    assert rows
-    assert all(
-        row.rust_crate == "classic-shared-core" and row.rust_symbol == "StringProcessor"
-        for row in rows
-    )
-    assert methods <= {row.runtime_operation for row in rows}
-    policy = coverage_policy("string-operations")
-    assert all(
-        any(
-            predicate.covers_runtime_operation(method)
-            for predicate in policy.predicates
-        )
-        for method in methods
-    )
-
-
 @pytest.mark.parametrize("family", ["string-operations", "registry-operations"])
 def test_inputs_and_observation_predicates_fail_closed(family: str) -> None:
     """Authored inputs are oracle-free and missing actual fields earn no credit."""
@@ -96,8 +57,8 @@ def _pack(family: str) -> dict:
 @pytest.mark.parametrize(
     "family,participants",
     [
-        ("string-operations", {"rust", "node", "python"}),
-        ("registry-operations", {"rust", "cxx", "node", "python"}),
+        ("string-operations", {"rust"}),
+        ("registry-operations", {"rust", "cxx"}),
     ],
 )
 def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(

@@ -41,7 +41,6 @@ def _observed(observation: Mapping[str, Any]) -> bool:
     )
 
 
-_PYTHON_COLLECTOR = "parity:python:file_io.log_collection.PyLogCollector"
 LOG_COLLECTION_COVERAGE_POLICY = FamilyCoveragePolicy(
     "log-collection",
     (
@@ -71,22 +70,6 @@ LOG_COLLECTION_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "parity:cxx:1462d027a7cba8dd",
                 "parity:cxx:acf327fd1cc5bdc2",
                 "parity:cxx:8d5f7aa4b18d4e1f",
-                "parity:node:scanlog.JsLogCollector",
-                "parity:node:aux-phase4c-crash-autoscan-pattern",
-                "parity:node:scanlog.patterns.CRASH_LOG_PATTERN",
-                _PYTHON_COLLECTOR,
-                *(
-                    _PYTHON_COLLECTOR + "." + name
-                    for name in (
-                        "__init__",
-                        "collect_all",
-                        "collect_crash_logs",
-                        "copy_from_xse_folder",
-                        "crash_logs_dir",
-                        "move_from_base_folder",
-                        "pastebin_dir",
-                    )
-                ),
             ),
             runtime_operations=(
                 None,

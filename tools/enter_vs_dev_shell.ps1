@@ -5,7 +5,7 @@
 .DESCRIPTION
     Initializes the Visual Studio Developer Shell environment in-process using
     Launch-VsDevShell.ps1. This is useful for Windows-local workflows that need
-    the MSVC toolchain, such as `napi build`, CMake/Ninja builds, or other tasks
+    the MSVC toolchain, such as `cargo` builds of the C++ bridge, CMake/Ninja builds, or other tasks
     that rely on `cl.exe` and the correct linker being first on PATH.
 
     If -Command is provided, the command runs after the Dev Shell is initialized.

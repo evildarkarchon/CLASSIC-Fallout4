@@ -24,7 +24,6 @@ from conformance.packs import (
 )
 from conformance.receipts import validate_prepared_run
 
-from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
 FAMILIES = ("config-vocabulary", "scan-run-vocabulary")
@@ -114,7 +113,7 @@ def test_vocabulary_receipts_reject_changed_wording_missing_cases_and_new_operat
         )
     pack = load_and_validate_pack(tmp_path, pack_path)
     policy = FAMILY_COVERAGE_POLICIES[family]
-    for participant in ("cxx", "node", "python"):
+    for participant in ("cxx",):
         run = materialize_run_plan(
             pack,
             participant_id=participant,
@@ -210,34 +209,3 @@ def test_vocabulary_receipts_reject_changed_wording_missing_cases_and_new_operat
                 mutation
             )
 
-
-@pytest.mark.parametrize("participant", ("node", "python"))
-def test_new_vocabulary_resolver_keeps_its_public_operation_identity(
-        tmp_path: Path, participant: str
-) -> None:
-    """A new exported resolver cannot inherit coverage merely by sharing an enum."""
-    copy_source_inventory(ROOT, tmp_path)
-    path = (
-            tmp_path
-            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
-    )
-    document = json.loads(path.read_text())
-    row = next(
-        row
-        for row in document["tier1Mappings"]
-        if row.get("rustSymbol") == "InstalledYamlDataProvenance"
-    )
-    added = {
-        **row,
-        "id": "future-resolver",
-        "nodeExport": "futureLabelOperation",
-        "pythonExportPath": "future_label_operation",
-    }
-    document["tier1Mappings"].append(added)
-    path.write_text(json.dumps(document))
-    actual = next(
-        row
-        for row in load_source_parity_rows(tmp_path)
-        if row.obligation_id == f"parity:{participant}:future-resolver"
-    )
-    assert actual.runtime_operation == "future_label_operation"

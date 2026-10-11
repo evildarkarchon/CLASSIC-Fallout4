@@ -51,25 +51,6 @@ _EXECUTION_POLICIES = (
         artifact_marker="name: tui-consumer-conformance",
     ),
     WorkflowExecutionPolicy(
-        workflow=".github/workflows/ci-typescript.yml",
-        job_id="build-and-test",
-        participant_id="node",
-        legacy_marker="Run Node runtime smoke tests",
-        launcher_marker="run_scan_run_conformance.py --participant node",
-        artifact_marker="name: node-scan-run-conformance",
-        launcher_condition="if: matrix.runtime == 'node' && !cancelled()",
-        upload_condition="if: matrix.runtime == 'node' && always()",
-        matrix_marker="runtime: [bun, node]",
-    ),
-    WorkflowExecutionPolicy(
-        workflow=".github/workflows/ci-python-bindings.yml",
-        job_id="build-and-test",
-        participant_id="python",
-        legacy_marker="Run Python bindings smoke tests",
-        launcher_marker="run_scan_run_conformance.py --participant python",
-        artifact_marker="name: python-scan-run-conformance",
-    ),
-    WorkflowExecutionPolicy(
         workflow=".github/workflows/ci-cpp.yml",
         job_id="cli-tests",
         participant_id="cxx",
@@ -104,6 +85,8 @@ _EXECUTION_POLICIES = (
         job_timeout_minutes=180,
     ),
 )
+# The derived families below expand only these base participant policies.
+_BASE_POLICY_COUNT = len(_EXECUTION_POLICIES)
 
 # Both promoted families retain the same native denominator and predecessor
 # gates. Family selection precedes compiler selection so markers stay unique.
@@ -115,7 +98,7 @@ _EXECUTION_POLICIES += tuple(
             policy.launcher_marker.replace(
                 "run_scan_run_conformance.py", "run_user_settings_conformance.py"
             )
-            if policy.participant_id in {"rust", "node", "python"}
+            if policy.participant_id == "rust"
             else policy.launcher_marker.replace(
                 " --participant", " --family user-settings --participant"
             ).replace(" -Compiler", " -Family user-settings -Compiler")
@@ -140,7 +123,7 @@ _EXECUTION_POLICIES += tuple(
 )
 
 
-# Focused analyzers share four semantic adapters, with no fabricated frontend
+# Focused analyzers share the semantic adapters, with no fabricated frontend
 # obligations. Every family has its own blocking step and diagnostic artifact.
 _EXECUTION_POLICIES += tuple(
     replace(
@@ -240,38 +223,20 @@ _EXECUTION_POLICIES += tuple(
         "settings-cached-docs",
         "version-registry-details",
     )
-    for policy in _EXECUTION_POLICIES[:7]
-    if policy.participant_id in {"rust", "node", "python", "cxx"}
-    and not (
-        family
-        in {
-            "markdown-rendering",
-            "report-discovery",
-            "yaml-update-operations",
-            "hash-cache-controls",
-        }
-        and policy.participant_id in {"node", "python"}
-    )
-    and not (
-        family == "windows-platform-paths"
-        and policy.participant_id in {"python", "cxx"}
-    )
-    and not (family == "file-backups" and policy.participant_id == "python")
+    for policy in _EXECUTION_POLICIES[:_BASE_POLICY_COUNT]
+    if policy.participant_id in {"rust", "cxx"}
+    and not (family == "windows-platform-paths" and policy.participant_id == "cxx")
     and not (
         family in {"unpacked-scan", "xse-plugin-validation"}
         and policy.participant_id == "cxx"
     )
-    and not (
-        family == "shared-performance" and policy.participant_id in {"node", "cxx"}
-    )
+    and not (family == "shared-performance" and policy.participant_id == "cxx")
     and not (
         family
         in {"file-generation", "yaml-source-values", "mod-ini", "game-orchestration"}
         and policy.participant_id == "cxx"
     )
-    and not (
-        family == "performance-timers" and policy.participant_id in {"node", "cxx"}
-    )
+    and not (family == "performance-timers" and policy.participant_id == "cxx")
     and not (family == "dds-header" and policy.participant_id == "cxx")
     and not (family == "log-parsing" and policy.participant_id == "cxx")
     and not (
@@ -290,18 +255,14 @@ _EXECUTION_POLICIES += tuple(
         family in {"version-extraction", "version-f4se", "version-pe-path"}
         and policy.participant_id == "cxx"
     )
-    and not (family == "version-f4se" and policy.participant_id == "node")
     and not (
         family in {"settings-cached-docs", "version-registry-details"}
         and policy.participant_id == "cxx"
     )
-    and not (family == "settings-validation" and policy.participant_id == "node")
     and not (
         family in {"registry-keys", "settings-yaml-batch"}
         and policy.participant_id == "cxx"
     )
-    and not (family == "registry-keys" and policy.participant_id == "node")
-    and not (family == "settings-yaml-batch" and policy.participant_id == "python")
     and not (
         family
         in {
@@ -313,26 +274,12 @@ _EXECUTION_POLICIES += tuple(
         and policy.participant_id == "cxx"
     )
     and not (
-        family
-        in {
-            "fallout4-metadata",
-            "fallout4-paths",
-            "game-version-order",
-            "version-registry-values",
-        }
-        and policy.participant_id == "node"
-    )
-    and not (
         family in {"registry-context", "registry-paths"}
         and policy.participant_id == "cxx"
     )
-    and not (
-        family in {"registry-context", "registry-gui"}
-        and policy.participant_id == "node"
-    )
 )
 # Autoscan Reports use the shared scan-run launcher while retaining the same
-# four semantic adapters and separate diagnostics as the focused families.
+# semantic adapters and separate diagnostics as the focused families.
 _EXECUTION_POLICIES += tuple(
     replace(
         policy,
@@ -347,11 +294,11 @@ _EXECUTION_POLICIES += tuple(
             + ("-${{ matrix.compiler }}" if policy.participant_id == "cxx" else "")
         ),
     )
-    for policy in _EXECUTION_POLICIES[:7]
-    if policy.participant_id in {"rust", "node", "python", "cxx"}
+    for policy in _EXECUTION_POLICIES[:_BASE_POLICY_COUNT]
+    if policy.participant_id in {"rust", "cxx"}
 )
 # Crash Log Scan Launch (ADR-0009) also uses the shared scan-run launcher, with
-# its own per-adapter runners, the same four semantic adapters, and separate
+# its own per-adapter runners, the same semantic adapters, and separate
 # diagnostics. Frontends consume it through their own consumer launchers.
 _EXECUTION_POLICIES += tuple(
     replace(
@@ -367,8 +314,8 @@ _EXECUTION_POLICIES += tuple(
             + ("-${{ matrix.compiler }}" if policy.participant_id == "cxx" else "")
         ),
     )
-    for policy in _EXECUTION_POLICIES[:7]
-    if policy.participant_id in {"rust", "node", "python", "cxx"}
+    for policy in _EXECUTION_POLICIES[:_BASE_POLICY_COUNT]
+    if policy.participant_id in {"rust", "cxx"}
 )
 # The native CLI launches through Crash Log Scan Launch (#289) and proves it with
 # its own consumer receipt, on the same compiler matrix as its other families.
@@ -384,7 +331,7 @@ _EXECUTION_POLICIES += tuple(
             "name: cli-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}"
         ),
     )
-    for policy in _EXECUTION_POLICIES[:7]
+    for policy in _EXECUTION_POLICIES[:_BASE_POLICY_COUNT]
     if policy.participant_id == "cli"
 )
 # The GUI launches every Crash Log Scan through Crash Log Scan Launch (#288), so
@@ -401,7 +348,7 @@ _EXECUTION_POLICIES += tuple(
             "name: gui-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}"
         ),
     )
-    for policy in _EXECUTION_POLICIES[:7]
+    for policy in _EXECUTION_POLICIES[:_BASE_POLICY_COUNT]
     if policy.participant_id == "gui"
 )
 # The TUI launches its Crash Logs scans through Crash Log Scan Launch (#287).
@@ -414,7 +361,7 @@ _EXECUTION_POLICIES += tuple(
         ),
         artifact_marker="name: tui-crash-log-scan-launch-consumer-conformance",
     )
-    for policy in _EXECUTION_POLICIES[:7]
+    for policy in _EXECUTION_POLICIES[:_BASE_POLICY_COUNT]
     if policy.participant_id == "tui"
 )
 # The CLI job retains its original suite and the bounded family launches.
@@ -507,132 +454,6 @@ def _has_exact_step_condition(step: str, expected: str) -> bool:
     return [condition.rstrip() for condition in conditions] == [expected]
 
 
-def _validate_retained_gate_producers(repo_root: Path) -> None:
-    """Require every imported command gate to execute in its producer job.
-
-    A successful reusable workflow alone cannot prove that a named command ran.
-    These exact launch and upload checks keep the full job's imported evidence
-    tied to blocking steps in the same checked-out workflow revision.
-    """
-
-    def job(workflow: str, job_id: str) -> str:
-        """Load one retained-gate producer without trusting artifact content."""
-        source = (repo_root / ".github" / "workflows" / workflow).read_text(
-            encoding="utf-8"
-        )
-        block = _job_block(source, job_id)
-        if re.search(r"(?m)^    continue-on-error:", block):
-            raise WorkflowPolicyError("retained gate producer must be blocking")
-        return block
-
-    def command_step(
-        block: str, name: str, command: str, condition: str | None = None
-    ) -> None:
-        """Require the catalog command and its reviewed matrix condition."""
-        step = _step_block(block, f"- name: {name}", label="retained gate command")
-        if (
-            f"        run: {command}" not in step.splitlines()
-            or "continue-on-error:" in step
-        ):
-            raise WorkflowPolicyError("retained gate command differs from catalog")
-        conditions = re.findall(r"(?m)^        (if:[^\r\n]*)$", step)
-        if conditions != ([] if condition is None else [f"if: {condition}"]):
-            raise WorkflowPolicyError("retained gate command has a changed condition")
-
-    def upload_step(block: str, name: str, artifact_name: str) -> None:
-        """Require one current-run artifact that survives failed producer steps."""
-        step = _step_block(block, f"- name: {name}", label="retained gate upload")
-        for line in (
-            "        if: always()",
-            "        uses: actions/upload-artifact@v6",
-            f"          name: {artifact_name}",
-            "          path: tools/binding_compliance/artifacts/retained/",
-            "          overwrite: true",
-        ):
-            if line not in step.splitlines():
-                raise WorkflowPolicyError("retained gate upload lost current-run evidence")
-        if "continue-on-error:" in step:
-            raise WorkflowPolicyError("retained gate upload must be blocking")
-
-    for workflow, job_id, step_name, profile, upload_name, artifact_name in (
-        (
-            "ci-cpp.yml",
-            "cxx-parity-gate",
-            "Run CXX binding compliance profile",
-            "cxx-ci",
-            "Upload CXX retained gate evidence",
-            "cxx-parity-retained-gates",
-        ),
-        (
-            "ci-typescript.yml",
-            "parity-gates",
-            "Run Node binding compliance profile",
-            "node-ci",
-            "Upload Node parity retained gate evidence",
-            "node-parity-retained-gates",
-        ),
-        (
-            "ci-python-bindings.yml",
-            "parity-gates",
-            "Run Python binding compliance profile",
-            "python-ci",
-            "Upload Python parity retained gate evidence",
-            "python-parity-retained-gates",
-        ),
-    ):
-        block = job(workflow, job_id)
-        command_step(
-            block,
-            step_name,
-            "python tools/binding_compliance/check_compliance.py --repo-root . "
-            f"--profile {profile} --gate-evidence-out "
-            "tools/binding_compliance/artifacts/retained/"
-            f"{profile}/gate_evidence.json",
-        )
-        upload_step(block, upload_name, artifact_name)
-        if block.index(f"- name: {upload_name}") < block.index(f"- name: {step_name}"):
-            raise WorkflowPolicyError("retained gate upload precedes its command")
-
-    node = job("ci-typescript.yml", "build-and-test")
-    for name, runtime, gate_id in (
-        ("Run Bun tests", "bun", "node-bun-runtime-tests"),
-        ("Run Node runtime smoke tests", "node", "node-node-runtime-tests"),
-    ):
-        command_step(
-            node,
-            name,
-            "python tools/binding_compliance/run_retained_gate.py --repo-root . "
-            f"--gate-id {gate_id} --gate-evidence-out "
-            "tools/binding_compliance/artifacts/retained/"
-            f"{gate_id}/gate_evidence.json",
-            f"matrix.runtime == '{runtime}'",
-        )
-    upload_step(
-        node,
-        "Upload Node runtime retained gate evidence",
-        "node-runtime-retained-gates-${{ matrix.runtime }}",
-    )
-
-    python = job("ci-python-bindings.yml", "build-and-test")
-    for name, gate_id in (
-        ("Build and install Python bindings", "python-bindings-rebuild"),
-        ("Run Python bindings smoke tests", "python-runtime-smoke-tests"),
-    ):
-        command_step(
-            python,
-            name,
-            "python tools/binding_compliance/run_retained_gate.py --repo-root . "
-            f"--gate-id {gate_id} --gate-evidence-out "
-            "tools/binding_compliance/artifacts/retained/"
-            f"{gate_id}/gate_evidence.json",
-        )
-    upload_step(
-        python,
-        "Upload Python runtime retained gate evidence",
-        "python-runtime-retained-gates",
-    )
-
-
 def _validate_corrosion_source_workflow(repo_root: Path) -> None:
     """Bind native builds to one verified current-run Corrosion checkout."""
     source = (repo_root / ".github" / "workflows" / "ci-cpp.yml").read_text(
@@ -710,15 +531,13 @@ def _validate_full_aggregation(repo_root: Path) -> None:
 
     Local reusable workflow references share the caller revision. Downloading
     separate artifact directories preserves immutable receipt/plan pairs; a
-    cross-run download or a skipped retained gate cannot certify this checkout.
+    cross-run download cannot certify this checkout.
     """
     source = (repo_root / ".github/workflows/ci-binding-compliance.yml").read_text(
         encoding="utf-8"
     )
     callers = {
         "rust": ".github/workflows/ci-rust.yml",
-        "node": ".github/workflows/ci-typescript.yml",
-        "python": ".github/workflows/ci-python-bindings.yml",
         "native": ".github/workflows/ci-cpp.yml",
     }
     for job_id, workflow in callers.items():
@@ -738,7 +557,7 @@ def _validate_full_aggregation(repo_root: Path) -> None:
             )
     full = _job_block(source, "full")
     for line in (
-        "    needs: [rust, node, python, native]",
+        "    needs: [rust, native]",
         "    if: ${{ !cancelled() }}",
         "    runs-on: windows-latest",
     ):
@@ -777,28 +596,6 @@ def _validate_full_aggregation(repo_root: Path) -> None:
         raise WorkflowPolicyError(
             "full aggregation artifacts must come from the current workflow run"
         )
-    retained_download = _step_block(
-        full,
-        "Download current-run retained gate artifacts",
-        label="full aggregation retained gate evidence",
-    )
-    for line in (
-        "        uses: actions/download-artifact@v8",
-        "          pattern: '*retained-gates*'",
-        "          path: tools/binding_compliance/artifacts/retained-downloaded",
-        "          merge-multiple: false",
-    ):
-        if line not in retained_download.splitlines():
-            raise WorkflowPolicyError(
-                "full aggregation requires current-run retained gate evidence"
-            )
-    if re.search(
-        r"(?m)^\s+(run-id|repository|github-token|name|artifact-ids):",
-        "\n".join(retained_download.splitlines()[1:]),
-    ):
-        raise WorkflowPolicyError(
-            "full aggregation retained gate evidence must come from the current run"
-        )
     upstream = _step_block(
         full,
         "Require every retained participant job to pass",
@@ -813,7 +610,7 @@ def _validate_full_aggregation(repo_root: Path) -> None:
         raise WorkflowPolicyError(
             "full aggregation must require actual upstream job results"
         )
-    command = "python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --gate-evidence-directory tools/binding_compliance/artifacts/retained-downloaded --output-dir tools/binding_compliance/artifacts/full"
+    command = "python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --output-dir tools/binding_compliance/artifacts/full"
     launcher = _step_block(
         full,
         "tools/binding_compliance/check_compliance.py",
@@ -828,7 +625,6 @@ def _validate_full_aggregation(repo_root: Path) -> None:
         )
     if not _has_exact_step_condition(launcher, "if: ${{ !cancelled() }}"):
         raise WorkflowPolicyError("full aggregation must report upstream failures")
-    _validate_retained_gate_producers(repo_root)
     _validate_corrosion_source_workflow(repo_root)
 
 

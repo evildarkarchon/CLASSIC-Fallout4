@@ -38,39 +38,10 @@ def test_lookup_memory_carriers_are_owned_only_by_executed_memory_scenarios() ->
     """Disabled and SQLite lookups cannot claim construction of in-memory entries."""
     policy = FAMILY_COVERAGE_POLICIES["formid-lookup"]
     carriers = {"FormIdValueLookupEntry", "FormIdValueLookupInMemoryReply"}
-    hit = next(
-        predicate
-        for predicate in policy.predicates
-        if predicate.id == "formid-lookup.hit.entries"
-    )
-    assert carriers <= set(hit.rust_symbols)
-    assert hit.covers_runtime_operation("__init__")
+    # The entry facts only credited retired Python selectors; no class-wide
+    # lookup fact may claim the carriers in their place.
     for predicate in policy.predicates:
-        if predicate.id not in {
-            "formid-lookup.hit.entries",
-            "formid-lookup.batch-hit-miss.entries",
-        }:
-            assert not carriers.intersection(predicate.rust_symbols)
-
-
-@pytest.mark.parametrize(
-    "family", ("crash-suspect", "mod-guidance", "crashgen-settings")
-)
-def test_semantic_config_carriers_have_exact_supporting_owner_selectors(
-        family: str,
-) -> None:
-    """Cross-crate support credit names exact constructed/projected Python exports."""
-    policy = FAMILY_COVERAGE_POLICIES[family]
-    support = [
-        predicate
-        for predicate in policy.predicates
-        if predicate.capability_id == family + ".config-carriers"
-    ]
-    assert support
-    assert all(
-        predicate.binding_obligation_ids and predicate.runtime_operations
-        for predicate in support
-    )
+        assert not carriers.intersection(predicate.rust_symbols)
 
 
 @pytest.mark.parametrize("family", FAMILIES)
@@ -177,7 +148,7 @@ def test_semantic_receipts_cover_only_their_executed_rows(
         )
     pack = load_and_validate_pack(tmp_path, pack_path)
     policy = FAMILY_COVERAGE_POLICIES[family]
-    for participant in ("cxx", "node", "python"):
+    for participant in ("cxx",):
         run = materialize_run_plan(
             pack,
             participant_id=participant,

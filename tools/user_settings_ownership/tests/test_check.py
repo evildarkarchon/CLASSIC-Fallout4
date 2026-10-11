@@ -12,7 +12,7 @@ def test_audit_rejects_raw_user_settings_interpretation_outside_owner(
 ) -> None:
     """A production adapter cannot interpret a first-party raw settings path."""
 
-    source = tmp_path / "node-bindings/classic-node/src/bad.rs"
+    source = tmp_path / "cpp-bindings/classic-cpp-bridge/src/bad.rs"
     source.parent.mkdir(parents=True)
     source.write_text(
         'let value = yaml.get("CLASSIC_Settings.FCX Mode");\n',
@@ -31,9 +31,9 @@ def test_audit_allows_the_deep_owner_and_non_production_evidence(tmp_path: Path)
     allowed = tmp_path / "business-logic/classic-user-settings-core/src/document.rs"
     allowed.parent.mkdir(parents=True)
     allowed.write_text('let key = "CLASSIC_Settings";\n', encoding="utf-8")
-    test_file = tmp_path / "node-bindings/classic-node/__test__/settings.spec.ts"
+    test_file = tmp_path / "cpp-bindings/classic-cpp-bridge/tests/settings.rs"
     test_file.parent.mkdir(parents=True)
-    test_file.write_text('const fixture = "CLASSIC_Settings";\n', encoding="utf-8")
+    test_file.write_text('let fixture = "CLASSIC_Settings";\n', encoding="utf-8")
     comment_only = tmp_path / "business-logic/example/src/lib.rs"
     comment_only.parent.mkdir(parents=True)
     comment_only.write_text("// ClassicConfig was retired.\n", encoding="utf-8")
@@ -84,7 +84,7 @@ def test_audit_allows_the_compatibility_mirror_generator(tmp_path: Path) -> None
 def test_audit_ignores_inline_python_comments(tmp_path: Path) -> None:
     """Forbidden historical names in inline Python comments are not code ownership."""
 
-    source = tmp_path / "python-bindings/example/src/module.py"
+    source = tmp_path / "ui-applications/example/src/module.py"
     source.parent.mkdir(parents=True)
     source.write_text(
         'label = "safe # text"  # ClassicConfig was retired here\n',

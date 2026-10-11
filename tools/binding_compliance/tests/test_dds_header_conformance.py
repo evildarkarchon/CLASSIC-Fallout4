@@ -40,7 +40,8 @@ def test_dds_observation_predicates_reject_missing_and_changed_fields() -> None:
         for row in load_source_parity_rows(root)
         if row.rust_symbol == "DDSHeader" and row.mapping_origin == "canonical_rust"
     ]
-    assert {row.participant_id for row in exported} == {"python"}
+    # Only the retired Python binding exported the header type itself.
+    assert not exported
 
 
 def test_dds_capabilities_route_parsing_to_file_io_and_game_rules_to_resource() -> None:
@@ -75,5 +76,6 @@ def test_dds_capabilities_route_parsing_to_file_io_and_game_rules_to_resource() 
         if row.rust_symbol is not None
         and row.rust_symbol.removesuffix("@rust") in moved
     ]
-    assert {row.participant_id for row in rows} == {"node", "python"}
-    assert {row.rust_crate for row in rows} == {"classic-resource-core"}
+    # The bindings that exported these types retired; any future row must still
+    # name the resource-core owner.
+    assert all(row.rust_crate == "classic-resource-core" for row in rows)

@@ -95,7 +95,7 @@ def test_named_forbidden_effect_facts_reject_contradictory_files() -> None:
         assert not derive_observed_fact_ids(document, scenario, observation, policy)
 
 
-@pytest.mark.parametrize("participant", ("cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("cxx",))
 def test_installed_yaml_receipts_fail_closed_and_cover_only_executed_operations(
         tmp_path: Path, participant: str
 ) -> None:

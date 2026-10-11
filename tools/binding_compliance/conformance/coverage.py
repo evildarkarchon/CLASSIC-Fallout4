@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -13,14 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 from .failures import FailureKind
 from .schema import ConformanceSchemaError, reject_duplicate_json_keys
-from .source_declarations import python_declaration_exports
 
 try:
     from ..cxx_opaque_map_reachability import validate_cxx_opaque_map_reachability
-    from ..node_package_metadata import validate_node_package_metadata
 except ImportError:
     from cxx_opaque_map_reachability import validate_cxx_opaque_map_reachability
-    from node_package_metadata import validate_node_package_metadata
 
 if TYPE_CHECKING:
     from .applicability import PolicyException
@@ -28,17 +24,62 @@ if TYPE_CHECKING:
 
 _PARITY_CONTRACTS = {
     "cxx": Path("docs/implementation/cxx_api_parity/baseline/parity_contract.json"),
-    "node": Path("docs/implementation/node_api_parity/baseline/parity_contract.json"),
-    "python": Path(
-        "docs/implementation/python_api_parity/baseline/parity_contract.json"
-    ),
 }
 _PARITY_ANALYZERS = {
     "cxx": "cxx-source-parity",
-    "node": "node-source-and-declaration-parity",
-    "python": "python-source-and-stub-parity",
 }
+
+# Permanent structural and negative analyzers that may own non-runtime CXX
+# parity rows. Each names the blocking CI step that still runs it; the loader
+# fails closed when that step or an evidence path disappears. The retired
+# compliance catalog used to own these (Retire, #304); T1 removes parity-row
+# coverage together with the CXX parity tooling.
+_RETAINED_ANALYZERS: tuple[dict[str, Any], ...] = (
+    {
+        "id": "cxx-opaque-map-reachability",
+        "evidenceKind": "negative",
+        "paths": [
+            "tools/binding_compliance/cxx_opaque_map_reachability.py",
+            "cpp-bindings/classic-cpp-bridge/src/types.rs",
+            "cpp-bindings/classic-cpp-bridge/src/types_tests.rs",
+            "cpp-bindings/classic-cpp-bridge/build.rs",
+            "cpp-bindings/classic-cpp-bridge/tests/opaque_map_read_only.rs",
+        ],
+        "blockingWorkflow": {
+            "path": ".github/workflows/ci-rust.yml",
+            "commandMarker": "cargo test --workspace --release",
+        },
+    },
+    {
+        "id": "cxx-source-parity",
+        "evidenceKind": "structural",
+        "paths": [
+            "tools/cxx_api_parity/check_parity_gate.py",
+            "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
+        ],
+        "blockingWorkflow": {
+            "path": ".github/workflows/ci-cpp.yml",
+            "commandMarker": "python tools/cxx_api_parity/check_parity_gate.py --repo-root .",
+        },
+    },
+)
 _ROW_COVERAGE_SEAL = object()
+
+# Operation-scoped pack capabilities whose only predicates selected Node or
+# Python parity rows. Those predicates retired with the bindings (Retire, #304),
+# and no CXX row ever matched them, so each resolves to an explicit empty scope
+# instead of failing the "nonempty operation predicates" guard. The capabilities
+# stay in the packs because pack edits would change every run-plan digest.
+_RETIRED_BINDING_SCOPES = frozenset(
+    {
+        "crash-suspect.config-carriers",
+        "crashgen-settings.config-carriers",
+        "file-operations.streams",
+        "formid-finding.lookup-entry",
+        "mod-guidance.config-carriers",
+        "papyrus-monitor.full",
+    }
+)
 _RETAINED_ANALYZER_CATALOG_SEAL = object()
 
 # Exact public operation names, not parity-row hashes. Unknown new bridge
@@ -67,16 +108,6 @@ _SEMANTIC_BRIDGE_OPERATIONS = {
     "formid_value_lookup_shared_pool_new": "shared_pool",
     "formid_value_lookup_sqlite_new": "sqlite",
 }
-
-# Python facade classes whose Rust owner type was renamed while the Python
-# class name stayed put, as (python class, rust symbol). Their method rows keep
-# the bare method name as their operation, exactly as before the rename, so a
-# row's runtime evidence stays bound to the method that produced it. The
-# version-labelled backup became classic_resource_core::VersionBackupManager
-# (#251) so it cannot share a crate-qualified name with the game-target
-# BackupManager, which also moves to resource core (#250).
-_RENAMED_PYTHON_FACADE_OWNERS = frozenset({("BackupManager", "VersionBackupManager")})
-
 
 class CoverageDerivationError(ValueError):
     """Raised when family coverage policy cannot produce trustworthy facts."""
@@ -125,31 +156,28 @@ class RetainedAnalyzerCatalog(Mapping[str, str]):
         return len(self._entries)
 
 
-def load_retained_analyzer_kinds(repo_root: Path) -> RetainedAnalyzerCatalog:
-    """Load retained analyzers whose owners remain blocking repository gates.
+def load_retained_analyzer_kinds(
+    repo_root: Path,
+    catalog: Sequence[Mapping[str, Any]] = _RETAINED_ANALYZERS,
+) -> RetainedAnalyzerCatalog:
+    """Load retained analyzers whose owners remain blocking CI steps.
 
-    Only the permanent analyzer catalog and its blocking owners are read. The
-    diagnostic migration ledger's obligation targets and migration states are
-    deliberately not inputs to this trust decision.
+    Every analyzer must name a ``blockingWorkflow`` (workflow path plus an
+    exact command marker that must still appear in it) and existing evidence
+    paths. ``catalog`` defaults to the permanent CXX table and exists only so
+    tests can exercise the fail-closed checks. The diagnostic migration
+    ledger's obligation targets and migration states are deliberately not
+    inputs to this trust decision.
+
+    Raises ``CoverageDerivationError`` when an entry is malformed, duplicated,
+    or has lost its workflow owner or an evidence path.
     """
-
-    try:
-        from ..retained_analyzers import (  # type: ignore[import-not-found]
-            BASE_ANALYZER_CATALOG,
-            BLOCKING_REQUIREMENT_IDS,
-        )
-    except ImportError:
-        from retained_analyzers import (  # type: ignore[import-not-found,no-redef]
-            BASE_ANALYZER_CATALOG,
-            BLOCKING_REQUIREMENT_IDS,
-        )
 
     root = repo_root.resolve()
     analyzer_kinds: dict[str, str] = {}
-    for item in BASE_ANALYZER_CATALOG:
+    for item in catalog:
         analyzer_id = item.get("id")
         evidence_kind = item.get("evidenceKind")
-        requirement_id = item.get("blockingRequirementId")
         workflow = item.get("blockingWorkflow")
         if not isinstance(analyzer_id, str) or analyzer_id in analyzer_kinds:
             raise CoverageDerivationError(
@@ -159,38 +187,30 @@ def load_retained_analyzer_kinds(repo_root: Path) -> RetainedAnalyzerCatalog:
             raise CoverageDerivationError(
                 f"retained analyzer {analyzer_id} has an unsupported evidence kind"
             )
-        if (requirement_id is None) == (workflow is None):
+        if workflow is None:
             raise CoverageDerivationError(
-                f"retained analyzer {analyzer_id} must name exactly one blocking owner"
+                f"retained analyzer {analyzer_id} must name a blocking workflow owner"
             )
-        if (
-            requirement_id is not None
-            and requirement_id not in BLOCKING_REQUIREMENT_IDS
-        ):
+        if not isinstance(workflow, Mapping):
             raise CoverageDerivationError(
-                f"retained analyzer {analyzer_id} does not name a blocking requirement"
+                f"retained analyzer {analyzer_id} has a malformed workflow owner"
             )
-        if workflow is not None:
-            if not isinstance(workflow, Mapping):
-                raise CoverageDerivationError(
-                    f"retained analyzer {analyzer_id} has a malformed workflow owner"
-                )
-            workflow_path = workflow.get("path")
-            marker = workflow.get("commandMarker")
-            if not isinstance(workflow_path, str) or not isinstance(marker, str):
-                raise CoverageDerivationError(
-                    f"retained analyzer {analyzer_id} has a malformed workflow owner"
-                )
-            try:
-                workflow_text = (root / workflow_path).read_text(encoding="utf-8")
-            except (OSError, UnicodeError) as error:
-                raise CoverageDerivationError(
-                    f"retained analyzer {analyzer_id} cannot read its workflow owner"
-                ) from error
-            if marker not in workflow_text:
-                raise CoverageDerivationError(
-                    f"retained analyzer {analyzer_id} lost its blocking workflow command"
-                )
+        workflow_path = workflow.get("path")
+        marker = workflow.get("commandMarker")
+        if not isinstance(workflow_path, str) or not isinstance(marker, str):
+            raise CoverageDerivationError(
+                f"retained analyzer {analyzer_id} has a malformed workflow owner"
+            )
+        try:
+            workflow_text = (root / workflow_path).read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as error:
+            raise CoverageDerivationError(
+                f"retained analyzer {analyzer_id} cannot read its workflow owner"
+            ) from error
+        if marker not in workflow_text:
+            raise CoverageDerivationError(
+                f"retained analyzer {analyzer_id} lost its blocking workflow command"
+            )
         raw_paths = item.get("paths")
         if not isinstance(raw_paths, list) or not raw_paths:
             raise CoverageDerivationError(
@@ -245,7 +265,10 @@ def scoped_operation_predicates(
 
     Unscoped capabilities retain their class-wide contract. Scoped capabilities
     require a nonempty explicit operation set; missing policies and wildcards
-    raise instead of making an applicable binding disappear.
+    raise instead of making an applicable binding disappear. The only
+    exception is ``_RETIRED_BINDING_SCOPES``: with a policy present and no
+    predicate for one of them, the result is the empty scope ``()``, which
+    enrolls no source row.
     """
     if not capability.get("operationScoped", False):
         return None
@@ -258,6 +281,12 @@ def scoped_operation_predicates(
         if policy is not None
         else ()
     )
+    if (
+        not selected
+        and policy is not None
+        and capability["id"] in _RETIRED_BINDING_SCOPES
+    ):
+        return ()
     if not selected or any(not predicate.runtime_operations for predicate in selected):
         raise CoverageDerivationError(
             f"{capability['id']} requires explicit nonempty operation predicates"
@@ -287,7 +316,7 @@ def matches_scoped_operation(
 
 @dataclass(frozen=True)
 class SourceParityRow:
-    """One occurrence from a live CXX, Node, or Python parity inventory."""
+    """One occurrence from the live CXX parity inventory."""
 
     obligation_id: str
     participant_id: str
@@ -302,7 +331,7 @@ class SourceParityRow:
 
 
 def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
-    """Load every live parity-row occurrence with canonical Rust metadata.
+    """Load every live CXX parity-row occurrence with canonical Rust metadata.
 
     Repeated IDs receive the same occurrence suffix used by the migration
     ledger, so coverage accounting cannot collapse two source obligations into
@@ -310,14 +339,8 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
     trustworthy closed row inventory.
     """
 
-    from .families.vocabulary import VOCABULARY_OPERATIONS
-
-    vocabulary_symbols = {
-        spec.symbol for specs in VOCABULARY_OPERATIONS.values() for spec in specs
-    }
     root = repo_root.resolve()
     rows: list[SourceParityRow] = []
-    python_declarations = python_declaration_exports(root)
     unreachable_map_accessors: frozenset[str] | None = None
     for participant_id, relative_path in _PARITY_CONTRACTS.items():
         try:
@@ -338,7 +361,7 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             raise CoverageDerivationError(
                 f"source parity artifact {relative_path.as_posix()} must be an object"
             )
-        row_key = "entries" if participant_id == "cxx" else "tier1Mappings"
+        row_key = "entries"
         raw_rows = document.get(row_key)
         if not isinstance(raw_rows, list):
             raise CoverageDerivationError(
@@ -349,24 +372,6 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             for raw_row in raw_rows
         ]
         totals = Counter(raw_ids)
-        # Historical @rust references anchor extra Rust declarations to an
-        # independently tracked Python export. The anchor still owns runtime
-        # proof; the extra source-reference occurrence has no separate call.
-        python_export_anchors = {
-            (
-                item.get("pythonModule"),
-                item.get("pythonExportPath"),
-                item.get("pythonKind"),
-            )
-            for item in raw_rows
-            if participant_id == "python"
-            and isinstance(item, Mapping)
-            and isinstance(item.get("id"), str)
-            and not item["id"].endswith("@rust")
-            and isinstance(item.get("pythonModule"), str)
-            and isinstance(item.get("pythonExportPath"), str)
-            and item.get("pythonKind") in {"class", "function", "method"}
-        }
         occurrences: Counter[object] = Counter()
         for index, raw_row in enumerate(raw_rows):
             if not isinstance(raw_row, Mapping):
@@ -383,315 +388,40 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                 f":occurrence:{occurrences[row_id]}" if totals[row_id] > 1 else ""
             )
             analyzer_override = None
-            if participant_id == "cxx":
-                binding_only = isinstance(raw_row.get("unmappedReason"), str)
-                mapping_origin = "binding_only" if binding_only else "canonical_rust"
-                rust_symbol = raw_row.get("coreRustSymbol")
-                # CXX shared structs, enums and opaque type declarations have
-                # source shape, not callable behavior. Their exported getters,
-                # constructors and mutations remain separate runtime rows even
-                # when the declaration maps to a canonical Rust domain type.
-                declaration_only = raw_row.get("kind") in {
-                    "struct",
-                    "enum",
-                    "opaque",
-                } or (binding_only and raw_row.get("blockOrigin") == "C++")
-                required_evidence_kind = "structural" if declaration_only else "runtime"
-                if (
-                    binding_only
-                    and raw_row.get("kind") == "function"
-                    and raw_row.get("bridgeModule") == "types"
-                    and raw_row.get("sourceFile")
-                    == "cpp-bindings/classic-cpp-bridge/src/types.rs"
-                ):
-                    if unreachable_map_accessors is None:
-                        try:
-                            unreachable_map_accessors = (
-                                validate_cxx_opaque_map_reachability(root)
-                            )
-                        except (OSError, ValueError) as error:
-                            raise CoverageDerivationError(str(error)) from error
-                    if raw_row.get("rustSymbol") in unreachable_map_accessors:
-                        required_evidence_kind = "negative"
-                        analyzer_override = "cxx-opaque-map-reachability"
-            else:
-                binding_only = isinstance(raw_row.get("unmappedReason"), str)
-                if participant_id == "node":
-                    # A Rust-side row without a Node export remains a rust-only
-                    # source obligation; treating it as a binding mapping would
-                    # fabricate Node applicability.
-                    mapping_origin = (
-                        "binding_only"
-                        if binding_only
-                        else "canonical_rust"
-                        if raw_row.get("nodeExport")
-                        else "rust_only"
-                    )
-                    # TypeScript erases these declaration shapes at runtime, so
-                    # their blocking source/declaration analyzer is the only
-                    # evidence owner that can honestly prove them.
-                    # Rust-only inventory entries likewise expose no Node call
-                    # to execute; retain their source obligation without
-                    # manufacturing a Node runtime coverage requirement.
-                    required_evidence_kind = (
-                        "structural"
-                        if mapping_origin == "rust_only"
-                        or raw_row.get("nodeKind")
-                        in {"interface", "type", "const_enum"}
-                        else "runtime"
-                    )
-                    if (
-                        binding_only
-                        and raw_row.get("nodeExport") == "getVersion"
-                        and raw_row.get("nodeKind") == "function"
-                        and raw_row.get("nodeArity") == 0
-                    ):
-                        # This zero-argument getter has a separately verified
-                        # compile-time body; arbitrary binding functions never
-                        # inherit its structural metadata disposition.
-                        try:
-                            validate_node_package_metadata(root)
-                        except (OSError, ValueError) as error:
-                            raise CoverageDerivationError(str(error)) from error
-                        required_evidence_kind = "structural"
-                        analyzer_override = "node-package-metadata"
-                else:
-                    explicit_rust_only = raw_row.get("pythonKind") == "rust_only"
-                    if explicit_rust_only and (
-                        binding_only
-                        or any(
-                            key in raw_row
-                            for key in (
-                                "pythonModule",
-                                "pythonExportPath",
-                                "pythonExport",
-                                "pythonArity",
-                            )
+            binding_only = isinstance(raw_row.get("unmappedReason"), str)
+            mapping_origin = "binding_only" if binding_only else "canonical_rust"
+            rust_symbol = raw_row.get("coreRustSymbol")
+            # CXX shared structs, enums and opaque type declarations have
+            # source shape, not callable behavior. Their exported getters,
+            # constructors and mutations remain separate runtime rows even
+            # when the declaration maps to a canonical Rust domain type.
+            declaration_only = raw_row.get("kind") in {
+                "struct",
+                "enum",
+                "opaque",
+            } or (binding_only and raw_row.get("blockOrigin") == "C++")
+            required_evidence_kind = "structural" if declaration_only else "runtime"
+            if (
+                binding_only
+                and raw_row.get("kind") == "function"
+                and raw_row.get("bridgeModule") == "types"
+                and raw_row.get("sourceFile")
+                == "cpp-bindings/classic-cpp-bridge/src/types.rs"
+            ):
+                if unreachable_map_accessors is None:
+                    try:
+                        unreachable_map_accessors = (
+                            validate_cxx_opaque_map_reachability(root)
                         )
-                    ):
-                        raise CoverageDerivationError(
-                            "Python rust_only inventory cannot claim a binding export"
-                        )
-                    # A suffix alone never retires a real export: source-only
-                    # references must also resolve to a separately tracked
-                    # module/export/kind anchor that keeps its runtime duty.
-                    source_reference = explicit_rust_only or (
-                        not binding_only
-                        and row_id.endswith("@rust")
-                        and (
-                            raw_row.get("pythonModule"),
-                            raw_row.get("pythonExportPath"),
-                            raw_row.get("pythonKind"),
-                        )
-                        in python_export_anchors
-                    )
-                    mapping_origin = (
-                        "binding_only"
-                        if binding_only
-                        else "rust_only"
-                        if source_reference
-                        else "canonical_rust"
-                    )
-                    # A source-corroborated type without a custom constructor
-                    # has declaration shape only. Explicit constructors,
-                    # methods, properties and static factories remain runtime.
-                    namespace_only = (
-                        raw_row.get("pythonKind") == "class"
-                        and (
-                            raw_row.get("pythonModule"),
-                            raw_row.get("pythonExportPath"),
-                        )
-                        in python_declarations
-                    )
-                    required_evidence_kind = (
-                        "structural"
-                        if source_reference or namespace_only
-                        else "runtime"
-                    )
-                rust_symbol = raw_row.get("rustSymbol")
-            # Python maps methods to their owning Rust type; CXX uses both
-            # method and type mappings. Read the public binding operation so a
-            # new class method or bridge alias cannot inherit existing credit.
+                    except (OSError, ValueError) as error:
+                        raise CoverageDerivationError(str(error)) from error
+                if raw_row.get("rustSymbol") in unreachable_map_accessors:
+                    required_evidence_kind = "negative"
+                    analyzer_override = "cxx-opaque-map-reachability"
+            # Read the public bridge operation so a new bridge alias cannot
+            # inherit existing credit from its canonical Rust symbol.
             runtime_operation = None
-            if (
-                participant_id == "node"
-                and raw_row.get("rustCrate") == "classic-file-io-core"
-                and rust_symbol in {"FileHasher", "EncodingDetector"}
-                and raw_row.get("nodeKind") == "function"
-            ):
-                # Aggregate hash/encoding owners must not credit an unexecuted alias.
-                runtime_operation = raw_row.get("nodeExport")
-            # These operation packs migrate portions of aggregate class mappings.
-            # Preserve free-function identity so unrelated and future exports
-            # cannot borrow the class carrier's executed observation.
-            if (
-                raw_row.get("rustCrate")
-                in {
-                    "classic-config-core",
-                    "classic-scanlog-core",
-                    "classic-path-core",
-                    "classic-message-core",
-                    "classic-database-core",
-                    "classic-version-registry-core",
-                    "classic-scangame-core",
-                    "classic-update-core",
-                    "classic-xse-core",
-                    "classic-registry-core",
-                }
-                or (
-                    raw_row.get("rustCrate") == "classic-shared-core"
-                    and rust_symbol
-                    in {
-                        "StringProcessor",
-                        "intern",
-                        "normalize_string",
-                        "process_batch",
-                        "GameId",
-                        "as_str",
-                        "get_runtime",
-                        # Timing moved here from classic-perf-core; keep each
-                        # timing export's own operation identity.
-                        "MetricsSummary",
-                        "Timer",
-                        "clear_metrics",
-                        "get_summary",
-                        "record_timing",
-                        "record_timing_millis",
-                        "start_timer",
-                        # Generic YAML moved here from classic-settings-core;
-                        # keep each logical-key cache and validator export's
-                        # own operation identity.
-                        "CacheStats",
-                        "CoercedValue",
-                        "cache_keys",
-                        "cache_size",
-                        "cache_stats",
-                        "clear_cache",
-                        "coerce_setting_value",
-                        "get_cached",
-                        "invalidate",
-                        "is_cached",
-                        "load_batch_async",
-                        "load_batch_sync",
-                        "load_settings_async",
-                        "load_settings_sync",
-                        "reset_cache_stats",
-                        "validate_setting_value",
-                        # YamlOperations and the path/mtime YAML-file cache
-                        # moved here from classic-settings-core (#240); several
-                        # exports share one Rust symbol (yamlParse and
-                        # yamlGetValue both map to parse_yaml), so keep each
-                        # export's own operation identity.
-                        "YamlOperations",
-                        "clear_global_yaml_cache",
-                        "dump_yaml",
-                        "get_hashmap_value",
-                        "get_hashmap_vec_value",
-                        "get_indexmap_value",
-                        "get_settings_batch",
-                        "get_string_value",
-                        "get_vec_value",
-                        "load_yaml_file",
-                        "parse_yaml",
-                        "save_yaml_file",
-                        "set_setting",
-                        "set_settings_batch",
-                        "yaml_cache_stats",
-                        # The generic path primitives moved here from
-                        # classic-path-core (#245); keep the exported operation
-                        # identity they had there (isValidExecutablePath maps
-                        # to is_executable_file_path, so the symbol alone is not
-                        # it).
-                        "check_drive_exists",
-                        "check_read_permissions",
-                        "check_write_permissions",
-                        "is_executable_file_path",
-                        "is_valid_path",
-                        "remove_readonly",
-                        "validate_path_with_permissions",
-                    }
-                )
-                or (
-                    raw_row.get("rustCrate") == "classic-file-io-core"
-                    and rust_symbol in {"FileHasher", "EncodingDetector"}
-                )
-            ):
-                if participant_id == "node" and raw_row.get("nodeKind") == "function":
-                    runtime_operation = raw_row.get("nodeExport")
-                elif (
-                    participant_id == "python"
-                    and raw_row.get("pythonKind") == "function"
-                ):
-                    runtime_operation = raw_row.get("pythonExportPath")
-            # Label functions map to their enum owner. Keep the exported function
-            # identity too, so a future resolver cannot borrow an existing call.
-            # Aux constructors also map to shared class carriers; preserve their
-            # exported operation so a new factory cannot borrow constructor credit.
-            if (
-                rust_symbol in vocabulary_symbols
-                or raw_row.get("rustCrate")
-                in {
-                    "classic-web-core",
-                    "classic-resource-core",
-                }
-                or (
-                    # The loose version and PE helpers moved here from
-                    # classic-version-core (#243); keep the exported operation
-                    # identity they had there (isValidPePath maps to
-                    # is_valid_executable_path, so the symbol alone is not it).
-                    raw_row.get("rustCrate") == "classic-shared-core"
-                    and rust_symbol
-                    in {
-                        "compare_versions",
-                        "extract_all_versions",
-                        "extract_pe_version",
-                        "extract_version_from_filename",
-                        "extract_version_from_log",
-                        "format_version",
-                        "is_valid_executable_path",
-                        "parse_version",
-                        "try_parse_version",
-                    }
-                )
-                or (
-                    # The known-version queries moved here from
-                    # classic-version-core (#244); keep the exported operation
-                    # identity they had there.
-                    raw_row.get("rustCrate") == "classic-version-registry-core"
-                    and rust_symbol
-                    in {"is_known_f4se_version", "is_known_fallout4_version"}
-                )
-            ):
-                if participant_id == "node" and raw_row.get("nodeKind") == "function":
-                    export = raw_row.get("nodeExport")
-                    if isinstance(export, str):
-                        runtime_operation = re.sub(
-                            r"(?<!^)(?=[A-Z])", "_", export
-                        ).lower()
-                elif (
-                    participant_id == "python"
-                    and raw_row.get("pythonKind") == "function"
-                ):
-                    runtime_operation = raw_row.get("pythonExportPath")
-            if participant_id == "python" and raw_row.get("pythonKind") in {
-                "method",
-                "property",
-            }:
-                export = raw_row.get("pythonExportPath")
-                if not isinstance(export, str):
-                    raise CoverageDerivationError(
-                        "Python method/property row has no export path"
-                    )
-                owner, _, method = export.rpartition(".")
-                runtime_operation = (
-                    method
-                    if owner == rust_symbol
-                    or (owner, rust_symbol) in _RENAMED_PYTHON_FACADE_OWNERS
-                    else export
-                )
-                if runtime_operation == "from_shared_pool":
-                    runtime_operation = "shared_pool"
-            elif participant_id == "cxx" and raw_row.get("kind") == "function":
+            if raw_row.get("kind") == "function":
                 binding_symbol = raw_row.get("rustSymbol")
                 if not isinstance(binding_symbol, str):
                     raise CoverageDerivationError(

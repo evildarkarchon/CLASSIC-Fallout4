@@ -75,23 +75,6 @@ def _observed(exists: bool, observation: Mapping[str, Any]) -> bool:
     )
 
 
-def _full(observation: Mapping[str, Any]) -> bool:
-    """Require complete Node-exported full-file counters or an actual missing-file error."""
-    if set(observation) != {"stats", "error", "content"}:
-        return False
-    if observation["error"] == "missing":
-        return observation["stats"] is None and observation["content"] is None
-    value = observation["stats"]
-    return (
-        observation["error"] is None
-        and isinstance(observation["content"], str)
-        and isinstance(value, Mapping)
-        and set(value) == {"dumps", "stacks", "warnings", "errors", "lines"}
-        and all(type(count) is int and count >= 0 for count in value.values())
-        and value["lines"] == len(observation["content"].splitlines())
-    )
-
-
 PAPYRUS_MONITOR_COVERAGE_POLICY = FamilyCoveragePolicy(
     "papyrus-monitor",
     tuple(
@@ -131,17 +114,5 @@ PAPYRUS_MONITOR_COVERAGE_POLICY = FamilyCoveragePolicy(
             ),
         )
         for exists in (True, False)
-    )
-    + (
-        CoveragePredicate(
-            "full-file",
-            "papyrus-monitor.full",
-            "papyrus-monitor.full",
-            "full-stats",
-            ("PapyrusStats",),
-            _full,
-            binding_obligation_ids=("parity:node:scanlog-papyrus-analysis",),
-            runtime_operations=("analyzePapyrusLog",),
-        ),
     ),
 )

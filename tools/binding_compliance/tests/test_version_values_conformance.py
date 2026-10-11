@@ -28,7 +28,7 @@ def test_null_version_query_has_positive_and_negative_executable_inputs():
     """The CXX null helper must be exercised for both null and non-null parsed versions."""
     from conformance.coverage import load_source_parity_rows
     from conformance.families.version_values import version_values_coverage_policy
-    from retirement_readiness import candidate_predicates
+    from selector_test_support import candidate_predicates
 
     root = Path(__file__).resolve().parents[3]
     pack = load_and_validate_pack(
@@ -50,7 +50,7 @@ def test_config_owned_executable_name_has_cross_owner_evidence():
     """The CXX config resolver must retain its real Rust owner in version-value evidence."""
     from conformance.coverage import load_source_parity_rows
     from conformance.families.version_values import version_values_coverage_policy
-    from retirement_readiness import candidate_predicates
+    from selector_test_support import candidate_predicates
 
     root = Path(__file__).resolve().parents[3]
     pack = load_and_validate_pack(
@@ -72,12 +72,9 @@ def test_config_owned_executable_name_has_cross_owner_evidence():
     [
         (family, participant)
         for family, participants in {
-        "game-version-parse": ("cxx", "node", "python"),
-        "game-version-distance": ("node", "python"),
-        "game-version-order": ("python",),
-        "fallout4-identity": ("cxx", "node", "python"),
-        "fallout4-paths": ("cxx", "python"),
-        "fallout4-metadata": ("python",),
+        "game-version-parse": ("cxx",),
+        "fallout4-identity": ("cxx",),
+        "fallout4-paths": ("cxx",),
     }.items()
         for participant in participants
     ],
@@ -116,36 +113,3 @@ def test_version_value_receipts_cover_only_applicable_rows(
     )
     assert coverage.rows
     assert not coverage.failures
-    if participant == "python":
-        expected_operations = {
-            "game-version-order": {
-                "__eq__",
-                "__lt__",
-                "__le__",
-                "__gt__",
-                "__ge__",
-                "__hash__",
-            },
-            "fallout4-paths": {"docs_folder_name", "is_standard", "registry_id"},
-            "fallout4-metadata": {
-                "__eq__",
-                "__hash__",
-                "__repr__",
-                "__str__",
-                "display_name",
-                "from_str",
-                "short_name",
-                "version",
-                "xse_acronym",
-            },
-        }.get(family, set())
-        covered = {row.obligation_id for row in coverage.rows}
-        for operation in expected_operations:
-            owner = (
-                "GameVersion" if family == "game-version-order" else "Fallout4Version"
-            )
-            module = "version" if owner == "GameVersion" else "lib"
-            assert (
-                    f"parity:python:version_registry.{module}.{owner}.{operation}"
-                    in covered
-            )

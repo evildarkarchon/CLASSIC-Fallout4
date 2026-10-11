@@ -17,7 +17,7 @@ from conformance.families.aux_operations import (
 )
 from conformance.receipts import validate_prepared_run
 
-from receipt_test_support import copy_source_inventory, prepare_receipt_case
+from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -39,7 +39,6 @@ def test_web_game_routing_obligates_only_adapters_with_the_public_operation():
     matrix = derive_applicability(document, load_source_parity_rows(ROOT))
     assert {p.id for p in matrix.participants if route["id"] in p.scenario_ids} == {
         "rust",
-        "node",
         "cxx",
     }
     policy = aux_operations_coverage_policy("web-operations")
@@ -49,7 +48,7 @@ def test_web_game_routing_obligates_only_adapters_with_the_public_operation():
     assert not derive_observed_fact_ids(document, route, changed, policy)
 
 
-@pytest.mark.parametrize("participant", ["rust", "node", "python"])
+@pytest.mark.parametrize("participant", ["rust"])
 def test_resource_file_inventory_detects_mutation(
         tmp_path: Path, participant: str
 ) -> None:
@@ -99,19 +98,12 @@ def test_auxiliary_fixture_and_predicate_contract(family: str) -> None:
         assert "expected" not in json.loads(path.read_text())
     policy = aux_operations_coverage_policy(family)
     if family == "web-operations":
-        from retirement_readiness import candidate_predicates
+        from selector_test_support import candidate_predicates
 
         rows = load_source_parity_rows(ROOT)
         for obligation in (
                 "parity:cxx:7d9536f46f7a602a",
                 "parity:cxx:1c07ae6197b62a4e",
-                "parity:node:aux-phase4b-get-mod-site-name",
-                "parity:node:aux-phase4b-get-mod-site-url",
-                "parity:node:aux-phase4b-get-user-agent-prefix",
-                "parity:node:version-registry-promote-get-classic-version",
-                "parity:python:web.lib.ModSite.__eq__",
-                "parity:python:web.lib.ModSite.__str__",
-                "parity:python:web.lib.ModSite.__repr__",
         ):
             row = next(row for row in rows if row.obligation_id == obligation)
             assert candidate_predicates(row, pack, policy), obligation
@@ -161,12 +153,9 @@ def test_resource_pack_observes_filesystem_results_and_missing_errors() -> None:
     "family,participant",
     [
         (family, participant)
-        for family in ("web-operations", "resource-operations", "version-operations")
-        for participant in (
-            ("cxx", "node", "python")
-            if family == "web-operations"
-            else ("node", "python")
-    )
+        # Only CXX still maps web operations through a parity inventory.
+        for family in ("web-operations",)
+        for participant in ("cxx",)
     ],
 )
 def test_auxiliary_receipts_cover_selected_rows_and_reject_mutations(
@@ -227,50 +216,3 @@ def test_auxiliary_receipts_cover_selected_rows_and_reject_mutations(
         rejected = validate_prepared_run(pack, run, coverage_policy=policy)
         assert rejected.scenarios[0].result == "fail"
 
-
-@pytest.mark.parametrize("participant", ["node", "python"])
-def test_source_loaded_resource_alias_cannot_borrow_class_carrier(
-        tmp_path: Path, participant: str
-) -> None:
-    """Load a real appended public alias row; its own operation must fail closed."""
-    relative = Path("tests/conformance/packs/resource_operations/v1.json")
-    pack, run, _ = prepare_receipt_case(
-        ROOT, tmp_path, relative, participant, runner_id="aux-alias-test"
-    )
-    copy_source_inventory(ROOT, tmp_path)
-    contract = (
-            tmp_path
-            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
-    )
-    document = json.loads(contract.read_text())
-    export_key = "nodeExport" if participant == "node" else "pythonExportPath"
-    current = "createResourceInfo" if participant == "node" else "parse_resource_type"
-    alias = copy.deepcopy(
-        next(row for row in document["tier1Mappings"] if row.get(export_key) == current)
-    )
-    alias["id"] = "resource-unobserved-public-alias"
-    alias[export_key] = (
-        "futureResourceAlias" if participant == "node" else "future_resource_alias"
-    )
-    document["tier1Mappings"].append(alias)
-    contract.write_text(json.dumps(document))
-    rows = load_source_parity_rows(tmp_path)
-    added = next(
-        row
-        for row in rows
-        if row.obligation_id == f"parity:{participant}:resource-unobserved-public-alias"
-    )
-    assert added.runtime_operation == "future_resource_alias"
-    policy = aux_operations_coverage_policy("resource-operations")
-    report = validate_prepared_run(pack, run, coverage_policy=policy)
-    coverage = derive_row_coverage(
-        pack.document(),
-        rows,
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert [failure.obligation_id for failure in coverage.failures] == [
-        added.obligation_id
-    ]

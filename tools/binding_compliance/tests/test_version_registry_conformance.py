@@ -88,7 +88,7 @@ def test_remaining_registry_queries_have_separate_executable_facts() -> None:
         assert not predicate.covers_runtime_operation("future_registry_operation")
 
 
-@pytest.mark.parametrize("participant", ("cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("cxx",))
 def test_version_registry_receipt_lifecycle_fails_closed(
         tmp_path: Path, participant: str
 ) -> None:

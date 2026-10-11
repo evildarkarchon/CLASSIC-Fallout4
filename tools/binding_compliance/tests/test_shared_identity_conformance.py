@@ -33,15 +33,12 @@ def test_game_metadata_and_python_value_methods_are_source_scoped():
     assert metadata is not None
     assert {p.id for p in matrix.participants if "metadata" in p.scenario_ids} == {
         "rust",
-        "python",
-        "node",
         "cxx",
     }
     assert {p.id for p in matrix.participants if "details" in p.scenario_ids} == {
         "rust",
-        "python",
     }
-    from retirement_readiness import candidate_predicates
+    from selector_test_support import candidate_predicates
 
     selected = {
         "__eq__",
@@ -70,8 +67,6 @@ def test_runtime_access_includes_python_and_explicit_shutdown_intent() -> None:
     assert {participant.id for participant in matrix.participants} == {
         "rust",
         "cxx",
-        "node",
-        "python",
     }
     assert any(
         "parity:cxx:b0a1036b892934c2" in predicate.binding_obligation_ids
@@ -108,8 +103,8 @@ def _pack(family: str) -> dict:
 @pytest.mark.parametrize(
     "family,participants",
     [
-        ("game-identity", {"rust", "cxx", "node", "python"}),
-        ("runtime-access", {"rust", "cxx", "node", "python"}),
+        ("game-identity", {"rust", "cxx"}),
+        ("runtime-access", {"rust", "cxx"}),
     ],
 )
 def test_shared_identity_receipts_fail_closed_at_public_coverage_seam(

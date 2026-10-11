@@ -134,19 +134,5 @@ FORMID_FINDING_COVERAGE_POLICY = FamilyCoveragePolicy(
             partial(_observed, "sqlite-missing"),
             runtime_operations=("sqlite", "formid_finding_analyzer_sqlite_new"),
         ),
-        CoveragePredicate(
-            "lookup-entry",
-            "formid-finding.lookup-entry",
-            "formid-finding.analyze",
-            "formid-findings",
-            ("FormIdValueLookupEntry", "FormIdValueLookupInMemoryReply"),
-            _lookup_entry,
-            binding_obligation_ids=(
-                "parity:python:scanlog.formid_finding_analyzer.FormIDFindingLookupEntry",
-                "parity:python:scanlog.formid_finding_analyzer.FormIDFindingLookupEntry.__init__",
-                "parity:python:scanlog.formid_finding_analyzer.FormIDFindingLookupReplyKind",
-            ),
-            runtime_operations=(None, "FormIDFindingLookupEntry.__init__"),
-        ),
     ),
 )

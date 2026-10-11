@@ -40,18 +40,6 @@ def test_unreachable_opaque_map_accessors_have_negative_ownership() -> None:
     assert row.retained_analyzer_id == "cxx-opaque-map-reachability"
 
 
-def test_node_package_version_has_its_narrow_structural_analyzer() -> None:
-    """Only the verified compile-time metadata getter gets this permanent owner."""
-    row = next(
-        row
-        for row in load_source_parity_rows(REPO_ROOT)
-        if row.obligation_id == "parity:node:version-registry-promote-get-version"
-    )
-    assert row.mapping_origin == "binding_only"
-    assert row.required_evidence_kind == "structural"
-    assert row.retained_analyzer_id == "node-package-metadata"
-
-
 def test_legacy_tui_import_is_in_all_exporting_source_inventories() -> None:
     """A shipped import API cannot disappear from receipt applicability."""
     rows = [
@@ -59,73 +47,7 @@ def test_legacy_tui_import_is_in_all_exporting_source_inventories() -> None:
         for row in load_source_parity_rows(REPO_ROOT)
         if row.rust_symbol == "import_legacy_tui_state"
     ]
-    assert {row.participant_id for row in rows} == {"cxx", "node", "python"}
-
-
-def test_python_binding_namespaces_are_structural_only_without_constructor(
-        tmp_path: Path,
-) -> None:
-    """A static namespace is a declaration; a separately exported constructor is runtime."""
-    # The one Python adapter layout (#259): facade stub under python/<module>/
-    # and that facade's Rust under src/<module>/.
-    adapter = tmp_path / "python-bindings/classic-python-bindings"
-    (adapter / "python/classic_binding").mkdir(parents=True)
-    (adapter / "src/classic_binding").mkdir(parents=True)
-    (adapter / "python/classic_binding/__init__.pyi").write_text(
-        "class Namespace: ...\nclass Object:\n    def __init__(self) -> None: ...\n"
-    )
-    (adapter / "src/classic_binding/mod.rs").write_text(
-        "#[pyclass]\npub struct Namespace {}\n#[pyclass]\npub struct Object {}\n#[pymethods]\nimpl Object { #[new] pub fn new() -> Self { Self {} } }\nfn register(m: Module) { m.add_class::<Namespace>(); m.add_class::<Object>(); }\n"
-    )
-    rows = [
-        {
-            "id": "namespace",
-            "pythonModule": "classic_binding",
-            "pythonExportPath": "Namespace",
-            "pythonKind": "class",
-            "rustSymbol": None,
-            "unmappedReason": "Namespace of free functions",
-        },
-        {
-            "id": "class",
-            "pythonModule": "classic_binding",
-            "pythonExportPath": "Object",
-            "pythonKind": "class",
-            "rustSymbol": None,
-            "unmappedReason": "Wrapper-owned object",
-        },
-        {
-            "id": "ctor",
-            "pythonModule": "classic_binding",
-            "pythonExportPath": "Object.__init__",
-            "pythonKind": "method",
-            "rustSymbol": None,
-            "unmappedReason": "Wrapper constructor",
-        },
-    ]
-    for participant in ("cxx", "node", "python"):
-        path = (
-                tmp_path
-                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
-        )
-        path.parent.mkdir(parents=True)
-        path.write_text(
-            json.dumps(
-                {
-                    "entries" if participant == "cxx" else "tier1Mappings": rows
-                    if participant == "python"
-                    else []
-                }
-            )
-        )
-    namespace, wrapper, constructor = load_source_parity_rows(tmp_path)
-    assert namespace.required_evidence_kind == "structural"
-    assert namespace.retained_analyzer_id == "python-source-and-stub-parity"
-    assert (
-            wrapper.required_evidence_kind
-            == constructor.required_evidence_kind
-            == "runtime"
-    )
+    assert {row.participant_id for row in rows} == {"cxx"}
 
 
 def test_cxx_declarations_have_structural_owners_but_calls_require_execution(
@@ -172,172 +94,7 @@ def test_main_yaml_version_loader_is_in_every_exporting_binding_inventory() -> N
         for row in load_source_parity_rows(REPO_ROOT)
         if row.rust_symbol == "load_main_yaml_version_with_bundled_dir"
     ]
-    assert {row.participant_id for row in rows} == {"cxx", "node", "python"}
-
-
-def test_user_settings_properties_keep_public_operation_identity() -> None:
-    """Property getters must not borrow aggregate class-carrier credit."""
-    row = next(
-        row
-        for row in load_source_parity_rows(REPO_ROOT)
-        if row.obligation_id == "parity:python:user_settings.update_check_accessor"
-    )
-    assert row.rust_symbol == "UpdatePreferences"
-    assert row.runtime_operation == "update_check"
-
-
-def test_python_source_references_require_an_independent_export_anchor(
-        tmp_path: Path,
-) -> None:
-    """Synthetic Rust references retain source proof without retiring real calls."""
-    common = {
-        "rustCrate": "classic-example-core",
-        "pythonModule": "classic_example",
-        "pythonKind": "class",
-    }
-    python_rows = [
-        {
-            **common,
-            "id": "owner.Anchor",
-            "rustSymbol": "Anchor",
-            "pythonExportPath": "Anchor",
-        },
-        {
-            **common,
-            "id": "owner.InternalHelper@rust",
-            "rustSymbol": "InternalHelper",
-            "pythonExportPath": "Anchor",
-        },
-        {
-            **common,
-            "id": "owner.ActualExport@rust",
-            "rustSymbol": "ActualExport",
-            "pythonExportPath": "ActualExport",
-        },
-        {
-            **common,
-            "id": "owner.Anchor.future_method",
-            "rustSymbol": "Anchor",
-            "pythonExportPath": "Anchor.future_method",
-            "pythonKind": "method",
-        },
-        {
-            **common,
-            "id": "owner.Unknown@rust",
-            "rustSymbol": "Unknown",
-            "pythonExportPath": "MissingAnchor",
-        },
-    ]
-    for participant in ("cxx", "node", "python"):
-        path = (
-                tmp_path
-                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
-        )
-        path.parent.mkdir(parents=True)
-        path.write_text(
-            json.dumps(
-                {
-                    "entries" if participant == "cxx" else "tier1Mappings": python_rows
-                    if participant == "python"
-                    else []
-                }
-            )
-        )
-    anchor, reference, actual, future, missing = load_source_parity_rows(tmp_path)
-    assert reference.required_evidence_kind == "structural"
-    assert reference.mapping_origin == "rust_only"
-    assert reference.retained_analyzer_id == "python-source-and-stub-parity"
-    assert all(
-        row.required_evidence_kind == "runtime"
-        for row in (anchor, actual, future, missing)
-    )
-
-
-def test_operation_family_free_functions_keep_their_public_identity(
-        tmp_path: Path,
-) -> None:
-    """New owner-mapped free functions cannot borrow an aggregate class receipt."""
-    for participant in ("cxx", "node", "python"):
-        path = (
-                tmp_path
-                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
-        )
-        path.parent.mkdir(parents=True)
-        rows = (
-            []
-            if participant == "cxx"
-            else [
-                {
-                    "id": "future-operation",
-                    "rustCrate": "classic-database-core",
-                    "rustSymbol": "DatabasePool",
-                    **(
-                        {"nodeKind": "function", "nodeExport": "futureOperation"}
-                        if participant == "node"
-                        else {
-                            "pythonKind": "function",
-                            "pythonExportPath": "future_operation",
-                        }
-                    ),
-                }
-            ]
-        )
-        path.write_text(
-            json.dumps({"entries" if participant == "cxx" else "tier1Mappings": rows})
-        )
-    rows = load_source_parity_rows(tmp_path)
-    assert {row.participant_id: row.runtime_operation for row in rows} == {
-        "node": "futureOperation",
-        "python": "future_operation",
-    }
-
-
-def test_node_source_only_rows_have_structural_ownership(tmp_path: Path) -> None:
-    """Source-only declarations need no Node execution; real exports still do."""
-    for participant in ("cxx", "node", "python"):
-        path = (
-                tmp_path
-                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
-        )
-        path.parent.mkdir(parents=True)
-        rows = (
-            [
-                {
-                    "id": "source-only",
-                    "rustCrate": "classic-example-core",
-                    "rustSymbol": "future_operation@rust",
-                    "nodeKind": "function",
-                },
-                {
-                    "id": "future-export",
-                    "rustCrate": "classic-example-core",
-                    "rustSymbol": "future_operation",
-                    "nodeKind": "function",
-                    "nodeExport": "futureOperation",
-                },
-                {
-                    "id": "binding-only-export",
-                    "nodeKind": "function",
-                    "nodeExport": "bindingOnlyOperation",
-                    "unmappedReason": "Binding convenience operation",
-                },
-            ]
-            if participant == "node"
-            else []
-        )
-        path.write_text(
-            json.dumps({"entries" if participant == "cxx" else "tier1Mappings": rows})
-        )
-
-    source_only, exported, binding_only = load_source_parity_rows(tmp_path)
-    assert source_only.mapping_origin == "rust_only"
-    assert source_only.required_evidence_kind == "structural"
-    assert source_only.retained_analyzer_id == "node-source-and-declaration-parity"
-    assert exported.mapping_origin == "canonical_rust"
-    assert binding_only.mapping_origin == "binding_only"
-    for row in (exported, binding_only):
-        assert row.required_evidence_kind == "runtime"
-        assert row.retained_analyzer_id is None
+    assert {row.participant_id for row in rows} == {"cxx"}
 
 
 def _pack() -> dict[str, object]:
@@ -412,22 +169,13 @@ def test_applicability_comes_from_canonical_source_rows() -> None:
             locator="/entries/0#id=execute",
         ),
         SourceParityRow(
-            obligation_id="parity:node:request",
-            participant_id="node",
-            mapping_origin="canonical_rust",
-            rust_crate="classic-example-core",
-            rust_symbol="Request",
-            artifact="node.json",
-            locator="/tier1Mappings/0#id=request",
-        ),
-        SourceParityRow(
-            obligation_id="parity:python:other",
-            participant_id="python",
+            obligation_id="parity:cxx:other",
+            participant_id="cxx",
             mapping_origin="canonical_rust",
             rust_crate="classic-other-core",
             rust_symbol="execute",
-            artifact="python.json",
-            locator="/tier1Mappings/0#id=other",
+            artifact="cxx.json",
+            locator="/entries/1#id=other",
         ),
     )
 
@@ -439,13 +187,6 @@ def test_applicability_comes_from_canonical_source_rows() -> None:
                 "id": "cxx",
                 "role": "semantic-adapter",
                 "executionInstanceIds": ["windows-clang-cl", "windows-msvc"],
-                "capabilityIds": ["example.execute"],
-                "scenarioIds": ["base-case"],
-            },
-            {
-                "id": "node",
-                "role": "semantic-adapter",
-                "executionInstanceIds": ["node"],
                 "capabilityIds": ["example.execute"],
                 "scenarioIds": ["base-case"],
             },
@@ -474,13 +215,13 @@ def test_applicability_requires_the_validated_action_mapping() -> None:
     pack["scenarios"][0]["capabilityIds"].append("example.request")
     rows = (
         SourceParityRow(
-            obligation_id="parity:python:request",
-            participant_id="python",
+            obligation_id="parity:cxx:request",
+            participant_id="cxx",
             mapping_origin="canonical_rust",
             rust_crate="classic-example-core",
             rust_symbol="SupportingDto",
-            artifact="python.json",
-            locator="/tier1Mappings/0#id=request",
+            artifact="cxx.json",
+            locator="/entries/0#id=request",
         ),
     )
 
@@ -494,13 +235,13 @@ def test_fact_coverage_preserves_every_source_row_occurrence() -> None:
 
     rows = tuple(
         SourceParityRow(
-            obligation_id=f"parity:node:execute:occurrence:{occurrence}",
-            participant_id="node",
+            obligation_id=f"parity:cxx:execute:occurrence:{occurrence}",
+            participant_id="cxx",
             mapping_origin="canonical_rust",
             rust_crate="classic-example-core",
             rust_symbol="execute",
-            artifact="node.json",
-            locator=f"/tier1Mappings/{occurrence - 1}#id=execute",
+            artifact="cxx.json",
+            locator=f"/entries/{occurrence - 1}#id=execute",
         )
         for occurrence in (1, 2)
     )
@@ -517,7 +258,7 @@ def test_fact_coverage_preserves_every_source_row_occurrence() -> None:
             ),
         ),
     )
-    prepared_reports = (_prepared_report("node", ("example.completed",)),)
+    prepared_reports = (_prepared_report("cxx", ("example.completed",)),)
 
     report = derive_row_coverage(
         _pack(),
@@ -527,8 +268,8 @@ def test_fact_coverage_preserves_every_source_row_occurrence() -> None:
     )
 
     assert [row["obligationId"] for row in report.document()["rows"]] == [
-        "parity:node:execute:occurrence:1",
-        "parity:node:execute:occurrence:2",
+        "parity:cxx:execute:occurrence:1",
+        "parity:cxx:execute:occurrence:2",
     ]
     assert {row["evidenceKind"] for row in report.document()["rows"]} == {"executable"}
     assert all(
@@ -890,7 +631,7 @@ def test_live_parity_loader_preserves_canonical_metadata_and_occurrences() -> No
 
     assert {
                participant: sum(row.participant_id == participant for row in rows)
-               for participant in ("cxx", "node", "python")
+               for participant in ("cxx",)
            } == {
                participant: len(
                    json.loads(
@@ -898,13 +639,12 @@ def test_live_parity_loader_preserves_canonical_metadata_and_occurrences() -> No
                                REPO_ROOT
                                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
                        ).read_text(encoding="utf-8")
-                   )["entries" if participant == "cxx" else "tier1Mappings"]
+                   )["entries"]
                )
-               for participant in ("cxx", "node", "python")
+               for participant in ("cxx",)
            }
     obligation_ids = [row.obligation_id for row in rows]
     assert len(obligation_ids) == len(set(obligation_ids))
-    assert any(":occurrence:1" in obligation_id for obligation_id in obligation_ids)
     assert {row.required_evidence_kind for row in rows} == {
         "structural",
         "negative",
@@ -928,10 +668,50 @@ def test_retained_analyzers_resolve_only_from_current_blocking_owners(
     monkeypatch.setitem(sys.modules, "tools.binding_compliance.migration_ledger", None)
     analyzers = load_retained_analyzer_kinds(REPO_ROOT)
 
-    assert analyzers["cxx-source-parity"] == "structural"
-    assert analyzers["scan-run-local-ignore-reset-internal-faults"] == "structural"
-    assert analyzers["scan-run-structured-failure-internal-faults"] == "structural"
-    assert analyzers["user-settings-exclusive-ownership"] == "negative"
+    assert dict(analyzers) == {
+        "cxx-opaque-map-reachability": "negative",
+        "cxx-source-parity": "structural",
+    }
+
+
+@pytest.mark.parametrize(
+    ("damage", "message"),
+    (
+        ("workflow-missing", "cannot read its workflow owner"),
+        ("marker-removed", "lost its blocking workflow command"),
+        ("evidence-missing", "missing evidence path"),
+        ("no-owner", "must name a blocking workflow owner"),
+    ),
+)
+def test_retained_analyzers_fail_closed_without_a_live_ci_owner(
+        tmp_path: Path, damage: str, message: str
+) -> None:
+    """An analyzer whose CI step or evidence disappeared cannot own a row."""
+
+    workflow = tmp_path / ".github/workflows/ci-example.yml"
+    workflow.parent.mkdir(parents=True)
+    if damage != "workflow-missing":
+        workflow.write_text(
+            "steps:\n"
+            + ("" if damage == "marker-removed" else "  - run: python check.py\n"),
+            encoding="utf-8",
+        )
+    evidence = tmp_path / "check.py"
+    if damage != "evidence-missing":
+        evidence.write_text("# analyzer\n", encoding="utf-8")
+    entry = {
+        "id": "example-analyzer",
+        "evidenceKind": "structural",
+        "paths": ["check.py"],
+    }
+    if damage != "no-owner":
+        entry["blockingWorkflow"] = {
+            "path": ".github/workflows/ci-example.yml",
+            "commandMarker": "python check.py",
+        }
+
+    with pytest.raises(CoverageDerivationError, match=message):
+        load_retained_analyzer_kinds(tmp_path, (entry,))
 
 
 def test_retained_analyzer_and_exception_must_come_from_trusted_catalogs(
@@ -940,30 +720,32 @@ def test_retained_analyzer_and_exception_must_come_from_trusted_catalogs(
     """Ledger target strings alone cannot resolve non-executable evidence."""
 
     structural_row = SourceParityRow(
-        obligation_id="parity:node:request",
-        participant_id="node",
+        obligation_id="parity:cxx:request",
+        participant_id="cxx",
         mapping_origin="canonical_rust",
         rust_crate="classic-example-core",
         rust_symbol="Request",
-        artifact="node.json",
-        locator="/tier1Mappings/0#id=request",
+        artifact="cxx.json",
+        locator="/entries/1#id=request",
         required_evidence_kind="structural",
-        retained_analyzer_id="node-source-and-declaration-parity",
+        retained_analyzer_id="cxx-source-parity",
     )
+    # The exception names a different participant than the structural row, so
+    # each row keeps its own disposition.
     exception_row = SourceParityRow(
-        obligation_id="parity:cxx:execute",
-        participant_id="cxx",
+        obligation_id="parity:rust:execute",
+        participant_id="rust",
         mapping_origin="canonical_rust",
         rust_crate="classic-example-core",
         rust_symbol="execute",
-        artifact="cxx.json",
+        artifact="rust.json",
         locator="/entries/0#id=execute",
     )
     exception = PolicyException(
-        id="cxx-example-exception",
+        id="rust-example-exception",
         capability_id="example.execute",
-        participant_id="cxx",
-        rationale="The example is intentionally absent from CXX.",
+        participant_id="rust",
+        rationale="The example is intentionally absent from this participant.",
         policy_page="docs/api/binding-parity-policy.md",
     )
 
@@ -1010,7 +792,7 @@ def test_retained_analyzer_and_exception_must_come_from_trusted_catalogs(
             (structural_row,),
             FamilyCoveragePolicy("example-family", ()),
             (),
-            retained_analyzers={"node-source-and-declaration-parity": "structural"},
+            retained_analyzers={"cxx-source-parity": "structural"},
         )
     with pytest.raises(CoverageDerivationError, match="reviewed repository catalog"):
         derive_row_coverage(
@@ -1050,7 +832,7 @@ def test_applicability_rejects_dangling_or_duplicate_exception_scopes() -> None:
     dangling = PolicyException(
         id="dangling-capability",
         capability_id="example.missing",
-        participant_id="node",
+        participant_id="cxx",
         rationale="This capability does not exist.",
         policy_page="docs/api/binding-parity-policy.md",
     )

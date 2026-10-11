@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parents[3]
 @pytest.mark.parametrize(
     "family,participants",
     [
-        ("registry-game", {"rust", "node", "cxx", "python"}),
-        ("registry-gui", {"rust", "cxx", "python"}),
-        ("registry-context", {"rust", "python"}),
-        ("registry-paths", {"rust", "node", "python"}),
+        ("registry-game", {"rust", "cxx"}),
+        ("registry-gui", {"rust", "cxx"}),
+        ("registry-context", {"rust"}),
+        ("registry-paths", {"rust"}),
     ],
 )
 def test_registry_accessor_receipts_require_owned_state(tmp_path, family, participants):

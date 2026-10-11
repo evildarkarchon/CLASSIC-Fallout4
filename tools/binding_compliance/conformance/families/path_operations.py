@@ -171,13 +171,9 @@ def path_operations_coverage_policy() -> FamilyCoveragePolicy:
                         "parity:cxx:ef0c70d7c9e34cd5",
                         "parity:cxx:18b69f0fbebc68bc",
                         "parity:cxx:5318454026bb9a08",
-                        "parity:node:aux-phase4a-is-valid-path",
-                        "parity:python:path.lib.PathValidator.is_valid_path",
                     ),
                     "validate_required_files": (
                         "parity:cxx:cff13ceeb2ccbf58",
-                        "parity:node:aux-phase4a-validate-required-files",
-                        "parity:python:path.lib.PathValidator.validate_required_files",
                     ),
                 }[operation],
             )
@@ -189,17 +185,13 @@ def path_operations_coverage_policy() -> FamilyCoveragePolicy:
                     "is_valid_path",
                     "path-operations.exists",
                     "is_valid_path",
-                    ("validate_path", "PathValidator.is_valid_path", "isValidPath"),
+                    ("validate_path",),
                 ),
                 (
                     "validate_required_files",
                     "path-operations.validate",
                     "validate_required_files",
-                    (
-                        "path_validate_required_files",
-                        "PathValidator.validate_required_files",
-                        "validateRequiredFiles",
-                    ),
+                    ("path_validate_required_files",),
                 ),
             )
             for variant in ("success", "missing", "wrong-kind", "required-missing")
