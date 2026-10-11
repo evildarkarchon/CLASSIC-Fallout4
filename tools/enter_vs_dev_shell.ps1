@@ -35,8 +35,8 @@
 
 .EXAMPLE
     pwsh -ExecutionPolicy Bypass -File tools/enter_vs_dev_shell.ps1 `
-        -WorkingDirectory node-bindings/classic-node `
-        -Command "bun run parity:gate:local"
+        -WorkingDirectory cpp-bindings/classic-cpp-bridge `
+        -Command "cargo test --lib"
 #>
 
 param(
