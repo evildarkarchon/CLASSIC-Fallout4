@@ -14,7 +14,7 @@ The main utility-style Rust surfaces now live in dedicated crates, for example:
 - `classic-web-core`
 - `classic-xse-core`
 
-Related Python bindings live in matching `python-bindings/*-py` crates, and Node/C++ consumers access the same underlying Rust logic through their own layers.
+C++ consumers access the same underlying Rust logic through the C++ bridge (the Python and Node bindings retired with ADR-0010).
 
 ## Current usage rule
 
@@ -26,7 +26,7 @@ Related Python bindings live in matching `python-bindings/*-py` crates, and Node
 
 ```powershell
 cargo test --workspace
-python tools/python_api_parity/check_parity_gate.py --repo-root .
+python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 ```
 
 ## Historical note

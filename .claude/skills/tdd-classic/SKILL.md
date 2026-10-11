@@ -1,9 +1,9 @@
 ---
 name: tdd
-description: Test-Driven Development skill for a Rust-first project with Python, C++, and Node.js bindings. Enforces Red-Green-Refactor cycle with Rust-primary testing patterns and binding-layer verification.
+description: Test-Driven Development skill for a Rust-first project with a C++ bridge and native frontends. Enforces Red-Green-Refactor cycle with Rust-primary testing patterns and bridge-layer verification.
 ---
 
-This skill guides test-driven development for the CLASSIC project. All business logic lives in Rust core crates under `foundation/` and `business-logic/`, in a Cargo workspace rooted at the repository root. Python, C++, and Node.js are binding layers only. Follow the Red-Green-Refactor cycle strictly: write a failing test first, implement minimal code to pass, then refactor while keeping tests green.
+This skill guides test-driven development for the CLASSIC project. All business logic lives in Rust core crates under `foundation/` and `business-logic/`, in a Cargo workspace rooted at the repository root. The C++ bridge is the only binding layer (the Python and Node bindings are retired, ADR-0010). Follow the Red-Green-Refactor cycle strictly: write a failing test first, implement minimal code to pass, then refactor while keeping tests green.
 
 ## TDD Workflow
 
@@ -40,11 +40,8 @@ With passing tests as a safety net:
 |---|---|---|
 | Business logic, parsing, analysis | Rust | `#[cfg(test)]` in source or `tests/` dir in crate |
 | Cross-crate workflows | Rust | `tests/integration_tests.rs` in the crate |
-| PyO3 binding correctness | Python | `tests/rust_integration/` |
-| Python-layer orchestration | Python | `tests/` by domain |
 | C++ CLI behavior | C++ | `classic-cli/tests/` (Catch2) |
 | C++ CLI integration | PowerShell | `classic-cli/test_cli.ps1` |
-| Node.js/Bun bindings | TypeScript | NAPI-RS test suite |
 
 ## Rust Testing Patterns (Primary)
 
@@ -188,48 +185,6 @@ cargo test --workspace -- --nocapture
 cargo test -p classic-shared-core -- load_modify_save
 ```
 
-Set `PYO3_PYTHON` first if the command can build a PyO3 crate — see `AGENTS.md`.
-
-## Python Testing Patterns (Binding Layer)
-
-Python tests are binding smoke tests: they verify that the PyO3 surface exposes Rust
-functionality correctly and returns the expected types. They are **not** where business
-logic gets tested — that belongs in the `-core` crate's Rust tests.
-
-### Layout
-
-Tests live as flat `test_*.py` modules under `python-bindings/tests/`, with shared data
-under `python-bindings/tests/fixtures/`. There is no `conftest.py` and no registered
-pytest marker set, so do not add `@pytest.mark.*` decorators expecting them to be
-selectable.
-
-```python
-def test_shared_module_loads():
-    """Verify the PyO3 binding imports and exposes its version."""
-    import classic_shared
-
-    assert hasattr(classic_shared, "__version__")
-```
-
-### Test Execution (Python)
-
-Python tests run against maturin-built wheels, so the build order matters. The full
-four-step sequence (pin `PYO3_PYTHON` → `uv sync --inexact` → `rebuild_rust.ps1` →
-pytest) is in `CLAUDE.md`; skipping the rebuild fails at collection time with
-`ModuleNotFoundError`.
-
-```powershell
-# Whole binding suite
-uv run --project python-bindings python -m pytest python-bindings/tests -q
-
-# Single file or test
-uv run --project python-bindings python -m pytest python-bindings/tests/test_classic_shared_smoke.py -v
-uv run --project python-bindings python -m pytest python-bindings/tests/test_classic_shared_smoke.py::test_name -v
-```
-
-Use `python -m pytest`, never the `pytest.exe` entrypoint — the config crate anchors
-settings lookup to `sys.argv[0]`'s parent.
-
 ## C++ Testing Patterns (CLI Frontend)
 
 The C++ CLI (`classic-cli/`) tests bridge-free components using Catch2 v3.
@@ -292,17 +247,9 @@ Full CLI binary exercising Rust CXX bridge:
 
 ### Never Test Business Logic in Bindings
 
-```python
-# WRONG - testing parsing logic in Python
-def test_formid_parser_handles_edge_cases():
-    result = classic_scanlog.parse_formid("FE000800")
-    assert result.is_light_plugin  # This logic belongs in Rust tests
-
-# CORRECT - test that binding exposes the function
-def test_formid_parser_binding_callable():
-    result = classic_scanlog.parse_formid("0A001234")
-    assert result is not None  # Verify binding works
-```
+Parsing and analysis edge cases belong in the core crate's Rust tests. A bridge or
+frontend test proves only that the C++ surface exposes the Rust behavior and carries
+its result across the seam.
 
 ### Never Modify Production YAML in Tests
 
@@ -312,27 +259,6 @@ yaml_settings(str, YAML.Settings, "key", "value")
 
 # CORRECT - use test YAML or mocks
 yaml_settings(str, YAML.TEST, "key", "value")
-```
-
-### Never Create Fixtures in Python Test Files
-
-```python
-# WRONG - fixture in test file
-@pytest.fixture
-def my_local_fixture():
-    return "data"
-
-# CORRECT - add to tests/fixtures/<appropriate_module>.py
-```
-
-### Never Test Fallback Paths (Rust Is Mandatory)
-
-```python
-# WRONG - testing Python fallback behavior
-if not is_rust_accelerated("parser"):
-    # test fallback...
-
-# Rust is mandatory. If import fails, the test should fail.
 ```
 
 ### Never Use `.expect()` in Async Bridge Code
@@ -348,15 +274,12 @@ Before marking a feature complete:
 - [ ] Code refactored with tests still passing (Refactor)
 - [ ] Business logic tested in Rust (not in bindings)
 - [ ] Binding tests verify FFI correctness only
-- [ ] Appropriate markers applied (Python) or tags applied (C++)
-- [ ] Python fixtures in `tests/fixtures/` (not in test file)
+- [ ] Appropriate tags applied (C++)
 - [ ] Caches/singletons cleaned up in tests
 - [ ] No production YAML modifications
 - [ ] Tests pass individually AND together
 - [ ] `cargo test --workspace` passes
-- [ ] `uv run pytest` passes
 
 ## References
 
-- `tests/TEST_WRITING_GUIDE.md` - Python test data patterns and crash log formats
 - `CLAUDE.md` - Build commands, architecture, and conventions

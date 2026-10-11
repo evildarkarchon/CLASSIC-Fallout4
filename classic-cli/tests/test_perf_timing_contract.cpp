@@ -4,9 +4,8 @@
 // `classic::perf::perf_record_timing`.
 //
 // The JSON conformance fixtures cannot represent NaN or infinity, so these
-// direct C++ tests are the CXX counterpart of the Python
-// (`python-bindings/tests/test_timing_contract.py`) and Node
-// (`node-bindings/classic-node/__test__/shared.spec.ts`) invalid-timing tests:
+// direct C++ tests pin the invalid-timing contract (their Python and Node
+// counterparts retired with those bindings, ADR-0010):
 // every rejected sample throws `rust::Error` whose message begins with the
 // stable error token, and no rejection changes the metrics store. The
 // Rust-side unit tests in `cpp-bindings/classic-cpp-bridge/src/perf_tests.rs`

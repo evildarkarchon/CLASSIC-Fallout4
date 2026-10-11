@@ -474,8 +474,7 @@ pub fn is_gui_mode() -> bool {
 ///
 /// # Note
 ///
-/// The actual type depends on what was registered. In practice, this will be
-/// a Python object reference when called from PyO3 bindings.
+/// The actual type depends on what was registered.
 ///
 /// # Examples
 ///
@@ -498,7 +497,7 @@ pub fn get_yaml_cache<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
 ///
 /// # Note
 ///
-/// This is typically a Python Qt widget object when called from PyO3 bindings.
+/// The actual type depends on what was registered.
 pub fn get_manual_docs_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
     DEFAULT_SCOPE.get_manual_docs_gui()
 }
@@ -511,7 +510,7 @@ pub fn get_manual_docs_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T
 ///
 /// # Note
 ///
-/// This is typically a Python Qt widget object when called from PyO3 bindings.
+/// The actual type depends on what was registered.
 pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
     DEFAULT_SCOPE.get_game_path_gui()
 }
@@ -527,8 +526,8 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 ///
 /// # Note
 ///
-/// The actual type depends on what was registered. When called from PyO3 bindings,
-/// this will return a `Fallout4Version` enum value.
+/// The actual type depends on what was registered; it is normally a
+/// `Fallout4Version` enum value.
 ///
 /// # Examples
 ///

@@ -5,8 +5,6 @@ This guide describes the current maintained ScanGame Rust surfaces.
 ## Current layout
 
 - Core logic: `business-logic/classic-scangame-core`
-- Python binding: `python-bindings/classic-python-bindings` (adapter module `src/classic_scangame/`, facade `classic_scangame`)
-- Node exposure: `node-bindings/classic-node`
 - C++ consumers reach shared logic through `cpp-bindings/classic-cpp-bridge` where applicable
 
 ## Current rule
@@ -17,16 +15,9 @@ ScanGame behavior should be implemented once in `classic-scangame-core`, with bi
 
 ```powershell
 cargo test -p classic-scangame-core
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
 ```
 
-If the Node surface changed, also run from `node-bindings/classic-node`:
-
-```powershell
-bun run parity:gate:local
-bun run test:bun
-bun run test:node
-```
+The Python and Node bindings that also wrapped this crate retired with ADR-0010.
 
 ## Historical note
 

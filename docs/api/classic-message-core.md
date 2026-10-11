@@ -351,10 +351,6 @@ Important direct dependencies:
 Related CLASSIC crates and consumers:
 
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/message.rs) - forwards C++ log calls and startup contract diagnostics through `Logger`
-- [`classic-node`](../../node-bindings/classic-node/src/message.rs) - exposes `Message`, formatting helpers, and a wrapped logger to JavaScript/TypeScript
-- [`classic-node`](../../node-bindings/classic-node/src/logging_contract.rs) - emits Node startup diagnostics through the structured contract helpers
-- [`classic_message` adapter module](../../python-bindings/classic-python-bindings/src/classic_message/mod.rs) - wraps `Message`, `MessageType`, and `MessageTarget` for Python
-- [`classic_message` adapter module](../../python-bindings/classic-python-bindings/src/classic_message/logging.rs) - wraps `Logger` for Python callers
 
 Source-observed note:
 

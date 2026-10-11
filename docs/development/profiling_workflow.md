@@ -1,6 +1,6 @@
 # Profiling Workflow for CLASSIC
 
-This guide describes the workflow for identifying performance bottlenecks, establishing baselines, implementing optimizations, and verifying improvements in the CLASSIC hybrid Python-Rust codebase.
+This guide describes the workflow for identifying performance bottlenecks, establishing baselines, implementing optimizations, and verifying improvements in the CLASSIC Rust codebase.
 
 ## Overview
 
@@ -17,7 +17,6 @@ Performance optimization in CLASSIC follows a systematic four-step process:
 
 - **Rust toolchain** with Cargo (for Criterion benchmarks)
 - **uv** package manager (for Python environment)
-- **py-spy** (optional, for Python+Rust combined profiling) - Note: incompatible with Python 3.14+
 
 ### Optional Tools
 
@@ -28,14 +27,6 @@ Performance optimization in CLASSIC follows a systematic four-step process:
 ### Setup
 
 ```bash
-# Ensure Python bindings environment is ready
-# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
-# --inexact is load-bearing: it keeps uv from pruning the maturin-built classic-python-bindings wheel.
-uv sync --project python-bindings --inexact
-
-# Build Rust extensions used by the maintained Python smoke/parity workflow
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-
 # Install optional Rust profiling tools
 cargo install flamegraph
 cargo install critcmp
@@ -65,28 +56,6 @@ Generate CPU flamegraphs for Rust benchmarks or applications:
 
 Output: `target/profiling/flamegraphs/flamegraph-{timestamp}.svg`
 
-### For Python+Rust Code: py-spy
-
-Capture combined Python and Rust stack traces:
-
-```powershell
-# Quick profiling (10 seconds)
-.\scripts\profile\run_pyspy.ps1
-
-# Thorough profiling (60 seconds)
-.\scripts\profile\run_pyspy.ps1 -Mode thorough
-
-# Profile CLI entry point instead of GUI
-.\scripts\profile\run_pyspy.ps1 -EntryPoint CLASSIC_ScanLogs.py
-
-# Output to speedscope format
-.\scripts\profile\run_pyspy.ps1 -Format speedscope -Open
-```
-
-Output: `target/profiling/pyspy/pyspy-{timestamp}.svg`
-
-**Note:** py-spy 0.4.1 is incompatible with Python 3.14+. Use cProfile for Python-only profiling on newer Python versions.
-
 ### For Memory Analysis: dhat
 
 Profile heap allocations in Rust code:
@@ -112,17 +81,6 @@ writing a report until a crate adds that hook. Pass `-BenchTarget` with
 instrumented one contributes to the report.
 
 View results at: https://nnethercote.github.io/dh_view/dh_view.html
-
-### For Cache Performance
-
-Check cache hit rates to identify caching issues:
-
-```powershell
-.\scripts\profile\dump_cache_stats.ps1
-
-# Export to JSON
-.\scripts\profile\dump_cache_stats.ps1 -Format json -Output cache-stats.json
-```
 
 ## Step 2: Establish Baseline
 
@@ -174,20 +132,6 @@ All benchmarks support two modes controlled by the `BENCH_MODE` environment vari
 
 Baseline location: `target/criterion/{baseline-name}/`
 
-### GIL Benchmarks
-
-For the Python binding adapter (`classic-python-bindings`, one crate behind all
-18 `classic_*` facades since issue #259), GIL benchmarks measure pure Rust
-compute time:
-
-```bash
-# Run GIL benchmarks for scanlog operations
-BENCH_MODE=thorough cargo bench --bench scanlog_gil_benchmarks -p classic-python-bindings
-
-# Run GIL benchmarks for file-io operations
-BENCH_MODE=quick cargo bench --bench file_io_gil_benchmarks -p classic-python-bindings
-```
-
 ## Step 3: Implement Optimization
 
 With a baseline established and hot path identified, implement targeted optimizations.
@@ -206,7 +150,6 @@ With a baseline established and hot path identified, implement targeted optimiza
 | Repeated string allocations | Use string interning or `Arc<str>` |
 | Dictionary membership checks | Use `set()` instead of `list` |
 | File re-reading | Add caching with mod-time validation |
-| GIL contention | Release GIL for Rust operations >1ms |
 | Repeated regex compilation | Pre-compile patterns at module load |
 
 ### Example: Set-Backed List Pattern
@@ -267,9 +210,7 @@ Pull requests automatically run benchmarks and compare against the `main` baseli
 | Tool | Command | Output |
 |------|---------|--------|
 | Flamegraph | `.\scripts\profile\run_flamegraph.ps1` | SVG flamegraph |
-| py-spy | `.\scripts\profile\run_pyspy.ps1` | SVG/speedscope |
 | dhat | `.\scripts\profile\run_dhat.ps1 -Crate classic-shared-core -Bench -BenchTarget yaml_benchmarks` | JSON heap data |
-| Cache stats | `.\scripts\profile\dump_cache_stats.ps1` | Console/JSON |
 
 ### Benchmark Commands
 
@@ -293,7 +234,4 @@ Pull requests automatically run benchmarks and compare against the `main` baseli
 ## Related Documentation
 
 - [Cache Patterns](./cache_patterns.md) - Caching strategies in CLASSIC
-- [GIL Audit Guide](./gil_audit.md) - GIL release decisions for PyO3
-- [PyO3 Integration Patterns](./pyo3_integration_patterns.md) - Rust-Python binding patterns
 - CI and platform notes - see the `CI And Platform Notes` section of `.agents/skills/classic-project-guide/references/repo-guide.md` (the former `ci_cd_guide.md` is archived at [`docs/archive/ci_cd_guide.md`](../archive/ci_cd_guide.md) and describes a retired single-workflow pipeline)
-- [Rust Acceleration Guide](./rust_acceleration_guide.md) - Rust performance patterns

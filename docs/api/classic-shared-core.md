@@ -360,7 +360,7 @@ The former `classic-perf-core` crate, a seconds-view re-export facade over this 
 
 ### Default store
 
-There is **one default observable store per linked library image**: `get_global_metrics()`, the seconds/milliseconds free functions, and `Timer` all read and clear the same timing and byte state. A `PerformanceMetrics::new()` value owns independent state that the default store never sees. The C++ bridge and Node addon each link their own image and therefore their own default. The one Python adapter (issue #259) links `classic_perf` and `classic_shared` into one image, so they share its default store: a timing recorded through either facade appears in the other's view (`classic_perf` in seconds, `RustPerformanceMonitor` in milliseconds and bytes), and clearing through either clears timing and byte state for both. Probes: `python-bindings/tests/test_one_wheel_facades.py`.
+There is **one default observable store per linked library image**: `get_global_metrics()`, the seconds/milliseconds free functions, and `Timer` all read and clear the same timing and byte state. A `PerformanceMetrics::new()` value owns independent state that the default store never sees. The C++ bridge links its own image and therefore its own default.
 
 ### Sample contract
 
@@ -377,8 +377,6 @@ There is **one default observable store per linked library image**: `get_global_
 | Binding | Entry points | Units | Invalid input |
 |---|---|---|---|
 | [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) (`classic::perf`) | `perf_record_timing -> Result<()>`, `perf_get_summary`, `perf_clear_metrics`, `perf_get_operation_count`, `perf_get_operation_average` | seconds | `rust::Error`, message begins with the stable token |
-| [`classic-node`](../../node-bindings/classic-node/src/shared.rs) | `recordTimingMetric`, `getMetricsSummary`, `clearAllMetrics` | milliseconds | `Error` with `code === "InvalidArg"`, message begins with the stable token |
-| [`classic_perf` adapter module](../../python-bindings/classic-python-bindings/src/classic_perf/mod.rs) (`classic_perf`) | `record_timing`, `get_summary`, `clear_metrics`, `reset_metrics`, `Timer`, `start_timer`, `MetricsSummary` | seconds | `ValueError`, message begins with the stable token |
 
 Missing operations keep their existing projections: absent from summary maps, and `0` / `0.0` from the CXX numeric accessors.
 
@@ -930,7 +928,6 @@ In-repo examples of this collaboration:
 
 - [`business-logic/classic-config-core/src/lib.rs`](../../business-logic/classic-config-core/src/lib.rs) re-exports `get_runtime`
 - [`cpp-bindings/classic-cpp-bridge/src/lib.rs`](../../cpp-bindings/classic-cpp-bridge/src/lib.rs) documents `get_runtime().block_on(...)` as the C++ bridge pattern
-- [`node-bindings/classic-node/src/fileio.rs`](../../node-bindings/classic-node/src/fileio.rs) and sibling modules clone the shared runtime handle for Node task execution
 - [`ui-applications/classic-tui/src/app.rs`](../../ui-applications/classic-tui/src/app.rs) uses `get_runtime().spawn(...)`
 
 Contributor rule: if you add new async foundation or business-logic APIs, keep them compatible with the shared runtime model rather than introducing per-crate runtime ownership.
@@ -1014,8 +1011,7 @@ Related CLASSIC crates and consumers:
 
 - [`classic-config-core`](../../business-logic/classic-config-core) - re-exports `get_runtime` and depends on the shared-runtime rule
 - [`classic-file-io-core`](../../business-logic/classic-file-io-core), [`classic-database-core`](../../business-logic/classic-database-core), and [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - async business-logic crates expected to run on the shared runtime
-- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that call into async Rust using the shared runtime
-- [`classic_shared` adapter module](../../python-bindings/classic-python-bindings/src/classic_shared/) - PyO3 wrapper over this crate's runtime/error/path/performance/string helpers
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - binding layer that calls into async Rust using the shared runtime
 - [`classic-gui`](../../classic-gui) and Rust UI crates such as [`ui-applications/classic-tui`](../../ui-applications/classic-tui) - UI surfaces that depend on the same runtime policy; Slint-style bridging is feature-gated here
 
 Source-observed note:

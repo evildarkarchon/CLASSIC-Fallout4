@@ -37,7 +37,7 @@ Do not use this crate for:
 - crash-log analysis itself
 - locating, defaulting, validating, serializing, or persisting `CLASSIC Settings.yaml`
 
-Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -296,8 +296,6 @@ There is no fallback: `None` means no Installation Root, and each caller turns t
 Callers: the GUI (`MainWindow::findDataRoot()` passes `QCoreApplication::applicationDirPath()` and `QDir::currentPath()`), the TUI (`classic_tui::state::locate_installation_root()`, which refuses to start with a "CLASSIC Data not found" message instead of falling back to the executable folder), update-core's first-party YAML Data check/apply when no `bundled_yaml_dir` layout hint is supplied, and every CLI:
 
 - the C++ CLI (`classic-cli/src/installation_root.cpp`) passes its `GetModuleFileNameW` folder and working directory for the scan, `--check-app-update`, `--check-yaml-updates`, and `--apply-yaml-updates` paths;
-- the Node CLI (`node-bindings/classic-node/cli/run-scan.ts`) passes its own script folder as the executable folder (the parent and grandparent candidates reach the package root from both `cli/` and `dist/cli/`) plus the working directory;
-- the Python CLI (`classic-py`) passes its package folder and the working directory, unless an explicit `--installation-root` is given, which must itself hold `CLASSIC Data`.
 
 On no match each CLI prints a "CLASSIC Data not found" message naming both search starts and exits with status `2` before any scan, settings, or update work; none falls back to the working directory.
 
@@ -632,7 +630,6 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 - [`classic-durable-publication`](classic-durable-publication.md) - durability sequence under `install_atomic` and the Local Ignore reset, the `.prev` rollback generation, and the install lock that `rollback` and `self_heal` also take
 - [`classic-update-core`](classic-update-core.md) - YAML Data Update Channel; drives `install_atomic` and `rollback` against the YAML cache location owned here
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and evaluates the crashgen rule model through `CrashgenSettingsAnalyzer`
-- [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime
 
 In practice, `classic-config-core` is the data-loading layer between raw YAML files and higher-level analysis/UI/binding code.
@@ -1126,11 +1123,6 @@ rationale):
   Empty-string sentinels on success; `error_kind` is one of `"load"`,
   `"version_key_missing"`, `"version_empty"`, `"version_not_string"`, or
   `"unknown"` (reserved for future non-exhaustive variants).
-- Node binding exposes `loadMainYamlVersion(bundledYamlDir?: string | null): Promise<string>`.
-  Rejects with an `Error` whose `message` is prefixed with the variant
-  code (`LOAD:`, `VERSION_KEY_MISSING:`, `VERSION_EMPTY:`,
-  `VERSION_NOT_STRING:`, `UNKNOWN:`), matching the `check_app_notification`
-  precedent for async napi-rs surfaces.
 - Python binding exposes `load_main_yaml_version(bundled_yaml_dir=None)`
   and the typed exception hierarchy rooted at
   `ClassicMainYamlVersionError`, with one subclass per core variant

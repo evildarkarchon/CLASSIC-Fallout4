@@ -11,8 +11,6 @@ The active Cargo workspace is rooted at the repository root.
 |- Cargo.toml           workspace manifest
 |- foundation/          shared runtime, error, and support crates
 |- business-logic/      pure Rust product logic (`*-core`)
-|- python-bindings/     the one PyO3 adapter crate (`classic-python-bindings`) and tooling
-|- node-bindings/       Node/NAPI bindings
 |- cpp-bindings/        C++ bridge crates
 |- ui-applications/     Rust-hosted UI/TUI applications
 ```
@@ -30,27 +28,21 @@ The active Cargo workspace is rooted at the repository root.
 - Lives under `business-logic/`
 - Uses crate names like `classic-config-core`, `classic-scanlog-core`, `classic-version-registry-core`
 - Contains product logic, validation rules, parsing, matching, persistence rules, and shared behavior
-- Should not depend on PyO3, Node, or C++ bridge code
+- Should not depend on binding-framework or C++ bridge code
 
 ### Binding layers
 
-- Python bindings live in one adapter crate, `python-bindings/classic-python-bindings`: one native extension and wheel behind the 18 `classic_*` direct-import facades (see `docs/api/python-bindings-adapter.md`)
-- Node bindings live under `node-bindings/`
-- C++ bindings live under `cpp-bindings/`
+- C++ bindings live under `cpp-bindings/` (the Python and Node bindings retired with ADR-0010)
 - These layers should stay thin and delegate real logic to Rust core crates
 
 ## Naming conventions
 
 - Rust core crates: `classic-{name}-core`
-- Python adapter modules: `python-bindings/classic-python-bindings/src/classic_{name}/`
-- Python import names: `classic_{name}` (facade packages under `python-bindings/classic-python-bindings/python/`)
 
 Examples:
 
 - `business-logic/classic-config-core`
-- `python-bindings/classic-python-bindings/src/classic_config/`
 - `business-logic/classic-scanlog-core`
-- `python-bindings/classic-python-bindings/src/classic_scanlog/`
 
 ## Dependency direction
 
@@ -78,25 +70,4 @@ Bindings should not become alternate homes for business logic.
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace
-```
-
-### Python binding changes
-
-```powershell
-# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
-# --inexact is load-bearing: it keeps uv from pruning the maturin-built classic-python-bindings wheel.
-uv sync --project python-bindings --inexact
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
-uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
-```
-
-### Node binding changes
-
-Run from `node-bindings/classic-node`:
-
-```powershell
-bun run build:debug
-bun run parity:gate:local
-bun run test:bun
-bun run test:node
 ```

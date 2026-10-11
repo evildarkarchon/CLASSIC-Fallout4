@@ -94,21 +94,9 @@ If you are translating older instructions that still mention `ClassicLib-rs/...`
 
 ---
 
-## 6) Node bindings workflow (only when touching Node surface)
+## 6) Repository gates
 
-From [`node-bindings/classic-node/`](../../node-bindings/classic-node):
-
-```powershell
-bun install
-bun run build
-bun run cli -- --version
-bun run parity:gate
-# only if the plain gate reports intentional source-backed drift
-bun run parity:gate:update-baseline
-bun run parity:gate
-bun run test:bun
-bun run test:node
-```
+The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](../adr/)). The checks CI runs as direct steps, and the tools-only Python environment they use, are listed in [Repository gates](../development/repository-gates.md).
 
 ---
 
@@ -116,14 +104,14 @@ bun run test:node
 
 - [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test for MSVC and clang-cl. GUI CI uses prebuilt Qt with the `ci-system-qt` presets; local/default GUI presets remain vcpkg-first.
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml): Rust format/lint/build/test
-- [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml): Node parity/runtime tests
+- [`ci-binding-compliance.yml`](../../.github/workflows/ci-binding-compliance.yml): umbrella over `ci-rust.yml` and `ci-cpp.yml` plus the conformance-only `full` verdict
 - [`benchmarks.yml`](../../.github/workflows/benchmarks.yml): benchmark regression checks
 
 ---
 
-## 8) Scope boundary: maintained vs deprecated Python
+## 8) Scope boundary: retired Python
 
-- Maintained Python scope: bindings under [`python-bindings/`](../../python-bindings)
+- Retired Python and Node bindings: removed from the repo (ADR-0010, in [`docs/adr/`](../adr/)); repository tooling under `tools/` still uses Python
 - Retired pure-Python runtime: removed from the repo; docs preserved under [`docs/archive/python-era/`](../archive/python-era)
 
 Do not treat legacy Python runtime paths as the default contributor flow unless the task is explicitly migration/legacy support.

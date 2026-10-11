@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers testing patterns, fixtures, and coverage requirements for CLASSIC's Rust crates. The Rust components follow a three-layer architecture with pure business logic (`-core` crates), Python bindings (the one `classic-python-bindings` adapter crate), and applications.
+This guide covers testing patterns, fixtures, and coverage requirements for CLASSIC's Rust crates. The Rust components follow a three-layer architecture with pure business logic (`-core` crates), the C++ bridge (`classic-cpp-bridge`), and applications.
 
 ## Rust Test Structure
 
@@ -22,9 +22,6 @@ This guide covers testing patterns, fixtures, and coverage requirements for CLAS
 │   │   └── tests/
 │   │       └── integration_tests.rs  # Configuration loading tests
 │   └── ... (other -core crates)
-│
-├── python-bindings/
-│   └── classic-python-bindings/      # Tested via Python integration
 │
 └── ui-applications/
     └── classic-tui/
@@ -192,7 +189,6 @@ fn test_concurrent_access() {
 
 - **Business logic crates (`-core`)**: 60%+ line coverage
 - **Foundation crates**: 80%+ line coverage
-- **Python binding adapter (`classic-python-bindings`)**: Excluded (tested via Python)
 
 ### Per-Crate Requirements
 
@@ -231,10 +227,6 @@ cargo llvm-cov --workspace --html
 start target/llvm-cov/html/index.html  # Windows
 open target/llvm-cov/html/index.html   # macOS
 
-# Exclude the Python binding adapter (tested via Python). Since issue #259
-# there is one PyO3 adapter crate behind all 18 classic_* facades; the former
-# per-module classic-*-py crates no longer exist.
-cargo llvm-cov --workspace --exclude classic-python-bindings
 ```
 
 ## Test Fixtures and Helpers
@@ -386,20 +378,6 @@ fn test_increment() {
 }
 ```
 
-## Integration with Python Tests
-
-The Python binding adapter (`classic-python-bindings`, behind all 18 `classic_*` facades) is tested via binding smoke tests in `python-bindings/tests/`. These tests verify:
-
-1. PyO3 bindings work correctly
-2. Error handling propagates properly
-3. Type conversions are correct
-4. Async/await bridges function
-
-```bash
-# Run Python integration tests for Rust bindings
-uv run --project python-bindings python -m pytest python-bindings/tests -q
-```
-
 ## CI Integration
 
 The GitHub Actions CI workflow includes dedicated Rust jobs that run independently:
@@ -414,23 +392,16 @@ The GitHub Actions CI workflow includes dedicated Rust jobs that run independent
 
 3. **Rust Build** (60 min timeout)
    - `cargo build --workspace --release`
-   - Produces build artifacts for Python bindings
 
 4. **Rust Tests** (30 min timeout) - **NEW**
-   - Runs independently of Python tests
    - Two test phases:
      1. `cargo test --workspace --release` - Default feature tests
      2. `cargo test --workspace --release --all-features` - All-features tests
    - Full backtrace enabled (`RUST_BACKTRACE=full`)
    - Output captured (`--nocapture`)
 
-5. **Python Bindings** (30 min timeout)
-   - Maturin builds the one `classic-python-bindings` wheel
-   - Depends on Rust Build job
-
-6. **Coverage** (future)
+5. **Coverage** (future)
    - `cargo llvm-cov` with 55% minimum threshold
-   - Exclude `classic-python-bindings` from coverage requirements
 
 ## Writing New Tests
 
@@ -490,4 +461,3 @@ cargo llvm-cov --workspace
 - [CLAUDE.md](../../CLAUDE.md) - Main project documentation
 - [Rust Workspace Architecture](../development/rust_workspace_architecture.md)
 - [Async Development Guide](../development/async_development_guide.md)
-- [PyO3 Integration Patterns](../development/pyo3_integration_patterns.md)

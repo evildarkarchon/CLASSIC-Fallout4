@@ -330,7 +330,6 @@ The native TUI now opens that same revision-cohesive store. Crash Log Scan and G
 Focused checks:
 
 ```powershell
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 cargo test -p classic-user-settings-core
 cargo test -p classic-user-settings-core --test migration_planning_behavior
 cargo test -p classic-user-settings-core --test migration_persistence_behavior
@@ -342,9 +341,9 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName cl
 
 The compatibility source of truth remains [`tests/fixtures/user_settings_compatibility/expectations.json`](../../tests/fixtures/user_settings_compatibility/expectations.json), with its contract guard and public-interface behavioral coverage owned by this crate. The checked-in fixtures cover canonical, alias-only, conflicting-alias, invalid-known-value, and unknown-entry documents.
 
-The [binding compliance suite](binding-compliance-suite.md#user-settings-blocking-execution)
-requires executable User Settings receipts from Rust, CXX on MSVC and clang-cl,
-Node, and Python, plus separate maintained frontend consumer receipts. The
+The conformance-only `full` verdict ([repository gates](../development/repository-gates.md))
+requires executable User Settings receipts from Rust and CXX on MSVC and clang-cl,
+plus separate maintained frontend consumer receipts. The
 [same-revision equivalence map](../implementation/user_settings_conformance_equivalence.md)
 identifies the corpus facts exercised by the new receipts and the unique focused
 tests that remain required. The ownership audit remains an independent blocking

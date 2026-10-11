@@ -246,5 +246,3 @@ Source files most often involved:
 
 - [`business-logic/classic-scangame-core/src/game_setup_intake.rs`](../../business-logic/classic-scangame-core/src/game_setup_intake.rs)
 - [`cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs)
-- [`node-bindings/classic-node/src/scangame.rs`](../../node-bindings/classic-node/src/scangame.rs)
-- [`python-bindings/classic-python-bindings/src/classic_scangame/setup.rs`](../../python-bindings/classic-python-bindings/src/classic_scangame/setup.rs)

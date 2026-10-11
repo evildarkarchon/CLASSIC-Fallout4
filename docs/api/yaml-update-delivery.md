@@ -43,7 +43,7 @@ Current additive history:
 
 Because both changes are additive, `client_schemas::MAIN_YAML` remains `SchemaCompat::new(2, 0)` while `client-schema-ranges.yaml` advertises the compatible 2.x publish range.
 
-The drift guard (`tools/schema_version_gate.py`, wired into `ci-python-bindings.yml :: parity-gates`) fails CI whenever a checked-in YAML's `schema_version` MAJOR diverges from the governing constant's `accepted_major`, or when MINOR falls below `minimum_minor`. This catches either side drifting without the other.
+The drift guard (the `client_schemas` test in `classic-config-core`, run by `cargo test --workspace` in `ci-rust.yml`) fails CI whenever a checked-in YAML's `schema_version` MAJOR diverges from the governing constant's `accepted_major`, or when MINOR falls below `minimum_minor`. This catches either side drifting without the other.
 
 The embedded default mirror has an independent content-freshness gate because the outer schema guard cannot inspect a literal scalar's settings semantics. `cargo run -p classic-user-settings-core --bin generate-user-settings-default-mirror -- --check` parses every canonical registered path and compares its exact generated text. The generator is the only supported way to edit that block; the Rust User Settings runtime never loads defaults from YAML Data.
 
@@ -269,9 +269,7 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 | First-party YAML Data Update Channel (`check_yaml_data_update`, `apply_yaml_data_update_with_decision`, `rollback_yaml_data_update`) plus generic `YamlManifest`, `fetch_yaml_manifest`, `check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update` | [`business-logic/classic-update-core/src/yaml_update.rs`](../../business-logic/classic-update-core/src/yaml_update.rs) |
 | CXX bridge first-party helpers (`yaml_data_check_update`, `yaml_data_apply_update`, `yaml_data_rollback_update`) and generic compatibility helpers (`yaml_check_update`, `yaml_apply_update`, `yaml_rollback_update`) | [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) |
 | Typed CXX/Qt User Settings policy snapshot and atomic GUI edit seam | [`cpp-bindings/classic-cpp-bridge/src/settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs), [`classic-gui/src/core/guiusersettings.cpp`](../../classic-gui/src/core/guiusersettings.cpp) |
-| Node bindings first-party helpers (`checkYamlDataUpdate`, `applyYamlDataUpdateWithDecision`, `rollbackYamlDataUpdate`) plus single-file `rollbackYamlUpdate` | [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) |
-| Python bindings (`check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update`) | [`python-bindings/classic-python-bindings/src/classic_update/yaml_update.rs`](../../python-bindings/classic-python-bindings/src/classic_update/yaml_update.rs) |
 | Publish workflow | [`.github/workflows/publish-yaml-data.yml`](../../.github/workflows/publish-yaml-data.yml) |
 | Publish tooling | [`tools/publish_yaml_data/`](../../tools/publish_yaml_data) |
-| Drift guard | [`tools/schema_version_gate.py`](../../tools/schema_version_gate.py) |
+| Drift guard | [`business-logic/classic-config-core/src/client_schemas_tests.rs`](../../business-logic/classic-config-core/src/client_schemas_tests.rs) |
 | Shippable metadata | [`CLASSIC Data/databases/client-schema-ranges.yaml`](../../CLASSIC%20Data/databases/client-schema-ranges.yaml) |

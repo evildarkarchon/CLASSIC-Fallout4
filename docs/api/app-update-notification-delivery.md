@@ -114,15 +114,13 @@ When `fallback.marker` is present and its mtime is within TTL, a subsequent Page
 
 ## 3. Error contract (per binding)
 
-All three bindings propagate a single unified `UpdateError` family (design decision D-05) with notification-specific variants `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`. The notification path can also surface shared manifest-validation variants: `ManifestInvalid` when a fetched notification manifest violates cross-field invariants, and `ManifestUnsupportedVersion` when it advertises a newer `manifest_version` major. The shape each binding exposes follows the established per-language idiom:
+The C++ bridge propagates the single unified `UpdateError` family (design decision D-05) with notification-specific variants `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`. The notification path can also surface shared manifest-validation variants: `ManifestInvalid` when a fetched notification manifest violates cross-field invariants, and `ManifestUnsupportedVersion` when it advertises a newer `manifest_version` major. The shape it exposes follows the established bridge idiom:
 
 | Binding | Error shape |
 | --- | --- |
 | C++ (CXX) | `NotificationStatusDto { classification = "error", error_message = "<Display>", …empty-string sentinels… }` |
-| Node (NAPI-RS) | Promise rejects with `Error` whose `message` is prefixed with the variant-keyed code: `"FETCH_FAILED: <detail>"` / `"DECODE: <detail>"` / `"INSTALLED_VERSION_PARSE: <detail>"` / `"CACHE_IO: <detail>"` / `"UPDATE_ERROR: <detail>"`. Consumers discriminate with `err.message.startsWith("FETCH_FAILED:")`. The prefix-on-message shape (rather than a custom `err.code`) is a napi-rs 3.x async-macro constraint — `Status` is a fixed C-style enum, so custom variant codes can't round-trip through `execute_tokio_future_with_finalize_callback` as structured `code` values |
-| Python (PyO3) | Raises a `ClassicNotificationError` subclass keyed to the variant, or the `ClassicNotificationError` base for shared notification-channel failures such as `ManifestInvalid` and `ManifestUnsupportedVersion`; subclass of `ClassicUpdateError` so existing catches still work |
 
-Absence is not a failure: Pages `404 Not Found` plus no matching Releases manifest returns `Ok(NotificationStatus { classification: NotPublished, .. })`. Binding success strings differ by existing convention: CXX/GUI/CLI use `"not_published"`; Node/Python expose `"notPublished"`. Both represent the same benign outcome and MUST NOT be surfaced as an exception, rejected promise, stderr line, non-zero exit, or warning dialog.
+Absence is not a failure: Pages `404 Not Found` plus no matching Releases manifest returns `Ok(NotificationStatus { classification: NotPublished, .. })`. CXX/GUI/CLI use the success string `"not_published"`. It represents a benign outcome and MUST NOT be surfaced as an exception, rejected promise, stderr line, non-zero exit, or warning dialog.
 
 Full precedent + examples: [`error-contract.md`](error-contract.md).
 

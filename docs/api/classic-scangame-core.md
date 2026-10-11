@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-scangame-core/
 Crate metadata:
 
 - Crate: `classic-scangame-core`
-- Description: `Pure Rust business logic for game scanning and validation (NO PyO3)`
+- Description: `Pure Rust business logic for game scanning and validation`
 
 This crate is the Rust-side game-installation and mod-file scanning layer for CLASSIC. It covers setup-time validation, Address Library and crashgen config checks, loose-file and BA2 archive scanning, game log scanning, Wrye Bash report parsing, ENB detection, and mod INI/config inspection.
 

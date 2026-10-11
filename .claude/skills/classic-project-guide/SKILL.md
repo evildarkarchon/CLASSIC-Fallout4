@@ -1,6 +1,6 @@
 ---
 name: classic-project-guide
-description: CLASSIC-specific command and artifact reference for build, test, parity, publish, Windows/MSVC, PyO3, and CI follow-up workflows. Use when work needs repo-approved validation commands, binding parity artifact ownership, YAML or app-update publish tooling, native wrapper invocations, or platform-specific command choices. Do not use for generic code edits or architecture rules already covered by AGENTS.md.
+description: CLASSIC-specific command and artifact reference for build, test, parity, conformance, publish, Windows/MSVC, and CI follow-up workflows. Use when work needs repo-approved validation commands, binding parity artifact ownership, YAML or app-update publish tooling, native wrapper invocations, or platform-specific command choices. Do not use for generic code edits or architecture rules already covered by AGENTS.md.
 ---
 
 AGENTS.md is the always-on source for CLASSIC architecture placement and hard repository rules. This skill adds bulky command recipes, parity artifact ownership, publish preflights, and CI/platform details only.
@@ -11,8 +11,8 @@ Read `references/repo-guide.md` selectively:
 
 - `Command Picker` for the fastest map from touched surface to local checks.
 - `Native C++ Wrappers` for CLI/GUI build, test, install, and package command forms.
-- `Rust And PyO3 Commands` for workspace cargo commands and the current PyO3 shell setup.
-- `Binding Parity Workflows` for CXX, Node, or Python artifact ownership and refresh commands.
+- `Rust Commands` for workspace cargo commands and the tools-only Python environment.
+- `Binding Parity Workflows` for CXX parity artifact ownership, refresh commands, and conformance launchers.
 - `Data Publish Workflows` for YAML database or app-update notification validation and publish preflights.
 - `CI And Platform Notes` for workflow names or Windows/Linux portability constraints.
 

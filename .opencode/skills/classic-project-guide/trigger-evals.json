@@ -8,11 +8,11 @@
     "should_trigger": true
   },
   {
-    "query": "`ci-typescript.yml` started failing after a Node binding change. Map out what this repo considers part of the Node parity surface, which files are supposed to stay fresh, and what local commands mirror CI.",
+    "query": "The `full` job in `ci-binding-compliance.yml` started failing after a bridge change. Map out what this repo considers part of the CXX parity surface, which files are supposed to stay fresh, and what local commands mirror CI.",
     "should_trigger": true
   },
   {
-    "query": "I'm changing a Rust API that is surfaced in the Python bindings. Walk me through the Python parity checklist so I don't miss tracked artifacts or validation commands.",
+    "query": "I'm changing a Rust API that is surfaced through the C++ bridge. Walk me through the parity checklist so I don't miss tracked artifacts or validation commands.",
     "should_trigger": true
   },
   {
@@ -68,7 +68,7 @@
     "should_trigger": false
   },
   {
-    "query": "Refactor the Node binding code in `node-bindings/classic-node/src/` to reduce duplication, but don't spend time recapping repo policy unless it directly affects the code change.",
+    "query": "Refactor the TUI code in `ui-applications/classic-tui/src/` to reduce duplication, but don't spend time recapping repo policy unless it directly affects the code change.",
     "should_trigger": false
   }
 ]

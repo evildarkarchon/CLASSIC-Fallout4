@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-resource-core/
 Crate metadata:
 
 - Crate: `classic-resource-core`
-- Description: `Resource management for game files (no PyO3)`
+- Description: `Resource management for game files`
 
 This crate is the small Rust resource-discovery layer for CLASSIC. It detects resource types from file extensions, enumerates supported files under a directory tree, provides a lightweight `ResourceInfo` struct, validates that an individual resource path exists and points to a file, and owns the game-target DDS texture rules applied to parsed DDS headers.
 
@@ -425,11 +425,7 @@ Related CLASSIC crates and wrappers:
 
 - [`classic-path-core`](../../business-logic/classic-path-core) - neighboring game/documents path layer (this crate no longer depends on it)
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it uses this crate's `dds` rules for loose-texture checks and handles scan orchestration itself
-- [`classic_resource` adapter module](../../python-bindings/classic-python-bindings/src/classic_resource/) - Python wrapper for this crate's public API
-- [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers, plus `JsBackupManager` and `JsGameFilesManager`
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - CXX `files` bridge module that wraps `BackupManager` and `GameFilesManager`
-- [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers
-- [`classic_path` adapter module](../../python-bindings/classic-python-bindings/src/classic_path/), `classic-node`'s `path` module, and the CXX bridge's `classic::path` backup helpers - wrap `VersionBackupManager` / `XseVersion` under their existing `BackupManager` / `XseVersion` / `backup_*` export names
 
 Binding collaboration visible in source today:
 
