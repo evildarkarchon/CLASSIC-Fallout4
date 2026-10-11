@@ -34,8 +34,9 @@ $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 # 2. Create/refresh the tooling venv from the locked manifest.
 #    `--inexact` is load-bearing — it stops uv from pruning the
 #    maturin-built `classic-python-bindings` wheel (it is not declared in
-#    pyproject.toml). This also installs ruamel.yaml for
-#    `tools/schema_version_gate.py`; it is a default dependency.
+#    pyproject.toml). Repository tooling under `tools/` (for example
+#    `tools/schema_version_gate.py`) does not use this venv; it runs from
+#    the tools-only project: `uv sync --project tools`.
 uv sync --project python-bindings --inexact
 
 # 3. Build the one adapter wheel via maturin, remove obsolete per-module

@@ -91,7 +91,14 @@ Create or refresh the Python binding tool environment before Python binding smok
 uv sync --project python-bindings --inexact
 ```
 
-That sync also installs `ruamel.yaml` for the schema drift guard and YAML publish tooling; it is a default dependency, and there is no `drift-guards` group.
+Repository tooling under `tools/` (the schema drift guard, the YAML Data and app-notification publish tools, and the tool test suites) does not use the binding environment. It runs from the tools-only uv project at `tools/pyproject.toml`, which holds only `ruamel.yaml` and `pytest`:
+
+```powershell
+uv sync --project tools
+uv run --project tools python -m pytest tools/<suite>/tests -q
+```
+
+Run each tool suite in its own pytest process: several suites put their own directory on `sys.path` and reuse module basenames, so one `pytest tools` process cannot collect them together.
 
 ## Binding Parity Workflows
 
@@ -175,8 +182,8 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 When the same change touches shippable YAML data or schema-version constants, start with:
 
 ```powershell
-uv sync --project python-bindings --inexact
-uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
+uv sync --project tools
+uv run --project tools python tools/schema_version_gate.py --repo-root .
 ```
 
 Commit touched `.pyi` files, shared conformance pack/adapter changes, tracked reports under `python-bindings/parity-artifacts/`, and affected files under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
@@ -188,9 +195,9 @@ Commit touched `.pyi` files, shared conformance pack/adapter changes, tracked re
 Use this for shippable YAML databases, client schema ranges, schema-version rules, or YAML publish tooling.
 
 ```powershell
-uv sync --project python-bindings --inexact
-uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
-uv run --project python-bindings python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
+uv sync --project tools
+uv run --project tools python tools/schema_version_gate.py --repo-root .
+uv run --project tools python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
 ```
 
 Update `docs/api/yaml-update-delivery.md` when loader, manifest, cache, fallback, or delivery behavior changes. The maintainer publish workflow is `.github/workflows/publish-yaml-data.yml` and runs only for pushed `yaml-data-v*` tags.
@@ -200,12 +207,12 @@ Update `docs/api/yaml-update-delivery.md` when loader, manifest, cache, fallback
 Use this for `CLASSIC Data/app-notification.yaml`, notification manifest semantics, or app-notification publish tooling.
 
 ```powershell
-uv sync --project python-bindings --inexact
-uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"
+uv sync --project tools
+uv run --project tools python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"
 $publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt
-uv run --project python-bindings python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v<VERSION> --published-at $publishedAt
-uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q
+uv run --project tools python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt
+uv run --project tools python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v<VERSION> --published-at $publishedAt
+uv run --project tools python -m pytest tools/publish_app_notification/tests -q
 ```
 
 Do not commit generated manifest previews or local `gh-pages` output. The maintainer publish workflow is `.github/workflows/publish-app-notification.yml` and runs only for pushed `app-notification-v*` tags. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the advertised binary `v*` release, not the `app-notification-v*` workflow tag. Preserve `--latest=false` on notification release operations so GitHub's latest release pointer stays on binary releases.

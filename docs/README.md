@@ -82,7 +82,7 @@ bun run test:node
 ```powershell
 # python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
 # `--inexact` is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
-# ruamel.yaml (for schema_version_gate.py) is a default dependency, so this installs it.
+# Repository tooling under tools/ (for example schema_version_gate.py) uses the tools-only uv project (uv sync --project tools).
 uv sync --project python-bindings --inexact
 uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
 uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
