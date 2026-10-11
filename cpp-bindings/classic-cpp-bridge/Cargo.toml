@@ -72,6 +72,10 @@ classic-web-core = { path = "../../business-logic/classic-web-core" }
 [dev-dependencies]
 tempfile = { workspace = true }
 serial_test = "3.2"
+# Parse the crate's own #[cxx::bridge] modules in tests/opaque_map_read_only.rs.
+syn = { version = "2.0", features = ["full"] }
+proc-macro2 = "1.0"
+quote = "1.0"
 
 [target.'cfg(windows)'.dependencies]
 # CXX FFI framework
