@@ -4,7 +4,7 @@
 
 This guide demonstrates how to use `pyo3-async-runtimes` to create **true async Python functions** backed by Rust's Tokio runtime. This eliminates blocking and enables native async/await integration between Python and Rust.
 
-For the repo-wide decision table that distinguishes true async Python APIs from synchronous GIL-detached wrappers, see [`../development/runtime_gil_patterns.md`](../development/runtime_gil_patterns.md).
+For the repo-wide single-runtime rule and its clippy guard, see [`../development/async_development_guide.md`](../development/async_development_guide.md#native-async-solution).
 
 ## Table of Contents
 

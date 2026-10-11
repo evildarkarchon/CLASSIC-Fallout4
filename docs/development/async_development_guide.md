@@ -180,7 +180,7 @@ analyzer = get_formid_analyzer(yamldata, show_values, db_exists)
 
 CLASSIC uses one shared Tokio runtime owned by `foundation/classic-shared-core`. The **ONE RUNTIME RULE** means crates and bindings must use `classic_shared_core::get_runtime()` or a surface-specific helper that wraps it; they must not create additional runtimes.
 
-For the current decision table and helper snippets for CXX, PyO3, NAPI-RS, and UI/TUI surfaces, see [`runtime_gil_patterns.md`](runtime_gil_patterns.md).
+Clippy enforces the rule. The workspace `clippy.toml` disallows `tokio::runtime::Runtime::new`, `Builder::new_multi_thread`, `Builder::new_current_thread` and `#[tokio::main]`, so `cargo clippy --workspace --all-targets --all-features -- -D warnings` (ci-rust `lint`) fails on any runtime constructed outside `classic-shared-core`. Because `#[tokio::test]` expands to a runtime builder, every test file that uses it starts with an inner `#![allow(clippy::disallowed_methods)]` and a one-line reason; a new test file fails clippy until it opts in. The few test and bench sites that construct a runtime directly carry a targeted `#[allow(clippy::disallowed_methods)]` with a reason.
 
 ### The ONE RUNTIME RULE
 
