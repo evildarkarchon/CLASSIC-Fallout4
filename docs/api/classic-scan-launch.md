@@ -170,37 +170,21 @@ binding that projects it, which is how CXX, Node and Python stay in parity with 
 
 ## Binding surfaces
 
-Launch is exposed on the existing scan-run surfaces, the same way scan presentation is; there is no
-new bridge module and no new Python facade.
+Launch is exposed on the existing scan-run bridge surface, the same way scan presentation is; there
+is no new bridge module.
 
 | Surface | Entry points | Notes |
 |---|---|---|
 | CXX `classic::scanner` (`cpp-bindings/classic-cpp-bridge/src/scanner/launch.rs`) | `scan_run_launch_standard(root, overrides)`, `scan_run_launch_targeted(root, inputs, overrides)` → opaque `ScanRunLaunch`; `scan_run_launch_error`, `scan_run_launch_view`, `scan_run_launch_request` | `ScanRunLaunchOverridesDto` uses presence flags; `max_concurrent` 0 with `has_max_concurrent` is adaptive; `fcx_mode` is supplied-as-on; `no_scan_path` supplies "no custom scan folder" (an exception together with `has_scan_path`). `ScanRunLaunchErrorDto.has_error` is authoritative; `ScanRunLaunchErrorKind` is `TargetedWithoutInputs` or `XseLogInspect`. The view reuses `ScanRunConfigurationDto`, `ScanRunStandardSourceDto`, `ScanRunTargetedSourceDto` and `ScanRunSetupContextDto`, plus `display_lines`. Exceptions are reserved for unrepresentable input (blank paths, an unknown game-version token, an out-of-range game discriminant). |
-| Node (`node-bindings/classic-node/src/scan_run_launch.rs`) | `ScanRunLaunch.standard(root, overrides?)`, `ScanRunLaunch.targeted(root, inputs, overrides?)` | Getters `intent`, `configuration`, `standardSource`, `unsolvedLogs`, `targetedSource`, `fcxEnabled`, `setupContext`, `diagnostics`, `displayLines`; `request()` returns a `ScanRunRequest`. Overrides include `fcxMode` and `noScanPath` ("no custom scan folder"; `InvalidArg` together with `scanPath`). A typed launch error throws with `code` and `kind` set to its token (`targeted_without_inputs`, `xse_log_inspect`); diagnostic kinds are camelCase (`userSettings`, `gameVersionNotApplied`, …). |
-| Python `classic_scanlog` (`classic_scanlog/scan_launch.rs`) | `ScanRunLaunch.standard(root, overrides=None)`, `ScanRunLaunch.targeted(root, inputs, overrides=None)`, `ScanRunLaunchOverrides(...)` | Flat read-only properties (`game`, `game_version`, `formid_database_paths`, `base_directory`, `unsolved_logs`, `targeted_inputs`, `setup_context`, `diagnostics`, `display_lines`, …); `request()` returns a `ScanRunRequest`. Overrides include `fcx_mode=False` and `no_scan_path=False` ("no custom scan folder"; `ValueError` together with `scan_path`). `ScanRunLaunchTargetedWithoutInputsError` and `ScanRunLaunchXseLogInspectError` subclass `ScanRunLaunchError(ValueError)`. Launches go through `prepare_launch_in_scopes` with the facade's own Version Registry and YAML-file scopes, the ones `scan_run_execute` uses. |
 
 Every binding parses the game-version override with `GameVersionSelection::parse` and maps a
 max-concurrency count with `MaxConcurrency::from_count`, so none of them restates a merge rule.
 
 ## Frontend consumers
 
-- **Node CLI** (`node-bindings/classic-node/cli/run-scan.ts`) launches a Standard scan with
-  `ScanRunLaunch.standard(installationRoot, overrides)` and executes `launch.request()`. Only the
-  flags the user supplied become overrides (`--game`, `--game-version`, `--scan-path`,
-  `--max-concurrent` with `0` meaning adaptive, and the supplied-as-on `--fcx-mode`,
-  `--show-fid-values`, `--simplify-logs`); `--game` accepts only `Fallout4`, like the native CLI,
-  and an omitted `--game` scans the managed game. The Standard
-  base folder is therefore the Installation Root, not the working directory. It prints
-  `displayLines` before the run and carries the typed `diagnostics` as `launchDiagnostics` in its
-  JSON summary. A launch error is a fatal (exit 2).
-- **Python CLI** (`classic-py scan logs`) launches a Targeted scan of `--path` with
-  `ScanRunLaunch.targeted(installation_root, [path])`, no overrides, and executes
-  `launch.request()`. Its text stream prints `display_lines` ahead of the run's lines; its JSON
-  `data.launchDiagnostics` carries the typed diagnostics. A launch error is reported like any other
-  binding exception (exit 1).
-
-Neither CLI keeps a game-name table, opens User Settings to build a request, or settles Local
-Ignore recovery: a paused run stays terminal and exits as a product failure (exit 1).
+The native CLI, GUI and TUI launch their Crash Log Scans through this crate and prove it with their
+own consumer conformance receipts. The Node and Python demo CLIs that also consumed it retired with
+those bindings (ADR-0010, in [`docs/adr/`](../adr/)).
 
 ## Conformance
 
@@ -214,7 +198,7 @@ XSE log, missing folders still launching, the FCX Mode override on a Targeted in
 `xse_log_inspect` error. FCX fixtures name the Installation Root through an
 `{{installationRoot}}` placeholder each runner fills, and scenarios list empty `files` to create
 beneath it. It runs through the shared scan-run launcher with one runner per adapter, each traversing its
-own DTOs (ADR-0008); see [`binding-compliance-suite.md`](binding-compliance-suite.md).
+own DTOs (ADR-0008); see [repository gates](../development/repository-gates.md) for the `full` verdict.
 
 ## Tests
 

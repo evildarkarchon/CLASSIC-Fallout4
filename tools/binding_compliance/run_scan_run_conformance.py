@@ -92,39 +92,6 @@ PARTICIPANT_COMMANDS = {
             *_COMMON_CORE_SOURCES,
         ),
     ),
-    "node": ParticipantCommand(
-        arguments=("bun", "run", "conformance:scan-run"),
-        working_directory=REPO_ROOT / "node-bindings" / "classic-node",
-        source_paths=(
-            REPO_ROOT
-            / "node-bindings"
-            / "classic-node"
-            / "__test__"
-            / "scan_run_conformance_runner.ts",
-            REPO_ROOT / "node-bindings" / "classic-node" / "src" / "scan_run.rs",
-            REPO_ROOT / "node-bindings" / "classic-node" / "package.json",
-            *_COMMON_CORE_SOURCES,
-        ),
-    ),
-    "python": ParticipantCommand(
-        arguments=(
-            "uv",
-            "run",
-            "--project",
-            "python-bindings",
-            "python",
-            "python-bindings/tests/scan_run_conformance_runner.py",
-        ),
-        working_directory=REPO_ROOT,
-        source_paths=(
-            REPO_ROOT / "python-bindings" / "tests" / "scan_run_conformance_runner.py",
-            # The one Python adapter crate builds one native extension for every
-            # facade, so the whole adapter (Rust and Python facades) is participant input.
-            REPO_ROOT / "python-bindings/classic-python-bindings/src",
-            REPO_ROOT / "python-bindings/classic-python-bindings/python",
-            *_COMMON_CORE_SOURCES,
-        ),
-    ),
 }
 
 # Crash Log Scan Launch has its own runner per adapter: each launches through its
@@ -152,38 +119,6 @@ LAUNCH_PARTICIPANT_COMMANDS = {
             / "tests"
             / "launch_conformance.rs",
             REPO_ROOT / "business-logic" / "classic-scan-launch" / "Cargo.toml",
-            *_COMMON_CORE_SOURCES,
-        ),
-    ),
-    "node": ParticipantCommand(
-        arguments=("bun", "run", "conformance:scan-launch"),
-        working_directory=REPO_ROOT / "node-bindings" / "classic-node",
-        source_paths=(
-            REPO_ROOT
-            / "node-bindings"
-            / "classic-node"
-            / "__test__"
-            / "scan_launch_conformance_runner.ts",
-            REPO_ROOT / "node-bindings" / "classic-node" / "src" / "scan_run.rs",
-            REPO_ROOT / "node-bindings" / "classic-node" / "src" / "scan_run_launch.rs",
-            REPO_ROOT / "node-bindings" / "classic-node" / "package.json",
-            *_COMMON_CORE_SOURCES,
-        ),
-    ),
-    "python": ParticipantCommand(
-        arguments=(
-            "uv",
-            "run",
-            "--project",
-            "python-bindings",
-            "python",
-            "python-bindings/tests/scan_launch_conformance_runner.py",
-        ),
-        working_directory=REPO_ROOT,
-        source_paths=(
-            REPO_ROOT / "python-bindings" / "tests" / "scan_launch_conformance_runner.py",
-            REPO_ROOT / "python-bindings/classic-python-bindings/src",
-            REPO_ROOT / "python-bindings/classic-python-bindings/python",
             *_COMMON_CORE_SOURCES,
         ),
     ),

@@ -54,16 +54,16 @@ def test_missing_adapter_reports_blocking_settings_failure(
 def test_settings_compliance_requires_current_executed_facts(
         tmp_path: Path, state: str
 ) -> None:
-    """Registry-backed parity cannot replace a current, matching Node receipt."""
+    """Registry-backed parity cannot replace a current, matching Rust receipt."""
 
     root = settings_launcher.REPO_ROOT
     pack = load_and_validate_pack(root, settings_launcher.PACK_PATH)
     run = materialize_run_plan(
         pack,
-        participant_id="node",
+        participant_id="rust",
         participant_role="semantic-adapter",
-        execution_instance_id="node",
-        source_paths=settings_launcher.PARTICIPANT_COMMANDS["node"].source_paths,
+        execution_instance_id="rust",
+        source_paths=settings_launcher.PARTICIPANT_COMMANDS["rust"].source_paths,
         artifact_root=root / "tools/binding_compliance/artifacts" / tmp_path.name,
     )
     receipt = _receipt(pack, run)
@@ -88,7 +88,7 @@ def test_settings_compliance_requires_current_executed_facts(
             "--profile",
             "conformance",
             "--participant",
-            "node",
+            "rust",
             "--receipt",
             str(run.receipt_path),
             "--output-dir",
@@ -102,8 +102,10 @@ def test_settings_compliance_requires_current_executed_facts(
     )
     assert report["conformance"]["enforcement"] == "blocking"
     assert result == (0 if state == "valid" else 1)
-    coverage = report["conformance"]["coverage"]
+    # Rust owns no parity rows, so the receipt itself carries the verdict.
     if state == "valid":
-        assert any(row["evidenceKind"] == "executable" for row in coverage["rows"])
+        assert report["conformance"]["result"] == "pass"
+        assert report["conformance"]["failures"] == []
     else:
-        assert coverage["failures"]
+        assert report["conformance"]["result"] == "fail"
+        assert report["conformance"]["failures"]

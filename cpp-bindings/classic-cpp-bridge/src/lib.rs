@@ -1,7 +1,7 @@
 //! classic-cpp-bridge: CXX FFI bindings for CLASSIC
 //!
 //! This crate exposes all CLASSIC business-logic crates to C++ via CXX FFI.
-//! It follows the same thin-adapter pattern as the PyO3 and NAPI-RS bindings.
+//! It is a thin adapter: business logic stays in the Rust core crates.
 //!
 //! # Architecture
 //!

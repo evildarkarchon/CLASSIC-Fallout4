@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-file-io-core/`
 Crate metadata:
 
 - Crate: `classic-file-io-core`
-- Description: `Pure Rust file I/O operations for CLASSIC (no PyO3)`
+- Description: `Pure Rust file I/O operations for CLASSIC`
 
 This crate is the shared Rust file-system utility layer for CLASSIC business-logic crates. It combines async text and byte I/O, directory walking, DDS header parsing, and hash utilities in one crate.
 
@@ -400,7 +400,7 @@ Related CLASSIC crates:
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - downstream consumer of file I/O helpers for game-file checks
 - [`classic-config-core`](classic-config-core.md) - downstream owner of YAML Data install/rollback/self-heal and Ignore/Local YAML generation, which return this crate's `FileIOError`
 - [`classic-resource-core`](classic-resource-core.md) - downstream owner of the game-target backup and game-file operations, which return this crate's `FileIOError`
-- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that depend on stable higher-level behavior built on top of these helpers
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - binding layer that depends on stable higher-level behavior built on top of these helpers
 
 Source-observed notes:
 

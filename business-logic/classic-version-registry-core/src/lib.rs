@@ -1,8 +1,8 @@
 //! CLASSIC Version Registry Core - Pure Rust version management
 //!
-//! This crate provides game version detection and matching for CLASSIC without
-//! any PyO3 dependencies. It can be used directly by Rust applications (TUI, CLI)
-//! or through Python bindings in a separate `-py` crate.
+//! This crate provides game version detection and matching for CLASSIC as pure
+//! Rust. It is used directly by Rust applications (TUI, CLI) and through the
+//! C++ bridge.
 //!
 //! ## Features
 //!
@@ -17,7 +17,7 @@
 //!
 //! ## Architecture
 //!
-//! - Pure Rust - no PyO3, usable by TUI/CLI directly
+//! - Pure Rust, usable by TUI/CLI directly
 //! - Thread-safe lazy snapshots: one per [`VersionRegistryScope`], with a
 //!   process default scope behind [`get_version_registry`]
 //! - Custom `GameVersion` type for 4-component versions (e.g., 1.10.163.0)

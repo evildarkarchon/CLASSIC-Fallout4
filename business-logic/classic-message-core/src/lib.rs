@@ -11,8 +11,8 @@
 //!
 //! # Architecture
 //!
-//! This is the `-core` crate containing pure Rust business logic. The Python bindings
-//! are in the `classic_message` module of the separate `classic-python-bindings` adapter crate, following the **SEPARATION OF CONCERNS** rule.
+//! This is the `-core` crate containing pure Rust business logic. Frontends reach it
+//! through the separate C++ bridge crate, following the **SEPARATION OF CONCERNS** rule.
 //!
 //! # Examples
 //!

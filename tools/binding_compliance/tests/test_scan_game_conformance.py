@@ -80,7 +80,7 @@ def test_scan_game_facts_require_complete_native_results_and_no_writes() -> None
         )
 
 
-@pytest.mark.parametrize("participant", ("cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("cxx",))
 def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
         tmp_path: Path, participant: str
 ) -> None:

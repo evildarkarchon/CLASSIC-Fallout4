@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Run the canonical CLASSIC binding compliance suite."""
+"""Run the CLASSIC executable conformance verdict (conformance or full profile).
+
+The static requirement catalog, its suite and retained-gate evidence retired
+with the Python and Node bindings (Retire, #304). Only the receipt-backed
+``conformance`` profile and the conformance-only ``full`` repository verdict
+remain until the Rust conformance engine replaces this command.
+"""
 
 from __future__ import annotations
 
@@ -7,8 +13,8 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
-from catalog import requirements_for_profile  # type: ignore
 from conformance.command import (  # type: ignore
     ConformanceCommandError,
     build_conformance_report_from_receipts,
@@ -17,21 +23,17 @@ from conformance.repository import (  # type: ignore
     build_repository_report,
     discover_repository_receipts,
 )
-from gate_evidence import (  # type: ignore
-    GateEvidenceError,
-    current_source_revision,
-    github_run_identity,
-    load_gate_evidence,
-    write_gate_evidence,
-)
-from suite import ComplianceSuite, write_report_files  # type: ignore
+
+PROFILES = ("conformance", "full")
+REPORT_JSON_NAME = "binding_compliance_report.json"
+REPORT_MARKDOWN_NAME = "binding_compliance_report.md"
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
-    """Build the canonical compliance command-line contract."""
+    """Build the canonical conformance command-line contract."""
 
     parser = argparse.ArgumentParser(
-        description="Run the CLASSIC binding compliance suite."
+        description="Run the CLASSIC executable conformance verdict."
     )
     parser.add_argument(
         "--repo-root",
@@ -40,31 +42,14 @@ def build_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--profile",
-        default="ci",
-        help=(
-            "Execution profile: ci, full, conformance, static, cxx-ci, "
-            "node-ci, or python-ci."
-        ),
+        required=True,
+        choices=PROFILES,
+        help="Execution profile: conformance (one participant) or full (repository).",
     )
     parser.add_argument(
         "--output-dir",
         default="tools/binding_compliance/artifacts",
-        help="Directory for generated compliance reports, relative to repo root.",
-    )
-    parser.add_argument(
-        "--skip-commands",
-        action="store_true",
-        help="Only run static requirement checks; command-backed checks are marked skipped.",
-    )
-    parser.add_argument(
-        "--fail-on-gaps",
-        action="store_true",
-        help="Treat known coverage gaps as a failing CI result.",
-    )
-    parser.add_argument(
-        "--list-requirements",
-        action="store_true",
-        help="Print the selected requirement catalog as JSON and exit.",
+        help="Directory for generated reports, relative to repo root.",
     )
     parser.add_argument(
         "--participant",
@@ -86,16 +71,6 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help="Full profile: recursively collect downloaded receipts with sibling plans.",
     )
     parser.add_argument(
-        "--gate-evidence-out",
-        type=Path,
-        help="Participant source profile: write same-run retained-gate evidence.",
-    )
-    parser.add_argument(
-        "--gate-evidence-directory",
-        type=Path,
-        help="Full profile: import current-run retained-gate evidence without rerunning commands.",
-    )
-    parser.add_argument(
         "--attempt",
         help="Companion native attempt diagnostics; never semantic evidence.",
     )
@@ -111,14 +86,6 @@ def _argument_error(args: argparse.Namespace) -> str | None:
 
     if args.receipt_directory and args.profile != "full":
         return "--receipt-directory requires --profile full"
-    if args.gate_evidence_out and args.profile not in {"cxx-ci", "node-ci", "python-ci"}:
-        return "--gate-evidence-out requires cxx-ci, node-ci, or python-ci profile"
-    if args.gate_evidence_directory and args.profile != "full":
-        return "--gate-evidence-directory requires --profile full"
-    if args.gate_evidence_out and args.gate_evidence_directory:
-        return "gate evidence output and import cannot be combined"
-    if args.skip_commands and (args.gate_evidence_out or args.gate_evidence_directory):
-        return "gate evidence cannot be produced or imported with --skip-commands"
     if args.profile == "conformance":
         if not args.participant:
             return "--profile conformance requires --participant"
@@ -128,62 +95,102 @@ def _argument_error(args: argparse.Namespace) -> str | None:
             return "CXX conformance requires companion --attempt and --junit paths"
     elif args.execution_instance or args.participant:
         return "--participant and --execution-instance require --profile conformance"
-    if args.profile not in {"conformance", "full"} and args.receipt:
-        return "--receipt is supported only by conformance and full profiles"
     if args.profile != "conformance" and (args.attempt or args.junit):
         return "--attempt and --junit require --profile conformance"
     return None
 
 
+def build_report(profile: str, conformance_report: dict[str, Any]) -> dict[str, Any]:
+    """Wrap a conformance report in the stable top-level report document.
+
+    ``conformance`` takes the scoped report's own result. ``full`` passes only
+    when the repository report is complete and passing; ``repository_complete``
+    is never true for the ``conformance`` profile.
+    """
+
+    result = str(conformance_report.get("result", "fail"))
+    repository_complete = False
+    if profile == "full":
+        repository_complete = (
+            conformance_report.get("repositoryComplete") is True and result == "pass"
+        )
+        if not repository_complete:
+            result = "fail"
+    return {
+        "schemaVersion": 1,
+        "profile": profile,
+        "summary": {
+            "result": result,
+            "repository_complete": repository_complete,
+        },
+        "conformance": dict(conformance_report),
+    }
+
+
+def render_markdown(report: dict[str, Any]) -> str:
+    """Render a short human-readable summary of a report document."""
+
+    summary = report["summary"]
+    conformance = report["conformance"]
+    lines = [
+        "# Binding Compliance Report",
+        "",
+        f"- Profile: `{report['profile']}`",
+        f"- Result: **{summary['result'].upper()}**",
+        f"- Repository complete: **{'yes' if summary['repository_complete'] else 'no'}**",
+        "",
+        "## Executable Conformance",
+        "",
+        f"- Result: **{str(conformance.get('result', 'unknown')).upper()}**",
+    ]
+    for key, label in (
+        ("missingFamilies", "Missing families"),
+        ("uncoveredRows", "Uncovered parity rows"),
+    ):
+        values = conformance.get(key)
+        if isinstance(values, list) and values:
+            lines.append(f"- {label}: {', '.join(f'`{value}`' for value in values)}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def write_report_files(report: dict[str, Any], output_dir: Path) -> tuple[Path, Path]:
+    """Write the JSON and Markdown reports and return their paths.
+
+    The file names are stable: CI uploads glob ``**/binding_compliance_report.*``.
+    """
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / REPORT_JSON_NAME
+    markdown_path = output_dir / REPORT_MARKDOWN_NAME
+    json_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    markdown_path.write_text(render_markdown(report), encoding="utf-8")
+    return json_path, markdown_path
+
+
 def main(argv: list[str] | None = None) -> int:
-    """Parse CLI arguments, run the selected profile, and write reports."""
+    """Parse CLI arguments, build the selected verdict, and write reports.
+
+    Returns 0 on a passing verdict, 1 on a failing one, and 2 when receipts or
+    catalogs are invalid (argument errors exit 2 through ``argparse``).
+    """
 
     parser = build_argument_parser()
     args = parser.parse_args(argv)
-
-    repo_root = Path(args.repo_root).resolve()
-    try:
-        requirements = requirements_for_profile(args.profile)
-    except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 2
-
-    if args.list_requirements:
-        print(
-            json.dumps(
-                [
-                    {
-                        "id": requirement.id,
-                        "title": requirement.title,
-                        "surface": requirement.surface,
-                        "classification": requirement.classification,
-                        "blocking": requirement.blocking,
-                    }
-                    for requirement in requirements
-                ],
-                indent=2,
-            )
-        )
-        return 0
-
     argument_error = _argument_error(args)
     if argument_error is not None:
         parser.error(argument_error)
 
-    conformance_report = None
-    if args.profile == "full":
-        try:
+    repo_root = Path(args.repo_root).resolve()
+    try:
+        if args.profile == "full":
             receipts = tuple(Path(value) for value in args.receipt)
             if args.receipt_directory:
                 receipts += discover_repository_receipts(
                     repo_root, args.receipt_directory
                 )
             conformance_report = build_repository_report(repo_root, receipts)
-        except ConformanceCommandError as exc:
-            print(str(exc), file=sys.stderr)
-            return 2
-    elif args.profile == "conformance":
-        try:
+        else:
             conformance_report = build_conformance_report_from_receipts(
                 repo_root,
                 profile=args.profile,
@@ -193,67 +200,17 @@ def main(argv: list[str] | None = None) -> int:
                 attempt_path=Path(args.attempt) if args.attempt else None,
                 junit_path=Path(args.junit) if args.junit else None,
             )
-        except ConformanceCommandError as exc:
-            print(str(exc), file=sys.stderr)
-            return 2
+    except ConformanceCommandError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
 
-    imported_gate_results = None
-    gate_evidence_error = None
-    if args.gate_evidence_directory:
-        try:
-            run_id, run_attempt = github_run_identity()
-            imported_gate_results = load_gate_evidence(
-                repo_root,
-                args.gate_evidence_directory,
-                requirements,
-                source_revision=current_source_revision(repo_root),
-                run_id=run_id,
-                run_attempt=run_attempt,
-            )
-        except GateEvidenceError as exc:
-            # Keep a red full report after a producer failure; rerunning its
-            # missing commands here would erase the same-run evidence boundary.
-            gate_evidence_error = str(exc)
-            imported_gate_results = {}
-            print(gate_evidence_error, file=sys.stderr)
-
-    suite = ComplianceSuite(
-        repo_root=repo_root,
-        profile=args.profile,
-        requirements=requirements,
-        skip_commands=args.skip_commands,
-        fail_on_gaps=args.fail_on_gaps,
-        conformance_report=conformance_report,
-        imported_gate_results=imported_gate_results,
-    )
-    report = suite.run()
-    if gate_evidence_error is not None:
-        report["gateEvidenceError"] = gate_evidence_error
-        report["summary"]["result"] = "fail"
-        report["summary"]["repository_complete"] = False
+    report = build_report(args.profile, conformance_report)
     json_path, markdown_path = write_report_files(report, repo_root / args.output_dir)
-    if args.gate_evidence_out:
-        try:
-            destination = (
-                args.gate_evidence_out
-                if args.gate_evidence_out.is_absolute()
-                else repo_root / args.gate_evidence_out
-            )
-            write_gate_evidence(repo_root, destination, report, requirements)
-        except GateEvidenceError as exc:
-            print(str(exc), file=sys.stderr)
-            return 2
-
     summary = report["summary"]
     print(f"Binding compliance profile: {args.profile}")
     print(f"Result: {summary['result'].upper()}")
     print(f"- JSON report: {json_path}")
     print(f"- Markdown report: {markdown_path}")
-    print(
-        "Summary: passed={passed}, failed={failed}, gaps={coverage_gaps}, skipped={skipped}".format(
-            **summary
-        )
-    )
     return 0 if summary["result"] == "pass" else 1
 
 

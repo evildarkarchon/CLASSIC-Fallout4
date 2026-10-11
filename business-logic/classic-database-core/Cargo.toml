@@ -4,11 +4,11 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Pure Rust database operations for CLASSIC (no PyO3)"
+description = "Pure Rust database operations for CLASSIC"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"] # Pure Rust library only - no PyO3
+crate-type = ["rlib"] # Pure Rust library only
 
 [dependencies]
 # CLASSIC shared utilities
@@ -32,8 +32,6 @@ thiserror = { workspace = true }
 
 # Logging
 log = { workspace = true }
-
-# NO PyO3 dependency!
 
 [dev-dependencies]
 tempfile = { workspace = true }

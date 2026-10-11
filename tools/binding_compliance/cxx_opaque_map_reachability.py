@@ -5,10 +5,57 @@ import json
 import re
 from pathlib import Path
 
-try:
-    from .node_package_metadata import _tokens
-except ImportError:
-    from node_package_metadata import _tokens
+# The source tokenizer moved here from the retired Node package-metadata proof
+# (Retire, #304); this script is its last consumer until T1 deletes it.
+_TOKEN = re.compile(
+    r""""(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|[A-Za-z_]\w*|[^\s]"""
+)
+_RAW_STRING = re.compile(r'(?:br|r)(#*)"')
+
+
+def _tokens(source: str) -> list[str]:
+    """Tokenize code while keeping strings opaque and discarding nested comments."""
+    result = []
+    index = 0
+    while index < len(source):
+        if source[index].isspace():
+            index += 1
+            continue
+        if source.startswith("//", index):
+            end = source.find("\n", index)
+            index = len(source) if end < 0 else end
+            continue
+        if source.startswith("/*", index):
+            depth = 1
+            index += 2
+            while depth and index < len(source):
+                if source.startswith("/*", index):
+                    depth += 1
+                    index += 2
+                elif source.startswith("*/", index):
+                    depth -= 1
+                    index += 2
+                else:
+                    index += 1
+            if depth:
+                raise ValueError("unterminated source comment")
+            continue
+        raw = _RAW_STRING.match(source, index)
+        if raw:
+            terminator = '"' + raw[1]
+            end = source.find(terminator, raw.end())
+            if end < 0:
+                raise ValueError("unterminated raw source string")
+            result.append(source[index: end + len(terminator)])
+            index = end + len(terminator)
+            continue
+        token = _TOKEN.match(source, index)
+        if token is None:
+            raise ValueError("unsupported source token")
+        result.append(token[0])
+        index = token.end()
+    return result
+
 
 _DECLARATIONS = (
     "fn string_map_get(map: &StringMap, key: &str) -> String;",

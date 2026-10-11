@@ -16,8 +16,6 @@ SOURCE_ROOTS = (
     "cpp-bindings",
     "classic-cli",
     "classic-gui",
-    "node-bindings",
-    "python-bindings",
     "ui-applications",
 )
 SOURCE_SUFFIXES = {".rs", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".py", ".ts", ".tsx", ".js", ".mjs"}

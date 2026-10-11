@@ -34,34 +34,8 @@ onto a choice of output stream and nothing else, so shared wording reaches a pip
 single escape sequence; the TUI maps the same severities onto a terminal palette; the GUI maps them
 onto hex colours from its dark theme and turns the paths into links. All three print the same words.
 
-`classic-node` is the first surface that carries the lines without rendering anything itself. It has
-no frontend to be: it mirrors the same flattening onto napi objects and hands them to whatever a
-consumer builds. That is why it reuses the bridge's shape rather than inventing a Node-idiomatic one
-with optional payloads — a consumer reading two bindings would otherwise read the same segment two
-ways. See [`node-python-contract-map.md`](node-python-contract-map.md).
-
-The demo CLI shipped with that binding, `node-bindings/classic-node/cli/run-scan.ts`, is the fourth
-renderer and the worked example of a consumer written against the binding rather than against Rust.
-It renders identically to `classic-cli` — segments joined by single spaces, no styling, no
-capitalization rule, paths whole, severity spent entirely on the choice of output stream — which is
-what a Node frontend gets for free by reading the lines instead of writing its own.
-
-The `classic_scanlog` module of the Python adapter is the second carrying binding and the last surface to adopt the model. It
-mirrors the same flattening onto pyo3 classes, differing from Node only where the shape of the
-surface differs: Python has one execution envelope with `result` and `error` presence, so a single
-`display_lines` covers both payloads the way the bridge's does, and its five resume rejections are
-exceptions, so each carries the field beside its stable `code`.
-
-`classic-py-cli` is the fifth renderer, and the frontend that fell behind. It is where the
-raw-token bug this whole effort begins from survived after the same bug had been fixed in the TUI:
-it told a user a run `failed during formid_database_access`. It renders as the native CLI and the
-Node demo CLI do, and it gained the display-label audit it had never had — the direct reason that
-drift survived here — so it is covered by the same enforcement as the other three from now on.
-
-The Python CLI is also the one frontend that spends severity on nothing. It writes one stream of
-plain lines through an output envelope every command shares, so routing by severity would change
-that shared contract rather than this run's presentation. Mapping every severity onto plain text is
-explicitly correct, and the severity stays on the line for the day that frontend grows a use for it.
+The Node and Python bindings, which carried the same flattened lines to their own demo CLIs, are
+retired (ADR-0010, in [`docs/adr/`](../adr/)).
 
 See
 [`../implementation/scan_run_presentation_consolidation.md`](../implementation/scan_run_presentation_consolidation.md).
@@ -391,7 +365,6 @@ Two per-seam details worth knowing:
 ## Testing
 
 ```powershell
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 cargo test -p classic-scan-presentation
 ```
 

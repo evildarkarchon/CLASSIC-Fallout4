@@ -27,7 +27,7 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
 
 
 @pytest.mark.parametrize(
-    "participant", ("rust", "cxx", "node", "python", "cli", "gui", "tui")
+    "participant", ("rust", "cxx", "cli", "gui", "tui")
 )
 def test_policy_catalog_cannot_omit_a_required_participant(
         monkeypatch: pytest.MonkeyPatch, participant: str
@@ -111,8 +111,6 @@ def test_native_policy_cannot_drop_compiler_denominator(
     ("participant", "workflow"),
     (
             ("rust", "ci-rust.yml"),
-            ("node", "ci-typescript.yml"),
-            ("python", "ci-python-bindings.yml"),
             ("cxx", "ci-cpp.yml"),
     ),
 )
@@ -179,9 +177,9 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
                     "matrix cannot exclude required executions",
             ),
             (
-                    ".github/workflows/ci-python-bindings.yml",
-                    "needs: [parity-gates]",
-                    "needs: [parity-gates]\n    if: false",
+                    ".github/workflows/ci-cpp.yml",
+                    "needs: [cxx-parity-gate, corrosion-source]\n    if: ${{ !cancelled() }}",
+                    "needs: [cxx-parity-gate, corrosion-source]\n    if: false",
                     "job must run after upstream failures unless cancelled",
             ),
             (
@@ -191,9 +189,9 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
                     "cannot claim full-repository scope",
             ),
             (
-                    ".github/workflows/ci-python-bindings.yml",
-                    "- name: Upload Python Crash Log Scan Run conformance diagnostics\n        if: always()",
-                    "- name: Upload Python Crash Log Scan Run conformance diagnostics\n        if: success()",
+                    ".github/workflows/ci-rust.yml",
+                    "- name: Upload Rust Crash Log Scan Run conformance diagnostics\n        if: always()",
+                    "- name: Upload Rust Crash Log Scan Run conformance diagnostics\n        if: success()",
                     "diagnostics must upload even on failure",
             ),
             (
@@ -209,9 +207,9 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
                     "variant preflight must run after earlier failures unless cancelled",
             ),
             (
-                    ".github/workflows/ci-typescript.yml",
-                    "runtime: [bun, node]\n    env:\n      RUST_BACKTRACE: full\n    steps:\n      - uses: actions/checkout@v6",
-                    "runtime: [bun, node]\n    env:\n      RUST_BACKTRACE: full\n    steps:\n      - uses: actions/checkout@v6\n        with:\n          ref: classic-next",
+                    ".github/workflows/ci-cpp.yml",
+                    "      - uses: actions/checkout@v6\n        with:\n          submodules: recursive",
+                    "      - uses: actions/checkout@v6\n        with:\n          submodules: recursive\n          ref: classic-next",
                     "cannot replace the event source revision",
             ),
             (
@@ -265,11 +263,11 @@ def test_workflow_policy_rejects_weakened_topology(
     "condition,message",
     (
             (
-                    "if: matrix.runtime == 'node' && !cancelled()",
+                    "if: ${{ !cancelled() }}",
                     "launcher must run after earlier failures unless cancelled",
             ),
             (
-                    "if: matrix.runtime == 'node' && always()",
+                    "if: always()",
                     "diagnostics must upload even on failure",
             ),
     ),
@@ -284,7 +282,7 @@ def test_workflow_policy_rejects_conditions_with_disabled_suffix(
     workflow_root = tmp_path / ".github" / "workflows"
     workflow_root.parent.mkdir(parents=True)
     shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
-    path = workflow_root / "ci-typescript.yml"
+    path = workflow_root / "ci-rust.yml"
     source = path.read_text(encoding="utf-8")
     assert condition in source
     path.write_text(
@@ -298,13 +296,13 @@ def test_workflow_policy_rejects_conditions_with_disabled_suffix(
 @pytest.mark.parametrize(
     "needle,replacement",
     (
-            ("needs: [rust, node, python, native]", "needs: [rust, node, python]"),
+            ("needs: [rust, native]", "needs: [rust]"),
             (
                     "uses: ./.github/workflows/ci-cpp.yml",
                     "uses: owner/repo/.github/workflows/ci-cpp.yml@main",
             ),
             ("merge-multiple: false", "merge-multiple: true"),
-            ("pattern: '*conformance*'", "pattern: 'node-*'"),
+            ("pattern: '*conformance*'", "pattern: 'rust-*'"),
             ("--profile full", "--profile ci"),
             (
                     "uses: actions/download-artifact@v8",
@@ -335,68 +333,6 @@ def test_full_aggregation_cannot_lose_required_jobs_or_artifact_identity(
     assert needle in source
     path.write_text(source.replace(needle, replacement, 1), encoding="utf-8")
     with pytest.raises(WorkflowPolicyError, match="full aggregation"):
-        validate_scan_run_workflow_policy(tmp_path)
-
-
-def test_full_aggregation_requires_current_run_retained_gate_evidence(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A receipt-only download cannot certify commands run by producer jobs."""
-    required = workflow_policy._required_execution_keys(REPO_ROOT)
-    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
-    workflow_root = tmp_path / ".github" / "workflows"
-    workflow_root.parent.mkdir(parents=True)
-    shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
-    path = workflow_root / "ci-binding-compliance.yml"
-    source = path.read_text(encoding="utf-8")
-    path.write_text(
-        source.replace("pattern: '*retained-gates*'", "pattern: 'stale-*'", 1),
-        encoding="utf-8",
-    )
-
-    with pytest.raises(WorkflowPolicyError, match="retained gate evidence"):
-        validate_scan_run_workflow_policy(tmp_path)
-
-
-@pytest.mark.parametrize(
-    "workflow_name,needle,replacement",
-    (
-        (
-            "ci-cpp.yml",
-            "--gate-evidence-out tools/binding_compliance/artifacts/retained/cxx-ci/gate_evidence.json",
-            "--skip-commands",
-        ),
-        (
-            "ci-typescript.yml",
-            "name: node-runtime-retained-gates-${{ matrix.runtime }}",
-            "name: node-runtime-stale",
-        ),
-        (
-            "ci-python-bindings.yml",
-            "--gate-id python-runtime-smoke-tests",
-            "--gate-id python-bindings-rebuild",
-        ),
-    ),
-)
-def test_retained_gate_producers_cannot_lose_their_current_run_evidence(
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-        workflow_name: str,
-        needle: str,
-        replacement: str,
-) -> None:
-    """A green producer job must still execute and publish its exact catalog gates."""
-    required = workflow_policy._required_execution_keys(REPO_ROOT)
-    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
-    workflow_root = tmp_path / ".github" / "workflows"
-    workflow_root.parent.mkdir(parents=True)
-    shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
-    path = workflow_root / workflow_name
-    source = path.read_text(encoding="utf-8")
-    assert needle in source
-    path.write_text(source.replace(needle, replacement, 1), encoding="utf-8")
-
-    with pytest.raises(WorkflowPolicyError, match="retained gate"):
         validate_scan_run_workflow_policy(tmp_path)
 
 
@@ -447,7 +383,7 @@ def test_actual_workflow_upstream_guard_rejects_failed_or_absent_jobs(
     script = textwrap.dedent(step.split("        run: |\n", 1)[1])
     results = {
         participant: {"result": "success"}
-        for participant in ("rust", "node", "python", "native")
+        for participant in ("rust", "native")
     }
     if damage == "missing":
         del results["native"]
@@ -477,12 +413,12 @@ def test_receipt_producers_preserve_aggregation_checkout_layout(
         tmp_path: Path, monkeypatch: pytest.MonkeyPatch, needle: str, replacement: str
 ) -> None:
     """Absolute immutable fixture paths require the same Windows checkout layout."""
-    required = {("performance", "python", "python")}
+    required = {("performance", "rust", "rust")}
     monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
     workflow_root = tmp_path / ".github" / "workflows"
     workflow_root.parent.mkdir(parents=True)
     shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
-    path = workflow_root / "ci-python-bindings.yml"
+    path = workflow_root / "ci-rust.yml"
     source = path.read_text(encoding="utf-8")
     source = source.replace(needle, replacement)
     path.write_text(source, encoding="utf-8")

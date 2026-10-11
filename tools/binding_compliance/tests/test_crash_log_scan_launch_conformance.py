@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/crash_log_scan_launch/v1.json")
 
 
-def test_launch_requires_all_four_semantic_adapters() -> None:
-    """Every binding maps the launch crate, so none may skip its runner.
+def test_launch_requires_both_semantic_adapters() -> None:
+    """The bridge maps the launch crate, so neither semantic adapter may skip its runner.
 
     Frontends that launch through Crash Log Scan Launch join as consumers, never as semantic
     adapters; the native CLI (#289), the GUI (#288) and the TUI (#287) are among them.
@@ -36,11 +36,11 @@ def test_launch_requires_all_four_semantic_adapters() -> None:
         consumer_catalog=load_consumer_obligations(ROOT),
     )
     participants = {p.id for p in matrix.participants}
-    assert {"rust", "cxx", "node", "python"} <= participants
+    assert {"rust", "cxx"} <= participants
     assert "cli" in participants
     assert "gui" in participants
     assert "tui" in participants
-    assert participants - {"rust", "cxx", "node", "python"} <= {"cli", "gui", "tui"}
+    assert participants - {"rust", "cxx"} <= {"cli", "gui", "tui"}
     assert next(
         p for p in matrix.participants if p.id == "cxx"
     ).execution_instance_ids == ("windows-clang-cl", "windows-msvc")
@@ -66,7 +66,7 @@ def test_tui_consumer_plan_names_the_launch_obligation_without_expectations() ->
     assert all(set(item) == {"id", "scenarioIds"} for item in plan["obligations"])
 
 
-@pytest.mark.parametrize("participant", ("cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("cxx",))
 def test_pack_observations_cover_every_binding_launch_row(
         tmp_path: Path, participant: str
 ) -> None:

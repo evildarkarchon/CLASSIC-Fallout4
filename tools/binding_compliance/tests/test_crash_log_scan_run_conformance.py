@@ -50,16 +50,6 @@ PARTICIPANT_SOURCES = {
         / "tests"
         / "scan_run_conformance.rs",
     ),
-    "node": (
-        REPO_ROOT
-        / "node-bindings"
-        / "classic-node"
-        / "__test__"
-        / "scan_run_conformance_runner.ts",
-    ),
-    "python": (
-        REPO_ROOT / "python-bindings" / "tests" / "scan_run_conformance_runner.py",
-    ),
 }
 
 EXPECTED_SCENARIO_IDS = [
@@ -116,8 +106,8 @@ EXPECTED_OBSERVATION_FAMILIES = {
 """The public-seam Crash Log Scan Run v1 scenarios required by issues #193-196."""
 
 
-def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> None:
-    """Fresh Rust, Node, and Python plans share scenarios but never the oracle."""
+def test_live_pack_is_input_only_for_the_base_adapter(tmp_path: Path) -> None:
+    """A fresh Rust plan carries the scenarios but never the oracle."""
 
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
     discovered = [
@@ -178,8 +168,12 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
             shutil.rmtree(artifact_root)
 
     assert len({plan["expectationDigest"] for plan in plans.values()}) == 1
-    assert len({plan["invocation"]["id"] for plan in plans.values()}) == 3
-    assert len({plan["invocation"]["sourceIdentity"] for plan in plans.values()}) == 3
+    assert len({plan["invocation"]["id"] for plan in plans.values()}) == len(
+        PARTICIPANT_SOURCES
+    )
+    assert len(
+        {plan["invocation"]["sourceIdentity"] for plan in plans.values()}
+    ) == len(PARTICIPANT_SOURCES)
 
 
 def test_cxx_preparation_materializes_fresh_input_only_toolchain_instances(
@@ -1302,7 +1296,7 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
         assert document["enforcement"] == "blocking"
         assert document["result"] == "pass"
         assert document["repositoryComplete"] is True
-        assert len(document["receivedExecutions"]) == 10
+        assert len(document["receivedExecutions"]) == 8
         assert document["missingExecutions"] == []
         assert all(
             [scenario.id for scenario in report.scenarios]

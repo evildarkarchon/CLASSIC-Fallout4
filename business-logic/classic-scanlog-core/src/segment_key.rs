@@ -1,8 +1,8 @@
 //! Segment key constants for named segment map access.
 //!
 //! These constants prevent bare string literals at call sites and provide
-//! compile-time verification of key names across the orchestrator, settings
-//! validator, and PyO3 bindings.
+//! compile-time verification of key names across the orchestrator and the
+//! settings validator.
 
 /// Key for the crashgen settings section.
 ///

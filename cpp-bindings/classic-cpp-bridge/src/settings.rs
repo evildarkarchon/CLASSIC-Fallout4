@@ -1675,9 +1675,8 @@ fn yaml_file_description(f: ffi::YamlFile) -> String {
 
 /// Parse a setting-type token into `SettingType`.
 ///
-/// Mirrors `parse_setting_type` in `classic-python-bindings/src/classic_settings/mod.rs` 1:1:
-/// accepts `int|integer`, `bool|boolean`, `float|double`, `path`, `string|str`
-/// (case-insensitive).
+/// Accepts `int|integer`, `bool|boolean`, `float|double`, `path`, `string|str`
+/// (case-insensitive), the same token set the retired Python binding accepted.
 fn parse_setting_type_token(type_name: &str) -> Result<SettingType, String> {
     match type_name.to_lowercase().as_str() {
         "int" | "integer" => Ok(SettingType::Int),

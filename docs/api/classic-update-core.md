@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-update-core/`]
 Crate metadata:
 
 - Crate: `classic-update-core`
-- Description: `Pure Rust business logic for auto-update system (NO PyO3)`
+- Description: `Pure Rust business logic for auto-update system`
 
 This crate is CLASSIC's small async update-check layer for GitHub-hosted releases. It owns GitHub release DTOs, a reusable `GithubClient`, strict semver comparison for release tags, and the crate-specific `UpdateError` model.
 
@@ -362,7 +362,6 @@ In-repo runtime patterns:
 
 - the TUI spawns update checks with `classic_shared_core::get_runtime().spawn(...)` in [`ui-applications/classic-tui/src/app.rs:672`](../../ui-applications/classic-tui/src/app.rs#L672)
 - the C++ bridge blocks on `get_latest_release()` with the shared runtime in [`cpp-bindings/classic-cpp-bridge/src/update.rs:33`](../../cpp-bindings/classic-cpp-bridge/src/update.rs#L33)
-- the Node bindings clone the shared runtime handle and spawn async update work in [`node-bindings/classic-node/src/update.rs:220`](../../node-bindings/classic-node/src/update.rs#L220)
 
 Contributor note:
 
@@ -387,8 +386,6 @@ Related CLASSIC crates and consumers:
 - [`classic-shared-core`](classic-shared-core.md) - shared Tokio runtime policy used by callers of this crate
 - [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) - alternative version helpers with intentionally different, more lenient parsing rules
 - [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) - narrower frontend-oriented bridge over latest-release check + comparison
-- [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) - fuller binding layer preserving `GithubClient` and DTOs
-- [`python-bindings/classic-python-bindings/src/classic_update/github.rs`](../../python-bindings/classic-python-bindings/src/classic_update/github.rs) - Python wrapper over the same client model
 - [`ui-applications/classic-tui/src/app.rs`](../../ui-applications/classic-tui/src/app.rs) - direct in-repo UI consumer
 
 ---

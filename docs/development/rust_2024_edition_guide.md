@@ -216,41 +216,6 @@ pub fn load_config(path: &Path) -> Config {
 }
 ```
 
-## Integration with PyO3
-
-When writing PyO3 bindings in `-py` crates, continue using Rust 2024 patterns:
-
-```rust
-// ✅ CORRECT - PyO3 with Rust 2024 patterns
-#[pyclass]
-pub struct RustLogParser {
-    inner: Arc<LogParserCore>,
-}
-
-#[pymethods]
-impl RustLogParser {
-    #[new]
-    pub fn new() -> PyResult<Self> {
-        let inner = LogParserCore::new()
-            .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?;
-        Ok(Self {
-            inner: Arc::new(inner),
-        })
-    }
-
-    pub fn parse_log(&self, py: Python<'_>, path: String) -> PyResult<AnalysisResult> {
-        let inner = self.inner.clone();
-        py.allow_threads(|| {
-            classic_shared::get_runtime()
-                .block_on(async move {
-                    inner.parse_async(&PathBuf::from(path)).await
-                })
-                .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))
-        })
-    }
-}
-```
-
 ## Migration Checklist
 
 When migrating existing code to Rust 2024 or writing new code:

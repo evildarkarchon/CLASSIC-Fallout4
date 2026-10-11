@@ -22,16 +22,10 @@ def test_scoped_plan_projection_uses_the_same_source_denominator(
 
     pack, rows, policy = _inputs()
     monkeypatch.setitem(command.FAMILY_COVERAGE_POLICIES, "getter", policy)
-    monkeypatch.setattr(coverage, "load_source_parity_rows", lambda _: rows)
-    assert [
-               case["id"] for case in packs._semantic_scenarios(Path("."), pack, "python")
-           ] == ["one"]
+    monkeypatch.setattr(coverage, "load_source_parity_rows", lambda _: (rows[1],))
     with pytest.raises(packs.MaterializationError, match="not applicable"):
         packs._semantic_scenarios(Path("."), pack, "cxx")
-    changed = (
-        *rows,
-        replace(rows[1], obligation_id="cxx.read", runtime_operation="read"),
-    )
+    changed = rows
     monkeypatch.setattr(coverage, "load_source_parity_rows", lambda _: changed)
     assert [
                case["id"] for case in packs._semantic_scenarios(Path("."), pack, "cxx")
@@ -46,9 +40,9 @@ def test_supporting_capability_keeps_its_explicit_rust_owner() -> None:
     assert {
                p.id
                for p in derive_applicability(pack, rows, coverage_policy=policy).participants
-           } == {"rust", "python"}
+           } == {"rust", "cxx"}
     report = derive_row_coverage(pack, rows, policy, ())
-    assert {failure.obligation_id for failure in report.failures} == {"python.read"}
+    assert {failure.obligation_id for failure in report.failures} == {"cxx.read"}
     unrelated = tuple(replace(row, rust_crate="other-core") for row in rows)
     assert not derive_row_coverage(pack, unrelated, policy, ()).failures
 
@@ -66,8 +60,8 @@ def test_structural_declarations_do_not_invent_scoped_execution() -> None:
         runtime_operation=None,
         retained_analyzer_id="cxx-source-parity",
     )
-    matrix = derive_applicability(pack, (rows[0], declaration), coverage_policy=policy)
-    assert {participant.id for participant in matrix.participants} == {"rust", "python"}
+    matrix = derive_applicability(pack, (declaration,), coverage_policy=policy)
+    assert {participant.id for participant in matrix.participants} == {"rust"}
 
 
 def test_binding_only_operations_require_exact_scoped_selectors() -> None:
@@ -108,7 +102,7 @@ def test_binding_only_operations_require_exact_scoped_selectors() -> None:
 
 
 def _inputs():
-    """Represent two bindings of one aggregate owner with distinct public calls."""
+    """Represent one aggregate owner with two distinct public bridge calls."""
     pack = {
         "familyId": "getter",
         "domainOwner": {"rustCrate": "example-core"},
@@ -127,8 +121,8 @@ def _inputs():
     }
     rows = (
         SourceParityRow(
-            "python.read",
-            "python",
+            "cxx.read",
+            "cxx",
             "canonical_rust",
             "example-core",
             "Owner",
@@ -165,21 +159,17 @@ def _inputs():
 
 
 def test_scoped_family_selects_only_existing_public_operations() -> None:
-    """An unrelated CXX method cannot obligate a Python getter scenario."""
+    """An unrelated bridge method cannot obligate a getter scenario."""
     pack, rows, policy = _inputs()
-    matrix = derive_applicability(pack, rows, coverage_policy=policy)
-    assert {participant.id for participant in matrix.participants} == {"rust", "python"}
+    matrix = derive_applicability(pack, (rows[1],), coverage_policy=policy)
+    assert {participant.id for participant in matrix.participants} == {"rust"}
     report = derive_row_coverage(pack, rows, policy, ())
-    assert {failure.obligation_id for failure in report.failures} == {"python.read"}
+    assert {failure.obligation_id for failure in report.failures} == {"cxx.read"}
     # Global inventory is not rewritten or removed by narrower family selection.
-    assert {row.obligation_id for row in rows} == {"python.read", "cxx.other"}
-    new_export = replace(rows[1], obligation_id="cxx.read", runtime_operation="read")
-    expanded = derive_applicability(pack, (*rows, new_export), coverage_policy=policy)
-    assert {participant.id for participant in expanded.participants} == {
-        "rust",
-        "python",
-        "cxx",
-    }
+    assert {row.obligation_id for row in rows} == {"cxx.read", "cxx.other"}
+    new_export = replace(rows[1], obligation_id="cxx.new-read", runtime_operation="read")
+    expanded = derive_applicability(pack, (rows[1], new_export), coverage_policy=policy)
+    assert {participant.id for participant in expanded.participants} == {"rust", "cxx"}
 
 
 def test_unscoped_capability_preserves_class_wide_obligations() -> None:
@@ -188,12 +178,31 @@ def test_unscoped_capability_preserves_class_wide_obligations() -> None:
     del pack["capabilities"][0]["operationScoped"]
     assert {p.id for p in derive_applicability(pack, rows).participants} == {
         "rust",
-        "python",
         "cxx",
     }
     assert {
                f.obligation_id for f in derive_row_coverage(pack, rows, policy, ()).failures
-           } == {"python.read", "cxx.other"}
+           } == {"cxx.read", "cxx.other"}
+
+
+def test_retired_binding_scope_without_predicates_enrolls_no_row(
+        monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A binding-only scope left without predicates selects nothing; others still fail."""
+    from conformance import coverage
+
+    pack, rows, policy = _inputs()
+    empty = replace(policy, predicates=())
+    with pytest.raises(CoverageDerivationError, match="explicit.*operation"):
+        derive_applicability(pack, rows, coverage_policy=empty)
+
+    monkeypatch.setattr(coverage, "_RETIRED_BINDING_SCOPES", frozenset({"getter.read"}))
+    matrix = derive_applicability(pack, rows, coverage_policy=empty)
+    assert {participant.id for participant in matrix.participants} == {"rust"}
+    assert not derive_row_coverage(pack, rows, empty, ()).failures
+    # Without any policy the guard still refuses to guess a scope.
+    with pytest.raises(CoverageDerivationError, match="explicit.*operation"):
+        coverage.scoped_operation_predicates(pack["capabilities"][0], None)
 
 
 @pytest.mark.parametrize("operations", [None, ()])

@@ -136,35 +136,5 @@ FILE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
             ("write-text", ("created", "replaced", "failure")),
         )
         for outcome in outcomes
-    )
-    + (
-        # The Python stream wrappers are produced by FileIOCore's stream_lines
-        # methods. Their rows formerly borrowed the LogCollector carrier, which
-        # moved to classic-scanlog-core (#254); row IDs are kept. Explicit
-        # selectors keep the unrelated collection/move operations out of this
-        # file-operations credit.
-        CoveragePredicate(
-            id="read-stream-carriers",
-            capability_id="file-operations.streams",
-            action="file-operations.read-text",
-            observation_family="file-effects",
-            rust_symbols=("FileIOCore",),
-            matches=partial(_observed, "read-text", "nonempty"),
-            binding_obligation_ids=(
-                "parity:python:file_io.log_collection.PyLineStreamer",
-                "parity:python:file_io.log_collection.PyLineStreamer.__aiter__",
-                "parity:python:file_io.log_collection.PyLineStreamer.__anext__",
-                "parity:python:file_io.log_collection.PySyncLineStreamer",
-                "parity:python:file_io.log_collection.PySyncLineStreamer.__iter__",
-                "parity:python:file_io.log_collection.PySyncLineStreamer.__next__",
-            ),
-            runtime_operations=(
-                None,
-                "PyLineStreamer.__aiter__",
-                "PyLineStreamer.__anext__",
-                "PySyncLineStreamer.__iter__",
-                "PySyncLineStreamer.__next__",
-            ),
-        ),
     ),
 )

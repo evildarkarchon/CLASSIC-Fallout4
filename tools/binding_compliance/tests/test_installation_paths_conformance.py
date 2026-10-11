@@ -2,7 +2,6 @@
 
 import copy
 import json
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -54,7 +53,7 @@ def test_installation_paths_require_all_applicable_adapters():
     """Cached methods exist in every adapter, including both supported CXX instances."""
     pack = load_and_validate_pack(ROOT, PACK).document()
     matrix = derive_applicability(pack, load_source_parity_rows(ROOT))
-    assert {p.id for p in matrix.participants} == {"rust", "cxx", "node", "python"}
+    assert {p.id for p in matrix.participants} == {"rust", "cxx"}
     assert next(
         p for p in matrix.participants if p.id == "cxx"
     ).execution_instance_ids == ("windows-clang-cl", "windows-msvc")
@@ -107,7 +106,7 @@ def test_installation_fixture_rejects_discovery_fallback(tmp_path, mutation):
         validate_installation_paths_pack(document, tmp_path)
 
 
-@pytest.mark.parametrize("participant", ("rust", "cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("rust", "cxx"))
 def test_installation_receipts_reject_changed_missing_extra_and_stale_facts(
         tmp_path, participant
 ):
@@ -135,43 +134,6 @@ def test_installation_receipts_reject_changed_missing_extra_and_stale_facts(
             changed["invocation"]["id"] = "stale"
         run.receipt_path.write_text(json.dumps(changed))
         assert validate_prepared_run(pack, run, coverage_policy=POLICY).failures
-
-
-@pytest.mark.parametrize("participant", ("node", "python"))
-def test_installation_row_coverage_does_not_credit_unexecuted_methods(
-        tmp_path, participant
-):
-    """Current observed methods earn coverage; future methods cannot borrow their facts."""
-    pack, run, _ = prepare_receipt_case(
-        ROOT, tmp_path, PACK, participant, runner_id="installation-coverage-test"
-    )
-    report = validate_prepared_run(pack, run, coverage_policy=POLICY)
-    rows = load_source_parity_rows(ROOT)
-    arguments = {
-        "scope_participant_id": participant,
-        "retained_analyzers": load_retained_analyzer_kinds(ROOT),
-    }
-    coverage = derive_row_coverage(pack.document(), rows, POLICY, [report], **arguments)
-    assert not coverage.failures
-    parent = next(
-        row
-        for row in rows
-        if row.participant_id == participant and row.rust_symbol == "GamePathFinder"
-    )
-    future = replace(
-        parent,
-        obligation_id="parity:" + participant + ":future-finder",
-        runtime_operation="future_discovery_method",
-    )
-    # A scoped family excludes unimplemented siblings; the full owner inventory
-    # must still require independent proof for every newly exported method.
-    full_owner = pack.document()
-    for capability in full_owner["capabilities"]:
-        capability.pop("operationScoped", None)
-    failures = derive_row_coverage(
-        full_owner, (*rows, future), POLICY, [report], **arguments
-    ).failures
-    assert future.obligation_id in {failure.obligation_id for failure in failures}
 
 
 def _locate_document(tmp_path, mutate):
@@ -236,7 +198,7 @@ def test_locate_fixture_rejects_inputs_outside_the_owned_tree(tmp_path, mutation
         validate_installation_paths_pack(document, tmp_path)
 
 
-@pytest.mark.parametrize("participant", ("rust", "cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("rust", "cxx"))
 def test_locate_receipts_reject_a_later_candidate_or_an_invented_fallback(
         tmp_path, participant
 ):

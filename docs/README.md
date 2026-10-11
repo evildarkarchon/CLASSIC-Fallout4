@@ -10,7 +10,6 @@ This documentation set reflects the current **C++ + Rust** product architecture.
 - **Shared/runtime crates (active):** [`foundation/`](../foundation)
 - **Core/business logic (active):** [`business-logic/`](../business-logic)
 - **C++ bridge (active):** [`cpp-bindings/classic-cpp-bridge/`](../cpp-bindings/classic-cpp-bridge)
-- **Maintained integration bindings:** [`python-bindings/`](../python-bindings) and [`node-bindings/classic-node/`](../node-bindings/classic-node)
 - **Rust TUI app (active):** [`ui-applications/classic-tui/`](../ui-applications/classic-tui)
 
 For policy-level guidance, see [`AGENTS.md`](../AGENTS.md).
@@ -23,7 +22,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`api/README.md`](api/README.md) - contributor-facing Rust API docs index
 - [`api/QUICK_START.md`](api/QUICK_START.md) — contributor quick start for current C++ + Rust workflows
 - [`architecture/ARCHITECTURE_OVERVIEW.md`](architecture/ARCHITECTURE_OVERVIEW.md) — architecture map and runtime boundaries
-- [`development/RUST_INTEGRATION_GUIDE.md`](development/RUST_INTEGRATION_GUIDE.md) — Rust integration surfaces (C++, Node, Python bindings)
+- [`development/RUST_INTEGRATION_GUIDE.md`](development/RUST_INTEGRATION_GUIDE.md) — Rust integration surfaces (the C++ bridge)
 - [`testing/TESTING_GUIDE_INDEX.md`](testing/TESTING_GUIDE_INDEX.md) — local/CI testing matrix and commands
 - [`RUST_DOCUMENTATION_INDEX.md`](RUST_DOCUMENTATION_INDEX.md) — Rust-focused index for active workspace docs
 - [`archive/README.md`](archive/README.md) — historical records only; never live guidance
@@ -65,30 +64,17 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
-### Node bindings (when touching NAPI surface)
+### Repository tooling
+
+The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](adr/)). Repository tooling under `tools/` runs from the tools-only uv project:
 
 ```powershell
-# From node-bindings/classic-node
-bun install
-bun run build
-bun run cli -- --version
-bun run parity:gate
-bun run test:bun
-bun run test:node
+uv sync --project tools
+uv run --project tools python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+uv run --project tools python -m pytest tools/user_settings_ownership/tests -q
 ```
 
-### Python bindings (when touching PyO3 surface)
-
-```powershell
-# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
-# `--inexact` is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
-# Repository tooling under tools/ (for example schema_version_gate.py) uses the tools-only uv project (uv sync --project tools).
-uv sync --project python-bindings --inexact
-uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
-uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --project python-bindings python -m pytest python-bindings/tests -q
-```
+The checks CI runs as direct steps are listed in [Repository gates](development/repository-gates.md).
 
 ---
 
@@ -96,8 +82,7 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 
 - [`ci-cpp.yml`](../.github/workflows/ci-cpp.yml) — C++ CLI/GUI build + test on Windows for MSVC and clang-cl
 - [`ci-rust.yml`](../.github/workflows/ci-rust.yml) — Rust format/lint/build/test
-- [`ci-typescript.yml`](../.github/workflows/ci-typescript.yml) — Node parity gates + Bun/Node runtime tests
-- [`ci-python-bindings.yml`](../.github/workflows/ci-python-bindings.yml) — Python parity gates + binding smoke tests
+- [`ci-binding-compliance.yml`](../.github/workflows/ci-binding-compliance.yml) — umbrella over `ci-rust.yml` and `ci-cpp.yml` plus the conformance-only `full` verdict
 - [`benchmarks.yml`](../.github/workflows/benchmarks.yml) — benchmark regression detection
 
 ---
@@ -105,8 +90,7 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 ## Documentation Scope Notes
 
 1. Treat C++ frontends + Rust core as the default contributor path.
-2. Treat [`python-bindings/`](../python-bindings) and [`node-bindings/classic-node/`](../node-bindings/classic-node) as maintained integration surfaces where applicable.
-3. Treat everything under [`archive/`](archive/README.md) as historical record, not live guidance. Do not follow its commands or paths.
+2. Treat everything under [`archive/`](archive/README.md) as historical record, not live guidance. Do not follow its commands or paths.
 
 > Migration note: if you encounter older `ClassicLib-rs/...` instructions, translate them through the [Workspace Migration Matrix](workspace-migration-matrix.md) instead of treating them as live workspace guidance.
 

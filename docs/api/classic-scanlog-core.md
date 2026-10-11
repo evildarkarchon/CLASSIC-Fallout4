@@ -751,11 +751,8 @@ recovery-required result as terminal and never settle it. CXX exposes
 `scan_run_contract_execution_take_pending_recovery`,
 `scan_run_pending_recovery_prompt`,
 `scan_run_pending_recovery_cancellation_requested`, and a synchronous
-`scan_run_pending_recovery_settle` (no callback crosses the bridge). Node exposes
-`JsScanRunSuccess.pendingRecovery` and `scanRunSettle`; Python exposes
-`ScanRunExecution.pending_recovery` and `scan_run_settle`. See
-[classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md)
-and [node-python-contract-map.md](node-python-contract-map.md).
+`scan_run_pending_recovery_settle` (no callback crosses the bridge). See
+[classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md).
 
 The TUI depends on this crate directly and settles (#279). On `ScanFinished` it
 takes the pending recovery with `classic_scan_presentation::take_pending_recovery`

@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-xse-core/`](..
 Crate metadata:
 
 - Crate: `classic-xse-core`
-- Description: `Script Extender (XSE) utilities for CLASSIC (no PyO3)`
+- Description: `Script Extender (XSE) utilities for CLASSIC`
 
 This crate is the Rust-side XSE module for CLASSIC. It identifies which script extender a game uses, resolves the XSE Folder used for Crash Log collection, checks whether the expected loader exists in a game directory, and tries to derive an XSE version from sibling DLL filenames.
 
@@ -293,8 +293,6 @@ Important direct dependencies:
 Related CLASSIC crates and consumers:
 
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes XSE helpers, including XSE Folder resolution, to C++ callers in [`cpp-bindings/classic-cpp-bridge/src/xse.rs`](../../cpp-bindings/classic-cpp-bridge/src/xse.rs)
-- [`classic-node`](../../node-bindings/classic-node) - wraps the same core APIs for JavaScript in [`node-bindings/classic-node/src/xse.rs`](../../node-bindings/classic-node/src/xse.rs)
-- [`classic_xse` adapter module](../../python-bindings/classic-python-bindings/src/classic_xse/) - wraps the same core APIs for Python in [`python-bindings/classic-python-bindings/src/classic_xse/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_xse/mod.rs)
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - adjacent higher-level scan/setup crate; current source does not directly call `classic-xse-core`, but both participate in setup-time XSE-related workflows
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - upstream source of expected XSE metadata for other layers, even though this crate does not query it directly today
 

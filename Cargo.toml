@@ -2,11 +2,11 @@
 members = [
     # Foundation
     # The first two are workspace-internal: no binding surface, absent from the
-    # parity matrix. `classic-shared-core` is not — it is tracked by both gates.
+    # parity matrix. `classic-shared-core` is not — it is tracked by the CXX parity gate.
     "foundation/classic-operation-context",
     "foundation/classic-vocabulary",
     "foundation/classic-shared-core",
-    # Business Logic (Pure Rust - no PyO3)
+    # Business Logic (Pure Rust)
     # Workspace-internal: no binding surface, absent from the parity matrix.
     "business-logic/classic-durable-publication",
     "business-logic/classic-database-core",
@@ -30,12 +30,6 @@ members = [
     "business-logic/classic-update-core",
     # Version Registry (Game version detection and matching)
     "business-logic/classic-version-registry-core",
-    # Python Bindings (PyO3 adapters)
-    # One PyO3 adapter crate: a single native extension and wheel behind
-    # the 18 classic_* direct-import facades (#259).
-    "python-bindings/classic-python-bindings",
-    # Node.js/Bun Bindings (NAPI-RS adapters)
-    "node-bindings/classic-node",
     # UI Applications
     "ui-applications/classic-tui",
     # C++ Bindings (CXX FFI adapters)
@@ -44,10 +38,6 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-# PyO3 bindings
-pyo3 = { version = "0.29.3", features = ["abi3-py312"] }
-pyo3-async-runtimes = { version = "0.29.0" }
-
 # Async runtime (ONE RUNTIME RULE)
 tokio = { version = "1.52.3", features = ["full"] }
 futures = "0.3.32"

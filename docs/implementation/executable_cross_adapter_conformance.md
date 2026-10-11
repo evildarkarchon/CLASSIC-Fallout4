@@ -31,7 +31,7 @@ The first vertical slice is Crash Log Scan Run and includes real CXX execution. 
 
 In scope:
 
-- Rust, CXX, Node, and Python public binding semantics.
+- Rust and CXX public binding semantics (the Node and Python participants retired with ADR-0010).
 - CLI, GUI, and TUI consumption of binding-owned facts and Rust-owned Display Content.
 - Shared fixtures, deterministic durable effects, structured failures, and observer events.
 - Source-derived parity inventories and row-to-capability coverage.
@@ -52,9 +52,9 @@ Out of scope:
 
 | Role | Participants | Proves | Does not prove |
 | --- | --- | --- | --- |
-| Semantic adapter | Rust, CXX, Node, Python | Public operations produce the expected normalized domain facts and effects | Declaration completeness, erased types, absence of unused exports |
+| Semantic adapter | Rust, CXX | Public operations produce the expected normalized domain facts and effects | Declaration completeness, erased types, absence of unused exports |
 | Consumer | CLI, GUI, TUI | Facts and Display Content cross the frontend seam with required routing, ordering, interaction, and layout behavior | Binding parity or identical presentation |
-| Structural analyzer | Rust/CXX/Node/Python surface parsers, declaration/stub validators | Public items, signatures, variants, declarations, and stubs have the required shape | Runtime behavior |
+| Structural analyzer | Rust/CXX surface parsers | Public items, signatures, variants, declarations, and stubs have the required shape | Runtime behavior |
 | Negative analyzer | Forbidden-export and ownership audits | Removed APIs and adapter-local duplicated policy/content remain absent | Positive runtime semantics |
 
 There is no manual-evidence role. A test name, file path, marker string, selector hash, owner-module label, or `runtime_verified` claim can help locate diagnostics but cannot grant coverage.
@@ -275,12 +275,12 @@ After normalization, object keys and values compare exactly. Arrays compare in o
 The coverage engine starts from each scenario's canonical Rust capability and expands it through current source-derived parity artifacts:
 
 1. Resolve the canonical Rust crate and symbol set.
-2. Select the CXX, Node, and Python parity rows mapped to those symbols.
+2. Select the CXX parity rows mapped to those symbols.
 3. Include returned/input DTOs, fields, enum variants, and accessors that the public operation exposes through the declared observation families.
 4. Require a completed, matching receipt for every applicable semantic adapter.
 5. Derive observed fact IDs by evaluating family-owned predicates over the validated action and normalized observation, then credit only rows associated with predicates that passed. The receipt cannot self-attest coverage.
 
-Node and Python baselines already carry Rust crate/symbol metadata. The CXX parity artifact must be enriched with canonical `ownerModule`, `rustCrate`, and `coreRustSymbol` metadata rather than claiming that a bridge declaration alone is the core mapping. Mechanically derived counts, identifiers, and hashes are generated diagnostics, never hand-maintained evidence.
+The CXX parity artifact must be enriched with canonical `ownerModule`, `rustCrate`, and `coreRustSymbol` metadata rather than claiming that a bridge declaration alone is the core mapping. Mechanically derived counts, identifiers, and hashes are generated diagnostics, never hand-maintained evidence.
 
 Every tracked row must end in exactly one honest evidence classification:
 
@@ -288,7 +288,7 @@ Every tracked row must end in exactly one honest evidence classification:
 - irreducibly structural or negative through a named retained analyzer; or
 - excluded by a documented parity-policy exception.
 
-There is no `mapped_only`, unclassified, or manual-acknowledgement success bucket. Existing Node binding-only and Python binding-only rows remain explicitly classified; they are not silently relabeled as matched Rust capabilities.
+There is no `mapped_only`, unclassified, or manual-acknowledgement success bucket.
 
 ### New-row rule
 
@@ -497,7 +497,7 @@ Deliverables:
 
 Equivalence gate:
 
-- Every publicly executable required scenario produces Rust, Node, Python, MSVC CXX, and clang-cl CXX execution receipts plus the applicable consumer receipts. These roll up to four semantic participants; retained internal-only fault mappings appear separately and grant no semantic-adapter coverage.
+- Every publicly executable required scenario produces Rust, MSVC CXX, and clang-cl CXX execution receipts plus the applicable consumer receipts. These roll up to two semantic participants; retained internal-only fault mappings appear separately and grant no semantic-adapter coverage.
 - Reviewed variant evidence targets exactly partition the source-derived inventory. Executable variants name required scenario facts; irreducibly structural values name retained analyzers and grant no semantic receipt credit.
 - Run Status, discovery, setup, Installed YAML Data, per-log outcomes, ordered events, Display Content, durable artifacts, recovery, reset, all five named cancellation boundaries, replay, abandonment, observer failure, and publicly reachable structured failures have equal or stronger executable coverage.
 - Fault injection that remains internal is explicitly retained and cannot be counted as public CXX execution.
@@ -571,9 +571,7 @@ Final exit gate:
 | Node/Python runtime registry claims and test pointers | Delete surface by surface | Every selected parity row tied to an executed matching receipt |
 | Selector counts and hashes | Generate only | Derived from current source mappings and receipts |
 | CXX source parity gate/baseline | Retain | Continues to catch source/ABI/export drift alongside runtime receipts |
-| Node/Python source parity contracts | Retain | Continue to catch public surface/signature drift |
-| Node declarations and TypeScript negative type tests | Retain | Runtime cannot prove erased types |
-| Python stubs/type validation | Retain | Runtime cannot prove annotation/type surface |
+| Node/Python source parity contracts, declarations, type tests, and stubs | Deleted with the bindings (Retire, #304) | None; the surfaces no longer exist |
 | Forbidden-export audit and runtime namespace probes | Retain narrowly | Source/declaration scans prove unused or hidden API absence; loadable bindings also prove removed names are not generated or re-exported at runtime |
 | Rust Vocabulary owner conformance | Retain | Canonical token/label ownership invariant |
 | Positive per-adapter label/segment mapping copies | Delete when covered | Predicate-derived receipt coverage exercises every source-derived token, segment kind, severity, unknown behavior, and the exact `kind + text + path + count` carrier including empty unused fields |
@@ -600,8 +598,6 @@ Required workflow placement:
 
 - Rust receipts: the existing Rust workspace test workflow.
 - CXX receipts: the existing `ci-cpp.yml` CLI test matrix for MSVC and clang-cl, through `build_cli.ps1` only.
-- Node receipts: the existing Bun/Node runtime workflow after the native package is built.
-- Python receipts: the existing Python binding workflow after `uv sync --inexact` and `rebuild_rust.ps1 -Target python`.
 - CLI consumer receipts: the CLI wrapper test/integration workflow.
 - GUI consumer receipts: the GUI wrapper test workflow; never raw CTest.
 - TUI consumer receipts: the existing Cargo test workflow.
@@ -620,19 +616,16 @@ Issue #205 adds blocking semantic receipts for `crash-suspect`,
 lifecycle while retaining all their previous registry and focused test
 evidence. The [focused semantic equivalence map](semantic_conformance_equivalence.md)
 records their fixture sources and distinct observations. These families have
-four semantic adapters and both CXX compiler instances; they add no frontend
+two semantic adapters and both CXX compiler instances; they add no frontend
 consumer obligations.
 
 ```powershell
 python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant rust
-python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant node
-uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant python
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-suspect -Compiler msvc
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-suspect -Compiler clang-cl
 ```
 
-Repeat with each family ID above. Build the Node addon and synchronize/rebuild
-the Python environment as described below before launching those adapters.
+Repeat with each family ID above.
 
 Commands are run from the repository root unless a working directory is stated. The new `conformance`, `participant`, `execution-instance`, receipt, JUnit, and attempt arguments shown here are part of the implementation contract; adapter-specific launchers may add private diagnostic options without changing them.
 
@@ -641,10 +634,9 @@ Tooling and source compliance:
 ```powershell
 uv sync --project tools
 uv run --project tools python -m pytest tools/binding_compliance/tests -q
-python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
 python tools/cxx_api_parity/check_parity_gate.py --repo-root .
-python tools/node_api_parity/check_parity_gate.py --repo-root .
-python tools/python_api_parity/check_parity_gate.py --repo-root .
+python tools/user_settings_ownership/check.py --repo-root .
+python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
 ```
 
 CXX conformance uses its private adapter launcher, which may invoke native tests only through the approved CLI wrapper. Frontend validation continues to use the repository wrappers:
@@ -662,41 +654,18 @@ python tools/binding_compliance/run_scan_run_consumer_conformance.py --participa
 
 The CXX launcher prepares the absolute run-plan/output paths and always performs the instance-scoped validation described in [CXX and CLI test-host design](#cxx-and-cli-test-host-design). Invoking the registered CTest without that launcher-provided state only produces a visible skip and grants no evidence.
 
-Node runtime validation, from `node-bindings/classic-node/`:
-
-```powershell
-bun run parity:gate:ci
-bun run test:types
-bun run test:bun
-bun run test:node
-```
-
-Python runtime validation follows the repository-owned environment sequence:
-
-```powershell
-uv sync --project python-bindings --inexact
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
-uv run --project python-bindings python validate_stubs.py `
-    --rust-dir . `
-    --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json `
-    --json-out python-bindings/parity-artifacts/stub_validation_report.json `
-    --fail-on-warnings
-uv run --project python-bindings python -m pytest python-bindings/tests -q
-```
-
-Focused Rust pack tests run through their owning Cargo packages. Workspace-wide Cargo commands that touch PyO3 set `PYO3_PYTHON` first as required by repository policy.
+Focused Rust pack tests run through their owning Cargo packages.
 
 ## Completion criteria
 
 The architecture is complete only when all of the following are true:
 
-1. Every runtime-verifiable CXX, Node, and Python parity row has a passing executed receipt, Rust passes the same applicable semantic scenarios, and both required CXX execution instances pass.
+1. Every runtime-verifiable CXX parity row has a passing executed receipt, Rust passes the same applicable semantic scenarios, and both required CXX execution instances pass.
 2. Every non-runtime row has one named retained structural/negative analyzer or documented policy exception; there is no manual third bucket.
-3. Crash Log Scan Run has four-adapter executable coverage for every agreed observation family, both CXX toolchain instances, and separate executable CLI/GUI/TUI consumer coverage.
+3. Crash Log Scan Run has semantic-adapter executable coverage for every agreed observation family, both CXX toolchain instances, and separate executable CLI/GUI/TUI consumer coverage.
 4. CXX executes through the approved CLI wrapper in the Windows MSVC and clang-cl matrix; source parity alone cannot satisfy runtime coverage.
 5. Mutation tests prove that a new public row, new enum variant, missing participant, skipped scenario, stale receipt, changed adapter observation, and extra observation fail closed; changing Rust output alone cannot rewrite the tracked expectation and therefore fails comparison.
-6. Structural surface gates, declaration/stub checks, type-level negatives, forbidden exports, Vocabulary owner invariants, and negative Display Content ownership audits remain green without reduced scope.
+6. Structural surface gates, forbidden exports, Vocabulary owner invariants, and negative Display Content ownership audits remain green without reduced scope.
 7. The redundant acknowledgement, marker, and registry evidence listed in the migration ledger is deleted only after its replacement becomes blocking.
 8. Adding one scenario or observation changes the shared pack once and automatically obligates every applicable adapter.
 9. Current API and contributor documentation names the new canonical commands only after their implementation is blocking.
@@ -706,7 +675,7 @@ The architecture is complete only when all of the following are true:
 
 Do not update current API pages to claim executable coverage before it is blocking. Update them in the implementation changes that make each claim true:
 
-- `docs/api/binding-compliance-suite.md` — profiles, receipts, failure kinds, and removal of the CXX runtime gap.
+- `docs/development/repository-gates.md` — the conformance-only `full` verdict and the interim direct gates (the binding compliance suite page retired with the Python and Node bindings).
 - `docs/api/binding-parity-overview.md` — capability/scenario coverage and participant roles.
 - `docs/api/binding-parity-policy.md` — same-change executable obligation and narrow applicability exceptions.
 - `docs/api/cxx-parity-gate.md` — distinction between bridge source parity and native CXX semantic conformance.

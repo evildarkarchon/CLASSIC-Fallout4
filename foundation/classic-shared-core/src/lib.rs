@@ -7,8 +7,8 @@
 //!
 //! # Architecture
 //!
-//! This is the **-core** layer containing pure Rust business logic with NO PyO3 dependencies.
-//! Python bindings are provided separately by the `classic-python-bindings` adapter crate.
+//! This is the **-core** layer containing pure Rust business logic with no
+//! binding-framework dependencies. The C++ bridge is a separate adapter crate.
 //!
 //! # The ONE RUNTIME RULE
 //!

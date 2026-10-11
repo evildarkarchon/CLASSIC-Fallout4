@@ -177,7 +177,7 @@ def test_config_fact_limits_credit_to_observed_api() -> None:
         assert not predicate.covers_runtime_operation("yaml_data_set_value")
 
 
-@pytest.mark.parametrize("participant", ("cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("cxx",))
 def test_config_receipt_lifecycle_fails_closed(
         tmp_path: Path, participant: str
 ) -> None:

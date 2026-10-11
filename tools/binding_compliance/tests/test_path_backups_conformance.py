@@ -51,33 +51,6 @@ def test_backup_receipt_requires_each_lifecycle_field(tmp_path):
 _MOVED_VERSION_BACKUP_ROWS = {
     "parity:cxx:12499068ea3118fb": ("create_backup", "backup_create_timestamped"),
     "parity:cxx:31c8949e2bfdacaf": ("list_versions", "backup_list_existing"),
-    "parity:node:aux-phase4a-backup-manager": ("VersionBackupManager", None),
-    "parity:node:version-registry-promote-xse-version": ("XseVersion", None),
-    "parity:python:path.lib.BackupManager": ("VersionBackupManager", None),
-    "parity:python:path.lib.BackupManager.__init__": (
-        "VersionBackupManager",
-        "__init__",
-    ),
-    "parity:python:path.lib.BackupManager.create_backup": (
-        "VersionBackupManager",
-        "create_backup",
-    ),
-    "parity:python:path.lib.BackupManager.extract_version_from_xse_log": (
-        "VersionBackupManager",
-        "extract_version_from_xse_log",
-    ),
-    "parity:python:path.lib.BackupManager.get_version_path": (
-        "VersionBackupManager",
-        "get_version_path",
-    ),
-    "parity:python:path.lib.BackupManager.list_versions": (
-        "VersionBackupManager",
-        "list_versions",
-    ),
-    "parity:python:path.lib.XseVersion": ("XseVersion", None),
-    "parity:python:path.lib.XseVersion.__init__": ("XseVersion", "__init__"),
-    "parity:python:path.lib.XseVersion.full_version": ("XseVersion", "full_version"),
-    "parity:python:path.lib.XseVersion.sanitized": ("XseVersion", "sanitized"),
 }
 
 
@@ -108,20 +81,6 @@ def test_version_backup_rows_name_resource_core_and_keep_operation_identity():
     ]
 
 
-def test_version_backup_rows_keep_executable_predicate_candidates():
-    """Every moved binding row still finds its path-backups predicate."""
-    from retirement_readiness import candidate_predicates
-
-    pack = load_and_validate_pack(
-        ROOT, Path("tests/conformance/packs/path_backups/v1.json")
-    ).document()
-    policy = FAMILY_COVERAGE_POLICIES["path-backups"]
-    assert pack["domainOwner"]["rustCrate"] == "classic-resource-core"
-    rows = _rows()
-    for obligation in _MOVED_VERSION_BACKUP_ROWS:
-        assert candidate_predicates(rows[obligation], pack, policy), obligation
-
-
 def test_two_backup_operations_stay_independently_identifiable():
     """The version-labelled and game-target backups never share a Rust owner symbol.
 
@@ -150,9 +109,3 @@ def test_two_backup_operations_stay_independently_identifiable():
     assert "VersionBackupManager" in version_types
     assert "BackupManager" in game_target_types
     assert not version_types & game_target_types
-    rows = _rows()
-    for obligation in (
-        "parity:node:aux-phase4a-js-backup-manager",
-        "parity:python:file_io.core.BackupManager@rust",
-    ):
-        assert rows[obligation].rust_symbol in {"BackupManager", "BackupManager@rust"}

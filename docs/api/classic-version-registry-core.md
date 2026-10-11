@@ -36,7 +36,7 @@ Do not use this crate for:
 - owning or creating a Tokio runtime
 - exposing binding-specific wrapper types
 
-Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -401,9 +401,7 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 - [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - YAML loading and extraction (`YamlOperations`) used during registry initialization (historical note: formerly reached through `classic-settings-core`, which absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1 and retired in issue #257)
 - [`classic-config-core`](../../business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
-- [`classic-node`](../../node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
-- [`classic_version_registry` adapter module](../../python-bindings/classic-python-bindings/src/classic_version_registry/) - maintained Python-facing integration layer for registry lookups and version metadata
 
 In practice, this crate sits upstream of config-building and scanlog-analysis decisions.
 

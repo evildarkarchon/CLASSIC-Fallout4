@@ -93,17 +93,12 @@ def test_goldens_remain_independent_and_all_adapters_are_blocking() -> None:
         assert report["byteLength"] == len(oracle.read_bytes())
     assert document["consumerObligations"] == []
     applicability = derive_applicability(document, load_source_parity_rows(ROOT))
-    assert {p.id for p in applicability.participants} == {
-        "rust",
-        "cxx",
-        "node",
-        "python",
-    }
+    assert {p.id for p in applicability.participants} == {"rust", "cxx"}
     assert enforcement_for_family("autoscan-report") == "blocking"
     assert "autoscan-report" in FAMILY_COVERAGE_POLICIES
 
 
-@pytest.mark.parametrize("participant", ["rust", "cxx", "node", "python"])
+@pytest.mark.parametrize("participant", ["rust", "cxx"])
 def test_receipts_reject_byte_display_effect_and_execution_mutations(
         tmp_path: Path, participant: str
 ) -> None:

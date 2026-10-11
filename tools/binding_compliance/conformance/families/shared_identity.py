@@ -10,10 +10,6 @@ from ..coverage import CoveragePredicate, FamilyCoveragePolicy
 GAME_ROWS = (
     "parity:cxx:d04a85fb7225176b",
     "parity:cxx:e5c87d8b488cc983",
-    "parity:node:aux-phase4c-js-game-id",
-    "parity:node:aux-phase4c-get-all-game-ids",
-    "parity:python:shared.lib.GameId",
-    "parity:python:shared.lib.GameId.as_str",
 )
 
 

@@ -104,27 +104,10 @@ def test_moved_version_rows_name_shared_core_and_keep_operation_identity():
     rows = {row.obligation_id: row for row in load_source_parity_rows(ROOT)}
     moved = {
         "parity:cxx:b2ef7e82ec676f1a": "extract_pe_version_string",
-        "parity:node:version-pe-extract": "extract_pe_version",
-        "parity:node:version-pe-is-valid-path": "is_valid_pe_path",
-        "parity:node:version-registry-promote-parse-version": "parse_version",
-        "parity:python:version.lib.is_valid_pe_path": "is_valid_pe_path",
-        "parity:python:version.lib.extract_pe_version": "extract_pe_version",
-        "parity:python:version.lib.compare_versions": "compare_versions",
     }
     for obligation, operation in moved.items():
         row = rows[obligation]
         assert row.rust_crate == "classic-shared-core", obligation
-        assert row.runtime_operation == operation, obligation
-    known = {
-        "parity:node:version-registry-promote-is-known-fallout4-version": (
-            "is_known_fallout4_version"
-        ),
-        "parity:python:version.lib.is_known_fallout4_version": "is_known_fallout4_version",
-        "parity:python:version.lib.is_known_f4se_version": "is_known_f4se_version",
-    }
-    for obligation, operation in known.items():
-        row = rows[obligation]
-        assert row.rust_crate == "classic-version-registry-core", obligation
         assert row.runtime_operation == operation, obligation
     # xse no longer re-exports the loose helpers, so no row may claim it does.
     assert not [
@@ -145,26 +128,12 @@ def test_version_rows_keep_predicate_candidates_across_owners():
     rows silently lose their runtime credit (#243, #244).
     """
     from conformance.coverage import load_source_parity_rows
-    from retirement_readiness import candidate_predicates
+    from selector_test_support import candidate_predicates
 
     rows = {row.obligation_id: row for row in load_source_parity_rows(ROOT)}
+    # Only the CXX row survives; the Python and Node rows retired with them.
     expected = {
-        "version-extraction": (
-            "parity:node:version-registry-promote-extract-version-from-filename",
-            "parity:node:version-registry-promote-is-known-fallout4-version",
-            "parity:python:version.lib.extract_all_versions",
-            "parity:python:version.lib.is_known_fallout4_version",
-        ),
-        "version-f4se": ("parity:python:version.lib.is_known_f4se_version",),
-        "version-pe": (
-            "parity:cxx:b2ef7e82ec676f1a",
-            "parity:node:version-pe-extract",
-            "parity:python:version.lib.extract_pe_version",
-        ),
-        "version-pe-path": (
-            "parity:node:version-pe-is-valid-path",
-            "parity:python:version.lib.is_valid_pe_path",
-        ),
+        "version-pe": ("parity:cxx:b2ef7e82ec676f1a",),
     }
     for family, obligations in expected.items():
         pack = json.loads(

@@ -22,21 +22,11 @@ def copy_source_inventory(repo_root: Path, destination: Path) -> None:
     Native binaries and virtual environments are excluded. Tests still mutate
     their own copies, so source-spoof and future-export checks remain isolated.
     """
-    files = {Path("Cargo.toml"), Path("cpp-bindings/classic-cpp-bridge/build.rs")}
-    files.update(
-        Path(f"docs/implementation/{binding}_api_parity/baseline/parity_contract.json")
-        for binding in ("cxx", "node", "python")
-    )
-    files.update(
-        Path("node-bindings/classic-node") / name
-        for name in ("Cargo.toml", "index.d.ts", "src/lib.rs")
-    )
-    for base in ("python-bindings", "foundation"):
-        for crate in (repo_root / base).glob("classic-*-py"):
-            files.update(path.relative_to(repo_root) for path in crate.glob("*.pyi"))
-            files.update(
-                path.relative_to(repo_root) for path in (crate / "src").rglob("*.rs")
-            )
+    files = {
+        Path("Cargo.toml"),
+        Path("cpp-bindings/classic-cpp-bridge/build.rs"),
+        Path("docs/implementation/cxx_api_parity/baseline/parity_contract.json"),
+    }
     files.update(
         path.relative_to(repo_root)
         for path in (repo_root / "cpp-bindings/classic-cpp-bridge/src").rglob("*.rs")

@@ -1,7 +1,7 @@
-//! Error handling framework for CLASSIC Rust extensions (Pure Rust - No PyO3)
+//! Error handling framework for CLASSIC Rust crates (Pure Rust)
 //!
 //! This module provides a comprehensive error handling system for Rust code.
-//! Python exception conversion is handled in the `classic-python-bindings` adapter crate (`src/support`).
+//! Adapter crates (the C++ bridge) convert these errors at their own boundary.
 //!
 //! # Overview
 //!

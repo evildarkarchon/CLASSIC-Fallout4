@@ -52,9 +52,9 @@ def _pack(family: str) -> dict:
 @pytest.mark.parametrize(
     "family,participants",
     [
-        ("settings-load", {"rust", "cxx", "node", "python"}),
-        ("settings-yaml", {"rust", "cxx", "node", "python"}),
-        ("settings-yaml-batch", {"rust", "node"}),
+        ("settings-load", {"rust", "cxx"}),
+        ("settings-yaml", {"rust", "cxx"}),
+        ("settings-yaml-batch", {"rust"}),
     ],
 )
 def test_settings_load_receipts_fail_closed_at_public_coverage_seam(

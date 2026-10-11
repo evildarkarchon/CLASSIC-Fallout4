@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-database-core/
 Crate metadata:
 
 - Crate: `classic-database-core`
-- Description: `Pure Rust database operations for CLASSIC (no PyO3)`
+- Description: `Pure Rust database operations for CLASSIC`
 
 This crate is the Rust-side FormID database access layer for CLASSIC. It manages SQLite connection pools, cached lookup results, and multi-database query flow for consumers that need entry text for `(formid, plugin)` pairs.
 
@@ -33,7 +33,7 @@ Do not use this crate for:
 - binding-specific wrapper APIs
 - crash-log analysis itself
 
-Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge), [`classic-node`](../../node-bindings/classic-node), and [`classic_database` adapter module](../../python-bindings/classic-python-bindings/src/classic_database/).
+Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -297,8 +297,6 @@ Contributor rule: if you extend this crate, keep new async work compatible with 
 
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer; the final scan-run engine attaches a `DatabasePool` internally for richer FormID report text
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - configures scan-time DB cache profiles and logs `PoolStatistics`
-- [`classic-node`](../../node-bindings/classic-node) - JavaScript/TypeScript wrapper over this crate's pool API
-- [`classic_database` adapter module](../../python-bindings/classic-python-bindings/src/classic_database/) - PyO3 adapter that delegates business logic to this crate
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared runtime policy used by higher-level callers and benchmarks
 
 This crate sits upstream of the optional FormID-enrichment path in [`classic-scanlog-core`](../../business-logic/classic-scanlog-core). Scanlog analysis can run without it, but richer entry descriptions depend on it.

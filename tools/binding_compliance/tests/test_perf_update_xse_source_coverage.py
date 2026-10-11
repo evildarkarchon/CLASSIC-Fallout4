@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[3]
             ("xse_operations", XSE_OPERATIONS_COVERAGE_POLICY),
     ),
 )
-@pytest.mark.parametrize("participant", ("cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("cxx",))
 def test_owner_receipts_cover_selected_rows_and_reject_future_alias(
         tmp_path, family, policy, participant
 ):

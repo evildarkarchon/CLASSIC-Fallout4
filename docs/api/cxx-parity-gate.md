@@ -72,7 +72,7 @@ To run the gate's own test suite (covering the parser, canonical mappings, the
 gate, and drift detection):
 
 ```bash
-python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -q
+uv run --project tools python -m pytest tools/cxx_api_parity/tests/ -q
 ```
 
 ---

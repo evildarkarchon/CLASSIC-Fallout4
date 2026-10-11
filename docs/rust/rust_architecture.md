@@ -12,19 +12,17 @@ classic-cli/ and classic-gui/
           -> business-logic/*-core
           -> foundation/*
 
-python-bindings/*-py
-          -> business-logic/*-core
-          -> foundation/*
-
-node-bindings/classic-node
+ui-applications/classic-tui
           -> business-logic/*-core
           -> foundation/*
 ```
 
+The Python and Node bindings retired with ADR-0010.
+
 ## Rules
 
 - Keep business logic in `business-logic/*-core`.
-- Keep Python, Node, and C++ layers thin.
+- Keep the C++ bridge layer thin.
 - Preserve the shared Tokio runtime provided by Rust core facilities.
 - Avoid duplicating the same logic across bindings.
 
@@ -33,10 +31,9 @@ node-bindings/classic-node
 - The active Rust workspace root is the repository root.
 - There is no maintained `classic_core` facade.
 - There is no active `classic-rust/` workspace directory.
-- Public API changes may require matching updates in Python, Node, C++, and `docs/api/`.
+- Public API changes may require matching updates in the C++ bridge and `docs/api/`.
 
 ## Related docs
 
 - `docs/development/rust_workspace_architecture.md`
 - `docs/rust/development_with_rust.md`
-- `docs/development/pyo3_integration_patterns.md`

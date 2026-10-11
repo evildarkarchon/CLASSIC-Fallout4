@@ -320,8 +320,8 @@ std::vector<std::string> core_owned_phrases() {
 /// be wrong — and it was wrong: `succeeded,` is core-owned prose that occurs
 /// verbatim in ordinary code as `terminal.succeeded, terminal.failed`. Extracting
 /// literals removes that whole class of false positive rather than asking the
-/// deny-list to dodge it, and matches the Python audit, which reads literals off
-/// the AST for the same reason.
+/// deny-list to dodge it, and matches the retired Python audit, which read
+/// literals off the AST for the same reason.
 ///
 /// Comments never appear, for the reason the CXX parity gate's name scan was
 /// fixed: a comment *describing* the drift is not the drift, and this file's own

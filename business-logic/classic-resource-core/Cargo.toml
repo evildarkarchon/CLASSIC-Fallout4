@@ -4,11 +4,11 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Resource management for game files (no PyO3)"
+description = "Resource management for game files"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+crate-type = ["rlib"] # Pure Rust library only
 
 [dependencies]
 # Generic path primitives and PathError
@@ -46,8 +46,6 @@ regex = { workspace = true }
 
 # Serialization
 serde = { workspace = true, features = ["derive"] }
-
-# NO PyO3 dependency!
 
 [dev-dependencies]
 # Testing

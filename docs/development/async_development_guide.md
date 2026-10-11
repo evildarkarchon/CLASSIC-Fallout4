@@ -196,14 +196,6 @@ pub fn get_runtime() -> &'static tokio::runtime::Runtime {
 fn bridge_call(arg: &str) -> Result<String, String> {
     crate::runtime_support::block_on_result(core_async_call(arg))
 }
-
-// Sync PyO3 adapter: release the GIL while blocking on async Rust.
-fn process_data(py: Python<'_>, data: String) -> PyResult<String> {
-    classic_shared::without_gil_block_on(py, || async move {
-        async_operation(data).await
-    })
-    .map_err(to_pyerr)
-}
 ```
 
 ### Benefits of Native Async Solution
@@ -277,22 +269,6 @@ pub fn sync_function() -> Result<String> {
     })
 }
 ```
-
-### Pattern 4: PyO3 Sync Function with Async Rust
-
-```rust
-// Rust PyO3 binding
-#[pyfunction]
-pub fn parse_log(py: Python<'_>, path: String) -> PyResult<AnalysisResult> {
-    let path = PathBuf::from(path);
-    classic_shared::without_gil_block_on(py, || async move {
-        parse_log_async(&path).await
-    })
-    .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))
-}
-```
-
-Use `future_into_py(py, async move { ... })` instead when the Python API should return a true coroutine.
 
 ## Best Practices
 

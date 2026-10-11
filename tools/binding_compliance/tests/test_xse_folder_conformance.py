@@ -106,7 +106,7 @@ def test_xse_folder_derivation_is_rust_only_and_the_log_runs_on_every_adapter():
             document, load_source_parity_rows(ROOT)
         ).participants
     }
-    assert set(participants) == {"rust", "cxx", "node", "python"}
+    assert set(participants) == {"rust", "cxx"}
     assert participants["rust"].capability_ids == (
         "xse-folder.derive",
         "xse-folder.log",
@@ -122,9 +122,6 @@ def test_xse_folder_derivation_is_rust_only_and_the_log_runs_on_every_adapter():
     assert set(participants["cxx"].scenario_ids) == (
         COMPOSITION_SCENARIOS | LOG_SCENARIOS
     )
-    for binding in ("node", "python"):
-        assert participants[binding].capability_ids == ("xse-folder.log",)
-        assert set(participants[binding].scenario_ids) == LOG_SCENARIOS
 
 
 def test_xse_folder_derivation_rejects_uncontrolled_game_local_facts(tmp_path):
@@ -175,8 +172,6 @@ def test_xse_folder_receipts_cover_public_resolver_and_reject_path_drift(tmp_pat
     assert {participant.id for participant in participants.participants} == {
         "rust",
         "cxx",
-        "node",
-        "python",
     }
     pack, run, receipt = prepare_receipt_case(
         ROOT, tmp_path, PACK, "cxx", runner_id="xse-folder-boundary"
@@ -199,41 +194,6 @@ def test_xse_folder_receipts_cover_public_resolver_and_reject_path_drift(tmp_pat
         pack, run, coverage_policy=XSE_FOLDER_COVERAGE_POLICY
     )
     assert report.scenarios[3].result == "fail"
-
-
-@pytest.mark.parametrize("participant", ["node", "python"])
-def test_xse_log_receipts_cover_bindings_and_reject_the_other_editions_log(
-    tmp_path, participant
-):
-    """Node and Python earn XSE log credit only for each edition's own log."""
-    from conformance.coverage import derive_row_coverage, load_source_parity_rows
-    from conformance.families.xse_folder import XSE_FOLDER_COVERAGE_POLICY
-    from conformance.receipts import validate_prepared_run
-    from receipt_test_support import prepare_receipt_case
-
-    document = load_and_validate_pack(ROOT, PACK).document()
-    pack, run, receipt = prepare_receipt_case(
-        ROOT, tmp_path, PACK, participant, runner_id="xse-log-boundary"
-    )
-    report = validate_prepared_run(
-        pack, run, coverage_policy=XSE_FOLDER_COVERAGE_POLICY
-    )
-    assert not report.failures
-    coverage = derive_row_coverage(
-        document,
-        load_source_parity_rows(ROOT),
-        XSE_FOLDER_COVERAGE_POLICY,
-        (report,),
-        scope_participant_id=participant,
-    )
-    assert coverage.rows and not coverage.failures
-    index = [case["id"] for case in receipt["scenarios"]].index("log-vr")
-    receipt["scenarios"][index]["observation"]["log"] = "configured-docs/F4SE/f4se.log"
-    run.receipt_path.write_text(json.dumps(receipt))
-    report = validate_prepared_run(
-        pack, run, coverage_policy=XSE_FOLDER_COVERAGE_POLICY
-    )
-    assert report.scenarios[index].result == "fail"
 
 
 def test_xse_log_rejects_uncontrolled_log_files(tmp_path):

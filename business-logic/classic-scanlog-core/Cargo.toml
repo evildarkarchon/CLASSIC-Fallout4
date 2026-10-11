@@ -4,7 +4,7 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Pure Rust business logic for log parsing and analysis (NO PyO3)"
+description = "Pure Rust business logic for log parsing and analysis"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
@@ -19,7 +19,7 @@ mimalloc = ["dep:mimalloc"]
 [dependencies]
 # Alternative allocator (optional - Phase 16 optimization)
 mimalloc = { workspace = true, optional = true }
-# CLASSIC core dependencies (pure Rust - NO PyO3!)
+# CLASSIC core dependencies (pure Rust)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-operation-context = { path = "../../foundation/classic-operation-context" }
 classic-config-core = { path = "../classic-config-core" }

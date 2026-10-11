@@ -12,16 +12,12 @@ permissions:
 jobs:
   rust:
     uses: ./.github/workflows/ci-rust.yml
-  node:
-    uses: ./.github/workflows/ci-typescript.yml
-  python:
-    uses: ./.github/workflows/ci-python-bindings.yml
   native:
     uses: ./.github/workflows/ci-cpp.yml
 
   full:
     name: Full Repository Conformance
-    needs: [rust, node, python, native]
+    needs: [rust, native]
     if: ${{ !cancelled() }}
     runs-on: windows-latest
     timeout-minutes: 360
@@ -40,13 +36,6 @@ jobs:
           path: tools/binding_compliance/artifacts/downloaded
           merge-multiple: false
 
-      - name: Download current-run retained gate artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: '*retained-gates*'
-          path: tools/binding_compliance/artifacts/retained-downloaded
-          merge-multiple: false
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -63,15 +52,15 @@ jobs:
           PARTICIPANT_RESULTS: ${{ toJSON(needs) }}
         run: |
           $results = $env:PARTICIPANT_RESULTS | ConvertFrom-Json -AsHashtable
-          if ($results.Count -ne 4 -or @($results.Values | Where-Object { $_.result -ne 'success' }).Count -ne 0) {
+          if ($results.Count -ne 2 -or @($results.Values | Where-Object { $_.result -ne 'success' }).Count -ne 0) {
             throw 'Every retained participant workflow must pass before repository conformance can pass.'
           }
 
-      # Producer gate evidence is checked against this checkout and run while
-      # immutable conformance plans and receipts are authenticated here.
+      # Immutable conformance plans and receipts are authenticated against
+      # this checkout; the verdict is conformance-only since Retire (#304).
       - name: Run full binding compliance
         if: ${{ !cancelled() }}
-        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --gate-evidence-directory tools/binding_compliance/artifacts/retained-downloaded --output-dir tools/binding_compliance/artifacts/full
+        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --output-dir tools/binding_compliance/artifacts/full
 
       - name: Upload full binding compliance diagnostics
         if: always()

@@ -19,15 +19,19 @@ ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/version_registry_values/v1.json")
 
 
-def test_value_methods_have_exact_python_applicability(tmp_path: Path) -> None:
-    """Range enrollment cannot silently enroll CXX/Node or grant unknown method credit."""
+def test_value_methods_enroll_no_bridge_and_grant_no_unknown_credit(tmp_path: Path) -> None:
+    """Range enrollment cannot silently enroll CXX or grant unknown method credit.
+
+    The Python value methods that once enrolled a binding retired with it, so
+    only the Rust owner runs this pack.
+    """
     pack, run, _receipt = prepare_receipt_case(
-        ROOT, tmp_path, PACK, "python", runner_id="registry-values-test"
+        ROOT, tmp_path, PACK, "rust", runner_id="registry-values-test"
     )
     rows = load_source_parity_rows(ROOT)
     assert {
                item.id for item in derive_applicability(pack.document(), rows).participants
-           } == {"rust", "python"}
+           } == {"rust"}
     report = validate_prepared_run(pack, run, coverage_policy=POLICY)
     assert not report.failures
     coverage = derive_row_coverage(
@@ -35,14 +39,9 @@ def test_value_methods_have_exact_python_applicability(tmp_path: Path) -> None:
         rows,
         POLICY,
         (report,),
-        scope_participant_id="python",
         retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert not coverage.failures
-    assert {
-               "parity:python:version_registry.models.VersionInfo.__eq__",
-               "parity:python:version_registry.models.VersionInfo.__hash__",
-           } <= {row.obligation_id for row in coverage.rows}
     assert all(
         not predicate.covers_runtime_operation("future_value_method")
         for predicate in POLICY.predicates

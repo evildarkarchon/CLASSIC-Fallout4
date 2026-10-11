@@ -10,8 +10,7 @@
 //! - Rust-owned Crash Log Scan Run execution
 //! - Report generation
 //!
-//! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
-//! For Python bindings, see the `classic_scanlog` module of `classic-python-bindings`.
+//! Pure Rust business logic only; the C++ bridge is a separate adapter crate.
 //!
 //! # Optional Features
 //!

@@ -6,65 +6,60 @@ Reference: [`AGENTS.md`](../../AGENTS.md), [`binding-parity-overview.md`](bindin
 
 ## One-Tier Policy Statement
 
-All Rust public API symbols in business-logic `-core` crates are exposed through all three binding surfaces: C++ (CXX), Node (NAPI-RS), and Python (PyO3). There is no deferred tier, no backlog tier, and no graduated promotion process.
+All Rust public API symbols in business-logic `-core` crates are exposed through the one binding surface, the C++ bridge (CXX). The Python and Node bindings retired with ADR-0010 (in [`docs/adr/`](../adr/)). There is no deferred tier, no backlog tier, and no graduated promotion process.
 
-When a new `pub fn` or `pub struct` is added to a `-core` crate's `lib.rs`, all three bindings must expose it before CI passes. The only current exception is `classic-resource-core`, which has no dedicated C++ bridge module -- its functionality is accessed transitively through the `classic-file-io-core` bridge surface.
+When a new `pub fn` or `pub struct` is added to a `-core` crate's `lib.rs`, the bridge must expose it before CI passes. The only current exception is `classic-resource-core`, which has no dedicated C++ bridge module -- its functionality is accessed transitively through the `classic-file-io-core` bridge surface.
 
 ### Scope: methods from workspace-internal traits
 
-Implementing a workspace-internal trait on a `-core` type does not by itself create a parity obligation. The obligation attaches to the crate's own exported surface -- the `pub fn` and `pub struct` entries a binding is meant to publish -- not to every method a shared trait makes callable. `Vocabulary` from [`classic-vocabulary`](classic-vocabulary.md) is the current case: `as_str()` supplies the Vocabulary Token that all three bindings already published under their own names, so adopting it changes nothing on any surface, while `label()` becomes projectable rather than automatically projected. A Display Label crosses a binding seam when a frontend needs to render it, and that projection is a deliberate, separately reviewed addition with its own baseline and coverage-registry cost.
+Implementing a workspace-internal trait on a `-core` type does not by itself create a parity obligation. The obligation attaches to the crate's own exported surface -- the `pub fn` and `pub struct` entries a binding is meant to publish -- not to every method a shared trait makes callable. `Vocabulary` from [`classic-vocabulary`](classic-vocabulary.md) is the current case: `as_str()` supplies the Vocabulary Token that the bindings already published under their own names, so adopting it changes nothing on any surface, while `label()` becomes projectable rather than automatically projected. A Display Label crosses a binding seam when a frontend needs to render it, and that projection is a deliberate, separately reviewed addition with its own baseline and coverage-registry cost.
 
-Note that the gates cannot decide this for you. Both surface parsers match `pub fn` and `pub struct` at the start of a line, and trait-impl members carry no `pub`, so a trait method is invisible to them either way. Treat this as a contributor judgement recorded in review, not a check CI will make.
+Note that the gate cannot decide this for you. The surface parser matches `pub fn` and `pub struct` at the start of a line, and trait-impl members carry no `pub`, so a trait method is invisible to them either way. Treat this as a contributor judgement recorded in review, not a check CI will make.
 
 ### Scope: inherent methods that supply an already-published value
 
-The same reasoning covers an inherent method added to a type a binding already publishes. `Revision::token()` and `Revision::from_token()` in [`classic-user-settings-core`](classic-user-settings-core.md) are the current case: each binding previously carried its own byte-identical copy of that formatting, so consolidating it changes which code produces the revision strings the three surfaces already expose, not which strings they expose. No new adapter symbol is warranted, and no contract row moves.
-
-Unlike trait-impl members, inherent `pub fn` entries *are* visible to the Node and Python surface parsers — they match `pub fn` with leading whitespace allowed. So this case does cost two rows in `docs/implementation/{node,python}_api_parity/baseline/rust_api_surface.json` and requires `--update-baseline`, while leaving `parity_contract.json`, the binding surface inventories, and both runtime coverage-registry contract hashes untouched. A baseline that moves and a contract that does not is the expected shape here.
+The same reasoning covers an inherent method added to a type a binding already publishes. `Revision::token()` and `Revision::from_token()` in [`classic-user-settings-core`](classic-user-settings-core.md) are the current case: each binding previously carried its own byte-identical copy of that formatting, so consolidating it changes which code produces the revision strings the bridge already exposes, not which strings it exposes. No new adapter symbol is warranted, and no contract row moves.
 
 For the semantic Autoscan Report Contribution architecture, parity is both
-positive and negative. CXX, Node, and Python expose the six public Focused
+positive and negative. CXX exposes the six public Focused
 Semantic Analyzers, owned inputs/results, and shared typed errors. They must not expose
 the private contribution collector, Autoscan Report Assembly, report
 primitives, or fragment-producing compatibility aliases. A breaking removal is
-complete only when authored wrappers, generated declarations, maintained
-stubs, runtime coverage registries, compliance reports, and committed parity
+complete only when authored wrappers, compliance reports, and committed parity
 baselines all describe that same final surface. See
 [ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
 
 ---
 
-## Canonical Compliance Gate
+## Canonical Conformance Verdict
 
-The canonical binding gate is the compliance suite:
+The repository conformance verdict is the conformance-only `full` profile:
 
 ```powershell
-python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
+python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded
 ```
 
-The suite owns the top-level pass/fail result, policy mapping, structured report, and known-gap report. The surface-specific gates below remain available as lower-level checks and focused debugging commands.
-
-The `ci` result is source-level validation. Only `--profile full` with all family
-receipts and executed retained gates can certify repository-wide conformance.
-Full aggregation counts every source parity occurrence and fails on missing
-families or uncovered runtime rows. Registry metadata never supplies that proof.
-The remaining migration gaps are recorded in the
-[retirement readiness audit](../implementation/binding_compliance/retirement_readiness.md).
+Only `--profile full` with all family receipts can certify repository-wide
+conformance. Full aggregation counts every source parity occurrence and fails on
+missing families or uncovered runtime rows. Registry metadata never supplies that
+proof. The static requirement catalog and its retained-gate evidence retired with
+the Python and Node bindings; the checks CI now runs as direct steps are listed in
+[repository gates](../development/repository-gates.md).
 
 Crash Log Scan Run and User Settings have blocking executable conformance obligations. Rust,
-Node, Python, CXX on both MSVC and clang-cl, CLI and GUI on both compiler legs,
+CXX on both MSVC and clang-cl, CLI and GUI on both compiler legs,
 and TUI must emit current same-revision receipts for their exact applicable
 scopes. Central validation requires the full scenario and observation-family
 denominator plus every source-owned consumer obligation. Missing, skipped,
 stale, malformed, duplicate, or semantically mismatched evidence fails the
 applicable workflow. These receipts run conjunctively with the source parity,
-declaration/stub, runtime, Rust-variant, and native wrapper gates; promotion
+runtime, Rust-variant, and native wrapper gates; promotion
 does not weaken or retire those checks.
 
-See [`binding-compliance-suite.md`](binding-compliance-suite.md).
+See [repository gates](../development/repository-gates.md).
 
-Autoscan Report output also has a blocking semantic family across Rust, Node,
-Python, and CXX on MSVC and clang-cl. Fresh same-revision receipts compare
+Autoscan Report output also has a blocking semantic family across Rust and CXX
+on MSVC and clang-cl. Fresh same-revision receipts compare
 actual persisted bytes with the original immutable goldens, typed Display
 Content, and durable filesystem effects. Existing owner goldens and focused
 assembly diagnostics remain required. This family adds no public assembly API
@@ -83,26 +78,11 @@ or frontend layout contract; see the
 - **Contributor docs:** [`docs/api/cxx-parity-gate.md`](cxx-parity-gate.md)
 - **Run command:** `python tools/cxx_api_parity/check_parity_gate.py --repo-root .`
 
-### Python Gate
-
-- **Script:** `tools/python_api_parity/check_parity_gate.py`
-- **Baseline:** `docs/implementation/python_api_parity/baseline/parity_contract.json`
-- **Baseline generator:** `tools/python_api_parity/generate_baseline.py`
-- **Run command:** `python tools/python_api_parity/check_parity_gate.py --repo-root .`
-
-### Node Gate
-
-- **Baseline:** `docs/implementation/node_api_parity/baseline/parity_contract.json`
-- **Primary working directory:** `node-bindings/classic-node/`
-- **Run command:** `bun run parity:gate`
-- **Intentional refresh command:** `bun run parity:gate:update-baseline`
-- **Follow-up checks:** `bun run test:bun`, `bun run test:node`, and `bun run dts:freshness:check`
-
 ---
 
 ## When Gates Refresh
 
-Gates refresh when the tracked contract drifts from the live Rust surface. CXX and Python refresh through the repo-root parity scripts, while Node refreshes through the `classic-node` package workflow.
+The gate refreshes when the tracked contract drifts from the live Rust surface. CXX refreshes through the repo-root parity scripts.
 
 Workflow:
 
@@ -120,54 +100,25 @@ Two consequences for reviewers:
 - An empty `git status` after a refresh means "no drift", not "the refresh did not run".
 - A timestamp change in a baseline artifact is a real signal: it marks when that surface last actually changed.
 
-The shared implementation is `tools/parity_artifact_io.py`; the byte-stability property is locked by `tools/test_parity_artifact_io.py` plus a `test_baseline_timestamp_stability.py` in each of the three `tools/*_api_parity/tests/` suites.
+The shared implementation is `tools/parity_artifact_io.py`; the byte-stability property is locked by `tools/test_parity_artifact_io.py` plus `tools/cxx_api_parity/tests/test_baseline_timestamp_stability.py`.
 
 ### Shared Gate Tooling
 
-Two modules under `tools/` are shared by the per-binding gates. Change them with the understanding that all three gates consume them:
+Two modules under `tools/` back the CXX gate:
 
 | Module | Owns |
 |---|---|
 | `parity_rust_surface.py` | Parsing the public Rust surface — crate source collection, `pub use` expansion, symbol extraction |
 | `parity_artifact_io.py` | Reading, comparing, and writing artifacts — `write_json`, `stable_id_hash`, `sync_baseline_artifacts`, timestamp preservation |
 
-The Node and Python gates previously carried independent copies of the Rust parser, which let them disagree about which Rust exports exist while both reported success. They now share one parser and differ only in their **crate list** — `RUST_TARGET_CRATES` / `RUST_OWNER_BY_CRATE` stay per-gate and are passed into `parse_rust_surface()` at call time. When you add a `-core` crate that a binding depends on, add it to that binding's crate list; a crate missing from the list is invisible to that gate, and any contract row naming one of its symbols will be rejected as "not in the parsed Rust surface".
-
 ### What a Contract Row Must Prove
 
-A row's `rustSymbol` check used to be satisfied by *any* symbol of any kind. That is weaker than it reads, and placeholder rows accumulated behind it — at one point 82 unrelated Node exports all named the Rust module `path_core`, and the gate still reported 913/913 matched. These rules now hold:
+A row's `rustSymbol` check used to be satisfied by *any* symbol of any kind. That is weaker than it reads, and placeholder rows accumulated behind it — at one point 82 unrelated binding exports all named the Rust module `path_core`, and a gate still reported 913/913 matched. These rules now hold:
 
-1. **A binding export may not map to a Rust module.** A module match verifies nothing about the export. Map the row to the specific core symbol the wrapper actually uses. Two resolvers derive that from the binding source rather than guessing — `tools/node_api_parity/resolve_node_rust_symbols.py` for NAPI wrappers and `tools/python_api_parity/resolve_python_rust_symbols.py` for PyO3 wrappers. Run either against the repo to see the proposed mapping and the evidence behind it.
-2. **`@rust` source-inventory rows may name a module.** They record Rust-only source even when a historical Python row also names a related binding export. They do not claim that the module implements that export.
+1. **A binding export may not map to a Rust module.** A module match verifies nothing about the export. Map the row to the specific core symbol the wrapper actually uses.
+2. **`@rust` source-inventory rows may name a module.** They record Rust-only source. They do not claim that the module implements that export.
 3. **An export with no verified counterpart must say so.** Set `rustSymbol` to `null` and add an `unmappedReason`. The row is then counted in the diff report's `tier1_unmapped` rather than being disguised as a match. A `null` `rustSymbol` without a reason is a malformed row.
-4. **A claimed Node counterpart must name its actual Rust crate.** The Node guard and diff report resolve the pair (`rustCrate`, `rustSymbol`), including `@rust` proxy rows. A same-named symbol in another crate cannot satisfy the mapping or hide a module-only match in the declared crate. When the NAPI wrapper gives direct crate evidence, the gate also rejects a row that names a different crate even if both crates export the symbol. For an export represented by one row, direct symbol evidence must match that row too. Name-derived resolver guesses remain advisory. Rows without a verified single core counterpart remain explicit `unmapped` rows; they still check that their Node export exists. Historical row IDs and `ownerModule` report buckets do not determine the physical Rust owner.
-5. **A claimed Python counterpart must name its actual Rust crate.** The Python guard and diff report resolve (`rustCrate`, `rustSymbol`) for every mapped row. A namesake in another crate cannot satisfy the row or hide a module-only match in the declared crate. Source-backed PyO3 evidence checks uniquely mapped public exports, including methods where their own body identifies a core owner, follows external Rust re-exports to the defining crate, and traces checked-in facade imports to shared native wrappers. A broken explicit facade-to-native route fails; ambiguous method evidence and name-derived guesses remain advisory. Historical row IDs and logical `ownerModule` buckets stay stable while `rustCrate` tracks the physical owner.
-
 `tier1_unmapped` is **tracked debt, not drift** — it does not fail the gate, but it is the number to drive toward zero. It is deliberately separate from `tier1_matched` so neither figure lies.
-
-### Resolver Evidence Tiers
-
-Both resolvers rank evidence rather than pattern-matching on names alone, because the obvious guess is sometimes wrong. Strongest first:
-
-| Tier | Evidence |
-|---|---|
-| `exact` | The wrapper calls a crate-qualified core symbol of the same name |
-| `from_impl` | `impl From<CoreType> for Wrapper` |
-| `conversion_fn` | A helper `fn …(x: CoreType) -> JsDto` pairs a DTO with its core type |
-| `inner_field` | The wrapper struct holds a field of a core type — the newtype pattern |
-| `js_prefix` / `name_match` | The exported name matches a core type, case-insensitively for acronyms |
-| `core_method` | A method called on a core-typed value, when that method exists in the surface |
-| `core_assoc` | `CoreType::assoc(…)`, an enum variant, or a `parse::<CoreType>()` turbofish |
-| `qualified` / `imported` | Any other core symbol the wrapper references — weakest; `imported` is not auto-applied |
-
-The ordering earns its keep. `FormIDAnalyzer` exists in `classic-scanlog-core`, so a name match looks right — but the PyO3 wrapper is `PyRustFormIDAnalyzer { inner: RustFormIDAnalyzer }`, and `inner_field` picks the type actually wrapped.
-
-Two filters keep the weaker tiers honest:
-
-- **Plumbing is never a counterpart.** `get_runtime`, `block_on`, `*Error` appear in nearly every wrapper.
-- **Ubiquitous method names are never a counterpart.** Almost every crate defines a `new`, `all`, or `as_str`, so matching one says only "this wrapper called a constructor". Without this filter the resolver produced `checkForUpdates -> new` and `getAllGameIds -> all` — as meaningless as the module matches it exists to replace.
-
-If a resolver reports `unresolved`, that is a real answer: the export may have no core counterpart. Seven Node DTOs (`QueryParam`, `ResourceCount`, `JsBatchEntry` …) are assembled entirely in the binding layer and have none. Record those with `rustSymbol: null` and an `unmappedReason` rather than inventing one.
 
 ---
 
@@ -179,27 +130,17 @@ Step-by-step workflow for contributors:
 
 2. **Add the C++ bridge entry** in `cpp-bindings/classic-cpp-bridge/src/` -- create a CXX shared struct if it is a DTO, or an opaque type if it is stateful. Use `block_on()` for async wrapping.
 
-3. **Add the Node NAPI wrapper** in `node-bindings/classic-node/src/` -- NAPI auto-converts `snake_case` to `camelCase` for JS consumers. Add the module import in `src/lib.rs` if it is a new file.
-
-4. **Add the Python PyO3 wrapper** in `python-bindings/classic-*-py/src/` and update the matching `.pyi` stub file with the new public surface.
-
-5. **Refresh the owned per-surface artifacts:**
+3. **Refresh the owned baseline:**
    ```bash
    python tools/cxx_api_parity/generate_baseline.py --repo-root .
-   python tools/python_api_parity/generate_baseline.py --repo-root .
-   cd node-bindings/classic-node && bun run parity:gate:update-baseline
    ```
 
-6. **Run all three gates to verify zero drift:**
+4. **Run the gate to verify zero drift:**
    ```bash
    python tools/cxx_api_parity/check_parity_gate.py --repo-root .
-   python tools/python_api_parity/check_parity_gate.py --repo-root .
-   cd node-bindings/classic-node && bun run parity:gate
    ```
 
-   Then finish the Node flow with `bun run test:bun`, `bun run test:node`, and `bun run dts:freshness:check` from `node-bindings/classic-node/`.
-
-7. **Commit all changes in the same PR** -- binding wrappers, stub updates, baseline refreshes, and gate verification should land together.
+5. **Commit all changes in the same PR** -- bridge wrappers, baseline refreshes, and gate verification should land together.
 
 If you are translating an older `ClassicLib-rs/...` instruction into the live repo-root workflow, use the shared [`workspace migration matrix`](../workspace-migration-matrix.md) instead of restating the full migration in each binding page.
 
@@ -210,5 +151,4 @@ If you are translating an older `ClassicLib-rs/...` instruction into the live re
 - [`AGENTS.md`](../../AGENTS.md) -- project-wide binding guidance
 - [`binding-parity-overview.md`](binding-parity-overview.md) -- per-crate binding surface reference
 - [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) -- when to refresh contract artifacts
-- [`node-python-contract-map.md`](node-python-contract-map.md) -- where Node and Python contract files live
 - [`cxx-parity-gate.md`](cxx-parity-gate.md) -- CXX gate internals

@@ -50,39 +50,6 @@ PARTICIPANT_COMMANDS = {
             *_COMMON_SOURCES,
         ),
     ),
-    "node": ParticipantCommand(
-        arguments=("bun", "run", "conformance:user-settings"),
-        working_directory=REPO_ROOT / "node-bindings/classic-node",
-        source_paths=(
-            REPO_ROOT
-            / "node-bindings/classic-node/__test__/user_settings_conformance_runner.ts",
-            REPO_ROOT
-            / "node-bindings/classic-node/__test__/user_settings_defaults_conformance.ts",
-            REPO_ROOT / "node-bindings/classic-node/src/user_settings.rs",
-            REPO_ROOT / "node-bindings/classic-node/package.json",
-            *_COMMON_SOURCES,
-        ),
-    ),
-    "python": ParticipantCommand(
-        arguments=(
-            "uv",
-            "run",
-            "--project",
-            "python-bindings",
-            "python",
-            "python-bindings/tests/user_settings_conformance_runner.py",
-        ),
-        working_directory=REPO_ROOT,
-        source_paths=(
-            REPO_ROOT / "python-bindings/tests/user_settings_conformance_runner.py",
-            REPO_ROOT / "python-bindings/tests/user_settings_defaults_conformance.py",
-            # The one Python adapter crate builds one native extension for every
-            # facade, so the whole adapter (Rust and Python facades) is participant input.
-            REPO_ROOT / "python-bindings/classic-python-bindings/src",
-            REPO_ROOT / "python-bindings/classic-python-bindings/python",
-            *_COMMON_SOURCES,
-        ),
-    ),
 }
 
 

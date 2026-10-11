@@ -12,22 +12,19 @@ As of the current codebase, CLASSIC is a **native C++ + Rust application**:
 - **Shared/runtime crates:** `foundation/`
 - **Business logic crates:** `business-logic/`
 - **C++ ↔ Rust bridge:** `cpp-bindings/classic-cpp-bridge/`
-- **Node bindings:** `node-bindings/classic-node/`
-- **Python bindings:** `python-bindings/`
 - **Rust TUI app:** `ui-applications/classic-tui/`
 
 Rust owns typed, preservation-aware User Settings, including widget-independent frontend preferences, GUI geometry, and a canonical TUI remembered-state namespace. Game Setup Intake can be prepared from an already-opened typed settings group, while discovered paths remain caller-reviewed proposals and are never persisted by intake itself.
 
 See the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for old-to-new command, path, and artifact translations.
 
-The [Binding Compliance Suite](docs/api/binding-compliance-suite.md) documents contributor validation. Crash Log Scan Run coverage uses blocking executable adapter and frontend receipts. Its copied acknowledgement lists and positive source markers are retired; fixture expectations, Rust variant inventory checks, negative export audits, and internal fault analyzers remain required.
+The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](docs/adr/)). [Repository gates](docs/development/repository-gates.md) lists the checks CI runs directly. Crash Log Scan Run coverage uses blocking executable adapter and frontend receipts. Its copied acknowledgement lists and positive source markers are retired; fixture expectations, Rust variant inventory checks, negative export audits, and internal fault analyzers remain required.
 
-Repository-wide conformance requires the suite's `full` profile with receipts for
-every tracked family and applicable instance, plus all retained gates. Source-only
-profiles make narrower claims. The legacy registry claims, loaders, claim-only
-summaries, and migration ledger are removed. Missing authenticated proof still
-fails the full profile; see [retirement readiness](docs/implementation/binding_compliance/retirement_readiness.md)
-for the current validation result.
+Repository-wide conformance requires the conformance-only `full` profile with
+receipts for every tracked family and applicable instance. Participant-scoped
+reports make narrower claims. The legacy registry claims, loaders, claim-only
+summaries, migration ledger, static requirement catalog and retained-gate
+evidence are removed. Missing authenticated proof still fails the full profile.
 
 Auxiliary, performance, and shared owner operations also use blocking hermetic
 packs with independent expectations and real adapter receipts. The
@@ -40,21 +37,21 @@ cache and YAML operations, version extraction and synthetic PE resources against
 test-owned state. Their [evidence map](docs/implementation/registry_settings_version_conformance_equivalence.md)
 records exact adapter applicability, transport limits, and retained checks.
 
-User Settings opening, typed snapshots, caller-controlled bootstrap, update preview/commit, and migration planning/apply/restore require executable receipts across Rust, CXX, Node, and Python. The shared compatibility oracle checks structured rejections, stale revisions, source bytes, reversible plans, exact retained backups, and durable effects, including unknown-entry preservation after commits. Maintained CLI, GUI, and TUI settings seams have separate consumer obligations. The existing corpus, Rust ownership audit, source parity, declarations, stubs, and negative checks remain blocking; registry claims alone cannot cover migrated settings rows. See the [same-revision evidence map](docs/implementation/user_settings_conformance_equivalence.md).
+User Settings opening, typed snapshots, caller-controlled bootstrap, update preview/commit, and migration planning/apply/restore require executable receipts across Rust and CXX. The shared compatibility oracle checks structured rejections, stale revisions, source bytes, reversible plans, exact retained backups, and durable effects, including unknown-entry preservation after commits. Maintained CLI, GUI, and TUI settings seams have separate consumer obligations. The existing corpus, Rust ownership audit, source parity, and negative checks remain blocking; registry claims alone cannot cover migrated settings rows. See the [same-revision evidence map](docs/implementation/user_settings_conformance_equivalence.md).
 
-Crash Suspect, Crashgen Settings, Mod Guidance, FormID lookup, Named Record, and Plugin Evidence also require blocking semantic receipts through Rust, Node, Python, and CXX on both MSVC and clang-cl. Their [focused equivalence map](docs/implementation/semantic_conformance_equivalence.md) records shared fixture ownership and retained diagnostic tests. Migrated fixture-backed registry claims and duplicate positive assertions are retired according to the [retirement evidence map](docs/implementation/fixture_evidence_retirement.md); all runtime operations now require applicable executable receipts, while named permanent analyzers retain structural and negative checks.
+Crash Suspect, Crashgen Settings, Mod Guidance, FormID lookup, Named Record, and Plugin Evidence also require blocking semantic receipts through Rust and CXX on both MSVC and clang-cl. Their [focused equivalence map](docs/implementation/semantic_conformance_equivalence.md) records shared fixture ownership and retained diagnostic tests. Migrated fixture-backed registry claims and duplicate positive assertions are retired according to the [retirement evidence map](docs/implementation/fixture_evidence_retirement.md); all runtime operations now require applicable executable receipts, while named permanent analyzers retain structural and negative checks.
 
 Installed YAML Data inspection and preparation also require blocking receipts across those adapters. The [Installed YAML Data evidence map](docs/implementation/installed_yaml_data_conformance_equivalence.md) covers source precedence, rejected-candidate diagnostics, exact-byte identities, retained snapshots, legacy Local Ignore adoption, and unavailable recovery defaults. Existing scan-run recovery and focused filesystem tests remain blocking.
 
-Autoscan Report output requires blocking same-revision receipts across Rust, Node, Python, and CXX on both compiler instances. The [Autoscan Report evidence map](docs/implementation/autoscan_report_conformance_equivalence.md) connects the original empty, populated, and FCX goldens to exact persisted bytes, typed Display Content, and durable effects. The original goldens and focused owner diagnostics remain required.
+Autoscan Report output requires blocking same-revision receipts across Rust and CXX on both compiler instances. The [Autoscan Report evidence map](docs/implementation/autoscan_report_conformance_equivalence.md) connects the original empty, populated, and FCX goldens to exact persisted bytes, typed Display Content, and durable effects. The original goldens and focused owner diagnostics remain required.
 
 Config and scan-run Vocabulary labels use executable token-to-label receipts, while the scan-run pack compares full typed Display Content. The [Vocabulary and Display Content evidence map](docs/implementation/vocabulary_display_conformance_equivalence.md) records independent expected wording, source token inventories, the shared provenance accessor, and the duplicated JavaScript tests retired after equivalent observations passed.
 
 Config loading, text file I/O, path validation/normalization, and message formatting now have separate blocking operation packs. Their [equivalence map](docs/implementation/config_file_path_message_conformance_equivalence.md) records exact effects, errors, binding applicability, and retained evidence.
 
-Database pool lookups, Version Registry metadata/matching, and Scan Game INI/ENB checks require blocking receipts through Rust, Node, Python, and CXX on both compilers. Their [equivalence map](docs/implementation/database_version_scangame_conformance_equivalence.md) records controlled fixtures, unchanged disk contents, stable failures, and the precise operations that retain their existing tests.
+Database pool lookups, Version Registry metadata/matching, and Scan Game INI/ENB checks require blocking receipts through Rust and CXX on both compilers. Their [equivalence map](docs/implementation/database_version_scangame_conformance_equivalence.md) records controlled fixtures, unchanged disk contents, stable failures, and the precise operations that retain their existing tests.
 
-Configured notification checks use blocking controlled-service receipts across Rust, CXX, Node and Python, covering failures, timeouts and exact cache effects without internet access. Web receipts also observe user agents and all common ModSite metadata. The [update and web evidence map](docs/implementation/update_web_conformance_equivalence.md) records these obligations and the existing evidence retained for other update operations.
+Configured notification checks use blocking controlled-service receipts across Rust and CXX, covering failures, timeouts and exact cache effects without internet access. Web receipts also observe user agents and all common ModSite metadata. The [update and web evidence map](docs/implementation/update_web_conformance_equivalence.md) records these obligations and the existing evidence retained for other update operations.
 
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
@@ -156,21 +153,17 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
-### Binding compliance quick reference
+### Repository gates quick reference
 
 ```powershell
-# From repo root: canonical source checks and complete receipt aggregation
-python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
-python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded
-
-# From node-bindings/classic-node
-bun run parity:gate
-
-# From repo root
-python tools/python_api_parity/check_parity_gate.py --repo-root .
-python tools/cxx_api_parity/check_parity_gate.py --repo-root .
-python validate_stubs.py --rust-dir .
+# From repo root, with the tools-only environment (uv sync --project tools)
+uv run --project tools python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+uv run --project tools python tools/user_settings_ownership/check.py --repo-root .
+uv run --project tools python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
+uv run --project tools python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded
 ```
+
+See [Repository gates](docs/development/repository-gates.md) for where each command runs in CI.
 
 Need the full old-to-new mapping? Start with the [Workspace Migration Matrix](docs/workspace-migration-matrix.md).
 
@@ -195,14 +188,12 @@ When `-Compiler clang-cl` is selected, the scripts also pass clang-cl to Cargo `
 
 GitHub Actions workflows:
 
-`ci-binding-compliance.yml` is the blocking umbrella workflow. It calls the four reusable participant workflows below at the same revision. Those jobs run retained gates once and publish their outcomes; the `full` profile verifies the current-run command evidence and independently authenticates the conformance receipts and plans. Native CI reuses one verified CLI/GUI build per compiler across its family tests. Missing executions or uncovered rows fail the aggregate; a passing participant slice cannot certify the repository. Binding conformance includes controlled XSE and installation-path scenarios. See the [binding compliance guide](docs/api/binding-compliance-suite.md) for executable coverage and retained platform-discovery evidence.
+`ci-binding-compliance.yml` is the blocking umbrella workflow. It calls the two reusable participant workflows below (`ci-rust.yml` and `ci-cpp.yml`) at the same revision, and its `full` job authenticates the current-run conformance receipts and plans. Native CI reuses one verified CLI/GUI build per compiler across its family tests. Missing executions or uncovered rows fail the aggregate; a passing participant slice cannot certify the repository. Binding conformance includes controlled XSE and installation-path scenarios. The checks CI runs as direct steps are listed in [Repository gates](docs/development/repository-gates.md).
 
 The [validated 43-crate baseline](docs/implementation/workspace_layout/baseline/validated-36127742320/README.md) is the comparison point before the first workspace owner move. The [final 23-crate inventory](docs/implementation/workspace_layout/final/README.md) compares the finished workspace with it: crates by group, internal dependency edges, and the remaining cross-crate handoffs.
 
 - `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest` for MSVC and clang-cl
 - `ci-rust.yml` - Rust format/lint/build/test
-- `ci-typescript.yml` - Node bindings parity gates + Bun/Node runtime tests
-- `ci-python-bindings.yml` - Python bindings parity gates + smoke tests
 - `benchmarks.yml` - benchmark/performance pipeline
 
 ---
@@ -214,8 +205,6 @@ The [validated 43-crate baseline](docs/implementation/workspace_layout/baseline/
 - `foundation/` — shared runtime and support crates
 - `business-logic/` — Rust business logic crates
 - `cpp-bindings/classic-cpp-bridge/` — C++ bridge into Rust
-- `node-bindings/classic-node/` — Node/Bun bindings
-- `python-bindings/` — Python bindings and parity artifacts
 - `ui-applications/classic-tui/` — Rust TUI app
 - `CLASSIC Data/` — runtime data, databases, help, graphics
 

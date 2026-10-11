@@ -109,7 +109,7 @@ def test_database_lookup_order_misses_and_close_are_material() -> None:
         )
 
 
-@pytest.mark.parametrize("participant", ("cxx", "node", "python"))
+@pytest.mark.parametrize("participant", ("cxx",))
 def test_database_receipt_lifecycle_fails_closed(
         tmp_path: Path, participant: str
 ) -> None:

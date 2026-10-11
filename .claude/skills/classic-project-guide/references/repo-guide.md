@@ -6,12 +6,10 @@ This file supplements `AGENTS.md`. Keep always-on architecture rules there; keep
 
 | Touched surface | Local checks to consider | Artifacts or docs to consider |
 | --- | --- | --- |
-| Rust-only crates | `cargo fmt`, `cargo clippy`, focused `cargo test`; set `PYO3_PYTHON` first if PyO3 can build | Affected `docs/api/` pages for public contracts |
+| Rust-only crates | `cargo fmt`, `cargo clippy`, focused `cargo test` | Affected `docs/api/` pages for public contracts |
 | `classic-cli/` or `classic-gui/` | PowerShell wrappers in `Native C++ Wrappers` | Packaging/install output only when requested; CLI integration fixtures may require submodules |
 | `cpp-bindings/classic-cpp-bridge/` or Rust APIs exposed through C++ | CXX parity gate, then CLI/GUI wrapper tests for changed consumers | `docs/implementation/cxx_api_parity/baseline/`; `docs/api/cxx-parity-gate.md` |
-| `node-bindings/classic-node/` or Rust APIs exposed through Node | Node parity gate, declaration freshness, Bun and Node tests | `index.d.ts`, shared conformance packs and receipts, `docs/implementation/node_api_parity/baseline/` |
-| `python-bindings/` or Rust APIs exposed through Python | Python parity gate, stub validation, rebuild, pytest | `.pyi` files, shared conformance packs and receipts, `python-bindings/parity-artifacts/`, `docs/implementation/python_api_parity/baseline/` |
-| `CLASSIC Data/databases/` or schema-version behavior | Schema drift guard and YAML publish validator | `docs/api/yaml-update-delivery.md` for loader, manifest, or delivery contract changes |
+| `CLASSIC Data/databases/` or schema-version behavior | `classic-config-core` schema-version test and YAML publish validator | `docs/api/yaml-update-delivery.md` for loader, manifest, or delivery contract changes |
 | `CLASSIC Data/app-notification.yaml` or notification publish tooling | Notification source validator, dry-run harness, publish-tool tests | `docs/api/app-update-notification-delivery.md` and affected update/path/error API docs |
 | Linux or cloud validation | Rust-only subsets and source-only gates first | Note any skipped Windows/MSVC-native checks explicitly |
 
@@ -55,13 +53,7 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Package
 
 CLI integration scenarios use the crash-log fixture corpus under `sample_logs/FO4`; initialize it with `git submodule update --init --recursive` when that directory is missing.
 
-## Rust And PyO3 Commands
-
-Before cargo commands that can build PyO3 crates, point PyO3 at the binding-local interpreter:
-
-```powershell
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
-```
+## Rust Commands
 
 Common workspace checks:
 
@@ -74,13 +66,7 @@ cargo build --workspace
 cargo build --workspace --release
 ```
 
-Create or refresh the Python binding tool environment before Python binding smoke tests:
-
-```powershell
-uv sync --project python-bindings --inexact
-```
-
-Repository tooling under `tools/` (the schema drift guard, the YAML Data and app-notification publish tools, and the tool test suites) does not use the binding environment. It runs from the tools-only uv project at `tools/pyproject.toml`, which holds only `ruamel.yaml` and `pytest`:
+Repository tooling under `tools/` (the YAML Data and app-notification publish tools, the conformance engine, the interim repository gates, and the tool test suites) runs from the tools-only uv project at `tools/pyproject.toml`, which holds only `ruamel.yaml` and `pytest`:
 
 ```powershell
 uv sync --project tools
@@ -91,26 +77,26 @@ Run each tool suite in its own pytest process: several suites put their own dire
 
 ## Binding Parity Workflows
 
-The canonical contributor entrypoint is the Binding Compliance Suite. Run the
-source profile first; run applicable scenario launchers against built native
-bindings; aggregate a directory containing every family and execution instance
-only when requesting repository-wide proof:
+The repository conformance verdict is `tools/binding_compliance/check_compliance.py`,
+which keeps only the receipt-backed `conformance` profile and the conformance-only
+`full` profile. Run applicable scenario launchers against built participants, and
+aggregate a directory containing every family and execution instance only when
+requesting repository-wide proof:
 
 ```powershell
-python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
-python tools/binding_compliance/run_semantic_conformance.py --family <family> --participant <rust|node|python>
+python tools/binding_compliance/run_semantic_conformance.py --family <family> --participant rust
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family <family> -Compiler msvc
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family <family> -Compiler clang-cl
 python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory <receipt-directory>
 ```
 
-Use the dedicated Scan Run/User Settings/consumer launchers listed in
-`docs/api/binding-compliance-suite.md` for those packs. Missing or stale receipts
-fail the full profile; source profiles and individual family jobs cannot certify
-the repository. Preserve sibling immutable plans when moving receipt artifacts.
-The old runtime registries, their loaders, claim-only summaries, and migration
-ledger are removed. The commands below remain focused source diagnostics and
-intentional baseline refresh tools; they do not grant runtime proof.
+Use the dedicated Scan Run, User Settings, and consumer launchers under
+`tools/binding_compliance/` for those packs. Missing or stale receipts fail the
+full profile; individual family jobs cannot certify the repository. Preserve
+sibling immutable plans when moving receipt artifacts. The checks CI runs as
+direct steps are listed in `docs/development/repository-gates.md`. The commands
+below remain focused source diagnostics and intentional baseline refresh tools;
+they do not grant runtime proof.
 
 ### CXX
 
@@ -123,55 +109,6 @@ python tools/cxx_api_parity/check_parity_gate.py --repo-root . --update-baseline
 
 Only run `--update-baseline` for intentional source-backed drift. Commit the refreshed files under `docs/implementation/cxx_api_parity/baseline/`; leave `cpp-bindings/classic-cpp-bridge/parity-artifacts/` as local diagnostics. The gate is source-only. For changed consumers, add the relevant CLI or GUI wrapper test command from `Native C++ Wrappers`.
 
-### Node
-
-Run from `node-bindings/classic-node`.
-
-```powershell
-bun install
-bun run parity:gate
-bun run parity:gate:ci        # parity:gate + dts:freshness:ci, the CI-equivalent pair
-bun run parity:gate:local     # drift refresh; see caveat below
-bun run test:bun
-bun run test:node
-bun run test:types
-bun run dts:freshness:check
-bun run dts:refresh
-bun run cli -- --version
-```
-
-`parity:gate:local` needs the MSVC developer shell because it rebuilds the native addon via `dts:refresh`. If it fails on toolchain resolution, use the wrapped form instead, which enters the VS dev shell first:
-
-```powershell
-bun run parity:gate:local:vsdev
-bun run shell:vsdev           # interactive VS dev shell in this directory
-```
-
-Use `parity:gate:local` only for intentional source-backed drift; it refreshes `index.d.ts`, updates the tracked Node baseline, and verifies declaration freshness. Commit affected files under `docs/implementation/node_api_parity/baseline/`, `node-bindings/classic-node/index.d.ts` when source ownership changes. Do not commit `node-bindings/classic-node/parity-artifacts/` or generated `index.js`.
-
-### Python
-
-Run from the repo root.
-
-```powershell
-uv sync --project python-bindings --inexact
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
-
-uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
-uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
-uv run --project python-bindings python -m pytest python-bindings/tests -q
-```
-
-When the same change touches shippable YAML data or schema-version constants, start with:
-
-```powershell
-uv sync --project tools
-uv run --project tools python tools/schema_version_gate.py --repo-root .
-```
-
-Commit touched `.pyi` files, shared conformance pack/adapter changes, tracked reports under `python-bindings/parity-artifacts/`, and affected files under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
-
 ## Data Publish Workflows
 
 ### YAML Data
@@ -179,8 +116,8 @@ Commit touched `.pyi` files, shared conformance pack/adapter changes, tracked re
 Use this for shippable YAML databases, client schema ranges, schema-version rules, or YAML publish tooling.
 
 ```powershell
+cargo test -p classic-config-core --lib client_schemas
 uv sync --project tools
-uv run --project tools python tools/schema_version_gate.py --repo-root .
 uv run --project tools python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
 ```
 
@@ -207,11 +144,9 @@ Primary workflows:
 
 | Workflow | Purpose |
 | --- | --- |
-| `ci-binding-compliance.yml` | Blocking umbrella: same-revision reusable participant workflows, then full authenticated receipt aggregation |
+| `ci-binding-compliance.yml` | Blocking umbrella: same-revision reusable `rust` and `native` participant workflows, then the conformance-only full receipt verdict |
 | `ci-cpp.yml` | CXX parity plus CLI and GUI build/test pipeline |
-| `ci-rust.yml` | Rust format, lint, build, and test pipeline |
-| `ci-typescript.yml` | Node parity, declaration freshness, and runtime tests |
-| `ci-python-bindings.yml` | Python parity, stub validation, schema drift guard, rebuild, and smoke tests |
+| `ci-rust.yml` | Rust format, lint (plus the interim User Settings ownership and workflow-policy gates), build, and test pipeline |
 | `benchmarks.yml` | Benchmark and performance pipeline |
 | `publish-yaml-data.yml` | Maintainer YAML-data release workflow for `yaml-data-v*` tags |
 | `publish-app-notification.yml` | Maintainer app-update notification workflow for `app-notification-v*` tags |
@@ -219,6 +154,5 @@ Primary workflows:
 Platform constraints worth remembering:
 
 - `classic-cli/` and `classic-gui/` are Windows-focused native surfaces and require an MSVC-compatible toolchain.
-- `node-bindings/classic-node` currently targets `x86_64-pc-windows-msvc`.
 - The CXX parity gate, YAML publish validator, and app-notification validator are source-only and do not require MSVC.
 - Some Rust workspace paths pull Windows-oriented dependencies through archive/DirectX-related crates; on Linux or generic cloud runners, prefer focused Rust subsets plus source-only gates unless full portability is the point of the task.
