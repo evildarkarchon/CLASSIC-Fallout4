@@ -1,0 +1,23 @@
+# Workspace clippy configuration.
+#
+# Single shared Tokio runtime guard (AGENTS.md rule 5, ADR-0010): only
+# `classic-shared-core` may construct a Tokio runtime. Every other crate must
+# use `classic_shared_core::get_runtime()`. The one legitimate construction
+# site, and the few test and bench sites that exercise runtime behaviour
+# directly, carry a targeted `#[allow(clippy::disallowed_methods)]` with a
+# reason.
+#
+# `disallowed-methods` also fires inside every `#[tokio::test]` expansion, and
+# clippy cannot skip macro expansions. Each test file that uses
+# `#[tokio::test]` therefore opts out with an inner
+# `#![allow(clippy::disallowed_methods)]` and a one-line reason. A new test file
+# trips clippy until it opts in the same way.
+disallowed-methods = [
+    { path = "tokio::runtime::Runtime::new", reason = "use classic_shared_core::get_runtime(); CLASSIC has exactly one Tokio runtime" },
+    { path = "tokio::runtime::Builder::new_multi_thread", reason = "use classic_shared_core::get_runtime(); CLASSIC has exactly one Tokio runtime" },
+    { path = "tokio::runtime::Builder::new_current_thread", reason = "use classic_shared_core::get_runtime(); CLASSIC has exactly one Tokio runtime" },
+]
+
+disallowed-macros = [
+    { path = "tokio::main", reason = "use classic_shared_core::get_runtime(); CLASSIC has exactly one Tokio runtime" },
+]

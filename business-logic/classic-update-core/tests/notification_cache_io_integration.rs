@@ -38,6 +38,9 @@
 //! CI where outbound HTTPS is blocked — the CacheIo branch fires before
 //! anything downstream runs.
 
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use classic_update_core::{UpdateError, check_app_notification_with_env};
 use std::collections::HashMap;
 use std::path::PathBuf;

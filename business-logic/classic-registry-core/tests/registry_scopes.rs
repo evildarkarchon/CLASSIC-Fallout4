@@ -16,6 +16,9 @@
 //!   `PathBuf` override (and vice versa);
 //! - a handle can be moved into async work and keeps naming its own store.
 
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use classic_registry_core::{
     Keys, RegistryScope, clear_all, get, get_application_dir, get_game, is_registered, register,
     set_application_dir, set_game,
