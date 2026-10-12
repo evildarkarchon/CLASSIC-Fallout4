@@ -3,8 +3,8 @@
 //!
 //! `read_game_local_facts_in_yaml_file_cache_scope` lets a binding facade keep
 //! its Game Local reads in its own core-owned scope, while the unscoped
-//! `read_game_local_facts` keeps using the process default scope that Rust,
-//! CXX, and Node callers have always used. The default scope is
+//! `read_game_local_facts` keeps using the process default scope that Rust
+//! and CXX callers have always used. The default scope is
 //! process-global, so these probes live in their own test binary and run
 //! serially.
 

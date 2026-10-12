@@ -2,9 +2,9 @@
 //! through the caller-selected `FileHashScope`.
 //!
 //! `contract::execute_in_scopes` carries an opaque hash scope chosen by the
-//! caller (the Python `classic_scanlog` facade selects its own), while the
-//! unscoped `contract::execute` keeps hashing through the process default
-//! scope that Rust, CXX, and Node callers have always used. The default scope
+//! caller (the retired Python `classic_scanlog` facade selected its own), while
+//! the unscoped `contract::execute` keeps hashing through the process default
+//! scope that Rust and CXX callers have always used. The default scope
 //! is process-global, so these probes live in their own test binary and run
 //! serially.
 

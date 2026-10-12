@@ -1306,10 +1306,10 @@ fn every_scan_progress_phase_variant_is_listed_for_iteration() {
 #[test]
 fn scan_progress_phase_tokens_are_the_frozen_published_spelling() {
     // This enum never had a token method, so these are not a respelling of one -
-    // they are the exact strings the Python and Node surfaces already publish
-    // from two separate hand-written tables, adopted here so those tables can be
-    // deleted without moving a byte on either surface. A change to any arm below
-    // is a breaking change to every binding consumer.
+    // they are the exact strings the Python and Node surfaces (since retired)
+    // published from two separate hand-written tables, adopted here so those
+    // tables could be deleted without moving a byte on either surface. A change
+    // to any arm below is a breaking change to every binding consumer.
     assert_eq!(ScanProgressPhase::Setup.as_str(), "setup");
     assert_eq!(ScanProgressPhase::Parse.as_str(), "parse");
     assert_eq!(ScanProgressPhase::Analyze.as_str(), "analyze");

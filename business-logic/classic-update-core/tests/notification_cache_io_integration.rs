@@ -1,8 +1,8 @@
 //! Integration tests for the notification-check `CACHE_IO` error branch.
 //!
 //! Purpose: exercise the full orchestrator path in [`classic_update_core::notification`]
-//! so that the `NotificationCacheIo` variant — and the Node `CACHE_IO:` /
-//! Python `ClassicNotificationCacheIoError` surfaces that mirror it — is
+//! so that the `NotificationCacheIo` variant — which the retired Node
+//! `CACHE_IO:` / Python `ClassicNotificationCacheIoError` surfaces mirrored — is
 //! observable end-to-end rather than asserted only at the
 //! `map_ensure_cache_result` helper level.
 //!

@@ -560,7 +560,7 @@ Final exit gate:
 | Shared scan-run fixtures and explicit expected outcomes | Retain and reshape as pack | Remain the independent oracle; never generated from Rust |
 | Node/Python runtime registry claims and test pointers | Delete surface by surface | Every selected parity row tied to an executed matching receipt |
 | Selector counts and hashes | Generate only | Derived from current source mappings and receipts |
-| CXX source parity gate/baseline | Deleted (T1, #306) | Production CLI/GUI builds catch missing exports; `cargo xtask cxx-bridge-gate` (wired by T2) catches orphan exports |
+| CXX source parity gate/baseline | Deleted (T1, #306) | Production CLI/GUI builds catch missing exports; `cargo xtask cxx-bridge-gate` (blocking `ci-cpp.yml` job since T2, #310) catches orphan exports |
 | Node/Python source parity contracts, declarations, type tests, and stubs | Deleted with the bindings (Retire, #304) | None; the surfaces no longer exist |
 | Forbidden-export audit and runtime namespace probes | Retain narrowly | Source/declaration scans prove unused or hidden API absence; loadable bindings also prove removed names are not generated or re-exported at runtime |
 | Rust Vocabulary owner conformance | Retain | Canonical token/label ownership invariant |
@@ -666,7 +666,7 @@ Do not update current API pages to claim executable coverage before it is blocki
 
 - `docs/development/repository-gates.md` — the conformance-only `full` verdict and the interim direct gates (the binding compliance suite page retired with the Python and Node bindings).
 - `docs/api/binding-parity-overview.md` — capability/scenario coverage and participant roles.
-- `docs/api/binding-parity-policy.md` — same-change executable obligation and narrow applicability exceptions.
+- `docs/api/cxx-bridge-policy.md` — the consumer-driven bridge rule; conformance never keeps a bridge export alive.
 - Affected domain API pages — scenario-owned behavior and any contract-shaping observation changes.
 - CI and contributor command references — only after the corresponding profile is blocking.
 

@@ -9,7 +9,7 @@ use classic_vocabulary::Vocabulary;
 /// A launch with diagnostics still produced a scannable request; diagnostics never stop a
 /// scan. New kinds are added as launch rules gain reportable outcomes. The enum is
 /// deliberately exhaustive: a new kind fails to compile in every binding that projects it,
-/// which is how CXX, Node and Python stay in parity with it.
+/// which is how the CXX bridge stays in step with it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CrashLogScanLaunchDiagnostic {
     /// A diagnostic User Settings reported when the launch opened them read-only.

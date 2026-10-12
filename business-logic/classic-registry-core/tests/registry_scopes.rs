@@ -2,8 +2,9 @@
 //!
 //! `classic_registry_core` owns the typed registry, including the
 //! application-directory key. Every store is reachable through an opaque
-//! [`RegistryScope`] handle so a binding adapter (the merged Python
-//! extension) can give each former extension facade its own registry, while
+//! [`RegistryScope`] handle so a binding adapter (originally the merged Python
+//! extension, retired with ADR-0010) can give each former extension facade its
+//! own registry, while
 //! the unscoped free functions keep using one process default scope.
 //!
 //! These tests pin the contract the adapter relies on:

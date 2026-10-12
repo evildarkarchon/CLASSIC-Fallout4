@@ -531,9 +531,9 @@ pub fn remove_readonly_attribute(_path: &Path) -> PathResult<()> {
 /// the error to the caller.
 ///
 /// Unlike [`remove_readonly_attribute`], this writes that stderr warning; the
-/// Node and Python `remove_readonly` exports rely on the existing behavior, so
-/// the two public helpers are kept distinct even though they share one
-/// implementation.
+/// retired Node and Python `remove_readonly` exports relied on that behavior,
+/// which is why the two public helpers are kept distinct even though they
+/// share one implementation.
 ///
 /// # Arguments
 ///

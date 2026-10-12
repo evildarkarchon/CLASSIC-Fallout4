@@ -20,8 +20,7 @@ fn every_crash_log_scan_run_status_variant_is_listed_for_iteration() {
     // construct reports how many variants an enum has - so adding a status must
     // land a contributor on a line that says so. This count is also the arity
     // every binding's exhaustive projection test iterates, and the arity of the
-    // three parallel status enums the bridge, the Qt GUI, and the Python surface
-    // still maintain by hand.
+    // parallel status enums the bridge and the Qt GUI still maintain by hand.
     assert_eq!(CrashLogScanRunStatus::VARIANTS.len(), 6);
 }
 

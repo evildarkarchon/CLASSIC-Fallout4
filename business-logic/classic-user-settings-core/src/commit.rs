@@ -427,7 +427,7 @@ impl CommitPublicationStage for PublicationStage {
             Self::Sync => "commit_temp_sync_failed",
             // The shared vocabulary calls this stage `Publish`. Mapping it to anything but
             // `commit_replace_failed` would silently retire that published code and every
-            // operation code derived from it, across three bindings at once.
+            // operation code derived from it, across every binding at once.
             Self::Publish => "commit_replace_failed",
         }
     }

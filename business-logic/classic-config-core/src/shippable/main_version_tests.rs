@@ -63,8 +63,9 @@ fn windows_env(tmp: &Path) -> Vec<(&'static str, String)> {
 }
 
 // ---------------------------------------------------------------------------
-// load_main_yaml_version — schema-gated `CLASSIC_Info.version` extractor used
-// by the C++/Node/Python startup bridges. The tests below are the regression
+// load_main_yaml_version — schema-gated `CLASSIC_Info.version` extractor once
+// used by the C++/Node/Python startup bridges (none export it since ADR-0010;
+// it is Rust-only). The tests below are the regression
 // gate that replaced the GUI's raw `yaml_ops_get_string("CLASSIC_Info.version",
 // "")` call; they exist to prove the loader rejects the legacy `CLASSIC v...`
 // shape on `schema_version: 1.x` and refuses blank / non-string values on the

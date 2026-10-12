@@ -74,9 +74,9 @@ impl Vocabulary for SourceLocation {
     const VARIANTS: &'static [Self] = &[Self::Canonical, Self::Legacy, Self::Missing];
 
     /// These tokens are frozen. They are the exact strings all three binding
-    /// surfaces already published — the Node spellings are single words, so its
-    /// casing transform is an identity here — and the CXX and Node reversal
-    /// paths parse them back out of a caller-supplied plan.
+    /// surfaces already published — the Node spellings were single words, so its
+    /// casing transform was an identity here — and the CXX and Node reversal
+    /// paths parsed them back out of a caller-supplied plan before ADR-0010.
     fn as_str(self) -> &'static str {
         match self {
             Self::Canonical => "canonical",
@@ -111,9 +111,9 @@ impl Vocabulary for DocumentClassification {
     ];
 
     /// These tokens are frozen. The four multi-word spellings are the ones the
-    /// Node surface publishes as `newerCompatible`, `futureMajor`, and
+    /// retired Node surface published as `newerCompatible`, `futureMajor`, and
     /// `legacyFlat` after its documented casing transform; respelling one here
-    /// changes all three binding contracts at once.
+    /// changes the CXX bridge contract.
     fn as_str(self) -> &'static str {
         match self {
             Self::Current => "current",
@@ -152,8 +152,8 @@ impl Vocabulary for CommitEligibility {
         Self::BlockedUntrusted,
     ];
 
-    /// These tokens are frozen. The Node surface publishes the last two as
-    /// `requiresMigration` and `blockedUntrusted` after its casing transform.
+    /// These tokens are frozen. The retired Node surface published the last two
+    /// as `requiresMigration` and `blockedUntrusted` after its casing transform.
     fn as_str(self) -> &'static str {
         match self {
             Self::Eligible => "eligible",
@@ -175,7 +175,7 @@ impl Vocabulary for CommitEligibility {
 impl Vocabulary for PreferenceOrigin {
     const VARIANTS: &'static [Self] = &[Self::Document, Self::Default, Self::DegradedFallback];
 
-    /// These tokens are frozen. The Node surface publishes the last as
+    /// These tokens are frozen. The retired Node surface published the last as
     /// `degradedFallback` after its casing transform.
     fn as_str(self) -> &'static str {
         match self {
@@ -218,8 +218,8 @@ impl Revision {
     ///
     /// The result is `missing`, `unavailable`, or `sha256:` followed by the
     /// lowercase hex encoding of the digest. This is a frozen wire format: the
-    /// C++, Node, and Python surfaces all publish exactly this string, so a
-    /// change here changes all three revision contracts at once.
+    /// C++ surface publishes exactly this string (as the retired Node and Python
+    /// surfaces did), so a change here changes its revision contract.
     ///
     /// [`Revision::from_token`] is the exact inverse — every value this method
     /// produces parses back to an equal revision.

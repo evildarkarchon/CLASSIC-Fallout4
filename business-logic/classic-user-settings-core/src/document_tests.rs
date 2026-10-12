@@ -3,7 +3,8 @@
 //! Document opening and classification are covered by `tests/open_behavior.rs`;
 //! this sibling module exists for what only the owning crate can assert — that
 //! the names it now owns satisfy the Vocabulary naming contract, and that the
-//! revision token pair the three bindings delegate to keeps the exact wire
+//! revision token pair the bindings delegate to (now only the CXX bridge;
+//! formerly also Node and Python) keeps the exact wire
 //! format, and the exact rejection set, that each binding used to carry as its
 //! own byte-identical copy.
 
@@ -36,7 +37,7 @@ fn preference_origin_satisfies_the_vocabulary_contract() {
 //
 // The one place in the workspace where these literals are legitimate: this is
 // the definition of the frozen identifiers, not a restatement of them. Every
-// other assertion about these strings — in all three bindings — derives its
+// other assertion about these strings — in every binding — derives its
 // expectation from here, so a change to any arm below is a breaking change to
 // every binding consumer and must fail loudly right now.
 
@@ -182,7 +183,7 @@ fn representative_revisions() -> Vec<Revision> {
 fn revision_tokens_are_the_frozen_published_spelling() {
     // The one place in the workspace where these literals are legitimate: this
     // is the definition of the frozen wire format, not a restatement of it. The
-    // CXX, Node, and Python surfaces all publish exactly what `token()` returns.
+    // CXX surface publishes exactly what `token()` returns.
     assert_eq!(Revision::Missing.token(), "missing");
     assert_eq!(Revision::Unavailable.token(), "unavailable");
     assert_eq!(

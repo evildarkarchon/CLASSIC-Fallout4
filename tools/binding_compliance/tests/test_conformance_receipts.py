@@ -106,9 +106,9 @@ def _prepare_run(
     pack_path.write_text(json.dumps(pack_document or _valid_pack()), encoding="utf-8")
     runner_path = tmp_path / "runner.py"
     runner_path.write_text("RUNNER_VERSION = 1\n", encoding="utf-8")
-    policy_page = tmp_path / "docs" / "api" / "binding-parity-policy.md"
+    policy_page = tmp_path / "docs" / "api" / "cxx-bridge-policy.md"
     policy_page.parent.mkdir(parents=True)
-    policy_page.write_text("# Binding Parity Policy\n", encoding="utf-8")
+    policy_page.write_text("# CXX Bridge Policy\n", encoding="utf-8")
     policy_path = tmp_path / "tests" / "conformance" / "policy_exceptions.json"
     policy_path.write_text(
         json.dumps(
@@ -473,7 +473,7 @@ def test_matching_reviewed_exception_accepts_not_applicable_execution(
         "capabilityId": "example.execute",
         "participantId": "cxx",
         "rationale": "The example capability is intentionally absent on CXX.",
-        "policyPage": "docs/api/binding-parity-policy.md",
+        "policyPage": "docs/api/cxx-bridge-policy.md",
     }
     pack, run = _prepare_run(tmp_path, [exception])
     run.receipt_path.write_text(
@@ -514,7 +514,7 @@ def test_not_applicable_rejects_nonmatching_or_unreviewable_exceptions(
         "capabilityId": "example.execute",
         "participantId": "cxx",
         "rationale": "The example capability is intentionally absent on CXX.",
-        "policyPage": "docs/api/binding-parity-policy.md",
+        "policyPage": "docs/api/cxx-bridge-policy.md",
     }
     if mismatch == "participant":
         exception["participantId"] = "rust"

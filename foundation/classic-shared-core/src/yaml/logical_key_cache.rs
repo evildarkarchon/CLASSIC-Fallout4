@@ -10,9 +10,9 @@
 //!
 //! Every store lives behind a [`LogicalKeyCacheScope`] handle. The unscoped
 //! free functions in this module use one lazily created process default
-//! scope, which is what Rust, CXX, and Node callers have always observed. A
+//! scope, which is what Rust and CXX callers have always observed. A
 //! binding adapter that links several former extension images into one
-//! library (the merged Python extension) creates
+//! library (originally the merged Python extension, retired with ADR-0010) creates
 //! [`LogicalKeyCacheScope::new_isolated`] handles so each facade keeps its own
 //! entries and counters. This cache stays distinct from the path/mtime-aware
 //! YAML-file cache; neither scope type reaches the other's store.
