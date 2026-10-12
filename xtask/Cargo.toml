@@ -18,8 +18,12 @@ clap = { workspace = true, features = ["derive"] }
 # `span-locations` gives real line numbers for spans parsed outside a proc
 # macro, which findings need for their `path:line` prefix.
 proc-macro2 = { workspace = true, features = ["span-locations"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
 syn = { workspace = true, features = ["full", "visit"] }
 walkdir = { workspace = true }
+yaml-rust2 = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

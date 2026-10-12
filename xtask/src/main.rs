@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use xtask::{Outcome, RepoRoot, cxx_bridge_gate};
+use xtask::{Outcome, RepoRoot, conformance, cxx_bridge_gate};
 
 /// CLASSIC repository tooling.
 ///
@@ -39,12 +39,17 @@ enum Command {
     /// namespace (for example `using namespace classic::<module>;`) fails as an
     /// unsupported reference form.
     CxxBridgeGate(cxx_bridge_gate::Args),
+    /// Conformance engine: `check` validates every scenario pack,
+    /// tests/conformance/participants.json, tests/conformance/consumer-obligations.json
+    /// and the CI workflow policy, without running any participant.
+    Conformance(conformance::Args),
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = RepoRoot::discover(cli.repo_root).and_then(|root| match cli.command {
         Command::CxxBridgeGate(args) => cxx_bridge_gate::run(&root, args),
+        Command::Conformance(args) => conformance::run(&root, args),
     });
     match result {
         Ok(outcome) => render(outcome),
