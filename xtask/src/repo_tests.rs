@@ -31,6 +31,19 @@ fn relative_paths_use_forward_slashes() {
 }
 
 #[test]
+fn paths_outside_the_root_are_rendered_as_given_with_forward_slashes() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = RepoRoot::new(dir.path());
+    let (outside, expected) = if cfg!(windows) {
+        (r"C:\elsewhere\db\a.yaml", "C:/elsewhere/db/a.yaml")
+    } else {
+        ("/elsewhere/db/a.yaml", "/elsewhere/db/a.yaml")
+    };
+    assert_eq!(root.relative(Path::new(outside)), expected);
+    assert_eq!(root.relative(Path::new("db/a.yaml")), "db/a.yaml");
+}
+
+#[test]
 fn walk_files_filters_by_extension_and_sorts() {
     let dir = tempfile::tempdir().unwrap();
     let src = dir.path().join("src");

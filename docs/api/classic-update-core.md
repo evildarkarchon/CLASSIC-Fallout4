@@ -108,6 +108,10 @@ Lower-level compatibility helpers remain public for tests, unusual hosts, and No
 - `apply_yaml_update_with_decision(client, pages_url, tag_prefix, current, config, approved)`
 - `rollback_yaml_update(file_name)`
 
+Rust-only rule helper (not on the C++ bridge):
+
+- `validate_cache_file_name(name)` - the client's yaml-cache basename rule (no empty, `.`, `..`, separators, `:`, NUL, trailing space or dot, multi-component path, or reserved Windows device stem); `Err(UpdateError::ManifestInvalid)` on refusal. Public so the `cargo xtask yaml-data` publish tooling can pin its mirror of the rule to this one in an agreement test
+
 Contributor note:
 
 - the first-party helpers derive the Pages URL from `GithubClient`; `classic-config-core` inspection supplies the selected Main/game schema versions and exact-byte SHA-256 identities under config-owned compatibility, semantic-validation, fallback, and `.prev` policy

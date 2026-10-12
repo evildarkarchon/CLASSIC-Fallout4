@@ -56,11 +56,15 @@ impl RepoRoot {
     /// finding uses. Paths outside the root are rendered as given.
     pub fn relative(&self, path: &Path) -> String {
         let relative = path.strip_prefix(&self.path).unwrap_or(path);
-        relative
-            .components()
-            .map(|component| component.as_os_str().to_string_lossy())
-            .collect::<Vec<_>>()
-            .join("/")
+        let text = relative.to_string_lossy();
+        // Only Windows uses `\` as a separator; on Unix it is a legal file-name
+        // character and must survive. (Joining components instead would turn a
+        // Windows `C:\` prefix into `C:/\`.)
+        if cfg!(windows) {
+            text.replace('\\', "/")
+        } else {
+            text.into_owned()
+        }
     }
 
     /// Lists every file under the repo-relative directory `relative_dir` whose

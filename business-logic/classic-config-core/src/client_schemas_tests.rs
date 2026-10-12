@@ -9,6 +9,7 @@
 //! the real [`schema_compat_check`], with no source-text parsing.
 
 use super::*;
+use crate::client_schema_ranges::load_client_schema_ranges;
 use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, extract_schema_version, schema_compat_check,
 };
@@ -65,29 +66,25 @@ fn load_single_document(path: &Path) -> Result<Yaml, String> {
 fn schema_drift_findings(dir: &Path) -> Vec<String> {
     let mut findings = Vec::new();
     let ranges_path = dir.join("client-schema-ranges.yaml");
-    let ranges = match load_single_document(&ranges_path) {
+    // The real ranges loader, so the drift guard also refuses a ranges file
+    // the loader would (malformed or inverted bounds).
+    let range_entries = match load_client_schema_ranges(&ranges_path) {
         Ok(ranges) => ranges,
-        Err(finding) => return vec![finding],
-    };
-    let Some(range_entries) = ranges["files"].as_vec() else {
-        return vec![format!(
-            "{}: missing top-level `files` list",
-            ranges_path.display()
-        )];
+        Err(error) => return vec![format!("{}: {error}", ranges_path.display())],
     };
 
     for entry in shippable_schema_entries() {
         let file_name = entry.file_name.as_str();
         let Some(range_entry) = range_entries
             .iter()
-            .find(|candidate| candidate["name"].as_str() == Some(file_name))
+            .find(|candidate| candidate.name == file_name)
         else {
             findings.push(format!(
                 "{file_name}: shippable file is not listed in client-schema-ranges.yaml"
             ));
             continue;
         };
-        let Some(const_name) = range_entry["client_schemas_const"].as_str() else {
+        let Some(const_name) = range_entry.client_schemas_const.as_deref() else {
             findings.push(format!(
                 "{file_name}: client-schema-ranges.yaml entry has no string `client_schemas_const`"
             ));

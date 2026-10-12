@@ -1327,3 +1327,24 @@ jobs:
           path: tools/binding_compliance/artifacts/crash-log-scan-launch/tui/tui/
           if-no-files-found: warn
           retention-days: 7
+
+  # Blocking: the YAML Data publish runs `cargo xtask yaml-data` on
+  # ubuntu-latest, so this proves the publish tooling builds and runs there,
+  # and gives YAML Data edits PR-time validation. It does not run
+  # `cargo test -p xtask`, because the Linux build of the core crates xtask's
+  # tests depend on is unproven.
+  xtask-linux:
+    name: xtask (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build xtask
+        run: cargo build -p xtask --locked
+
+      - name: Validate YAML Data
+        run: cargo xtask yaml-data validate --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
