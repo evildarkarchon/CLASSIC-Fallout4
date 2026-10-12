@@ -96,7 +96,7 @@ If you are translating older instructions that still mention `ClassicLib-rs/...`
 
 ## 6) Repository gates
 
-The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](../adr/)). The checks CI runs as direct steps, and the tools-only Python environment they use, are listed in [Repository gates](../development/repository-gates.md).
+The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](../adr/)). The checks CI runs as direct steps are listed in [Repository gates](../development/repository-gates.md); repository tooling is `cargo xtask` (`cargo xtask --help`).
 
 ---
 
@@ -111,7 +111,7 @@ The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](../adr/)). 
 
 ## 8) Scope boundary: retired Python
 
-- Retired Python and Node bindings: removed from the repo (ADR-0010, in [`docs/adr/`](../adr/)); repository tooling under `tools/` still uses Python
+- Retired Python and Node bindings: removed from the repo (ADR-0010, in [`docs/adr/`](../adr/)); the Python repository tooling was ported to `cargo xtask` and removed
 - Retired pure-Python runtime: removed from the repo; docs preserved under [`docs/archive/python-era/`](../archive/python-era)
 
 Do not treat legacy Python runtime paths as the default contributor flow unless the task is explicitly migration/legacy support.
