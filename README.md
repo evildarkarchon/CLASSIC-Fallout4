@@ -157,8 +157,9 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 ### Repository gates quick reference
 
 ```powershell
-# From repo root, with the tools-only environment (uv sync --project tools)
-uv run --project tools python tools/user_settings_ownership/check.py --repo-root .
+# From repo root
+cargo xtask user-settings-ownership
+# With the tools-only environment (uv sync --project tools)
 uv run --project tools python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
 uv run --project tools python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded
 ```

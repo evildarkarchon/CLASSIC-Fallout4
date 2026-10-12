@@ -20,8 +20,10 @@
 use std::fmt;
 
 pub mod bench;
+mod cpp_source;
 pub mod cxx_bridge_gate;
 mod repo;
+pub mod user_settings_ownership;
 
 pub use repo::RepoRoot;
 
