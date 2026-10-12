@@ -66,7 +66,7 @@ cargo build --workspace
 cargo build --workspace --release
 ```
 
-Repository tooling under `tools/` (the app-notification publish tool, the conformance engine, the interim repository gates, and the tool test suites) runs from the tools-only uv project at `tools/pyproject.toml`, which holds only `ruamel.yaml` and `pytest`:
+Repository tooling under `tools/` (the conformance engine, the interim repository gates, and the tool test suites) runs from the tools-only uv project at `tools/pyproject.toml`, which holds only `ruamel.yaml` and `pytest`:
 
 ```powershell
 uv sync --project tools
@@ -128,15 +128,14 @@ Update `docs/api/yaml-update-delivery.md` when loader, manifest, cache, fallback
 Use this for `CLASSIC Data/app-notification.yaml`, notification manifest semantics, or app-notification publish tooling.
 
 ```powershell
-uv sync --project tools
-uv run --project tools python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"
+cargo xtask app-notification validate --source "CLASSIC Data/app-notification.yaml"
 $publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-uv run --project tools python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt
-uv run --project tools python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v<VERSION> --published-at $publishedAt
-uv run --project tools python -m pytest tools/publish_app_notification/tests -q
+cargo xtask app-notification manifest --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt
+cargo xtask app-notification dry-run --workflow-tag app-notification-v<VERSION> --published-at $publishedAt
+cargo test -p xtask --test app_notification
 ```
 
-Do not commit generated manifest previews or local `gh-pages` output. The maintainer publish workflow is `.github/workflows/publish-app-notification.yml` and runs only for pushed `app-notification-v*` tags. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the advertised binary `v*` release, not the `app-notification-v*` workflow tag. Preserve `--latest=false` on notification release operations so GitHub's latest release pointer stays on binary releases.
+Do not commit generated manifest previews or local `gh-pages` output. The maintainer publish workflow is `.github/workflows/publish-app-notification.yml` and runs only for pushed `app-notification-v*` tags; its steps run `cargo xtask app-notification validate | manifest | verify-asset | smoke-pages`. The blocking `xtask-linux` job in `ci-rust.yml` validates the source and runs `cargo xtask app-notification dry-run` on every pull request. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the advertised binary `v*` release, not the `app-notification-v*` workflow tag. Preserve `--latest=false` on notification release operations so GitHub's latest release pointer stays on binary releases.
 
 ## CI And Platform Notes
 

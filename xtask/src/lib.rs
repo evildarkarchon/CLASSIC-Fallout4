@@ -19,6 +19,7 @@
 
 use std::fmt;
 
+pub mod app_notification;
 pub mod bench;
 mod cpp_source;
 pub mod cxx_bridge_gate;

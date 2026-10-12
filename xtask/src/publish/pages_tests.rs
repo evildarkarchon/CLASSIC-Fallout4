@@ -1,7 +1,21 @@
-//! `pages_url` cases ported from the retired Python suite's
-//! `build_pages_url` test.
+//! `pages_url` cases ported from the retired Python suites'
+//! `build_pages_url` tests (yaml-data and app-notification).
 
 use super::*;
+
+#[test]
+fn live_url_supports_the_app_notification_path() {
+    assert_eq!(
+        pages_url(
+            Some("classic-owner"),
+            Some("classic-repo"),
+            "app-notification/manifest-latest.json",
+            None
+        )
+        .as_deref(),
+        Some("https://classic-owner.github.io/classic-repo/app-notification/manifest-latest.json")
+    );
+}
 
 #[test]
 fn live_url_is_built_from_owner_and_repo() {

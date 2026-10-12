@@ -23,6 +23,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 syn = { workspace = true, features = ["full", "visit"] }
+# Localhost HTTP server for `app-notification dry-run`, and for the publish
+# probe tests (blocking threads, no Tokio).
+tiny_http = { workspace = true }
 # Blocking HTTP for the publish probes (no Tokio; AGENTS.md rule 5).
 ureq = { workspace = true }
 walkdir = { workspace = true }
@@ -35,5 +38,3 @@ classic-config-core = { path = "../business-logic/classic-config-core" }
 classic-shared-core = { path = "../foundation/classic-shared-core" }
 classic-update-core = { path = "../business-logic/classic-update-core" }
 tempfile = { workspace = true }
-# Localhost HTTP server for the publish probe tests.
-tiny_http = { workspace = true }

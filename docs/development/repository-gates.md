@@ -34,6 +34,7 @@ a family that has no pack.
 | Bundled YAML Data schema version | `cargo test -p classic-config-core --lib client_schemas` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
 | Single Tokio runtime | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | `ci-rust.yml`, job `lint`, step "Run clippy" |
 | YAML Data publishes cleanly | `cargo xtask yaml-data validate --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"` | `ci-rust.yml`, job `xtask-linux` (`ubuntu-latest`), step "Validate YAML Data" |
+| App-notification source publishes cleanly | `cargo xtask app-notification validate --source "CLASSIC Data/app-notification.yaml"`, then `cargo xtask app-notification dry-run --workflow-tag app-notification-v0.0.0` | `ci-rust.yml`, job `xtask-linux` (`ubuntu-latest`), steps "Validate app-notification source" and "Dry-run app-notification publish" |
 
 The CXX bridge gate enforces the consumer-driven bridge: every bridge function
 has a production caller in `classic-cli/src` or `classic-gui/src`, and every

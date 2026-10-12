@@ -1339,9 +1339,10 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  # Blocking: the YAML Data publish runs `cargo xtask yaml-data` on
-  # ubuntu-latest, so this proves the publish tooling builds and runs there,
-  # and gives YAML Data edits PR-time validation. It does not run
+  # Blocking: the YAML Data and app-notification publishes run
+  # `cargo xtask yaml-data` / `cargo xtask app-notification` on ubuntu-latest,
+  # so this proves the publish tooling builds and runs there, and gives YAML
+  # Data and notification-source edits PR-time validation. It does not run
   # `cargo test -p xtask`, because the Linux build of the core crates xtask's
   # tests depend on is unproven.
   xtask-linux:
@@ -1359,3 +1360,11 @@ jobs:
 
       - name: Validate YAML Data
         run: cargo xtask yaml-data validate --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
+
+      - name: Validate app-notification source
+        run: cargo xtask app-notification validate --source "CLASSIC Data/app-notification.yaml"
+
+      # No tag exists in the checkout, so the dry run takes its "current UTC
+      # time" fallback for published_at and exercises the full local publish.
+      - name: Dry-run app-notification publish
+        run: cargo xtask app-notification dry-run --workflow-tag app-notification-v0.0.0
