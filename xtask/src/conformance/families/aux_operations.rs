@@ -33,14 +33,18 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
     let mut issues = Vec::new();
     for (index, scenario) in context.pack.scenarios.iter().enumerate() {
         let allowed = if family == "web-operations" {
-            scenario.action == "web-operations.observe" || scenario.action == "web-operations.routes"
+            scenario.action == "web-operations.observe"
+                || scenario.action == "web-operations.routes"
         } else {
             scenario.action == format!("{family}.observe")
         };
         if !allowed {
             issues.push(issue(
                 index,
-                format!("{} is not an auxiliary operation action of {family}", scenario.action),
+                format!(
+                    "{} is not an auxiliary operation action of {family}",
+                    scenario.action
+                ),
             ));
         }
     }
@@ -55,7 +59,8 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
 /// Validates one fixture; the error names the first violated rule.
 fn check_fixture(family: &str, action: &str, fixture: &Value) -> Result<(), String> {
     if action == "web-operations.routes" {
-        let routes = serde_json::json!({"request": {"operation": "game-routes", "game": "Fallout4"}});
+        let routes =
+            serde_json::json!({"request": {"operation": "game-routes", "game": "Fallout4"}});
         return if fixture == &routes {
             Ok(())
         } else {
@@ -70,7 +75,11 @@ fn check_fixture(family: &str, action: &str, fixture: &Value) -> Result<(), Stri
         "web-operations" => &["url", "path", "params", "suffix"],
         "resource-operations" => &["path", "type", "validate", "types"],
         "version-operations" => &["version", "other"],
-        _ => return Err(format!("{family} fixtures must name an extended version operation")),
+        _ => {
+            return Err(format!(
+                "{family} fixtures must name an extended version operation"
+            ));
+        }
     };
     let fixture_keys: &[&str] = if family == "resource-operations" {
         &["request", "files"]
@@ -78,10 +87,14 @@ fn check_fixture(family: &str, action: &str, fixture: &Value) -> Result<(), Stri
         &["request"]
     };
     if !has_exact_keys(fixture, fixture_keys) {
-        return Err(format!("an auxiliary fixture must contain only {fixture_keys:?}"));
+        return Err(format!(
+            "an auxiliary fixture must contain only {fixture_keys:?}"
+        ));
     }
     if !has_exact_keys(request, fields) {
-        return Err(format!("an auxiliary request must have exactly the fields {fields:?}"));
+        return Err(format!(
+            "an auxiliary request must have exactly the fields {fields:?}"
+        ));
     }
     let plain_strings = request
         .as_object()
@@ -105,9 +118,11 @@ fn check_fixture(family: &str, action: &str, fixture: &Value) -> Result<(), Stri
     }
     if family == "resource-operations" {
         let relative = |value: &Value| value.as_str().is_some_and(is_relative_file_path);
-        let files = fixture["files"]
-            .as_object()
-            .is_some_and(|files| files.iter().all(|(path, content)| is_relative_file_path(path) && content.is_string()));
+        let files = fixture["files"].as_object().is_some_and(|files| {
+            files
+                .iter()
+                .all(|(path, content)| is_relative_file_path(path) && content.is_string())
+        });
         let validate = request["validate"]
             .as_array()
             .is_some_and(|items| items.iter().all(relative));
@@ -134,16 +149,27 @@ fn check_version_request(fixture: &Value) -> Result<(), String> {
         .as_object()
         .is_some_and(|map| map.values().all(Value::is_string));
     if !has_exact_keys(request, fields) || !strings {
-        return Err(format!("a {operation} request must have exactly the string fields {fields:?}"));
+        return Err(format!(
+            "a {operation} request must have exactly the string fields {fields:?}"
+        ));
     }
     let pe = operation.starts_with("pe-");
-    let fixture_keys: &[&str] = if pe { &["request", "files"] } else { &["request"] };
+    let fixture_keys: &[&str] = if pe {
+        &["request", "files"]
+    } else {
+        &["request"]
+    };
     if !has_exact_keys(fixture, fixture_keys) {
-        return Err(format!("a version fixture must contain only {fixture_keys:?}"));
+        return Err(format!(
+            "a version fixture must contain only {fixture_keys:?}"
+        ));
     }
     if pe {
         let hex = |text: &str| {
-            text.len() % 2 == 0 && text.bytes().all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+            text.len().is_multiple_of(2)
+                && text
+                    .bytes()
+                    .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
         };
         let files = fixture["files"].as_object().is_some_and(|files| {
             files

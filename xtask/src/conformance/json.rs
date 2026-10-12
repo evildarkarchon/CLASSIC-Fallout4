@@ -276,7 +276,9 @@ impl Parser<'_> {
                 }
                 b'\\' => {
                     self.position += 1;
-                    let escape = self.peek().ok_or_else(|| self.error("unterminated escape"))?;
+                    let escape = self
+                        .peek()
+                        .ok_or_else(|| self.error("unterminated escape"))?;
                     self.position += 1;
                     match escape {
                         b'"' => out.push('"'),

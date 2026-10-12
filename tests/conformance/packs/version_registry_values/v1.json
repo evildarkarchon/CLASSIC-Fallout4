@@ -12,7 +12,6 @@
   "capabilities": [
     {
       "id": "version-registry-values.execute",
-      "operationScoped": true,
       "rustSymbols": [
         "VersionInfo",
         "CompatibleRange",

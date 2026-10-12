@@ -7,7 +7,7 @@
 
 use serde_json::{Value, json};
 
-use super::{InputContext, has_exact_keys, issue, is_string_list};
+use super::{InputContext, has_exact_keys, is_string_list, issue};
 use crate::conformance::Issue;
 use crate::conformance::schema::is_relative_file_path;
 
@@ -21,7 +21,9 @@ pub(super) fn validate_load(context: &InputContext<'_>) -> Vec<Issue> {
         let relative = |value: &Value| value.as_str().is_some_and(is_relative_file_path);
         let request_ok = has_exact_keys(request, &["single", "batch"])
             && relative(&request["single"])
-            && request["batch"].as_array().is_some_and(|batch| batch.iter().all(relative));
+            && request["batch"]
+                .as_array()
+                .is_some_and(|batch| batch.iter().all(relative));
         if !request_ok {
             return Err("a settings request needs a contained single path and a list of contained batch paths".into());
         }
@@ -45,7 +47,9 @@ pub(super) fn validate_yaml(context: &InputContext<'_>) -> Vec<Issue> {
             || fixture["kind"] != "yaml"
             || !fixture["content"].is_string()
         {
-            return Err("a YAML fixture must be {kind: \"yaml\", content, updates, updateOrder}".into());
+            return Err(
+                "a YAML fixture must be {kind: \"yaml\", content, updates, updateOrder}".into(),
+            );
         }
         let updates = &fixture["updates"];
         let typed = has_exact_keys(updates, &["name", "ready", "size", "values"])
@@ -57,7 +61,9 @@ pub(super) fn validate_yaml(context: &InputContext<'_>) -> Vec<Issue> {
             return Err("YAML typed updates must be name (string), ready (bool), size (integer) and values (strings)".into());
         }
         if fixture["updateOrder"] != json!(["name", "ready", "size", "values"]) {
-            return Err("YAML updates require the explicit common order name, ready, size, values".into());
+            return Err(
+                "YAML updates require the explicit common order name, ready, size, values".into(),
+            );
         }
         Ok(())
     })
@@ -91,7 +97,13 @@ fn validate_each(
     let mut issues = Vec::new();
     for (index, scenario) in context.pack.scenarios.iter().enumerate() {
         if scenario.action != action {
-            issues.push(issue(index, format!("{} scenarios must use the {action} action", context.pack.family_id)));
+            issues.push(issue(
+                index,
+                format!(
+                    "{} scenarios must use the {action} action",
+                    context.pack.family_id
+                ),
+            ));
         }
     }
     for (index, _, fixture) in context.sole_json_fixtures() {

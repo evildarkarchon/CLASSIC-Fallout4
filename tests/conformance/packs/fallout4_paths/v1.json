@@ -12,14 +12,12 @@
   "capabilities": [
     {
       "id": "fallout4-paths.config-exe",
-      "operationScoped": true,
       "rustCrate": "classic-config-core",
       "rustSymbols": ["resolve_registry_version_info"],
       "observationFamilies": ["value-results"]
     },
     {
       "id": "fallout4-paths.observe",
-      "operationScoped": true,
       "rustSymbols": [
         "Fallout4Version",
         "as_str",

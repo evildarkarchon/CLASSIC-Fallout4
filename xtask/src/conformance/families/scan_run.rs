@@ -51,10 +51,20 @@ const STAGED_LISTS: [&str; 2] = ["installationData", "logInputs"];
 
 /// Scan-run members that list contained relative paths, as strings or as
 /// `{path}` objects.
-const PATH_LISTS: [&str; 3] = ["formidDatabasePaths", "forbiddenEffectPaths", "observedPaths"];
+const PATH_LISTS: [&str; 3] = [
+    "formidDatabasePaths",
+    "forbiddenEffectPaths",
+    "observedPaths",
+];
 
 /// The exact members of a Crash Log Scan Launch input.
-const LAUNCH_KEYS: [&str; 5] = ["settingsFixtureRef", "intent", "targetedInputs", "overrides", "files"];
+const LAUNCH_KEYS: [&str; 5] = [
+    "settingsFixtureRef",
+    "intent",
+    "targetedInputs",
+    "overrides",
+    "files",
+];
 
 /// `crash-log-scan-run` and `autoscan-report` scan-run input plans.
 pub(super) fn validate_run(context: &InputContext<'_>) -> Vec<Issue> {
@@ -63,13 +73,21 @@ pub(super) fn validate_run(context: &InputContext<'_>) -> Vec<Issue> {
         .scenarios
         .iter()
         .enumerate()
-        .filter_map(|(index, scenario)| run_plan(&scenario.input).err().map(|message| issue(index, message)))
+        .filter_map(|(index, scenario)| {
+            run_plan(&scenario.input)
+                .err()
+                .map(|message| issue(index, message))
+        })
         .collect()
 }
 
 fn run_plan(input: &Map<String, Value>) -> Result<(), String> {
     let present: BTreeSet<&str> = input.keys().map(String::as_str).collect();
-    let missing: Vec<&str> = RUN_REQUIRED.iter().copied().filter(|key| !present.contains(key)).collect();
+    let missing: Vec<&str> = RUN_REQUIRED
+        .iter()
+        .copied()
+        .filter(|key| !present.contains(key))
+        .collect();
     if !missing.is_empty() {
         return Err(format!("a scan-run input is missing {missing:?}"));
     }
@@ -92,9 +110,11 @@ fn run_plan(input: &Map<String, Value>) -> Result<(), String> {
     }
     for key in STAGED_LISTS {
         if let Some(value) = input.get(key) {
-            let staged = value
-                .as_array()
-                .is_some_and(|items| items.iter().all(|item| has_exact_keys(item, &["fixtureRef", "path"])));
+            let staged = value.as_array().is_some_and(|items| {
+                items
+                    .iter()
+                    .all(|item| has_exact_keys(item, &["fixtureRef", "path"]))
+            });
             if !staged {
                 return Err(format!("{key} must list {{fixtureRef, path}} documents"));
             }
@@ -103,12 +123,14 @@ fn run_plan(input: &Map<String, Value>) -> Result<(), String> {
     for key in PATH_LISTS {
         if let Some(value) = input.get(key) {
             let contained = value.as_array().is_some_and(|items| {
-                items
-                    .iter()
-                    .all(|item| {
-                        let path = if has_exact_keys(item, &["path"]) { &item["path"] } else { item };
-                        path.as_str().is_some_and(is_canonical_relative_path)
-                    })
+                items.iter().all(|item| {
+                    let path = if has_exact_keys(item, &["path"]) {
+                        &item["path"]
+                    } else {
+                        item
+                    };
+                    path.as_str().is_some_and(is_canonical_relative_path)
+                })
             });
             if !contained {
                 return Err(format!("{key} must list canonical relative paths"));

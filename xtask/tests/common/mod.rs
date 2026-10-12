@@ -12,6 +12,8 @@ use std::path::Path;
 use tempfile::TempDir;
 use xtask::RepoRoot;
 
+pub mod conformance;
+
 /// Repo-relative directory holding the CXX bridge crate's sources.
 pub const BRIDGE_SRC: &str = "cpp-bindings/classic-cpp-bridge/src";
 /// Repo-relative CLI production source tree.

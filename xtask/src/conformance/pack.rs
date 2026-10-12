@@ -34,10 +34,10 @@ use anyhow::Result;
 use serde_json::{Map, Value};
 
 use super::families::{self, Fixture, InputContext, InputShape};
-use super::json::{Document, pointer};
+use super::json::{Document, parse_strict, pointer};
 use super::schema::{
-    Pack, is_canonical_relative_path, is_exact_json_path, is_fixture_ref,
-    is_relative_file_path, is_stable_id,
+    Pack, is_canonical_relative_path, is_exact_json_path, is_fixture_ref, is_relative_file_path,
+    is_stable_id,
 };
 use super::{Issue, load_document};
 use crate::{Finding, RepoRoot};
@@ -61,15 +61,36 @@ pub(crate) struct LoadedPack {
     pub pack: Pack,
 }
 
+/// Every pack file, split into those that deserialized and those that did not.
+#[derive(Debug, Default)]
+pub(crate) struct Packs {
+    /// Packs that deserialized, sorted by path.
+    pub loaded: Vec<LoadedPack>,
+    /// `familyId`s read from pack files that failed their closed shape.
+    pub unloaded_families: BTreeSet<String>,
+    /// Whether some pack file was not even strict JSON, so its family is
+    /// unknown.
+    pub unidentified: bool,
+}
+
+impl Packs {
+    /// Whether a catalog entry for `family_id` may lack a loaded pack because
+    /// that pack failed to load (its finding already fails the check). This
+    /// keeps one broken pack from cascading into "untracked family" findings.
+    pub fn excuses(&self, family_id: &str) -> bool {
+        self.unidentified || self.unloaded_families.contains(family_id)
+    }
+}
+
 /// Loads and validates every pack under [`PACKS_DIR`], appending findings.
 ///
-/// Returns the packs that deserialized, sorted by path. A missing or empty
-/// pack directory is a finding, as is a `familyId` claimed by two packs.
+/// A missing or empty pack directory is a finding, as is a `familyId`
+/// claimed by two packs.
 ///
 /// # Errors
 ///
 /// Fails when the pack tree or a pack file cannot be read.
-pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<Vec<LoadedPack>> {
+pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<Packs> {
     let discovery = |message: &str| Finding {
         path: PACKS_DIR.to_owned(),
         line: 1,
@@ -78,13 +99,26 @@ pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<V
     };
     if !root.join(PACKS_DIR).is_dir() {
         findings.push(discovery("the scenario pack directory is missing"));
-        return Ok(Vec::new());
+        return Ok(Packs::default());
     }
+    let mut result = Packs::default();
     let mut packs = Vec::new();
     for path in root.walk_files(PACKS_DIR, &["json"])? {
         let file = root.relative(&path);
         match load_document::<Pack>(root, &file, "pack-schema")? {
-            Err(finding) => findings.push(finding),
+            Err(finding) => {
+                findings.push(finding);
+                let family = std::fs::read_to_string(&path)
+                    .ok()
+                    .and_then(|text| parse_strict(&text).ok())
+                    .and_then(|document| document.value()["familyId"].as_str().map(str::to_owned));
+                match family {
+                    Some(family) => {
+                        result.unloaded_families.insert(family);
+                    }
+                    None => result.unidentified = true,
+                }
+            }
             Ok(loaded) => {
                 let issues = validate(root, &loaded.value);
                 findings.extend(
@@ -100,7 +134,7 @@ pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<V
             }
         }
     }
-    if packs.is_empty() && findings.is_empty() {
+    if packs.is_empty() && !result.unidentified && result.unloaded_families.is_empty() {
         findings.push(discovery("no scenario packs were found"));
     }
     let mut owners: HashMap<&str, &str> = HashMap::new();
@@ -117,7 +151,8 @@ pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<V
             });
         }
     }
-    Ok(packs)
+    result.loaded = packs;
+    Ok(result)
 }
 
 /// Runs every semantic check on one deserialized pack.
@@ -137,7 +172,10 @@ fn validate(root: &RepoRoot, pack: &Pack) -> Vec<Issue> {
 /// Reports every element of `values` that occurs more than once.
 fn duplicates<'a>(values: impl IntoIterator<Item = &'a str>) -> BTreeSet<&'a str> {
     let mut seen = BTreeSet::new();
-    values.into_iter().filter(|value| !seen.insert(*value)).collect()
+    values
+        .into_iter()
+        .filter(|value| !seen.insert(*value))
+        .collect()
 }
 
 /// Validates schema versions, stable identities and identity references.
@@ -163,7 +201,11 @@ fn identities(pack: &Pack) -> Vec<Issue> {
         let at = format!("/capabilities/{index}");
         stable(format!("{at}/id"), &capability.id, "capability id");
         if let Some(crate_name) = &capability.rust_crate {
-            stable(format!("{at}/rustCrate"), crate_name, "capability rustCrate");
+            stable(
+                format!("{at}/rustCrate"),
+                crate_name,
+                "capability rustCrate",
+            );
         }
         for (position, family) in capability.observation_families.iter().enumerate() {
             stable(
@@ -194,16 +236,32 @@ fn identities(pack: &Pack) -> Vec<Issue> {
     }
 
     if pack.schema_version != 1 {
-        issues.push(Issue::new("/schemaVersion", RULE, "schemaVersion must be 1"));
+        issues.push(Issue::new(
+            "/schemaVersion",
+            RULE,
+            "schemaVersion must be 1",
+        ));
     }
     if pack.family_version == 0 {
-        issues.push(Issue::new("/familyVersion", RULE, "familyVersion must be positive"));
+        issues.push(Issue::new(
+            "/familyVersion",
+            RULE,
+            "familyVersion must be positive",
+        ));
     }
     if pack.capabilities.is_empty() {
-        issues.push(Issue::new("/capabilities", RULE, "a pack declares at least one capability"));
+        issues.push(Issue::new(
+            "/capabilities",
+            RULE,
+            "a pack declares at least one capability",
+        ));
     }
     if pack.scenarios.is_empty() {
-        issues.push(Issue::new("/scenarios", RULE, "a pack declares at least one scenario"));
+        issues.push(Issue::new(
+            "/scenarios",
+            RULE,
+            "a pack declares at least one scenario",
+        ));
     }
     for (index, capability) in pack.capabilities.iter().enumerate() {
         let at = format!("/capabilities/{index}");
@@ -227,10 +285,13 @@ fn identities(pack: &Pack) -> Vec<Issue> {
             }
         }
     }
-    let capability_ids: BTreeSet<&str> =
-        pack.capabilities.iter().map(|c| c.id.as_str()).collect();
+    let capability_ids: BTreeSet<&str> = pack.capabilities.iter().map(|c| c.id.as_str()).collect();
     for duplicate in duplicates(pack.capabilities.iter().map(|c| c.id.as_str())) {
-        issues.push(Issue::new("/capabilities", RULE, format!("duplicate capability {duplicate}")));
+        issues.push(Issue::new(
+            "/capabilities",
+            RULE,
+            format!("duplicate capability {duplicate}"),
+        ));
     }
     for (index, scenario) in pack.scenarios.iter().enumerate() {
         let at = format!("/scenarios/{index}");
@@ -245,7 +306,10 @@ fn identities(pack: &Pack) -> Vec<Issue> {
             issues.push(Issue::new(
                 format!("{at}/capabilityIds"),
                 RULE,
-                format!("scenario {} names capability {duplicate} twice", scenario.id),
+                format!(
+                    "scenario {} names capability {duplicate} twice",
+                    scenario.id
+                ),
             ));
         }
         for capability in &scenario.capability_ids {
@@ -253,7 +317,10 @@ fn identities(pack: &Pack) -> Vec<Issue> {
                 issues.push(Issue::new(
                     format!("{at}/capabilityIds"),
                     RULE,
-                    format!("scenario {} references unknown capability {capability}", scenario.id),
+                    format!(
+                        "scenario {} references unknown capability {capability}",
+                        scenario.id
+                    ),
                 ));
             }
         }
@@ -269,7 +336,11 @@ fn identities(pack: &Pack) -> Vec<Issue> {
         }
     }
     for duplicate in duplicates(pack.scenarios.iter().map(|s| s.id.as_str())) {
-        issues.push(Issue::new("/scenarios", RULE, format!("duplicate scenario {duplicate}")));
+        issues.push(Issue::new(
+            "/scenarios",
+            RULE,
+            format!("duplicate scenario {duplicate}"),
+        ));
     }
     for duplicate in duplicates(pack.consumer_obligations.iter().map(|o| o.id.as_str())) {
         issues.push(Issue::new(
@@ -309,7 +380,10 @@ fn fixtures(root: &RepoRoot, pack: &Pack, issues: &mut Vec<Issue>) -> BTreeMap<S
                 issues.push(Issue::new(
                     "/fixtureRoot",
                     RULE,
-                    format!("fixtureRoot {} must be an existing repository directory", pack.fixture_root),
+                    format!(
+                        "fixtureRoot {} must be an existing repository directory",
+                        pack.fixture_root
+                    ),
                 ));
                 None
             }
@@ -345,13 +419,16 @@ fn fixtures(root: &RepoRoot, pack: &Pack, issues: &mut Vec<Issue>) -> BTreeMap<S
         match contained(base, relative) {
             Some(path) if path.is_file() => {
                 let json = if relative.ends_with(".json") {
-                    match std::fs::read(&path).map(|bytes| serde_json::from_slice::<Value>(&bytes)) {
+                    match std::fs::read(&path).map(|bytes| serde_json::from_slice::<Value>(&bytes))
+                    {
                         Ok(Ok(value)) => Some(value),
                         Ok(Err(error)) => {
                             issues.push(Issue::new(
                                 at,
                                 RULE,
-                                format!("fixture {reference} ({relative}) is not valid JSON: {error}"),
+                                format!(
+                                    "fixture {reference} ({relative}) is not valid JSON: {error}"
+                                ),
                             ));
                             None
                         }
@@ -372,7 +449,9 @@ fn fixtures(root: &RepoRoot, pack: &Pack, issues: &mut Vec<Issue>) -> BTreeMap<S
             _ => issues.push(Issue::new(
                 at,
                 RULE,
-                format!("fixture {reference} ({relative}) must be an existing file beneath fixtureRoot"),
+                format!(
+                    "fixture {reference} ({relative}) must be an existing file beneath fixtureRoot"
+                ),
             )),
         }
     }
@@ -391,7 +470,10 @@ fn fixtures(root: &RepoRoot, pack: &Pack, issues: &mut Vec<Issue>) -> BTreeMap<S
                 issues.push(Issue::new(
                     at.clone(),
                     RULE,
-                    format!("scenario {} references undeclared fixture {reference}", scenario.id),
+                    format!(
+                        "scenario {} references undeclared fixture {reference}",
+                        scenario.id
+                    ),
                 ));
             }
         }
@@ -418,17 +500,26 @@ fn normalization(pack: &Pack, issues: &mut Vec<Issue>) {
             path_issue(format!("{at}/unorderedPaths/{position}"), path);
         }
         for (position, exclusion) in rules.excluded_paths.iter().enumerate() {
-            path_issue(format!("{at}/excludedPaths/{position}/path"), &exclusion.path);
+            path_issue(
+                format!("{at}/excludedPaths/{position}/path"),
+                &exclusion.path,
+            );
         }
         for (position, optional) in rules.optional_empty_files.iter().flatten().enumerate() {
-            path_issue(format!("{at}/optionalEmptyFiles/{position}/path"), &optional.path);
+            path_issue(
+                format!("{at}/optionalEmptyFiles/{position}/path"),
+                &optional.path,
+            );
         }
         for (position, exclusion) in rules.excluded_paths.iter().enumerate() {
             if exclusion.rationale.trim().is_empty() {
                 issues.push(Issue::new(
                     format!("{at}/excludedPaths/{position}/rationale"),
                     RULE,
-                    format!("excluded path {} needs a non-empty rationale", exclusion.path),
+                    format!(
+                        "excluded path {} needs a non-empty rationale",
+                        exclusion.path
+                    ),
                 ));
             }
         }
@@ -438,7 +529,10 @@ fn normalization(pack: &Pack, issues: &mut Vec<Issue>) {
                 issues.push(Issue::new(
                     format!("{entry}/relativePath"),
                     RULE,
-                    format!("{:?} must be a canonical relative file path", optional.relative_path),
+                    format!(
+                        "{:?} must be a canonical relative file path",
+                        optional.relative_path
+                    ),
                 ));
             }
             if optional.rationale.trim().is_empty() {
@@ -450,10 +544,18 @@ fn normalization(pack: &Pack, issues: &mut Vec<Issue>) {
             }
         }
         for duplicate in duplicates(rules.unordered_paths.iter().map(String::as_str)) {
-            issues.push(Issue::new(at.clone(), RULE, format!("duplicate unordered path {duplicate}")));
+            issues.push(Issue::new(
+                at.clone(),
+                RULE,
+                format!("duplicate unordered path {duplicate}"),
+            ));
         }
         for duplicate in duplicates(rules.excluded_paths.iter().map(|e| e.path.as_str())) {
-            issues.push(Issue::new(at.clone(), RULE, format!("duplicate excluded path {duplicate}")));
+            issues.push(Issue::new(
+                at.clone(),
+                RULE,
+                format!("duplicate excluded path {duplicate}"),
+            ));
         }
         let selectors: Vec<String> = rules
             .optional_empty_files
@@ -468,7 +570,11 @@ fn normalization(pack: &Pack, issues: &mut Vec<Issue>) {
                 format!("duplicate optional empty file selector {duplicate}"),
             ));
         }
-        let excluded: BTreeSet<&str> = rules.excluded_paths.iter().map(|e| e.path.as_str()).collect();
+        let excluded: BTreeSet<&str> = rules
+            .excluded_paths
+            .iter()
+            .map(|e| e.path.as_str())
+            .collect();
         for path in &rules.unordered_paths {
             if excluded.contains(path.as_str()) {
                 issues.push(Issue::new(
@@ -490,7 +596,10 @@ fn input_rule(pack: &Pack, fixtures: &BTreeMap<String, Fixture>, issues: &mut Ve
         let id = &scenario.id;
 
         if shape == InputShape::FixtureRefOnly {
-            let sole = match (scenario.input.get("fixtureRef"), scenario.fixture_refs.as_slice()) {
+            let sole = match (
+                scenario.input.get("fixtureRef"),
+                scenario.fixture_refs.as_slice(),
+            ) {
                 (Some(Value::String(reference)), [only]) => {
                     scenario.input.len() == 1 && reference == only
                 }
@@ -525,7 +634,10 @@ fn input_rule(pack: &Pack, fixtures: &BTreeMap<String, Fixture>, issues: &mut Ve
         let input = Value::Object(scenario.input.clone());
         let mut sources = vec![("input".to_owned(), &input)];
         for reference in &scenario.fixture_refs {
-            if let Some(Fixture { json: Some(json), .. }) = fixtures.get(reference) {
+            if let Some(Fixture {
+                json: Some(json), ..
+            }) = fixtures.get(reference)
+            {
                 sources.push((format!("fixture {reference}"), json));
             }
         }
@@ -562,7 +674,11 @@ fn walk_input(
                 Value::String(reference) => {
                     named.insert(reference.clone());
                 }
-                _ => issues.push(Issue::new(here.clone(), "pack-input", format!("{key} must be a fixture alias string"))),
+                _ => issues.push(Issue::new(
+                    here.clone(),
+                    "pack-input",
+                    format!("{key} must be a fixture alias string"),
+                )),
             }
         }
         if key == "path" && input.contains_key("fixtureRef") {

@@ -28,7 +28,6 @@
   "capabilities": [
     {
       "id": "xse-folder.derive",
-      "operationScoped": true,
       "rustSymbols": [
         "resolve_xse_folder_from_game_local_facts"
       ],
@@ -38,7 +37,6 @@
     },
     {
       "id": "xse-folder.resolve",
-      "operationScoped": true,
       "rustCrate": "classic-scangame-core",
       "rustSymbols": [
         "resolve_xse_folder_for_scan"
@@ -49,7 +47,6 @@
     },
     {
       "id": "xse-folder.log",
-      "operationScoped": true,
       "rustCrate": "classic-scangame-core",
       "rustSymbols": [
         "resolve_xse_log_for_scan"

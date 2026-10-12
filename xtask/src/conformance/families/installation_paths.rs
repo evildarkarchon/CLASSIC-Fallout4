@@ -40,7 +40,10 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
             scenario.action.as_str(),
             "installation-paths.inspect" | "installation-paths.locate"
         ) {
-            issues.push(issue(index, format!("{} is not an installation-paths action", scenario.action)));
+            issues.push(issue(
+                index,
+                format!("{} is not an installation-paths action", scenario.action),
+            ));
         }
     }
     for (index, scenario, fixture) in context.sole_json_fixtures() {
@@ -62,7 +65,10 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
 }
 
 fn check_locate(fixture: &Value, expected_directories: Option<&Value>) -> Result<(), String> {
-    if !has_exact_keys(fixture, &["operation", "executableDir", "workingDir", "classicDataIn"]) {
+    if !has_exact_keys(
+        fixture,
+        &["operation", "executableDir", "workingDir", "classicDataIn"],
+    ) {
         return Err("an Installation Root fixture must contain exactly operation, executableDir, workingDir and classicDataIn".into());
     }
     if fixture["operation"] != "locate" {
@@ -82,7 +88,9 @@ fn check_locate(fixture: &Value, expected_directories: Option<&Value>) -> Result
         return Err("CLASSIC Data may only be placed, once each, in a locator candidate".into());
     }
     if expected_directories != Some(&json!(directory_tree(&placements))) {
-        return Err("the expected directory tree must be exactly the tree the locate inputs create".into());
+        return Err(
+            "the expected directory tree must be exactly the tree the locate inputs create".into(),
+        );
     }
     Ok(())
 }
@@ -93,7 +101,11 @@ fn directory_tree(placements: &[&str]) -> Vec<String> {
     let mut found = BTreeSet::new();
     let leaves = [EXECUTABLE_DIR.to_owned(), WORKING_DIR.to_owned()]
         .into_iter()
-        .chain(placements.iter().map(|place| format!("{place}/CLASSIC Data")));
+        .chain(
+            placements
+                .iter()
+                .map(|place| format!("{place}/CLASSIC Data")),
+        );
     for leaf in leaves {
         let parts: Vec<&str> = leaf.split('/').collect();
         for end in 1..=parts.len() {
@@ -108,13 +120,17 @@ fn check_inspect(fixture: &Value) -> Result<(), String> {
         return Err("an installation paths fixture must contain exactly gamePath, docsPath, registryYaml and files".into());
     }
     let (game, docs) = (fixture["gamePath"].as_str(), fixture["docsPath"].as_str());
-    if !matches!((game, docs), (Some("game"), Some("docs")) | (Some("Game Folder"), Some("Docs Folder"))) {
+    if !matches!(
+        (game, docs),
+        (Some("game"), Some("docs")) | (Some("Game Folder"), Some("Docs Folder"))
+    ) {
         return Err("installation paths must be owned cache directories".into());
     }
     let registry_ok = fixture["registryYaml"]
         .as_str()
         .is_some_and(|text| sha256_hex(text.as_bytes()) == REGISTRY_SHA256);
-    let marker = json!({format!("{}/Fallout4.exe", game.unwrap_or_default()): "owned executable marker"});
+    let marker =
+        json!({format!("{}/Fallout4.exe", game.unwrap_or_default()): "owned executable marker"});
     if !registry_ok || fixture["files"] != marker {
         return Err("installation paths need the controlled registry metadata and exactly one executable marker".into());
     }

@@ -65,10 +65,26 @@ const fn twin(
 }
 
 const CONFIG_OPERATIONS: [Operation; 4] = [
-    op("installed_yaml_data_provenance_label", "InstalledYamlDataProvenance", CONFIG),
-    op("scan_run_installed_yaml_data_provenance_label", "InstalledYamlDataProvenance", CONFIG),
-    op("installed_yaml_data_diagnostic_kind_label", "InstalledYamlDataDiagnosticKind", CONFIG),
-    op("local_ignore_yaml_data_state_label", "LocalIgnoreYamlDataState", CONFIG),
+    op(
+        "installed_yaml_data_provenance_label",
+        "InstalledYamlDataProvenance",
+        CONFIG,
+    ),
+    op(
+        "scan_run_installed_yaml_data_provenance_label",
+        "InstalledYamlDataProvenance",
+        CONFIG,
+    ),
+    op(
+        "installed_yaml_data_diagnostic_kind_label",
+        "InstalledYamlDataDiagnosticKind",
+        CONFIG,
+    ),
+    op(
+        "local_ignore_yaml_data_state_label",
+        "LocalIgnoreYamlDataState",
+        CONFIG,
+    ),
 ];
 
 const SCAN_OPERATIONS: [Operation; 6] = [
@@ -86,7 +102,11 @@ const SCAN_OPERATIONS: [Operation; 6] = [
     ),
     op("scan_run_log_disposition_label", "LogDisposition", SCAN),
     op("scan_run_log_failure_stage_label", "LogFailureStage", SCAN),
-    op("scan_run_infrastructure_error_stage_label", "InfrastructureErrorStage", SCAN),
+    op(
+        "scan_run_infrastructure_error_stage_label",
+        "InfrastructureErrorStage",
+        SCAN,
+    ),
     twin(
         "scan_run_local_ignore_reset_failure_stage_label",
         "LocalIgnoreResetFailureStage",
@@ -107,8 +127,14 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
     for (index, scenario) in context.pack.scenarios.iter().enumerate() {
         match scenario.input.get("operation").and_then(Value::as_str) {
             Some(name) if by_name.insert(name, index).is_none() => {}
-            Some(name) => issues.push(issue(index, format!("resolver {name} is exercised more than once"))),
-            None => issues.push(issue(index, "a vocabulary input must name its resolver operation")),
+            Some(name) => issues.push(issue(
+                index,
+                format!("resolver {name} is exercised more than once"),
+            )),
+            None => issues.push(issue(
+                index,
+                "a vocabulary input must name its resolver operation",
+            )),
         }
     }
     let wanted: BTreeSet<&str> = operations.iter().map(|operation| operation.name).collect();
@@ -121,7 +147,9 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
     }
     let mut sources = Sources::new(context.root);
     for operation in operations {
-        let Some(&index) = by_name.get(operation.name) else { continue };
+        let Some(&index) = by_name.get(operation.name) else {
+            continue;
+        };
         match sources.tokens(operation) {
             Err(message) => issues.push(issue(index, message)),
             Ok(mut tokens) => {
@@ -181,7 +209,11 @@ impl<'a> Sources<'a> {
             .filter(|(variant, _)| owner.variants.contains(variant))
             .collect();
         tokens.extend(owner.tokens);
-        let unpaired: Vec<&String> = owner.variants.iter().filter(|variant| !tokens.contains_key(*variant)).collect();
+        let unpaired: Vec<&String> = owner
+            .variants
+            .iter()
+            .filter(|variant| !tokens.contains_key(*variant))
+            .collect();
         if let ([variant], Some(constant)) = (unpaired.as_slice(), &owner.fallback) {
             let file = self.file(operation.source)?;
             if let Some(value) = string_const(file, constant) {
@@ -189,7 +221,10 @@ impl<'a> Sources<'a> {
             }
         }
         let complete = !owner.variants.is_empty()
-            && owner.variants.iter().all(|variant| tokens.contains_key(variant))
+            && owner
+                .variants
+                .iter()
+                .all(|variant| tokens.contains_key(variant))
             && tokens.len() == owner.variants.len();
         let distinct = tokens.values().collect::<BTreeSet<_>>().len() == tokens.len();
         if !complete || !distinct {
@@ -198,7 +233,11 @@ impl<'a> Sources<'a> {
                 operation.symbol, operation.source
             ));
         }
-        Ok(owner.variants.iter().map(|variant| tokens[variant].clone()).collect())
+        Ok(owner
+            .variants
+            .iter()
+            .map(|variant| tokens[variant].clone())
+            .collect())
     }
 
     /// The enum's variants and its `as_str` literal arms and fallback.
@@ -206,7 +245,12 @@ impl<'a> Sources<'a> {
         let file = self.file(source)?;
         let variants: Vec<String> = crate::rust_source::find_enum(file, symbol)
             .filter(|item| matches!(item.vis, syn::Visibility::Public(_)))
-            .map(|item| item.variants.iter().map(|variant| variant.ident.to_string()).collect())
+            .map(|item| {
+                item.variants
+                    .iter()
+                    .map(|variant| variant.ident.to_string())
+                    .collect()
+            })
             .ok_or_else(|| format!("vocabulary source {source} declares no `pub enum {symbol}`"))?;
         let as_str = file
             .items
@@ -214,13 +258,19 @@ impl<'a> Sources<'a> {
             .find_map(|item| match item {
                 syn::Item::Impl(item) if implements_vocabulary_for(item, symbol) => {
                     item.items.iter().find_map(|member| match member {
-                        syn::ImplItem::Fn(function) if function.sig.ident == "as_str" => Some(function),
+                        syn::ImplItem::Fn(function) if function.sig.ident == "as_str" => {
+                            Some(function)
+                        }
                         _ => None,
                     })
                 }
                 _ => None,
             })
-            .ok_or_else(|| format!("vocabulary source {source} has no `impl Vocabulary for {symbol}` with `as_str`"))?;
+            .ok_or_else(|| {
+                format!(
+                    "vocabulary source {source} has no `impl Vocabulary for {symbol}` with `as_str`"
+                )
+            })?;
         let mut arms = Arms::default();
         arms.visit_block(&as_str.block);
         Ok(Declared {
@@ -255,19 +305,29 @@ impl<'ast> Visit<'ast> for Arms {
                 lit: syn::Lit::Str(text),
                 ..
             }) => Some(Body::Token(text.value())),
-            syn::Expr::Path(path) => path.path.get_ident().map(|ident| Body::Constant(ident.to_string())),
+            syn::Expr::Path(path) => path
+                .path
+                .get_ident()
+                .map(|ident| Body::Constant(ident.to_string())),
             _ => None,
         };
         match (&arm.pat, body) {
             (syn::Pat::Path(pattern), Some(Body::Token(token))) => {
-                let segments: Vec<String> = pattern.path.segments.iter().map(|s| s.ident.to_string()).collect();
+                let segments: Vec<String> = pattern
+                    .path
+                    .segments
+                    .iter()
+                    .map(|s| s.ident.to_string())
+                    .collect();
                 if let [first, variant] = segments.as_slice()
                     && first == "Self"
                 {
                     self.tokens.insert(variant.clone(), token);
                 }
             }
-            (syn::Pat::Ident(pattern), Some(Body::Constant(constant))) if pattern.ident == "None" => {
+            (syn::Pat::Ident(pattern), Some(Body::Constant(constant)))
+                if pattern.ident == "None" =>
+            {
                 self.fallback = Some(constant);
             }
             _ => {}
@@ -289,7 +349,11 @@ fn implements_vocabulary_for(item: &syn::ItemImpl, symbol: &str) -> bool {
         .and_then(|(_, path, _)| path.segments.last())
         .is_some_and(|segment| segment.ident == "Vocabulary");
     let self_is_symbol = match &*item.self_ty {
-        syn::Type::Path(path) => path.path.segments.last().is_some_and(|segment| segment.ident == symbol),
+        syn::Type::Path(path) => path
+            .path
+            .segments
+            .last()
+            .is_some_and(|segment| segment.ident == symbol),
         _ => false,
     };
     trait_is_vocabulary && self_is_symbol
@@ -308,3 +372,7 @@ fn string_const(file: &syn::File, name: &str) -> Option<String> {
         _ => None,
     })
 }
+
+#[cfg(test)]
+#[path = "vocabulary_tests.rs"]
+mod tests;

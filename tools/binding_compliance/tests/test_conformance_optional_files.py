@@ -1,7 +1,6 @@
 """Exact scenario declarations bound optional empty coordination-file evidence."""
 
 import copy
-import re
 
 import pytest
 from conformance.compare import (
@@ -13,7 +12,6 @@ from conformance.packs import PackValidationError, load_and_validate_pack
 from conformance.schema import ConformanceSchemaError, _validate_normalization_envelope
 
 from test_conformance_packs import _valid_pack, _write_pack
-from test_conformance_schema import _schema
 
 
 def _normalization():
@@ -135,16 +133,6 @@ def test_optional_file_declarations_are_unique_and_schema_owned():
     )
     with pytest.raises(ConformanceSchemaError):
         _validate_normalization_envelope(rules, "normalization")
-    for name in ("scenario-pack-v1.schema.json", "run-plan-v1.schema.json"):
-        normalization = _schema(name)["$defs"]["normalization"]
-        declaration = normalization["properties"]["optionalEmptyFiles"]["items"]
-        assert declaration["additionalProperties"] is False
-        assert set(declaration["required"]) == {"path", "relativePath", "rationale"}
-        assert "optionalEmptyFiles" not in normalization["required"]
-        pattern = declaration["properties"]["relativePath"]["pattern"]
-        assert re.fullmatch(pattern, "CLASSIC Settings.yaml.commit.lock")
-        for invalid in ("../file", "./file", "/file", "a//b", "C:file", "a\\b"):
-            assert re.fullmatch(pattern, invalid) is None
 
 
 def test_optional_file_declarations_are_accepted_by_pack_validation(tmp_path):

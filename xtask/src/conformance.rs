@@ -84,11 +84,15 @@ fn check(root: &RepoRoot) -> Result<Outcome> {
     let required = &applicability.required;
     findings.extend(workflow_policy::check(root, required)?);
 
-    let scenarios: usize = packs.iter().map(|loaded| loaded.pack.scenarios.len()).sum();
+    let scenarios: usize = packs
+        .loaded
+        .iter()
+        .map(|loaded| loaded.pack.scenarios.len())
+        .sum();
     let summary = format!(
         "conformance check: {} packs ({scenarios} scenarios), {} CXX scenarios in {} enrolled \
          families, {} consumer obligations, {} required CI executions",
-        packs.len(),
+        packs.loaded.len(),
         applicability.cxx_scenarios,
         applicability.cxx_families,
         applicability.consumer_obligations,
@@ -188,7 +192,11 @@ pub(crate) fn load_document<T: DeserializeOwned>(
     let text = match std::fs::read_to_string(root.join(relative)) {
         Ok(text) => text,
         Err(error) if error.kind() == ErrorKind::NotFound => {
-            return Ok(Err(finding(1, schema_rule, "required file is missing".into())));
+            return Ok(Err(finding(
+                1,
+                schema_rule,
+                "required file is missing".into(),
+            )));
         }
         Err(error) if error.kind() == ErrorKind::InvalidData => {
             return Ok(Err(finding(1, "invalid-json", "file is not UTF-8".into())));

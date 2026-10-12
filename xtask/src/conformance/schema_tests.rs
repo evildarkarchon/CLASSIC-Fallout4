@@ -36,7 +36,12 @@ fn a_well_formed_pack_deserializes() {
     assert_eq!(pack.family_id, "demo");
     assert_eq!(pack.scenarios[0].input["fixtureRef"], "one");
     assert!(pack.capabilities[0].rust_crate.is_none());
-    assert!(pack.scenarios[0].normalization.optional_empty_files.is_none());
+    assert!(
+        pack.scenarios[0]
+            .normalization
+            .optional_empty_files
+            .is_none()
+    );
 }
 
 #[test]
@@ -46,7 +51,10 @@ fn unknown_and_missing_members_and_wrong_types_are_rejected() {
     assert!(deserialize_error(unknown).contains("unknown field `operationScoped`"));
 
     let mut missing = pack();
-    missing.as_object_mut().unwrap().remove("consumerObligations");
+    missing
+        .as_object_mut()
+        .unwrap()
+        .remove("consumerObligations");
     assert!(deserialize_error(missing).contains("missing field `consumerObligations`"));
 
     let mut wrong_type = pack();
@@ -65,7 +73,10 @@ fn participants_admit_only_the_cxx_enrolment() {
         "families": [{"familyId": "demo", "cxx": {"capabilityIds": ["demo.observe"]}}]
     }))
     .expect("valid catalog");
-    assert_eq!(catalog.families[0].cxx.as_ref().unwrap().capability_ids, ["demo.observe"]);
+    assert_eq!(
+        catalog.families[0].cxx.as_ref().unwrap().capability_ids,
+        ["demo.observe"]
+    );
 
     let error = serde_json::from_value::<Participants>(json!({
         "schemaVersion": 1,
@@ -88,7 +99,10 @@ fn consumer_obligations_have_a_closed_shape() {
         }]}]
     });
     let catalog: ConsumerObligations = serde_json::from_value(document.clone()).expect("valid");
-    assert_eq!(catalog.families[0].consumers[0].obligations[0].id, "demo.shown");
+    assert_eq!(
+        catalog.families[0].consumers[0].obligations[0].id,
+        "demo.shown"
+    );
 
     let mut extra = document;
     extra["families"][0]["consumers"][0]["obligations"][0]["owner"] = json!("x");
@@ -120,7 +134,9 @@ fn exact_json_paths_name_one_non_root_node() {
     for valid in ["$.a", "$.a[0].b_c-d", "$[12]", "$._x"] {
         assert!(is_exact_json_path(valid), "{valid}");
     }
-    for invalid in ["$", "a", "$.*", "$..a", "$[01]", "$[-1]", "$.a[", "$.1a", "$[*]"] {
+    for invalid in [
+        "$", "a", "$.*", "$..a", "$[01]", "$[-1]", "$.a[", "$.1a", "$[*]",
+    ] {
         assert!(!is_exact_json_path(invalid), "{invalid}");
     }
 }
@@ -131,9 +147,13 @@ fn relative_paths_are_canonical_and_contained() {
         assert!(is_canonical_relative_path(valid), "{valid}");
         assert!(is_relative_file_path(valid), "{valid}");
     }
-    for invalid in ["", ".", "..", "a/../b", "./a", "a//b", "a/", "/a", "C:/a", "a\\b"] {
+    for invalid in [
+        "", ".", "..", "a/../b", "./a", "a//b", "a/", "/a", "C:/a", "a\\b",
+    ] {
         assert!(!is_canonical_relative_path(invalid), "{invalid}");
     }
-    assert!(is_canonical_relative_path("a:b"));
-    assert!(!is_relative_file_path("a:b"));
+    assert!(is_canonical_relative_path("ab:c"));
+    assert!(!is_relative_file_path("ab:c"));
+    // A drive-relative path names another drive's working directory.
+    assert!(!is_canonical_relative_path("a:b"));
 }

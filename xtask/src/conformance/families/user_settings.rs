@@ -30,15 +30,31 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
                 .and_then(|()| observation_fields(&input["observationFields"])),
             "user-settings.update" => keys(
                 input,
-                &["installationData", "installationRootExists", "previewMode", "requestedUpdate", "commit", "externalEdit"],
+                &[
+                    "installationData",
+                    "installationRootExists",
+                    "previewMode",
+                    "requestedUpdate",
+                    "commit",
+                    "externalEdit",
+                ],
             )
             .and_then(|()| staged(input))
             .and_then(|()| update(input))
             .and_then(|()| only_capability(&scenario.capability_ids, "user-settings.update")),
-            "user-settings.migrate" => keys(input, &["installationData", "apply", "restore", "beforeApply", "beforeRestore"])
-                .and_then(|()| staged(input))
-                .and_then(|()| migrate(input))
-                .and_then(|()| only_capability(&scenario.capability_ids, "user-settings.migrate")),
+            "user-settings.migrate" => keys(
+                input,
+                &[
+                    "installationData",
+                    "apply",
+                    "restore",
+                    "beforeApply",
+                    "beforeRestore",
+                ],
+            )
+            .and_then(|()| staged(input))
+            .and_then(|()| migrate(input))
+            .and_then(|()| only_capability(&scenario.capability_ids, "user-settings.migrate")),
             "user-settings.defaults" => keys(input, &[]),
             "user-settings.geometry" => keys(input, &["installationData", "blockLock"])
                 .and_then(|()| staged(input))
@@ -62,7 +78,9 @@ fn keys(input: &Map<String, Value>, expected: &[&str]) -> Result<(), String> {
     if actual == wanted {
         Ok(())
     } else {
-        Err(format!("User Settings input must contain exactly {wanted:?}, found {actual:?}"))
+        Err(format!(
+            "User Settings input must contain exactly {wanted:?}, found {actual:?}"
+        ))
     }
 }
 
@@ -114,14 +132,17 @@ fn update(input: &Map<String, Value>) -> Result<(), String> {
         .as_array()
         .is_some_and(|items| items.len() <= 1 && items.iter().all(|item| item["path"] == SETTINGS));
     if !staged_at_settings {
-        return Err(format!("an update stages at most one document, at {SETTINGS}"));
+        return Err(format!(
+            "an update stages at most one document, at {SETTINGS}"
+        ));
     }
     let external = &input["externalEdit"];
     let external_ok = external.is_null()
-        || (super::has_exact_keys(external, &["fixtureRef", "path"]) && external["path"] == SETTINGS);
-    external_ok
-        .then_some(())
-        .ok_or_else(|| format!("externalEdit must be null or a {{fixtureRef, path}} edit of {SETTINGS}"))
+        || (super::has_exact_keys(external, &["fixtureRef", "path"])
+            && external["path"] == SETTINGS);
+    external_ok.then_some(()).ok_or_else(|| {
+        format!("externalEdit must be null or a {{fixtureRef, path}} edit of {SETTINGS}")
+    })
 }
 
 fn migrate(input: &Map<String, Value>) -> Result<(), String> {
@@ -136,7 +157,11 @@ fn migrate(input: &Map<String, Value>) -> Result<(), String> {
             Some("external-edit") => &["kind", "fixtureRef", "path"],
             Some("tamper-backup") => &["kind", "fixtureRef"],
             Some("remove-backup" | "block-backup-directory") => &["kind"],
-            _ => return Err(format!("{key} has an unsupported migration interference kind")),
+            _ => {
+                return Err(format!(
+                    "{key} has an unsupported migration interference kind"
+                ));
+            }
         };
         if !super::has_exact_keys(control, fields) {
             return Err(format!("{key} must contain exactly {fields:?}"));

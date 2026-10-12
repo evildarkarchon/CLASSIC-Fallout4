@@ -95,8 +95,12 @@ pub fn check(root: &RepoRoot, required: &BTreeSet<ExecutionKey>) -> Result<Vec<F
 
     let mut jobs_checked = BTreeSet::new();
     for policy in &policies {
-        let Some(workflow) = workflows.get(policy.workflow) else { continue };
-        let Some(job) = workflow.job(policy.job, &mut findings) else { continue };
+        let Some(workflow) = workflows.get(policy.workflow) else {
+            continue;
+        };
+        let Some(job) = workflow.job(policy.job, &mut findings) else {
+            continue;
+        };
         if jobs_checked.insert((policy.workflow, policy.job)) {
             participant_job(workflow, &job, policy, &mut findings);
         }
@@ -134,7 +138,10 @@ struct StepPolicy {
 /// Turns the required executions into step policies, one per (family,
 /// participant). A matrix participant must require exactly both compiler
 /// instances, since one matrix step runs both.
-fn step_policies(required: &BTreeSet<ExecutionKey>, findings: &mut Vec<Finding>) -> Vec<StepPolicy> {
+fn step_policies(
+    required: &BTreeSet<ExecutionKey>,
+    findings: &mut Vec<Finding>,
+) -> Vec<StepPolicy> {
     let mut grouped: BTreeMap<(&str, &str), BTreeSet<&str>> = BTreeMap::new();
     for key in required {
         grouped
@@ -159,7 +166,11 @@ fn step_policies(required: &BTreeSet<ExecutionKey>, findings: &mut Vec<Finding>)
             [participant].into()
         };
         if instances != expected {
-            let source = if participant == "cxx" { PARTICIPANTS } else { CONSUMER_OBLIGATIONS };
+            let source = if participant == "cxx" {
+                PARTICIPANTS
+            } else {
+                CONSUMER_OBLIGATIONS
+            };
             findings.push(Finding {
                 path: source.to_owned(),
                 line: 1,
@@ -197,7 +208,15 @@ fn step_policy(family: &str, participant: &str) -> Option<StepPolicy> {
                     format!("rust-{family}-conformance"),
                 ),
             };
-            (CI_RUST, "test", "Run Rust tests with all features", launcher, artifact, false, None)
+            (
+                CI_RUST,
+                "test",
+                "Run Rust tests with all features",
+                launcher,
+                artifact,
+                false,
+                None,
+            )
         }
         "tui" => {
             let (launcher, artifact) = if family == "crash-log-scan-run" {
@@ -207,11 +226,21 @@ fn step_policy(family: &str, participant: &str) -> Option<StepPolicy> {
                 )
             } else {
                 (
-                    format!("run_scan_run_consumer_conformance.py --family {family} --participant tui"),
+                    format!(
+                        "run_scan_run_consumer_conformance.py --family {family} --participant tui"
+                    ),
                     format!("tui-{family}-consumer-conformance"),
                 )
             };
-            (CI_RUST, "test", "Run Rust tests with all features", launcher, artifact, false, None)
+            (
+                CI_RUST,
+                "test",
+                "Run Rust tests with all features",
+                launcher,
+                artifact,
+                false,
+                None,
+            )
         }
         "cxx" | "cli" | "gui" => {
             let script = match participant {
@@ -219,7 +248,11 @@ fn step_policy(family: &str, participant: &str) -> Option<StepPolicy> {
                 "cli" => "run_cli_consumer_conformance.ps1",
                 _ => "run_gui_consumer_conformance.ps1",
             };
-            let suffix = if participant == "cxx" { "conformance" } else { "consumer-conformance" };
+            let suffix = if participant == "cxx" {
+                "conformance"
+            } else {
+                "consumer-conformance"
+            };
             let (launcher, artifact) = if family == "crash-log-scan-run" {
                 (
                     format!("{script} -Compiler {COMPILER}"),
@@ -254,38 +287,66 @@ fn step_policy(family: &str, participant: &str) -> Option<StepPolicy> {
 }
 
 /// Job-level checks shared by every policy that runs in the job.
-fn participant_job(workflow: &Workflow, job: &Job<'_>, policy: &StepPolicy, findings: &mut Vec<Finding>) {
+fn participant_job(
+    workflow: &Workflow,
+    job: &Job<'_>,
+    policy: &StepPolicy,
+    findings: &mut Vec<Finding>,
+) {
     let mut fail = |message: String| findings.push(workflow.finding(&job.path, message));
     let label = format!("job {}", job.id);
     if text(&job.yaml["runs-on"]) != Some("windows-latest") {
-        fail(format!("{label} must run on windows-latest to preserve the Windows receipt checkout layout"));
+        fail(format!(
+            "{label} must run on windows-latest to preserve the Windows receipt checkout layout"
+        ));
     }
     let has_needs = !job.yaml["needs"].is_badvalue();
     let condition = &job.yaml["if"];
     if has_needs && text(condition) != Some(NOT_CANCELLED) {
-        fail(format!("{label} has needs, so it must use `if: {NOT_CANCELLED}` to run after upstream failures unless cancelled"));
+        fail(format!(
+            "{label} has needs, so it must use `if: {NOT_CANCELLED}` to run after upstream failures unless cancelled"
+        ));
     }
     if !has_needs && !condition.is_badvalue() {
-        fail(format!("{label} is required and cannot be conditionally skipped"));
+        fail(format!(
+            "{label} is required and cannot be conditionally skipped"
+        ));
     }
     if !job.yaml["continue-on-error"].is_badvalue() {
-        fail(format!("{label} is required and must be blocking (no continue-on-error)"));
+        fail(format!(
+            "{label} is required and must be blocking (no continue-on-error)"
+        ));
     }
     if let Some(minutes) = policy.timeout
         && job.yaml["timeout-minutes"].as_i64() != Some(minutes)
     {
-        fail(format!("{label} must reserve timeout-minutes: {minutes} for its retained and promoted gates"));
+        fail(format!(
+            "{label} must reserve timeout-minutes: {minutes} for its retained and promoted gates"
+        ));
     }
-    let checkouts: Vec<&Yaml> = job.steps().iter().filter(|step| text(&step["uses"]) == Some("actions/checkout@v6")).collect();
+    let checkouts: Vec<&Yaml> = job
+        .steps()
+        .iter()
+        .filter(|step| text(&step["uses"]) == Some("actions/checkout@v6"))
+        .collect();
     if checkouts.len() != 1 {
-        fail(format!("{label} must use exactly one default actions/checkout@v6"));
+        fail(format!(
+            "{label} must use exactly one default actions/checkout@v6"
+        ));
     }
     for checkout in checkouts {
         if !checkout["with"]["ref"].is_badvalue() {
-            fail(format!("{label} checkout cannot replace the event source revision (ref)"));
+            fail(format!(
+                "{label} checkout cannot replace the event source revision (ref)"
+            ));
         }
-        if ["path", "repository"].iter().any(|key| !checkout["with"][*key].is_badvalue()) {
-            fail(format!("{label} must preserve the default receipt checkout layout (no path or repository)"));
+        if ["path", "repository"]
+            .iter()
+            .any(|key| !checkout["with"][*key].is_badvalue())
+        {
+            fail(format!(
+                "{label} must preserve the default receipt checkout layout (no path or repository)"
+            ));
         }
     }
     if policy.matrix {
@@ -294,7 +355,9 @@ fn participant_job(workflow: &Workflow, job: &Job<'_>, policy: &StepPolicy, find
             .as_vec()
             .and_then(|items| items.iter().map(text).collect());
         if compilers.as_deref() != Some(&COMPILERS[..]) {
-            fail(format!("{label} is missing the exact required matrix compiler: [msvc, clang-cl]"));
+            fail(format!(
+                "{label} is missing the exact required matrix compiler: [msvc, clang-cl]"
+            ));
         }
         if strategy["fail-fast"].as_bool() != Some(false) {
             fail(format!("{label} matrix must keep fail-fast: false"));
@@ -306,16 +369,23 @@ fn participant_job(workflow: &Workflow, job: &Job<'_>, policy: &StepPolicy, find
 }
 
 /// Step-level checks for one (family, participant).
-fn policy_steps(workflow: &Workflow, job: &Job<'_>, policy: &StepPolicy, findings: &mut Vec<Finding>) {
+fn policy_steps(
+    workflow: &Workflow,
+    job: &Job<'_>,
+    policy: &StepPolicy,
+    findings: &mut Vec<Finding>,
+) {
     let label = format!("job {}: {} {}", job.id, policy.participant, policy.family);
     let steps = job.steps();
     let legacy = steps.iter().position(|step| {
         text(&step["name"]).is_some_and(|name| name.contains(policy.legacy))
             || text(&step["run"]).is_some_and(|run| run.contains(policy.legacy))
     });
-    let launchers = job.find(|step| text(&step["run"]).is_some_and(|run| run.contains(&policy.launcher)));
+    let launchers =
+        job.find(|step| text(&step["run"]).is_some_and(|run| run.contains(&policy.launcher)));
     let uploads = job.find(|step| text(&step["with"]["name"]) == Some(policy.artifact.as_str()));
-    let (Some(legacy), [launcher], [upload]) = (legacy, launchers.as_slice(), uploads.as_slice()) else {
+    let (Some(legacy), [launcher], [upload]) = (legacy, launchers.as_slice(), uploads.as_slice())
+    else {
         findings.push(workflow.finding(
             &job.path,
             format!(
@@ -326,39 +396,64 @@ fn policy_steps(workflow: &Workflow, job: &Job<'_>, policy: &StepPolicy, finding
         return;
     };
     let (launcher, upload) = (*launcher, *upload);
-    let mut fail = |index: usize, message: String| findings.push(workflow.finding(&job.step_path(index), message));
+    let mut fail = |index: usize, message: String| {
+        findings.push(workflow.finding(&job.step_path(index), message))
+    };
     if !(legacy < launcher && launcher < upload) {
-        fail(launcher, format!("{label} must run legacy, receipt, and upload steps in order"));
+        fail(
+            launcher,
+            format!("{label} must run legacy, receipt, and upload steps in order"),
+        );
     }
     let launch = &steps[launcher];
     if !launch["continue-on-error"].is_badvalue() {
         fail(launcher, format!("{label} launcher must be blocking"));
     }
     if text(&launch["if"]) != Some(NOT_CANCELLED) {
-        fail(launcher, format!("{label} launcher must run after earlier failures unless cancelled (`if: {NOT_CANCELLED}`)"));
+        fail(
+            launcher,
+            format!(
+                "{label} launcher must run after earlier failures unless cancelled (`if: {NOT_CANCELLED}`)"
+            ),
+        );
     }
     if text(&launch["run"]).is_some_and(|run| run.contains("--profile full")) {
-        fail(launcher, format!("{label} launcher cannot claim full-repository scope"));
+        fail(
+            launcher,
+            format!("{label} launcher cannot claim full-repository scope"),
+        );
     }
     if policy.participant == "gui" {
         for index in [legacy, launcher] {
             let presets = presets(text(&steps[index]["run"]).unwrap_or_default());
             if presets != ["ci-system-qt"] {
-                fail(index, format!("{label} must reuse the preceding GUI build preset ci-system-qt"));
+                fail(
+                    index,
+                    format!("{label} must reuse the preceding GUI build preset ci-system-qt"),
+                );
             }
         }
     }
     let artifact = &steps[upload];
     if text(&artifact["if"]) != Some(ALWAYS) {
-        fail(upload, format!("{label} diagnostics must upload even on failure (`if: {ALWAYS}`)"));
+        fail(
+            upload,
+            format!("{label} diagnostics must upload even on failure (`if: {ALWAYS}`)"),
+        );
     }
     if text(&artifact["uses"]) != Some("actions/upload-artifact@v6") {
-        fail(upload, format!("{label} artifact marker is not an actions/upload-artifact@v6 step"));
+        fail(
+            upload,
+            format!("{label} artifact marker is not an actions/upload-artifact@v6 step"),
+        );
     }
     if policy.participant == "cxx"
         && !text(&artifact["with"]["path"]).is_some_and(|path| path.contains("**/run_plan.json"))
     {
-        fail(upload, format!("{label} upload must retain the authenticated run plan (**/run_plan.json)"));
+        fail(
+            upload,
+            format!("{label} upload must retain the authenticated run plan (**/run_plan.json)"),
+        );
     }
 }
 
@@ -373,15 +468,30 @@ fn presets(command: &str) -> Vec<&str> {
 }
 
 /// `ci-binding-compliance.yml`: the repository verdict's inputs.
-fn full_aggregation(root: &RepoRoot, workflow: &Workflow, findings: &mut Vec<Finding>) -> Result<()> {
+fn full_aggregation(
+    root: &RepoRoot,
+    workflow: &Workflow,
+    findings: &mut Vec<Finding>,
+) -> Result<()> {
     for (job_id, callee) in [("rust", CI_RUST), ("native", CI_CPP)] {
-        let Some(job) = workflow.job(job_id, findings) else { continue };
-        let mut fail = |message: String| findings.push(workflow.finding(&job.path, format!("full aggregation: {message}")));
+        let Some(job) = workflow.job(job_id, findings) else {
+            continue;
+        };
+        let mut fail = |message: String| {
+            findings.push(workflow.finding(&job.path, format!("full aggregation: {message}")))
+        };
         if text(&job.yaml["uses"]) != Some(&format!("./{callee}")) {
-            fail(format!("job {job_id} must be the same-revision reusable workflow ./{callee}"));
+            fail(format!(
+                "job {job_id} must be the same-revision reusable workflow ./{callee}"
+            ));
         }
-        if ["if", "continue-on-error", "needs"].iter().any(|key| !job.yaml[*key].is_badvalue()) {
-            fail(format!("job {job_id} cannot skip a required reusable job (no if, continue-on-error or needs)"));
+        if ["if", "continue-on-error", "needs"]
+            .iter()
+            .any(|key| !job.yaml[*key].is_badvalue())
+        {
+            fail(format!(
+                "job {job_id} cannot skip a required reusable job (no if, continue-on-error or needs)"
+            ));
         }
         let callee_text = match std::fs::read_to_string(root.join(callee)) {
             Ok(text) => Some(text),
@@ -391,20 +501,35 @@ fn full_aggregation(root: &RepoRoot, workflow: &Workflow, findings: &mut Vec<Fin
         let callable = callee_text
             .and_then(|text| YamlLoader::load_from_str(&text).ok())
             .and_then(|docs| docs.into_iter().next())
-            .is_some_and(|doc| doc["on"].as_hash().is_some_and(|on| on.contains_key(&Yaml::String("workflow_call".into()))));
+            .is_some_and(|doc| {
+                doc["on"]
+                    .as_hash()
+                    .is_some_and(|on| on.contains_key(&Yaml::String("workflow_call".into())))
+            });
         if !callable {
-            fail(format!("{callee} must declare `on: workflow_call` to be a full aggregation participant"));
+            fail(format!(
+                "{callee} must declare `on: workflow_call` to be a full aggregation participant"
+            ));
         }
     }
 
-    let Some(full) = workflow.job("full", findings) else { return Ok(()) };
-    let mut fail = |path: &str, message: &str| findings.push(workflow.finding(path, format!("full aggregation: {message}")));
-    let needs: Option<Vec<&str>> = full.yaml["needs"].as_vec().and_then(|items| items.iter().map(text).collect());
+    let Some(full) = workflow.job("full", findings) else {
+        return Ok(());
+    };
+    let mut fail = |path: &str, message: &str| {
+        findings.push(workflow.finding(path, format!("full aggregation: {message}")))
+    };
+    let needs: Option<Vec<&str>> = full.yaml["needs"]
+        .as_vec()
+        .and_then(|items| items.iter().map(text).collect());
     if needs.as_deref() != Some(&["rust", "native"][..])
         || text(&full.yaml["if"]) != Some(NOT_CANCELLED)
         || text(&full.yaml["runs-on"]) != Some("windows-latest")
     {
-        fail(&full.path, "job full must await every Windows participant: needs: [rust, native], if: ${{ !cancelled() }}, runs-on: windows-latest");
+        fail(
+            &full.path,
+            "job full must await every Windows participant: needs: [rust, native], if: ${{ !cancelled() }}, runs-on: windows-latest",
+        );
     }
     if !full.yaml["continue-on-error"].is_badvalue() {
         fail(&full.path, "job full must be blocking");
@@ -412,12 +537,22 @@ fn full_aggregation(root: &RepoRoot, workflow: &Workflow, findings: &mut Vec<Fin
 
     let checkouts = full.find(|step| text(&step["uses"]) == Some("actions/checkout@v6"));
     match checkouts.as_slice() {
-        [index] if ["ref", "path", "repository"].iter().all(|key| full.steps()[*index]["with"][*key].is_badvalue()) => {}
-        [index] => fail(&full.step_path(*index), "the checkout must preserve the event checkout identity"),
-        _ => fail(&full.path, "job full must check out the repository exactly once"),
+        [index]
+            if ["ref", "path", "repository"]
+                .iter()
+                .all(|key| full.steps()[*index]["with"][*key].is_badvalue()) => {}
+        [index] => fail(
+            &full.step_path(*index),
+            "the checkout must preserve the event checkout identity",
+        ),
+        _ => fail(
+            &full.path,
+            "job full must check out the repository exactly once",
+        ),
     }
 
-    let download = full.find(|step| text(&step["name"]) == Some("Download current-run conformance artifacts"));
+    let download =
+        full.find(|step| text(&step["name"]) == Some("Download current-run conformance artifacts"));
     match download.as_slice() {
         [index] => {
             let step = &full.steps()[*index];
@@ -427,16 +562,35 @@ fn full_aggregation(root: &RepoRoot, workflow: &Workflow, findings: &mut Vec<Fin
                 && text(&with["path"]) == Some("tools/binding_compliance/artifacts/downloaded")
                 && with["merge-multiple"].as_bool() == Some(false);
             if !exact {
-                fail(&full.step_path(*index), "the download must take every unmerged receipt artifact (download-artifact@v8, pattern '*conformance*', merge-multiple: false)");
+                fail(
+                    &full.step_path(*index),
+                    "the download must take every unmerged receipt artifact (download-artifact@v8, pattern '*conformance*', merge-multiple: false)",
+                );
             }
-            if ["run-id", "repository", "github-token", "name", "artifact-ids"].iter().any(|key| !with[*key].is_badvalue()) {
-                fail(&full.step_path(*index), "artifacts must come from the current workflow run");
+            if [
+                "run-id",
+                "repository",
+                "github-token",
+                "name",
+                "artifact-ids",
+            ]
+            .iter()
+            .any(|key| !with[*key].is_badvalue())
+            {
+                fail(
+                    &full.step_path(*index),
+                    "artifacts must come from the current workflow run",
+                );
             }
         }
-        _ => fail(&full.path, "job full must have one \"Download current-run conformance artifacts\" step"),
+        _ => fail(
+            &full.path,
+            "job full must have one \"Download current-run conformance artifacts\" step",
+        ),
     }
 
-    let guard = full.find(|step| text(&step["name"]) == Some("Require every retained participant job to pass"));
+    let guard = full
+        .find(|step| text(&step["name"]) == Some("Require every retained participant job to pass"));
     match guard.as_slice() {
         [index] => {
             let step = &full.steps()[*index];
@@ -444,26 +598,44 @@ fn full_aggregation(root: &RepoRoot, workflow: &Workflow, findings: &mut Vec<Fin
                 && step["continue-on-error"].is_badvalue()
                 && text(&step["if"]) == Some(NOT_CANCELLED);
             if !ok {
-                fail(&full.step_path(*index), "the upstream guard must require actual upstream job results (PARTICIPANT_RESULTS: ${{ toJSON(needs) }}, blocking, if: ${{ !cancelled() }})");
+                fail(
+                    &full.step_path(*index),
+                    "the upstream guard must require actual upstream job results (PARTICIPANT_RESULTS: ${{ toJSON(needs) }}, blocking, if: ${{ !cancelled() }})",
+                );
             }
         }
-        _ => fail(&full.path, "job full must have one \"Require every retained participant job to pass\" step"),
+        _ => fail(
+            &full.path,
+            "job full must have one \"Require every retained participant job to pass\" step",
+        ),
     }
 
     let launchers = full.find(|step| {
-        text(&step["run"]).is_some_and(|run| run.contains("tools/binding_compliance/check_compliance.py"))
+        text(&step["run"])
+            .is_some_and(|run| run.contains("tools/binding_compliance/check_compliance.py"))
     });
     match launchers.as_slice() {
         [index] => {
             let step = &full.steps()[*index];
-            if text(&step["run"]).map(str::trim_end) != Some(FULL_COMMAND) || !step["continue-on-error"].is_badvalue() {
-                fail(&full.step_path(*index), "the verdict step must execute the complete full profile command");
+            if text(&step["run"]).map(str::trim_end) != Some(FULL_COMMAND)
+                || !step["continue-on-error"].is_badvalue()
+            {
+                fail(
+                    &full.step_path(*index),
+                    "the verdict step must execute the complete full profile command",
+                );
             }
             if text(&step["if"]) != Some(NOT_CANCELLED) {
-                fail(&full.step_path(*index), "the verdict step must report upstream failures (if: ${{ !cancelled() }})");
+                fail(
+                    &full.step_path(*index),
+                    "the verdict step must report upstream failures (if: ${{ !cancelled() }})",
+                );
             }
         }
-        _ => fail(&full.path, "job full must run check_compliance.py exactly once"),
+        _ => fail(
+            &full.path,
+            "job full must run check_compliance.py exactly once",
+        ),
     }
     Ok(())
 }
@@ -478,31 +650,52 @@ fn corrosion(workflow: &Workflow, findings: &mut Vec<Finding>) {
         "Get-FileHash -LiteralPath $archivePath -Algorithm SHA256",
     ];
     if let Some(fetch) = workflow.job("corrosion-source", findings) {
-        let mut fail = |path: &str, message: &str| findings.push(workflow.finding(path, format!("Corrosion source: {message}")));
-        match fetch.find(|step| text(&step["name"]) == Some("Archive verified Corrosion v0.6.1 source")).as_slice() {
+        let mut fail = |path: &str, message: &str| {
+            findings.push(workflow.finding(path, format!("Corrosion source: {message}")))
+        };
+        match fetch
+            .find(|step| text(&step["name"]) == Some("Archive verified Corrosion v0.6.1 source"))
+            .as_slice()
+        {
             [index] => {
                 let run = text(&fetch.steps()[*index]["run"]).unwrap_or_default();
                 if !archive_markers.iter().all(|marker| run.contains(marker)) {
-                    fail(&fetch.step_path(*index), "the source must be pinned to its revision and archived once");
+                    fail(
+                        &fetch.step_path(*index),
+                        "the source must be pinned to its revision and archived once",
+                    );
                 }
             }
-            _ => fail(&fetch.path, "job corrosion-source must archive the verified source once"),
+            _ => fail(
+                &fetch.path,
+                "job corrosion-source must archive the verified source once",
+            ),
         }
-        match fetch.find(|step| text(&step["name"]) == Some("Upload pinned Corrosion source")).as_slice() {
+        match fetch
+            .find(|step| text(&step["name"]) == Some("Upload pinned Corrosion source"))
+            .as_slice()
+        {
             [index] => {
                 let step = &fetch.steps()[*index];
                 let ok = text(&step["uses"]) == Some("actions/upload-artifact@v6")
                     && text(&step["with"]["name"]) == Some(CORROSION_ARTIFACT)
-                    && text(&step["with"]["path"]) == Some("${{ runner.temp }}/classic-corrosion-artifact/")
+                    && text(&step["with"]["path"])
+                        == Some("${{ runner.temp }}/classic-corrosion-artifact/")
                     && text(&step["with"]["if-no-files-found"]) == Some("error");
                 if !ok {
-                    fail(&fetch.step_path(*index), "the archive must be uploaded as corrosion-source-v0.6.1 with if-no-files-found: error");
+                    fail(
+                        &fetch.step_path(*index),
+                        "the archive must be uploaded as corrosion-source-v0.6.1 with if-no-files-found: error",
+                    );
                 }
             }
             _ => fail(&fetch.path, "the archive must be uploaded once"),
         }
         if !fetch.yaml["continue-on-error"].is_badvalue() || !fetch.yaml["strategy"].is_badvalue() {
-            fail(&fetch.path, "the fetch must be one blocking job (no matrix, no continue-on-error)");
+            fail(
+                &fetch.path,
+                "the fetch must be one blocking job (no matrix, no continue-on-error)",
+            );
         }
     }
 
@@ -512,37 +705,70 @@ fn corrosion(workflow: &Workflow, findings: &mut Vec<Finding>) {
         "Expand-Archive -LiteralPath $archivePath",
         "CLASSIC_CORROSION_SOURCE_DIR=$sourceDir",
     ];
-    for (job_id, build) in [("cli-tests", "Build and test CLI"), ("gui-tests", "Build and test GUI")] {
-        let Some(job) = workflow.job(job_id, findings) else { continue };
-        let mut fail = |path: &str, message: &str| findings.push(workflow.finding(path, format!("Corrosion source: {message}")));
-        let needs: Option<Vec<&str>> = job.yaml["needs"].as_vec().and_then(|items| items.iter().map(text).collect());
+    for (job_id, build) in [
+        ("cli-tests", "Build and test CLI"),
+        ("gui-tests", "Build and test GUI"),
+    ] {
+        let Some(job) = workflow.job(job_id, findings) else {
+            continue;
+        };
+        let mut fail = |path: &str, message: &str| {
+            findings.push(workflow.finding(path, format!("Corrosion source: {message}")))
+        };
+        let needs: Option<Vec<&str>> = job.yaml["needs"]
+            .as_vec()
+            .and_then(|items| items.iter().map(text).collect());
         if needs.as_deref() != Some(&["corrosion-source"][..]) {
-            fail(&job.path, "the corrosion-source job must gate each native build (needs: [corrosion-source])");
+            fail(
+                &job.path,
+                "the corrosion-source job must gate each native build (needs: [corrosion-source])",
+            );
         }
-        match job.find(|step| text(&step["name"]) == Some("Download pinned Corrosion source")).as_slice() {
+        match job
+            .find(|step| text(&step["name"]) == Some("Download pinned Corrosion source"))
+            .as_slice()
+        {
             [index] => {
                 let step = &job.steps()[*index];
                 let with = &step["with"];
                 let ok = text(&step["uses"]) == Some("actions/download-artifact@v8")
                     && text(&with["name"]) == Some(CORROSION_ARTIFACT)
                     && text(&with["path"]) == Some("${{ runner.temp }}/classic-corrosion-artifact")
-                    && ["run-id", "repository", "github-token", "artifact-ids"].iter().all(|key| with[*key].is_badvalue());
+                    && ["run-id", "repository", "github-token", "artifact-ids"]
+                        .iter()
+                        .all(|key| with[*key].is_badvalue());
                 if !ok {
-                    fail(&job.step_path(*index), "the source must come from this run's corrosion-source-v0.6.1 artifact");
+                    fail(
+                        &job.step_path(*index),
+                        "the source must come from this run's corrosion-source-v0.6.1 artifact",
+                    );
                 }
             }
-            _ => fail(&job.path, "the source must be downloaded once from this run"),
+            _ => fail(
+                &job.path,
+                "the source must be downloaded once from this run",
+            ),
         }
-        let verify = job.find(|step| text(&step["name"]) == Some("Verify and extract pinned Corrosion source"));
-        let build_index = job.steps().iter().position(|step| text(&step["name"]) == Some(build));
+        let verify = job
+            .find(|step| text(&step["name"]) == Some("Verify and extract pinned Corrosion source"));
+        let build_index = job
+            .steps()
+            .iter()
+            .position(|step| text(&step["name"]) == Some(build));
         match verify.as_slice() {
             [index] => {
                 let run = text(&job.steps()[*index]["run"]).unwrap_or_default();
                 if !verify_markers.iter().all(|marker| run.contains(marker)) {
-                    fail(&job.step_path(*index), "the verification was weakened (revision, hash, Expand-Archive, CLASSIC_CORROSION_SOURCE_DIR)");
+                    fail(
+                        &job.step_path(*index),
+                        "the verification was weakened (revision, hash, Expand-Archive, CLASSIC_CORROSION_SOURCE_DIR)",
+                    );
                 }
                 if build_index.is_none_or(|build_index| *index > build_index) {
-                    fail(&job.step_path(*index), "the source must be verified before the build");
+                    fail(
+                        &job.step_path(*index),
+                        "the source must be verified before the build",
+                    );
                 }
             }
             _ => fail(&job.path, "the source must be verified and extracted once"),
@@ -552,21 +778,30 @@ fn corrosion(workflow: &Workflow, findings: &mut Vec<Finding>) {
 
 /// ci-rust `test`: the Crash Log Scan Run contract preflight.
 fn scan_run_contract_preflight(workflow: &Workflow, findings: &mut Vec<Finding>) {
-    let Some(job) = workflow.job("test", findings) else { return };
-    let preflight = job.find(|step| text(&step["run"]).map(str::trim_end) == Some(SCAN_RUN_CONTRACT));
+    let Some(job) = workflow.job("test", findings) else {
+        return;
+    };
+    let preflight =
+        job.find(|step| text(&step["run"]).map(str::trim_end) == Some(SCAN_RUN_CONTRACT));
     let [index] = preflight.as_slice() else {
-        findings.push(workflow.finding(&job.path, format!("job test must run the variant preflight ({SCAN_RUN_CONTRACT}) exactly once")));
+        findings.push(workflow.finding(
+            &job.path,
+            format!("job test must run the variant preflight ({SCAN_RUN_CONTRACT}) exactly once"),
+        ));
         return;
     };
     let step = &job.steps()[*index];
-    let mut fail = |message: &str| findings.push(workflow.finding(&job.step_path(*index), message.to_owned()));
+    let mut fail =
+        |message: &str| findings.push(workflow.finding(&job.step_path(*index), message.to_owned()));
     if !step["continue-on-error"].is_badvalue() {
         fail("the ci-rust variant preflight must be blocking");
     }
     if text(&step["if"]) != Some(NOT_CANCELLED) {
         fail("the ci-rust variant preflight must run after earlier failures unless cancelled");
     }
-    let rust = job.steps().iter().position(|step| text(&step["run"]).is_some_and(|run| run.contains(RUST_SCAN_RUN_LAUNCHER)));
+    let rust = job.steps().iter().position(|step| {
+        text(&step["run"]).is_some_and(|run| run.contains(RUST_SCAN_RUN_LAUNCHER))
+    });
     if rust.is_some_and(|rust| *index > rust) {
         fail("the ci-rust variant preflight must run before Rust receipt execution");
     }
@@ -629,9 +864,17 @@ impl Workflow {
         };
         let yaml = match YamlLoader::load_from_str(&source) {
             Ok(mut documents) if documents.len() == 1 => documents.remove(0),
-            Ok(_) => return Ok(Err(finding(1, "a workflow must be exactly one YAML document".into()))),
+            Ok(_) => {
+                return Ok(Err(finding(
+                    1,
+                    "a workflow must be exactly one YAML document".into(),
+                )));
+            }
             Err(error) => {
-                return Ok(Err(finding(error.marker().line().max(1), format!("invalid YAML: {}", error.info()))));
+                return Ok(Err(finding(
+                    error.marker().line().max(1),
+                    format!("invalid YAML: {}", error.info()),
+                )));
             }
         };
         let mut tracker = LineTracker::default();

@@ -19,7 +19,6 @@
       "rustSymbols": [
         "ConfigFileCache"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "ini-cache"
       ]
@@ -32,7 +31,6 @@
         "ModIniScanResult",
         "VsyncEntry"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "mod-scan"
       ]
@@ -43,7 +41,6 @@
         "ConfigDuplicateDetector",
         "DuplicateGroup"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "duplicate-groups"
       ]

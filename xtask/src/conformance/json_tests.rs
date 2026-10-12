@@ -8,8 +8,9 @@ fn error(text: &str) -> JsonError {
 
 #[test]
 fn strict_parse_accepts_plain_json_and_records_lines() {
-    let document = parse_strict("{\n  \"a\": [1, -2, \"x\"],\n  \"b\": {\n    \"c/d\": null\n  }\n}\n")
-        .expect("valid JSON");
+    let document =
+        parse_strict("{\n  \"a\": [1, -2, \"x\"],\n  \"b\": {\n    \"c/d\": null\n  }\n}\n")
+            .expect("valid JSON");
     assert_eq!(
         document.value(),
         &json!({"a": [1, -2, "x"], "b": {"c/d": null}})
@@ -26,7 +27,10 @@ fn strict_parse_accepts_plain_json_and_records_lines() {
 fn duplicate_keys_are_rejected_at_every_depth() {
     let top = error("{\"a\": 1,\n \"a\": 2}");
     assert_eq!(top.line, 2);
-    assert!(top.message.contains("duplicate JSON object key: \"a\""), "{top}");
+    assert!(
+        top.message.contains("duplicate JSON object key: \"a\""),
+        "{top}"
+    );
     let nested = error("{\"x\": [{\"k\": 1, \"k\": 1}]}");
     assert!(nested.message.contains("duplicate"), "{nested}");
 }
@@ -36,7 +40,9 @@ fn floating_point_and_non_finite_numbers_are_rejected() {
     for text in ["1.0", "[1e5]", "{\"a\": -0.5}", "2E-3"] {
         let failure = error(text);
         assert!(
-            failure.message.contains("floating-point JSON value is forbidden"),
+            failure
+                .message
+                .contains("floating-point JSON value is forbidden"),
             "{text}: {failure}"
         );
     }
@@ -47,7 +53,11 @@ fn floating_point_and_non_finite_numbers_are_rejected() {
             "{text}: {failure}"
         );
     }
-    assert!(error("123456789012345678901234567890").message.contains("64-bit range"));
+    assert!(
+        error("123456789012345678901234567890")
+            .message
+            .contains("64-bit range")
+    );
 }
 
 #[test]

@@ -20,7 +20,6 @@
         "restore_backup",
         "backup_exists"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "durable-effects"
       ]
@@ -30,7 +29,6 @@
       "rustSymbols": [
         "remove_backup"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "durable-effects"
       ]
@@ -43,7 +41,6 @@
         "restore",
         "remove"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "durable-effects"
       ]

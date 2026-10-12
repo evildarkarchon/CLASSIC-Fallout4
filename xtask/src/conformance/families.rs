@@ -102,8 +102,13 @@ pub(crate) fn input_shape(family_id: &str) -> InputShape {
 /// Runs the family's bespoke input checks; families without an arm have none.
 pub(crate) fn validate_inputs(context: &InputContext<'_>) -> Vec<Issue> {
     match context.pack.family_id.as_str() {
-        "web-operations" | "resource-operations" | "version-operations" | "version-extraction"
-        | "version-f4se" | "version-pe" | "version-pe-path" => aux_operations::validate(context),
+        "web-operations"
+        | "resource-operations"
+        | "version-operations"
+        | "version-extraction"
+        | "version-f4se"
+        | "version-pe"
+        | "version-pe-path" => aux_operations::validate(context),
         "xse-folder" => xse_folder::validate(context),
         "installation-paths" => installation_paths::validate(context),
         "settings-load" => settings_load::validate_load(context),

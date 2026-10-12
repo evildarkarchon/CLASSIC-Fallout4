@@ -52,30 +52,58 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
     for (index, scenario, fixture) in context.sole_json_fixtures() {
         let derive = scenario.action == "xse-folder.derive";
         let log = scenario.action == "xse-folder.log";
-        let source_key = if derive { "gameLocalFacts" } else { "localYaml" };
-        let mut keys = vec!["registryYaml", "game", "selectedVersion", source_key, "configuredDocs"];
+        let source_key = if derive {
+            "gameLocalFacts"
+        } else {
+            "localYaml"
+        };
+        let mut keys = vec![
+            "registryYaml",
+            "game",
+            "selectedVersion",
+            source_key,
+            "configuredDocs",
+        ];
         if log {
             keys.push("logFiles");
         }
         if !has_exact_keys(fixture, &keys) {
-            issues.push(issue(index, format!("an XSE folder fixture for {} must contain exactly {keys:?}", scenario.action)));
+            issues.push(issue(
+                index,
+                format!(
+                    "an XSE folder fixture for {} must contain exactly {keys:?}",
+                    scenario.action
+                ),
+            ));
             continue;
         }
         let this_registry = fixture["registryYaml"].as_str().unwrap_or_default();
         if registry.is_some_and(|first| first != this_registry) {
-            issues.push(issue(index, "every XSE folder case must carry identical registry bytes"));
+            issues.push(issue(
+                index,
+                "every XSE folder case must carry identical registry bytes",
+            ));
         }
         registry = Some(this_registry);
         if sha256_hex(this_registry.as_bytes()) != REGISTRY_SHA256 {
-            issues.push(issue(index, "XSE folder requires the controlled registry metadata"));
+            issues.push(issue(
+                index,
+                "XSE folder requires the controlled registry metadata",
+            ));
         }
         let triple = (
             fixture["game"].as_str(),
             fixture["selectedVersion"].as_str(),
             fixture["configuredDocs"].as_str(),
         );
-        if !GAMES.iter().any(|(game, version, docs)| triple == (Some(game), Some(version), Some(docs))) {
-            issues.push(issue(index, "XSE folder (game, selectedVersion, configuredDocs) could consult host discovery"));
+        if !GAMES
+            .iter()
+            .any(|(game, version, docs)| triple == (Some(game), Some(version), Some(docs)))
+        {
+            issues.push(issue(
+                index,
+                "XSE folder (game, selectedVersion, configuredDocs) could consult host discovery",
+            ));
         }
         if derive {
             let controlled = [
@@ -84,37 +112,58 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
                 json!({"docsFolderXse": null, "rootFolderDocs": null}),
             ];
             if !controlled.contains(&fixture["gameLocalFacts"]) {
-                issues.push(issue(index, "XSE folder derivation requires controlled Game Local facts"));
+                issues.push(issue(
+                    index,
+                    "XSE folder derivation requires controlled Game Local facts",
+                ));
             }
         } else {
             let local = fixture["localYaml"].as_str();
             let allowed = (fixture["localYaml"].is_null() || local.is_some())
-                && (LOCAL_YAML.contains(&local) || (log && local == Some(UNINSPECTABLE_LOCAL_YAML)));
+                && (LOCAL_YAML.contains(&local)
+                    || (log && local == Some(UNINSPECTABLE_LOCAL_YAML)));
             if !allowed {
-                issues.push(issue(index, "XSE folder requires controlled Local.yaml text"));
+                issues.push(issue(
+                    index,
+                    "XSE folder requires controlled Local.yaml text",
+                ));
             }
         }
         if log {
             let files = fixture["logFiles"].as_array();
             let controlled = files.is_some_and(|files| {
                 let names: Vec<Option<&str>> = files.iter().map(Value::as_str).collect();
-                let unique = names.iter().collect::<std::collections::BTreeSet<_>>().len() == names.len();
-                unique && names.iter().all(|name| name.is_some_and(|name| LOG_FILES.contains(&name)))
+                let unique = names
+                    .iter()
+                    .collect::<std::collections::BTreeSet<_>>()
+                    .len()
+                    == names.len();
+                unique
+                    && names
+                        .iter()
+                        .all(|name| name.is_some_and(|name| LOG_FILES.contains(&name)))
             });
             if !controlled {
-                issues.push(issue(index, "XSE log cases may create only the controlled, distinct log files"));
+                issues.push(issue(
+                    index,
+                    "XSE log cases may create only the controlled, distinct log files",
+                ));
             }
             continue;
         }
         // A resolution case observes the preserved YAML inventory, which must
         // be the fixture's own bytes rather than an independent answer.
         let mut inventory = vec![json!({"path": "CLASSIC Main.yaml", "content": this_registry})];
-        if let (Some(local), Some(game)) = (fixture["localYaml"].as_str(), fixture["game"].as_str()) {
+        if let (Some(local), Some(game)) = (fixture["localYaml"].as_str(), fixture["game"].as_str())
+        {
             inventory.push(json!({"path": format!("CLASSIC {game} Local.yaml"), "content": local}));
         }
         inventory.sort_by(|a, b| a["path"].as_str().cmp(&b["path"].as_str()));
         if scenario.expected.get("files") != Some(&Value::Array(inventory)) {
-            issues.push(issue(index, "an XSE folder expected inventory must preserve the fixture bytes"));
+            issues.push(issue(
+                index,
+                "an XSE folder expected inventory must preserve the fixture bytes",
+            ));
         }
     }
     issues

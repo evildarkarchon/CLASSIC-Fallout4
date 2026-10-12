@@ -40,7 +40,6 @@
       "rustSymbols": [
         "detect_crash_pattern"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "classification"
       ]
@@ -50,7 +49,6 @@
       "rustSymbols": [
         "LogParser"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "main-error"
       ]
@@ -60,7 +58,6 @@
       "rustSymbols": [
         "detect_vr_log"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "vr-detection"
       ]
