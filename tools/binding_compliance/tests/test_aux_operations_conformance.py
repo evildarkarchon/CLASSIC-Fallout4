@@ -18,7 +18,10 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_web_game_routing_obligates_only_adapters_with_the_public_operation():
-    """URL routing cannot enroll Python or hide changed route observations."""
+    """URL routing cannot enroll a binding or hide changed route observations.
+
+    web-operations is Rust-only since #309: no frontend calls the mod-site exports.
+    """
     from conformance.applicability import derive_applicability
     from conformance.coverage import derive_observed_fact_ids
     from conformance.packs import load_and_validate_pack
@@ -34,7 +37,6 @@ def test_web_game_routing_obligates_only_adapters_with_the_public_operation():
     matrix = derive_applicability(document, load_participants(ROOT))
     assert {p.id for p in matrix.participants if route["id"] in p.scenario_ids} == {
         "rust",
-        "cxx",
     }
     policy = aux_operations_coverage_policy("web-operations")
     assert derive_observed_fact_ids(document, route, route["expected"], policy)
@@ -138,9 +140,9 @@ def test_resource_pack_observes_filesystem_results_and_missing_errors() -> None:
     "family,participant",
     [
         (family, participant)
-        # CXX is the only non-Rust participant enrolled in web operations.
+        # web-operations left CXX in #309; Rust carries the receipt checks.
         for family in ("web-operations",)
-        for participant in ("cxx",)
+        for participant in ("rust",)
     ],
 )
 def test_auxiliary_receipts_yield_facts_and_reject_mutations(

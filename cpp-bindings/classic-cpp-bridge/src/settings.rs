@@ -1,63 +1,29 @@
 //! Settings operations bridge for CXX FFI.
 //!
-//! Bridges the config-owned CLASSIC YAML file identity
-//! (`classic_config_core::YamlSource`, projected as the bridge's `YamlFile`),
-//! and the generic YAML rules, YAML operations, and both YAML caches in
-//! `classic_shared_core::yaml`, to the C++ layer. Covers these surfaces:
+//! Bridges the surfaces the CLI and GUI call. The bridge is consumer-driven, so
+//! the rest of the YAML and User Settings surface stays Rust-only until a
+//! frontend calls it.
 //!
-//! 1. **YAML operations** (pre-existing): File loading, parsing, settings access
-//!    via dot-notation keys, and per-instance cache observation. Delegates to
-//!    `classic_shared_core::yaml::YamlOperations`, which uses the default
-//!    (unscoped) path/mtime-aware YAML-file cache of this linked library.
-//! 2. **Settings cache** (new — D-09): Process-wide YAML-settings cache with
-//!    sync and async-blocking load helpers, cache inspection, invalidation,
-//!    and observability. Delegates to the logical-key cache owned by
-//!    `classic_shared_core::yaml`. The async helpers use `classic_shared_core::get_runtime().block_on()`
-//!    to preserve the ONE RUNTIME RULE.
-//! 3. **Validators** (new — D-09): Settings document structure validation,
-//!    per-value type checking, and string-to-typed coercion through
-//!    `classic_shared_core::yaml::validators`. Mirrors the
-//!    Python `classic_settings` validator surface 1:1.
-//! 4. **User Settings**: Opens the deep User Settings module from an explicit
+//! 1. **YAML operations**: File loading and string settings access via
+//!    dot-notation keys. Delegates to `classic_shared_core::yaml::YamlOperations`,
+//!    which uses the default (unscoped) path/mtime-aware YAML-file cache of this
+//!    linked library.
+//! 2. **User Settings**: Opens the deep User Settings module from an explicit
 //!    CLASSIC root, returns typed Update, Crash Log Scan, and Game Setup groups,
-//!    previews caller-authored updates, and plans, applies, or explicitly restores
-//!    conflict-safe migrations.
-//!
-//! ## CXX type-system exceptions (documented)
-//!
-//! Two entries in the underlying `classic_shared_core::yaml` surface cannot cross
-//! the CXX boundary directly and are therefore intentionally omitted from
-//! this bridge:
-//!
-//! - `get_cached(key) -> Option<Arc<Vec<Yaml>>>` — `Arc<Vec<Yaml>>` cannot be
-//!   marshalled through CXX. C++ callers can test `settings_is_cached(key)`
-//!   and then use the existing `yaml_ops_*` load helpers if they need the
-//!   parsed documents.
-//! - The `load_settings_*` family returns the full parsed documents as
-//!   `Arc<Vec<Yaml>>` in Rust. Across CXX the bridge helpers return the
-//!   document count as `u32` instead, because the `Yaml` type is not
-//!   CXX-marshallable. C++ consumers needing the parsed docs must round-trip
-//!   through `yaml_ops_*`.
-//!
-//! Everything else on the shared-core logical-key cache and `validators` IS exposed.
+//!    previews and commits caller-authored updates, and plans, applies, or
+//!    explicitly restores conflict-safe migrations.
 
-use classic_config_core::YamlSource as CoreYamlSource;
-use classic_shared_core::yaml as shared_yaml;
-use classic_shared_core::yaml::validators::{self, CoercedValue, SettingType};
-use classic_shared_core::yaml::{YamlCacheStats, YamlOperations, yaml_cache_stats};
+use classic_shared_core::yaml::YamlOperations;
 use classic_user_settings_core::{
-    GuiWindow, LegacyTuiStateImportOutcome as CoreLegacyTuiStateImportOutcome,
-    LegacyTuiStateImportRestoreOutcome as CoreLegacyTuiStateImportRestoreOutcome,
-    MigrationChangeKind, MigrationPlanningOutcome, Revision, SourceLocation, UserSettings,
+    GuiWindow, MigrationPlanningOutcome, Revision, UserSettings,
     UserSettingsCommitOutcome as CoreUserSettingsCommitOutcome,
     UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
     UserSettingsMigrationApplyOutcome as CoreUserSettingsMigrationApplyOutcome,
     UserSettingsMigrationPlan, UserSettingsMigrationReceipt as CoreUserSettingsMigrationReceipt,
     UserSettingsMigrationRestoreOutcome as CoreUserSettingsMigrationRestoreOutcome,
-    UserSettingsSchemaVersion, UserSettingsUpdate as CoreUserSettingsUpdate,
+    UserSettingsUpdate as CoreUserSettingsUpdate,
     UserSettingsUpdateField as CoreUserSettingsUpdateField,
     UserSettingsUpdatePreview as CoreUserSettingsUpdatePreview, WindowGeometry,
-    import_legacy_tui_state,
 };
 use classic_vocabulary::Vocabulary;
 use std::{collections::BTreeMap, path::Path};
@@ -75,11 +41,6 @@ pub struct YamlOps {
 /// only the receipt returned by the conflict-safe Rust core can authorize restore.
 pub struct UserSettingsMigrationApplyHandle {
     state: UserSettingsMigrationApplyState,
-}
-
-/// Opaque owner of a legacy TUI import outcome and its unforgeable applied receipt.
-pub struct LegacyTuiStateImportHandle {
-    outcome: CoreLegacyTuiStateImportOutcome,
 }
 
 /// Internal representation of either an applied core receipt or a preflight/core conflict.
@@ -174,28 +135,6 @@ fn user_settings_plan_migration(
         ),
         MigrationPlanningOutcome::Planned(plan) => user_settings_migration_plan_dto(&plan),
     }
-}
-
-/// Returns the exact inverse of a planned CXX migration DTO entirely in memory.
-///
-/// The DTO is reconstructed as an unattested core review plan, so Rust owns endpoint,
-/// byte, revision, and review-row reversal semantics while the adapter remains unable
-/// to authorize persistence. No filesystem API is called.
-fn user_settings_reverse_migration_plan(
-    plan: &ffi::UserSettingsMigrationPlanningOutcomeDto,
-) -> Result<ffi::UserSettingsMigrationPlanningOutcomeDto, String> {
-    if plan.status != "planned"
-        || !plan.has_plan
-        || !plan.has_original_content
-        || !plan.has_proposed_content
-    {
-        return Err("only a complete planned User Settings migration can be reversed".to_string());
-    }
-
-    let review_plan = user_settings_migration_plan_from_dto(plan)?;
-    Ok(user_settings_migration_plan_dto(
-        &review_plan.reverse_in_memory(),
-    ))
 }
 
 /// Applies a caller-approved migration after reopening and reproducing its core plan.
@@ -379,49 +318,6 @@ fn empty_user_settings_migration_receipt_dto() -> ffi::UserSettingsMigrationRece
         backup_revision: String::new(),
         published_revision: String::new(),
     }
-}
-
-/// Reconstructs a flattened CXX plan as an unattested core review plan.
-///
-/// The core deliberately prevents plans created through this conversion from authorizing
-/// persistence; it exists only so adapters can delegate domain transformations such as reversal.
-fn user_settings_migration_plan_from_dto(
-    plan: &ffi::UserSettingsMigrationPlanningOutcomeDto,
-) -> Result<UserSettingsMigrationPlan, String> {
-    let source = (
-        source_location_from_token(&plan.source_location)?,
-        plan.has_source_schema_version.then(|| {
-            UserSettingsSchemaVersion::new(plan.source_schema_major, plan.source_schema_minor)
-        }),
-    );
-    let target = (
-        source_location_from_token(&plan.target_location)?,
-        plan.has_target_schema_version.then(|| {
-            UserSettingsSchemaVersion::new(plan.target_schema_major, plan.target_schema_minor)
-        }),
-    );
-    let changes = plan
-        .changes
-        .iter()
-        .map(|change| {
-            Ok((
-                migration_change_kind_from_token(&change.kind)?,
-                change.has_source_path.then(|| change.source_path.clone()),
-                change.has_target_path.then(|| change.target_path.clone()),
-                change.has_before.then(|| change.before.clone()),
-                change.has_after.then(|| change.after.clone()),
-            ))
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-
-    Ok(UserSettingsMigrationPlan::from((
-        plan.required,
-        source,
-        target,
-        changes,
-        plan.original_content.clone(),
-        plan.proposed_content.clone(),
-    )))
 }
 
 /// Flattens one core migration plan without reinterpreting its domain semantics.
@@ -631,13 +527,6 @@ fn user_settings_game_setup_settings_dto(settings: &UserSettings) -> ffi::GameSe
     }
 }
 
-/// Opens User Settings at an explicit CLASSIC root and returns the complete,
-/// widget-independent frontend state with per-field provenance.
-fn user_settings_open_frontend_state(classic_root: &str) -> ffi::FrontendStateDto {
-    let settings = UserSettings::open(Path::new(classic_root));
-    user_settings_frontend_state_dto(&settings)
-}
-
 /// Projects frontend state from an already-opened cohesive User Settings snapshot.
 fn user_settings_frontend_state_dto(settings: &UserSettings) -> ffi::FrontendStateDto {
     let frontend = settings.frontend_state();
@@ -803,132 +692,6 @@ fn user_settings_commit_update(
     update: &ffi::UserSettingsUpdateDto,
 ) -> Result<ffi::UserSettingsCommitResultDto, String> {
     commit_user_settings_update(classic_root, base_revision, update, false)
-}
-
-/// Explicitly imports one retired TUI `state.json` into the canonical User Settings store.
-fn user_settings_import_legacy_tui_state(
-    classic_root: &str,
-    legacy_state_path: &str,
-) -> Result<Box<LegacyTuiStateImportHandle>, String> {
-    import_legacy_tui_state(Path::new(classic_root), Path::new(legacy_state_path))
-        .map(|outcome| Box::new(LegacyTuiStateImportHandle { outcome }))
-        .map_err(|error| format!("{}: {}", error.code(), error.message()))
-}
-
-/// Returns the inspectable import outcome while keeping any applied receipt opaque.
-fn user_settings_legacy_tui_import_outcome(
-    handle: &LegacyTuiStateImportHandle,
-) -> ffi::LegacyTuiStateImportOutcomeDto {
-    legacy_tui_state_import_outcome_dto(&handle.outcome)
-}
-
-/// Restores the prior User Settings state through the retained import receipt.
-fn user_settings_restore_legacy_tui_import(
-    classic_root: &str,
-    handle: &LegacyTuiStateImportHandle,
-) -> Result<ffi::LegacyTuiStateImportRestoreOutcomeDto, String> {
-    let CoreLegacyTuiStateImportOutcome::Applied(receipt) = &handle.outcome else {
-        return Err(
-            "legacy_tui_state_restore_receipt_unavailable: only an applied import has a receipt"
-                .to_string(),
-        );
-    };
-    match receipt
-        .restore(Path::new(classic_root))
-        .map_err(|error| format!("{}: {}", error.code(), error.message()))?
-    {
-        CoreLegacyTuiStateImportRestoreOutcome::Restored { revision } => {
-            Ok(ffi::LegacyTuiStateImportRestoreOutcomeDto {
-                status: "restored".to_string(),
-                revision: revision.token(),
-                expected_revision: String::new(),
-                actual_revision: String::new(),
-            })
-        }
-        CoreLegacyTuiStateImportRestoreOutcome::Conflict {
-            expected_revision,
-            actual_revision,
-        } => Ok(ffi::LegacyTuiStateImportRestoreOutcomeDto {
-            status: "conflict".to_string(),
-            revision: String::new(),
-            expected_revision: expected_revision.token(),
-            actual_revision: actual_revision.token(),
-        }),
-    }
-}
-
-/// Flattens every import outcome into one CXX-safe tagged DTO.
-fn legacy_tui_state_import_outcome_dto(
-    outcome: &CoreLegacyTuiStateImportOutcome,
-) -> ffi::LegacyTuiStateImportOutcomeDto {
-    let mut dto = ffi::LegacyTuiStateImportOutcomeDto {
-        status: String::new(),
-        classification: String::new(),
-        revision: String::new(),
-        source_path: String::new(),
-        backup_path: String::new(),
-        source_revision: String::new(),
-        backup_revision: String::new(),
-        base_settings_revision: String::new(),
-        published_settings_revision: String::new(),
-        expected_revision: String::new(),
-        actual_revision: String::new(),
-        settings_path: String::new(),
-        has_settings_backup_path: false,
-        settings_backup_path: String::new(),
-    };
-    match outcome {
-        CoreLegacyTuiStateImportOutcome::NoLegacySource => {
-            dto.status = "no_legacy_source".to_string();
-        }
-        CoreLegacyTuiStateImportOutcome::RequiresSettingsMigration {
-            classification,
-            revision,
-        } => {
-            dto.status = "requires_settings_migration".to_string();
-            dto.classification = classification.as_str().to_string();
-            dto.revision = revision.token();
-        }
-        CoreLegacyTuiStateImportOutcome::UntrustedSettingsBase {
-            classification,
-            revision,
-        } => {
-            dto.status = "untrusted_settings_base".to_string();
-            dto.classification = classification.as_str().to_string();
-            dto.revision = revision.token();
-        }
-        CoreLegacyTuiStateImportOutcome::Applied(receipt) => {
-            dto.status = "applied".to_string();
-            dto.source_path = receipt.source_path().display().to_string();
-            dto.backup_path = receipt.backup_path().display().to_string();
-            dto.source_revision = receipt.source_revision().token();
-            dto.backup_revision = receipt.backup_revision().token();
-            dto.base_settings_revision = receipt.base_settings_revision().token();
-            dto.published_settings_revision = receipt.published_settings_revision().token();
-            dto.settings_path = receipt.settings_path().display().to_string();
-            dto.has_settings_backup_path = receipt.settings_backup_path().is_some();
-            dto.settings_backup_path = receipt
-                .settings_backup_path()
-                .map_or_else(String::new, |path| path.display().to_string());
-        }
-        CoreLegacyTuiStateImportOutcome::SettingsConflict {
-            expected_revision,
-            actual_revision,
-        } => {
-            dto.status = "settings_conflict".to_string();
-            dto.expected_revision = expected_revision.token();
-            dto.actual_revision = actual_revision.token();
-        }
-        CoreLegacyTuiStateImportOutcome::LegacySourceConflict {
-            expected_revision,
-            actual_revision,
-        } => {
-            dto.status = "legacy_source_conflict".to_string();
-            dto.expected_revision = expected_revision.token();
-            dto.actual_revision = actual_revision.token();
-        }
-    }
-    dto
 }
 
 /// Publishes one replay-safe frontend geometry transition through the Rust-owned retry policy.
@@ -1368,28 +1131,6 @@ fn user_settings_diagnostic_dto(
 // unchanged — so the four hand-written token tables that used to live here are
 // gone rather than delegating.
 
-/// Parses one stable CXX source-location token for review-only core reconstruction.
-///
-/// Derives its accepted inputs from the core variant list rather than restating
-/// them. The bridge round-trips a plan through the DTO, so a forward table and
-/// a reverse table that disagreed would corrupt a reversal silently.
-fn source_location_from_token(token: &str) -> Result<SourceLocation, String> {
-    classic_vocabulary::from_token(token)
-        .ok_or_else(|| format!("unsupported User Settings source location: {token}"))
-}
-
-/// Parses one stable CXX migration-change token for review-only core reconstruction.
-///
-/// Delegates to the core vocabulary rather than restating the token table. The
-/// bridge round-trips a plan through the DTO — emit tokens, hand them to C++,
-/// take them back, rebuild the plan — so a forward table and a reverse table
-/// that disagreed would corrupt a reversal silently. Derived from the same
-/// variant list, they cannot.
-fn migration_change_kind_from_token(token: &str) -> Result<MigrationChangeKind, String> {
-    classic_vocabulary::from_token(token)
-        .ok_or_else(|| format!("unsupported User Settings migration change kind: {token}"))
-}
-
 // The revision token pair is owned by `classic-user-settings-core`
 // (`Revision::token` / `Revision::from_token`) so the CXX, Node, and Python
 // surfaces cannot drift apart. This bridge projects it without exposing the
@@ -1415,26 +1156,6 @@ fn yaml_ops_load_file(ops: &mut YamlOps, path: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn yaml_ops_save_file(ops: &YamlOps, path: &str) -> Result<(), String> {
-    let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
-    ops.ops
-        .save_yaml_file(Path::new(path), doc)
-        .map_err(|e| format!("{e}"))
-}
-
-// ── Parse/dump ──────────────────────────────────────────────────────
-
-fn yaml_ops_parse(ops: &mut YamlOps, content: &str) -> Result<(), String> {
-    let yaml = ops.ops.parse_yaml(content).map_err(|e| format!("{e}"))?;
-    ops.doc = Some(yaml);
-    Ok(())
-}
-
-fn yaml_ops_dump(ops: &YamlOps) -> Result<String, String> {
-    let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
-    ops.ops.dump_yaml(doc).map_err(|e| format!("{e}"))
-}
-
 // ── Settings access ─────────────────────────────────────────────────
 
 fn yaml_ops_get_string(ops: &YamlOps, key_path: &str, default_val: &str) -> String {
@@ -1444,364 +1165,8 @@ fn yaml_ops_get_string(ops: &YamlOps, key_path: &str, default_val: &str) -> Stri
     }
 }
 
-fn yaml_ops_get_vec(ops: &YamlOps, key_path: &str) -> Vec<String> {
-    match &ops.doc {
-        Some(doc) => ops.ops.get_vec_value(doc, key_path),
-        None => Vec::new(),
-    }
-}
-
-fn yaml_ops_get_setting_value(ops: &YamlOps, key_path: &str) -> ffi::YamlValue {
-    match &ops.doc {
-        Some(doc) => match ops.ops.get_setting(doc, key_path) {
-            Some(yaml) => match yaml {
-                Yaml::String(s) => ffi::YamlValue {
-                    value: s,
-                    is_null: false,
-                    value_type: "string".to_string(),
-                },
-                Yaml::Boolean(b) => ffi::YamlValue {
-                    value: b.to_string(),
-                    is_null: false,
-                    value_type: "bool".to_string(),
-                },
-                Yaml::Integer(i) => ffi::YamlValue {
-                    value: i.to_string(),
-                    is_null: false,
-                    value_type: "integer".to_string(),
-                },
-                Yaml::Real(r) => ffi::YamlValue {
-                    value: r,
-                    is_null: false,
-                    value_type: "real".to_string(),
-                },
-                Yaml::Null => ffi::YamlValue {
-                    value: String::new(),
-                    is_null: true,
-                    value_type: "null".to_string(),
-                },
-                _ => ffi::YamlValue {
-                    value: format!("{yaml:?}"),
-                    is_null: false,
-                    value_type: "complex".to_string(),
-                },
-            },
-            None => ffi::YamlValue {
-                value: String::new(),
-                is_null: true,
-                value_type: "null".to_string(),
-            },
-        },
-        None => ffi::YamlValue {
-            value: String::new(),
-            is_null: true,
-            value_type: "null".to_string(),
-        },
-    }
-}
-
-fn yaml_ops_set_string_setting(
-    ops: &mut YamlOps,
-    key_path: &str,
-    value: &str,
-) -> Result<(), String> {
-    let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
-    let updated = ops
-        .ops
-        .set_setting(doc, key_path, Yaml::String(value.to_string()))
-        .map_err(|e| format!("{e}"))?;
-    ops.doc = Some(updated);
-    Ok(())
-}
-
-fn yaml_ops_set_bool_setting(ops: &mut YamlOps, key_path: &str, value: bool) -> Result<(), String> {
-    let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
-    let updated = ops
-        .ops
-        .set_setting(doc, key_path, Yaml::Boolean(value))
-        .map_err(|e| format!("{e}"))?;
-    ops.doc = Some(updated);
-    Ok(())
-}
-
-fn yaml_ops_set_integer_setting(
-    ops: &mut YamlOps,
-    key_path: &str,
-    value: i64,
-) -> Result<(), String> {
-    let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
-    let updated = ops
-        .ops
-        .set_setting(doc, key_path, Yaml::Integer(value))
-        .map_err(|e| format!("{e}"))?;
-    ops.doc = Some(updated);
-    Ok(())
-}
-
-fn yaml_ops_set_vec_setting(
-    ops: &mut YamlOps,
-    key_path: &str,
-    values: Vec<String>,
-) -> Result<(), String> {
-    let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
-    let yaml_array = Yaml::Array(values.into_iter().map(Yaml::String).collect());
-    let updated = ops
-        .ops
-        .set_setting(doc, key_path, yaml_array)
-        .map_err(|e| format!("{e}"))?;
-    ops.doc = Some(updated);
-    Ok(())
-}
-
-// ── Cache management (per-YamlOps — delegates to YAML-file cache) ──
-
-fn yaml_ops_clear_cache(ops: &YamlOps) {
-    ops.ops.clear_cache();
-}
-
-fn yaml_ops_cache_size(ops: &YamlOps) -> usize {
-    yaml_ops_cache_stats(ops).size
-}
-
-fn yaml_cache_stats_from(stats: YamlCacheStats) -> ffi::YamlCacheStatsDto {
-    ffi::YamlCacheStatsDto {
-        hits: stats.hits,
-        misses: stats.misses,
-        hit_rate: stats.hit_rate,
-        size: stats.size,
-        capacity: stats.capacity,
-    }
-}
-
-fn yaml_ops_cache_stats(ops: &YamlOps) -> ffi::YamlCacheStatsDto {
-    let _ = ops;
-    yaml_cache_stats_from(yaml_cache_stats())
-}
-
-fn yaml_ops_has_document(ops: &YamlOps) -> bool {
-    ops.doc.is_some()
-}
-
-// ── Settings cache ops (D-09 — process-wide settings cache) ────────
-
-fn settings_load_sync(key: &str, path: &str) -> Result<u32, String> {
-    let docs = shared_yaml::load_settings_sync(key, Path::new(path)).map_err(|e| e.to_string())?;
-    Ok(docs.len() as u32)
-}
-
-fn settings_load_async_blocking(key: &str, path: &str) -> Result<u32, String> {
-    let key = key.to_string();
-    let path = path.to_string();
-    let docs = classic_shared_core::get_runtime()
-        .block_on(async move { shared_yaml::load_settings_async(&key, Path::new(&path)).await })
-        .map_err(|e| e.to_string())?;
-    Ok(docs.len() as u32)
-}
-
-fn settings_load_batch_sync(paths: Vec<String>) -> Result<u32, String> {
-    let path_bufs: Vec<std::path::PathBuf> = paths.iter().map(std::path::PathBuf::from).collect();
-    let path_refs: Vec<&Path> = path_bufs.iter().map(|p| p.as_path()).collect();
-    let count = shared_yaml::load_batch_sync(&path_refs).map_err(|e| e.to_string())?;
-    Ok(count as u32)
-}
-
-fn settings_load_batch_async_blocking(paths: Vec<String>) -> Result<u32, String> {
-    let path_bufs: Vec<std::path::PathBuf> = paths.iter().map(std::path::PathBuf::from).collect();
-    let count = classic_shared_core::get_runtime()
-        .block_on(async move {
-            let path_refs: Vec<&Path> = path_bufs.iter().map(|p| p.as_path()).collect();
-            shared_yaml::load_batch_async(&path_refs).await
-        })
-        .map_err(|e| e.to_string())?;
-    Ok(count as u32)
-}
-
-fn settings_cache_stats() -> ffi::SettingsCacheStats {
-    let stats = shared_yaml::cache_stats();
-    ffi::SettingsCacheStats {
-        hits: stats.hits,
-        misses: stats.misses,
-        hit_rate: stats.hit_rate,
-        size: stats.size as u64,
-        capacity: stats.capacity as u64,
-    }
-}
-
-fn settings_reset_cache_stats() {
-    shared_yaml::reset_cache_stats();
-}
-
-fn settings_clear_cache() {
-    shared_yaml::clear_cache();
-}
-
-fn settings_cache_size() -> u64 {
-    shared_yaml::cache_size() as u64
-}
-
-fn settings_cache_keys() -> Vec<String> {
-    shared_yaml::cache_keys()
-}
-
-fn settings_is_cached(key: &str) -> bool {
-    shared_yaml::is_cached(key)
-}
-
-fn settings_invalidate(key: &str) -> bool {
-    shared_yaml::invalidate(key)
-}
-
-fn from_bridge_yaml_file(f: ffi::YamlFile) -> CoreYamlSource {
-    match f {
-        ffi::YamlFile::Main => CoreYamlSource::Main,
-        ffi::YamlFile::Ignore => CoreYamlSource::Ignore,
-        ffi::YamlFile::Game => CoreYamlSource::Game,
-        ffi::YamlFile::GameLocal => CoreYamlSource::GameLocal,
-        ffi::YamlFile::Test => CoreYamlSource::Test,
-        ffi::YamlFile::Cache => CoreYamlSource::Cache,
-        _ => CoreYamlSource::Main,
-    }
-}
-
-fn yaml_file_as_str(f: ffi::YamlFile) -> String {
-    from_bridge_yaml_file(f).as_str().to_string()
-}
-
-fn yaml_file_description(f: ffi::YamlFile) -> String {
-    from_bridge_yaml_file(f).description().to_string()
-}
-
-// ── Validators (D-09 — mirrors Python classic_settings surface) ────
-
-/// Parse a setting-type token into `SettingType`.
-///
-/// Accepts `int|integer`, `bool|boolean`, `float|double`, `path`, `string|str`
-/// (case-insensitive), the same token set the retired Python binding accepted.
-fn parse_setting_type_token(type_name: &str) -> Result<SettingType, String> {
-    match type_name.to_lowercase().as_str() {
-        "int" | "integer" => Ok(SettingType::Int),
-        "bool" | "boolean" => Ok(SettingType::Bool),
-        "float" | "double" => Ok(SettingType::Float),
-        "path" => Ok(SettingType::Path),
-        "string" | "str" => Ok(SettingType::String),
-        _ => Err(format!("unknown setting type: {type_name}")),
-    }
-}
-
-fn settings_validate_value(value: &str, expected_type: &str) -> Result<bool, String> {
-    let ty = parse_setting_type_token(expected_type)?;
-    Ok(validators::validate_setting_value(value, ty))
-}
-
-fn settings_coerce_value(
-    value: &str,
-    target_type: &str,
-) -> Result<ffi::SettingsCoercedValue, String> {
-    let ty = parse_setting_type_token(target_type)?;
-    let coerced = validators::coerce_setting_value(value, ty)?;
-    Ok(match coerced {
-        CoercedValue::Int(v) => ffi::SettingsCoercedValue {
-            kind: "int".to_string(),
-            string_val: String::new(),
-            int_val: v,
-            float_val: 0.0,
-            bool_val: false,
-        },
-        CoercedValue::Bool(v) => ffi::SettingsCoercedValue {
-            kind: "bool".to_string(),
-            string_val: String::new(),
-            int_val: 0,
-            float_val: 0.0,
-            bool_val: v,
-        },
-        CoercedValue::Float(v) => ffi::SettingsCoercedValue {
-            kind: "float".to_string(),
-            string_val: String::new(),
-            int_val: 0,
-            float_val: v,
-            bool_val: false,
-        },
-        CoercedValue::Path(s) => ffi::SettingsCoercedValue {
-            kind: "path".to_string(),
-            string_val: s,
-            int_val: 0,
-            float_val: 0.0,
-            bool_val: false,
-        },
-        CoercedValue::String(s) => ffi::SettingsCoercedValue {
-            kind: "string".to_string(),
-            string_val: s,
-            int_val: 0,
-            float_val: 0.0,
-            bool_val: false,
-        },
-    })
-}
-
 #[cxx::bridge(namespace = "classic::settings")]
 mod ffi {
-    #[repr(u8)]
-    enum YamlFile {
-        Main = 0,
-        Ignore = 2,
-        Game = 3,
-        GameLocal = 4,
-        Test = 5,
-        Cache = 6,
-    }
-
-    /// YAML-file cache stats DTO (distinct from `SettingsCacheStats` below).
-    ///
-    /// Returned by `yaml_ops_cache_stats` for observing the YAML-file cache
-    /// used internally by `YamlOperations::load_yaml_file`.
-    struct YamlCacheStatsDto {
-        hits: u64,
-        misses: u64,
-        hit_rate: f64,
-        size: usize,
-        capacity: usize,
-    }
-
-    /// Settings cache stats DTO — process-wide YAML-settings cache (D-09).
-    ///
-    /// Returned by `settings_cache_stats`. Distinct from `YamlCacheStatsDto`
-    /// because these stats cover a different cache populated by the
-    /// `load_settings_*` family. `size` and `capacity` are `u64` here (rather
-    /// than `usize`) to keep the DTO width stable across platforms.
-    struct SettingsCacheStats {
-        hits: u64,
-        misses: u64,
-        hit_rate: f64,
-        size: u64,
-        capacity: u64,
-    }
-
-    /// Tagged coerced-value DTO for `settings_coerce_value`.
-    ///
-    /// `kind` discriminates the payload: "int", "bool", "float", "path", or
-    /// "string". The payload field matching `kind` holds the value; other
-    /// fields are zero/empty. Note that `Path` and `String` both carry their
-    /// payload in `string_val` but expose distinct `kind` tokens so C++
-    /// callers can tell them apart (matching `CoercedValue::Path` vs
-    /// `CoercedValue::String` in the Rust source).
-    struct SettingsCoercedValue {
-        kind: String,
-        string_val: String,
-        int_val: i64,
-        float_val: f64,
-        bool_val: bool,
-    }
-
-    /// Typed YAML value for cross-FFI returns.
-    struct YamlValue {
-        /// String representation of the value
-        value: String,
-        /// Whether the value is null/missing
-        is_null: bool,
-        /// Type hint: "string", "bool", "integer", "real", "null", "complex"
-        value_type: String,
-    }
-
     /// One structured diagnostic produced while opening User Settings.
     struct UserSettingsDiagnosticDto {
         code: String,
@@ -2187,42 +1552,9 @@ mod ffi {
         diagnostics: Vec<UserSettingsUpdateDiagnosticDto>,
     }
 
-    /// Tagged result of explicitly importing retired TUI state into User Settings.
-    ///
-    /// Only fields associated with `status` are populated. Operational failures
-    /// propagate as `rust::Error` whose message begins with the stable core code.
-    struct LegacyTuiStateImportOutcomeDto {
-        status: String,
-        classification: String,
-        revision: String,
-        source_path: String,
-        backup_path: String,
-        source_revision: String,
-        backup_revision: String,
-        base_settings_revision: String,
-        published_settings_revision: String,
-        expected_revision: String,
-        actual_revision: String,
-        settings_path: String,
-        has_settings_backup_path: bool,
-        settings_backup_path: String,
-    }
-
-    /// Result of restoring User Settings through an applied legacy import receipt.
-    struct LegacyTuiStateImportRestoreOutcomeDto {
-        status: String,
-        revision: String,
-        expected_revision: String,
-        actual_revision: String,
-    }
-
     extern "Rust" {
         type YamlOps;
         type UserSettingsMigrationApplyHandle;
-        type LegacyTuiStateImportHandle;
-
-        fn yaml_file_as_str(f: YamlFile) -> String;
-        fn yaml_file_description(f: YamlFile) -> String;
 
         /// Open User Settings from an explicit CLASSIC root and return the
         /// typed Update Preferences view used by native update-check policy.
@@ -2232,11 +1564,6 @@ mod ffi {
         fn user_settings_plan_migration(
             classic_root: &str,
         ) -> UserSettingsMigrationPlanningOutcomeDto;
-
-        /// Reverse a complete migration plan entirely in memory.
-        fn user_settings_reverse_migration_plan(
-            plan: &UserSettingsMigrationPlanningOutcomeDto,
-        ) -> Result<UserSettingsMigrationPlanningOutcomeDto>;
 
         /// Reopen, reproduce, and apply an explicitly approved migration plan.
         fn user_settings_apply_migration(
@@ -2263,9 +1590,6 @@ mod ffi {
         /// Open User Settings and return the complete typed Game Setup group.
         fn user_settings_open_game_setup_settings(classic_root: &str) -> GameSetupSettingsDto;
 
-        /// Open User Settings and return the complete typed frontend-state group.
-        fn user_settings_open_frontend_state(classic_root: &str) -> FrontendStateDto;
-
         /// Open every GUI-consumed typed group from one revision-cohesive snapshot.
         fn user_settings_open_gui_settings(classic_root: &str) -> GuiSettingsSnapshotDto;
 
@@ -2291,23 +1615,6 @@ mod ffi {
             update: &UserSettingsUpdateDto,
         ) -> Result<UserSettingsCommitResultDto>;
 
-        /// Explicitly import one retired TUI state file into canonical User Settings.
-        fn user_settings_import_legacy_tui_state(
-            classic_root: &str,
-            legacy_state_path: &str,
-        ) -> Result<Box<LegacyTuiStateImportHandle>>;
-
-        /// Inspect an import result without exposing its restoration receipt.
-        fn user_settings_legacy_tui_import_outcome(
-            handle: &LegacyTuiStateImportHandle,
-        ) -> LegacyTuiStateImportOutcomeDto;
-
-        /// Restore through the opaque receipt retained by an applied import.
-        fn user_settings_restore_legacy_tui_import(
-            classic_root: &str,
-            handle: &LegacyTuiStateImportHandle,
-        ) -> Result<LegacyTuiStateImportRestoreOutcomeDto>;
-
         /// Commit one replay-safe frontend geometry transition with one Rust-owned retry.
         fn user_settings_commit_frontend_geometry_transition(
             classic_root: &str,
@@ -2327,55 +1634,9 @@ mod ffi {
 
         // File operations
         fn yaml_ops_load_file(ops: &mut YamlOps, path: &str) -> Result<()>;
-        fn yaml_ops_save_file(ops: &YamlOps, path: &str) -> Result<()>;
-
-        // Parse/dump
-        fn yaml_ops_parse(ops: &mut YamlOps, content: &str) -> Result<()>;
-        fn yaml_ops_dump(ops: &YamlOps) -> Result<String>;
 
         // Settings access
         fn yaml_ops_get_string(ops: &YamlOps, key_path: &str, default_val: &str) -> String;
-        fn yaml_ops_get_vec(ops: &YamlOps, key_path: &str) -> Vec<String>;
-        fn yaml_ops_get_setting_value(ops: &YamlOps, key_path: &str) -> YamlValue;
-        fn yaml_ops_set_string_setting(
-            ops: &mut YamlOps,
-            key_path: &str,
-            value: &str,
-        ) -> Result<()>;
-        fn yaml_ops_set_bool_setting(ops: &mut YamlOps, key_path: &str, value: bool) -> Result<()>;
-        fn yaml_ops_set_integer_setting(
-            ops: &mut YamlOps,
-            key_path: &str,
-            value: i64,
-        ) -> Result<()>;
-        fn yaml_ops_set_vec_setting(
-            ops: &mut YamlOps,
-            key_path: &str,
-            values: Vec<String>,
-        ) -> Result<()>;
-
-        // Cache management (YAML-file cache via YamlOperations)
-        fn yaml_ops_clear_cache(ops: &YamlOps);
-        fn yaml_ops_cache_size(ops: &YamlOps) -> usize;
-        fn yaml_ops_cache_stats(ops: &YamlOps) -> YamlCacheStatsDto;
-        fn yaml_ops_has_document(ops: &YamlOps) -> bool;
-
-        // Settings cache ops (D-09 — process-wide settings cache)
-        fn settings_load_sync(key: &str, path: &str) -> Result<u32>;
-        fn settings_load_async_blocking(key: &str, path: &str) -> Result<u32>;
-        fn settings_load_batch_sync(paths: Vec<String>) -> Result<u32>;
-        fn settings_load_batch_async_blocking(paths: Vec<String>) -> Result<u32>;
-        fn settings_cache_stats() -> SettingsCacheStats;
-        fn settings_reset_cache_stats();
-        fn settings_clear_cache();
-        fn settings_cache_size() -> u64;
-        fn settings_cache_keys() -> Vec<String>;
-        fn settings_is_cached(key: &str) -> bool;
-        fn settings_invalidate(key: &str) -> bool;
-
-        // Validators (D-09 — mirrors Python surface)
-        fn settings_validate_value(value: &str, expected_type: &str) -> Result<bool>;
-        fn settings_coerce_value(value: &str, target_type: &str) -> Result<SettingsCoercedValue>;
     }
 }
 

@@ -215,7 +215,7 @@ Important methods:
 - `display_name_with_game(&self, game: &str) -> String`
 - `load(&self, game: &str) -> anyhow::Result<yaml_rust2::Yaml>`
 
-`YamlSource` derives `Serialize`/`Deserialize`, `Copy`, `Eq`, and `Hash`. The tokens, descriptions, order, `Display`, and serialization are exactly those of the retired `classic_settings_core::YamlFile`; that import path ended in issue #246 with no forwarding re-export. Binding projections keep their published names: CXX `classic::settings::YamlFile` with `yaml_file_as_str` / `yaml_file_description`, Node `JsYamlFile` with `getAllYamlFiles` / `getYamlFileDescription`, and Python `classic_settings.YamlFile`, each backed by `YamlSource`; Node `JsYamlSource` and Python `classic_config.YamlSource` remain the path/display-name projections. The `yaml-file-values` and `yaml-source-values` conformance packs pin both projections.
+`YamlSource` derives `Serialize`/`Deserialize`, `Copy`, `Eq`, and `Hash`. The tokens, descriptions, order, `Display`, and serialization are exactly those of the retired `classic_settings_core::YamlFile`; that import path ended in issue #246 with no forwarding re-export. No binding projects it: the CXX `classic::settings::YamlFile` projection left the bridge with no frontend caller (#309). The `yaml-file-values` and `yaml-source-values` conformance packs pin the Rust behaviour.
 
 Contributor notes:
 

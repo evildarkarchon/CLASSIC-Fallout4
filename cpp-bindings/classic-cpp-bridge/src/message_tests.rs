@@ -1,29 +1,9 @@
 use super::*;
 
 #[test]
-fn test_log_info_no_panic() {
-    init_logging();
-    log_info("test info message");
-}
-
-#[test]
 fn test_log_warning_no_panic() {
+    init_logging();
     log_warning("test warning message");
-}
-
-#[test]
-fn test_log_error_no_panic() {
-    log_error("test error message");
-}
-
-#[test]
-fn test_log_debug_no_panic() {
-    log_debug("test debug message");
-}
-
-#[test]
-fn test_log_trace_no_panic() {
-    log_trace("test trace message");
 }
 
 #[test]

@@ -14,24 +14,8 @@ fn optional_correlation_id(correlation_id: &str) -> Option<&str> {
     }
 }
 
-fn log_info(message: &str) {
-    log::info!("{}", message);
-}
-
 fn log_warning(message: &str) {
     log::warn!("{}", message);
-}
-
-fn log_error(message: &str) {
-    log::error!("{}", message);
-}
-
-fn log_debug(message: &str) {
-    log::debug!("{}", message);
-}
-
-fn log_trace(message: &str) {
-    log::trace!("{}", message);
 }
 
 fn log_startup_binding_contract_validated(
@@ -88,11 +72,7 @@ fn init_logging() {
 #[cxx::bridge(namespace = "classic::message")]
 mod ffi {
     extern "Rust" {
-        fn log_info(message: &str);
         fn log_warning(message: &str);
-        fn log_error(message: &str);
-        fn log_debug(message: &str);
-        fn log_trace(message: &str);
         fn log_startup_binding_contract_validated(
             contract: &str,
             checked_bindings: u32,

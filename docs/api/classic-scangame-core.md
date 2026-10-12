@@ -313,8 +313,7 @@ Neither owner can do this alone: config owns the Game Local document and XSE own
 Callers:
 
 - Crash Log collection: `classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery (with the run's Version Registry scope)
-- the C++ bridge's `classic::xse::resolve_xse_folder_for_scan` and `classic::files::log_collector_new_for_scan`
-- the `xse-folder` Binding Compliance Suite family's `xse-folder.resolve` capability (Rust and CXX participants), which credits this Local.yaml composition to this crate; the family's `domainOwner` is `classic-xse-core`, which owns the derivation (`xse-folder.derive`)
+- the `xse-folder` Binding Compliance Suite family's `xse-folder.resolve` capability (Rust participant; CXX left with the bridge's folder-resolution export in #309), which credits this Local.yaml composition to this crate; the family's `domainOwner` is `classic-xse-core`, which owns the derivation (`xse-folder.derive`)
 
 ### XSE log from the Game Local document
 

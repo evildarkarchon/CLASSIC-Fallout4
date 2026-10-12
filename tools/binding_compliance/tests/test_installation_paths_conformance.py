@@ -93,7 +93,9 @@ def test_installation_fixture_rejects_discovery_fallback(tmp_path, mutation):
         validate_installation_paths_pack(document, tmp_path)
 
 
-@pytest.mark.parametrize("participant", ("rust", "cxx"))
+# The cached-path inspection these mutations target left CXX in #309; CXX now
+# runs only `installation-paths.locate`, so Rust carries the inspection checks.
+@pytest.mark.parametrize("participant", ("rust",))
 def test_installation_receipts_reject_changed_missing_extra_and_stale_facts(
         tmp_path, participant
 ):

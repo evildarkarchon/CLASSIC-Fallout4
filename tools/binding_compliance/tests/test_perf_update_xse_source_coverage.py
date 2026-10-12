@@ -26,8 +26,14 @@ def test_owner_receipts_pass_and_facts_reject_future_alias(
         tmp_path, family, policy, participant
 ):
     """Complete receipts pass, and no fact silently speaks for a new method."""
-    if participant == "cxx" and family == "performance":
-        pytest.skip("performance left CXX with the perf bridge module (#307)")
+    from conformance.participants import load_participants
+
+    # The consumer-driven bridge trim (#307-#309) leaves some of these families
+    # Rust-only; Rust receives every pack, so it carries the checks there.
+    if participant == "cxx" and family.replace("_", "-") not in load_participants(
+        ROOT
+    ).family_ids:
+        pytest.skip("Rust-only family: CXX is not enrolled in participants.json")
     path = Path(f"tests/conformance/packs/{family}/v1.json")
     pack, run, _receipt = prepare_receipt_case(
         ROOT, tmp_path, path, participant, runner_id="aux-source-boundary"

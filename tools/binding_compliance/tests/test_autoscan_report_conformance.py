@@ -64,7 +64,11 @@ def test_report_root_cannot_inject_template_content(root: object) -> None:
 
 
 def test_goldens_remain_independent_and_all_adapters_are_blocking() -> None:
-    """Every original owner golden remains an oracle, never an adapter fixture."""
+    """Every original owner golden remains an oracle, never an adapter fixture.
+
+    Autoscan Report is Rust-only since #309: its CXX runner built requests through
+    the scan-run constructors that left the bridge.
+    """
     pack = load_and_validate_pack(ROOT, PACK)
     document = pack.document()
     assert [s["id"] for s in document["scenarios"]] == [
@@ -89,12 +93,12 @@ def test_goldens_remain_independent_and_all_adapters_are_blocking() -> None:
         assert report["byteLength"] == len(oracle.read_bytes())
     assert document["consumerObligations"] == []
     applicability = derive_applicability(document, load_participants(ROOT))
-    assert {p.id for p in applicability.participants} == {"rust", "cxx"}
+    assert {p.id for p in applicability.participants} == {"rust"}
     assert enforcement_for_family("autoscan-report") == "blocking"
     assert "autoscan-report" in FAMILY_COVERAGE_POLICIES
 
 
-@pytest.mark.parametrize("participant", ["rust", "cxx"])
+@pytest.mark.parametrize("participant", ["rust"])
 def test_receipts_reject_byte_display_effect_and_execution_mutations(
         tmp_path: Path, participant: str
 ) -> None:

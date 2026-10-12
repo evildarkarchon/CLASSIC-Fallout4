@@ -192,9 +192,9 @@ For the native CLI, notification delivery is downstream of typed User Settings p
 
 Hosts using GitHub-compatible mirrors or an explicit notification manifest can call
 `check_app_notification_configured(owner, repo, installed_version, config_json, cache_dir)`.
-Node exposes `checkAppNotificationConfigured` with the same five positional arguments;
-Python and CXX preserve the snake-case name. Return DTOs and typed failure conventions
-are identical to the default notification check. All parsing, validation, fallback,
+It is Rust API only: the CXX bridge does not export it, because no frontend calls it
+(#309). Return DTOs and typed failure conventions are identical to the default
+notification check. All parsing, validation, fallback,
 classification, and cache persistence remain in Rust.
 
 `config_json` is a JSON object with optional `github_api_base_url` (default

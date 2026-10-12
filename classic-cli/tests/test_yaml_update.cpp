@@ -3,9 +3,9 @@
 // Catch2 bridge tests for the YAML update-delivery FFI surface.
 //
 // These exercises target the first-party `classic::update::yaml_data_*`
-// entry points used by native callers plus the lower-level generic
-// `yaml_*` compatibility functions retained by the yaml-update-delivery
-// change. The Rust-side unit tests in
+// entry points native callers use; the lower-level generic `yaml_*`
+// compatibility functions left the bridge with no frontend caller (#309).
+// The Rust-side unit tests in
 // `cpp-bindings/classic-cpp-bridge/src/update.rs` cover the same DTO
 // mapping, but the tests here prove the full FFI round-trip works end to
 // end from C++.
@@ -39,18 +39,6 @@ namespace fs = std::filesystem;
 /// the bridge adds a new status case.
 constexpr std::uint32_t kTagDisabled = 0u;
 
-rust::Vec<classic::update::YamlClientSchemaEntryDto> make_entries() {
-    rust::Vec<classic::update::YamlClientSchemaEntryDto> entries;
-    classic::update::YamlClientSchemaEntryDto entry{};
-    entry.name = "CLASSIC Main.yaml";
-    entry.accepted_major = 1u;
-    entry.accepted_minimum_minor = 0u;
-    entry.has_installed = false;
-    entry.installed_major = 0u;
-    entry.installed_minor = 0u;
-    entries.push_back(std::move(entry));
-    return entries;
-}
 
 struct ScopedCurrentPath {
     explicit ScopedCurrentPath(const fs::path& path) : original(fs::current_path()) {
@@ -84,23 +72,6 @@ fs::path make_disabled_settings_root() {
 
 } // namespace
 
-TEST_CASE("yaml_check_update returns Disabled when enabled=false", "[bridge][update][yaml]") {
-    // Pass an unroutable Pages URL. If the Disabled short-circuit regressed,
-    // this would either hang on the HTTP GET or come back with tag=Error.
-    auto entries = make_entries();
-    auto status = classic::update::yaml_check_update(
-        "http://127.0.0.1:1/manifest-latest.json",
-        "yaml-data-v",
-        entries,
-        /*enabled=*/false,
-        /*bundled_yaml_dir=*/rust::Str(""));
-
-    REQUIRE(status.tag == kTagDisabled);
-    REQUIRE(std::string(status.error_message).empty());
-    REQUIRE(status.compatible_files.empty());
-    REQUIRE(status.incompatible_files.empty());
-}
-
 TEST_CASE("yaml_data_check_update returns Disabled when enabled=false",
           "[bridge][update][yaml]") {
     auto status = classic::update::yaml_data_check_update(/*enabled=*/false);
@@ -111,21 +82,20 @@ TEST_CASE("yaml_data_check_update returns Disabled when enabled=false",
     REQUIRE(status.incompatible_files.empty());
 }
 
-TEST_CASE("yaml_rollback_update on unknown file does not error",
+TEST_CASE("yaml_data_apply_update refuses when enabled=false without installing",
           "[bridge][update][yaml]") {
-    // The yaml-cache dir may not be populated on this machine; rollback
-    // must surface that as a graceful outcome (rolled_back=false + either
-    // empty error_message or a resolvable Generic error) rather than
-    // aborting the caller.
-    auto outcome = classic::update::yaml_rollback_update(
-        "__cpp_bridge_definitely_nonexistent_file_xyzzy__.yaml");
-    if (std::string(outcome.error_message).empty()) {
-        REQUIRE_FALSE(outcome.rolled_back);
-    }
-    // If the test environment has no LOCALAPPDATA/APPDATA, the bridge
-    // produces a Generic error — still acceptable; the guard here is
-    // only against a panic reaching C++.
-    SUCCEED("yaml_rollback_update FFI round-trip produced a valid outcome");
+    // The production apply path: with Update Check off, the core refuses before
+    // any HTTP, so no approved file can be installed even with a decision attached.
+    classic::update::ApprovedUpdateDto approved{};
+    approved.release_tag = "yaml-data-v-test";
+    approved.file_names.push_back("CLASSIC Main.yaml");
+    approved.file_sha256.push_back("deadbeef");
+
+    const auto report = classic::update::yaml_data_apply_update(/*enabled=*/false, approved);
+
+    REQUIRE(report.installed.empty());
+    REQUIRE(report.failed.empty());
+    REQUIRE(std::string(report.error_message).rfind("update check disabled:", 0) == 0);
 }
 
 TEST_CASE("yaml_data_rollback_update covers first-party shippable files",

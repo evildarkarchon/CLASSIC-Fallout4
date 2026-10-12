@@ -54,7 +54,7 @@ def _pack(family: str) -> dict:
     "family,participants",
     [
         ("string-operations", {"rust"}),
-        ("registry-operations", {"rust", "cxx"}),
+        ("registry-operations", {"rust"}),
     ],
 )
 def test_shared_registry_receipts_fail_closed_at_public_receipt_seam(

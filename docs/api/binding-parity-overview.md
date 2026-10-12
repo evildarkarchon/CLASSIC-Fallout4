@@ -95,15 +95,15 @@ The same prompt also reaches each surface inside a **pending recovery** (ADR-000
 | --- | --- | --- | --- |
 | C++ (CXX) | `classic::update::check_app_notification(owner, repo, installed_version)` | `NotificationStatusDto`; absent manifests resolve as `classification == "not_published"` with empty `error_message` | Genuine failures use `classification == "error"` + populated `error_message`; empty-string sentinels on every other string field |
 
-Full cross-crate flow: [`app-update-notification-delivery.md`](app-update-notification-delivery.md). Error shapes: [`error-contract.md`](error-contract.md). The legacy `github_check_for_updates` / `GithubClient::get_latest_release` surface is retained as compat-only and is no longer called from user-facing update checks.
+Full cross-crate flow: [`app-update-notification-delivery.md`](app-update-notification-delivery.md). Error shapes: [`error-contract.md`](error-contract.md). The legacy `GithubClient::get_latest_release` surface is retained in Rust as compat-only and is no longer called from user-facing update checks; its `github_check_for_updates` CXX export left the bridge with no frontend caller (#309).
 
-**Note on YAML Data update surface (`classic-update-core`):** native C++ now has first-party helpers for the product YAML Data Update Channel, and the lower-level generic manifest interface remains for compatibility.
+**Note on YAML Data update surface (`classic-update-core`):** native C++ calls only the first-party helpers for the product YAML Data Update Channel. The lower-level generic manifest interface left the CXX bridge with no frontend caller (#309) and remains Rust API.
 
-| Binding | Preferred first-party/native API | Generic compatibility API |
-| --- | --- | --- |
-| C++ (CXX) | `classic::update::yaml_data_check_update(enabled)`, `yaml_data_apply_update(enabled, approved)`, `yaml_data_rollback_update()` | `yaml_check_update(pages_url, tag_prefix, entries, enabled, bundled_yaml_dir)`, `yaml_apply_update(request)`, `yaml_rollback_update(file_name)` |
+| Binding | First-party/native API |
+| --- | --- |
+| C++ (CXX) | `classic::update::yaml_data_check_update(enabled)`, `yaml_data_apply_update(enabled, approved)`, `yaml_data_rollback_update()` |
 
-The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, config-inspected installed schema/content identity, first-party file set, and rollback target list in Rust. Generic compatibility APIs preserve caller-supplied installed metadata and use their retained bundled-directory hint to enrich entries whose installed version/digest are absent. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
+The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, config-inspected installed schema/content identity, first-party file set, and rollback target list in Rust. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
 
 **Note on `classic-resource-core`**: This crate provides lightweight resource classification helpers and, since #250, owns the game-target backup (`BackupManager`) and game-file operations (`GameFilesManager`). It depends on `classic-file-io-core`, never the reverse. It has no dedicated C++ bridge module: the `files.rs` bridge module wraps `BackupManager` and `GameFilesManager` from this crate (`backup_manager_*`, `game_files_*`, `CxxBackupManager`, `CxxGameFilesManager`), and resource classification is not exposed to C++.
 

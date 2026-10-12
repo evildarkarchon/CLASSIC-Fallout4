@@ -40,19 +40,8 @@ pub(crate) fn papyrus_check_updates(analyzer: &mut CxxPapyrusAnalyzer) -> ffi::P
     papyrus_stats_to_dto(analyzer.inner.stats())
 }
 
-pub(crate) fn papyrus_analyze_full(
-    analyzer: &mut CxxPapyrusAnalyzer,
-) -> Result<ffi::PapyrusStatsDto, String> {
-    let stats = analyzer.inner.analyze_full().map_err(|e| format!("{e}"))?;
-    Ok(papyrus_stats_to_dto(&stats))
-}
-
 pub(crate) fn papyrus_log_exists(analyzer: &CxxPapyrusAnalyzer) -> bool {
     analyzer.inner.log_exists()
-}
-
-pub(crate) fn papyrus_reset(analyzer: &mut CxxPapyrusAnalyzer) {
-    analyzer.inner.reset();
 }
 
 #[cfg(test)]

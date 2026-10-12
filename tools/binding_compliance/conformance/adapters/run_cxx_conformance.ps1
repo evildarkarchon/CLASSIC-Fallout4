@@ -13,8 +13,9 @@ param(
     [ValidateSet("msvc", "clang-cl")]
     [string]$Compiler = "msvc",
     [switch]$TestOnly,
-    [ValidateSet("settings-yaml", "settings-validation", "registry-game", "registry-gui", "settings-load", "registry-operations", "web-operations", "update-decisions", "update-services", "xse-operations", "xse-folder", "installation-paths", "game-identity", "runtime-access", "crash-log-scan-run", "autoscan-report", "crash-log-scan-launch", "user-settings", "crash-suspect", "crashgen-settings", "mod-guidance", "named-record", "plugin-evidence", "scan-run-vocabulary", "config-operations", "file-backups", "path-backups", "game-setup-intake", "yaml-update-operations", "file-operations", "path-operations", "papyrus-monitor", "log-collection", "crash-pattern", "formid-finding", "hash-cache-controls", "message-logging", "update-rejection", "yaml-file-values", "markdown-rendering", "report-discovery")]
-    [string]$Family = "crash-log-scan-run",
+    [Parameter(Mandatory)]
+    [ValidateSet("xse-folder", "installation-paths", "game-identity", "crash-log-scan-launch", "user-settings", "config-operations", "file-backups", "game-setup-intake", "file-operations", "update-rejection", "report-discovery")]
+    [string]$Family,
     [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
 )
 
@@ -102,11 +103,6 @@ try {
         $JunitPath
     )
     $RecordedCommand = @("pwsh") + $WrapperArguments
-    if ($Family -in @("update-services", "yaml-update-operations")) {
-        $WrapperArguments = @((Join-Path $RepoRoot "tools/binding_compliance/controlled_update_service.py"), "--", $PwshPath) + $WrapperArguments
-        $PwshPath = (Get-Command python -ErrorAction Stop).Source
-        $RecordedCommand = @("python") + $WrapperArguments
-    }
 
     $ExitCode = $null
     $TimedOut = $false

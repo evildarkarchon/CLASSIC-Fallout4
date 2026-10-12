@@ -195,7 +195,7 @@ Behavior worth knowing:
 - an explicit `docs_folder_xse` always wins over derived values, and needs no registry entry
 - Version Registry metadata comes from the process default snapshot; `resolve_xse_folder_from_game_local_facts_in_version_registry_scope(..., &VersionRegistryScope)` applies the same order but reads only the caller's [scope](classic-version-registry-core.md#version-registry-scopes), taking its snapshot only for a Fallout 4 game (before the explicit-folder check, as it always has)
 
-Callers that start from an installation's `CLASSIC Data` directory use [`classic_scangame_core::resolve_xse_folder_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document) (and its `_in_version_registry_scope` form), which reads the facts with `classic_config_core::read_game_local_facts` and calls this function. The GUI's setup-detection hint and the C++ bridge's `classic::xse::resolve_xse_folder_for_scan` go through it, and so does Crash Log collection (`classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery, which passes the run's scope). Standard crash scans keep custom folders additive to XSE Folder collection.
+Callers that start from an installation's `CLASSIC Data` directory use [`classic_scangame_core::resolve_xse_folder_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document) (and its `_in_version_registry_scope` form), which reads the facts with `classic_config_core::read_game_local_facts` and calls this function. Crash Log collection goes through it (`classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery, which passes the run's scope). Standard crash scans keep custom folders additive to XSE Folder collection.
 
 This crate is the `domainOwner` of the `xse-folder` Binding Compliance Suite family. Its `xse-folder.derive` capability exercises `resolve_xse_folder_from_game_local_facts` directly with supplied facts (Rust only; no binding exposes the facts resolver). The Local.yaml composition is credited separately to `classic-scangame-core` as `xse-folder.resolve`.
 
@@ -209,7 +209,7 @@ This crate is the `domainOwner` of the `xse-folder` Binding Compliance Suite fam
 - `Err(XseLogError::Inspect { path, source })` means the candidate log could not be inspected for a reason other than absence (for example access denied, or a path that is not a valid file name). Its message starts with `cannot inspect XSE log `.
 - `resolve_xse_log_from_game_local_facts_in_version_registry_scope(..., &VersionRegistryScope)` reads Version Registry metadata only from the caller's scope.
 
-Callers that start from `CLASSIC Data` use [`classic_scangame_core::resolve_xse_log_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document), which is what CXX (`classic::xse::resolve_xse_log_for_scan`), Node (`resolveXseLogForScan`) and Python (`classic_xse.resolve_xse_log_for_scan`) expose. The `xse-folder` family's `xse-folder.log` capability runs those on all four adapters.
+Callers that start from `CLASSIC Data` use [`classic_scangame_core::resolve_xse_log_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document), which is what CXX exposes as `classic::xse::resolve_xse_log_for_scan` (the GUI's setup-detection hint calls it). The `xse-folder` family's `xse-folder.log` capability runs on the Rust and CXX participants.
 
 ## Version helpers
 

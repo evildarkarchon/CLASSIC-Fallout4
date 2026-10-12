@@ -2,14 +2,6 @@
   "schemaVersion": 1,
   "families": [
     {
-      "familyId": "autoscan-report",
-      "cxx": {
-        "capabilityIds": [
-          "autoscan-report.execute"
-        ]
-      }
-    },
-    {
       "familyId": "config-operations",
       "cxx": {
         "capabilityIds": [
@@ -26,47 +18,9 @@
       }
     },
     {
-      "familyId": "crash-log-scan-run",
-      "cxx": {
-        "capabilityIds": [
-          "scan-run.configured-movement",
-          "scan-run.execute",
-          "scan-run.standard-fcx-request",
-          "scan-run.targeted-fcx-request"
-        ]
-      }
-    },
-    {
-      "familyId": "crash-pattern",
-      "cxx": {
-        "capabilityIds": [
-          "crash-pattern.classify",
-          "crash-pattern.legacy",
-          "crash-pattern.vr"
-        ]
-      }
-    },
-    {
-      "familyId": "crash-suspect",
-      "cxx": {
-        "capabilityIds": [
-          "crash-suspect.analyze"
-        ]
-      }
-    },
-    {
-      "familyId": "crashgen-settings",
-      "cxx": {
-        "capabilityIds": [
-          "crashgen-settings.analyze"
-        ]
-      }
-    },
-    {
       "familyId": "file-backups",
       "cxx": {
         "capabilityIds": [
-          "file-backups.game-files",
           "file-backups.managed",
           "file-backups.remove"
         ]
@@ -76,17 +30,7 @@
       "familyId": "file-operations",
       "cxx": {
         "capabilityIds": [
-          "file-operations.read-text",
           "file-operations.write-text"
-        ]
-      }
-    },
-    {
-      "familyId": "formid-finding",
-      "cxx": {
-        "capabilityIds": [
-          "formid-finding.analyze",
-          "formid-finding.sqlite"
         ]
       }
     },
@@ -94,7 +38,6 @@
       "familyId": "game-identity",
       "cxx": {
         "capabilityIds": [
-          "game-identity.metadata",
           "game-identity.observe"
         ]
       }
@@ -108,120 +51,10 @@
       }
     },
     {
-      "familyId": "hash-cache-controls",
-      "cxx": {
-        "capabilityIds": [
-          "hash-cache-controls.empty"
-        ]
-      }
-    },
-    {
       "familyId": "installation-paths",
       "cxx": {
         "capabilityIds": [
-          "installation-paths.custom-scan",
-          "installation-paths.inspect",
-          "installation-paths.locate",
-          "installation-paths.primitives"
-        ]
-      }
-    },
-    {
-      "familyId": "log-collection",
-      "cxx": {
-        "capabilityIds": [
-          "log-collection.collect",
-          "log-collection.configured"
-        ]
-      }
-    },
-    {
-      "familyId": "markdown-rendering",
-      "cxx": {
-        "capabilityIds": [
-          "markdown-rendering.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "message-logging",
-      "cxx": {
-        "capabilityIds": [
-          "message-logging.basic",
-          "message-logging.startup"
-        ]
-      }
-    },
-    {
-      "familyId": "mod-guidance",
-      "cxx": {
-        "capabilityIds": [
-          "mod-guidance.analyze"
-        ]
-      }
-    },
-    {
-      "familyId": "named-record",
-      "cxx": {
-        "capabilityIds": [
-          "named-record.analyze"
-        ]
-      }
-    },
-    {
-      "familyId": "papyrus-monitor",
-      "cxx": {
-        "capabilityIds": [
-          "papyrus-monitor.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "path-backups",
-      "cxx": {
-        "capabilityIds": [
-          "path-backups.timestamp"
-        ]
-      }
-    },
-    {
-      "familyId": "path-operations",
-      "cxx": {
-        "capabilityIds": [
-          "path-operations.exists",
-          "path-operations.validate"
-        ]
-      }
-    },
-    {
-      "familyId": "plugin-evidence",
-      "cxx": {
-        "capabilityIds": [
-          "plugin-evidence.analyze"
-        ]
-      }
-    },
-    {
-      "familyId": "registry-game",
-      "cxx": {
-        "capabilityIds": [
-          "registry-game.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "registry-gui",
-      "cxx": {
-        "capabilityIds": [
-          "registry-gui.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "registry-operations",
-      "cxx": {
-        "capabilityIds": [
-          "registry-operations.execute"
+          "installation-paths.locate"
         ]
       }
     },
@@ -234,67 +67,10 @@
       }
     },
     {
-      "familyId": "runtime-access",
-      "cxx": {
-        "capabilityIds": [
-          "runtime-access.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "scan-run-vocabulary",
-      "cxx": {
-        "capabilityIds": [
-          "vocabulary.resolve"
-        ]
-      }
-    },
-    {
-      "familyId": "settings-load",
-      "cxx": {
-        "capabilityIds": [
-          "settings-load.execute"
-        ]
-      }
-    },
-    {
-      "familyId": "settings-validation",
-      "cxx": {
-        "capabilityIds": [
-          "settings-validation.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "settings-yaml",
-      "cxx": {
-        "capabilityIds": [
-          "settings-yaml.execute"
-        ]
-      }
-    },
-    {
-      "familyId": "update-decisions",
-      "cxx": {
-        "capabilityIds": [
-          "update-decisions.compare"
-        ]
-      }
-    },
-    {
       "familyId": "update-rejection",
       "cxx": {
         "capabilityIds": [
-          "update-rejection.latest",
           "update-rejection.notification"
-        ]
-      }
-    },
-    {
-      "familyId": "update-services",
-      "cxx": {
-        "capabilityIds": [
-          "update-services.notification"
         ]
       }
     },
@@ -304,19 +80,8 @@
         "capabilityIds": [
           "user-settings.defaults",
           "user-settings.geometry",
-          "user-settings.legacy-import",
-          "user-settings.migrate",
           "user-settings.open",
           "user-settings.update"
-        ]
-      }
-    },
-    {
-      "familyId": "web-operations",
-      "cxx": {
-        "capabilityIds": [
-          "web-operations.observe",
-          "web-operations.routes"
         ]
       }
     },
@@ -324,32 +89,7 @@
       "familyId": "xse-folder",
       "cxx": {
         "capabilityIds": [
-          "xse-folder.log",
-          "xse-folder.resolve"
-        ]
-      }
-    },
-    {
-      "familyId": "xse-operations",
-      "cxx": {
-        "capabilityIds": [
-          "xse-operations.inspect"
-        ]
-      }
-    },
-    {
-      "familyId": "yaml-file-values",
-      "cxx": {
-        "capabilityIds": [
-          "yaml-file-values.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "yaml-update-operations",
-      "cxx": {
-        "capabilityIds": [
-          "yaml-update-operations.execute"
+          "xse-folder.log"
         ]
       }
     }

@@ -189,8 +189,8 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
             ),
             (
                     ".github/workflows/ci-cpp.yml",
-                    "run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }}",
-                    "run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }} --profile full",
+                    "run_cxx_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }}",
+                    "run_cxx_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} --profile full",
                     "cannot claim full-repository scope",
             ),
             (

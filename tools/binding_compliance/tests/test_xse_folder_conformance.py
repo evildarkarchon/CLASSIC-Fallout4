@@ -93,8 +93,9 @@ def test_xse_folder_credits_derivation_to_xse_and_composition_to_scangame():
 def test_xse_folder_derivation_is_rust_only_and_the_log_runs_on_every_adapter():
     """No binding exposes the facts resolver, so only Rust executes derivation.
 
-    participants.json enrols CXX for the Local.yaml composition and the XSE log
-    operation only, so both adapters execute those scenarios.
+    participants.json enrols CXX for the XSE log operation only: the Local.yaml
+    composition (`xse-folder.resolve`) left CXX with its bridge export in #309, so
+    Rust alone executes composition and derivation.
     """
     from conformance.applicability import derive_applicability
     from conformance.participants import load_participants
@@ -115,13 +116,8 @@ def test_xse_folder_derivation_is_rust_only_and_the_log_runs_on_every_adapter():
     assert set(participants["rust"].scenario_ids) == (
         COMPOSITION_SCENARIOS | DERIVATION_SCENARIOS | LOG_SCENARIOS
     )
-    assert participants["cxx"].capability_ids == (
-        "xse-folder.log",
-        "xse-folder.resolve",
-    )
-    assert set(participants["cxx"].scenario_ids) == (
-        COMPOSITION_SCENARIOS | LOG_SCENARIOS
-    )
+    assert participants["cxx"].capability_ids == ("xse-folder.log",)
+    assert set(participants["cxx"].scenario_ids) == LOG_SCENARIOS
 
 
 def test_xse_folder_derivation_rejects_uncontrolled_game_local_facts(tmp_path):
