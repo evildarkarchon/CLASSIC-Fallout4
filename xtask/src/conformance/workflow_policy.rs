@@ -685,14 +685,13 @@ fn denominator(
     }
     for (participant, required_instances) in &instances {
         if !RUN_STEPS.iter().any(|(id, ..)| id == participant) {
-            findings.push(Finding {
-                path: CONSUMER_OBLIGATIONS.to_owned(),
-                line: 1,
-                rule: RULE,
-                message: format!(
+            findings.push(Finding::file(
+                CONSUMER_OBLIGATIONS,
+                RULE,
+                format!(
                     "participant {participant} is required on {required_instances:?} but has no CI `conformance run` step"
                 ),
-            });
+            ));
         }
     }
     for (participant, file, job_id, name, matrix) in RUN_STEPS {
@@ -966,12 +965,7 @@ impl Job<'_> {
 impl Workflow {
     /// Loads `file`; a missing or unparseable workflow is a finding.
     fn load(root: &RepoRoot, file: &'static str) -> Result<std::result::Result<Self, Finding>> {
-        let finding = |line: usize, message: String| Finding {
-            path: file.to_owned(),
-            line,
-            rule: RULE,
-            message,
-        };
+        let finding = |line: usize, message: String| Finding::new(file, line, RULE, message);
         let source = match std::fs::read_to_string(root.join(file)) {
             Ok(source) => source,
             Err(error) if error.kind() == ErrorKind::NotFound => {
@@ -1031,12 +1025,7 @@ impl Workflow {
                 None => break 1,
             }
         };
-        Finding {
-            path: self.file.to_owned(),
-            line,
-            rule: RULE,
-            message,
-        }
+        Finding::new(self.file, line, RULE, message)
     }
 }
 
@@ -1080,6 +1069,8 @@ impl LineTracker {
 }
 
 impl MarkedEventReceiver for LineTracker {
+    /// Tracks the path of each node from the parser's events and records the line
+    /// of every mapping entry and sequence item (see [`LineTracker::enter`]).
     fn on_event(&mut self, event: Event, mark: Marker) {
         match event {
             Event::Scalar(value, ..) => {

@@ -78,27 +78,26 @@ pub(crate) fn run(root: &RepoRoot, args: Args) -> Result<Outcome> {
         } else if file_findings.is_empty() {
             // Every *.yaml in the directory is uploaded, so an unlisted file
             // would ship with no published schema range.
-            file_findings.push(Finding {
-                path: root.relative(path),
-                line: 1,
-                rule: "unlisted-shippable-yaml",
-                message: format!("shippable YAML not listed in {ranges_name}"),
-            });
+            file_findings.push(Finding::file(
+                root.relative(path),
+                "unlisted-shippable-yaml",
+                format!("shippable YAML not listed in {ranges_name}"),
+            ));
         }
         findings.extend(file_findings);
     }
 
     let ranges_text = std::fs::read_to_string(&ranges_path).unwrap_or_default();
     for name in listed.iter().filter(|name| !seen.contains(**name)) {
-        findings.push(Finding {
-            path: root.relative(&ranges_path),
-            line: entry_line(&ranges_text, name),
-            rule: "missing-shippable-yaml",
-            message: format!(
+        findings.push(Finding::new(
+            root.relative(&ranges_path),
+            entry_line(&ranges_text, name),
+            "missing-shippable-yaml",
+            format!(
                 "{name} listed in {ranges_name} but not found in {}",
                 dir.display()
             ),
-        });
+        ));
     }
 
     let count = findings.len();
@@ -134,12 +133,7 @@ fn validate_file(root: &RepoRoot, path: &Path) -> Vec<Finding> {
         Loaded::Document { text, document } => (text, document),
         Loaded::Unparseable(finding) => return vec![finding],
     };
-    let finding = |line, rule, message| Finding {
-        path: root.relative(path),
-        line,
-        rule,
-        message,
-    };
+    let finding = |line, rule, message| Finding::new(root.relative(path), line, rule, message);
     if !matches!(document, Yaml::Hash(_)) {
         return vec![finding(
             1,

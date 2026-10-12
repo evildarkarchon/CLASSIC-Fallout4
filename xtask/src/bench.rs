@@ -25,9 +25,9 @@
 //!   all benchmarks. The Python helper only looked at direct children of
 //!   `target/criterion` and so never found a real baseline.
 //!
-//! Both subcommands return their human-readable report inside the
-//! `Outcome::Pass` summary (one headline line, then the report), since modules
-//! never print.
+//! Both subcommands return a one-line headline as the `Outcome::Pass` summary
+//! and their human-readable report in its `report` field, since modules never
+//! print; the binary prints the report on stdout after the `OK:` line.
 
 use std::path::{Path, PathBuf};
 
@@ -113,8 +113,8 @@ impl Default for CleanupArgs {
 
 /// Runs the selected bench helper over the repository at `root`.
 ///
-/// Returns `Outcome::Pass` with the helper's report; neither helper produces
-/// findings.
+/// Returns `Outcome::Pass` with a one-line headline and the helper's report
+/// (no report for `percentiles --quiet`); neither helper produces findings.
 ///
 /// # Errors
 ///

@@ -29,7 +29,7 @@ fn fake_table() -> CommandTable {
         Some(ParticipantCommand {
             program: "fake-participant".into(),
             args: Vec::new(),
-            source_paths: if matches!(participant, "rust" | "cxx") {
+            source_paths: if matches!(participant, Participant::Rust | Participant::Cxx) {
                 vec!["runner/fake.rs".into()]
             } else {
                 Vec::new()
@@ -152,7 +152,8 @@ fn rust_runs_every_family_and_writes_its_artifacts() {
     assert_eq!(
         outcome,
         Outcome::Pass {
-            summary: "conformance run rust/rust: 3 families passed".into()
+            summary: "conformance run rust/rust: 3 families passed".into(),
+            report: None,
         }
     );
     let launches = launches.into_inner();
@@ -479,7 +480,8 @@ fn the_verdict_is_complete_only_with_every_execution() {
     assert_eq!(
         verdict(&repo, artifacts.path(), Some(&output)),
         Outcome::Pass {
-            summary: "conformance verdict: repository complete: 3 families, 6 executions".into()
+            summary: "conformance verdict: repository complete: 3 families, 6 executions".into(),
+            report: None,
         }
     );
     let document: Value = serde_json::from_slice(&std::fs::read(&output).unwrap()).unwrap();

@@ -172,11 +172,8 @@ fn is_excluded_dir(name: &str) -> bool {
 /// Applies every rule that covers `relative` to its comment-blanked `code`.
 fn audit_file(relative: &str, code: &str) -> Vec<Finding> {
     let lines: Vec<&str> = code.lines().collect();
-    let finding = |line: usize, rule: &'static str| Finding {
-        path: relative.to_owned(),
-        line,
-        rule,
-        message: lines[line - 1].trim().to_owned(),
+    let finding = |line: usize, rule: &'static str| {
+        Finding::new(relative, line, rule, lines[line - 1].trim().to_owned())
     };
     let mut findings = Vec::new();
 

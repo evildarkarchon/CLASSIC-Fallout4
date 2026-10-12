@@ -13,9 +13,8 @@ It also owns the structured startup-contract logging helpers now used from bridg
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
-Logger installation is explicit in every binding: Rust `logging::init()`, C++
-`classic::message::init_logging()`, Python `classic_message.init_logging()`, and
-Node `initLogging()` all use the same Rust initializer. Set `RUST_LOG` before the
+Logger installation is explicit: Rust `logging::init()` and C++
+`classic::message::init_logging()` use the same Rust initializer. Set `RUST_LOG` before the
 first call to choose the filter. Repeated calls preserve an already-installed
 logger; importing a binding or constructing a `Logger` does not install one.
 The initializer enables Rust log records on stderr and does not replace the
@@ -33,7 +32,7 @@ Use this crate when you need to:
 - initialize the shared Rust `env_logger` backend for CLASSIC log output when a process wants Rust-side stderr logging
 - preserve valid UTF-8 while formatting content and optional details for log output
 - emit structured startup or contract events through a single CLASSIC log target
-- reuse message and logging behavior across Rust, C++, Python, and Node layers
+- reuse message and logging behavior across Rust and C++ layers
 
 Do not use this crate for:
 
@@ -354,7 +353,7 @@ Related CLASSIC crates and consumers:
 
 Source-observed note:
 
-- the crate is shared heavily at ABI boundaries, so changes to enum variants, root re-exports, or message field semantics can cascade into Python, Node, and C++ wrappers even when the Rust surface looks small
+- the crate is shared heavily at ABI boundaries, so changes to enum variants, root re-exports, or message field semantics can cascade into the C++ wrappers even when the Rust surface looks small
 
 ---
 

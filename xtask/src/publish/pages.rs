@@ -15,7 +15,7 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 
 use super::probe::{self, Polled, Request, Schedule};
-use crate::{Finding, Outcome, RepoRoot};
+use crate::{Finding, Outcome, RepoRoot, digest};
 
 /// Per-request socket timeout (fixed, as in the retired tool).
 const SOCKET_TIMEOUT: Duration = Duration::from_secs(15);
@@ -80,7 +80,7 @@ pub(crate) fn smoke(
         .context("--owner and --repo are required unless --base-url is provided")?;
     let staged = std::fs::read(smoke.expected_body_path)
         .with_context(|| format!("reading {}", smoke.expected_body_path.display()))?;
-    let expected = probe::sha256_hex(&staged);
+    let expected = digest::sha256_hex(&staged);
     progress(&format!(
         "strict-body smoke test: expecting sha256={expected} ({} bytes from {})",
         staged.len(),
@@ -104,7 +104,7 @@ pub(crate) fn smoke(
             });
             match response {
                 Ok(response) if (200..300).contains(&response.status) => {
-                    let digest = probe::sha256_hex(&response.body);
+                    let digest = digest::sha256_hex(&response.body);
                     if digest == expected {
                         Ok(digest)
                     } else {
@@ -125,17 +125,17 @@ pub(crate) fn smoke(
     Ok(match polled {
         Polled::Ready { value, attempt } => Outcome::Pass {
             summary: format!("{url} serves staged manifest (sha256={value}, attempt {attempt})"),
+            report: None,
         },
         Polled::TimedOut { last, .. } => Outcome::from_findings(
-            vec![Finding {
-                path: root.relative(smoke.expected_body_path),
-                line: 1,
-                rule: "pages-not-serving",
-                message: format!(
+            vec![Finding::file(
+                root.relative(smoke.expected_body_path),
+                "pages-not-serving",
+                format!(
                     "{url} did not serve expected bytes (sha256={expected}) within {}s (last saw {last})",
                     smoke.timeout_seconds
                 ),
-            }],
+            )],
             String::new(),
             format!(
                 "{} smoke-pages: the Pages manifest does not match the staged manifest",

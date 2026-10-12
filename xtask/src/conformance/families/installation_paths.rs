@@ -12,8 +12,9 @@ use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
 
-use super::{InputContext, has_exact_keys, issue, sha256_hex};
+use super::{InputContext, has_exact_keys, issue};
 use crate::conformance::Issue;
+use crate::digest;
 
 /// SHA-256 of the controlled Version Registry YAML an `inspect` case stages.
 const REGISTRY_SHA256: &str = "d6659f95c1a4bd45e4ba4d6e6e505f405f458b4eaba37fc2e67e950c90dd8567";
@@ -64,6 +65,10 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
     issues
 }
 
+/// Checks one Installation Root `locate` fixture: exactly its four members,
+/// the owned start directories, `CLASSIC Data` placed at most once in each
+/// locator candidate, and `expected_directories` equal to the tree those inputs
+/// create.
 fn check_locate(fixture: &Value, expected_directories: Option<&Value>) -> Result<(), String> {
     if !has_exact_keys(
         fixture,
@@ -115,6 +120,9 @@ fn directory_tree(placements: &[&str]) -> Vec<String> {
     found.into_iter().collect()
 }
 
+/// Checks one installation-paths inspect fixture: exactly its four members,
+/// owned cache directories for the game and docs paths, the controlled registry
+/// metadata (pinned by SHA-256), and exactly one executable marker file.
 fn check_inspect(fixture: &Value) -> Result<(), String> {
     if !has_exact_keys(fixture, &["gamePath", "docsPath", "registryYaml", "files"]) {
         return Err("an installation paths fixture must contain exactly gamePath, docsPath, registryYaml and files".into());
@@ -128,7 +136,7 @@ fn check_inspect(fixture: &Value) -> Result<(), String> {
     }
     let registry_ok = fixture["registryYaml"]
         .as_str()
-        .is_some_and(|text| sha256_hex(text.as_bytes()) == REGISTRY_SHA256);
+        .is_some_and(|text| digest::sha256_hex(text.as_bytes()) == REGISTRY_SHA256);
     let marker =
         json!({format!("{}/Fallout4.exe", game.unwrap_or_default()): "owned executable marker"});
     if !registry_ok || fixture["files"] != marker {

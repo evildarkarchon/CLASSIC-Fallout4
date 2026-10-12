@@ -29,6 +29,7 @@ pub(crate) fn find_enum<'a>(file: &'a File, name: &str) -> Option<&'a ItemEnum> 
     find_enum_in(&file.items, name)
 }
 
+/// Depth-first search of `items` and their inline modules for the enum `name`.
 fn find_enum_in<'a>(items: &'a [Item], name: &str) -> Option<&'a ItemEnum> {
     items.iter().find_map(|item| match item {
         Item::Enum(found) if found.ident == name => Some(found),

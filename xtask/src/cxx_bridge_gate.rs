@@ -92,16 +92,16 @@ pub fn run(root: &RepoRoot, _args: Args) -> Result<Outcome> {
                 called.insert((namespaces[reference.namespace].clone(), reference.name));
             }
             for unsupported in scan.unsupported {
-                findings.push(Finding {
-                    path: root.relative(&path),
-                    line: unsupported.line,
-                    rule: "unsupported-reference-form",
-                    message: format!(
+                findings.push(Finding::new(
+                    root.relative(&path),
+                    unsupported.line,
+                    "unsupported-reference-form",
+                    format!(
                         "unsupported reference form `{}`; reference bridge exports only as \
                          classic::<module>::name or <alias>::name with `namespace <alias> = classic::<module>;`",
                         unsupported.form
                     ),
-                });
+                ));
             }
         }
     }
@@ -194,12 +194,12 @@ fn orphans(located: &LocatedBridge, called: &HashSet<(String, String)>) -> Vec<F
                 ),
                 _ => return None,
             };
-            Some(Finding {
-                path: located.file.clone(),
-                line: export.line,
-                rule: "orphan-export",
+            Some(Finding::new(
+                located.file.clone(),
+                export.line,
+                "orphan-export",
                 message,
-            })
+            ))
         })
         .collect()
 }

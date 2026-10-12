@@ -81,7 +81,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 
 ### Performance and benchmarking
 
-- [`docs/performance/performance_monitoring.md`](performance/performance_monitoring.md)
+- [`docs/archive/python-era/performance_monitoring.md`](archive/python-era/performance_monitoring.md) (archived; written for the retired Python-facing acceleration model)
 - [`docs/performance/rust_db_benchmark_baseline.md`](performance/rust_db_benchmark_baseline.md)
 - [`docs/archive/performance_optimization_complete.md`](archive/performance_optimization_complete.md) (archived historical report)
 

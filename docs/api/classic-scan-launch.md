@@ -11,8 +11,7 @@ so as its own User Settings Update, before or apart from launching.
 
 ## Status
 
-The crate and its binding surfaces exist. The Node and Python CLIs launch through it (#290). The
-native C++ CLI launches through it too (#289): it maps its flags onto overrides, saves
+The crate and its C++ bridge surface exist. The native C++ CLI launches through it (#289): it maps its flags onto overrides, saves
 `--unsolved-logs-destination` as a separate User Settings Update before launching, and prints the
 launch's `display_lines`. The native GUI launches through it (#288; see
 [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md)): it passes the
@@ -71,10 +70,9 @@ pub fn prepare_launch_in_scopes(
 ```
 
 `prepare_launch` reads Version Registry metadata and the Game Local document through the process
-default scopes. `prepare_launch_in_scopes` reads them only through the caller's scopes, so a binding
-facade that executes its runs in its own scopes launches with FCX setup facts from the same
-snapshot; the Python `classic_scanlog` facade passes its own. The scopes are read only when FCX Mode
-is on.
+default scopes. `prepare_launch_in_scopes` reads them only through the caller's scopes, so a caller
+that executes its runs in its own scopes launches with FCX setup facts from the same snapshot. The
+scopes are read only when FCX Mode is on.
 
 | Type | Role |
 |---|---|
@@ -89,7 +87,7 @@ is on.
 | `GameVersionSelection` | Re-exported from User Settings for the game-version override |
 
 The diagnostic and error enums are deliberately **exhaustive**: a new kind fails to compile in every
-binding that projects it, which is how CXX, Node and Python stay in parity with it.
+binding that projects it, which is how the CXX bridge stays in parity with it.
 
 ## Rules
 

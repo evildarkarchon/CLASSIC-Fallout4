@@ -38,7 +38,7 @@ Do not use this crate for:
 - validating archive internals or mod compatibility rules
 - general async file I/O, shared runtime ownership, or UI/binding-specific behavior
 
-Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the Node/Python binding wrappers.
+Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++ bridge.
 
 ---
 
@@ -267,11 +267,11 @@ Valid, missing, and malformed resources:
 - a readable file that is not a parseable DDS (too small, wrong magic, or rejected by `ddsfile`) returns exactly `Unable to read DDS header`
 - `validate_batch()` omits files with zero issues and never fails the whole batch
 
-Consumers: `classic-scangame-core` validates loose `.dds` files from unpacked mod scans with `DDSAnalyzer::new(config.game_target)`. Node (`JsDdsAnalyzer` / `JsDDSAnalyzer`, `JsDdsIssue`) and Python (`classic_file_io.DDSAnalyzer`) keep their existing export names and module locations; only their Rust owner changed.
+Consumers: `classic-scangame-core` validates loose `.dds` files from unpacked mod scans with `DDSAnalyzer::new(config.game_target)`. No binding exports the DDS analyzer.
 
 ## Game-Target Backup And Game-File Operations
 
-These two file-group operations moved here from `classic-file-io-core` in #250. The old `classic_file_io_core::backup` and `classic_file_io_core::game_files` modules and their root re-exports are gone, with no forwarding re-export: resource depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_resource_core`. Both operations still report failures as [`classic_file_io_core::FileIOError`](classic-file-io-core.md#fileioerror), not `ResourceError`, so every CXX, Node, and Python error projection is unchanged. Neither uses Durable Publication.
+These two file-group operations moved here from `classic-file-io-core` in #250. The old `classic_file_io_core::backup` and `classic_file_io_core::game_files` modules and their root re-exports are gone, with no forwarding re-export: resource depends on file I/O, so a re-export would close a dependency cycle. Rust callers import the same names from `classic_resource_core`. Both operations still report failures as [`classic_file_io_core::FileIOError`](classic-file-io-core.md#fileioerror), not `ResourceError`, so the CXX error projection is unchanged. Neither uses Durable Publication.
 
 The game-target backup is distinct from the [version-labelled backup](#version-labelled-backup): it keeps one fixed directory per backup type under the game root and does not label backups by version.
 
@@ -321,7 +321,7 @@ Behavior worth knowing:
 
 Both managers scan only top-level entries of their configured roots; they do not recursively discover nested matches before copying a matched directory tree.
 
-Callers: the CXX bridge (`files.rs`: `backup_manager_*`, `game_files_*`), the Node binding (`JsBackupManager`, `JsGameFilesManager`), and the TUI backup workflow. Python does not expose either operation.
+Callers: the CXX bridge (`files.rs`: `backup_manager_*`, which wraps `BackupManager` only) and the TUI backup workflow.
 
 ## Version-labelled backup
 
@@ -425,12 +425,11 @@ Related CLASSIC crates and wrappers:
 
 - [`classic-path-core`](../../business-logic/classic-path-core) - neighboring game/documents path layer (this crate no longer depends on it)
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it uses this crate's `dds` rules for loose-texture checks and handles scan orchestration itself
-- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - CXX `files` bridge module that wraps `BackupManager` and `GameFilesManager`
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - CXX `files` bridge module that wraps `BackupManager`
 
 Binding collaboration visible in source today:
 
-- both Node and Python wrappers expose `ResourceType`, `ResourceInfo`, `detect_resource_type()`, `is_supported_resource()`, `enumerate_resources()`, `count_resources_by_type()`, and `validate_resource()`
-- this makes the root-level Rust API the effective contract for multiple language surfaces
+- no binding exposes `ResourceType`, `ResourceInfo`, `detect_resource_type()`, `is_supported_resource()`, `enumerate_resources()`, `count_resources_by_type()`, or `validate_resource()`; the root-level Rust API is consumed by Rust callers only
 
 ---
 

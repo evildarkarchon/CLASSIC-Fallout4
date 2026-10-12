@@ -260,7 +260,7 @@ Two consequences worth naming, because they look like omissions:
 - **The retained-discovery sentence beside a recovery prompt.** How much work an accepted decision
   resumes is a count the prompt's own input does not carry — `render_local_ignore_recovery` reads
   Installed YAML Data, not the run's discovery. It stays each frontend's, and is the one remaining
-  caller of the local `plural` helper the TUI, the native CLI, and the Node demo CLI each kept.
+  caller of the local `plural` helper the TUI and the native CLI each kept.
   Moving it means the prompt taking a `RunResult`; that is a deliberate change, not a fix to make in
   passing.
 - **The resume error's stable code.** `ResumeErrorKind` is token-only by decision: it is an error
@@ -308,59 +308,37 @@ treatments are the split they claim to be. It does not restate a single sentence
 
 ## Binding surface
 
-All three: the C++ bridge, the Node binding, and the Python binding. Display Content is rendered
-**before** it crosses a seam and travels as mirrored data, because a `RunResult` cannot be held
-across one. A segment flattens to a kind tag plus a text field, a path field, and a count field, with
-unused fields empty; for a count, the text field carries the core-resolved noun. All three seams
-consume that one flattening, which is what lets a wording fix reach every consumer without three
-separate readings of the same segment.
+The C++ bridge. (The Node and Python bindings carried the same flattening until they retired with
+ADR-0010.) Display Content is rendered **before** it crosses a seam and travels as mirrored data,
+because a `RunResult` cannot be held across one. A segment flattens to a kind tag plus a text field,
+a path field, and a count field, with unused fields empty; for a count, the text field carries the
+core-resolved noun. Any seam consumes that one flattening, which is what lets a wording fix reach
+every consumer without separate readings of the same segment.
 
-Where the seams differ is only in where the field can sit and how each language spells the two tags.
+The bridge has one execution envelope with presence flags, so a single `display_lines` on it covers
+the run result, the infrastructure error, and the resume error.
 
-- **The bridge** has one execution envelope with presence flags, so a single `display_lines` on it
-  covers the run result, the infrastructure error, and the resume error.
-- **Node** resolves two envelopes instead — a success and a failure — and rejects a resume error
-  rather than returning it, so the same coverage costs three `displayLines` fields: one on each
-  envelope and one on the rejected error object beside its stable `code`.
-- **Python** has one envelope like the bridge, so one `display_lines` covers `result` and `error`
-  alike, plus one on each of the five resume exceptions.
+Events carry it too, and so does a launch: the bridge's `ScanRunLaunchRequestDto.display_lines`
+holds one line per launch diagnostic, in the same order as the typed `diagnostics` beside it.
 
-Events carry it identically on all three, and so does a launch: the bridge's
-`ScanRunLaunchRequestDto.display_lines`, Node's `ScanRunLaunch.displayLines`, and Python's
-`ScanRunLaunch.display_lines` each hold one line per launch diagnostic, in the same order as the
-typed `diagnostics` beside them.
-
-The recovery prompt rides the same seams and is rendered under the same rule — while the Rust value
+The recovery prompt rides the same seam and is rendered under the same rule — while the Rust value
 is live — but only for a run whose status is Local Ignore Recovery Required, which is exactly when
 the execution offers a pending recovery to answer with. Every other run carries no prompt rather than an
-empty one, so a consumer cannot mistake "nothing to ask" for "ask with no options":
+empty one, so a consumer cannot mistake "nothing to ask" for "ask with no options". The bridge
+carries `has_recovery_prompt` beside a `ScanRunRecoveryPrompt`, because `cxx` has no optional
+struct — the same presence-flag convention `has_local_ignore_reset` already uses.
 
-- **The bridge** carries `has_recovery_prompt` beside a `ScanRunRecoveryPrompt`, because `cxx` has no
-  optional struct — the same presence-flag convention `has_local_ignore_reset` already uses.
-- **Node** carries `recoveryPrompt?: JsScanRunRecoveryPrompt` on the success envelope, and **Python**
-  a `recovery_prompt: ScanRunRecoveryPrompt | None` getter on `ScanRunExecution`. Both languages have
-  a native absent form, and `undefined`/`None` is what a consumer on each surface already reads as
-  "not present".
+The bridge also offers the same prompt through its pending-recovery object, which is what a settling
+frontend reads: `scan_run_pending_recovery_prompt`. It is the same rendering as the envelope's
+prompt, taken from the bundle described above.
 
-Each surface also offers the same prompt through its pending-recovery object, which is what a
-settling frontend reads: `scan_run_pending_recovery_prompt` on the bridge, the
-`ScanRunPendingRecovery.prompt` getter on Node, and the `ScanRunPendingRecovery.prompt` property on
-Python. It is the same rendering as the envelope's prompt, taken from the bundle described above.
+A decision's `description` is an ordinary segment list, flattened exactly as the lines beside it
+are, so a consumer renders one with the renderer it already has. The `decision` itself crosses as
+the bridge's existing recovery-decision enum rather than as a token, so a consumer answers with
+precisely the value it was offered instead of mapping a string back.
 
-A decision's `description` is an ordinary segment list on all three, flattened exactly as the lines
-beside it are, so a consumer renders one with the renderer it already has. The `decision` itself
-crosses as each surface's existing recovery-decision enum rather than as a token, on all three, so a
-consumer answers with precisely the value it was offered instead of mapping a string back.
-
-Two per-seam details worth knowing:
-
-- **Node widens a `Count` to `i64` and saturates**, because JavaScript has no `u64`. Nothing counts
-  anywhere near that far, and the alternative — a silently wrapped negative quantity — would read as
-  nonsense rather than as an obvious ceiling. Python keeps the `u64`.
-- **The severity and the segment kind are spelled per language.** The bridge uses C++ enums, Node
-  uses PascalCase `string_enum` values, and Python uses snake_case token strings, because a
-  snake_case token is what every other tag on that surface already is — a run status, an event kind,
-  a log disposition. Parity is the flattening beneath the tag, not the tag's spelling.
+The severity and the segment kind cross as C++ enums. Parity is the flattening beneath the tag, not
+the tag's spelling.
 
 ## Testing
 

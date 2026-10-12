@@ -81,6 +81,9 @@ pub(super) fn validate_run(context: &InputContext<'_>) -> Vec<Issue> {
         .collect()
 }
 
+/// Checks one `crash-log-scan-run` input: every required member and no unknown
+/// one, boolean flags, a non-negative `maxConcurrent`, staged lists of
+/// `{fixtureRef, path}` documents, and path lists of canonical relative paths.
 fn run_plan(input: &Map<String, Value>) -> Result<(), String> {
     let present: BTreeSet<&str> = input.keys().map(String::as_str).collect();
     let missing: Vec<&str> = RUN_REQUIRED

@@ -340,7 +340,8 @@ fn a_passing_run_summarises_what_was_checked() {
         Outcome::Pass {
             summary: "cxx-bridge-gate: every export has a production caller \
                       (2 exports in 1 bridge modules, 1 frontend files scanned)"
-                .into()
+                .into(),
+            report: None,
         }
     );
 }

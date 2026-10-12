@@ -34,7 +34,7 @@ Do not use this crate for:
 - crashgen or broader setup scanning orchestration
 - binding-specific wrapper DTOs
 
-Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-version-registry-core`](../../business-logic/classic-version-registry-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++/Node/Python binding layers.
+Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-version-registry-core`](../../business-logic/classic-version-registry-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++ bridge.
 
 ---
 
@@ -53,7 +53,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 - `resolve_xse_folder_from_game_local_facts()` / `resolve_xse_folder_from_game_local_facts_in_version_registry_scope()` - fail-soft XSE Folder derivation from caller-supplied Game Local facts, reading Version Registry metadata from the default snapshot or a caller-selected scope
 - `resolve_xse_log_from_game_local_facts()` / `resolve_xse_log_from_game_local_facts_in_version_registry_scope()` - locate the XSE log inside the XSE Folder the same precedence selects; `Ok(None)` for absence, `XseLogError` for operational failure (see [XSE log](#xse-log-from-game-local-facts))
 - `XseLogError` - the XSE log resolvers' typed operational failure (`Inspect { path, source }`)
-- `xse_folder_name(acronym)` - the sole owner of the on-disk XSE folder-name rule: maps a Version Registry XSE acronym to the folder used both under the documents root (the XSE Folder) and under `Data/<folder>/Plugins`; `F4SEVR` maps to the shared `F4SE` folder, every other acronym (trimmed) is its own folder. Game Setup Intake's `plugins_path` uses it. Rust-only: no CXX, Node, or Python export
+- `xse_folder_name(acronym)` - the sole owner of the on-disk XSE folder-name rule: maps a Version Registry XSE acronym to the folder used both under the documents root (the XSE Folder) and under `Data/<folder>/Plugins`; `F4SEVR` maps to the shared `F4SE` folder, every other acronym (trimmed) is its own folder. Game Setup Intake's `plugins_path` uses it. Rust-only: no CXX export
 - `XseError`, `XseResult<T>` - crate-specific error model
 
 ## Root-level re-exports

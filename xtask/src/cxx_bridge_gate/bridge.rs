@@ -20,6 +20,7 @@ pub(super) enum ExportKind {
 }
 
 impl ExportKind {
+    /// The kind as finding text names it, e.g. `opaque type`.
     pub(super) fn label(self) -> &'static str {
         match self {
             ExportKind::Function => "function",
@@ -73,6 +74,8 @@ pub(super) fn parse_bridges(display_path: &str, source: &str) -> Result<Vec<Brid
     Ok(bridges)
 }
 
+/// Appends every `#[cxx::bridge]` module among `items` to `bridges`, searching
+/// inside inline modules that are not bridges themselves.
 fn collect(items: &[Item], display_path: &str, bridges: &mut Vec<Bridge>) -> Result<()> {
     for item in items {
         let Item::Mod(module) = item else { continue };
@@ -88,6 +91,7 @@ fn collect(items: &[Item], display_path: &str, bridges: &mut Vec<Bridge>) -> Res
     Ok(())
 }
 
+/// Whether `attr` is exactly `#[cxx::bridge]` (with or without arguments).
 fn is_cxx_bridge(attr: &Attribute) -> bool {
     let segments: Vec<String> = attr
         .path()
@@ -116,6 +120,16 @@ fn bridge_namespace(attr: &Attribute) -> syn::Result<Option<String>> {
     Ok(namespace)
 }
 
+/// Reads one bridge module: its namespace and its exports.
+///
+/// Exports are the `extern "Rust"` functions and opaque types and the shared
+/// structs and enums, each with the line of its name and the type names its
+/// signature or fields mention. `extern "C++"` functions are not exports, but
+/// the type names their signatures mention become reachability roots.
+///
+/// # Errors
+///
+/// Fails when the attribute's arguments are malformed or name no namespace.
 fn parse_bridge(module: &ItemMod, attr: &Attribute, display_path: &str) -> Result<Bridge> {
     let line = module.ident.span().start().line;
     let namespace = bridge_namespace(attr)

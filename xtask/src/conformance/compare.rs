@@ -458,6 +458,13 @@ pub(crate) fn exact_differences(expected: &Value, actual: &Value) -> Vec<Differe
     differences
 }
 
+/// Appends to `out` every difference between `expected` and `actual` below
+/// `path` (`$`, then `.member` and `[index]` steps).
+///
+/// Differing JSON types stop the descent with one `type_mismatch`. Objects
+/// report missing members, then extra members, then recurse into shared ones,
+/// each in sorted name order. Arrays recurse by index over the shared length,
+/// then report the missing or extra tail elements.
 fn differ(expected: &Value, actual: &Value, path: &str, out: &mut Vec<Difference>) {
     let difference = |path: String, kind| Difference { path, kind };
     if kind(expected) != kind(actual) {
@@ -530,6 +537,17 @@ pub(crate) fn validate_display_content(
     carriers(expected, actual, "$", false)
 }
 
+/// Walks `expected` and `actual` together and validates every display line at
+/// a location both sides share.
+///
+/// `display` is true for the value of a `displayContent` member, which holds
+/// one display line or an array of them. Elsewhere an object with a `segments`
+/// member is a display line. Members or elements present on only one side are
+/// skipped here; `exact_differences` reports them.
+///
+/// # Errors
+///
+/// Returns a [`NormalizationError`] at the first malformed line or segment.
 fn carriers(
     expected: &Value,
     actual: &Value,
@@ -587,6 +605,12 @@ fn carriers(
     }
 }
 
+/// Validates one display line at `path`: exactly `{severity, segments}`, a
+/// supported severity, and an ordered array of valid segments.
+///
+/// # Errors
+///
+/// Returns a [`NormalizationError`] naming the first offending member.
 fn display_line(line: &Value, path: &str) -> Result<(), NormalizationError> {
     let Some(map) = line.as_object().filter(|map| {
         map.len() == 2 && map.contains_key("severity") && map.contains_key("segments")
@@ -617,6 +641,14 @@ fn display_line(line: &Value, path: &str) -> Result<(), NormalizationError> {
     Ok(())
 }
 
+/// Validates one display segment at `path`: exactly `{kind, text, path,
+/// count}`, a supported kind, and only that kind's payload set. A `path`
+/// segment carries only a canonical relative path, a `count` segment text and a
+/// count, and every other kind text only.
+///
+/// # Errors
+///
+/// Returns a [`NormalizationError`] naming the first offending member.
 fn display_segment(segment: &Value, path: &str) -> Result<(), NormalizationError> {
     let Some(map) = segment.as_object().filter(|map| {
         map.len() == 4

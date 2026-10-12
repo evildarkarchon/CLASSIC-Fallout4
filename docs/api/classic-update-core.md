@@ -101,7 +101,7 @@ First-party helpers for native/product callers:
 - `apply_yaml_data_update_with_decision_with(client, pages_url, config, approved)` - testable first-party apply with an explicit Pages endpoint
 - `rollback_yaml_data_update()` - first-party bulk rollback; returns one result per first-party shippable target so bridges can group rolled-back/no-previous/failure lists without duplicating the target list
 
-Lower-level compatibility helpers remain public for tests, unusual hosts, and Node/Python binding consumers:
+Lower-level compatibility helpers remain public for tests and unusual hosts:
 
 - `fetch_yaml_manifest(client, pages_url, tag_prefix, cache_dir)`
 - `check_yaml_update(client, pages_url, tag_prefix, current, config)`

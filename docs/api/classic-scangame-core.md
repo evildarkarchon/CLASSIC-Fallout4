@@ -76,8 +76,8 @@ This crate exposes public modules directly and also re-exports most contributor-
 `ConfigDuplicateDetector::scan_directory` publishes the same groups returned by
 `get_duplicates`. Canonical files follow sorted path order, hashes are reused
 only within one scan, and a new or failed scan cannot expose stale groups from
-the previous directory contents. Node and Python detector methods delegate to
-this state, so object results and returned duplicate maps now agree.
+the previous directory contents, so object results and returned duplicate maps
+agree.
 
 ### Root re-exports
 
@@ -293,8 +293,8 @@ Behavior worth knowing:
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
 - a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
 - the resolved `plugins_path` is `<game root>/Data/<folder>/Plugins`, with the folder named by [`classic_xse_core::xse_folder_name`](classic-xse-core.md#root-level-api) from the selected Version Registry XSE acronym, so Fallout 4 VR uses `Data/F4SE/Plugins`. Intake keeps no copy of that rule.
-- executable and XSE script hashes go through `classic-file-io-core`'s hash cache: `run()` uses the process default `FileHashScope`; `run_in_hash_scope(scope)` behaves identically but reads, caches, and counts those hashes only in `scope`. The Python `classic_scangame` facade uses its own isolated scope so its hashing never reaches `classic_file_io.FileHasher`'s cache or statistics.
-- every Version Registry fact (version detection and matching, expectations, and known Address Library files) comes from one snapshot: `run()` and `run_in_hash_scope()` read the process default scope; `run_in_scopes(hash_scope, version_registry)` reads only `version_registry`. The Python `classic_scangame` facade passes its own isolated Version Registry scope to intake, `AddressLibInfo`, `XseChecker`, and `GameScanOrchestrator`.
+- executable and XSE script hashes go through `classic-file-io-core`'s hash cache: `run()` uses the process default `FileHashScope`; `run_in_hash_scope(scope)` behaves identically but reads, caches, and counts those hashes only in `scope`.
+- every Version Registry fact (version detection and matching, expectations, and known Address Library files) comes from one snapshot: `run()` and `run_in_hash_scope()` read the process default scope; `run_in_scopes(hash_scope, version_registry)` reads only `version_registry`.
 - failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
 - documents-folder state is mapped from `classic-path-core`'s structured `DocumentsCheckState`, not rendered message text.
 - the module covers setup-only diagnostics, not ENB, crashgen TOML, Wrye, BA2, loose-file, or mod INI scans.
@@ -328,9 +328,8 @@ Callers:
 Callers:
 
 - the GUI's setup-detection hint, FCX crash-log scan and game-files scan, through the C++ bridge's `classic::xse::resolve_xse_log_for_scan` (empty string = no log; operational failure raises `rust::Error`, which the GUI logs and treats as no hint). No frontend names XSE log files any more.
-- Node `resolveXseLogForScan` (`string | null`, throws on operational failure) and Python `classic_xse.resolve_xse_log_for_scan` (`str | None`, raises `OSError`)
 - Crash Log Scan Launch (`classic-scan-launch`, #286), which calls `resolve_xse_log_for_scan_in_scopes` for the FCX setup context and reports an operational failure as the typed `XseLogInspect` launch error ([`classic-scan-launch.md`](classic-scan-launch.md))
-- the `xse-folder` family's `xse-folder.log` capability, which runs on the Rust, CXX, Node and Python adapters
+- the `xse-folder` family's `xse-folder.log` capability, which runs on the Rust and CXX adapters
 
 ## Loose-file and archive scanning APIs
 

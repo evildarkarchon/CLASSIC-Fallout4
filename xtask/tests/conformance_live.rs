@@ -369,7 +369,8 @@ fn every_pack_validates_correct_receipts_and_rejects_a_mutated_observation() {
     assert_eq!(
         outcome,
         Outcome::Pass {
-            summary: "conformance run rust/rust: 86 families passed".into()
+            summary: "conformance run rust/rust: 86 families passed".into(),
+            report: None,
         }
     );
 

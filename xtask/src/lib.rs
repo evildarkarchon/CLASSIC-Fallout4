@@ -11,7 +11,9 @@
 //! Modules never print. The binary renders the [`Outcome`] and picks the exit
 //! code: 0 on pass, 1 on a failed check or operational failure, 2 on a usage
 //! error. Findings go to stderr as `path:line: rule: message`, then a summary;
-//! a pass prints `OK: <summary>` on stdout.
+//! a pass prints `OK: <summary>` on stdout. The summary is always one line; a
+//! pass that also carries a multi-line report prints it on stdout after that
+//! line.
 //!
 //! There is no gate trait or registry: the `match` in `main` is the whole
 //! dispatch table. Shared helper modules exist only once they have two real
@@ -24,6 +26,7 @@ pub mod bench;
 pub mod conformance;
 mod cpp_source;
 pub mod cxx_bridge_gate;
+mod digest;
 mod publish;
 mod repo;
 mod rust_source;
@@ -49,6 +52,29 @@ pub struct Finding {
     pub message: String,
 }
 
+impl Finding {
+    /// Builds a finding at 1-based `line` of the repo-relative `path`.
+    pub fn new(
+        path: impl Into<String>,
+        line: usize,
+        rule: &'static str,
+        message: impl Into<String>,
+    ) -> Self {
+        Self {
+            path: path.into(),
+            line,
+            rule,
+            message: message.into(),
+        }
+    }
+
+    /// Builds a finding about the file at `path` as a whole. It points at
+    /// line 1, because no narrower line applies.
+    pub fn file(path: impl Into<String>, rule: &'static str, message: impl Into<String>) -> Self {
+        Self::new(path, 1, rule, message)
+    }
+}
+
 impl fmt::Display for Finding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -62,10 +88,14 @@ impl fmt::Display for Finding {
 /// The plain-data result of one subcommand run.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Outcome {
-    /// The check passed; `summary` is printed after `OK: `.
+    /// The check passed; `summary` is printed after `OK: `, then `report`
+    /// (if any) on the following lines.
     Pass {
         /// One-line description of what was checked.
         summary: String,
+        /// Optional multi-line human-readable report, printed to stdout after
+        /// the `OK:` line. Only `bench` produces one today.
+        report: Option<String>,
     },
     /// The check found violations. Findings are complete (all collected, not
     /// first-only) and sorted by path, then line.
@@ -88,6 +118,7 @@ impl Outcome {
         if findings.is_empty() {
             Outcome::Pass {
                 summary: pass_summary,
+                report: None,
             }
         } else {
             findings.sort();

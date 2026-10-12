@@ -17,7 +17,7 @@ The fix is ownership, not another gate. One definition site, projected everywher
   - `fn as_str(self) -> &'static str` — the frozen adapter-facing **Vocabulary Token**, snake_case.
   - `fn label(self) -> &'static str` — the human-facing **Display Label**, glossary capitalization.
 - `from_token<T: Vocabulary>(token: &str) -> Option<T>` — resolves the variant whose token is exactly `token`. A scan over `VARIANTS` rather than a reverse table, so the forward and parse directions cannot disagree.
-- `display_label<T, U>(value: U, project: fn(T) -> U) -> &'static str` — resolves the Display Label for a value an adapter already projected, by running that adapter's *existing* forward projection over `VARIANTS`. Same reasoning as `from_token`, applied to a binding's mirror enum instead of a string: a reverse `match` would be a second variant mapping able to disagree with the forward one. Returns `""` for a value the projection cannot produce, so no adapter invents a label or borrows another variant's. It lives here rather than per-binding because nothing about it is surface-specific — the contrasting case is the Node casing transform, which encodes a JavaScript identifier convention and therefore belongs to the surface that has the convention.
+- `display_label<T, U>(value: U, project: fn(T) -> U) -> &'static str` — resolves the Display Label for a value an adapter already projected, by running that adapter's *existing* forward projection over `VARIANTS`. Same reasoning as `from_token`, applied to a binding's mirror enum instead of a string: a reverse `match` would be a second variant mapping able to disagree with the forward one. Returns `""` for a value the projection cannot produce, so no adapter invents a label or borrows another variant's. It lives here rather than per-binding because nothing about it is surface-specific — the contrasting case was the retired Node binding's casing transform, which encoded a JavaScript identifier convention and therefore belonged to the surface that had the convention.
 - `assert_vocabulary_conformance<T: Vocabulary>()` — the reusable conformance assertion, called once per adopting enum from that crate's sibling test module.
 - `assert_twin_vocabulary_conformance<Twin, Source>(source_of, locally_owned_tokens)` — the same, for a **delegating twin**: an enum one crate declares so another crate's type does not leak into its contract, and which mirrors that other enum. Called *instead of* the plain assertion, since it runs the base contract first. `source_of` is the twin-to-source direction of the mapping, returning `None` for a variant the source has no counterpart for; `locally_owned_tokens` names exactly those. It additionally checks that every paired variant agrees with its counterpart on **both** forms, that the unpaired set is exactly the declared one in both directions, and that every *source* variant is reachable from some twin variant — the clause that catches a variant added to the source and not to the twin.
 
@@ -35,15 +35,13 @@ Neither form is derived from the other. A mechanical transform turns `field_tran
 - `VARIANTS` lists every variant exactly once. Nothing at runtime can verify that completeness — no Rust construct reports how many variants an enum has — so treat the constant as part of the variant definition. Adopting enums pin `VARIANTS.len()` in their own sibling test so that adding a variant lands a contributor on the line that says so.
 - Tokens and labels are non-empty, and each form is unique *within* an enum. Uniqueness is deliberately not workspace-wide: two unrelated enums may each have a `missing` variant, and the owning type disambiguates them.
 - `as_str` and `label` are written as exhaustive `match` expressions. That exhaustiveness is the enforcement mechanism — a contributor adding a variant cannot ship it without supplying both forms, because the crate will not compile.
-- This crate is workspace-internal and has no C++, Node, or Python surface. It deliberately has no bridge module. Only the enums cross a binding seam; the trait never does.
+- This crate is workspace-internal and has no C++ surface. It deliberately has no bridge module. Only the enums cross a binding seam; the trait never does.
 
 ## Adopting an enum
 
 1. Implement `Vocabulary` in the core crate that owns the enum, next to its definition.
 2. Call `assert_vocabulary_conformance::<YourEnum>()` from that module's sibling test file, and pin `VARIANTS.len()` alongside it.
-3. Replace each binding's hand-written token function with `kind.as_str()`, and each parse counterpart with `classic_vocabulary::from_token` — or, on the Node surface, with `crate::vocabulary::js_token` and `crate::vocabulary::from_js_token`.
-
-   On Node, check what the surface already publishes before reaching for `js_token`. The casing transform belongs wherever the surface's JavaScript identifier convention applies, and the scan-run surface is the standing exception: it publishes the core token unchanged, spelled out in the `ts_type` attributes on `JsScanRunResult` and `JsScanRunInfrastructureError` and pinned again in `index.d.ts`. Routing one of those through `js_token` would respell `no_crash_logs_found` as `noCrashLogsFound` — a breaking rename of a value consumers match on, which is the one thing this contract's frozen-token guarantee exists to prevent. Delegate with `as_str()` there, as the per-log disposition already does.
+3. Replace each binding's hand-written token function with `kind.as_str()`, and each parse counterpart with `classic_vocabulary::from_token`.
 4. Build and test the consuming frontends through their wrappers (`classic-cli/build_cli.ps1 -Test`, `classic-gui/build_gui.ps1 -Test`). Replacing a hand-written token function must not change a single token byte; a changed token means the projection is wrong.
 
    An enum a frontend renders also needs a Display Label projection on the bridge. That projection is a new bridge export, so it lands in the same change as the frontend call that renders it.
@@ -56,10 +54,10 @@ None of these five is rendered by a frontend, so no Display Label of theirs cros
 
 | Enum | Notes |
 | --- | --- |
-| `MigrationChangeKind` | The tracer. Chosen first because its Node token already diverged to camelCase, so it exercises the casing transform for real. |
-| `SourceLocation` | Every token is a single word, so the Node transform is an identity. Its reverse-parse path on the CXX and Node surfaces derives from `VARIANTS`. |
-| `DocumentClassification` | Three multi-word tokens reach JavaScript as `newerCompatible`, `futureMajor`, and `legacyFlat`. |
-| `CommitEligibility` | Two multi-word tokens reach JavaScript as `requiresMigration` and `blockedUntrusted`. |
+| `MigrationChangeKind` | The tracer. Chosen first because its token on the since-retired Node surface had already diverged to camelCase, so it exercised that surface's casing transform for real. |
+| `SourceLocation` | Every token is a single word. Its reverse-parse path on the CXX surface derives from `VARIANTS`. |
+| `DocumentClassification` | Three multi-word tokens (`newer_compatible`, `future_major`, `legacy_flat`). |
+| `CommitEligibility` | Two multi-word tokens (`requires_migration`, `blocked_untrusted`). |
 | `PreferenceOrigin` | One multi-word token reaches JavaScript as `degradedFallback`. Projected at more call sites than any other adopter, since every typed preference carries one. |
 
 Two of the four later adopters are reachable exhaustively through a binding-safe constructor (`DocumentClassification` through the legacy-import outcome, `SourceLocation` through a review-only migration plan), so their per-binding projection tests drive the real conversion functions. `CommitEligibility` and `PreferenceOrigin` only exist inside a `UserSettings` that was opened from a real document; rather than add a test-only constructor for a path production never takes, their exhaustive check sits at the pure projection rule instead. After adoption there is no per-enum projection code left for a production path to exercise differently, so the two seams cover the same ground.
@@ -79,7 +77,7 @@ These three are the first adopters whose Display Labels cross a binding seam, an
 
 Adopting these also deleted two Python restatements of the same vocabulary — `classic-config-py` and `classic-scanlog-py` each wrote out the provenance tokens — and replaced `classic-config-py`'s copy of the five durable-publication stage tokens with delegation to the crate that owns them.
 
-The CXX and Node label projections resolve a variant through the shared `display_label`, which runs that surface's *existing* forward projection over `VARIANTS` rather than matching on the binding-side enum. A reverse `match` would be a second variant mapping that could disagree with the forward one; derived from it, the two cannot. This is the same reasoning `from_token` applies to strings.
+The CXX label projections resolve a variant through the shared `display_label`, which runs that surface's *existing* forward projection over `VARIANTS` rather than matching on the binding-side enum. A reverse `match` would be a second variant mapping that could disagree with the forward one; derived from it, the two cannot. This is the same reasoning `from_token` applies to strings.
 
 ### From [`classic-durable-publication`](classic-durable-publication.md)
 
@@ -115,7 +113,7 @@ Three the run crate **owns outright**. Nothing mirrors them, so the plain `asser
 | `LogFailureStage` | Three variants. `Unsolved Logs finalization` keeps the glossary capitalization of a domain term — the case that shows why a label is not derivable from a token. |
 | `InfrastructureErrorStage` | Six variants. `FormID database access` capitalizes a domain term and `internal invariant validation` reads as the failure rather than the noun. Its `Display` impl renders the **token**, not the label, and is unchanged. |
 
-Three more the run crate owns outright, adopted later so that the scan-run presentation work has Display Labels to put inside a display segment. Nothing about their tokens moved, and no new label entry point was added to the C++ bridge, Node, or Python surfaces — the new labels are meant to reach frontends inside display segments, so no surface gained a label projection and no coverage registry moved.
+Three more the run crate owns outright, adopted later so that the scan-run presentation work has Display Labels to put inside a display segment. Nothing about their tokens moved, and no new label entry point was added to the C++ bridge or the since-retired Node and Python surfaces — the new labels are meant to reach frontends inside display segments, so no surface gained a label projection and no coverage registry moved.
 
 Two of the three did move a baseline, for an unrelated reason: consolidating which code produces an already-published value is not publishing a new one (the former binding parity policy's rule for inherent methods, retired with that policy; see [`cxx-bridge-policy.md`](cxx-bridge-policy.md)). `CrashLogScanRunStatus` and `LocalIgnoreRecoveryDecision` each had an inherent `pub const fn as_str`, which the trait method replaced. Inherent entries were visible to the Node and Python surface parsers of the time where trait-impl members were not, so deleting the two moved only those parsers' surface baselines while the published CXX contract stayed byte-identical — which is what distinguishes consolidating who produces an already-published string from publishing a new one.
 

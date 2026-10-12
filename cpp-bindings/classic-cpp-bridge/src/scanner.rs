@@ -178,7 +178,7 @@ mod ffi {
         inputs: Vec<String>,
     }
 
-    /// Run-scoped FCX setup facts required by FCX request constructors.
+    /// Run-scoped FCX setup facts a launch resolved for an FCX-enabled Crash Log Scan Run.
     struct ScanRunSetupContextDto {
         has_game_root: bool,
         game_root: String,
@@ -275,8 +275,8 @@ mod ffi {
 
     /// Read-only view of a launched Crash Log Scan Run request and its diagnostics.
     ///
-    /// The view reuses the request-construction DTOs, filled with exactly what the launch
-    /// decided. `standard_source` and `unsolved_logs*` are meaningful only for a Standard
+    /// The view is built from the configuration, source and setup-context DTOs, filled with
+    /// exactly what the launch decided. `standard_source` and `unsolved_logs*` are meaningful only for a Standard
     /// intent, `targeted_source` only for a Targeted intent, and `setup_context` only when
     /// `fcx_enabled`; CXX shared structs cannot omit fields, so the others are empty.
     struct ScanRunLaunchRequestDto {

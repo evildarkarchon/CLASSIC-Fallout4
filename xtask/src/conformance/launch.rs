@@ -26,6 +26,7 @@ use std::time::{Duration, Instant};
 
 use super::receipt::FailureKind;
 use super::report::ScopedFailure;
+use super::{Compiler, Participant};
 
 /// Timeout of the cargo-test participants (rust, tui).
 pub const CARGO_TIMEOUT: Duration = Duration::from_secs(1200);
@@ -77,7 +78,7 @@ pub struct ParticipantCommand {
 }
 
 /// `(participant, family)` to the command that runs it.
-type Lookup = dyn Fn(&str, &str) -> Option<ParticipantCommand>;
+type Lookup = dyn Fn(Participant, &str) -> Option<ParticipantCommand>;
 
 /// Which command runs a participant for a family: `(participant, family)` to
 /// a command, or `None` when the participant has no runner for the family.
@@ -87,24 +88,23 @@ pub struct CommandTable {
 
 impl CommandTable {
     /// A table backed by `lookup(participant, family)`.
-    pub fn new(lookup: impl Fn(&str, &str) -> Option<ParticipantCommand> + 'static) -> Self {
+    pub fn new(lookup: impl Fn(Participant, &str) -> Option<ParticipantCommand> + 'static) -> Self {
         Self {
             lookup: Box::new(lookup),
         }
     }
 
     /// The command for `participant` in `family`.
-    pub fn command(&self, participant: &str, family: &str) -> Option<ParticipantCommand> {
+    pub fn command(&self, participant: Participant, family: &str) -> Option<ParticipantCommand> {
         (self.lookup)(participant, family)
     }
 
-    /// The repository's participant runners. `compiler` (`msvc` or
-    /// `clang-cl`) selects the CXX, CLI and GUI wrapper build; `preset` is the
-    /// GUI wrapper's preset.
-    pub fn repository(compiler: &str, preset: &str) -> Self {
-        let (compiler, preset) = (compiler.to_owned(), preset.to_owned());
+    /// The repository's participant runners. `compiler` selects the CXX, CLI
+    /// and GUI wrapper build; `preset` is the GUI wrapper's preset.
+    pub fn repository(compiler: Compiler, preset: &str) -> Self {
+        let preset = preset.to_owned();
         Self::new(move |participant, family| {
-            repository_command(participant, family, &compiler, &preset)
+            Some(repository_command(participant, family, compiler, &preset))
         })
     }
 }
@@ -113,13 +113,15 @@ fn strings(items: &[&str]) -> Vec<String> {
     items.iter().map(|item| (*item).to_owned()).collect()
 }
 
-/// The table behind [`CommandTable::repository`].
+/// The table behind [`CommandTable::repository`]: every participant has a
+/// runner, and the family only selects which test (and which receipt source
+/// paths) the rust and cxx runners use.
 fn repository_command(
-    participant: &str,
+    participant: Participant,
     family: &str,
-    compiler: &str,
+    compiler: Compiler,
     preset: &str,
-) -> Option<ParticipantCommand> {
+) -> ParticipantCommand {
     let cargo = |args: &[&str], sources: Vec<String>| ParticipantCommand {
         program: "cargo".into(),
         args: strings(args),
@@ -135,7 +137,7 @@ fn repository_command(
             "-CTestName",
             test,
             "-Compiler",
-            compiler,
+            compiler.name(),
         ]));
         args.extend(strings(extra));
         ParticipantCommand {
@@ -153,7 +155,7 @@ fn repository_command(
         sources
     };
     match participant {
-        "rust" => Some(match family {
+        Participant::Rust => match family {
             "crash-log-scan-run" | "autoscan-report" => cargo(
                 &[
                     "test",
@@ -253,8 +255,8 @@ fn repository_command(
                 ],
                 with_launcher(semantic_sources(family)),
             ),
-        }),
-        "tui" => Some(cargo(
+        },
+        Participant::Tui => cargo(
             &[
                 "test",
                 "-p",
@@ -268,26 +270,25 @@ fn repository_command(
                 "--nocapture",
             ],
             Vec::new(),
-        )),
-        "cxx" => Some(wrapper(
+        ),
+        Participant::Cxx => wrapper(
             "classic-cli/build_cli.ps1",
             "classic-cxx-conformance",
             &[],
             with_launcher(cxx_sources(family)),
-        )),
-        "cli" => Some(wrapper(
+        ),
+        Participant::Cli => wrapper(
             "classic-cli/build_cli.ps1",
             "classic-cli-consumer-conformance",
             &[],
             Vec::new(),
-        )),
-        "gui" => Some(wrapper(
+        ),
+        Participant::Gui => wrapper(
             "classic-gui/build_gui.ps1",
             "classic-gui-consumer-conformance",
             &["-Preset", preset],
             Vec::new(),
-        )),
-        _ => None,
+        ),
     }
 }
 

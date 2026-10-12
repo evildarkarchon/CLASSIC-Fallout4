@@ -41,6 +41,7 @@ struct Operation {
     delegate: Option<(&'static str, &'static str)>,
 }
 
+/// An operation whose tokens come only from its own enum's `as_str`.
 const fn op(name: &'static str, symbol: &'static str, source: &'static str) -> Operation {
     Operation {
         name,
@@ -50,6 +51,8 @@ const fn op(name: &'static str, symbol: &'static str, source: &'static str) -> O
     }
 }
 
+/// An operation whose enum delegates to the `(source, symbol)` enum, so tokens
+/// missing from its own `as_str` are taken from the delegate.
 const fn twin(
     name: &'static str,
     symbol: &'static str,
@@ -268,6 +271,7 @@ struct Sources<'a> {
 }
 
 impl<'a> Sources<'a> {
+    /// An empty cache over the repository at `root`.
     fn new(root: &'a RepoRoot) -> Self {
         Self {
             root,
@@ -275,6 +279,8 @@ impl<'a> Sources<'a> {
         }
     }
 
+    /// The parsed Rust file at repo-relative `source`, read and parsed once. A read
+    /// or parse failure is cached too and returned as a message on every call.
     fn file(&mut self, source: &'static str) -> Result<&syn::File, String> {
         let root = self.root;
         self.files
@@ -390,6 +396,8 @@ struct Arms {
 }
 
 impl<'ast> Visit<'ast> for Arms {
+    /// Records a `Self::Variant => "token"` arm as a token and a
+    /// `None => CONSTANT` arm as the fallback, then keeps walking nested arms.
     fn visit_arm(&mut self, arm: &'ast syn::Arm) {
         let body = match &*arm.body {
             syn::Expr::Lit(syn::ExprLit {

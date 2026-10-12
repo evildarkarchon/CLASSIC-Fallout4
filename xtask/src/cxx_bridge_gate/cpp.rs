@@ -114,6 +114,7 @@ struct Chain {
 }
 
 impl Chain {
+    /// The chain as written, `a::b::c`, with a leading `::` when it is global.
     fn text(&self) -> String {
         let joined = self.segments.join("::");
         if self.global {
@@ -124,6 +125,7 @@ impl Chain {
     }
 }
 
+/// The identifier at `index`, if that token is one.
 fn ident(tokens: &[Token], index: usize) -> Option<&str> {
     match tokens.get(index).map(|token| &token.kind) {
         Some(Kind::Ident(name)) => Some(name),
@@ -131,6 +133,7 @@ fn ident(tokens: &[Token], index: usize) -> Option<&str> {
     }
 }
 
+/// Whether the token at `index` (if any) is the punctuation `want`.
 fn is_punct(tokens: &[Token], index: Option<usize>, want: char) -> bool {
     index
         .and_then(|i| tokens.get(i))
@@ -212,6 +215,12 @@ const KEYWORDS: &[&str] = &[
     "while",
 ];
 
+/// The qualified name starting at token `start`, or `None` when no identifier
+/// starts there.
+///
+/// A leading `::` makes the chain global. The chain extends over `:: ident`
+/// pairs, except that an unqualified keyword (`return`, `new`, ...) is a chain
+/// of its own, so the `::` after it starts the next, global chain.
 fn chain_at(tokens: &[Token], start: usize) -> Option<Chain> {
     let global = tokens[start].kind == Kind::Scope;
     let mut i = if global { start + 1 } else { start };

@@ -30,6 +30,11 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
     issues
 }
 
+/// Checks one controlled update service fixture: exactly its four members,
+/// bounded `timeoutMs` and `checks`, and at most two scripted responses per
+/// route. Each response is a stall or a 200/304/404/503 status with a string
+/// body and only `ETag` headers; an `api` 200 body must be an empty release
+/// list, so no remote asset URL can be reached.
 fn check(fixture: &Value) -> Result<(), String> {
     if !has_exact_keys(
         fixture,

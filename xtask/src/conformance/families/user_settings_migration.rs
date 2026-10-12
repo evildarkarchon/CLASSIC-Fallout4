@@ -23,7 +23,8 @@ use super::user_settings_oracle::{
     Failure, LOCK, Oracle, SETTINGS, array, member, object, object_of, text, truthy,
 };
 use super::yaml_nodes::yaml_nodes;
-use super::{InputContext, NormalizationError, decode_hex, encode_hex, revision};
+use super::{InputContext, NormalizationError, decode_hex, revision};
+use crate::digest;
 
 /// The placeholder for a published revision in compiled expectations; the
 /// normalizer swaps it in once the observed token matches the proposal.
@@ -75,7 +76,7 @@ fn tree(files: &BTreeMap<String, Content>, directories: &[String]) -> Vec<Value>
     for (path, content) in files {
         let entry = match content {
             Content::Bytes(bytes) => {
-                json!({"path": {"path": path}, "kind": "file", "bytesHex": encode_hex(bytes)})
+                json!({"path": {"path": path}, "kind": "file", "bytesHex": digest::hex(bytes)})
             }
             Content::Proposed(nodes) => {
                 json!({"path": {"path": path}, "kind": "file", "proposedYamlNodes": nodes})
@@ -306,7 +307,7 @@ fn migration(
             "source": source,
             "target": target,
             "changes": changes(member(case, "changes")?)?,
-            "originalHex": encode_hex(original),
+            "originalHex": digest::hex(original),
             "proposedYamlNodes": proposed,
         }),
         (Some(_), None) => return Err("a planned migration needs a source document".into()),

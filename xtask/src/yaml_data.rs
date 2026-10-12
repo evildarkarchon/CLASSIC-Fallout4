@@ -110,12 +110,12 @@ enum Loaded {
 /// failure as an `unparseable-yaml` finding.
 fn load_yaml(root: &RepoRoot, path: &Path) -> Loaded {
     let unparseable = |line, message: String| {
-        Loaded::Unparseable(Finding {
-            path: root.relative(path),
+        Loaded::Unparseable(Finding::new(
+            root.relative(path),
             line,
-            rule: "unparseable-yaml",
-            message: format!("unparseable YAML: {message}"),
-        })
+            "unparseable-yaml",
+            format!("unparseable YAML: {message}"),
+        ))
     };
     let text = match std::fs::read_to_string(path) {
         Ok(text) => text,
@@ -159,14 +159,16 @@ fn check_ranges_file(root: &RepoRoot, path: &Path) -> CheckedRanges {
     let findings = ranges
         .problems
         .into_iter()
-        .map(|problem| Finding {
-            path: root.relative(path),
-            line: problem
-                .entry_name
-                .as_deref()
-                .map_or(1, |name| entry_line(&text, name)),
-            rule: problem.rule,
-            message: problem.message,
+        .map(|problem| {
+            Finding::new(
+                root.relative(path),
+                problem
+                    .entry_name
+                    .as_deref()
+                    .map_or(1, |name| entry_line(&text, name)),
+                problem.rule,
+                problem.message,
+            )
         })
         .collect();
     CheckedRanges {

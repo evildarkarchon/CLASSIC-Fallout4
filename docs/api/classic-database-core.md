@@ -78,7 +78,7 @@ This crate does not expose modules directly. `lib.rs` re-exports the public surf
 
 `lookup(formid, plugin)` returns one `FormIdValueLookupOutcome`. `lookup_batch(pairs)` preserves input order and returns one outcome per pair. Both methods reject blank values as `malformed_result`; SQL execution and row-decoding problems are `operational_failure`. Batch failure is all-or-error, so partial rows are never presented as a completed lookup.
 
-All facade inputs and outputs are owned. The CXX, Node, and Python adapters expose opaque handles and typed data rather than foreign callbacks.
+All facade inputs and outputs are owned, so an adapter can expose opaque handles and typed data rather than foreign callbacks. No binding exposes this facade today; the C++ bridge has no database module.
 
 ## `DatabasePool`
 
@@ -226,7 +226,7 @@ SQLite does not support binding identifiers (table or column names) as query par
 
 To keep that interpolation safe, both lookup methods validate the resolved table name with `DatabasePool::validate_table_identifier` before any SQL is constructed. A name is accepted only if it matches the unquoted SQLite identifier grammar `[A-Za-z_][A-Za-z0-9_]*` (non-empty, ASCII letters/underscore/digits only, and not starting with a digit). Anything else — including empty strings, spaces, punctuation, quotes, semicolons, or substrings like `x; DROP TABLE y--` — is rejected with `DatabaseError::InvalidTableIdentifier` rather than forwarded to sqlx.
 
-This guard matters because the foreign-language `set_game_table` bindings (the `classic_database` adapter module, `classic-node`) can otherwise supply an arbitrary string from outside Rust. Internally set game names such as `Fallout4`, `Skyrim`, and `FalloutNewVegas` always pass validation.
+This guard matters because `set_game_table` accepts an arbitrary caller string (the retired Python and Node bindings forwarded one from outside Rust). Internally set game names such as `Fallout4`, `Skyrim`, and `FalloutNewVegas` always pass validation.
 
 ### Expected SQLite shape
 

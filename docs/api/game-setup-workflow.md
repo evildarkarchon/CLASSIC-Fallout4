@@ -125,7 +125,7 @@ Intake never writes: it creates, modifies, or removes no files, and it does not 
 Evidence for this contract:
 
 - `classic-scangame-core/tests/game_setup_intake_read_only.rs` is a structural guard. It fails if the intake source gains a filesystem write call or names a User Settings open, update, preview, or commit API.
-- The `game-setup-intake` conformance pack runs two installation scenarios through every participant. In `explicit`, every path is supplied and no proposal is returned. In `proposal`, the saved settings omit the game root, and intake proposes `game_root` from the configured executable. Both scenarios snapshot the whole setup tree before and after the run and require it to be byte-identical. Rust, Node, and Python also require the explicit-facts and settings-backed entry points to return the same observation. CXX exposes only the settings-backed entry point.
+- The `game-setup-intake` conformance pack runs two installation scenarios through every participant. In `explicit`, every path is supplied and no proposal is returned. In `proposal`, the saved settings omit the game root, and intake proposes `game_root` from the configured executable. Both scenarios snapshot the whole setup tree before and after the run and require it to be byte-identical. The Rust participant also requires the explicit-facts and settings-backed entry points to return the same observation. CXX exposes only the settings-backed entry point.
 
 ## 3. Resolve Paths
 
@@ -221,11 +221,9 @@ saved settings / frontend inputs
 
 ## Adapter Surfaces
 
-Current binding surfaces should stay thin:
+The binding surface should stay thin:
 
 - C++ bridge: `classic::scangame::run_game_setup_intake_from_user_settings(classic_root, xse_log_path)` is the typed GUI path. The bridge does not expose positional Game Setup compatibility entry points. The GUI gets `xse_log_path` from `classic::xse::resolve_xse_log_for_scan` (Rust owns the XSE log location, #283); an empty result means no hint.
-- Node binding: `runGameSetupIntakeFromUserSettings(classicRoot, xseLogPath?)` is the cohesive read-only path and delegates `GameSetupIntake::from_user_settings`; `runGameSetupIntake(...)` remains the explicit-facts entry point, while `normalizeGameSetupVersionSelection(...)` and `gameSetupNeedsPathDetection(...)` remain narrow helpers. Both intake paths return proposals without persisting them.
-- Python binding: `run_game_setup_intake_from_user_settings(classic_root, xse_log_path=None)` is the cohesive read-only path; `GameSetupIntake` and `run_game_setup_intake(...)` remain the explicit-facts path. Both return typed path proposals without persisting them.
 
 Adapters should not rebuild executable-hash, XSE, Address Library, or documents logic locally. If a setup diagnostic needs to change, change `classic-scangame-core::game_setup_intake`.
 

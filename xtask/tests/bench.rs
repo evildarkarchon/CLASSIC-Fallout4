@@ -81,12 +81,25 @@ fn cleanup(repo: &FixtureRepo, args: CleanupArgs) -> anyhow::Result<Outcome> {
     )
 }
 
-/// The `Pass` summary, failing the test on anything else.
-fn pass_summary(outcome: anyhow::Result<Outcome>) -> String {
+/// The `Pass` one-line summary and multi-line report, failing the test on
+/// anything else. The summary must stay one line: it is printed after `OK: `.
+fn pass_parts(outcome: anyhow::Result<Outcome>) -> (String, Option<String>) {
     match outcome.expect("bench runs") {
-        Outcome::Pass { summary } => summary,
+        Outcome::Pass { summary, report } => {
+            assert!(
+                !summary.contains('\n'),
+                "summary must be one line: {summary:?}"
+            );
+            (summary, report)
+        }
         other => panic!("expected a pass, got {other:?}"),
     }
+}
+
+/// The `Pass` report, failing the test when the pass carries none.
+fn pass_report(outcome: anyhow::Result<Outcome>) -> (String, String) {
+    let (summary, report) = pass_parts(outcome);
+    (summary, report.expect("a pass with a report"))
 }
 
 /// The operational error's full message, failing the test on success.
@@ -127,7 +140,7 @@ fn percentiles_keep_criterions_string_unit_instead_of_crashing() {
     // valid raw.csv carries the string unit "ns".
     let repo = percentile_tree();
 
-    pass_summary(percentiles(&repo, PercentilesArgs::default()));
+    pass_parts(percentiles(&repo, PercentilesArgs::default()));
 
     let written = fs::read_to_string(criterion_dir(&repo).join("percentiles.json")).unwrap();
     assert_eq!(written, PERCENTILES_JSON);
@@ -138,12 +151,18 @@ fn percentiles_report_matches_the_python_summary() {
     let repo = percentile_tree();
     let output = criterion_dir(&repo).join("percentiles.json");
 
-    let summary = pass_summary(percentiles(&repo, PercentilesArgs::default()));
+    let (summary, report) = pass_report(percentiles(&repo, PercentilesArgs::default()));
 
+    assert_eq!(
+        summary,
+        format!(
+            "bench percentiles: wrote 2 benchmark(s) to {} (1 skipped)",
+            output.display()
+        )
+    );
     let rule = "=".repeat(70);
     let expected = format!(
-        "bench percentiles: wrote 2 benchmark(s) to {out} (1 skipped)\n\
-         Found 3 benchmark(s) to process...\n\
+        "Found 3 benchmark(s) to process...\n\
          \x20 Skipped (empty/invalid): empty_bench\n\
          \x20 Processed: flat_bench\n\
          \x20 Processed: grp/func/param\n\
@@ -170,7 +189,7 @@ fn percentiles_report_matches_the_python_summary() {
          \nResults written to: {out}",
         out = output.display()
     );
-    assert_eq!(summary, expected);
+    assert_eq!(report, expected);
 }
 
 #[test]
@@ -178,7 +197,7 @@ fn percentiles_quiet_keeps_only_the_headline_and_honours_output() {
     let repo = percentile_tree();
     let output = repo.path().join("out.json");
 
-    let summary = pass_summary(percentiles(
+    let (summary, report) = pass_parts(percentiles(
         &repo,
         PercentilesArgs {
             output: Some(output.clone()),
@@ -187,6 +206,7 @@ fn percentiles_quiet_keeps_only_the_headline_and_honours_output() {
         },
     ));
 
+    assert_eq!(report, None);
     assert_eq!(
         summary,
         format!(
@@ -208,7 +228,7 @@ fn percentiles_read_an_explicit_criterion_dir() {
     // Not the default `target/criterion`, so the benchmark name is `one`.
     let dir = criterion_dir(&repo).join("elsewhere");
 
-    let summary = pass_summary(percentiles(
+    let (summary, _) = pass_parts(percentiles(
         &repo,
         PercentilesArgs {
             criterion_dir: Some(dir.clone()),
@@ -290,7 +310,7 @@ fn cleanup_finds_baselines_inside_each_benchmark_directory() {
     // reported "No baselines found" for this tree.
     let repo = per_benchmark_tree();
 
-    let summary = pass_summary(cleanup(
+    let (summary, report) = pass_report(cleanup(
         &repo,
         CleanupArgs {
             keep: 1,
@@ -300,9 +320,12 @@ fn cleanup_finds_baselines_inside_each_benchmark_directory() {
 
     assert_eq!(
         summary,
+        "bench cleanup: dry run, would delete 2 of 3 baseline(s)"
+    );
+    assert_eq!(
+        report,
         format!(
-            "bench cleanup: dry run, would delete 2 of 3 baseline(s)\n\
-             Found 3 baseline(s) in {dir}\n\
+            "Found 3 baseline(s) in {dir}\n\
              Keeping the 1 most recent\n\
              \n\
              Baselines to KEEP:\n\
@@ -327,7 +350,7 @@ fn cleanup_finds_baselines_inside_each_benchmark_directory() {
 fn cleanup_execute_deletes_old_baselines_from_every_benchmark() {
     let repo = per_benchmark_tree();
 
-    let summary = pass_summary(cleanup(
+    let (summary, report) = pass_report(cleanup(
         &repo,
         CleanupArgs {
             keep: 1,
@@ -336,18 +359,15 @@ fn cleanup_execute_deletes_old_baselines_from_every_benchmark() {
         },
     ));
 
-    assert!(
-        summary.starts_with("bench cleanup: deleted 2 of 3 baseline(s)\n"),
-        "{summary}"
-    );
+    assert_eq!(summary, "bench cleanup: deleted 2 of 3 baseline(s)");
     // Sizes are measured before deletion, so the report shows what was freed.
     assert!(
-        summary.contains(
+        report.ends_with(
             "\x20 [DELETED] baseline-2026-01-01-000000  (2026-01-01 00:00:00, 6.0 B)\n\
              \x20 [DELETED] baseline-2026-02-01-000000  (2026-02-01 00:00:00, 3.0 B)\n\
              \nDeleted 2 baseline(s)"
         ),
-        "{summary}"
+        "{report}"
     );
     for gone in [
         "grp/func/param/baseline-2026-01-01-000000",
@@ -381,7 +401,7 @@ fn cleanup_still_handles_top_level_baselines_and_invalid_dates() {
         "base",
     ]);
 
-    let summary = pass_summary(cleanup(
+    let (summary, report) = pass_report(cleanup(
         &repo,
         CleanupArgs {
             keep: 1,
@@ -391,9 +411,12 @@ fn cleanup_still_handles_top_level_baselines_and_invalid_dates() {
 
     assert_eq!(
         summary,
+        "bench cleanup: dry run, would delete 2 of 3 baseline(s)"
+    );
+    assert_eq!(
+        report,
         format!(
-            "bench cleanup: dry run, would delete 2 of 3 baseline(s)\n\
-             Found 3 baseline(s) in {dir}\n\
+            "Found 3 baseline(s) in {dir}\n\
              Keeping the 1 most recent\n\
              \n\
              Baselines to KEEP:\n\
@@ -415,20 +438,24 @@ fn cleanup_still_handles_top_level_baselines_and_invalid_dates() {
 fn cleanup_passes_when_there_is_nothing_to_delete() {
     let missing = FixtureRepo::empty();
     assert_eq!(
-        pass_summary(cleanup(&missing, CleanupArgs::default())),
-        format!(
-            "bench cleanup: no baselines to clean up\n\
-             Criterion directory not found: {}\n\
-             No baselines to clean up.",
-            criterion_dir(&missing).display()
+        pass_report(cleanup(&missing, CleanupArgs::default())),
+        (
+            "bench cleanup: no baselines to clean up".to_owned(),
+            format!(
+                "Criterion directory not found: {}\n\
+                 No baselines to clean up.",
+                criterion_dir(&missing).display()
+            )
         )
     );
 
     let none = baseline_tree(&["b/new", "b/db-baseline-main"]);
     assert_eq!(
-        pass_summary(cleanup(&none, CleanupArgs::default())),
-        "bench cleanup: no baselines to clean up\n\
-         No baselines found matching pattern: baseline-YYYY-MM-DD-HHMMSS"
+        pass_report(cleanup(&none, CleanupArgs::default())),
+        (
+            "bench cleanup: no baselines to clean up".to_owned(),
+            "No baselines found matching pattern: baseline-YYYY-MM-DD-HHMMSS".to_owned()
+        )
     );
 
     // The default keeps 10, so two baselines are both kept.
@@ -436,14 +463,14 @@ fn cleanup_passes_when_there_is_nothing_to_delete() {
         "b/baseline-2026-01-01-000000",
         "b/baseline-2026-01-02-000000",
     ]);
-    let summary = pass_summary(cleanup(&few, CleanupArgs::default()));
-    assert!(
-        summary.starts_with("bench cleanup: dry run, would delete 0 of 2 baseline(s)\n"),
-        "{summary}"
+    let (summary, report) = pass_report(cleanup(&few, CleanupArgs::default()));
+    assert_eq!(
+        summary,
+        "bench cleanup: dry run, would delete 0 of 2 baseline(s)"
     );
     assert!(
-        summary.ends_with("\nNo baselines need to be deleted."),
-        "{summary}"
+        report.ends_with("\nNo baselines need to be deleted."),
+        "{report}"
     );
 }
 

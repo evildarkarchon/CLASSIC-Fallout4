@@ -81,16 +81,15 @@ pub(crate) fn check_workflow_tag(tag: &str) -> Vec<Finding> {
     if is_workflow_tag(tag) {
         return Vec::new();
     }
-    vec![Finding {
-        path: WORKFLOW_TAG_PATH.to_owned(),
-        line: 1,
-        rule: "invalid-workflow-tag",
-        message: format!(
+    vec![Finding::file(
+        WORKFLOW_TAG_PATH,
+        "invalid-workflow-tag",
+        format!(
             "workflow tag must match app-notification-v<SEMVER> (for example \
              app-notification-v9.2.0; got {})",
             py_str_repr(tag)
         ),
-    }]
+    )]
 }
 
 /// Every finding for the source at `path`, including a read or parse failure.
@@ -103,12 +102,7 @@ pub(crate) fn check_source(root: &RepoRoot, path: &Path) -> Vec<Finding> {
     let text = &source.text;
     let mut findings = Vec::new();
     let mut report = |line: usize, rule: &'static str, message: String| {
-        findings.push(Finding {
-            path: relative.clone(),
-            line,
-            rule,
-            message,
-        });
+        findings.push(Finding::new(relative.clone(), line, rule, message));
     };
     let doc = &source.document;
     let Yaml::Hash(hash) = doc else {

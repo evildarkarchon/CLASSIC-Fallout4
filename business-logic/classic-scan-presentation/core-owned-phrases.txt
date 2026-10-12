@@ -8,12 +8,12 @@
 #   classic-cli/tests/test_display_label_audit.cpp
 #   classic-gui/tests/test_display_label_audit.cpp
 #
-# One file rather than five inline copies. A deny-list duplicated per frontend
-# would reintroduce, in the test layer, exactly the five-copies drift that
-# `classic-scan-presentation` exists to delete: adding a phrase would mean
-# remembering five lists, and forgetting one would silently unenforce it there.
-# That the roster went from four to five without touching a single detector is
-# the property the shared file was chosen for.
+# One file rather than one inline copy per audit. A deny-list duplicated per
+# frontend would reintroduce, in the test layer, exactly the per-frontend-copies
+# drift that `classic-scan-presentation` exists to delete: adding a phrase would
+# mean remembering every list, and forgetting one would silently unenforce it
+# there. That the roster went from four to five, and later back to three, without
+# touching a single detector is the property the shared file was chosen for.
 #
 # FORMAT
 #   One phrase per line. Blank lines and lines whose first non-blank character is

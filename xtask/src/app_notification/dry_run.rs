@@ -193,6 +193,7 @@ pub(crate) fn run(root: &RepoRoot, args: Args, progress: &mut dyn FnMut(&str)) -
             "dry run complete; outputs preserved under: {}",
             work.display()
         ),
+        report: None,
     })
 }
 
@@ -209,7 +210,7 @@ fn failed(findings: Vec<Finding>) -> Outcome {
 /// Reports a passing stage's `OK:` line; `false` when the stage failed.
 fn passed(outcome: &Outcome, progress: &mut dyn FnMut(&str)) -> bool {
     match outcome {
-        Outcome::Pass { summary } => {
+        Outcome::Pass { summary, .. } => {
             progress(&format!("OK: {summary}"));
             true
         }
@@ -305,7 +306,10 @@ fn new_temp_dir() -> Result<PathBuf> {
         let dir = base.join(format!("{TEMP_PREFIX}{pid}-{nanos:09}-{attempt}"));
         match std::fs::create_dir(&dir) {
             Ok(()) => return Ok(dir),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                // Name collision with an earlier dry run: retry with the next
+                // attempt number (and a fresh timestamp).
+            }
             Err(error) => {
                 return Err(error).with_context(|| format!("creating {}", dir.display()));
             }

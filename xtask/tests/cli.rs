@@ -1,6 +1,7 @@
 //! The `cargo xtask` binary's output and exit-code contract: 0 pass with
-//! `OK: <summary>` on stdout, 1 failure with `path:line: rule: message`
-//! findings then a summary on stderr, 2 usage error.
+//! `OK: <summary>` on stdout (followed by the report, for a pass that has
+//! one), 1 failure with `path:line: rule: message` findings then a summary on
+//! stderr, 2 usage error.
 
 mod common;
 
@@ -56,6 +57,29 @@ fn a_pass_prints_ok_on_stdout_and_exits_0() {
         text(&output.stdout),
         "OK: cxx-bridge-gate: every export has a production caller \
          (2 exports in 1 bridge modules, 1 frontend files scanned)\n"
+    );
+    assert_eq!(text(&output.stderr), "");
+}
+
+#[test]
+fn a_pass_with_a_report_prints_it_on_stdout_after_the_ok_line() {
+    // `bench` is the one command whose pass carries a multi-line report; the
+    // `OK:` line stays one line and the report follows it.
+    let repo = FixtureRepo::empty();
+    let root = repo.path().to_str().unwrap();
+    let criterion = std::path::absolute(repo.path().join("target").join("criterion")).unwrap();
+
+    let output = xtask(&["--repo-root", root, "bench", "cleanup"]);
+
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(
+        text(&output.stdout),
+        format!(
+            "OK: bench cleanup: no baselines to clean up\n\
+             Criterion directory not found: {}\n\
+             No baselines to clean up.\n",
+            criterion.display()
+        )
     );
     assert_eq!(text(&output.stderr), "");
 }
