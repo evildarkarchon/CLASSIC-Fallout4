@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use xtask::{Outcome, RepoRoot, cxx_bridge_gate, user_settings_ownership};
+use xtask::{Outcome, RepoRoot, cxx_bridge_gate, user_settings_ownership, yaml_data};
 
 /// CLASSIC repository tooling.
 ///
@@ -65,6 +65,13 @@ enum Command {
     /// compatibility mirror outside its generator. Comments are ignored;
     /// string literals are audited.
     UserSettingsOwnership(user_settings_ownership::Args),
+    /// YAML Data (`yaml-data-v*`) publish steps: validate, manifest,
+    /// verify-assets, smoke-pages.
+    ///
+    /// Run by .github/workflows/publish-yaml-data.yml in that order, around
+    /// the release and gh-pages steps. `validate` also runs in the
+    /// `xtask-linux` CI job. The polling steps print each retry to stderr.
+    YamlData(yaml_data::Args),
 }
 
 fn main() -> ExitCode {
@@ -74,6 +81,9 @@ fn main() -> ExitCode {
         Command::ScanRunContract(args) => xtask::scan_run_contract::run(&root, args),
         Command::Bench(args) => xtask::bench::run(&root, args),
         Command::UserSettingsOwnership(args) => user_settings_ownership::run(&root, args),
+        Command::YamlData(args) => {
+            yaml_data::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
+        }
     });
     match result {
         Ok(outcome) => render(outcome),

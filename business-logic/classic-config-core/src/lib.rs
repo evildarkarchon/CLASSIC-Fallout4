@@ -11,6 +11,7 @@
 //! All async operations use `classic_shared_core::get_runtime().block_on()`.
 
 pub mod atomic_install;
+pub mod client_schema_ranges;
 pub mod client_schemas;
 pub mod crashgen_expectation_parser;
 pub(crate) mod crashgen_registry_yaml;

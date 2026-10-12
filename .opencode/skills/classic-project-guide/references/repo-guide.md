@@ -77,7 +77,7 @@ cargo build --workspace
 cargo build --workspace --release
 ```
 
-Repository tooling under `tools/` (the YAML Data and app-notification publish tools, the conformance engine, the interim repository gates, and the tool test suites) runs from the tools-only uv project at `tools/pyproject.toml`, which holds only `ruamel.yaml` and `pytest`:
+Repository tooling under `tools/` (the app-notification publish tool, the conformance engine, the interim repository gates, and the tool test suites) runs from the tools-only uv project at `tools/pyproject.toml`, which holds only `ruamel.yaml` and `pytest`:
 
 ```powershell
 uv sync --project tools
@@ -127,12 +127,12 @@ The gate fails on any bridge export that no `classic-cli/src` or `classic-gui/sr
 Use this for shippable YAML databases, client schema ranges, schema-version rules, or YAML publish tooling.
 
 ```powershell
-cargo test -p classic-config-core --lib client_schemas
-uv sync --project tools
-uv run --project tools python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
+cargo test -p classic-config-core --lib client_schema
+cargo xtask yaml-data validate --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
+cargo test -p xtask
 ```
 
-Update `docs/api/yaml-update-delivery.md` when loader, manifest, cache, fallback, or delivery behavior changes. The maintainer publish workflow is `.github/workflows/publish-yaml-data.yml` and runs only for pushed `yaml-data-v*` tags.
+Update `docs/api/yaml-update-delivery.md` when loader, manifest, cache, fallback, or delivery behavior changes. The maintainer publish workflow is `.github/workflows/publish-yaml-data.yml` and runs only for pushed `yaml-data-v*` tags; its steps run `cargo xtask yaml-data validate | manifest | verify-assets | smoke-pages`. The blocking `xtask-linux` job in `ci-rust.yml` runs the same validation on every pull request.
 
 ### App Update Notification
 

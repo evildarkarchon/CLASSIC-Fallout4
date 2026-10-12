@@ -1052,6 +1052,28 @@ YAML Data Update Channel so native callers do not duplicate the file list or
 schema ranges. If a new first-party shippable YAML file is added, update this
 metadata and the schema drift guard together.
 
+### Client schema ranges loader (Rust-only)
+
+`client_schema_ranges` loads `CLASSIC Data/databases/client-schema-ranges.yaml`,
+the publish metadata that pairs each shippable file name with the
+`[min_client_schema, max_client_schema]` range advertised in the YAML Data
+`manifest.json`:
+
+- `load_client_schema_ranges(path)` / `parse_client_schema_ranges(text)` return
+  `Vec<ClientSchemaRange { name, client_schemas_const, min_client_schema,
+  max_client_schema }>` in file order, with both bounds parsed as
+  `SchemaVersion`
+- the first violation is returned as `ClientSchemaRangesError`: not exactly one
+  YAML document, no top-level `files` list, an entry that is not a mapping or
+  has no string `name`, a non-string `client_schemas_const`, a missing or
+  unquoted bound, a bound `SchemaVersion` refuses, or `min > max`
+
+The cache-basename and duplicate-name rules for `name` belong to
+`classic-update-core` (`yaml_update::validate_cache_file_name`). The schema drift
+guard reads the ranges through this loader, and the `cargo xtask yaml-data`
+publish tooling mirrors its rules, pinned by an agreement test. The loader is not
+on the C++ bridge.
+
 ### The shippable selection module is private
 
 `classic-config-core::shippable` is `pub(crate)`. Its cache-then-bundled
