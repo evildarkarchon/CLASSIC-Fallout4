@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use xtask::{Outcome, RepoRoot, cxx_bridge_gate};
+use xtask::{Outcome, RepoRoot, cxx_bridge_gate, yaml_data};
 
 /// CLASSIC repository tooling.
 ///
@@ -39,12 +39,22 @@ enum Command {
     /// namespace (for example `using namespace classic::<module>;`) fails as an
     /// unsupported reference form.
     CxxBridgeGate(cxx_bridge_gate::Args),
+    /// YAML Data (`yaml-data-v*`) publish steps: validate, manifest,
+    /// verify-assets, smoke-pages.
+    ///
+    /// Run by .github/workflows/publish-yaml-data.yml in that order, around
+    /// the release and gh-pages steps. `validate` also runs in the
+    /// `xtask-linux` CI job. The polling steps print each retry to stderr.
+    YamlData(yaml_data::Args),
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = RepoRoot::discover(cli.repo_root).and_then(|root| match cli.command {
         Command::CxxBridgeGate(args) => cxx_bridge_gate::run(&root, args),
+        Command::YamlData(args) => {
+            yaml_data::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
+        }
     });
     match result {
         Ok(outcome) => render(outcome),

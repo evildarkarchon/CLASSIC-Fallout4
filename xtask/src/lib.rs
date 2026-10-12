@@ -20,7 +20,9 @@
 use std::fmt;
 
 pub mod cxx_bridge_gate;
+mod publish;
 mod repo;
+pub mod yaml_data;
 
 pub use repo::RepoRoot;
 

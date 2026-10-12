@@ -142,6 +142,9 @@ tokio-util = "0.7.18"
 clap = "4.5.48"
 syn = "2.0.109"
 proc-macro2 = "1.0.103"
+tiny_http = "0.12.0"
+# No gzip: an un-negotiated body is hashed exactly as served.
+ureq = { version = "3.4.2", default-features = false, features = ["rustls"] }
 
 # Testing
 tempfile = "3.27.0"

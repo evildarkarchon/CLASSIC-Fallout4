@@ -76,3 +76,5 @@ impl FixtureRepo {
         RepoRoot::new(self.path())
     }
 }
+
+pub mod http;

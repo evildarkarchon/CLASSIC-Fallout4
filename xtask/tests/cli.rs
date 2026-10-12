@@ -101,3 +101,71 @@ fn an_operational_failure_exits_1() {
     assert_eq!(output.status.code(), Some(1));
     assert!(text(&output.stderr).starts_with("error: "));
 }
+
+#[test]
+fn yaml_data_validate_passes_on_the_live_yaml_data() {
+    let output = xtask(&[
+        "yaml-data",
+        "validate",
+        "--databases-dir",
+        concat!(env!("CARGO_MANIFEST_DIR"), "/../CLASSIC Data/databases"),
+    ]);
+
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(
+        text(&output.stdout),
+        "OK: validated 2 shippable YAML files\n"
+    );
+}
+
+#[test]
+fn yaml_data_validate_failure_prints_findings_and_exits_1() {
+    let repo = FixtureRepo::empty()
+        .file(
+            "db/client-schema-ranges.yaml",
+            "files:\n  - name: \"a.yaml\"\n    min_client_schema: \"1.0\"\n    max_client_schema: \"1.0\"\n",
+        )
+        .file("db/a.yaml", "schema_version: 1.0\n");
+    let root = repo.path().to_str().unwrap();
+    let databases = repo.path().join("db");
+
+    let output = xtask(&[
+        "--repo-root",
+        root,
+        "yaml-data",
+        "validate",
+        "--databases-dir",
+        databases.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(
+        text(&output.stderr),
+        "db/a.yaml:1: schema-version-not-string: schema_version must be a quoted string, got float (1.0)\n\
+         yaml-data validate: 1 finding(s)\n"
+    );
+}
+
+#[test]
+fn yaml_data_smoke_pages_needs_owner_and_repo_without_a_base_url() {
+    let output = xtask(&[
+        "yaml-data",
+        "smoke-pages",
+        "--expected-body-path",
+        "manifest.json",
+    ]);
+    assert_eq!(output.status.code(), Some(2));
+
+    // The legacy `--tag` comparison mode is gone.
+    let output = xtask(&[
+        "yaml-data",
+        "smoke-pages",
+        "--owner",
+        "o",
+        "--repo",
+        "r",
+        "--tag",
+        "yaml-data-v1",
+    ]);
+    assert_eq!(output.status.code(), Some(2));
+}

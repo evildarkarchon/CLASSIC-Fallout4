@@ -18,8 +18,21 @@ clap = { workspace = true, features = ["derive"] }
 # `span-locations` gives real line numbers for spans parsed outside a proc
 # macro, which findings need for their `path:line` prefix.
 proc-macro2 = { workspace = true, features = ["span-locations"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
 syn = { workspace = true, features = ["full", "visit"] }
+# Blocking HTTP for the publish probes (no Tokio; AGENTS.md rule 5).
+ureq = { workspace = true }
 walkdir = { workspace = true }
+yaml-rust2 = { workspace = true }
 
 [dev-dependencies]
+# Agreement tests pin the mirrored client rules in `yaml_data::client_rules`
+# to the real implementations. Test-only: xtask never links them at run time.
+classic-config-core = { path = "../business-logic/classic-config-core" }
+classic-shared-core = { path = "../foundation/classic-shared-core" }
+classic-update-core = { path = "../business-logic/classic-update-core" }
 tempfile = { workspace = true }
+# Localhost HTTP server for the publish probe tests.
+tiny_http = { workspace = true }
