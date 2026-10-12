@@ -3,8 +3,9 @@
 from pathlib import Path
 
 from conformance.applicability import derive_applicability
-from conformance.coverage import derive_observed_fact_ids, load_source_parity_rows
+from conformance.coverage import derive_observed_fact_ids
 from conformance.packs import load_and_validate_pack
+from conformance.participants import load_participants
 
 
 def test_windows_path_facts_require_each_native_reference_agreement():
@@ -20,7 +21,7 @@ def test_windows_path_facts_require_each_native_reference_agreement():
     assert {
                p.id
                for p in derive_applicability(
-            document, load_source_parity_rows(root)
+            document, load_participants(root)
         ).participants
            } == {"rust"}
     scenario = document["scenarios"][0]

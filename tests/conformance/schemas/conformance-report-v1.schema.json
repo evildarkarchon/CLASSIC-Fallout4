@@ -15,7 +15,6 @@
     "receivedExecutions",
     "missingExecutions",
     "failures",
-    "coverage",
     "consumerCoverage"
   ],
   "properties": {
@@ -112,89 +111,6 @@
         }
       }
     },
-    "coverage": {
-      "oneOf": [
-        { "type": "null" },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "familyId",
-            "result",
-            "executionEvidence",
-            "preparedEvidenceDigest",
-            "rows",
-            "failures"
-          ],
-          "properties": {
-            "familyId": { "$ref": "#/$defs/stableId" },
-            "result": { "enum": ["pass", "fail"] },
-            "executionEvidence": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": { "$ref": "#/$defs/execution" }
-            },
-            "preparedEvidenceDigest": { "$ref": "#/$defs/sha256" },
-            "rows": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "obligationId",
-                  "participantId",
-                  "mappingOrigin",
-                  "capabilityId",
-                  "evidenceKind",
-                  "evidenceIds"
-                ],
-                "properties": {
-                  "obligationId": { "type": "string", "minLength": 1 },
-                  "participantId": { "$ref": "#/$defs/stableId" },
-                  "mappingOrigin": {
-                    "enum": ["canonical_rust", "binding_only", "rust_only"]
-                  },
-                  "capabilityId": {
-                    "oneOf": [
-                      { "$ref": "#/$defs/stableId" },
-                      { "type": "null" }
-                    ]
-                  },
-                  "evidenceKind": {
-                    "enum": [
-                      "executable",
-                      "structural",
-                      "negative",
-                      "policy-exception"
-                    ]
-                  },
-                  "evidenceIds": {
-                    "type": "array",
-                    "minItems": 1,
-                    "uniqueItems": true,
-                    "items": { "$ref": "#/$defs/stableId" }
-                  }
-                }
-              }
-            },
-            "failures": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["kind", "obligationId", "blocking", "message"],
-                "properties": {
-                  "kind": { "const": "coverage_mapping_gap" },
-                  "obligationId": { "type": "string", "minLength": 1 },
-                  "blocking": { "type": "boolean" },
-                  "message": { "type": "string", "minLength": 1 }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
     "consumerCoverage": {
       "oneOf": [
         { "type": "null" },
@@ -258,11 +174,8 @@
   "allOf": [
     {
       "if": {
-        "properties": {
-          "coverage": { "type": "null" },
-          "consumerCoverage": { "type": "null" }
-        },
-        "required": ["coverage", "consumerCoverage"]
+        "properties": { "requiredExecutions": { "maxItems": 0 } },
+        "required": ["requiredExecutions"]
       },
       "then": {
         "properties": {

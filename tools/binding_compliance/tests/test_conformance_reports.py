@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import replace
-
 import pytest
 from conformance.enforcement import enforcement_for_family
 from conformance.receipts import ScenarioValidationResult
@@ -12,9 +10,7 @@ from conformance.receipts import ScenarioValidationResult
 from conformance import (
     ApplicabilityMatrix,
     ApplicableParticipant,
-    CoverageFailure,
     PreparedRunReport,
-    RowCoverageReport,
     ScopedConformanceReport,
     build_scoped_report,
     validate_conformance_report_document,
@@ -98,16 +94,6 @@ def _prepared_report(
     )
 
 
-def _passing_coverage(
-        *prepared_reports: PreparedRunReport,
-) -> RowCoverageReport:
-    """Return an empty but centrally derived coverage partition for test rows."""
-
-    return RowCoverageReport._from_derivation(
-        "example-family", prepared_reports=prepared_reports
-    )
-
-
 def test_execution_instance_report_cannot_claim_participant_or_repository() -> None:
     """An instance slice reports only its selected execution denominator."""
 
@@ -121,7 +107,6 @@ def test_execution_instance_report_cannot_claim_participant_or_repository() -> N
         ),
         participant_id="cxx",
         execution_instance_id="windows-msvc",
-        coverage=_passing_coverage(_prepared_report("cxx", "windows-msvc")),
     )
 
     document = report.document()
@@ -148,7 +133,6 @@ def test_participant_report_requires_every_applicable_execution_instance() -> No
         applicability=_applicability(),
         prepared_reports=(_prepared_report("cxx", "windows-msvc"),),
         participant_id="cxx",
-        coverage=_passing_coverage(_prepared_report("cxx", "windows-msvc")),
     )
 
     document = report.document()
@@ -178,7 +162,6 @@ def test_full_report_is_the_only_repository_complete_scope() -> None:
         profile="full",
         applicability=_applicability(),
         prepared_reports=reports,
-        coverage=_passing_coverage(*reports),
     )
 
     document = report.document()
@@ -196,7 +179,6 @@ def test_full_report_is_the_only_repository_complete_scope() -> None:
         profile="full",
         applicability=_applicability(),
         prepared_reports=tuple(reversed(reports)),
-        coverage=_passing_coverage(*reports),
     ).json_text()
     )
 
@@ -223,7 +205,6 @@ def test_full_report_accepts_distinct_digests_from_one_source_revision() -> None
         profile="full",
         applicability=_applicability(),
         prepared_reports=reports,
-        coverage=_passing_coverage(*reports),
     ).document()
 
     assert document["result"] == "pass"
@@ -244,7 +225,6 @@ def test_full_report_rejects_mixed_source_revisions() -> None:
         profile="full",
         applicability=_applicability(),
         prepared_reports=reports,
-        coverage=_passing_coverage(*reports),
     ).document()
 
     assert document["result"] == "fail"
@@ -265,10 +245,6 @@ def test_report_validator_rejects_a_broadened_completeness_claim() -> None:
             _prepared_report("cxx", "windows-msvc"),
         ),
         participant_id="cxx",
-        coverage=_passing_coverage(
-            _prepared_report("cxx", "windows-clang-cl"),
-            _prepared_report("cxx", "windows-msvc"),
-        ),
     ).document()
     validate_conformance_report_document(report)
     invalid_enforcement = copy.deepcopy(report)
@@ -280,39 +256,6 @@ def test_report_validator_rejects_a_broadened_completeness_claim() -> None:
 
     with pytest.raises(ValueError, match="full-repository"):
         validate_conformance_report_document(broadened)
-
-
-def test_scoped_report_exposes_coverage_gaps_in_report_result() -> None:
-    """A row gap remains visible inside the scoped report envelope."""
-
-    prepared_reports = (
-        _prepared_report("cxx", "windows-clang-cl"),
-        _prepared_report("cxx", "windows-msvc"),
-        _prepared_report("rust", "rust"),
-    )
-    coverage = RowCoverageReport._from_derivation(
-        "example-family",
-        prepared_reports=prepared_reports,
-        failures=(
-            CoverageFailure(
-                obligation_id="parity:cxx:new-row",
-                message="source parity row lacks executable coverage",
-                blocking=True,
-            ),
-        ),
-    )
-    report = build_scoped_report(
-        family_id="example-family",
-        profile="full",
-        applicability=_applicability(),
-        prepared_reports=prepared_reports,
-        coverage=coverage,
-    )
-
-    document = report.document()
-    assert document["result"] == "fail"
-    assert document["repositoryComplete"] is False
-    assert document["coverage"]["failures"][0]["kind"] == "coverage_mapping_gap"
 
 
 def test_aggregation_rejects_mixed_expectations_and_missing_scenarios() -> None:
@@ -331,7 +274,6 @@ def test_aggregation_rejects_mixed_expectations_and_missing_scenarios() -> None:
         applicability=_applicability(),
         prepared_reports=(clang_report, msvc_report),
         participant_id="cxx",
-        coverage=_passing_coverage(clang_report, msvc_report),
     ).document()
 
     assert document["result"] == "fail"
@@ -342,41 +284,8 @@ def test_aggregation_rejects_mixed_expectations_and_missing_scenarios() -> None:
     validate_conformance_report_document(document)
 
 
-def test_report_validator_closes_coverage_rows_and_failures() -> None:
-    """Nested coverage evidence cannot admit self-asserted selector metadata."""
-
-    prepared_reports = (
-        _prepared_report("cxx", "windows-clang-cl"),
-        _prepared_report("cxx", "windows-msvc"),
-    )
-    coverage = RowCoverageReport._from_derivation(
-        "example-family",
-        prepared_reports=prepared_reports,
-        failures=(
-            CoverageFailure(
-                obligation_id="parity:cxx:new-row",
-                message="source parity row lacks executable coverage",
-                blocking=True,
-            ),
-        ),
-    )
-    report = build_scoped_report(
-        family_id="example-family",
-        profile="conformance",
-        applicability=_applicability(),
-        prepared_reports=prepared_reports,
-        participant_id="cxx",
-        coverage=coverage,
-    ).document()
-    validate_conformance_report_document(report)
-    report["coverage"]["failures"][0]["selectorHash"] = "invented"
-
-    with pytest.raises(ValueError, match="unexpected selectorHash"):
-        validate_conformance_report_document(report)
-
-
-def test_missing_coverage_cannot_pass_or_claim_repository_completeness() -> None:
-    """Receipt completeness alone is not a source-row coverage partition."""
+def test_report_validator_rejects_a_pass_with_an_empty_denominator() -> None:
+    """A report that requires no execution proves nothing and cannot pass."""
 
     report = build_scoped_report(
         family_id="example-family",
@@ -388,11 +297,15 @@ def test_missing_coverage_cannot_pass_or_claim_repository_completeness() -> None
             _prepared_report("rust", "rust"),
         ),
     ).document()
-
-    assert report["result"] == "fail"
-    assert report["repositoryComplete"] is False
-    assert report["coverage"] is None
+    assert report["result"] == "pass"
+    assert "coverage" not in report
     validate_conformance_report_document(report)
+    emptied = copy.deepcopy(report)
+    emptied["requiredExecutions"] = []
+    emptied["receivedExecutions"] = []
+
+    with pytest.raises(ValueError, match="result does not match"):
+        validate_conformance_report_document(emptied)
 
 
 def test_caller_constructed_prepared_report_cannot_enter_aggregation() -> None:
@@ -418,17 +331,6 @@ def test_caller_constructed_prepared_report_cannot_enter_aggregation() -> None:
             profile="full",
             applicability=_applicability(),
             prepared_reports=(invented,),
-            coverage=_passing_coverage(),
-        )
-
-    replaced_coverage = replace(_passing_coverage())
-    with pytest.raises(ValueError, match="centrally derived row coverage"):
-        build_scoped_report(
-            family_id="example-family",
-            profile="full",
-            applicability=_applicability(),
-            prepared_reports=(),
-            coverage=replaced_coverage,
         )
 
 
@@ -448,38 +350,8 @@ def test_consumer_role_cannot_satisfy_a_semantic_participant_scope() -> None:
         ),
         participant_id="cxx",
         execution_instance_id="windows-msvc",
-        coverage=_passing_coverage(
-            _prepared_report(
-                "cxx",
-                "windows-msvc",
-                participant_role="consumer",
-            )
-        ),
     ).document()
 
     assert report["result"] == "fail"
     assert report["failures"][0]["kind"] == "applicability_violation"
 
-
-def test_coverage_cannot_be_reused_for_different_prepared_evidence() -> None:
-    """A legitimate coverage result is bound to its exact validated receipt set."""
-
-    selected = _prepared_report("cxx", "windows-msvc")
-    different_evidence = _prepared_report(
-        "cxx",
-        "windows-msvc",
-        expectation_digest="sha256:" + "e" * 64,
-    )
-
-    report = build_scoped_report(
-        family_id="example-family",
-        profile="conformance",
-        applicability=_applicability(),
-        prepared_reports=(selected,),
-        participant_id="cxx",
-        execution_instance_id="windows-msvc",
-        coverage=_passing_coverage(different_evidence),
-    ).document()
-
-    assert report["result"] == "fail"
-    assert report["failures"][0]["kind"] == "coverage_mapping_gap"

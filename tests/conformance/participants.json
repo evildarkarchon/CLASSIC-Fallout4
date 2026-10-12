@@ -1,0 +1,486 @@
+{
+  "schemaVersion": 1,
+  "families": [
+    {
+      "familyId": "autoscan-report",
+      "cxx": {
+        "capabilityIds": [
+          "autoscan-report.execute"
+        ]
+      }
+    },
+    {
+      "familyId": "ba2-scan",
+      "cxx": {
+        "capabilityIds": [
+          "ba2-scan.bridge"
+        ]
+      }
+    },
+    {
+      "familyId": "config-operations",
+      "cxx": {
+        "capabilityIds": [
+          "config-operations.load-explicit",
+          "config-operations.main-version",
+          "config-operations.persist-local",
+          "config-operations.yaml-values"
+        ]
+      }
+    },
+    {
+      "familyId": "config-vocabulary",
+      "cxx": {
+        "capabilityIds": [
+          "vocabulary.resolve"
+        ]
+      }
+    },
+    {
+      "familyId": "crash-log-scan-launch",
+      "cxx": {
+        "capabilityIds": [
+          "crash-log-scan-launch.prepare"
+        ]
+      }
+    },
+    {
+      "familyId": "crash-log-scan-run",
+      "cxx": {
+        "capabilityIds": [
+          "scan-run.configured-movement",
+          "scan-run.execute",
+          "scan-run.standard-fcx-request",
+          "scan-run.targeted-fcx-request"
+        ]
+      }
+    },
+    {
+      "familyId": "crash-pattern",
+      "cxx": {
+        "capabilityIds": [
+          "crash-pattern.classify",
+          "crash-pattern.legacy",
+          "crash-pattern.vr"
+        ]
+      }
+    },
+    {
+      "familyId": "crash-suspect",
+      "cxx": {
+        "capabilityIds": [
+          "crash-suspect.analyze"
+        ]
+      }
+    },
+    {
+      "familyId": "crashgen-check",
+      "cxx": {
+        "capabilityIds": [
+          "crashgen-check.check"
+        ]
+      }
+    },
+    {
+      "familyId": "crashgen-settings",
+      "cxx": {
+        "capabilityIds": [
+          "crashgen-settings.analyze"
+        ]
+      }
+    },
+    {
+      "familyId": "database-operations",
+      "cxx": {
+        "capabilityIds": [
+          "database-operations.pool"
+        ]
+      }
+    },
+    {
+      "familyId": "fallout4-identity",
+      "cxx": {
+        "capabilityIds": [
+          "fallout4-identity.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "fallout4-paths",
+      "cxx": {
+        "capabilityIds": [
+          "fallout4-paths.config-exe",
+          "fallout4-paths.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "file-backups",
+      "cxx": {
+        "capabilityIds": [
+          "file-backups.game-files",
+          "file-backups.managed",
+          "file-backups.remove"
+        ]
+      }
+    },
+    {
+      "familyId": "file-operations",
+      "cxx": {
+        "capabilityIds": [
+          "file-operations.read-text",
+          "file-operations.write-text"
+        ]
+      }
+    },
+    {
+      "familyId": "formid-finding",
+      "cxx": {
+        "capabilityIds": [
+          "formid-finding.analyze",
+          "formid-finding.sqlite"
+        ]
+      }
+    },
+    {
+      "familyId": "formid-lookup",
+      "cxx": {
+        "capabilityIds": [
+          "formid-lookup.lookup"
+        ]
+      }
+    },
+    {
+      "familyId": "game-identity",
+      "cxx": {
+        "capabilityIds": [
+          "game-identity.metadata",
+          "game-identity.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "game-integrity",
+      "cxx": {
+        "capabilityIds": [
+          "game-integrity.basic"
+        ]
+      }
+    },
+    {
+      "familyId": "game-setup-intake",
+      "cxx": {
+        "capabilityIds": [
+          "game-setup-intake.run"
+        ]
+      }
+    },
+    {
+      "familyId": "game-version-parse",
+      "cxx": {
+        "capabilityIds": [
+          "game-version-parse.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "hash-cache-controls",
+      "cxx": {
+        "capabilityIds": [
+          "hash-cache-controls.empty"
+        ]
+      }
+    },
+    {
+      "familyId": "installation-paths",
+      "cxx": {
+        "capabilityIds": [
+          "installation-paths.custom-scan",
+          "installation-paths.inspect",
+          "installation-paths.locate",
+          "installation-paths.primitives"
+        ]
+      }
+    },
+    {
+      "familyId": "installed-yaml-data",
+      "cxx": {
+        "capabilityIds": [
+          "installed-yaml-data.inspect",
+          "installed-yaml-data.load"
+        ]
+      }
+    },
+    {
+      "familyId": "log-collection",
+      "cxx": {
+        "capabilityIds": [
+          "log-collection.collect",
+          "log-collection.configured"
+        ]
+      }
+    },
+    {
+      "familyId": "markdown-rendering",
+      "cxx": {
+        "capabilityIds": [
+          "markdown-rendering.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "message-logging",
+      "cxx": {
+        "capabilityIds": [
+          "message-logging.basic",
+          "message-logging.startup"
+        ]
+      }
+    },
+    {
+      "familyId": "mod-guidance",
+      "cxx": {
+        "capabilityIds": [
+          "mod-guidance.analyze"
+        ]
+      }
+    },
+    {
+      "familyId": "named-record",
+      "cxx": {
+        "capabilityIds": [
+          "named-record.analyze"
+        ]
+      }
+    },
+    {
+      "familyId": "papyrus-monitor",
+      "cxx": {
+        "capabilityIds": [
+          "papyrus-monitor.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "path-backups",
+      "cxx": {
+        "capabilityIds": [
+          "path-backups.timestamp"
+        ]
+      }
+    },
+    {
+      "familyId": "path-operations",
+      "cxx": {
+        "capabilityIds": [
+          "path-operations.exists",
+          "path-operations.validate"
+        ]
+      }
+    },
+    {
+      "familyId": "performance",
+      "cxx": {
+        "capabilityIds": [
+          "performance.metrics"
+        ]
+      }
+    },
+    {
+      "familyId": "plugin-evidence",
+      "cxx": {
+        "capabilityIds": [
+          "plugin-evidence.analyze"
+        ]
+      }
+    },
+    {
+      "familyId": "registry-game",
+      "cxx": {
+        "capabilityIds": [
+          "registry-game.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "registry-gui",
+      "cxx": {
+        "capabilityIds": [
+          "registry-gui.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "registry-operations",
+      "cxx": {
+        "capabilityIds": [
+          "registry-operations.execute"
+        ]
+      }
+    },
+    {
+      "familyId": "report-discovery",
+      "cxx": {
+        "capabilityIds": [
+          "report-discovery.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "runtime-access",
+      "cxx": {
+        "capabilityIds": [
+          "runtime-access.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "scan-game",
+      "cxx": {
+        "capabilityIds": [
+          "scan-game.validate-enb",
+          "scan-game.validate-ini"
+        ]
+      }
+    },
+    {
+      "familyId": "scan-run-vocabulary",
+      "cxx": {
+        "capabilityIds": [
+          "vocabulary.resolve"
+        ]
+      }
+    },
+    {
+      "familyId": "settings-load",
+      "cxx": {
+        "capabilityIds": [
+          "settings-load.execute"
+        ]
+      }
+    },
+    {
+      "familyId": "settings-validation",
+      "cxx": {
+        "capabilityIds": [
+          "settings-validation.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "settings-yaml",
+      "cxx": {
+        "capabilityIds": [
+          "settings-yaml.execute"
+        ]
+      }
+    },
+    {
+      "familyId": "update-decisions",
+      "cxx": {
+        "capabilityIds": [
+          "update-decisions.compare"
+        ]
+      }
+    },
+    {
+      "familyId": "update-rejection",
+      "cxx": {
+        "capabilityIds": [
+          "update-rejection.latest",
+          "update-rejection.notification"
+        ]
+      }
+    },
+    {
+      "familyId": "update-services",
+      "cxx": {
+        "capabilityIds": [
+          "update-services.notification"
+        ]
+      }
+    },
+    {
+      "familyId": "user-settings",
+      "cxx": {
+        "capabilityIds": [
+          "user-settings.defaults",
+          "user-settings.geometry",
+          "user-settings.legacy-import",
+          "user-settings.migrate",
+          "user-settings.open",
+          "user-settings.update"
+        ]
+      }
+    },
+    {
+      "familyId": "version-pe",
+      "cxx": {
+        "capabilityIds": [
+          "version-pe.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "version-registry",
+      "cxx": {
+        "capabilityIds": [
+          "version-registry.crashgen",
+          "version-registry.enumerate",
+          "version-registry.query",
+          "version-registry.xse"
+        ]
+      }
+    },
+    {
+      "familyId": "web-operations",
+      "cxx": {
+        "capabilityIds": [
+          "web-operations.observe",
+          "web-operations.routes"
+        ]
+      }
+    },
+    {
+      "familyId": "wrye-report",
+      "cxx": {
+        "capabilityIds": [
+          "wrye-report.parse"
+        ]
+      }
+    },
+    {
+      "familyId": "xse-folder",
+      "cxx": {
+        "capabilityIds": [
+          "xse-folder.log",
+          "xse-folder.resolve"
+        ]
+      }
+    },
+    {
+      "familyId": "xse-operations",
+      "cxx": {
+        "capabilityIds": [
+          "xse-operations.inspect"
+        ]
+      }
+    },
+    {
+      "familyId": "yaml-file-values",
+      "cxx": {
+        "capabilityIds": [
+          "yaml-file-values.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "yaml-update-operations",
+      "cxx": {
+        "capabilityIds": [
+          "yaml-update-operations.execute"
+        ]
+      }
+    }
+  ]
+}

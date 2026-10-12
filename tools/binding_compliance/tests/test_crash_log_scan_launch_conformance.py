@@ -5,16 +5,12 @@ from pathlib import Path
 import pytest
 from conformance.applicability import derive_applicability
 from conformance.consumers import load_consumer_obligations, prepare_consumer_run
-from conformance.coverage import (
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
 from conformance.enforcement import enforcement_for_family
 from conformance.families.crash_log_scan_launch import (
     CRASH_LOG_SCAN_LAUNCH_COVERAGE_POLICY as POLICY,
 )
 from conformance.packs import load_and_validate_pack
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
 
 from receipt_test_support import prepare_receipt_case
@@ -24,7 +20,7 @@ PACK = Path("tests/conformance/packs/crash_log_scan_launch/v1.json")
 
 
 def test_launch_requires_both_semantic_adapters() -> None:
-    """The bridge maps the launch crate, so neither semantic adapter may skip its runner.
+    """participants.json enrols CXX in launch, so neither semantic adapter may skip its runner.
 
     Frontends that launch through Crash Log Scan Launch join as consumers, never as semantic
     adapters; the native CLI (#289), the GUI (#288) and the TUI (#287) are among them.
@@ -32,7 +28,7 @@ def test_launch_requires_both_semantic_adapters() -> None:
     pack = load_and_validate_pack(ROOT, PACK).document()
     matrix = derive_applicability(
         pack,
-        load_source_parity_rows(ROOT),
+        load_participants(ROOT),
         consumer_catalog=load_consumer_obligations(ROOT),
     )
     participants = {p.id for p in matrix.participants}
@@ -67,25 +63,17 @@ def test_tui_consumer_plan_names_the_launch_obligation_without_expectations() ->
 
 
 @pytest.mark.parametrize("participant", ("cxx",))
-def test_pack_observations_cover_every_binding_launch_row(
+def test_pack_observations_pass_and_yield_launch_facts(
         tmp_path: Path, participant: str
 ) -> None:
-    """The pack's own launched and refused scenarios credit each binding's launch rows."""
+    """The pack's own launched and refused scenarios pass and each yields a launch fact."""
     pack, run, _ = prepare_receipt_case(
         ROOT, tmp_path, PACK, participant, runner_id="scan-launch-coverage"
     )
     report = validate_prepared_run(pack, run, coverage_policy=POLICY)
     assert not report.failures
-    coverage = derive_row_coverage(
-        pack.document(),
-        load_source_parity_rows(ROOT),
-        POLICY,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert not coverage.failures
-    assert coverage.rows
+    assert all(scenario.result == "pass" for scenario in report.scenarios)
+    assert all(scenario.observed_fact_ids for scenario in report.scenarios)
 
 
 def _launched_observation() -> dict:

@@ -7,12 +7,6 @@ from typing import Any
 
 from ..coverage import CoveragePredicate, FamilyCoveragePolicy
 
-GAME_ROWS = (
-    "parity:cxx:d04a85fb7225176b",
-    "parity:cxx:e5c87d8b488cc983",
-)
-
-
 def _games(value: Mapping[str, Any]) -> bool:
     """Require complete ordered domain tokens, not just a successful call flag."""
     return (
@@ -109,17 +103,15 @@ def validate_pack(document: Mapping[str, Any], root: Path) -> tuple[Path, ...]:
 def coverage_policy(family: str) -> FamilyCoveragePolicy:
     """Limit token credit to exact invoked carriers and runtime credit to access calls."""
     if family == "game-identity":
-        symbols, matches, rows, operations = (
+        symbols, matches, operations = (
             ("GameId", "as_str"),
             _games,
-            GAME_ROWS,
             (None, "as_str", "game_id_as_str", "getAllGameIds"),
         )
     elif family == "runtime-access":
-        symbols, matches, rows, operations = (
+        symbols, matches, operations = (
             ("get_runtime",),
             _runtime,
-            (),
             (
                 None,
                 "init_runtime",
@@ -142,7 +134,6 @@ def coverage_policy(family: str) -> FamilyCoveragePolicy:
                 observation_family=family,
                 rust_symbols=symbols,
                 matches=matches,
-                binding_obligation_ids=rows,
                 runtime_operations=operations,
             ),
         )
@@ -155,7 +146,6 @@ def coverage_policy(family: str) -> FamilyCoveragePolicy:
                     observation_family="runtime-access",
                     rust_symbols=("get_runtime",),
                     matches=_runtime,
-                    binding_obligation_ids=("parity:cxx:b0a1036b892934c2",),
                     runtime_operations=("shutdown_runtime",),
                 ),
             )

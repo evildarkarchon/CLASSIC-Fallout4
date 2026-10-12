@@ -6,7 +6,7 @@ from pathlib import Path
 def test_yaml_file_values_are_a_shared_executable_family() -> None:
     """Every exported reader participates; incomplete kind inventories fail."""
     from conformance.applicability import derive_applicability
-    from conformance.coverage import load_source_parity_rows
+    from conformance.participants import load_participants
     from conformance.packs import load_and_validate_pack
 
     root = Path(__file__).resolve().parents[3]
@@ -17,7 +17,7 @@ def test_yaml_file_values_are_a_shared_executable_family() -> None:
     pack = load_and_validate_pack(root, path).document()
     assert {
                p.id
-               for p in derive_applicability(pack, load_source_parity_rows(root)).participants
+               for p in derive_applicability(pack, load_participants(root)).participants
            } == {"rust", "cxx"}
     expected = pack["scenarios"][0]["expected"]
     predicate = YAML_FILE_VALUES_COVERAGE_POLICY.predicates[0]

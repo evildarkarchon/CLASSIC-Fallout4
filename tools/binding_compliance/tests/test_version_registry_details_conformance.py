@@ -4,11 +4,12 @@ import copy
 from pathlib import Path
 
 from conformance.applicability import derive_applicability
-from conformance.coverage import derive_observed_fact_ids, load_source_parity_rows
+from conformance.coverage import derive_observed_fact_ids
 from conformance.families.version_registry_details import (
     VERSION_REGISTRY_DETAILS_COVERAGE_POLICY as POLICY,
 )
 from conformance.packs import load_and_validate_pack
+from conformance.participants import load_participants
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -18,7 +19,7 @@ PACK = Path("tests/conformance/packs/version_registry_details/v1.json")
 def test_details_require_every_field_and_exclude_cxx() -> None:
     """CXX has no extended query surface; partial observations never grant facts."""
     document = load_and_validate_pack(ROOT, PACK).document()
-    applicability = derive_applicability(document, load_source_parity_rows(ROOT))
+    applicability = derive_applicability(document, load_participants(ROOT))
     assert {participant.id for participant in applicability.participants} == {"rust"}
     for scenario in document["scenarios"]:
         expected = scenario["expected"]

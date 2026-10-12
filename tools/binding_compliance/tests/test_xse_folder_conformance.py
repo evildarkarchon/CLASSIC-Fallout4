@@ -93,17 +93,17 @@ def test_xse_folder_credits_derivation_to_xse_and_composition_to_scangame():
 def test_xse_folder_derivation_is_rust_only_and_the_log_runs_on_every_adapter():
     """No binding exposes the facts resolver, so only Rust executes derivation.
 
-    CXX also binds the Local.yaml composition; the XSE log operation is bound
-    on CXX, Node and Python, so all four adapters execute its scenarios.
+    participants.json enrols CXX for the Local.yaml composition and the XSE log
+    operation only, so both adapters execute those scenarios.
     """
     from conformance.applicability import derive_applicability
-    from conformance.coverage import load_source_parity_rows
+    from conformance.participants import load_participants
 
     document = load_and_validate_pack(ROOT, PACK).document()
     participants = {
         participant.id: participant
         for participant in derive_applicability(
-            document, load_source_parity_rows(ROOT)
+            document, load_participants(ROOT)
         ).participants
     }
     assert set(participants) == {"rust", "cxx"}
@@ -158,17 +158,16 @@ def test_xse_folder_rejects_registry_metadata_that_can_trigger_discovery(tmp_pat
         validate_xse_folder_pack(pack, tmp_path)
 
 
-def test_xse_folder_receipts_cover_public_resolver_and_reject_path_drift(tmp_path):
-    """Only applicable public adapters grant resolver evidence from exact observations."""
+def test_xse_folder_receipts_validate_public_resolver_and_reject_path_drift(tmp_path):
+    """Only applicable public adapters derive resolver facts from exact observations."""
     from conformance.applicability import derive_applicability
-    from conformance.coverage import derive_row_coverage, load_source_parity_rows
     from conformance.families.xse_folder import XSE_FOLDER_COVERAGE_POLICY
+    from conformance.participants import load_participants
     from conformance.receipts import validate_prepared_run
     from receipt_test_support import prepare_receipt_case
 
     document = load_and_validate_pack(ROOT, PACK).document()
-    rows = load_source_parity_rows(ROOT)
-    participants = derive_applicability(document, rows)
+    participants = derive_applicability(document, load_participants(ROOT))
     assert {participant.id for participant in participants.participants} == {
         "rust",
         "cxx",
@@ -180,14 +179,7 @@ def test_xse_folder_receipts_cover_public_resolver_and_reject_path_drift(tmp_pat
         pack, run, coverage_policy=XSE_FOLDER_COVERAGE_POLICY
     )
     assert not report.failures
-    coverage = derive_row_coverage(
-        document,
-        rows,
-        XSE_FOLDER_COVERAGE_POLICY,
-        (report,),
-        scope_participant_id="cxx",
-    )
-    assert coverage.rows and not coverage.failures
+    assert all(scenario.observed_fact_ids for scenario in report.scenarios)
     receipt["scenarios"][3]["observation"]["folder"] = "configured-docs/F4SEVR"
     run.receipt_path.write_text(json.dumps(receipt))
     report = validate_prepared_run(

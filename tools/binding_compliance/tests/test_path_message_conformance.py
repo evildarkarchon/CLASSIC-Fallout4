@@ -6,17 +6,11 @@ import copy
 import json
 import shutil
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from conformance.applicability import derive_applicability
 from conformance.command import FAMILY_COVERAGE_POLICIES
-from conformance.coverage import (
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
 from conformance.families.message_operations import (
     message_operations_coverage_policy,
     validate_message_operations_pack,
@@ -27,45 +21,12 @@ from conformance.families.path_operations import (
     validate_path_operations_pack,
 )
 from conformance.packs import load_and_validate_pack, materialize_run_plan
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
 
+from receipt_test_support import copy_participant_catalog
+
 ROOT = Path(__file__).resolve().parents[3]
-
-
-def test_same_named_validator_in_a_new_bridge_namespace_cannot_borrow_proof(tmp_path):
-    """Public namespace identity matters even when core owner and function name match."""
-    from receipt_test_support import prepare_receipt_case
-
-    pack, run, _ = prepare_receipt_case(
-        ROOT,
-        tmp_path,
-        Path("tests/conformance/packs/path_operations/v1.json"),
-        "cxx",
-        runner_id="namespace-scope-regression",
-    )
-    policy = path_operations_coverage_policy()
-    report = validate_prepared_run(pack, run, coverage_policy=policy)
-    assert not report.failures
-    rows = load_source_parity_rows(ROOT)
-    original = next(
-        row for row in rows if row.obligation_id == "parity:cxx:5318454026bb9a08"
-    )
-    future = replace(
-        original,
-        obligation_id="parity:cxx:new-namespace-validate-path",
-        locator="/entries/new-namespace",
-    )
-    coverage = derive_row_coverage(
-        pack.document(),
-        (*rows, future),
-        policy,
-        (report,),
-        scope_participant_id="cxx",
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert [failure.obligation_id for failure in coverage.failures] == [
-        future.obligation_id
-    ]
 
 
 def test_message_mutation_and_routing_methods_have_executable_ownership() -> None:
@@ -206,20 +167,21 @@ def test_path_fixture_escape_fails_before_execution(
         ("path-operations", {"rust", "cxx"}),
     ],
 )
-def test_path_message_receipts_fail_closed_at_public_coverage_seam(
+def test_path_message_receipts_fail_closed(
         tmp_path: Path, family: str, participants: set[str]
 ) -> None:
-    """Only complete current receipts cover source-selected public operations.
+    """Only complete current receipts pass for every applicable participant.
 
     Authored observations stand in for a transport at this tooling boundary;
     separate native participant runs prove the real API calls. Every mutation
-    reaches the same materialization, receipt validation and row derivation
-    interfaces used by CI.
+    reaches the same materialization and receipt validation interfaces used by
+    CI.
     """
     pack_path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
     original = _pack(family)
     for relative in (pack_path.parent, Path(original["fixtureRoot"])):
         shutil.copytree(ROOT / relative, tmp_path / relative)
+    copy_participant_catalog(ROOT, tmp_path)
     for args in (
             ("init",),
             ("config", "user.email", "conformance@example.invalid"),
@@ -233,19 +195,13 @@ def test_path_message_receipts_fail_closed_at_public_coverage_seam(
     pack = load_and_validate_pack(tmp_path, pack_path)
     document = pack.document()
     policy = FAMILY_COVERAGE_POLICIES[family]
-    rows = load_source_parity_rows(ROOT)
-    retained = load_retained_analyzer_kinds(ROOT)
-    matrix = derive_applicability(document, rows)
+    matrix = derive_applicability(document, load_participants(tmp_path))
     assert {participant.id for participant in matrix.participants} == participants
     assert all(
         set(participant.scenario_ids) == {case["id"] for case in document["scenarios"]}
         for participant in matrix.participants
     )
     for participant in matrix.participants:
-        if participant.id == "rust":
-            # Canonical Rust observations are validated in native runs; parity
-            # row accounting below belongs to the source-selected adapters.
-            continue
         for execution in participant.execution_instance_ids:
             run = materialize_run_plan(
                 pack,
@@ -289,36 +245,6 @@ def test_path_message_receipts_fail_closed_at_public_coverage_seam(
             run.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
             report = validate_prepared_run(pack, run, coverage_policy=policy)
             assert not report.failures
-            covered = derive_row_coverage(
-                document,
-                rows,
-                policy,
-                (report,),
-                scope_participant_id=participant.id,
-                retained_analyzers=retained,
-            )
-            assert covered.rows and not covered.failures
-            prototype = next(
-                row
-                for row in rows
-                if row.participant_id == participant.id
-                and row.rust_crate == document["domainOwner"]["rustCrate"]
-                and row.rust_symbol in document["capabilities"][0]["rustSymbols"]
-            )
-            future = replace(
-                prototype,
-                obligation_id="future-path-message-operation",
-                runtime_operation="future_public_method",
-                required_evidence_kind="runtime",
-            )
-            assert derive_row_coverage(
-                document,
-                (*rows, future),
-                policy,
-                (report,),
-                scope_participant_id=participant.id,
-                retained_analyzers=retained,
-            ).failures
             for mutation in (
                     "changed",
                     "missing-scenario",
@@ -348,81 +274,3 @@ def test_path_message_receipts_fail_closed_at_public_coverage_seam(
                     run.receipt_path.write_text(json.dumps(changed), encoding="utf-8")
                 rejected = validate_prepared_run(pack, run, coverage_policy=policy)
                 assert rejected.failures, mutation
-                assert derive_row_coverage(
-                    document,
-                    rows,
-                    policy,
-                    (rejected,),
-                    scope_participant_id=participant.id,
-                    retained_analyzers=retained,
-                ).failures, mutation
-
-
-def test_moved_path_primitive_rows_name_shared_core_and_keep_operation_identity():
-    """Moved primitive rows name shared core without re-keying their export.
-
-    The path-core root re-exports of the moved primitives end with the move, so
-    no row may still claim classic-path-core owns one of them.
-    """
-    # The per-binding moved rows retired with the Python and Node bindings; the
-    # owner check below still holds for every surviving row.
-    rows = {row.obligation_id: row for row in load_source_parity_rows(ROOT)}
-    moved_symbols = {
-        "is_valid_path",
-        "validate_path_exists",
-        "validate_is_directory",
-        "validate_is_file",
-        "check_drive_exists",
-        "check_read_permissions",
-        "check_write_permissions",
-        "validate_path_with_permissions",
-        "drive_exists",
-        "has_read_permission",
-        "has_write_permission",
-        "remove_readonly_attribute",
-        "remove_readonly",
-        "is_valid_executable_path",
-        "PathError",
-        "PathResult",
-    }
-    assert not [
-        key
-        for key, row in rows.items()
-        if row.rust_crate == "classic-path-core"
-        and (row.rust_symbol or "").removesuffix("@rust") in moved_symbols
-    ]
-
-
-def test_moved_path_primitive_rows_keep_predicate_candidates():
-    """Every moved row still finds an executable predicate after the owner split.
-
-    Coverage binds one crate per capability, so the shared-core primitives need
-    their own capabilities or their rows silently lose runtime credit (#245).
-    The CXX existence/kind validators keep theirs through installation-paths.
-    """
-    from selector_test_support import candidate_predicates
-
-    rows = {row.obligation_id: row for row in load_source_parity_rows(ROOT)}
-    installation = (_pack("installation-paths"), FAMILY_COVERAGE_POLICIES["installation-paths"])
-    operations = (_pack("path-operations"), path_operations_coverage_policy())
-    cxx_validators = (
-        "parity:cxx:05e39e517d1d52d7",
-        "parity:cxx:cda253fce9192d69",
-        "parity:cxx:92a0085674e7c6c0",
-    )
-    for obligation in cxx_validators:
-        row = rows[obligation]
-        assert row.rust_crate == "classic-shared-core", obligation
-        assert candidate_predicates(row, *installation), obligation
-    for obligation in (
-        "parity:cxx:ef0c70d7c9e34cd5",
-        "parity:cxx:18b69f0fbebc68bc",
-        "parity:cxx:5318454026bb9a08",
-    ):
-        assert candidate_predicates(rows[obligation], *operations), obligation
-    # validate_required_files stays path-core policy and keeps its own credit.
-    for obligation in (
-        "parity:cxx:cff13ceeb2ccbf58",
-    ):
-        assert rows[obligation].rust_crate == "classic-path-core", obligation
-        assert candidate_predicates(rows[obligation], *operations), obligation

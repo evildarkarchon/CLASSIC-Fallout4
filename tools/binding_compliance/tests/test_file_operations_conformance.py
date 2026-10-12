@@ -6,16 +6,10 @@ import copy
 import json
 import shutil
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from conformance.coverage import (
-    derive_observed_fact_ids,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from conformance.coverage import derive_observed_fact_ids
 from conformance.families.file_operations import FILE_OPERATIONS_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
@@ -65,17 +59,17 @@ def test_file_operations_have_complete_independent_observations() -> None:
 
 
 @pytest.mark.parametrize("participant", ("cxx",))
-def test_file_receipts_fail_closed_and_preserve_migration_scope(
+def test_file_receipts_fail_closed(
         tmp_path: Path, participant: str
 ) -> None:
-    """Public receipt validation rejects replay, missing work, drift and future APIs."""
+    """Public receipt validation rejects replay, missing work and drift."""
     (tmp_path / PACK).parent.mkdir(parents=True)
     shutil.copyfile(ROOT / PACK, tmp_path / PACK)
     fixtures = Path("tests/fixtures/file_operations")
     shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
-    from receipt_test_support import copy_source_inventory
+    from receipt_test_support import copy_participant_catalog
 
-    copy_source_inventory(ROOT, tmp_path)
+    copy_participant_catalog(ROOT, tmp_path)
     for arguments in (
             ("init",),
             ("config", "user.email", "conformance@example.invalid"),
@@ -131,44 +125,7 @@ def test_file_receipts_fail_closed_and_preserve_migration_scope(
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     assert not report.failures
     assert all(scenario.result == "pass" for scenario in report.scenarios)
-    rows = load_source_parity_rows(ROOT)
-    coverage = derive_row_coverage(
-        document,
-        rows,
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert coverage.rows
-    assert not coverage.failures
-    assert all(
-        row.evidence_kind in {"executable", "structural"} for row in coverage.rows
-    )
-    prototype = next(
-        row
-        for row in rows
-        if row.participant_id == participant
-        and row.rust_crate == "classic-file-io-core"
-        and row.rust_symbol in {"FileIOCore", "read_file"}
-    )
-    added = replace(
-        prototype,
-        obligation_id="parity:test:future-file-operation",
-        rust_symbol="FileIOCore",
-        runtime_operation="future_file_operation",
-    )
-    expanded = derive_row_coverage(
-        document,
-        (*rows, added),
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert [failure.obligation_id for failure in expanded.failures] == [
-        added.obligation_id
-    ]
+    assert all(scenario.observed_fact_ids for scenario in report.scenarios)
 
     for mutation in ("missing", "skipped", "wrong-value", "forbidden-file"):
         changed = copy.deepcopy(receipt)

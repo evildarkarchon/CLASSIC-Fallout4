@@ -11,12 +11,7 @@ from typing import Any
 
 from .applicability import derive_applicability, load_policy_exceptions
 from .consumers import derive_consumer_coverage, load_consumer_obligations
-from .coverage import (
-    FamilyCoveragePolicy,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from .coverage import FamilyCoveragePolicy
 from .failures import FailureKind
 from .families.autoscan_report import AUTOSCAN_REPORT_COVERAGE_POLICY
 from .families.aux_operations import aux_operations_coverage_policy
@@ -91,6 +86,7 @@ from .packs import (
     load_and_validate_pack,
     load_prepared_run,
 )
+from .participants import load_participants
 from .receipts import validate_prepared_run
 from .reports import ScopedReportFailure, build_scoped_report
 from .schema import (
@@ -106,7 +102,8 @@ class ConformanceCommandError(ValueError):
 
 
 # Domain slices register repository-owned predicate policies here as they land.
-# An absent policy leaves coverage unresolved and therefore cannot pass a scope.
+# A policy only names the observed facts receipts record; since parity-row
+# coverage was deleted (T1) an absent policy no longer blocks a scope.
 FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     "file-generation": FILE_GENERATION_COVERAGE_POLICY,
     "mod-ini": MOD_INI_COVERAGE_POLICY,
@@ -558,11 +555,10 @@ def build_conformance_report_from_receipts(
                     consumer_catalog=consumer_catalog,
                 )
             )
-        parity_rows = load_source_parity_rows(root)
         policy_exceptions = load_policy_exceptions(root)
         applicability = derive_applicability(
             pack.document(),
-            parity_rows,
+            load_participants(root),
             policy_exceptions=policy_exceptions,
             consumer_catalog=consumer_catalog,
         )
@@ -583,11 +579,6 @@ def build_conformance_report_from_receipts(
                 )
             )
         )
-        coverage_prepared_reports = tuple(
-            report
-            for report in selected_prepared_reports
-            if report.participant.get("role") == "semantic-adapter"
-        )
         consumer_prepared_reports = tuple(
             report
             for report in selected_prepared_reports
@@ -600,22 +591,6 @@ def build_conformance_report_from_receipts(
                 if participant.id == participant_id
             ),
             None,
-        )
-        coverage = (
-            derive_row_coverage(
-                pack.document(),
-                parity_rows,
-                coverage_policy,
-                coverage_prepared_reports,
-                scope_participant_id=(
-                    participant_id if profile == "conformance" else None
-                ),
-                retained_analyzers=load_retained_analyzer_kinds(root),
-                policy_exceptions=policy_exceptions,
-            )
-            if coverage_policy is not None
-            and (profile == "full" or selected_role == "semantic-adapter")
-            else None
         )
         consumer_coverage = (
             derive_consumer_coverage(
@@ -640,7 +615,6 @@ def build_conformance_report_from_receipts(
             prepared_reports=tuple(prepared_reports),
             participant_id=participant_id,
             execution_instance_id=execution_instance_id,
-            coverage=coverage,
             consumer_coverage=consumer_coverage,
         )
     except ValueError as error:

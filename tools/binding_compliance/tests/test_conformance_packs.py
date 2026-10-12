@@ -380,17 +380,17 @@ def test_each_materialization_is_fresh_and_never_exposes_the_oracle(
 
     first = materialize_run_plan(
         validated,
-        participant_id="node",
+        participant_id="rust",
         participant_role="semantic-adapter",
-        execution_instance_id="windows-node",
+        execution_instance_id="rust",
         source_paths=(runner_path,),
         artifact_root=artifact_root,
     )
     second = materialize_run_plan(
         validated,
-        participant_id="node",
+        participant_id="rust",
         participant_role="semantic-adapter",
-        execution_instance_id="windows-node",
+        execution_instance_id="rust",
         source_paths=(runner_path,),
         artifact_root=artifact_root,
     )
@@ -411,9 +411,9 @@ def test_each_materialization_is_fresh_and_never_exposes_the_oracle(
     assert not first.receipt_path.exists()
     assert list(first.artifact_dir.iterdir()) == [first.run_plan_path]
     assert first_plan["participant"] == {
-        "id": "node",
+        "id": "rust",
         "role": "semantic-adapter",
-        "executionInstanceId": "windows-node",
+        "executionInstanceId": "rust",
     }
     assert Path(first_plan["fixtureRoot"]).is_absolute()
     assert all(Path(path).is_absolute() for path in first_plan["fixtures"].values())
@@ -435,9 +435,9 @@ def test_materialized_run_can_be_authenticated_by_a_later_cli_process(
     pack = load_and_validate_pack(tmp_path, pack_path)
     run = materialize_run_plan(
         pack,
-        participant_id="node",
+        participant_id="rust",
         participant_role="semantic-adapter",
-        execution_instance_id="node",
+        execution_instance_id="rust",
         source_paths=(runner_path,),
         artifact_root=tmp_path / "tools" / "binding_compliance" / "artifacts",
     )
@@ -469,27 +469,27 @@ def test_source_identity_tracks_only_declared_current_runner_inputs(
 
     first = materialize_run_plan(
         validated,
-        participant_id="python",
+        participant_id="rust",
         participant_role="semantic-adapter",
-        execution_instance_id="windows-python",
+        execution_instance_id="rust",
         source_paths=(runner_path,),
         artifact_root=artifact_root,
     )
     unrelated_path.write_text("version = 2\n", encoding="utf-8")
     unrelated = materialize_run_plan(
         validated,
-        participant_id="python",
+        participant_id="rust",
         participant_role="semantic-adapter",
-        execution_instance_id="windows-python",
+        execution_instance_id="rust",
         source_paths=(runner_path,),
         artifact_root=artifact_root,
     )
     runner_path.write_text("version = 2\n", encoding="utf-8")
     relevant = materialize_run_plan(
         validated,
-        participant_id="python",
+        participant_id="rust",
         participant_role="semantic-adapter",
-        execution_instance_id="windows-python",
+        execution_instance_id="rust",
         source_paths=(runner_path,),
         artifact_root=artifact_root,
     )
@@ -575,16 +575,16 @@ def test_materialization_rejects_an_artifact_component_symlink_escape(
     outside = tmp_path / "outside-artifacts"
     outside.mkdir()
     try:
-        (artifact_root / "node").symlink_to(outside, target_is_directory=True)
+        (artifact_root / "rust").symlink_to(outside, target_is_directory=True)
     except OSError as error:
         pytest.skip(f"directory symlinks are unavailable on this host: {error}")
 
     with pytest.raises(MaterializationError, match="artifact"):
         materialize_run_plan(
             validated,
-            participant_id="node",
+            participant_id="rust",
             participant_role="semantic-adapter",
-            execution_instance_id="windows-node",
+            execution_instance_id="rust",
             source_paths=(runner_path,),
             artifact_root=artifact_root,
         )
@@ -602,19 +602,19 @@ def test_materialization_rejects_an_in_root_artifact_component_symlink(
     _commit_repository(tmp_path)
     validated = load_and_validate_pack(tmp_path, pack_path)
     artifact_root = tmp_path / "tools" / "binding_compliance" / "artifacts"
-    other_participant = artifact_root / "python"
+    other_participant = artifact_root / "cxx"
     other_participant.mkdir(parents=True)
     try:
-        (artifact_root / "node").symlink_to(other_participant, target_is_directory=True)
+        (artifact_root / "rust").symlink_to(other_participant, target_is_directory=True)
     except OSError as error:
         pytest.skip(f"directory symlinks are unavailable on this host: {error}")
 
     with pytest.raises(MaterializationError, match="artifact"):
         materialize_run_plan(
             validated,
-            participant_id="node",
+            participant_id="rust",
             participant_role="semantic-adapter",
-            execution_instance_id="windows-node",
+            execution_instance_id="rust",
             source_paths=(runner_path,),
             artifact_root=artifact_root,
         )

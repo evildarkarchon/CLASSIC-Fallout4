@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ from .schema import (
 
 if TYPE_CHECKING:
     from .packs import MaterializedRun, ValidatedPack
+    from .receipts import PreparedRunReport
 
 DEFAULT_CONSUMER_OBLIGATIONS_PATH = Path("tests/conformance/consumer-obligations.json")
 _CATALOG_PROVENANCE_SEAL = object()
@@ -507,6 +509,36 @@ def prepare_consumer_run(
     )
 
 
+def prepared_report_evidence_digest(
+    prepared_reports: Sequence[PreparedRunReport],
+) -> str:
+    """Bind consumer coverage to the exact centrally validated report set.
+
+    The digest is a SHA-256 over the canonical JSON of every report document,
+    ordered by participant, execution instance and invocation, so a scoped
+    report can prove its coverage came from the receipts it selected.
+    """
+
+    payload = [
+        report.document()
+        for report in sorted(
+            prepared_reports,
+            key=lambda item: (
+                str(item.participant.get("id")),
+                str(item.participant.get("executionInstanceId")),
+                str(item.invocation.get("id")),
+            ),
+        )
+    ]
+    canonical = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+
 def derive_consumer_coverage(
     pack: Mapping[str, Any],
     catalog: ConsumerObligationCatalog,
@@ -515,7 +547,7 @@ def derive_consumer_coverage(
     scope_participant_id: str | None = None,
     scope_execution_instance_id: str | None = None,
 ) -> ConsumerCoverageReport:
-    """Derive named consumer coverage without entering semantic row coverage.
+    """Derive named consumer coverage from consumer receipts only.
 
     Coverage is the intersection of passing obligation observations across the
     source-required execution instances in scope. Runner-authored obligation IDs
@@ -523,7 +555,6 @@ def derive_consumer_coverage(
     cannot enter this derivation.
     """
 
-    from .coverage import prepared_report_evidence_digest
     from .receipts import PreparedRunReport
 
     if not catalog.has_trusted_provenance:

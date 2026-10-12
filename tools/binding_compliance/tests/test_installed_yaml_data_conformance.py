@@ -6,20 +6,16 @@ import copy
 import json
 import shutil
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from conformance.command import FAMILY_COVERAGE_POLICIES
-from conformance.coverage import (
-    derive_observed_fact_ids,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from conformance.coverage import derive_observed_fact_ids
 from conformance.enforcement import enforcement_for_family
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+
+from receipt_test_support import copy_participant_catalog
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/installed_yaml_data/v1.json")
@@ -96,14 +92,15 @@ def test_named_forbidden_effect_facts_reject_contradictory_files() -> None:
 
 
 @pytest.mark.parametrize("participant", ("cxx",))
-def test_installed_yaml_receipts_fail_closed_and_cover_only_executed_operations(
+def test_installed_yaml_receipts_fail_closed(
         tmp_path: Path, participant: str
 ) -> None:
-    """Real receipt validation rejects semantic drift, omissions, replay, and new APIs."""
+    """Real receipt validation rejects semantic drift, omissions, and replay."""
     fixtures = Path("tests/fixtures/installed_yaml_data_conformance")
     (tmp_path / PACK).parent.mkdir(parents=True)
     shutil.copyfile(ROOT / PACK, tmp_path / PACK)
     shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
+    copy_participant_catalog(ROOT, tmp_path)
     for arguments in (
             ("init",),
             ("config", "user.email", "conformance@example.invalid"),
@@ -157,39 +154,6 @@ def test_installed_yaml_receipts_fail_closed_and_cover_only_executed_operations(
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     assert not report.failures
     assert all(scenario.result == "pass" for scenario in report.scenarios)
-    rows = load_source_parity_rows(ROOT)
-    coverage = derive_row_coverage(
-        document,
-        rows,
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert coverage.rows
-    assert not coverage.failures
-    prototype = next(
-        row
-        for row in rows
-        if row.participant_id == participant
-        and row.rust_symbol == "inspect_installed_yaml_data"
-    )
-    added = replace(
-        prototype,
-        obligation_id="parity:test:future-inspection",
-        runtime_operation="future_inspection",
-    )
-    expanded = derive_row_coverage(
-        document,
-        (*rows, added),
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert [failure.obligation_id for failure in expanded.failures] == [
-        added.obligation_id
-    ]
     for field, replacement in (
             ("main", None),
             ("diagnostics", []),

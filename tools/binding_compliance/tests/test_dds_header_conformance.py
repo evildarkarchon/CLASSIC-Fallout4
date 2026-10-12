@@ -3,7 +3,7 @@
 from copy import deepcopy
 from pathlib import Path
 
-from conformance.coverage import derive_observed_fact_ids, load_source_parity_rows
+from conformance.coverage import derive_observed_fact_ids
 from conformance.packs import load_and_validate_pack
 
 
@@ -35,13 +35,6 @@ def test_dds_observation_predicates_reject_missing_and_changed_fields() -> None:
             assert not derive_observed_fact_ids(
                 pack, scenario, changed, DDS_HEADER_COVERAGE_POLICY
             )
-    exported = [
-        row
-        for row in load_source_parity_rows(root)
-        if row.rust_symbol == "DDSHeader" and row.mapping_origin == "canonical_rust"
-    ]
-    # Only the retired Python binding exported the header type itself.
-    assert not exported
 
 
 def test_dds_capabilities_route_parsing_to_file_io_and_game_rules_to_resource() -> None:
@@ -49,9 +42,6 @@ def test_dds_capabilities_route_parsing_to_file_io_and_game_rules_to_resource() 
 
     The pack's domain owner covers the parse and file-reader capabilities,
     while the game-target validation capability names resource core (#249).
-    Every live parity row for the moved analyzer, issue, and target types must
-    name that owner too, so a stale same-named file I/O mapping cannot satisfy
-    source parity.
     """
 
     root = Path(__file__).resolve().parents[3]
@@ -68,14 +58,3 @@ def test_dds_capabilities_route_parsing_to_file_io_and_game_rules_to_resource() 
         "dds-header.files": "classic-file-io-core",
         "dds-header.validate": "classic-resource-core",
     }
-
-    moved = {"DDSAnalyzer", "DDSIssue", "GameTarget"}
-    rows = [
-        row
-        for row in load_source_parity_rows(root)
-        if row.rust_symbol is not None
-        and row.rust_symbol.removesuffix("@rust") in moved
-    ]
-    # The bindings that exported these types retired; any future row must still
-    # name the resource-core owner.
-    assert all(row.rust_crate == "classic-resource-core" for row in rows)

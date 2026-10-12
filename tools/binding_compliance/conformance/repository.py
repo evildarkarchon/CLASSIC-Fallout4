@@ -1,4 +1,4 @@
-"""Aggregate authenticated family receipts against the entire source inventory."""
+"""Aggregate authenticated family receipts against every tracked family."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from .command import (
     _run_plan_family,
     build_conformance_report_from_receipts,
 )
-from .coverage import load_retained_analyzer_kinds, load_source_parity_rows
 from .enforcement import enforcement_for_family
 from .packs import discover_pack_paths, load_and_validate_pack
 
@@ -48,11 +47,12 @@ def discover_repository_receipts(repo_root: Path, directory: Path) -> tuple[Path
 def build_repository_report(
     repo_root: Path, receipt_paths: Sequence[Path]
 ) -> dict[str, Any]:
-    """Require all tracked blocking families and a disposition for every row.
+    """Require every tracked blocking family to pass its full applicability.
 
     Family validation authenticates current source and immutable plans before
-    any row evidence is counted. Missing families and unowned runtime rows fail
-    closed; structural ownership never substitutes for runtime observations.
+    any receipt is counted, and each family report requires every applicable
+    (participant, execution instance) from ``participants.json`` and the
+    consumer obligation catalog. Missing families fail closed.
     Returns a failing report for incomplete proof and raises
     ``ConformanceCommandError`` for invalid catalogs or receipt inputs.
     """
@@ -66,8 +66,6 @@ def build_repository_report(
             raise ValueError(
                 "repository conformance requires a unique nonempty pack catalog"
             )
-        rows = load_source_parity_rows(root)
-        analyzers = load_retained_analyzer_kinds(root)
     except ValueError as error:
         raise ConformanceCommandError(str(error)) from error
 
@@ -89,30 +87,12 @@ def build_repository_report(
         )
         for family in sorted(grouped)
     ]
-    retained = {
-        row.obligation_id: row.retained_analyzer_id
-        for row in rows
-        if row.required_evidence_kind in {"structural", "negative"}
-        and row.retained_analyzer_id is not None
-        and analyzers.get(row.retained_analyzer_id) == row.required_evidence_kind
-    }
-    covered = set(retained)
-    for report in reports:
-        # Failed or partial invocations cannot donate facts to repository proof.
-        if report["result"] == "pass" and report["enforcement"] == "blocking":
-            coverage = report.get("coverage") or {}
-            covered.update(row["obligationId"] for row in coverage.get("rows", []))
     missing = sorted(set(families) - grouped.keys())
     unpromoted = sorted(
         family for family in families if enforcement_for_family(family) != "blocking"
     )
-    uncovered = sorted(
-        row.obligation_id for row in rows if row.obligation_id not in covered
-    )
-    complete = (
-        bool(rows)
-        and not (missing or unpromoted or uncovered)
-        and all(report["repositoryComplete"] for report in reports)
+    complete = not (missing or unpromoted) and all(
+        report["repositoryComplete"] for report in reports
     )
     return {
         "schemaVersion": 1,
@@ -123,7 +103,5 @@ def build_repository_report(
         "requiredFamilies": sorted(families),
         "missingFamilies": missing,
         "unpromotedFamilies": unpromoted,
-        "uncoveredRows": uncovered,
-        "retainedRows": retained,
         "families": reports,
     }

@@ -594,7 +594,6 @@ def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
                 "receivedExecutions",
                 "missingExecutions",
                 "failures",
-                "coverage",
                 "consumerCoverage",
             }
         ),
@@ -704,160 +703,6 @@ def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
             if value is not None:
                 _pattern_string(value, f"{label}.{selector}", _STABLE_ID)
 
-    coverage = document["coverage"]
-    # A scoped pass is a coverage claim, so a missing partition must fail
-    # closed even when all execution receipts are otherwise present.
-    coverage_passed = False
-    if coverage is not None:
-        coverage_object = _mapping(coverage, f"{prefix}.coverage")
-        _exact_keys(
-            coverage_object,
-            frozenset(
-                {
-                    "familyId",
-                    "result",
-                    "executionEvidence",
-                    "preparedEvidenceDigest",
-                    "rows",
-                    "failures",
-                }
-            ),
-            f"{prefix}.coverage",
-        )
-        if coverage_object["familyId"] != document["familyId"]:
-            raise ConformanceSchemaError(
-                f"{prefix}.coverage family does not match the report"
-            )
-        if coverage_object["result"] not in {"pass", "fail"}:
-            raise ConformanceSchemaError(
-                f"{prefix}.coverage.result must be pass or fail"
-            )
-        coverage_executions = _list(
-            coverage_object["executionEvidence"],
-            f"{prefix}.coverage.executionEvidence",
-        )
-        coverage_execution_keys: list[tuple[str, str]] = []
-        for index, raw_execution in enumerate(coverage_executions):
-            label = f"{prefix}.coverage.executionEvidence[{index}]"
-            execution = _mapping(raw_execution, label)
-            _exact_keys(
-                execution,
-                frozenset({"participantId", "executionInstanceId"}),
-                label,
-            )
-            coverage_execution_keys.append(
-                (
-                    _pattern_string(
-                        execution["participantId"],
-                        f"{label}.participantId",
-                        _STABLE_ID,
-                    ),
-                    _pattern_string(
-                        execution["executionInstanceId"],
-                        f"{label}.executionInstanceId",
-                        _STABLE_ID,
-                    ),
-                )
-            )
-        if len(coverage_execution_keys) != len(set(coverage_execution_keys)):
-            raise ConformanceSchemaError(
-                f"{prefix}.coverage.executionEvidence contains duplicates"
-            )
-        _pattern_string(
-            coverage_object["preparedEvidenceDigest"],
-            f"{prefix}.coverage.preparedEvidenceDigest",
-            _SHA256,
-        )
-        coverage_rows = _list(coverage_object["rows"], f"{prefix}.coverage.rows")
-        row_ids: list[str] = []
-        for index, raw_row in enumerate(coverage_rows):
-            label = f"{prefix}.coverage.rows[{index}]"
-            row = _mapping(raw_row, label)
-            _exact_keys(
-                row,
-                frozenset(
-                    {
-                        "obligationId",
-                        "participantId",
-                        "mappingOrigin",
-                        "capabilityId",
-                        "evidenceKind",
-                        "evidenceIds",
-                    }
-                ),
-                label,
-            )
-            row_ids.append(
-                _nonempty_string(row["obligationId"], f"{label}.obligationId")
-            )
-            _pattern_string(row["participantId"], f"{label}.participantId", _STABLE_ID)
-            if row["mappingOrigin"] not in {
-                "canonical_rust",
-                "binding_only",
-                "rust_only",
-            }:
-                raise ConformanceSchemaError(
-                    f"{label}.mappingOrigin has an unsupported value"
-                )
-            capability_id = row["capabilityId"]
-            if capability_id is not None:
-                _pattern_string(capability_id, f"{label}.capabilityId", _STABLE_ID)
-            if row["evidenceKind"] not in {
-                "executable",
-                "structural",
-                "negative",
-                "policy-exception",
-            }:
-                raise ConformanceSchemaError(
-                    f"{label}.evidenceKind has an unsupported value"
-                )
-            evidence_ids = _string_array(
-                row["evidenceIds"], f"{label}.evidenceIds", nonempty=True
-            )
-            if len(evidence_ids) != len(set(evidence_ids)):
-                raise ConformanceSchemaError(f"{label}.evidenceIds contains duplicates")
-            for evidence_index, evidence_id in enumerate(evidence_ids):
-                _pattern_string(
-                    evidence_id,
-                    f"{label}.evidenceIds[{evidence_index}]",
-                    _STABLE_ID,
-                )
-        if len(row_ids) != len(set(row_ids)):
-            raise ConformanceSchemaError(
-                f"{prefix}.coverage.rows contains duplicate obligations"
-            )
-        coverage_failures = _list(
-            coverage_object["failures"], f"{prefix}.coverage.failures"
-        )
-        failure_ids: list[str] = []
-        for index, raw_failure in enumerate(coverage_failures):
-            label = f"{prefix}.coverage.failures[{index}]"
-            failure = _mapping(raw_failure, label)
-            _exact_keys(
-                failure,
-                frozenset({"kind", "obligationId", "blocking", "message"}),
-                label,
-            )
-            if failure["kind"] != FailureKind.COVERAGE_MAPPING.value:
-                raise ConformanceSchemaError(
-                    f"{label}.kind must be coverage_mapping_gap"
-                )
-            failure_ids.append(
-                _nonempty_string(failure["obligationId"], f"{label}.obligationId")
-            )
-            if not isinstance(failure["blocking"], bool):
-                raise ConformanceSchemaError(f"{label}.blocking must be boolean")
-            _nonempty_string(failure["message"], f"{label}.message")
-        if len(failure_ids) != len(set(failure_ids)):
-            raise ConformanceSchemaError(
-                f"{prefix}.coverage.failures contains duplicate obligations"
-            )
-        expected_coverage_result = "fail" if coverage_failures else "pass"
-        if coverage_object["result"] != expected_coverage_result:
-            raise ConformanceSchemaError(
-                f"{prefix}.coverage.result does not match coverage failures"
-            )
-        coverage_passed = coverage_object["result"] == "pass" and not coverage_failures
     consumer_coverage = document["consumerCoverage"]
     consumer_coverage_passed = False
     if consumer_coverage is not None:
@@ -984,11 +829,15 @@ def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
             )
         consumer_coverage_passed = expected_result == "pass"
 
-    has_coverage = coverage is not None or consumer_coverage is not None
-    all_coverage_passed = (coverage is None or coverage_passed) and (
-        consumer_coverage is None or consumer_coverage_passed
+    # Semantic proof is the exact scenario comparison already folded into
+    # failures; consumer obligations keep their separate coverage partition.
+    # An empty denominator proves nothing, so it can never pass.
+    passed = (
+        bool(required)
+        and not missing
+        and not failures
+        and (consumer_coverage is None or consumer_coverage_passed)
     )
-    passed = not missing and not failures and has_coverage and all_coverage_passed
     if document["result"] != ("pass" if passed else "fail"):
         raise ConformanceSchemaError(
             f"{prefix}.result does not match missing executions and failures"

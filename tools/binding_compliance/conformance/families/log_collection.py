@@ -66,11 +66,6 @@ LOG_COLLECTION_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "CRASH_LOG_PATTERN",
             ),
             _observed,
-            binding_obligation_ids=(
-                "parity:cxx:1462d027a7cba8dd",
-                "parity:cxx:acf327fd1cc5bdc2",
-                "parity:cxx:8d5f7aa4b18d4e1f",
-            ),
             runtime_operations=(
                 None,
                 "log_collector_new",

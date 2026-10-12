@@ -7,16 +7,10 @@ import hashlib
 import json
 import shutil
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from conformance.coverage import (
-    derive_observed_fact_ids,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from conformance.coverage import derive_observed_fact_ids
 from conformance.families.config_operations import CONFIG_OPERATIONS_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
@@ -181,14 +175,14 @@ def test_config_fact_limits_credit_to_observed_api() -> None:
 def test_config_receipt_lifecycle_fails_closed(
         tmp_path: Path, participant: str
 ) -> None:
-    """Validate genuine receipt transport while rejecting drift, replay, and new APIs."""
+    """Validate genuine receipt transport while rejecting drift and replay."""
     (tmp_path / PACK).parent.mkdir(parents=True)
     shutil.copyfile(ROOT / PACK, tmp_path / PACK)
     fixtures = Path("tests/fixtures/config_operations")
     shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
-    from receipt_test_support import copy_source_inventory
+    from receipt_test_support import copy_participant_catalog
 
-    copy_source_inventory(ROOT, tmp_path)
+    copy_participant_catalog(ROOT, tmp_path)
     for arguments in (
             ("init",),
             ("config", "user.email", "conformance@example.invalid"),
@@ -243,39 +237,7 @@ def test_config_receipt_lifecycle_fails_closed(
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     assert not report.failures
     assert all(scenario.result == "pass" for scenario in report.scenarios)
-    rows = load_source_parity_rows(ROOT)
-    coverage = derive_row_coverage(
-        document,
-        rows,
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert coverage.rows
-    assert not coverage.failures
-    prototype = next(
-        row
-        for row in rows
-        if row.participant_id == participant
-        and row.rust_symbol == "load_explicit_yaml_data"
-    )
-    added = replace(
-        prototype,
-        obligation_id="parity:test:future-config-operation",
-        runtime_operation="future_config_operation",
-    )
-    expanded = derive_row_coverage(
-        document,
-        (*rows, added),
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert [failure.obligation_id for failure in expanded.failures] == [
-        added.obligation_id
-    ]
+    assert all(scenario.observed_fact_ids for scenario in report.scenarios)
     for index, field, replacement in (
             (0, "result", None),
             (1, "error", None),

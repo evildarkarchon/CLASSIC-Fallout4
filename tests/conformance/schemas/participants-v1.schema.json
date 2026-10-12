@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/evildarkarchon/CLASSIC-Fallout4/tests/conformance/schemas/participants-v1.schema.json",
+  "title": "CLASSIC conformance semantic participants v1",
+  "description": "Central semantic applicability. Families are Rust-only by default; a listed family enrols cxx for the named capability IDs, and cxx runs exactly the scenarios whose action is one of them. Families are sorted and unique by familyId, capability IDs sorted and unique (enforced by the loader).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "families"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "families": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["familyId", "cxx"],
+        "properties": {
+          "familyId": { "$ref": "#/$defs/stableId" },
+          "cxx": { "$ref": "#/$defs/enrolment" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "enrolment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capabilityIds"],
+      "properties": {
+        "capabilityIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableId" }
+        }
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
+    }
+  }
+}

@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from conformance.applicability import derive_applicability
 from conformance.command import FAMILY_COVERAGE_POLICIES
-from conformance.coverage import load_source_parity_rows
 from conformance.packs import load_and_validate_pack
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
 
 from receipt_test_support import prepare_receipt_case
@@ -32,7 +32,7 @@ def test_registry_accessor_receipts_require_owned_state(tmp_path, family, partic
     assert {
                p.id
                for p in derive_applicability(
-            pack.document(), load_source_parity_rows(ROOT)
+            pack.document(), load_participants(ROOT)
         ).participants
            } == participants
     policy = FAMILY_COVERAGE_POLICIES[family]

@@ -4,12 +4,13 @@ import copy
 from pathlib import Path
 
 from conformance.applicability import derive_applicability
-from conformance.coverage import derive_observed_fact_ids, load_source_parity_rows
+from conformance.coverage import derive_observed_fact_ids
 from conformance.packs import load_and_validate_pack
+from conformance.participants import load_participants
 
 
 def test_interface_helpers_have_no_fabricated_core_owner_or_extra_adapter():
-    """Exact binding selectors enroll only the actual CXX surface and its Rust reference."""
+    """The central catalog enrols only the actual CXX surface and its Rust reference."""
     from conformance.families.interface_helpers import interface_coverage_policy
 
     root = Path(__file__).resolve().parents[3]
@@ -21,7 +22,7 @@ def test_interface_helpers_have_no_fabricated_core_owner_or_extra_adapter():
         assert {
                    p.id
                    for p in derive_applicability(
-                document, load_source_parity_rows(root)
+                document, load_participants(root)
             ).participants
                } == {"rust", "cxx"}
         policy = interface_coverage_policy(family)
