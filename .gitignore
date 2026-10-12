@@ -120,9 +120,6 @@ coverage.json
 too-many-branches.txt
 test-results.txt
 
-# Ephemeral conformance artifacts (receipts, run plans and reports).
-tools/binding_compliance/artifacts/
-
 # Code signing certificates (auto-generated, contains private key)
 tools/certs/
 

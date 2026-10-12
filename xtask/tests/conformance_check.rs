@@ -355,7 +355,7 @@ fn a_copy_of_the_real_inputs_passes_and_seeded_failures_fail() {
     assert!(
         findings.iter().any(
             |f| f.starts_with(".github/workflows/ci-binding-compliance.yml:")
-                && f.contains("full aggregation")
+                && f.contains("job full must have exactly needs")
         ),
         "{findings:#?}"
     );

@@ -52,20 +52,16 @@ Use local command sets that mirror these workflows before opening PRs.
 
 ## 3) Repository gates
 
-The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](../adr/)). Repository tooling under `tools/` runs from the tools-only uv project:
-
-```powershell
-uv sync --project tools
-```
-
-Gates already ported to Rust run through `cargo xtask` and need no Python:
+The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](../adr/)). Every repository gate runs through `cargo xtask`:
 
 ```powershell
 cargo xtask user-settings-ownership
 cargo xtask conformance check
+# Conformance for one participant (rust, tui; cxx, cli, gui need --compiler and a wrapper build)
+cargo xtask conformance run --participant rust
 ```
 
-See [Repository gates](../development/repository-gates.md) for where each check runs in CI.
+See [Repository gates](../development/repository-gates.md) for where each check runs in CI, and [Conformance](../development/conformance.md) for the conformance commands.
 
 ---
 

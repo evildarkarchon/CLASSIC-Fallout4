@@ -62,10 +62,21 @@ fn duplicate_keys_and_bad_yaml_are_findings() {
 }
 
 #[test]
-fn presets_are_read_from_command_tokens() {
-    assert_eq!(
-        presets("pwsh build_gui.ps1 -Test -Preset ci-system-qt -TestOnly"),
-        ["ci-system-qt"]
+fn pinned_mappings_compare_scalars_as_text_and_reject_extra_keys() {
+    let workflow = workflow(
+        "jobs:\n  a:\n    with:\n      name: x\n      retention-days: 7\n      merge-multiple: false\n",
     );
-    assert!(presets("pwsh build_gui.ps1 -Test").is_empty());
+    let with = &workflow.yaml["jobs"]["a"]["with"];
+    let pinned = [
+        ("name", "x"),
+        ("retention-days", "7"),
+        ("merge-multiple", "false"),
+    ];
+    assert!(mapping_is(with, &pinned));
+    assert!(!mapping_is(with, &pinned[..2]));
+    assert!(mapping_is(&workflow.yaml["jobs"]["a"]["env"], &[]));
+    assert_eq!(
+        string_list(&Yaml::String("build".into())),
+        Some(vec!["build"])
+    );
 }

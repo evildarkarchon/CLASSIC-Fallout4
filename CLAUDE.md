@@ -25,14 +25,15 @@ Read on demand, not up front:
 
 ## Repository Tooling Quickstart
 
-The Python and Node bindings are retired (ADR-0010). Python survives only as repository tooling under `tools/`, which runs from the tools-only uv project at `tools/pyproject.toml` (it holds only `ruamel.yaml` and `pytest`):
+The Python and Node bindings are retired (ADR-0010). Repository tooling is the `cargo xtask` crate (`cargo xtask --help`), including the conformance engine (`docs/development/conformance.md`):
 
 ```powershell
-uv sync --project tools
-uv run --project tools python -m pytest tools/binding_compliance/tests -q
+cargo test -p xtask
+cargo xtask conformance check
+cargo xtask conformance run --participant rust
 ```
 
-Run each tools test suite in its own pytest process; several suites share module basenames and do not collect together. The interim repository gates that CI runs directly are listed in `docs/development/repository-gates.md`.
+No tool runs from the leftover tools-only uv project at `tools/pyproject.toml` any more; it goes with the last Python files. The repository gates that CI runs directly are listed in `docs/development/repository-gates.md`.
 
 ## graphify
 

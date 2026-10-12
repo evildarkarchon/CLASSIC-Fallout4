@@ -95,4 +95,4 @@ A universal domain payload was rejected because the domains do not share one hon
 
 This decision complements ADR-0002, ADR-0004, ADR-0006, and ADR-0007: Rust continues to own business behavior, User Settings, Installed YAML Data policy, and Crash Log Scan Run Display Content. It changes how those contracts are proved across bindings; it does not move their ownership or reopen their seams.
 
-The executable schemas, CI topology, phased migration, and deletion gates are specified in the [Executable Cross-Adapter Conformance Specification](../implementation/executable_cross_adapter_conformance.md).
+The executable schemas, CI topology, phased migration, and deletion gates were specified in the Executable Cross-Adapter Conformance Specification. That specification was replaced by [Conformance](../development/conformance.md) when the engine moved to `cargo xtask conformance` (ADR-0010).

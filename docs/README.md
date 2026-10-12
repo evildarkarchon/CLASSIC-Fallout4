@@ -66,14 +66,14 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 ### Repository tooling
 
-The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](adr/)). Repository tooling under `tools/` runs from the tools-only uv project:
+The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](adr/)). Repository tooling is the `cargo xtask` crate (`cargo xtask --help`):
 
 ```powershell
-uv sync --project tools
-uv run --project tools python -m pytest tools/binding_compliance/tests -q
+cargo test -p xtask
+cargo xtask conformance check
 ```
 
-The checks CI runs as direct steps are listed in [Repository gates](development/repository-gates.md).
+The checks CI runs as direct steps are listed in [Repository gates](development/repository-gates.md); the conformance engine is described in [Conformance](development/conformance.md).
 
 ---
 

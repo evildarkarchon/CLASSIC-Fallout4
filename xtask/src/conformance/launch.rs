@@ -324,8 +324,8 @@ fn scan_run_sources(own: &[&str]) -> Vec<String> {
 fn semantic_sources(family: &str) -> Vec<String> {
     let mut sources = strings(&[
         "business-logic/classic-scanlog-core/tests/semantic_conformance.rs",
+        // Includes platform_path_oracle.ps1, the windows-platform-paths oracle.
         "business-logic/classic-scanlog-core/tests/semantic_conformance",
-        "tools/binding_compliance/platform_path_oracle.ps1",
         "business-logic/classic-scanlog-core/Cargo.toml",
         "CLASSIC Data/databases/CLASSIC Main.yaml",
         "foundation/classic-vocabulary/src",
