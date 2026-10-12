@@ -21,6 +21,8 @@ use std::fmt;
 
 pub mod cxx_bridge_gate;
 mod repo;
+mod rust_source;
+pub mod scan_run_contract;
 
 pub use repo::RepoRoot;
 
