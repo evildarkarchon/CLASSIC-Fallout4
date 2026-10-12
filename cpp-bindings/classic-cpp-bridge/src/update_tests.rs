@@ -201,7 +201,6 @@ fn notification_error_dto_preserves_variant_specific_display() {
     assert!(dto.error_message.contains("latest_version"));
 }
 
-
 #[test]
 fn yaml_data_apply_update_short_circuits_when_disabled() {
     let approved = ffi::ApprovedUpdateDto {

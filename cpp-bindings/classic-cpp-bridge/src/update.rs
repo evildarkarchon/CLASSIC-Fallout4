@@ -38,7 +38,6 @@ const TAG_UP_TO_DATE: u32 = 2;
 const TAG_UNKNOWN: u32 = 3;
 const TAG_ERROR: u32 = 4;
 
-
 fn manifest_file_to_dto(f: &YamlManifestFile) -> ffi::YamlUpdateFileDto {
     ffi::YamlUpdateFileDto {
         name: f.name.clone(),
@@ -141,7 +140,6 @@ fn yaml_github_client_error_dto(error: UpdateError) -> ffi::YamlUpdateStatusDto 
     dto.error_message = format!("github client init failed: {error}");
     dto
 }
-
 
 fn yaml_data_check_update(enabled: bool) -> ffi::YamlUpdateStatusDto {
     let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
@@ -315,7 +313,6 @@ fn notification_error_dto(error: &UpdateError) -> ffi::NotificationStatusDto {
     }
 }
 
-
 fn check_app_notification(
     owner: &str,
     repo: &str,
@@ -326,7 +323,6 @@ fn check_app_notification(
         Err(err) => notification_error_dto(&err),
     }
 }
-
 
 fn yaml_data_rollback_update() -> ffi::YamlRollbackReportDto {
     let mut dto = ffi::YamlRollbackReportDto {
@@ -410,7 +406,6 @@ mod ffi {
         failed: Vec<YamlUpdateFileOutcomeDto>,
         error_message: String,
     }
-
 
     /// Aggregate result of first-party [`yaml_data_rollback_update`].
     struct YamlRollbackReportDto {

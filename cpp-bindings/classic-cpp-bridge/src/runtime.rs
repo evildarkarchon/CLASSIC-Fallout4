@@ -17,7 +17,6 @@ fn shutdown_runtime() {
     // This function exists for API symmetry so C++ can express intent.
 }
 
-
 #[cxx::bridge(namespace = "classic::runtime")]
 mod ffi {
     extern "Rust" {

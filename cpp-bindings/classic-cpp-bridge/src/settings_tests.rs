@@ -396,7 +396,6 @@ fn test_invalid_yaml_parse() {
     assert!(result.is_err());
 }
 
-
 #[test]
 fn test_user_settings_update_preferences_bridge_is_fail_closed_with_diagnostics() {
     let root = tempfile::tempdir().unwrap();
@@ -426,7 +425,8 @@ fn test_user_settings_frontend_state_bridge_maps_canonical_fixture() {
     let root = tempfile::tempdir().expect("create temporary CLASSIC root");
     install_user_settings_fixture(root.path(), "gui_geometry.yaml");
 
-    let frontend = user_settings_open_gui_settings(&root.path().display().to_string()).frontend_state;
+    let frontend =
+        user_settings_open_gui_settings(&root.path().display().to_string()).frontend_state;
 
     assert!(frontend.auto_switch_after_scan);
     assert_eq!(frontend.auto_switch_after_scan_origin, "document");
@@ -481,7 +481,8 @@ fn test_user_settings_frontend_state_bridge_preserves_invalid_fixture_fallbacks(
     let root = tempfile::tempdir().expect("create temporary CLASSIC root");
     install_user_settings_fixture(root.path(), "invalid_known_values.yaml");
 
-    let frontend = user_settings_open_gui_settings(&root.path().display().to_string()).frontend_state;
+    let frontend =
+        user_settings_open_gui_settings(&root.path().display().to_string()).frontend_state;
     let main = frontend
         .window_geometry
         .iter()
@@ -971,7 +972,9 @@ fn test_user_settings_window_geometry_update_rejects_unknown_tab_token() {
     let content = "schema_version: \"1.0\"\nCLASSIC_Settings: {}\n";
     std::fs::write(&settings_path, content).unwrap();
     let root_string = root.path().display().to_string();
-    let revision = user_settings_open_gui_settings(&root_string).frontend_state.revision;
+    let revision = user_settings_open_gui_settings(&root_string)
+        .frontend_state
+        .revision;
     let mut update = empty_user_settings_update();
     update.window_geometry_updates = vec![ffi::UserSettingsWindowGeometryUpdateDto {
         tab: "settings_dialog".to_string(),
