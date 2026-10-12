@@ -16,6 +16,7 @@ from conformance.packs import (
     load_and_validate_pack,
     materialize_run_plan,
 )
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
 from receipt_test_support import copy_participant_catalog
 
@@ -109,7 +110,12 @@ def test_vocabulary_receipts_reject_changed_wording_missing_cases_and_new_operat
         )
     pack = load_and_validate_pack(tmp_path, pack_path)
     policy = FAMILY_COVERAGE_POLICIES[family]
-    for participant in ("cxx",):
+    # config-vocabulary is Rust-only since the #308 bridge trim; Rust receives
+    # every pack, so it carries the receipt checks wherever CXX is not enrolled.
+    participants = (
+        ("cxx",) if family in load_participants(ROOT).family_ids else ("rust",)
+    )
+    for participant in participants:
         run = materialize_run_plan(
             pack,
             participant_id=participant,

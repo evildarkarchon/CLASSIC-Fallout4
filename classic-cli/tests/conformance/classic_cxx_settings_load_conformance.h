@@ -28,8 +28,6 @@ json settings_load_error(const std::string& message, const fs::path& root, const
 /// Retains counters and bounded storage without platform-specific capacity.
 json settings_load_statistics() {
     const auto stats = classic::settings::settings_cache_stats();
-    const auto alias = classic::config::settings_cache_stats();
-    if (stats.hits != alias.hits || stats.misses != alias.misses || stats.size != classic::config::settings_cache_size()) throw RunnerError("settings cache aliases disagree");
     return json{{"hits", stats.hits}, {"misses", stats.misses}, {"hitRateZero", stats.hit_rate == 0.0}, {"size", stats.size}, {"bounded", stats.capacity > 0}};
 }
 
@@ -114,14 +112,12 @@ json execute_settings_load_scenario(const json& plan, const json& scenario) {
         if (!output) throw RunnerError("cannot materialize settings input");
     }
     classic::settings::settings_reset_cache_stats();
-    classic::config::reset_settings_cache_stats();
     auto yaml_cache = classic::settings::yaml_ops_new();
     classic::settings::yaml_ops_clear_cache(*yaml_cache);
     if (classic::settings::yaml_ops_cache_size(*yaml_cache) != 0) throw RunnerError("YAML cache clear failed");
     json observed = json::object();
     for (const std::string operation : {"sync", "async", "batchSync", "batchAsync"}) {
         classic::settings::settings_clear_cache();
-        classic::config::settings_cache_clear();
         const bool batch = operation.starts_with("batch");
         const auto relatives = batch ? fixture.at("request").at("batch").get<std::vector<std::string>>() : std::vector<std::string>{fixture.at("request").at("single").get<std::string>()};
         std::vector<std::string> paths;
@@ -151,9 +147,6 @@ json execute_settings_load_scenario(const json& plan, const json& scenario) {
         classic::settings::settings_reset_cache_stats();
         const json cache_state{{"keys", normalized_keys}, {"size", size}, {"stats", stats}, {"invalidated", invalidated}, {"invalidatedAgain", invalidated_again}, {"afterInvalidate", after_invalidate}, {"resetStats", settings_load_statistics()}};
         // Refill entries so clear is checked independently of invalidation.
-        for (std::size_t index = 0; index < keys.size(); ++index) if (cached[index].get<bool>()) classic::settings::settings_load_sync(keys[index], paths[index]);
-        classic::config::settings_cache_clear();
-        for (const auto& key : keys) if (classic::settings::settings_is_cached(key)) throw RunnerError("config cache clear alias retained an entry");
         for (std::size_t index = 0; index < keys.size(); ++index) if (cached[index].get<bool>()) classic::settings::settings_load_sync(keys[index], paths[index]);
         classic::settings::settings_clear_cache();
         for (const auto& key : keys) after_clear.push_back(classic::settings::settings_is_cached(key));

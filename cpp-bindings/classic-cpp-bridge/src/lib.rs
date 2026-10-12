@@ -25,7 +25,7 @@
 //! - [`runtime`] - Tokio runtime management
 //! - [`registry`] - Global key-value store
 //! - [`settings`] - YAML operations, settings cache, and validators
-//! - [`config`] - YamlDataCore configuration loading
+//! - [`config`] - Installation Root discovery and Game Local YAML path persistence
 //!
 //! ## Scanning (Wave 2)
 //! - [`scanner`] - Crash log analysis (primary feature)
@@ -33,7 +33,7 @@
 //!
 //! ## File I/O (Wave 3)
 //! - [`files`] - File operations, backups, log collection
-//! - [`scangame`] - Game file scanning
+//! - [`scangame`] - Game Setup Intake
 //!
 //! ## Game Support (Wave 4)
 //! - [`game`] - Versions, XSE, paths

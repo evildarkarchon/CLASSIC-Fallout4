@@ -148,7 +148,7 @@ These are the first adopters whose Display Labels cross a binding seam. All thre
 
 | Surface | Projection |
 | --- | --- |
-| CXX | `installed_yaml_data_provenance_label`, `installed_yaml_data_diagnostic_kind_label`, `local_ignore_yaml_data_state_label` — take the frozen FFI mirror enum, return `String` |
+| CXX | none since the consumer-driven bridge trim (#308), which removed these resolvers because no frontend called them; the scan-run mirrors (`classic::scanner::scan_run_*_label`) render the same prose for the values a run result carries |
 | Node | the same three names in camelCase, taking the `string_enum` value |
 | Python | the same three names, taking the published snake_case token and raising `ValueError` for anything else |
 
@@ -1115,18 +1115,8 @@ Field naming note: `source_path` rather than `source` is deliberate;
 `thiserror` reserves the `source` field name for the error-chain link and
 would demand `StdError` on the field type.
 
-Binding surfaces (see [`error-contract.md`](error-contract.md) for shape
-rationale):
-
-- C++ CXX bridge exposes `classic::config::load_main_yaml_version(bundled_yaml_dir: &str)`
-  returning `MainYamlVersionDto { version, error_kind, error_message }`.
-  Empty-string sentinels on success; `error_kind` is one of `"load"`,
-  `"version_key_missing"`, `"version_empty"`, `"version_not_string"`, or
-  `"unknown"` (reserved for future non-exhaustive variants).
-- Python binding exposes `load_main_yaml_version(bundled_yaml_dir=None)`
-  and the typed exception hierarchy rooted at
-  `ClassicMainYamlVersionError`, with one subclass per core variant
-  (`ClassicMainYamlVersionLoadError`,
-  `ClassicMainYamlVersionKeyMissingError`,
-  `ClassicMainYamlVersionEmptyError`,
-  `ClassicMainYamlVersionNotStringError`).
+Binding surfaces: none. The CXX entry point (`classic::config::load_main_yaml_version`
+and its `MainYamlVersionDto`) was removed in the consumer-driven bridge trim
+(#308) because no frontend called it; the GUI and CLI bake their version at
+configure time instead (see `classic-gui/src/main.cpp`). Rust callers receive
+the typed `MainYamlVersionError` directly.
