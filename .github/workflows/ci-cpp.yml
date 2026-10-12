@@ -42,6 +42,26 @@ jobs:
           retention-days: 7
           overwrite: true
 
+  # Consumer-driven bridge rule (docs/api/cxx-bridge-policy.md): every CXX
+  # export needs a classic-cli/src or classic-gui/src production caller. The
+  # gate is source-only, so it needs no `needs:` and runs alongside the CLI and
+  # GUI jobs; the build wrappers deliberately do not call it.
+  cxx-bridge-gate:
+    name: CXX Bridge Gate
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build xtask
+        run: cargo build -p xtask --locked
+
+      - name: Check for orphan CXX bridge exports
+        run: cargo xtask cxx-bridge-gate
+
   cli-tests:
     name: CLI Tests (${{ matrix.compiler }})
     needs: [corrosion-source]

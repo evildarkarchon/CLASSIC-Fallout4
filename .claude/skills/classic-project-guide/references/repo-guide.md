@@ -8,7 +8,7 @@ This file supplements `AGENTS.md`. Keep always-on architecture rules there; keep
 | --- | --- | --- |
 | Rust-only crates | `cargo fmt`, `cargo clippy`, focused `cargo test` | Affected `docs/api/` pages for public contracts |
 | `classic-cli/` or `classic-gui/` | PowerShell wrappers in `Native C++ Wrappers` | Packaging/install output only when requested; CLI integration fixtures may require submodules |
-| `cpp-bindings/classic-cpp-bridge/` or Rust APIs exposed through C++ | `cargo xtask cxx-bridge-gate`, then CLI/GUI wrapper tests for changed consumers | `docs/api/binding-parity-policy.md`; `tests/conformance/participants.json` when the change alters which conformance families CXX runs |
+| `cpp-bindings/classic-cpp-bridge/` or Rust APIs exposed through C++ | `cargo xtask cxx-bridge-gate`, then CLI/GUI wrapper tests for changed consumers | `docs/api/cxx-bridge-policy.md`; `tests/conformance/participants.json` when the change alters which conformance families CXX runs |
 | `CLASSIC Data/databases/` or schema-version behavior | `classic-config-core` schema-version test and YAML publish validator | `docs/api/yaml-update-delivery.md` for loader, manifest, or delivery contract changes |
 | `CLASSIC Data/app-notification.yaml` or notification publish tooling | Notification source validator, dry-run harness, publish-tool tests | `docs/api/app-update-notification-delivery.md` and affected update/path/error API docs |
 | Linux or cloud validation | Rust-only subsets and source-only gates first | Note any skipped Windows/MSVC-native checks explicitly |
@@ -107,7 +107,7 @@ Use this when bridge source, `cpp-bindings/classic-cpp-bridge/build.rs`, or a Ru
 cargo xtask cxx-bridge-gate
 ```
 
-The gate fails on any bridge export that no `classic-cli/src` or `classic-gui/src` production code calls; there is no baseline to refresh. It is source-only. Until T2 trims the bridge it still reports the known pre-trim orphans, and T2 wires it into CI. For changed consumers, add the relevant CLI or GUI wrapper test command from `Native C++ Wrappers`.
+The gate fails on any bridge export that no `classic-cli/src` or `classic-gui/src` production code calls; there is no baseline to refresh. It is source-only and runs in CI as the blocking `cxx-bridge-gate` job in `ci-cpp.yml`. Add an export in the same change as its first production call site and remove it with its last (`docs/api/cxx-bridge-policy.md`). For changed consumers, add the relevant CLI or GUI wrapper test command from `Native C++ Wrappers`.
 
 ## Data Publish Workflows
 
@@ -145,7 +145,7 @@ Primary workflows:
 | Workflow | Purpose |
 | --- | --- |
 | `ci-binding-compliance.yml` | Blocking umbrella: same-revision reusable `rust` and `native` participant workflows, then the conformance-only full receipt verdict |
-| `ci-cpp.yml` | CXX parity plus CLI and GUI build/test pipeline |
+| `ci-cpp.yml` | CXX bridge gate (orphan exports) plus CLI and GUI build/test pipeline |
 | `ci-rust.yml` | Rust format, lint (plus the interim User Settings ownership and workflow-policy gates), build, and test pipeline |
 | `benchmarks.yml` | Benchmark and performance pipeline |
 | `publish-yaml-data.yml` | Maintainer YAML-data release workflow for `yaml-data-v*` tags |

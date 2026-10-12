@@ -121,7 +121,7 @@ See: [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoi
 
 ## Gate Coverage
 
-Gate run instructions, ownership, and the step-by-step workflow for adding a new public Rust API to the bridge are documented in [`binding-parity-policy.md`](binding-parity-policy.md).
+The consumer-driven bridge rule, the orphan-export gate (`cargo xtask cxx-bridge-gate`), and the steps for adding or removing a bridge export are documented in [`cxx-bridge-policy.md`](cxx-bridge-policy.md).
 
 Need an old-to-new path translation first? Use the shared [`workspace migration matrix`](../workspace-migration-matrix.md).
 

@@ -165,21 +165,21 @@ def test_applicability_rejects_dangling_or_duplicate_exception_scopes(
         capability_id="example.read",
         participant_id="cxx",
         rationale="The public capability is intentionally absent.",
-        policy_page="docs/api/binding-parity-policy.md",
+        policy_page="docs/api/cxx-bridge-policy.md",
     )
     duplicate_scope = PolicyException(
         id="same-scope-second-id",
         capability_id="example.read",
         participant_id="cxx",
         rationale="A duplicate review must not create ambiguous ownership.",
-        policy_page="docs/api/binding-parity-policy.md",
+        policy_page="docs/api/cxx-bridge-policy.md",
     )
     dangling = PolicyException(
         id="dangling-capability",
         capability_id="example.missing",
         participant_id="cxx",
         rationale="This capability does not exist.",
-        policy_page="docs/api/binding-parity-policy.md",
+        policy_page="docs/api/cxx-bridge-policy.md",
     )
     catalog = _catalog(tmp_path, [])
 

@@ -37,8 +37,8 @@ For old-to-new path and command translations, see `docs/workspace-migration-matr
 
 1. Prioritize active work in `classic-cli/`, `classic-gui/`, `foundation/`, `business-logic/`, `cpp-bindings/`, and `ui-applications/`.
 2. Keep all business logic in Rust. Put shared behavior, state transitions, data mutation, persistence rules, and validation in Rust core crates unless the task is explicitly interface-only.
-3. Keep non-interface layers thin. C++, Python, Node, and other binding/UI surfaces should act as wrappers over Rust APIs rather than reimplementing logic, unless the performance cost of FFI bridging is demonstrated to be too high for that specific path.
-4. Treat Rust core code and all supported bindings as one change surface. Update the applicable C++ bindings together with core behavior or API changes, and update the core contract when a binding change requires it. Core/binding parity is a top priority and is required even when no current consumer uses the affected capability yet.
+3. Keep non-interface layers thin. The CXX bridge and the C++ CLI/GUI wrap Rust APIs rather than reimplementing logic, unless FFI cost is demonstrated to be too high for that specific path.
+4. The CXX bridge is consumer-driven: it exposes exactly what `classic-cli` and `classic-gui` production code calls. Add an export in the same change as its first production call site; remove it in the same change as its last. A core change updates the bridge only where a frontend consumes the affected capability. Business logic never moves into the bridge to compensate.
 5. Maintain a single shared Tokio runtime from Rust core runtime facilities; do not introduce independent runtimes.
 6. Keep docs synchronized with architecture or workflow changes, especially `README.md` and this file.
 7. Never write to `NUL` or `nul` as if it were a file path on Windows.
