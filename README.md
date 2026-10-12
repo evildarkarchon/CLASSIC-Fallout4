@@ -160,11 +160,13 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 # From repo root
 cargo xtask user-settings-ownership
 cargo xtask conformance check
-# With the tools-only environment (uv sync --project tools)
-uv run --project tools python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded
+# Run one conformance participant, then judge the artifacts
+# (the verdict passes only once every required participant has run)
+cargo xtask conformance run --participant rust
+cargo xtask conformance verdict --receipts target/conformance
 ```
 
-See [Repository gates](docs/development/repository-gates.md) for where each command runs in CI.
+See [Repository gates](docs/development/repository-gates.md) for where each command runs in CI, and [Conformance](docs/development/conformance.md) for the conformance protocol.
 
 Need the full old-to-new mapping? Start with the [Workspace Migration Matrix](docs/workspace-migration-matrix.md).
 

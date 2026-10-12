@@ -33,19 +33,15 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           pattern: '*conformance*'
-          path: tools/binding_compliance/artifacts/downloaded
+          path: ${{ runner.temp }}/conformance
           merge-multiple: false
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Install conformance YAML parser
-        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
-
-      # Prepare the receipt parser before this guard can fail: the full report
-      # still runs after participant failures via !cancelled().
+      # Exactly the two reusable participant workflows (rust, native) must have
+      # succeeded. The verdict below still runs after a failure, via
+      # !cancelled(), so its report names every incomplete family.
       - name: Require every retained participant job to pass
         if: ${{ !cancelled() }}
         env:
@@ -56,18 +52,19 @@ jobs:
             throw 'Every retained participant workflow must pass before repository conformance can pass.'
           }
 
-      # Immutable conformance plans and receipts are authenticated against
-      # this checkout; the verdict is conformance-only since Retire (#304).
-      - name: Run full binding compliance
+      # Every downloaded run plan is authenticated against this checkout, and
+      # every pack's family must pass on every required (participant,
+      # execution instance).
+      - name: Run full repository conformance verdict
         if: ${{ !cancelled() }}
-        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --output-dir tools/binding_compliance/artifacts/full
+        run: cargo xtask conformance verdict --receipts ${{ runner.temp }}/conformance --output ${{ runner.temp }}/conformance-verdict/verdict.json
 
-      - name: Upload full binding compliance diagnostics
+      - name: Upload full repository conformance verdict
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: full-binding-compliance-report
-          path: tools/binding_compliance/artifacts/full/
+          name: full-repository-verdict
+          path: ${{ runner.temp }}/conformance-verdict/
           if-no-files-found: warn
           retention-days: 7
           overwrite: true

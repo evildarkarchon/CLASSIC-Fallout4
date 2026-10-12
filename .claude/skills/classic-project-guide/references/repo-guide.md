@@ -9,7 +9,7 @@ This file supplements `AGENTS.md`. Keep always-on architecture rules there; keep
 | Rust-only crates | `cargo fmt`, `cargo clippy`, focused `cargo test` | Affected `docs/api/` pages for public contracts |
 | `classic-cli/` or `classic-gui/` | PowerShell wrappers in `Native C++ Wrappers` | Packaging/install output only when requested; CLI integration fixtures may require submodules |
 | `cpp-bindings/classic-cpp-bridge/` or Rust APIs exposed through C++ | `cargo xtask cxx-bridge-gate`, then CLI/GUI wrapper tests for changed consumers | `docs/api/cxx-bridge-policy.md`; `tests/conformance/participants.json` when the change alters which conformance families CXX runs |
-| `tests/conformance/` packs or catalogs, or CI conformance steps | `cargo xtask conformance check` | `docs/development/repository-gates.md` |
+| `tests/conformance/` packs or catalogs, or CI conformance steps | `cargo xtask conformance check`, then `cargo xtask conformance run` for the affected participants | `docs/development/conformance.md`, `docs/development/repository-gates.md` |
 | `CLASSIC Data/databases/` or schema-version behavior | `classic-config-core` schema-version test and YAML publish validator | `docs/api/yaml-update-delivery.md` for loader, manifest, or delivery contract changes |
 | `CLASSIC Data/app-notification.yaml` or notification publish tooling | Notification source validator, dry-run harness, publish-tool tests | `docs/api/app-update-notification-delivery.md` and affected update/path/error API docs |
 | Linux or cloud validation | Rust-only subsets and source-only gates first | Note any skipped Windows/MSVC-native checks explicitly |
@@ -23,6 +23,7 @@ The two wrappers do **not** take the same parameters. Check this table before co
 | Parameter | `build_cli.ps1` | `build_gui.ps1` |
 | --- | --- | --- |
 | `-Clean`, `-Test`, `-Debug`, `-Install`, `-Package`, `-Compiler` | yes | yes |
+| `-TestOnly` | yes | yes |
 | `-CTestName`, `-CTestArgs` | yes | yes |
 | `-IntegrationTestName` | yes | **no** |
 | `-Preset`, `-TestTimeoutSec` | **no** | yes |
@@ -43,6 +44,10 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "T
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 
+# Reuse a completed build in the same checkout for a separate CI receipt test.
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -TestOnly -CTestName classic-cxx-conformance
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -TestOnly -CTestName classic-gui-consumer-conformance
+
 # Clean rebuild, install, or package
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Clean
@@ -51,6 +56,12 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Install
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Package
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Package
 ```
+
+`-TestOnly` verifies the completed build marker's compiler, preset, and Git
+revision before running the wrapper's selected tests; it skips configure/build.
+Run a normal build/test through the matching wrapper first. Native CI fetches
+the pinned Corrosion source once for its compiler jobs and reuses that source
+for their initial CMake configure; ordinary local builds retain FetchContent.
 
 CLI integration scenarios use the crash-log fixture corpus under `sample_logs/FO4`; initialize it with `git submodule update --init --recursive` when that directory is missing.
 
@@ -67,39 +78,35 @@ cargo build --workspace
 cargo build --workspace --release
 ```
 
-Repository tooling under `tools/` (the conformance engine, the interim repository gates, and the tool test suites) runs from the tools-only uv project at `tools/pyproject.toml`, which holds only `ruamel.yaml` and `pytest`:
+Repository tooling is the `cargo xtask` crate (`cargo xtask --help`); its tests run with `cargo test -p xtask`.
 
-```powershell
-uv sync --project tools
-uv run --project tools python -m pytest tools/<suite>/tests -q
-```
+## Conformance And Bridge Workflows
 
-Run each tool suite in its own pytest process: several suites put their own directory on `sys.path` and reuse module basenames, so one `pytest tools` process cannot collect them together.
-
-## Binding Parity Workflows
-
-The repository conformance verdict is `tools/binding_compliance/check_compliance.py`,
-which keeps only the receipt-backed `conformance` profile and the conformance-only
-`full` profile. Run applicable scenario launchers against built participants, and
-aggregate a directory containing every family and execution instance only when
-requesting repository-wide proof:
+The conformance engine is `cargo xtask conformance` (`docs/development/conformance.md`).
+`run` executes every family that requires one participant and writes each
+family's plan, receipt, attempt and report under `--artifact-root` (default
+`target/conformance`); `verdict` certifies the repository only over a directory
+holding every required participant and execution instance:
 
 ```powershell
 cargo xtask conformance check
-python tools/binding_compliance/run_semantic_conformance.py --family <family> --participant rust
-pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family <family> -Compiler msvc
-pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family <family> -Compiler clang-cl
-python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory <receipt-directory>
+cargo xtask conformance run --participant rust [--family <family>]
+cargo xtask conformance run --participant tui
+# cxx, cli and gui reuse a completed wrapper build of the same commit (-Test -TestOnly)
+cargo xtask conformance run --participant cxx --compiler msvc
+cargo xtask conformance run --participant cli --compiler clang-cl
+cargo xtask conformance run --participant gui --compiler msvc [--preset <preset>]
+cargo xtask conformance verdict --receipts target/conformance --output target/conformance-verdict.json
 ```
 
-Use the dedicated Scan Run, User Settings, and consumer launchers under
-`tools/binding_compliance/` for those packs. Missing or stale receipts fail the
-full profile; individual family jobs cannot certify the repository. Preserve
-sibling immutable plans when moving receipt artifacts. The checks CI runs as
-direct steps are listed in `docs/development/repository-gates.md`, which also
-describes `tests/conformance/participants.json`, the central declaration of which
-families CXX runs. The command below is a focused source diagnostic; it does not
-grant runtime proof.
+Use a fresh `--artifact-root` per run of an execution instance: two runs of one
+instance under one directory are duplicate evidence to the verdict. Missing or
+stale receipts fail the verdict; one participant's run cannot certify the
+repository. `tests/conformance/participants.json` declares which families CXX
+runs, and `tests/conformance/consumer-obligations.json` registers the CLI, GUI
+and TUI consumers. The checks CI runs as direct steps are listed in
+`docs/development/repository-gates.md`. The command below is a focused source
+diagnostic; it does not grant runtime proof.
 
 ### CXX
 
@@ -145,9 +152,9 @@ Primary workflows:
 
 | Workflow | Purpose |
 | --- | --- |
-| `ci-binding-compliance.yml` | Blocking umbrella: same-revision reusable `rust` and `native` participant workflows, then the conformance-only full receipt verdict |
-| `ci-cpp.yml` | CXX bridge gate (orphan exports) plus CLI and GUI build/test pipeline |
-| `ci-rust.yml` | Rust format, lint (plus the `cargo xtask user-settings-ownership` gate and the `cargo xtask conformance check` gate), build, and test pipeline |
+| `ci-binding-compliance.yml` | Blocking umbrella: same-revision reusable `rust` and `native` participant workflows, then `cargo xtask conformance verdict` over every uploaded conformance artifact |
+| `ci-cpp.yml` | CXX bridge gate (orphan exports) plus CLI and GUI build/test pipeline, with the `cxx`, `cli` and `gui` conformance runs on both compilers |
+| `ci-rust.yml` | Rust format, lint (plus the `cargo xtask user-settings-ownership` gate and the `cargo xtask conformance check` gate), build, and test pipeline, with the `rust` and `tui` conformance runs |
 | `benchmarks.yml` | Benchmark and performance pipeline |
 | `publish-yaml-data.yml` | Maintainer YAML-data release workflow for `yaml-data-v*` tags |
 | `publish-app-notification.yml` | Maintainer app-update notification workflow for `app-notification-v*` tags |

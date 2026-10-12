@@ -1,6 +1,6 @@
-//! The CI workflow policy: every required conformance execution is a
-//! blocking, same-revision CI step, and the repository verdict sees all of
-//! them.
+//! The CI workflow policy: every required conformance execution and every
+//! surviving gate is a blocking, same-revision CI step, and the repository
+//! verdict sees all of them.
 //!
 //! The workflows are parsed with `yaml-rust2` and walked structurally
 //! (`jobs → steps`); no regular expression runs over the raw text. Line
@@ -9,31 +9,31 @@
 //!
 //! What it enforces:
 //!
-//! - **Denominator.** For every required (family, participant, instance), the
-//!   participant's job runs the family's launcher step, then uploads its
-//!   diagnostics artifact. The step markers follow from the family and
-//!   participant, so a newly applicable execution automatically needs a CI
-//!   step. CXX, CLI and GUI run on the `compiler: [msvc, clang-cl]` matrix,
-//!   which must cover exactly the two required instances.
-//! - **Participant jobs.** `windows-latest`; `if: ${{ !cancelled() }}`
-//!   exactly when the job has `needs`; no `continue-on-error`; the reserved
-//!   `timeout-minutes` (`cli-tests` 360, `gui-tests` 180); exactly one
-//!   default `actions/checkout@v6` with no `ref`, `path` or `repository`; and
-//!   for matrix jobs `fail-fast: false` with no `exclude`.
-//! - **Steps.** The legacy build/test step runs before the launcher, which
-//!   runs before the upload. Launchers are blocking, use exactly
-//!   `if: ${{ !cancelled() }}` and never claim `--profile full`. Uploads use
-//!   exactly `if: always()` and `actions/upload-artifact@v6`; CXX uploads keep
-//!   `**/run_plan.json`. GUI build and launcher steps use `-Preset
-//!   ci-system-qt`.
+//! - **Pinned jobs** ([`JOBS`]): every job that hosts a gate or a
+//!   conformance step keeps its runner, its exact `timeout-minutes` and
+//!   `needs`, `if: ${{ !cancelled() }}` exactly when it has `needs` (no
+//!   condition otherwise), no `continue-on-error`, exactly one default
+//!   `actions/checkout@v6` (no `ref`, `path` or `repository`), and for the
+//!   native jobs the `compiler: [msvc, clang-cl]` matrix with
+//!   `fail-fast: false` and no `exclude`/`include`.
+//! - **Pinned steps**: each gate step appears exactly once, by name, with
+//!   its exact `run` (or `uses`), `if`, `with`, `env` and step timeout and no
+//!   other key (so no `continue-on-error`), in the pinned order. That covers
+//!   `cxx-bridge-gate`, `xtask-linux`, clippy, the cargo-test steps,
+//!   `user-settings-ownership`, `scan-run-contract`, `conformance check`,
+//!   the native build-and-test steps, every `conformance run` and its upload,
+//!   and the `full` job's download, participant guard, verdict and upload.
+//! - **Denominator.** Every (participant, execution instance) the packs and
+//!   catalogs require has its `conformance run` step, and every run step
+//!   runs a participant something requires. One run covers every family of
+//!   its participant, so a new family needs no new step; a new participant
+//!   does. CXX, CLI and GUI run on the two-compiler matrix, so they must be
+//!   required on exactly both instances.
 //! - **Full aggregation** (`ci-binding-compliance.yml`): same-revision
-//!   reusable `rust`/`native` jobs, `full` with `needs: [rust, native]`, the
-//!   unmerged current-run artifact download, the upstream-result guard and the
-//!   exact `--profile full` command.
+//!   reusable `rust`/`native` jobs that cannot be skipped, and callees that
+//!   declare `workflow_call`.
 //! - **Corrosion:** one pinned, archived Corrosion source per run, verified
 //!   before each native build.
-//! - **Crash Log Scan Run contract** preflight in ci-rust `test`: blocking,
-//!   `if: ${{ !cancelled() }}`, before the Rust receipt run.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::io::ErrorKind;
@@ -44,7 +44,7 @@ use yaml_rust2::scanner::Marker;
 use yaml_rust2::{Yaml, YamlLoader};
 
 use super::ExecutionKey;
-use super::applicability::{CONSUMER_OBLIGATIONS, PARTICIPANTS};
+use super::applicability::CONSUMER_OBLIGATIONS;
 use crate::{Finding, RepoRoot};
 
 const RULE: &str = "workflow-policy";
@@ -53,24 +53,368 @@ const CI_RUST: &str = ".github/workflows/ci-rust.yml";
 const CI_CPP: &str = ".github/workflows/ci-cpp.yml";
 const CI_FULL: &str = ".github/workflows/ci-binding-compliance.yml";
 
-/// The only accepted condition on launchers and jobs with `needs`.
+/// The only accepted condition on conformance runs and on jobs with `needs`.
 const NOT_CANCELLED: &str = "${{ !cancelled() }}";
 /// The only accepted condition on diagnostics uploads.
 const ALWAYS: &str = "always()";
 /// The compiler matrix of every native participant job.
 const COMPILERS: [&str; 2] = ["msvc", "clang-cl"];
-
-/// The Crash Log Scan Run contract preflight step's exact command.
-const SCAN_RUN_CONTRACT: &str = "cargo xtask scan-run-contract";
-/// The Rust receipt run the preflight must precede.
-const RUST_SCAN_RUN_LAUNCHER: &str = "run_scan_run_conformance.py --participant rust";
-
-/// The `full` job's exact verdict command.
-const FULL_COMMAND: &str = "python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --output-dir tools/binding_compliance/artifacts/full";
+/// The execution instances that matrix runs.
+const MATRIX_INSTANCES: [&str; 2] = ["windows-clang-cl", "windows-msvc"];
 
 /// The pinned Corrosion revision and its per-run artifact.
 const CORROSION_REVISION: &str = "1499b14e4906a2890f5cee1547c8848db261753d";
 const CORROSION_ARTIFACT: &str = "corrosion-source-v0.6.1";
+
+/// What a pinned step executes.
+#[derive(Debug, Clone, Copy)]
+enum Action {
+    /// A shell command, compared exactly (trailing whitespace ignored).
+    Run(&'static str),
+    /// An action reference, compared exactly.
+    Uses(&'static str),
+}
+
+/// One pinned step, matched by its `name`.
+#[derive(Debug)]
+struct StepPin {
+    name: &'static str,
+    action: Action,
+    /// The exact `if`, or `None` for a step that must have no condition.
+    condition: Option<&'static str>,
+    /// The exact `with` mapping (empty: no `with`).
+    with: &'static [(&'static str, &'static str)],
+    /// The exact `env` mapping (empty: no `env`).
+    env: &'static [(&'static str, &'static str)],
+    /// The exact step `timeout-minutes`, if any.
+    timeout: Option<i64>,
+}
+
+impl StepPin {
+    /// A step running `command` with no condition.
+    const fn run(name: &'static str, command: &'static str) -> Self {
+        Self {
+            name,
+            action: Action::Run(command),
+            condition: None,
+            with: &[],
+            env: &[],
+            timeout: None,
+        }
+    }
+
+    /// A step running `command` even after earlier failures (unless the
+    /// workflow was cancelled).
+    const fn run_unless_cancelled(name: &'static str, command: &'static str) -> Self {
+        Self {
+            condition: Some(NOT_CANCELLED),
+            ..Self::run(name, command)
+        }
+    }
+
+    /// An action step with no condition and no inputs yet.
+    const fn uses(name: &'static str, action: &'static str) -> Self {
+        Self {
+            name,
+            action: Action::Uses(action),
+            condition: None,
+            with: &[],
+            env: &[],
+            timeout: None,
+        }
+    }
+
+    /// A diagnostics upload, which runs even on failure; its inputs are
+    /// filled in by the caller (see [`upload!`]).
+    const fn upload(name: &'static str) -> Self {
+        Self {
+            condition: Some(ALWAYS),
+            ..Self::uses(name, "actions/upload-artifact@v6")
+        }
+    }
+}
+
+/// Builds an upload [`StepPin`] of `path` as artifact `artifact`. A missing
+/// directory only warns: a run that wrote nothing is reported by the verdict
+/// as a missing execution instead.
+macro_rules! upload {
+    ($name:expr, $artifact:expr, $path:expr) => {
+        StepPin {
+            with: &[
+                ("name", $artifact),
+                ("path", $path),
+                ("if-no-files-found", "warn"),
+                ("retention-days", "7"),
+            ],
+            ..StepPin::upload($name)
+        }
+    };
+}
+
+/// One pinned job and its pinned steps, in their required order.
+#[derive(Debug)]
+struct JobPin {
+    workflow: &'static str,
+    job: &'static str,
+    runs_on: &'static str,
+    timeout: i64,
+    /// The exact `needs` (empty: none).
+    needs: &'static [&'static str],
+    /// Whether the job runs on the two-compiler matrix.
+    matrix: bool,
+    steps: &'static [StepPin],
+}
+
+/// Every pinned job. Changing a pinned value is a deliberate edit here, in
+/// the same change as the workflow.
+const JOBS: &[JobPin] = &[
+    JobPin {
+        workflow: CI_RUST,
+        job: "lint",
+        runs_on: "windows-latest",
+        timeout: 60,
+        needs: &[],
+        matrix: false,
+        steps: &[
+            StepPin::run(
+                "Check User Settings exclusive ownership",
+                "cargo xtask user-settings-ownership",
+            ),
+            StepPin::run(
+                "Check conformance packs, catalogs and workflow policy",
+                "cargo xtask conformance check",
+            ),
+            StepPin::run(
+                "Run clippy",
+                "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+            ),
+        ],
+    },
+    JobPin {
+        workflow: CI_RUST,
+        job: "test",
+        runs_on: "windows-latest",
+        timeout: 120,
+        needs: &[],
+        matrix: false,
+        steps: &[
+            StepPin::run(
+                "Run phase-1 logging contract tests (Rust)",
+                "cargo test -p classic-message-core -- --nocapture",
+            ),
+            StepPin::run(
+                "Run Rust tests",
+                "cargo test --workspace --release -- --nocapture",
+            ),
+            StepPin::run(
+                "Run Rust tests with all features",
+                "cargo test --workspace --release --all-features -- --nocapture",
+            ),
+            // The variant preflight runs before the Rust receipt run.
+            StepPin::run_unless_cancelled(
+                "Validate Crash Log Scan Run variant coverage",
+                "cargo xtask scan-run-contract",
+            ),
+            StepPin::run_unless_cancelled(
+                "Run Rust conformance",
+                "cargo xtask conformance run --participant rust --artifact-root ${{ runner.temp }}/conformance",
+            ),
+            StepPin::run_unless_cancelled(
+                "Run TUI consumer conformance",
+                "cargo xtask conformance run --participant tui --artifact-root ${{ runner.temp }}/conformance",
+            ),
+            upload!(
+                "Upload Rust conformance artifacts",
+                "rust-conformance",
+                "${{ runner.temp }}/conformance/rust/rust/"
+            ),
+            upload!(
+                "Upload TUI consumer conformance artifacts",
+                "tui-conformance",
+                "${{ runner.temp }}/conformance/tui/tui/"
+            ),
+        ],
+    },
+    JobPin {
+        workflow: CI_RUST,
+        job: "xtask-linux",
+        runs_on: "ubuntu-latest",
+        timeout: 30,
+        needs: &[],
+        matrix: false,
+        steps: &[
+            StepPin::run("Build xtask", "cargo build -p xtask --locked"),
+            StepPin::run(
+                "Validate YAML Data",
+                "cargo xtask yaml-data validate --databases-dir \"CLASSIC Data/databases\" --schema-ranges \"CLASSIC Data/databases/client-schema-ranges.yaml\"",
+            ),
+            StepPin::run(
+                "Validate app-notification source",
+                "cargo xtask app-notification validate --source \"CLASSIC Data/app-notification.yaml\"",
+            ),
+            StepPin::run(
+                "Dry-run app-notification publish",
+                "cargo xtask app-notification dry-run --workflow-tag app-notification-v0.0.0",
+            ),
+        ],
+    },
+    JobPin {
+        workflow: CI_CPP,
+        job: "cxx-bridge-gate",
+        runs_on: "windows-latest",
+        timeout: 20,
+        needs: &[],
+        matrix: false,
+        steps: &[
+            StepPin::run("Build xtask", "cargo build -p xtask --locked"),
+            StepPin::run(
+                "Check for orphan CXX bridge exports",
+                "cargo xtask cxx-bridge-gate",
+            ),
+        ],
+    },
+    JobPin {
+        workflow: CI_CPP,
+        job: "cli-tests",
+        runs_on: "windows-latest",
+        timeout: 360,
+        needs: &["corrosion-source"],
+        matrix: true,
+        steps: &[
+            // The CTest-only conformance runs reuse this build.
+            StepPin {
+                timeout: Some(90),
+                ..StepPin::run(
+                    "Build and test CLI",
+                    "pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler ${{ matrix.compiler }}",
+                )
+            },
+            StepPin::run_unless_cancelled(
+                "Run native CXX conformance",
+                "cargo xtask conformance run --participant cxx --compiler ${{ matrix.compiler }} --artifact-root ${{ runner.temp }}/conformance",
+            ),
+            StepPin::run_unless_cancelled(
+                "Run CLI consumer conformance",
+                "cargo xtask conformance run --participant cli --compiler ${{ matrix.compiler }} --artifact-root ${{ runner.temp }}/conformance",
+            ),
+            upload!(
+                "Upload native CXX conformance artifacts",
+                "cxx-conformance-${{ matrix.compiler }}",
+                "${{ runner.temp }}/conformance/cxx/windows-${{ matrix.compiler }}/"
+            ),
+            upload!(
+                "Upload CLI consumer conformance artifacts",
+                "cli-conformance-${{ matrix.compiler }}",
+                "${{ runner.temp }}/conformance/cli/windows-${{ matrix.compiler }}/"
+            ),
+        ],
+    },
+    JobPin {
+        workflow: CI_CPP,
+        job: "gui-tests",
+        runs_on: "windows-latest",
+        timeout: 180,
+        needs: &["corrosion-source"],
+        matrix: true,
+        steps: &[
+            // The conformance run reuses this build, so both use ci-system-qt.
+            StepPin::run(
+                "Build and test GUI",
+                "pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}",
+            ),
+            StepPin::run_unless_cancelled(
+                "Run GUI consumer conformance",
+                "cargo xtask conformance run --participant gui --compiler ${{ matrix.compiler }} --preset ci-system-qt --artifact-root ${{ runner.temp }}/conformance",
+            ),
+            upload!(
+                "Upload GUI consumer conformance artifacts",
+                "gui-conformance-${{ matrix.compiler }}",
+                "${{ runner.temp }}/conformance/gui/windows-${{ matrix.compiler }}/"
+            ),
+        ],
+    },
+    JobPin {
+        workflow: CI_FULL,
+        job: "full",
+        runs_on: "windows-latest",
+        timeout: 360,
+        needs: &["rust", "native"],
+        matrix: false,
+        steps: &[
+            // Every artifact of this run, unmerged, and no other run's.
+            StepPin {
+                with: &[
+                    ("pattern", "*conformance*"),
+                    ("path", "${{ runner.temp }}/conformance"),
+                    ("merge-multiple", "false"),
+                ],
+                ..StepPin::uses(
+                    "Download current-run conformance artifacts",
+                    "actions/download-artifact@v8",
+                )
+            },
+            // Exactly the two reusable participant workflows, each passed.
+            StepPin {
+                env: &[("PARTICIPANT_RESULTS", "${{ toJSON(needs) }}")],
+                ..StepPin::run_unless_cancelled(
+                    "Require every retained participant job to pass",
+                    "$results = $env:PARTICIPANT_RESULTS | ConvertFrom-Json -AsHashtable\n\
+                     if ($results.Count -ne 2 -or @($results.Values | Where-Object { $_.result -ne 'success' }).Count -ne 0) {\n  \
+                     throw 'Every retained participant workflow must pass before repository conformance can pass.'\n\
+                     }",
+                )
+            },
+            StepPin::run_unless_cancelled(
+                "Run full repository conformance verdict",
+                "cargo xtask conformance verdict --receipts ${{ runner.temp }}/conformance --output ${{ runner.temp }}/conformance-verdict/verdict.json",
+            ),
+            StepPin {
+                with: &[
+                    ("name", "full-repository-verdict"),
+                    ("path", "${{ runner.temp }}/conformance-verdict/"),
+                    ("if-no-files-found", "warn"),
+                    ("retention-days", "7"),
+                    ("overwrite", "true"),
+                ],
+                ..StepPin::upload("Upload full repository conformance verdict")
+            },
+        ],
+    },
+];
+
+/// The `conformance run` step of each participant: (participant, workflow,
+/// job, step name, runs on the compiler matrix).
+const RUN_STEPS: &[(&str, &str, &str, &str, bool)] = &[
+    ("rust", CI_RUST, "test", "Run Rust conformance", false),
+    (
+        "tui",
+        CI_RUST,
+        "test",
+        "Run TUI consumer conformance",
+        false,
+    ),
+    (
+        "cxx",
+        CI_CPP,
+        "cli-tests",
+        "Run native CXX conformance",
+        true,
+    ),
+    (
+        "cli",
+        CI_CPP,
+        "cli-tests",
+        "Run CLI consumer conformance",
+        true,
+    ),
+    (
+        "gui",
+        CI_CPP,
+        "gui-tests",
+        "Run GUI consumer conformance",
+        true,
+    ),
+];
 
 /// Checks the workflows at `root` against the policy for `required`.
 ///
@@ -91,237 +435,104 @@ pub fn check(root: &RepoRoot, required: &BTreeSet<ExecutionKey>) -> Result<Vec<F
             Err(finding) => findings.push(finding),
         }
     }
-    let policies = step_policies(required, &mut findings);
-
-    let mut jobs_checked = BTreeSet::new();
-    for policy in &policies {
-        let Some(workflow) = workflows.get(policy.workflow) else {
+    for pin in JOBS {
+        let Some(workflow) = workflows.get(pin.workflow) else {
             continue;
         };
-        let Some(job) = workflow.job(policy.job, &mut findings) else {
+        let Some(job) = workflow.job(pin.job, &mut findings) else {
             continue;
         };
-        if jobs_checked.insert((policy.workflow, policy.job)) {
-            participant_job(workflow, &job, policy, &mut findings);
-        }
-        policy_steps(workflow, &job, policy, &mut findings);
+        pinned_job(workflow, &job, pin, &mut findings);
+        pinned_steps(workflow, &job, pin, &mut findings);
     }
+    denominator(&workflows, required, &mut findings);
     if let Some(workflow) = workflows.get(CI_FULL) {
         full_aggregation(root, workflow, &mut findings)?;
     }
     if let Some(workflow) = workflows.get(CI_CPP) {
         corrosion(workflow, &mut findings);
     }
-    if let Some(workflow) = workflows.get(CI_RUST) {
-        scan_run_contract_preflight(workflow, &mut findings);
-    }
     Ok(findings)
 }
 
-/// One required (family, participant) step pair and where it must run.
-#[derive(Debug)]
-struct StepPolicy {
-    family: String,
-    participant: String,
-    workflow: &'static str,
-    job: &'static str,
-    /// The build/test step that must precede the launcher.
-    legacy: &'static str,
-    /// A substring of the launcher step's `run`.
-    launcher: String,
-    /// The upload step's exact artifact `name`.
-    artifact: String,
-    matrix: bool,
-    timeout: Option<i64>,
+/// A scalar's text, whatever its YAML type (`7`, `false` and `"7"` all
+/// compare as text against a pin).
+fn scalar(value: &Yaml) -> Option<String> {
+    match value {
+        Yaml::String(text) | Yaml::Real(text) => Some(text.clone()),
+        Yaml::Integer(number) => Some(number.to_string()),
+        Yaml::Boolean(flag) => Some(flag.to_string()),
+        _ => None,
+    }
 }
 
-/// Turns the required executions into step policies, one per (family,
-/// participant). A matrix participant must require exactly both compiler
-/// instances, since one matrix step runs both.
-fn step_policies(
-    required: &BTreeSet<ExecutionKey>,
-    findings: &mut Vec<Finding>,
-) -> Vec<StepPolicy> {
-    let mut grouped: BTreeMap<(&str, &str), BTreeSet<&str>> = BTreeMap::new();
-    for key in required {
-        grouped
-            .entry((key.family_id.as_str(), key.participant_id.as_str()))
-            .or_default()
-            .insert(key.instance_id.as_str());
+/// A list of strings, accepting the scalar shorthand (`needs: build`) and
+/// treating an absent key as empty.
+fn string_list(value: &Yaml) -> Option<Vec<&str>> {
+    match value {
+        Yaml::BadValue => Some(Vec::new()),
+        Yaml::String(text) => Some(vec![text.as_str()]),
+        Yaml::Array(items) => items.iter().map(text).collect(),
+        _ => None,
     }
-    let mut policies = Vec::new();
-    for ((family, participant), instances) in grouped {
-        let Some(policy) = step_policy(family, participant) else {
-            findings.push(Finding {
-                path: CONSUMER_OBLIGATIONS.to_owned(),
-                line: 1,
-                rule: RULE,
-                message: format!("participant {participant} of {family} has no CI workflow policy"),
-            });
-            continue;
-        };
-        let expected: BTreeSet<&str> = if policy.matrix {
-            ["windows-clang-cl", "windows-msvc"].into()
-        } else {
-            [participant].into()
-        };
-        if instances != expected {
-            let source = if participant == "cxx" {
-                PARTICIPANTS
-            } else {
-                CONSUMER_OBLIGATIONS
-            };
-            findings.push(Finding {
-                path: source.to_owned(),
-                line: 1,
-                rule: RULE,
-                message: format!(
-                    "{family} requires {participant} instances {instances:?}, but its CI step runs exactly {expected:?}"
-                ),
-            });
-        }
-        policies.push(policy);
-    }
-    policies
 }
 
-/// The CI step markers of one (family, participant).
-fn step_policy(family: &str, participant: &str) -> Option<StepPolicy> {
-    const COMPILER: &str = "${{ matrix.compiler }}";
-    let (workflow, job, legacy, launcher, artifact, matrix, timeout) = match participant {
-        "rust" => {
-            let (launcher, artifact) = match family {
-                "crash-log-scan-run" => (
-                    "run_scan_run_conformance.py --participant rust".to_owned(),
-                    "rust-scan-run-conformance".to_owned(),
-                ),
-                "user-settings" => (
-                    "run_user_settings_conformance.py --participant rust".to_owned(),
-                    "rust-user-settings-conformance".to_owned(),
-                ),
-                "autoscan-report" | "crash-log-scan-launch" => (
-                    format!("run_scan_run_conformance.py --family {family} --participant rust"),
-                    format!("rust-{family}-conformance"),
-                ),
-                _ => (
-                    format!("run_semantic_conformance.py --family {family} --participant rust"),
-                    format!("rust-{family}-conformance"),
-                ),
-            };
-            (
-                CI_RUST,
-                "test",
-                "Run Rust tests with all features",
-                launcher,
-                artifact,
-                false,
-                None,
-            )
-        }
-        "tui" => {
-            let (launcher, artifact) = if family == "crash-log-scan-run" {
-                (
-                    "run_scan_run_consumer_conformance.py --participant tui".to_owned(),
-                    "tui-consumer-conformance".to_owned(),
-                )
-            } else {
-                (
-                    format!(
-                        "run_scan_run_consumer_conformance.py --family {family} --participant tui"
-                    ),
-                    format!("tui-{family}-consumer-conformance"),
-                )
-            };
-            (
-                CI_RUST,
-                "test",
-                "Run Rust tests with all features",
-                launcher,
-                artifact,
-                false,
-                None,
-            )
-        }
-        "cxx" | "cli" | "gui" => {
-            let script = match participant {
-                "cxx" => "run_cxx_conformance.ps1",
-                "cli" => "run_cli_consumer_conformance.ps1",
-                _ => "run_gui_consumer_conformance.ps1",
-            };
-            let suffix = if participant == "cxx" {
-                "conformance"
-            } else {
-                "consumer-conformance"
-            };
-            let (launcher, artifact) = if family == "crash-log-scan-run" {
-                (
-                    format!("{script} -Compiler {COMPILER}"),
-                    format!("{participant}-{suffix}-{COMPILER}"),
-                )
-            } else {
-                (
-                    format!("{script} -Family {family} -Compiler {COMPILER}"),
-                    format!("{participant}-{family}-{suffix}-{COMPILER}"),
-                )
-            };
-            let (job, legacy, timeout) = if participant == "gui" {
-                ("gui-tests", "Build and test GUI", 180)
-            } else {
-                ("cli-tests", "Build and test CLI", 360)
-            };
-            (CI_CPP, job, legacy, launcher, artifact, true, Some(timeout))
-        }
-        _ => return None,
+/// Whether the mapping `value` is exactly `expected` (an absent mapping
+/// equals an empty one).
+fn mapping_is(value: &Yaml, expected: &[(&str, &str)]) -> bool {
+    let Some(actual) = (match value {
+        Yaml::BadValue => Some(Vec::new()),
+        Yaml::Hash(hash) => hash
+            .iter()
+            .map(|(key, value)| Some((text(key)?.to_owned(), scalar(value)?)))
+            .collect::<Option<Vec<_>>>(),
+        _ => None,
+    }) else {
+        return false;
     };
-    Some(StepPolicy {
-        family: family.to_owned(),
-        participant: participant.to_owned(),
-        workflow,
-        job,
-        legacy,
-        launcher,
-        artifact,
-        matrix,
-        timeout,
-    })
+    let actual: BTreeMap<String, String> = actual.into_iter().collect();
+    let expected: BTreeMap<String, String> = expected
+        .iter()
+        .map(|(key, value)| ((*key).to_owned(), (*value).to_owned()))
+        .collect();
+    actual.len() == expected.len() && actual == expected
 }
 
-/// Job-level checks shared by every policy that runs in the job.
-fn participant_job(
-    workflow: &Workflow,
-    job: &Job<'_>,
-    policy: &StepPolicy,
-    findings: &mut Vec<Finding>,
-) {
+/// Job-level checks: runner, timeout, `needs`, condition, blocking,
+/// checkout layout and the compiler matrix.
+fn pinned_job(workflow: &Workflow, job: &Job<'_>, pin: &JobPin, findings: &mut Vec<Finding>) {
     let mut fail = |message: String| findings.push(workflow.finding(&job.path, message));
     let label = format!("job {}", job.id);
-    if text(&job.yaml["runs-on"]) != Some("windows-latest") {
+    if text(&job.yaml["runs-on"]) != Some(pin.runs_on) {
         fail(format!(
-            "{label} must run on windows-latest to preserve the Windows receipt checkout layout"
+            "{label} must run on {} (the receipt checkout layout and toolchain it was proven on)",
+            pin.runs_on
         ));
     }
-    let has_needs = !job.yaml["needs"].is_badvalue();
+    if job.yaml["timeout-minutes"].as_i64() != Some(pin.timeout) {
+        fail(format!(
+            "{label} must reserve exactly timeout-minutes: {}",
+            pin.timeout
+        ));
+    }
+    if string_list(&job.yaml["needs"]).as_deref() != Some(pin.needs) {
+        fail(format!("{label} must have exactly needs: {:?}", pin.needs));
+    }
     let condition = &job.yaml["if"];
-    if has_needs && text(condition) != Some(NOT_CANCELLED) {
+    if pin.needs.is_empty() {
+        if !condition.is_badvalue() {
+            fail(format!(
+                "{label} is required and cannot be conditionally skipped"
+            ));
+        }
+    } else if text(condition) != Some(NOT_CANCELLED) {
         fail(format!(
             "{label} has needs, so it must use `if: {NOT_CANCELLED}` to run after upstream failures unless cancelled"
-        ));
-    }
-    if !has_needs && !condition.is_badvalue() {
-        fail(format!(
-            "{label} is required and cannot be conditionally skipped"
         ));
     }
     if !job.yaml["continue-on-error"].is_badvalue() {
         fail(format!(
             "{label} is required and must be blocking (no continue-on-error)"
-        ));
-    }
-    if let Some(minutes) = policy.timeout
-        && job.yaml["timeout-minutes"].as_i64() != Some(minutes)
-    {
-        fail(format!(
-            "{label} must reserve timeout-minutes: {minutes} for its retained and promoted gates"
         ));
     }
     let checkouts: Vec<&Yaml> = job
@@ -349,8 +560,8 @@ fn participant_job(
             ));
         }
     }
-    if policy.matrix {
-        let strategy = &job.yaml["strategy"];
+    let strategy = &job.yaml["strategy"];
+    if pin.matrix {
         let compilers: Option<Vec<&str>> = strategy["matrix"]["compiler"]
             .as_vec()
             .and_then(|items| items.iter().map(text).collect());
@@ -362,112 +573,174 @@ fn participant_job(
         if strategy["fail-fast"].as_bool() != Some(false) {
             fail(format!("{label} matrix must keep fail-fast: false"));
         }
-        if !strategy["matrix"]["exclude"].is_badvalue() {
-            fail(format!("{label} matrix cannot exclude required executions"));
+        if !strategy["matrix"]["exclude"].is_badvalue()
+            || !strategy["matrix"]["include"].is_badvalue()
+        {
+            fail(format!(
+                "{label} matrix cannot exclude or add executions (no exclude or include)"
+            ));
         }
+    } else if !strategy.is_badvalue() {
+        fail(format!("{label} cannot run on a matrix"));
     }
 }
 
-/// Step-level checks for one (family, participant).
-fn policy_steps(
-    workflow: &Workflow,
-    job: &Job<'_>,
-    policy: &StepPolicy,
-    findings: &mut Vec<Finding>,
-) {
-    let label = format!("job {}: {} {}", job.id, policy.participant, policy.family);
+/// Step-level checks: each pinned step exactly once, exactly as pinned, in
+/// the pinned order.
+fn pinned_steps(workflow: &Workflow, job: &Job<'_>, pin: &JobPin, findings: &mut Vec<Finding>) {
     let steps = job.steps();
-    let legacy = steps.iter().position(|step| {
-        text(&step["name"]).is_some_and(|name| name.contains(policy.legacy))
-            || text(&step["run"]).is_some_and(|run| run.contains(policy.legacy))
-    });
-    let launchers =
-        job.find(|step| text(&step["run"]).is_some_and(|run| run.contains(&policy.launcher)));
-    let uploads = job.find(|step| text(&step["with"]["name"]) == Some(policy.artifact.as_str()));
-    let (Some(legacy), [launcher], [upload]) = (legacy, launchers.as_slice(), uploads.as_slice())
-    else {
-        findings.push(workflow.finding(
-            &job.path,
-            format!(
-                "{label} is missing a required marker: the legacy step {:?}, exactly one launcher running {:?} and exactly one upload named {:?}",
-                policy.legacy, policy.launcher, policy.artifact
-            ),
-        ));
-        return;
-    };
-    let (launcher, upload) = (*launcher, *upload);
-    let mut fail = |index: usize, message: String| {
-        findings.push(workflow.finding(&job.step_path(index), message))
-    };
-    if !(legacy < launcher && launcher < upload) {
-        fail(
-            launcher,
-            format!("{label} must run legacy, receipt, and upload steps in order"),
-        );
-    }
-    let launch = &steps[launcher];
-    if !launch["continue-on-error"].is_badvalue() {
-        fail(launcher, format!("{label} launcher must be blocking"));
-    }
-    if text(&launch["if"]) != Some(NOT_CANCELLED) {
-        fail(
-            launcher,
-            format!(
-                "{label} launcher must run after earlier failures unless cancelled (`if: {NOT_CANCELLED}`)"
-            ),
-        );
-    }
-    if text(&launch["run"]).is_some_and(|run| run.contains("--profile full")) {
-        fail(
-            launcher,
-            format!("{label} launcher cannot claim full-repository scope"),
-        );
-    }
-    if policy.participant == "gui" {
-        for index in [legacy, launcher] {
-            let presets = presets(text(&steps[index]["run"]).unwrap_or_default());
-            if presets != ["ci-system-qt"] {
-                fail(
-                    index,
-                    format!("{label} must reuse the preceding GUI build preset ci-system-qt"),
-                );
+    let mut previous: Option<(usize, &str)> = None;
+    for step_pin in pin.steps {
+        let label = format!("job {}: step {:?}", job.id, step_pin.name);
+        let matches = job.find(|step| text(&step["name"]) == Some(step_pin.name));
+        let [index] = matches.as_slice() else {
+            findings.push(workflow.finding(
+                &job.path,
+                format!(
+                    "{label} must appear exactly once (found {}); it is a pinned gate step",
+                    matches.len()
+                ),
+            ));
+            continue;
+        };
+        let index = *index;
+        let step = &steps[index];
+        let mut fail =
+            |message: String| findings.push(workflow.finding(&job.step_path(index), message));
+        match step_pin.action {
+            Action::Run(command) => {
+                let actual = text(&step["run"]).map(|run| run.replace("\r\n", "\n"));
+                if actual.as_deref().map(str::trim_end) != Some(command) {
+                    fail(format!("{label} must run exactly `{command}`"));
+                }
+            }
+            Action::Uses(action) => {
+                if text(&step["uses"]) != Some(action) {
+                    fail(format!("{label} must use exactly {action}"));
+                }
             }
         }
-    }
-    let artifact = &steps[upload];
-    if text(&artifact["if"]) != Some(ALWAYS) {
-        fail(
-            upload,
-            format!("{label} diagnostics must upload even on failure (`if: {ALWAYS}`)"),
-        );
-    }
-    if text(&artifact["uses"]) != Some("actions/upload-artifact@v6") {
-        fail(
-            upload,
-            format!("{label} artifact marker is not an actions/upload-artifact@v6 step"),
-        );
-    }
-    if policy.participant == "cxx"
-        && !text(&artifact["with"]["path"]).is_some_and(|path| path.contains("**/run_plan.json"))
-    {
-        fail(
-            upload,
-            format!("{label} upload must retain the authenticated run plan (**/run_plan.json)"),
-        );
+        if text(&step["if"]) != step_pin.condition {
+            fail(match step_pin.condition {
+                Some(condition) => format!("{label} must use exactly `if: {condition}`"),
+                None => format!("{label} is required and cannot be conditionally skipped"),
+            });
+        }
+        if !mapping_is(&step["with"], step_pin.with) {
+            fail(format!(
+                "{label} must have exactly with: {:?}",
+                step_pin.with
+            ));
+        }
+        if !mapping_is(&step["env"], step_pin.env) {
+            fail(format!("{label} must have exactly env: {:?}", step_pin.env));
+        }
+        if step["timeout-minutes"].as_i64() != step_pin.timeout {
+            fail(format!(
+                "{label} must have timeout-minutes: {:?}",
+                step_pin.timeout
+            ));
+        }
+        let allowed = [
+            "name",
+            "run",
+            "uses",
+            "if",
+            "with",
+            "env",
+            "timeout-minutes",
+        ];
+        if let Some(hash) = step.as_hash() {
+            for key in hash.keys() {
+                let key = text(key).unwrap_or("?");
+                if !allowed.contains(&key) {
+                    fail(format!(
+                        "{label} cannot set `{key}` (it must stay blocking and exactly as pinned)"
+                    ));
+                }
+            }
+        }
+        if let Some((before, name)) = previous
+            && index < before
+        {
+            fail(format!("{label} must come after step {name:?}"));
+        }
+        previous = Some((index, step_pin.name));
     }
 }
 
-/// Every value following a `-Preset` token in a command line.
-fn presets(command: &str) -> Vec<&str> {
-    let tokens: Vec<&str> = command.split_whitespace().collect();
-    tokens
-        .windows(2)
-        .filter(|pair| pair[0] == "-Preset")
-        .map(|pair| pair[1])
-        .collect()
+/// Every required (participant, instance) has its run step, and every run
+/// step runs a required participant.
+fn denominator(
+    workflows: &BTreeMap<&str, Workflow>,
+    required: &BTreeSet<ExecutionKey>,
+    findings: &mut Vec<Finding>,
+) {
+    let mut instances: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+    for key in required {
+        instances
+            .entry(key.participant_id.as_str())
+            .or_default()
+            .insert(key.instance_id.as_str());
+    }
+    for (participant, required_instances) in &instances {
+        if !RUN_STEPS.iter().any(|(id, ..)| id == participant) {
+            findings.push(Finding {
+                path: CONSUMER_OBLIGATIONS.to_owned(),
+                line: 1,
+                rule: RULE,
+                message: format!(
+                    "participant {participant} is required on {required_instances:?} but has no CI `conformance run` step"
+                ),
+            });
+        }
+    }
+    for (participant, file, job_id, name, matrix) in RUN_STEPS {
+        let Some(workflow) = workflows.get(file) else {
+            continue;
+        };
+        let Some(job) = workflow.yaml["jobs"][*job_id].as_hash().map(|_| Job {
+            id: job_id,
+            path: format!("/jobs/{job_id}"),
+            yaml: &workflow.yaml["jobs"][*job_id],
+        }) else {
+            continue;
+        };
+        // A missing step is already reported by the pinned-step check.
+        let path = match job
+            .find(|step| text(&step["name"]) == Some(*name))
+            .as_slice()
+        {
+            [index] => job.step_path(*index),
+            _ => job.path.clone(),
+        };
+        let runs: BTreeSet<&str> = if *matrix {
+            MATRIX_INSTANCES.into()
+        } else {
+            [*participant].into()
+        };
+        match instances.get(participant) {
+            None => findings.push(workflow.finding(
+                &path,
+                format!(
+                    "step {name:?} runs participant {participant}, but no family requires {participant}, so `conformance run` would fail"
+                ),
+            )),
+            Some(required_instances) if *required_instances != runs => {
+                findings.push(workflow.finding(
+                    &path,
+                    format!(
+                        "{participant} is required on instances {required_instances:?}, but step {name:?} runs exactly {runs:?}; the catalogs must require it on both compilers"
+                    ),
+                ));
+            }
+            Some(_) => {}
+        }
+    }
 }
 
-/// `ci-binding-compliance.yml`: the repository verdict's inputs.
+/// `ci-binding-compliance.yml`: the reusable participant workflows the
+/// verdict aggregates.
 fn full_aggregation(
     root: &RepoRoot,
     workflow: &Workflow,
@@ -511,131 +784,6 @@ fn full_aggregation(
                 "{callee} must declare `on: workflow_call` to be a full aggregation participant"
             ));
         }
-    }
-
-    let Some(full) = workflow.job("full", findings) else {
-        return Ok(());
-    };
-    let mut fail = |path: &str, message: &str| {
-        findings.push(workflow.finding(path, format!("full aggregation: {message}")))
-    };
-    let needs: Option<Vec<&str>> = full.yaml["needs"]
-        .as_vec()
-        .and_then(|items| items.iter().map(text).collect());
-    if needs.as_deref() != Some(&["rust", "native"][..])
-        || text(&full.yaml["if"]) != Some(NOT_CANCELLED)
-        || text(&full.yaml["runs-on"]) != Some("windows-latest")
-    {
-        fail(
-            &full.path,
-            "job full must await every Windows participant: needs: [rust, native], if: ${{ !cancelled() }}, runs-on: windows-latest",
-        );
-    }
-    if !full.yaml["continue-on-error"].is_badvalue() {
-        fail(&full.path, "job full must be blocking");
-    }
-
-    let checkouts = full.find(|step| text(&step["uses"]) == Some("actions/checkout@v6"));
-    match checkouts.as_slice() {
-        [index]
-            if ["ref", "path", "repository"]
-                .iter()
-                .all(|key| full.steps()[*index]["with"][*key].is_badvalue()) => {}
-        [index] => fail(
-            &full.step_path(*index),
-            "the checkout must preserve the event checkout identity",
-        ),
-        _ => fail(
-            &full.path,
-            "job full must check out the repository exactly once",
-        ),
-    }
-
-    let download =
-        full.find(|step| text(&step["name"]) == Some("Download current-run conformance artifacts"));
-    match download.as_slice() {
-        [index] => {
-            let step = &full.steps()[*index];
-            let with = &step["with"];
-            let exact = text(&step["uses"]) == Some("actions/download-artifact@v8")
-                && text(&with["pattern"]) == Some("*conformance*")
-                && text(&with["path"]) == Some("tools/binding_compliance/artifacts/downloaded")
-                && with["merge-multiple"].as_bool() == Some(false);
-            if !exact {
-                fail(
-                    &full.step_path(*index),
-                    "the download must take every unmerged receipt artifact (download-artifact@v8, pattern '*conformance*', merge-multiple: false)",
-                );
-            }
-            if [
-                "run-id",
-                "repository",
-                "github-token",
-                "name",
-                "artifact-ids",
-            ]
-            .iter()
-            .any(|key| !with[*key].is_badvalue())
-            {
-                fail(
-                    &full.step_path(*index),
-                    "artifacts must come from the current workflow run",
-                );
-            }
-        }
-        _ => fail(
-            &full.path,
-            "job full must have one \"Download current-run conformance artifacts\" step",
-        ),
-    }
-
-    let guard = full
-        .find(|step| text(&step["name"]) == Some("Require every retained participant job to pass"));
-    match guard.as_slice() {
-        [index] => {
-            let step = &full.steps()[*index];
-            let ok = text(&step["env"]["PARTICIPANT_RESULTS"]) == Some("${{ toJSON(needs) }}")
-                && step["continue-on-error"].is_badvalue()
-                && text(&step["if"]) == Some(NOT_CANCELLED);
-            if !ok {
-                fail(
-                    &full.step_path(*index),
-                    "the upstream guard must require actual upstream job results (PARTICIPANT_RESULTS: ${{ toJSON(needs) }}, blocking, if: ${{ !cancelled() }})",
-                );
-            }
-        }
-        _ => fail(
-            &full.path,
-            "job full must have one \"Require every retained participant job to pass\" step",
-        ),
-    }
-
-    let launchers = full.find(|step| {
-        text(&step["run"])
-            .is_some_and(|run| run.contains("tools/binding_compliance/check_compliance.py"))
-    });
-    match launchers.as_slice() {
-        [index] => {
-            let step = &full.steps()[*index];
-            if text(&step["run"]).map(str::trim_end) != Some(FULL_COMMAND)
-                || !step["continue-on-error"].is_badvalue()
-            {
-                fail(
-                    &full.step_path(*index),
-                    "the verdict step must execute the complete full profile command",
-                );
-            }
-            if text(&step["if"]) != Some(NOT_CANCELLED) {
-                fail(
-                    &full.step_path(*index),
-                    "the verdict step must report upstream failures (if: ${{ !cancelled() }})",
-                );
-            }
-        }
-        _ => fail(
-            &full.path,
-            "job full must run check_compliance.py exactly once",
-        ),
     }
     Ok(())
 }
@@ -773,37 +921,6 @@ fn corrosion(workflow: &Workflow, findings: &mut Vec<Finding>) {
             }
             _ => fail(&job.path, "the source must be verified and extracted once"),
         }
-    }
-}
-
-/// ci-rust `test`: the Crash Log Scan Run contract preflight.
-fn scan_run_contract_preflight(workflow: &Workflow, findings: &mut Vec<Finding>) {
-    let Some(job) = workflow.job("test", findings) else {
-        return;
-    };
-    let preflight =
-        job.find(|step| text(&step["run"]).map(str::trim_end) == Some(SCAN_RUN_CONTRACT));
-    let [index] = preflight.as_slice() else {
-        findings.push(workflow.finding(
-            &job.path,
-            format!("job test must run the variant preflight ({SCAN_RUN_CONTRACT}) exactly once"),
-        ));
-        return;
-    };
-    let step = &job.steps()[*index];
-    let mut fail =
-        |message: &str| findings.push(workflow.finding(&job.step_path(*index), message.to_owned()));
-    if !step["continue-on-error"].is_badvalue() {
-        fail("the ci-rust variant preflight must be blocking");
-    }
-    if text(&step["if"]) != Some(NOT_CANCELLED) {
-        fail("the ci-rust variant preflight must run after earlier failures unless cancelled");
-    }
-    let rust = job.steps().iter().position(|step| {
-        text(&step["run"]).is_some_and(|run| run.contains(RUST_SCAN_RUN_LAUNCHER))
-    });
-    if rust.is_some_and(|rust| *index > rust) {
-        fail("the ci-rust variant preflight must run before Rust receipt execution");
     }
 }
 

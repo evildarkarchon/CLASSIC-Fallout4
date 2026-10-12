@@ -148,267 +148,33 @@ jobs:
         timeout-minutes: 90
         run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler ${{ matrix.compiler }}
 
-      - name: Install User Settings conformance YAML parser
-        # The conformance steps below still run after a failed build/test step, so the parser
-        # they import must be installed then too, or they mask real results with ImportError.
+      # Both runs reuse the build above through `-Test -TestOnly` and still run
+      # after an earlier failed step, so conformance results are reported
+      # either way. The artifact root lives under runner.temp, not the cached
+      # target/, so no earlier run's plans can reach these uploads.
+      - name: Run native CXX conformance
         if: ${{ !cancelled() }}
-        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+        run: cargo xtask conformance run --participant cxx --compiler ${{ matrix.compiler }} --artifact-root ${{ runner.temp }}/conformance
 
-      # Each compiler must prove settings execution beside its retained corpus tests.
-      - name: Run native CXX User Settings conformance
+      - name: Run CLI consumer conformance
         if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/user-settings -TestOnly
+        run: cargo xtask conformance run --participant cli --compiler ${{ matrix.compiler }} --artifact-root ${{ runner.temp }}/conformance
 
-      - name: Upload native CXX User Settings conformance diagnostics
+      - name: Upload native CXX conformance artifacts
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: cxx-user-settings-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.json
-            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.md
+          name: cxx-conformance-${{ matrix.compiler }}
+          path: ${{ runner.temp }}/conformance/cxx/windows-${{ matrix.compiler }}/
           if-no-files-found: warn
           retention-days: 7
-
-      - name: Run native CXX config-operations conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family config-operations -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/config-operations -TestOnly
-
-      - name: Upload native CXX config-operations conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-config-operations-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/config-operations/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/config-operations/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/config-operations/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/config-operations/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/config-operations/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/config-operations/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-            tools/binding_compliance/artifacts/config-operations/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX file-operations conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family file-operations -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/file-operations -TestOnly
-
-      - name: Upload native CXX file-operations conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-file-operations-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/file-operations/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/file-operations/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/file-operations/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/file-operations/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/file-operations/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/file-operations/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-            tools/binding_compliance/artifacts/file-operations/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX update-rejection conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family update-rejection -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/update-rejection -TestOnly
-
-      - name: Upload native CXX update-rejection conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-update-rejection-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/update-rejection/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/update-rejection/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/update-rejection/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/update-rejection/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/update-rejection/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/update-rejection/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX game-setup-intake conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family game-setup-intake -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/game-setup-intake -TestOnly
-
-      - name: Upload native CXX game-setup-intake conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-game-setup-intake-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/game-setup-intake/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/game-setup-intake/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/game-setup-intake/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/game-setup-intake/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/game-setup-intake/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/game-setup-intake/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX report-discovery conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family report-discovery -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/report-discovery -TestOnly
-
-      - name: Upload native CXX report-discovery conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-report-discovery-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/report-discovery/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/report-discovery/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/report-discovery/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/report-discovery/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/report-discovery/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/report-discovery/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX file-backups conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family file-backups -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/file-backups -TestOnly
-
-      - name: Upload native CXX file-backups conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-file-backups-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/file-backups/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/file-backups/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/file-backups/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/file-backups/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/file-backups/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/file-backups/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-            tools/binding_compliance/artifacts/file-backups/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX installation-paths conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family installation-paths -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/installation-paths -TestOnly
-
-      - name: Upload native CXX installation-paths conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-installation-paths-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX xse-folder conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family xse-folder -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/xse-folder -TestOnly
-
-      - name: Upload native CXX xse-folder conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-xse-folder-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX game-identity conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family game-identity -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/game-identity -TestOnly
-
-      - name: Upload native CXX game-identity conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-game-identity-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/game-identity/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/game-identity/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/game-identity/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/game-identity/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/game-identity/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/game-identity/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-            tools/binding_compliance/artifacts/game-identity/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run native CXX crash-log-scan-launch conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch -TestOnly
-
-      - name: Upload native CXX crash-log-scan-launch conformance diagnostics
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-crash-log-scan-launch-conformance-${{ matrix.compiler }}
-          path: |
-            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
-            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/receipt.json
-            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
-            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/attempt.json
-            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/stdout.log
-            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/stderr.log
-            tools/binding_compliance/artifacts/crash-log-scan-launch/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run CLI Crash Log Scan Run consumer conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }} -TestOnly
 
       - name: Upload CLI consumer conformance artifacts
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: cli-consumer-conformance-${{ matrix.compiler }}
-          path: tools/binding_compliance/artifacts/cli/windows-${{ matrix.compiler }}/
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run CLI User Settings consumer conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/user-settings -TestOnly
-
-      - name: Upload CLI User Settings consumer conformance artifacts
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cli-user-settings-consumer-conformance-${{ matrix.compiler }}
-          path: tools/binding_compliance/artifacts/user-settings/cli/windows-${{ matrix.compiler }}/
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run CLI Crash Log Scan Launch consumer conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers -TestOnly
-
-      - name: Upload CLI Crash Log Scan Launch consumer conformance artifacts
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cli-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}
-          path: tools/binding_compliance/artifacts/crash-log-scan-launch-consumers/cli/windows-${{ matrix.compiler }}/
+          name: cli-conformance-${{ matrix.compiler }}
+          path: ${{ runner.temp }}/conformance/cli/windows-${{ matrix.compiler }}/
           if-no-files-found: warn
           retention-days: 7
 
@@ -535,48 +301,18 @@ jobs:
       - name: Build and test GUI
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
 
-      - name: Install User Settings conformance YAML parser
-        # The conformance steps below still run after a failed build/test step, so the parser
-        # they import must be installed then too, or they mask real results with ImportError.
+      # Reuses the ci-system-qt build above through `-Test -TestOnly`; see
+      # cli-tests for why the artifact root is under runner.temp.
+      - name: Run GUI consumer conformance
         if: ${{ !cancelled() }}
-        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
-
-      - name: Run GUI Crash Log Scan Run consumer conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }} -Preset ci-system-qt -TestOnly
+        run: cargo xtask conformance run --participant gui --compiler ${{ matrix.compiler }} --preset ci-system-qt --artifact-root ${{ runner.temp }}/conformance
 
       - name: Upload GUI consumer conformance artifacts
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: gui-consumer-conformance-${{ matrix.compiler }}
-          path: tools/binding_compliance/artifacts/gui/windows-${{ matrix.compiler }}/
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run GUI User Settings consumer conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -Preset ci-system-qt -ArtifactRoot tools/binding_compliance/artifacts/user-settings -TestOnly
-
-      - name: Upload GUI User Settings consumer conformance artifacts
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: gui-user-settings-consumer-conformance-${{ matrix.compiler }}
-          path: tools/binding_compliance/artifacts/user-settings/gui/windows-${{ matrix.compiler }}/
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run GUI Crash Log Scan Launch consumer conformance
-        if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Family crash-log-scan-launch -Compiler ${{ matrix.compiler }} -Preset ci-system-qt -ArtifactRoot tools/binding_compliance/artifacts/crash-log-scan-launch-consumers -TestOnly
-
-      - name: Upload GUI Crash Log Scan Launch consumer conformance artifacts
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: gui-crash-log-scan-launch-consumer-conformance-${{ matrix.compiler }}
-          path: tools/binding_compliance/artifacts/crash-log-scan-launch-consumers/gui/windows-${{ matrix.compiler }}/
+          name: gui-conformance-${{ matrix.compiler }}
+          path: ${{ runner.temp }}/conformance/gui/windows-${{ matrix.compiler }}/
           if-no-files-found: warn
           retention-days: 7
 

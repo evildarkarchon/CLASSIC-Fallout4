@@ -169,7 +169,7 @@ jobs:
             --latest=false
 
       # Probe the single release asset. Same rationale as yaml-data's
-      # verify_assets_reachable.py: until we've proven the asset URL is
+      # `cargo xtask yaml-data verify-assets`: until we've proven the asset URL is
       # anonymously fetchable, advancing client visibility would create a
       # race where an API-fallback client discovers the release, pulls the
       # manifest URL, and 404s.
@@ -231,9 +231,9 @@ jobs:
             git push origin "$PAGES_BRANCH"
           fi
 
-      # Task 7.7: smoke-test the Pages URL serves the new tag. Reuses the
-      # yaml-data smoke-test helper via `--pages-path`, but in strict-body
-      # mode rather than `--tag` mode.
+      # Task 7.7: smoke-test the Pages URL serves the new tag with
+      # `cargo xtask app-notification smoke-pages`, which defaults to this
+      # family's own pages path and compares the strict body.
       #
       # The notification channel allows notification-only republishes that
       # keep the same binary `release_tag` while changing

@@ -3,11 +3,10 @@
 This page lists the repository checks that CI runs as direct, blocking steps
 outside the conformance families. It replaces the deleted static compliance
 catalog and its `cxx-ci` profile, which retired with the Python and Node
-bindings (ADR-0010, in [`docs/adr/`](../adr/)).
-
-Every Python command runs from the tools-only uv project at `tools/pyproject.toml`
-(`uv sync --project tools`, then `uv run --project tools python ...`). CI
-installs the same dependencies with `setup-python` and `pip`.
+bindings (ADR-0010, in [`docs/adr/`](../adr/)). Every gate is a Rust
+command: a `cargo xtask` subcommand, a crate-local cargo test or clippy. The
+conformance protocol, its catalogs and its CI steps are described in
+[`conformance.md`](conformance.md).
 
 ## Other direct gates
 
@@ -68,12 +67,15 @@ expectations reference an independent oracle (user-settings' compatibility
 corpus, autoscan-report's Markdown goldens, the vocabulary families' Rust
 tokens) are compiled against it, so an input or expectation that disagrees
 with its oracle fails too. The workflow policy
-walks each workflow's `jobs` and `steps` with a YAML parser. Every applicable
-(family, participant, execution instance) needs a blocking launcher step and
-an `if: always()` diagnostics upload in its participant job, on the
-`compiler: [msvc, clang-cl]` matrix for CXX, CLI and GUI. The `full`
-aggregation, the pinned Corrosion source and the scan-run contract preflight
-are pinned too. `cargo xtask conformance check --help` lists the input rule.
+walks each workflow's `jobs` and `steps` with a YAML parser and pins every
+gate in the table above: each gate's step must keep its exact `run` (or
+`uses`), `if`, `with` and position, and its job must keep its runner,
+timeout, `needs` and blocking status. It pins every `conformance run` step and
+upload as well, the `compiler: [msvc, clang-cl]` matrix on `cli-tests` and
+`gui-tests`, the `full` aggregation and the pinned Corrosion source. Deleting
+or editing any of them fails the check. `cargo xtask conformance check --help`
+lists the input rule; [`conformance.md`](conformance.md#workflow-policy) lists
+the pins.
 
 ## Conformance applicability
 
@@ -83,37 +85,32 @@ default; a family that enrols `cxx` lists the capability IDs CXX must cover,
 and CXX then runs exactly the scenarios whose `action` is one of them. Packs
 never choose their own participants, and the CLI, GUI and TUI consumers stay in
 `tests/conformance/consumer-obligations.json`. The workflow policy derives the
-required CI executions from both catalogs, so enrolling a family without a CI
-step fails `cargo xtask conformance check`.
+required CI executions from both catalogs. One `conformance run` step covers
+every family of its participant, so a newly enrolled family needs no new step,
+but a participant or execution instance without a run step fails
+`cargo xtask conformance check`.
 
 ## Repository conformance verdict
 
 The `full` job in `ci-binding-compliance.yml` waits for the `rust` and `native`
-participant workflows, requires both to succeed, and then runs the
-conformance-only verdict over every downloaded receipt:
+participant workflows, requires both to succeed, and then runs the verdict over
+every conformance artifact the run uploaded:
 
 ```powershell
-python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --output-dir tools/binding_compliance/artifacts/full
+cargo xtask conformance verdict --receipts <downloaded artifacts> --output <verdict.json>
 ```
 
-`check_compliance.py` keeps only the `conformance` and `full` profiles until the
-Rust conformance engine replaces it (engine PR B).
+Each participant job produces those artifacts with one
+`cargo xtask conformance run --participant <rust|cxx|cli|gui|tui>` step
+(`--compiler ${{ matrix.compiler }}` for cxx, cli and gui), which runs every
+family that requires the participant and keeps going past failures. The CXX,
+CLI and GUI runs call the build wrappers with `-Test -TestOnly`, reusing the
+job's earlier build. See [`conformance.md`](conformance.md) for the commands
+and artifacts.
 
-The Rust replacements already exist but no CI step calls them yet:
-`cargo xtask conformance run --participant <rust|cxx|cli|gui|tui>` (with
-`--compiler <msvc|clang-cl>` for cxx, cli and gui) runs every family that
-requires the participant, writes each invocation's plan, receipt, attempt and
-report under `--artifact-root` (default `target/conformance`), keeps going past
-failures and names every failed family at the end; `cargo xtask conformance
-verdict --receipts <dir>` decides repository completeness from those artifacts.
-The CXX, CLI and GUI runs call the build wrappers with `-Test -TestOnly`, so a
-wrapper build must exist first. `update-services` and `yaml-update-operations`
-run against an in-process controlled update service instead of
-`tools/binding_compliance/controlled_update_service.py`.
-
-Only `--profile full` with all family receipts can certify repository-wide
-conformance. Full aggregation fails on any missing family, and each family
-report requires every applicable participant and execution instance declared by
+Only the verdict, given every family's artifacts, can certify repository-wide
+conformance. It fails on any missing family, and each family report requires
+every applicable participant and execution instance declared by
 `tests/conformance/participants.json` and the consumer obligation catalog.
 Registry metadata never supplies that proof.
 
