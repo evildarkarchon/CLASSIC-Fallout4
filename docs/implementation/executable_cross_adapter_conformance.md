@@ -625,7 +625,7 @@ Tooling and source compliance:
 uv sync --project tools
 uv run --project tools python -m pytest tools/binding_compliance/tests -q
 cargo xtask user-settings-ownership
-python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
+cargo xtask conformance check
 ```
 
 CXX conformance uses its private adapter launcher, which may invoke native tests only through the approved CLI wrapper. Frontend validation continues to use the repository wrappers:

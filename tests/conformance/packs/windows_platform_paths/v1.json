@@ -4,7 +4,7 @@
   "domainOwner": {"rustCrate": "classic-path-core"},
   "fixtureRoot": "tests/fixtures/windows_platform_paths_conformance",
   "fixtures": {"read-only": "read-only.json"},
-  "capabilities": [{"id": "windows-platform-paths.observe", "operationScoped": true,
+  "capabilities": [{"id": "windows-platform-paths.observe",
     "rustSymbols": ["get_system_documents_path", "query_game_registry", "parse_steam_library"],
     "observationFamilies": ["platform-comparison"]}],
   "scenarios": [{"id": "read-only", "action": "windows-platform-paths.observe",

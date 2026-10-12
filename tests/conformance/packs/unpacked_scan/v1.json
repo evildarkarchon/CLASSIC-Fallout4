@@ -19,7 +19,6 @@
         "UnpackedIssues",
         "scan_directory"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "unpacked-issues"
       ]

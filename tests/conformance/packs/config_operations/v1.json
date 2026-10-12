@@ -64,7 +64,6 @@
       "rustSymbols": [
         "clear_global_yaml_cache"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "values"
       ]

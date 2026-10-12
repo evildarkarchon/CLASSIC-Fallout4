@@ -21,6 +21,7 @@ use std::fmt;
 
 pub mod bench;
 mod cpp_source;
+pub mod conformance;
 pub mod cxx_bridge_gate;
 mod publish;
 mod repo;

@@ -9,20 +9,6 @@ Every Python command runs from the tools-only uv project at `tools/pyproject.tom
 (`uv sync --project tools`, then `uv run --project tools python ...`). CI
 installs the same dependencies with `setup-python` and `pip`.
 
-## Interim gates
-
-Each of these steps stays in place until its replacement lands; the replacing
-PR deletes the step and its row here.
-
-| Check | Command (repo root) | CI step | Removed by |
-| --- | --- | --- | --- |
-| Scan-run workflow policy | `python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .` | `ci-rust.yml`, job `lint`, step "Check scan-run workflow policy" | engine PR A (`conformance check`) |
-
-The scan-run workflow policy loads the conformance packs, whose User Settings
-family needs `ruamel.yaml`, so the `lint` job installs it first. It also
-loads `tests/conformance/participants.json` and fails when that catalog enrols
-a family that has no pack.
-
 ## Other direct gates
 
 | Check | Command (repo root) | CI step |
@@ -30,6 +16,7 @@ a family that has no pack.
 | CXX bridge has no orphan exports | `cargo xtask cxx-bridge-gate` | `ci-cpp.yml`, job `cxx-bridge-gate` (`windows-latest`), step "Check for orphan CXX bridge exports" |
 | User Settings exclusive ownership | `cargo xtask user-settings-ownership` | `ci-rust.yml`, job `lint`, step "Check User Settings exclusive ownership" |
 | Crash Log Scan Run contract variants | `cargo xtask scan-run-contract` | `ci-rust.yml`, job `test`, step "Validate Crash Log Scan Run variant coverage" |
+| Conformance packs, catalogs and workflow policy | `cargo xtask conformance check` | `ci-rust.yml`, job `lint`, step "Check conformance packs, catalogs and workflow policy" |
 | Opaque CXX map reachability | `cargo test -p classic-cpp-bridge --test opaque_map_read_only` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
 | Bundled YAML Data schema version | `cargo test -p classic-config-core --lib client_schemas` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
 | Single Tokio runtime | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | `ci-rust.yml`, job `lint`, step "Run clippy" |
@@ -64,8 +51,24 @@ one run. The manifest's `contractVariants` must match the Rust enums it names
 `scenarios[].id` in `tests/conformance/packs/crash_log_scan_run/v1.json`, or a
 retained label when no scenario can reach it. The Reset To Default and failure
 fixtures must be complete, and no `forbiddenExports` symbol may appear in its
-source file. The scan-run workflow policy pins this step: it must stay
+source file. The conformance workflow policy pins this step: it must stay
 blocking, keep `if: ${{ !cancelled() }}`, and run before the Rust receipt step.
+
+The conformance check validates, statically and without running any
+participant, every scenario pack under `tests/conformance/packs/`,
+`tests/conformance/participants.json`,
+`tests/conformance/consumer-obligations.json` and the CI workflow policy.
+Packs and catalogs are read as strict JSON (duplicate keys and floating-point
+numbers fail) into closed shapes, so an unknown member fails. Pack inputs name
+fixtures only (`{"fixtureRef": ...}`), fixtures stay beneath the pack's
+`fixtureRoot`, and neither inputs nor fixtures may carry result data; families
+with richer inputs check them in their own input hook. The workflow policy
+walks each workflow's `jobs` and `steps` with a YAML parser. Every applicable
+(family, participant, execution instance) needs a blocking launcher step and
+an `if: always()` diagnostics upload in its participant job, on the
+`compiler: [msvc, clang-cl]` matrix for CXX, CLI and GUI. The `full`
+aggregation, the pinned Corrosion source and the scan-run contract preflight
+are pinned too. `cargo xtask conformance check --help` lists the input rule.
 
 ## Conformance applicability
 
@@ -76,7 +79,7 @@ and CXX then runs exactly the scenarios whose `action` is one of them. Packs
 never choose their own participants, and the CLI, GUI and TUI consumers stay in
 `tests/conformance/consumer-obligations.json`. The workflow policy derives the
 required CI executions from both catalogs, so enrolling a family without a CI
-step fails the scan-run workflow policy gate.
+step fails `cargo xtask conformance check`.
 
 ## Repository conformance verdict
 

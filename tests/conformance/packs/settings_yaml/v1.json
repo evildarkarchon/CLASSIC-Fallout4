@@ -30,8 +30,7 @@
       ],
       "observationFamilies": [
         "settings-yaml"
-      ],
-      "operationScoped": true
+      ]
     }
   ],
   "scenarios": [

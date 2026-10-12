@@ -19,8 +19,7 @@
       ],
       "observationFamilies": [
         "values"
-      ],
-      "operationScoped": true
+      ]
     }
   ],
   "scenarios": [
