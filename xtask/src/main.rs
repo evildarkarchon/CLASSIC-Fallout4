@@ -7,9 +7,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use xtask::{
-    Outcome, RepoRoot, conformance, cxx_bridge_gate, user_settings_ownership, yaml_data,
-};
+use xtask::{Outcome, RepoRoot, conformance, cxx_bridge_gate, user_settings_ownership, yaml_data};
 
 /// CLASSIC repository tooling.
 ///
