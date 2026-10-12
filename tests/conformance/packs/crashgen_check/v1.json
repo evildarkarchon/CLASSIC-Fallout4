@@ -22,7 +22,6 @@
         "check",
         "check_with_rules"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "configuration-report"
       ]

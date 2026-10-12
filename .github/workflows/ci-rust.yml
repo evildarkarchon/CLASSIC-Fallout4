@@ -33,20 +33,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      # Interim direct step replacing the retired cxx-ci compliance profile
-      # (Retire, #304). The workflow policy loads the conformance packs, whose
-      # User Settings family needs ruamel.yaml, and goes with engine PR A.
-      - name: Install conformance YAML parser
-        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
-
-      - name: Check scan-run workflow policy
-        run: python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -79,6 +65,9 @@ jobs:
 
       - name: Check User Settings exclusive ownership
         run: cargo xtask user-settings-ownership
+
+      - name: Check conformance packs, catalogs and workflow policy
+        run: cargo xtask conformance check
 
       - name: Run clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings

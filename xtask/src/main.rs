@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use xtask::{Outcome, RepoRoot, cxx_bridge_gate, user_settings_ownership, yaml_data};
+use xtask::{Outcome, RepoRoot, conformance, cxx_bridge_gate, user_settings_ownership, yaml_data};
 
 /// CLASSIC repository tooling.
 ///
@@ -80,6 +80,10 @@ enum Command {
     /// and `dry-run` also run in the `xtask-linux` CI job. Polling steps print
     /// each retry, and dry-run each stage, to stderr.
     AppNotification(xtask::app_notification::Args),
+    /// Conformance engine: `check` validates every scenario pack,
+    /// tests/conformance/participants.json, tests/conformance/consumer-obligations.json
+    /// and the CI workflow policy, without running any participant.
+    Conformance(conformance::Args),
 }
 
 fn main() -> ExitCode {
@@ -95,6 +99,7 @@ fn main() -> ExitCode {
         Command::AppNotification(args) => {
             xtask::app_notification::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
         }
+        Command::Conformance(args) => conformance::run(&root, args),
     });
     match result {
         Ok(outcome) => render(outcome),

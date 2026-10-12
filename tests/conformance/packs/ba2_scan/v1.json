@@ -26,7 +26,6 @@
         "BA2Issues",
         "scan_archives_batch"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "archive-issues"
       ]
@@ -36,7 +35,6 @@
       "rustSymbols": [
         "scan_archive"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "archive-issues"
       ]

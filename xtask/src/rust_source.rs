@@ -1,6 +1,6 @@
 //! `syn` helpers shared by the subcommands that read Rust source: the CXX
-//! bridge parser (`cxx-bridge-gate`) and the scan-run `rustEnums` inventory
-//! (`scan-run-contract`).
+//! bridge parser (`cxx-bridge-gate`), the scan-run `rustEnums` inventory
+//! (`scan-run-contract`) and the conformance vocabulary input hook.
 //!
 //! Line numbers come from `proc-macro2`'s `span-locations` feature, so they are
 //! real 1-based source lines even though nothing here runs inside a proc macro.
