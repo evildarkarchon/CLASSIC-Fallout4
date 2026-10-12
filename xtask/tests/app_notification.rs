@@ -91,7 +91,8 @@ fn a_pass_names_the_tag_and_the_source() {
                 "app-notification-v9.2.0 passes app-notification tag validation; {} passes \
                  app-notification validation",
                 repo.path().join(SOURCE).display()
-            )
+            ),
+            report: None,
         }
     );
 }
@@ -579,7 +580,8 @@ fn manifest_json_is_byte_exact() {
     assert_eq!(
         outcome,
         Outcome::Pass {
-            summary: format!("wrote {}", output.display())
+            summary: format!("wrote {}", output.display()),
+            report: None,
         }
     );
     assert_eq!(
@@ -726,7 +728,8 @@ fn verify_asset_accepts_a_matching_body() {
             summary: format!(
                 "{} is anonymously reachable (attempt 1) (body matches staged manifest)",
                 server.url(ASSET)
-            )
+            ),
+            report: None,
         }
     );
     assert_eq!(
@@ -755,7 +758,7 @@ fn verify_asset_retries_a_stale_cdn_copy_until_the_staged_bytes_arrive() {
     );
 
     assert!(
-        matches!(outcome.expect("runs"), Outcome::Pass { summary } if summary.contains("(attempt 2)"))
+        matches!(outcome.expect("runs"), Outcome::Pass { summary, .. } if summary.contains("(attempt 2)"))
     );
     assert!(
         lines[1].starts_with(&format!(
@@ -812,7 +815,8 @@ fn verify_asset_without_an_expected_body_accepts_any_reachable_manifest() {
     assert_eq!(
         outcome,
         Outcome::Pass {
-            summary: format!("{} is anonymously reachable (attempt 1)", server.url(ASSET))
+            summary: format!("{} is anonymously reachable (attempt 1)", server.url(ASSET)),
+            report: None,
         }
     );
 }
@@ -925,7 +929,8 @@ fn smoke_pages_passes_once_pages_serves_the_staged_manifest() {
                 "{} serves staged manifest (sha256={}, attempt 2)",
                 server.url(PAGES),
                 sha256(STAGED)
-            )
+            ),
+            report: None,
         }
     );
     assert!(
@@ -1074,7 +1079,8 @@ fn dry_run_generates_and_stages_the_manifest() {
     assert_eq!(
         outcome.expect("runs"),
         Outcome::Pass {
-            summary: format!("dry run complete; outputs preserved under: {work_display}")
+            summary: format!("dry run complete; outputs preserved under: {work_display}"),
+            report: None,
         }
     );
     let manifest = std::fs::read(work.join(dry_run::STAGED_MANIFEST)).expect("staged manifest");
@@ -1302,7 +1308,7 @@ fn dry_run_defaults_to_a_preserved_temp_work_dir() {
 
     let outcome = dry_run(&repo, args).0.expect("runs");
 
-    let Outcome::Pass { summary } = outcome else {
+    let Outcome::Pass { summary, .. } = outcome else {
         panic!("expected a pass");
     };
     let work = PathBuf::from(

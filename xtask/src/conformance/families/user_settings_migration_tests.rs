@@ -92,7 +92,7 @@ impl Real {
         {
             let plan = actual["planning"]["plan"].as_object_mut().unwrap();
             plan.remove("proposedYamlNodes");
-            plan.insert("proposedHex".into(), json!(encode_hex(proposed)));
+            plan.insert("proposedHex".into(), json!(digest::hex(proposed)));
             plan.insert("changes".into(), case["changes"].clone());
             let plan = Value::Object(plan.clone());
             let mut inverse = plan.clone();
@@ -133,7 +133,7 @@ impl Real {
                 {
                     entry.insert(
                         "bytesHex".into(),
-                        json!(encode_hex(proposed.as_ref().unwrap())),
+                        json!(digest::hex(proposed.as_ref().unwrap())),
                     );
                 }
             }

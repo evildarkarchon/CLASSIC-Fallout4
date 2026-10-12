@@ -11,7 +11,6 @@ This quick start reflects the active CLASSIC architecture: **C++ frontends + Rus
 - Rust toolchain (`cargo`)
 - PowerShell 7 (`pwsh`)
 - Qt 6 (for GUI builds)
-- Bun (only if you are modifying Node bindings)
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 

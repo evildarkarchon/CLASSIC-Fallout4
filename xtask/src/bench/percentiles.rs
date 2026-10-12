@@ -120,7 +120,10 @@ pub(super) fn run(root: &RepoRoot, args: PercentilesArgs) -> Result<Outcome> {
         let _ = write!(headline, " ({skipped} skipped)");
     }
     if args.quiet {
-        return Ok(Outcome::Pass { summary: headline });
+        return Ok(Outcome::Pass {
+            summary: headline,
+            report: None,
+        });
     }
 
     let rule = "=".repeat(70);
@@ -146,7 +149,8 @@ pub(super) fn run(root: &RepoRoot, args: PercentilesArgs) -> Result<Outcome> {
         output.display()
     );
     Ok(Outcome::Pass {
-        summary: format!("{headline}\n{report}"),
+        summary: headline,
+        report: Some(report),
     })
 }
 

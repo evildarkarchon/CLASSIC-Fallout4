@@ -14,6 +14,7 @@ minimal because these scanner operations inspect archive metadata, not audio or
 texture decompression.
 
 The `full` and `bridge` inputs contain equivalent archives. Their separate
-actions reflect the public surfaces: Node/Python expose discovery and batch
-scanning, while CXX exposes per-archive vectors and a summary. Expected results
+actions reflect the public surfaces the pack was written for: discovery and
+batch scanning (the retired Node and Python bindings), and per-archive vectors
+and a summary (CXX). Expected results
 remain authored in the scenario pack and never enter native run plans.

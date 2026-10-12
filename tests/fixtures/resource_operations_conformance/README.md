@@ -16,8 +16,5 @@ in `tests/conformance/packs/resource_operations/v1.json`. Unknown extensions and
 type names test the public `other` fallback. Validation failures become stable
 codes only after observing the core error variant or its binding error carrier.
 
-Rust, Node and Python expose the selected operations. CXX has no applicable
-resource bridge. The type catalog observes every type-specific static Python
-constructor against the equivalent canonical Rust/Node parse operation. Python
-representation and equality methods retain existing evidence and receive no
-classification credit from these calls.
+The Rust participant runs the selected operations. CXX has no applicable
+resource bridge.

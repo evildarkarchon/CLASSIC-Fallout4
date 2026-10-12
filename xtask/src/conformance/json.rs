@@ -19,6 +19,8 @@ use std::fmt;
 use serde_json::{Map, Number, Value};
 use sha2::{Digest, Sha256};
 
+use crate::digest;
+
 /// A strictly parsed JSON document with the line of every value.
 #[derive(Debug, Clone)]
 pub struct Document {
@@ -114,6 +116,7 @@ struct Parser<'a> {
 }
 
 impl Parser<'_> {
+    /// A [`JsonError`] at the current line.
     fn error(&self, message: impl Into<String>) -> JsonError {
         JsonError {
             line: self.line,
@@ -125,6 +128,7 @@ impl Parser<'_> {
         self.bytes.get(self.position).copied()
     }
 
+    /// Skips JSON whitespace, counting newlines so later values get the right line.
     fn skip_whitespace(&mut self) {
         while let Some(byte) = self.peek() {
             match byte {
@@ -138,6 +142,7 @@ impl Parser<'_> {
         }
     }
 
+    /// Consumes `byte`, or fails naming it.
     fn expect(&mut self, byte: u8) -> Result<(), JsonError> {
         if self.peek() == Some(byte) {
             self.position += 1;
@@ -166,6 +171,7 @@ impl Parser<'_> {
         }
     }
 
+    /// Consumes the keyword `word` (`true`, `false` or `null`) and returns `value`.
     fn literal(&mut self, word: &str, value: Value) -> Result<Value, JsonError> {
         if self.bytes[self.position..].starts_with(word.as_bytes()) {
             self.position += word.len();
@@ -175,6 +181,8 @@ impl Parser<'_> {
         }
     }
 
+    /// Parses an object at `pointer`, rejecting duplicate keys and non-string keys.
+    /// Each member value is parsed at its own pointer so its line is recorded.
     fn object(&mut self, pointer: &str) -> Result<Value, JsonError> {
         self.expect(b'{')?;
         let mut map = Map::new();
@@ -209,6 +217,8 @@ impl Parser<'_> {
         }
     }
 
+    /// Parses an array at `pointer`; each element is parsed at its own pointer so
+    /// its line is recorded.
     fn array(&mut self, pointer: &str) -> Result<Value, JsonError> {
         self.expect(b'[')?;
         let mut items = Vec::new();
@@ -233,6 +243,8 @@ impl Parser<'_> {
         }
     }
 
+    /// Parses an integer that fits `i64` or `u64`. A fraction or exponent is
+    /// rejected: the protocol forbids floating-point values.
     fn number(&mut self) -> Result<Value, JsonError> {
         let start = self.position;
         if self.peek() == Some(b'-') {
@@ -262,6 +274,8 @@ impl Parser<'_> {
         Err(self.error(format!("integer {lexeme} is outside the 64-bit range")))
     }
 
+    /// Parses a string literal, decoding escapes and rejecting unescaped control
+    /// characters.
     fn string(&mut self) -> Result<String, JsonError> {
         self.expect(b'"')?;
         let mut out = String::new();
@@ -306,6 +320,7 @@ impl Parser<'_> {
         }
     }
 
+    /// Reads the four hex digits of a `\u` escape.
     fn hex4(&mut self) -> Result<u32, JsonError> {
         let digits = self
             .text
@@ -317,6 +332,8 @@ impl Parser<'_> {
         Ok(value)
     }
 
+    /// Decodes a `\u` escape (after the `\u`), combining a surrogate pair and
+    /// rejecting a lone surrogate.
     fn unicode_escape(&mut self) -> Result<char, JsonError> {
         let first = self.hex4()?;
         let code = if (0xD800..0xDC00).contains(&first) {
@@ -349,6 +366,9 @@ pub fn canonical_bytes(value: &Value) -> Vec<u8> {
     out.into_bytes()
 }
 
+/// Appends the canonical form of `value` to `out`: no whitespace, object keys
+/// in sorted order, integers as written, and strings escaped by
+/// [`write_string`].
 fn write_canonical(value: &Value, out: &mut String) {
     match value {
         Value::Null => out.push_str("null"),
@@ -383,6 +403,9 @@ fn write_canonical(value: &Value, out: &mut String) {
     }
 }
 
+/// Appends `text` as a JSON string: `"` and `\` escaped, the short escapes for
+/// backspace, form feed, newline, carriage return and tab, `\u00XX` for other
+/// control characters, and everything else (including non-ASCII) as is.
 fn write_string(text: &str, out: &mut String) {
     out.push('"');
     for character in text.chars() {
@@ -432,12 +455,7 @@ impl FramedDigest {
 
     /// Finishes the digest as `sha256:<lowercase hex>`.
     pub fn finish(self) -> String {
-        let bytes = self.hasher.finalize();
-        let mut out = String::from("sha256:");
-        for byte in bytes.iter() {
-            out.push_str(&format!("{byte:02x}"));
-        }
-        out
+        format!("sha256:{}", digest::hex(&self.hasher.finalize()))
     }
 }
 

@@ -1,13 +1,12 @@
-//! Anonymous HTTP probing for publish verification: one blocking GET, a body
-//! SHA-256, and a fixed-interval poll loop with an overall deadline.
+//! Anonymous HTTP probing for publish verification: one blocking GET and a
+//! fixed-interval poll loop with an overall deadline. Body digests come from
+//! [`crate::digest::sha256_hex`].
 //!
 //! Built on `ureq` (blocking, no Tokio), so xtask never starts an async
 //! runtime of its own (AGENTS.md rule 5). Requests carry no credentials: a
 //! publish must prove what an anonymous client will see.
 
 use std::time::{Duration, Instant};
-
-use sha2::{Digest, Sha256};
 
 /// The largest response body a probe reads. Published assets are a few
 /// hundred KiB; the cap only stops a misbehaving server from exhausting
@@ -69,12 +68,6 @@ pub(crate) fn fetch(request: &Request<'_>) -> Result<Response, String> {
         .read_to_vec()
         .map_err(|error| error.to_string())?;
     Ok(Response { status, body })
-}
-
-/// Lowercase hex SHA-256 of `bytes`.
-pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
-    let digest = Sha256::digest(bytes);
-    digest.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 /// How long a poll may run and how long it waits between attempts.

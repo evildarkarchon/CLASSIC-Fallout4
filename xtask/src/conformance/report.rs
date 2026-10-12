@@ -16,14 +16,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
 
 use super::applicability::{Execution, owned_obligations};
 use super::json::canonical_bytes;
 use super::plan::Role;
 use super::receipt::{FailureKind, PreparedReport};
 use super::schema::{Consumer, Pack};
-use crate::Finding;
+use crate::{Finding, digest};
 
 /// The family-level summary of an invocation that failed receipt validation.
 const INVOCATION_FAILED: &str = "prepared invocation did not pass receipt validation";
@@ -71,6 +70,7 @@ impl ScopedFailure {
         }
     }
 
+    /// A failure of the whole family, not tied to one participant or instance.
     fn family(kind: FailureKind, message: impl Into<String>) -> Self {
         Self {
             kind,
@@ -102,6 +102,9 @@ impl ConsumerCoverage {
         self.gaps.is_empty()
     }
 
+    /// The coverage as a report document member: result, the executions whose
+    /// evidence was used, the evidence digest, the covered obligations and a
+    /// blocking `coverage_mapping_gap` failure per uncovered obligation.
     fn document(&self) -> Value {
         json!({
             "familyId": self.family_id,
@@ -141,8 +144,7 @@ fn evidence_digest(reports: &[&PreparedReport]) -> String {
         )
     });
     let documents: Vec<Value> = sorted.iter().map(|report| report.document()).collect();
-    let digest = Sha256::digest(canonical_bytes(&Value::Array(documents)));
-    let hex: String = digest.iter().map(|byte| format!("{byte:02x}")).collect();
+    let hex = digest::sha256_hex(&canonical_bytes(&Value::Array(documents)));
     format!("sha256:{hex}")
 }
 
@@ -349,32 +351,29 @@ impl FamilyReport {
                 (Some(participant), Some(instance)) => format!(" {participant}/{instance}"),
                 _ => String::new(),
             };
-            findings.push(Finding {
-                path: pack_file.to_owned(),
-                line: 1,
-                rule: failure.kind.as_str(),
-                message: format!("{family}{who}: {}", failure.message),
-            });
+            findings.push(Finding::file(
+                pack_file,
+                failure.kind.as_str(),
+                format!("{family}{who}: {}", failure.message),
+            ));
         }
         for key in self.missing() {
-            findings.push(Finding {
-                path: pack_file.to_owned(),
-                line: 1,
-                rule: FailureKind::MissingReceipt.as_str(),
-                message: format!(
+            findings.push(Finding::file(
+                pack_file,
+                FailureKind::MissingReceipt.as_str(),
+                format!(
                     "{family} {}/{}: required execution produced no validated invocation",
                     key.0, key.1
                 ),
-            });
+            ));
         }
         if let Some(coverage) = &self.coverage {
             for (obligation, message) in &coverage.gaps {
-                findings.push(Finding {
-                    path: pack_file.to_owned(),
-                    line: 1,
-                    rule: FailureKind::CoverageMapping.as_str(),
-                    message: format!("{family} obligation {obligation}: {message}"),
-                });
+                findings.push(Finding::file(
+                    pack_file,
+                    FailureKind::CoverageMapping.as_str(),
+                    format!("{family} obligation {obligation}: {message}"),
+                ));
             }
         }
         for report in &self.invocations {
@@ -397,15 +396,14 @@ impl FamilyReport {
                     .as_ref()
                     .map(|path| format!(" at {path}"))
                     .unwrap_or_default();
-                findings.push(Finding {
-                    path: path.clone(),
-                    line: 1,
-                    rule: failure.kind.as_str(),
-                    message: format!(
+                findings.push(Finding::file(
+                    path.clone(),
+                    failure.kind.as_str(),
+                    format!(
                         "{family} {}/{}{item}{at}: {}",
                         key.0, key.1, failure.message
                     ),
-                });
+                ));
             }
         }
         findings

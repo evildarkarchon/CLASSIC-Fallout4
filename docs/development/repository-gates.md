@@ -21,6 +21,10 @@ conformance protocol, its catalogs and its CI steps are described in
 | Single Tokio runtime | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | `ci-rust.yml`, job `lint`, step "Run clippy" |
 | YAML Data publishes cleanly | `cargo xtask yaml-data validate --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"` | `ci-rust.yml`, job `xtask-linux` (`ubuntu-latest`), step "Validate YAML Data" |
 | App-notification source publishes cleanly | `cargo xtask app-notification validate --source "CLASSIC Data/app-notification.yaml"`, then `cargo xtask app-notification dry-run --workflow-tag app-notification-v0.0.0` | `ci-rust.yml`, job `xtask-linux` (`ubuntu-latest`), steps "Validate app-notification source" and "Dry-run app-notification publish" |
+| A valid cached Documents path wins over platform discovery | `cargo test -p classic-path-core --lib docs_path` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` (the two tests are Windows-only; the job runs on `windows-latest`) |
+| Frontends write no core-owned scan-run phrase or Display Label table (TUI) | `cargo test -p classic-tui --test shared_runtime_audit` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
+| Frontends write no core-owned scan-run phrase or Display Label table (CLI) | `classic-cli/build_cli.ps1 -Test` (the `[display-label][audit]` cases in `classic-cli-tests`) | `ci-cpp.yml`, job `cli-tests` (both compilers), step "Build and test CLI" |
+| Frontends write no core-owned scan-run phrase or Display Label table (GUI) | `classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-display-label-audit` | `ci-cpp.yml`, job `gui-tests` (both compilers), step "Build and test GUI" |
 
 The CXX bridge gate enforces the consumer-driven bridge: every bridge function
 has a production caller in `classic-cli/src` or `classic-gui/src`, and every
@@ -76,6 +80,37 @@ upload as well, the `compiler: [msvc, clang-cl]` matrix on `cli-tests` and
 or editing any of them fails the check. `cargo xtask conformance check --help`
 lists the input rule; [`conformance.md`](conformance.md#workflow-policy) lists
 the pins.
+
+The cached Documents path test pins the installation-discovery source boundary
+(#297): `DocsPathFinder::find_docs_path` returns a valid cached path before it
+runs the non-injectable platform discovery, and falls back to discovery when
+the cached path is invalid.
+`valid_cached_docs_path_wins_over_a_discoverable_platform_path` and
+`invalid_cached_docs_path_falls_back_to_platform_discovery` in
+`business-logic/classic-path-core/src/docs_path_tests.rs` are Windows-only,
+because the registry Documents folder is the one discovery result every host
+is guaranteed to have.
+
+The core-owned phrase audits keep Crash Log Scan Run prose and Display Labels
+with the Rust crates that own them. Each frontend has one source audit:
+`ui-applications/classic-tui/tests/shared_runtime_audit.rs`,
+`classic-cli/tests/test_display_label_audit.cpp` and
+`classic-gui/tests/test_display_label_audit.cpp`. All three read the one shared
+deny-list, `business-logic/classic-scan-presentation/core-owned-phrases.txt`,
+and fail when a frontend source string literal contains a listed phrase, when a
+frontend turns an audited enum into its own naming table, or when the audit's
+declared source list falls behind the directory it covers. The TUI audit also
+pins the single shared Tokio runtime for TUI workflows.
+
+## Tools that are not gates
+
+| Tool | Command (repo root) | CI step |
+| --- | --- | --- |
+| Criterion post-processing (tail percentiles, old baseline cleanup) | `cargo xtask bench percentiles`, `cargo xtask bench cleanup [--keep <n>] [--execute]` | None. It is a local benchmarking aid with no CI home; no workflow runs it |
+
+`cargo xtask bench` post-processes local Criterion output and never fails a
+build on a performance result. Usage is in
+[`profiling_workflow.md`](profiling_workflow.md).
 
 ## Conformance applicability
 

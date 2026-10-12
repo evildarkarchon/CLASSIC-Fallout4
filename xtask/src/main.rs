@@ -7,13 +7,17 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use xtask::{Outcome, RepoRoot, conformance, cxx_bridge_gate, user_settings_ownership, yaml_data};
+use xtask::{
+    Outcome, RepoRoot, app_notification, bench, conformance, cxx_bridge_gate, scan_run_contract,
+    user_settings_ownership, yaml_data,
+};
 
 /// CLASSIC repository tooling.
 ///
 /// Exit codes: 0 pass, 1 failed check or operational failure, 2 usage error.
 /// Findings are printed to stderr as `path:line: rule: message`, followed by a
-/// summary; a pass prints `OK: <summary>` to stdout.
+/// summary; a pass prints `OK: <summary>` to stdout, followed by a multi-line
+/// report for commands that have one (`bench`).
 #[derive(Debug, Parser)]
 #[command(name = "xtask", bin_name = "cargo xtask", version)]
 struct Cli {
@@ -48,10 +52,10 @@ enum Command {
     /// tests/conformance/packs/crash_log_scan_run/v1.json, that the reset and
     /// failure fixtures are complete, and that no forbiddenExports symbol
     /// appears in its source file.
-    ScanRunContract(xtask::scan_run_contract::Args),
+    ScanRunContract(scan_run_contract::Args),
     /// Post-process Criterion benchmark output: tail percentiles and old
     /// baseline cleanup.
-    Bench(xtask::bench::Args),
+    Bench(bench::Args),
     /// Fail when anything but classic-user-settings-core interprets User
     /// Settings.
     ///
@@ -79,7 +83,7 @@ enum Command {
     /// (without dry-run), around the release and gh-pages steps. `validate`
     /// and `dry-run` also run in the `xtask-linux` CI job. Polling steps print
     /// each retry, and dry-run each stage, to stderr.
-    AppNotification(xtask::app_notification::Args),
+    AppNotification(app_notification::Args),
     /// Conformance engine: `check` validates every scenario pack,
     /// tests/conformance/participants.json, tests/conformance/consumer-obligations.json
     /// and the CI workflow policy, without running any participant; `run`
@@ -90,18 +94,21 @@ enum Command {
     Conformance(conformance::Args),
 }
 
+/// Parses the command line, runs the subcommand against the repository root,
+/// and renders its outcome; an operational error prints `error: ...` to stderr
+/// and exits 1.
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = RepoRoot::discover(cli.repo_root).and_then(|root| match cli.command {
         Command::CxxBridgeGate(args) => cxx_bridge_gate::run(&root, args),
-        Command::ScanRunContract(args) => xtask::scan_run_contract::run(&root, args),
-        Command::Bench(args) => xtask::bench::run(&root, args),
+        Command::ScanRunContract(args) => scan_run_contract::run(&root, args),
+        Command::Bench(args) => bench::run(&root, args),
         Command::UserSettingsOwnership(args) => user_settings_ownership::run(&root, args),
         Command::YamlData(args) => {
             yaml_data::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
         }
         Command::AppNotification(args) => {
-            xtask::app_notification::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
+            app_notification::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
         }
         Command::Conformance(args) => {
             conformance::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
@@ -119,8 +126,11 @@ fn main() -> ExitCode {
 /// Prints `outcome` per the output contract and returns its exit code.
 fn render(outcome: Outcome) -> ExitCode {
     match outcome {
-        Outcome::Pass { summary } => {
+        Outcome::Pass { summary, report } => {
             println!("OK: {summary}");
+            if let Some(report) = report {
+                println!("{report}");
+            }
             ExitCode::SUCCESS
         }
         Outcome::Fail { findings, summary } => {

@@ -163,21 +163,8 @@ impl Check<'_> {
     /// (a key or a string value).
     fn at_key(&mut self, literal: &str, rule: &'static str, message: String) {
         let line = self.manifest_line(&format!("\"{literal}\""));
-        self.findings.push(Finding {
-            path: MANIFEST_PATH.to_owned(),
-            line,
-            rule,
-            message,
-        });
-    }
-
-    fn at(&mut self, path: &str, line: usize, rule: &'static str, message: String) {
-        self.findings.push(Finding {
-            path: path.to_owned(),
-            line,
-            rule,
-            message,
-        });
+        self.findings
+            .push(Finding::new(MANIFEST_PATH, line, rule, message));
     }
 
     /// Reads `value` as a list of strings. Records `<label> must be a list of
@@ -276,12 +263,12 @@ impl Check<'_> {
             };
             if item.variants.is_empty() {
                 let line = item.ident.span().start().line;
-                self.at(
+                self.findings.push(Finding::new(
                     path,
                     line,
                     RUST_ENUM_MISMATCH,
                     format!("Rust enum {name} has no variants"),
-                );
+                ));
                 continue;
             }
 
@@ -324,14 +311,14 @@ impl Check<'_> {
             let prefix = format!("{category}.");
             for (variant, line) in &observed {
                 if !variants.contains(variant) {
-                    self.at(
+                    self.findings.push(Finding::new(
                         path,
                         *line,
                         RUST_ENUM_MISMATCH,
                         format!(
                             "Rust enum {name} does not match the manifest: unregistered {variant}"
                         ),
-                    );
+                    ));
                 }
             }
             for variant in variants
@@ -363,12 +350,12 @@ impl Check<'_> {
         }
         for target in TARGETS {
             if !variants.contains(target.variant) {
-                self.at(
+                self.findings.push(Finding::new(
                     POLICY_PATH,
                     target.line as usize,
                     VARIANT_EVIDENCE,
                     format!("variant evidence policy differs: stale {}", target.variant),
-                );
+                ));
             }
         }
 
@@ -379,7 +366,7 @@ impl Check<'_> {
             if let Evidence::Runtime { scenario_id } = target.evidence
                 && !scenarios.contains(scenario_id)
             {
-                self.at(
+                self.findings.push(Finding::new(
                     POLICY_PATH,
                     target.line as usize,
                     VARIANT_EVIDENCE,
@@ -387,7 +374,7 @@ impl Check<'_> {
                         "variant {} references scenario '{scenario_id}', which is not a scenario in {PACK_PATH}",
                         target.variant
                     ),
-                );
+                ));
             }
         }
     }
@@ -422,7 +409,8 @@ impl Check<'_> {
         match ids {
             Ok(ids) => Some(ids),
             Err(message) => {
-                self.at(PACK_PATH, 1, VARIANT_EVIDENCE, message);
+                self.findings
+                    .push(Finding::file(PACK_PATH, VARIANT_EVIDENCE, message));
                 None
             }
         }
@@ -845,12 +833,12 @@ impl Check<'_> {
                 };
                 for symbol in &symbols {
                     if let Some(offset) = find_symbol(&source, symbol) {
-                        self.at(
+                        self.findings.push(Finding::new(
                             path,
                             line_at(&source, offset),
                             FORBIDDEN_EXPORT,
                             format!("{owner} {path} still contains `{symbol}`"),
-                        );
+                        ));
                     }
                 }
             }

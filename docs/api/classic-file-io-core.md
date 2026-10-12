@@ -244,8 +244,8 @@ Contributor notes:
 
 ## File Hash Scopes
 
-Every hash-cache store sits behind an opaque `FileHashScope` handle, so a
-binding adapter can give each caller its own cached hashes and statistics
+Every hash-cache store sits behind an opaque `FileHashScope` handle, so an
+adapter can give each caller its own cached hashes and statistics
 while unscoped callers keep the process default.
 
 - `FileHashScope::default_scope()` - the store behind every unscoped `FileHasher` function
@@ -259,18 +259,15 @@ Contract:
 - hashing, clearing, and resetting through one scope never changes another scope's entries or statistics, including the default scope
 - handles are `Send + Sync + 'static` and keep naming the same store when moved into Rayon or async work
 
-Current owners: the Rust, CXX, and Node `FileHasher` surfaces use the default
-scope. In the one Python native extension, three facades each hold their own
-isolated scope, so their caches and statistics stay independent: the
-`classic_file_io.FileHasher` facade, Game Setup Intake runs started through
-`classic_scangame`, and the FCX setup step of Crash Log Scan Runs started
-through `classic_scanlog`. Game Setup Intake selects a scope with
-`GameSetupIntake::run_in_hash_scope` / `run_in_scopes` (see
-`classic-scangame-core.md`); a Crash Log Scan Run carries one through
-`scan_run::contract::execute_in_scopes` (see `classic-scanlog-core.md`), while
-the unscoped `execute` keeps the default scope. No Python facade reads, clears,
-or resets the default scope; a Python facade that later needs hash-cache
-controls must select its own isolated scope rather than expose the default one.
+Current owners: the Rust and CXX `FileHasher` surfaces use the default scope.
+(The retired Python extension held three isolated scopes of its own; see
+ADR-0010.) A caller that needs independent caches and statistics selects a
+scope: Game Setup Intake with `GameSetupIntake::run_in_hash_scope` /
+`run_in_scopes` (see `classic-scangame-core.md`), and a Crash Log Scan Run
+through `scan_run::contract::execute_in_scopes` (see
+`classic-scanlog-core.md`), while the unscoped `execute` keeps the default
+scope. A binding that later needs hash-cache controls for an isolated caller
+must select its own isolated scope rather than expose the default one.
 
 ## Similarity helpers
 

@@ -113,7 +113,7 @@ The bridge delegates role selection, validation, and error classification to Rus
 
 ## Installed YAML Data inspection errors (`unified-installed-yaml-data-inspection`)
 
-`classic_config_core::inspect_installed_yaml_data` returns `UnsupportedGame` before filesystem inspection or `NoUsableSource { role, diagnostics }` after exhausting the allowed candidates for a required role. Non-terminal candidate failures remain structured diagnostics with optional role, provenance, and path plus a typed stable kind. Rust/CXX use enum variants such as `InvalidRoleData`, Node string enums serialize those same PascalCase variant names, and Python projects stable snake-case tokens such as `invalid_role_data`.
+`classic_config_core::inspect_installed_yaml_data` returns `UnsupportedGame` before filesystem inspection or `NoUsableSource { role, diagnostics }` after exhausting the allowed candidates for a required role. Non-terminal candidate failures remain structured diagnostics with optional role, provenance, and path plus a typed stable kind. Rust/CXX use enum variants such as `InvalidRoleData`; the stable snake-case token is `invalid_role_data`.
 
 | Binding | Failure shape |
 | --- | --- |
@@ -131,7 +131,7 @@ Fatal Rust errors preserve `UnsupportedGame` and `NoUsableSource { role, diagnos
 | --- | --- |
 | C++ (CXX) | Not exposed directly since the consumer-driven bridge trim (#308). Native frontends observe Installed YAML Data loading only through the Crash Log Scan Run envelope (`classic::scanner`). |
 
-Reset operational errors are separate from fatal loading errors. Rust `LocalIgnoreResetError` distinguishes unavailable retained defaults, lock/read/backup-directory failures, backup verification, and backup or replacement publication. Publication variants carry `LocalIgnoreResetPublicationStage::{Create, Write, Flush, Sync, Publish}` and occur before canonical replacement, so the malformed original remains authoritative; replacement failures may leave the already verified backup in place. CXX exposes the equivalent reset operation status/error DTO, Node rejects with stable reset metadata, and Python raises dedicated `LocalIgnoreResetError` subclasses. Conflict is expected outcome data on every surface, not an exception. A post-rename Unix directory-sync failure instead becomes `ReplacementDurabilityUnknown` / `replacement_durability_unknown`: defaults are visible, durability is unconfirmed, and every binding receives canonical and verified-backup paths plus malformed, backup, and replacement identities.
+Reset operational errors are separate from fatal loading errors. Rust `LocalIgnoreResetError` distinguishes unavailable retained defaults, lock/read/backup-directory failures, backup verification, and backup or replacement publication. Publication variants carry `LocalIgnoreResetPublicationStage::{Create, Write, Flush, Sync, Publish}` and occur before canonical replacement, so the malformed original remains authoritative; replacement failures may leave the already verified backup in place. CXX carries the reset outcome and its stable metadata on the scan-run envelope (`has_local_ignore_reset` and the reset failure stage). Conflict is expected outcome data, not an exception. A post-rename Unix directory-sync failure instead becomes `ReplacementDurabilityUnknown` / `replacement_durability_unknown`: defaults are visible, durability is unconfirmed, and every binding receives canonical and verified-backup paths plus malformed, backup, and replacement identities.
 
 ---
 

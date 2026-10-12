@@ -30,10 +30,11 @@ use serde_json::{Map, Value, json};
 use super::user_settings_migration;
 use super::yaml_nodes::yaml_nodes;
 use super::{
-    Compiled, EXPECTATION_RULE, InputContext, NormalizationError, decode_hex, encode_hex,
-    expectation_issue, oracle_file, read_oracle, revision, sha256_hex,
+    Compiled, EXPECTATION_RULE, InputContext, NormalizationError, decode_hex, expectation_issue,
+    oracle_file, read_oracle, revision,
 };
 use crate::conformance::{Issue, json as strict_json};
+use crate::digest;
 
 /// The canonical settings document name.
 pub(super) const SETTINGS: &str = "CLASSIC Settings.yaml";
@@ -409,7 +410,7 @@ fn tree(content: Option<&[u8]>, root_exists: bool, lock: bool) -> Vec<Value> {
     }
     if let Some(content) = content {
         tree.push(
-            json!({"path": {"path": SETTINGS}, "kind": "file", "bytesHex": encode_hex(content)}),
+            json!({"path": {"path": SETTINGS}, "kind": "file", "bytesHex": digest::hex(content)}),
         );
     }
     if lock {
@@ -708,14 +709,14 @@ fn legacy_import(
                 "legacy import fixture placements are incomplete".into(),
             ));
         }
-        let backup = format!("{PREFIX}{}.json", sha256_hex(&source));
-        let settings_backup = format!("{PREFIX}{}.yaml", sha256_hex(&original));
+        let backup = format!("{PREFIX}{}.json", digest::sha256_hex(&source));
+        let settings_backup = format!("{PREFIX}{}.yaml", digest::sha256_hex(&original));
         contents.insert(backup.clone(), source);
         contents.insert(settings_backup.clone(), original);
         contents.insert(LOCK.to_owned(), Vec::new());
         let files: Vec<Value> = contents
             .iter()
-            .map(|(path, bytes)| json!({"path": path, "bytesHex": encode_hex(bytes)}))
+            .map(|(path, bytes)| json!({"path": path, "bytesHex": digest::hex(bytes)}))
             .collect();
         expected[index] = object_of(json!({
             "import": {

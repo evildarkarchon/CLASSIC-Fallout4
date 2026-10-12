@@ -89,8 +89,7 @@ The pure-Python runtime and its pytest suite have been removed from the repo. Th
 
 - [ ] Ran relevant C++ wrapper script tests (`classic-cli` / `classic-gui`)
 - [ ] Ran Rust format/lint/tests for touched crates
-- [ ] Ran Node parity/runtime checks if Node-exposed APIs changed
-- [ ] Ran Python parity/stub/runtime checks if Python-exposed APIs changed
+- [ ] Ran `cargo xtask cxx-bridge-gate` and the conformance checks if bridge-exposed APIs changed
 - [ ] Updated docs when architecture/build/test behavior changed
 
 Canonical policy reference: [`AGENTS.md`](../../AGENTS.md).

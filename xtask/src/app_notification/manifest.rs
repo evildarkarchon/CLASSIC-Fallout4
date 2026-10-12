@@ -93,6 +93,7 @@ pub(crate) fn run(root: &RepoRoot, args: Args) -> Result<Outcome> {
         .with_context(|| format!("writing {}", args.output.display()))?;
     Ok(Outcome::Pass {
         summary: format!("wrote {}", args.output.display()),
+        report: None,
     })
 }
 
@@ -108,12 +109,7 @@ fn build(root: &RepoRoot, path: &Path, fallback: Option<&str>) -> Result<Manifes
     let relative = root.relative(path);
     let mut findings = Vec::new();
     let mut report = |line: usize, rule: &'static str, message: String| {
-        findings.push(Finding {
-            path: relative.clone(),
-            line,
-            rule,
-            message,
-        });
+        findings.push(Finding::new(relative.clone(), line, rule, message));
     };
     if !matches!(doc, Yaml::Hash(_)) {
         report(

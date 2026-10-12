@@ -48,18 +48,20 @@ pub(super) fn run(root: &RepoRoot, args: CleanupArgs) -> Result<Outcome> {
     let dir = criterion_dir(root, args.criterion_dir.as_deref())?;
     if !dir.exists() {
         return Ok(Outcome::Pass {
-            summary: format!(
-                "{NOTHING}\nCriterion directory not found: {}\nNo baselines to clean up.",
+            summary: NOTHING.to_owned(),
+            report: Some(format!(
+                "Criterion directory not found: {}\nNo baselines to clean up.",
                 dir.display()
-            ),
+            )),
         });
     }
 
     let baselines = find_baselines(&dir)?;
     if baselines.is_empty() {
         return Ok(Outcome::Pass {
-            summary: format!(
-                "{NOTHING}\nNo baselines found matching pattern: baseline-YYYY-MM-DD-HHMMSS"
+            summary: NOTHING.to_owned(),
+            report: Some(
+                "No baselines found matching pattern: baseline-YYYY-MM-DD-HHMMSS".to_owned(),
             ),
         });
     }
@@ -146,7 +148,8 @@ pub(super) fn run(root: &RepoRoot, args: CleanupArgs) -> Result<Outcome> {
         format!("bench cleanup: dry run, would delete {delete_count} of {total} baseline(s)")
     };
     Ok(Outcome::Pass {
-        summary: format!("{headline}\n{report}"),
+        summary: headline,
+        report: Some(report),
     })
 }
 

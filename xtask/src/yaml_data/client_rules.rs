@@ -113,6 +113,12 @@ pub(crate) struct Ranges {
 }
 
 impl Ranges {
+    /// Records a problem against the entry named `entry_name` (if any).
+    ///
+    /// This collects a [`RangeProblem`], not a `Finding`: [`check_ranges`]
+    /// sees only the parsed document, with no path or source text, so the
+    /// caller that read the file attaches the path and finds the line from
+    /// `entry_name`.
     fn problem(&mut self, entry_name: Option<&str>, rule: &'static str, message: String) {
         self.problems.push(RangeProblem {
             entry_name: entry_name.map(str::to_owned),

@@ -9,7 +9,7 @@ Crate metadata:
 
 This crate is the Rust-side source of truth for known game versions, version matching, known-version queries, and per-version metadata such as Address Library, XSE, and crashgen compatibility data. It is the sole policy owner of the known-version queries `is_known_fallout4_version()` and `is_known_f4se_version()` (issue #244; they used to live in `classic-version-core`, which was retired in #258 with no forwarding shim).
 
-Every registry snapshot sits behind a `VersionRegistryScope` handle. The unscoped accessors read one process default scope, which is what Rust, CXX, and Node callers have always observed; the Python facades that read the registry each select their own isolated scope (see [Version Registry Scopes](#version-registry-scopes)).
+Every registry snapshot sits behind a `VersionRegistryScope` handle. The unscoped accessors read one process default scope, which is what Rust and CXX callers have always observed; a caller that needs isolation selects its own scope (see [Version Registry Scopes](#version-registry-scopes)).
 
 It is a pure Rust business-logic crate. It does not own a UI surface, FFI layer, or Tokio runtime.
 
@@ -260,7 +260,7 @@ Scoped entry points in downstream owners take either a snapshot (`&VersionRegist
 - [`classic-scangame-core`](classic-scangame-core.md): `resolve_xse_folder_for_scan_in_version_registry_scope()`, `AddressLibInfo::*_in()`, `XseChecker::with_version_registry_scope()`, `GameSetupIntake::run_in_scopes()`, `GameScanOrchestrator::with_version_registry_scope()`
 - [`classic-scanlog-core`](classic-scanlog-core.md): `PluginAnalyzer::with_version_registry_scope()`, `scan_run::contract::execute_in_version_registry_scope()`, `scan_run::contract::execute_in_scopes()`
 
-Rust, CXX, and Node callers keep using the unscoped paths and therefore the default scope. The Python `classic_version_registry`, `classic_version`, `classic_config`, `classic_scangame`, and `classic_scanlog` facades each hold their own isolated scope and pass it at facade entry or object construction, so now that the facades share one native library (#259) each keeps the snapshot of its own first use.
+Rust and CXX callers keep using the unscoped paths and therefore the default scope. A caller that holds its own isolated scope and passes it at entry or object construction keeps the snapshot of its own first use. (The retired Python facades were the callers this was built for after they merged into one native library in #259; see ADR-0010.)
 
 ## `MatchResult` and `MatchConfidence`
 

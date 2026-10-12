@@ -206,6 +206,9 @@ impl ControlledUpdateService {
         }
     }
 
+    /// Stops serving: sets the stop flag (releasing stalled requests), unblocks
+    /// the listener, and joins the acceptor and every request handler. Idempotent;
+    /// `Drop` calls it too.
     fn stop(&mut self) {
         let (flag, signal) = &*self.stopped;
         *flag.lock().expect("stop flag lock") = true;

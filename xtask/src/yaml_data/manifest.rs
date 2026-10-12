@@ -23,7 +23,8 @@ use serde::Serialize;
 use yaml_rust2::Yaml;
 
 use super::{Loaded, RANGES_FILE_NAME, check_ranges_file, entry_line, load_yaml};
-use crate::publish::{probe::sha256_hex, utc_timestamp};
+use crate::digest::sha256_hex;
+use crate::publish::utc_timestamp;
 use crate::{Finding, Outcome, RepoRoot};
 
 /// The `manifest_version` this tool writes.
@@ -104,12 +105,12 @@ pub(crate) fn run(root: &RepoRoot, args: Args) -> Result<Outcome> {
     for entry in ranges.entries {
         let source = args.databases_dir.join(&entry.name);
         if !source.is_file() {
-            findings.push(Finding {
-                path: root.relative(&ranges_path),
-                line: entry_line(&ranges_text, &entry.name),
-                rule: "missing-shippable-source",
-                message: format!("shippable source missing: {}", source.display()),
-            });
+            findings.push(Finding::new(
+                root.relative(&ranges_path),
+                entry_line(&ranges_text, &entry.name),
+                "missing-shippable-source",
+                format!("shippable source missing: {}", source.display()),
+            ));
             continue;
         }
         let staged = args.staging.join(&entry.name);
@@ -123,14 +124,12 @@ pub(crate) fn run(root: &RepoRoot, args: Args) -> Result<Outcome> {
             .with_context(|| format!("writing {}", sidecar.display()))?;
 
         let Some(schema_version) = staged_schema_version(root, &staged) else {
-            findings.push(Finding {
-                path: root.relative(&staged),
-                line: 1,
-                rule: "missing-schema-version",
-                message:
-                    "has no string schema_version (run `cargo xtask yaml-data validate` first)"
-                        .to_owned(),
-            });
+            findings.push(Finding::file(
+                root.relative(&staged),
+                "missing-schema-version",
+                "has no string schema_version (run `cargo xtask yaml-data validate` first)"
+                    .to_owned(),
+            ));
             continue;
         };
         files.push(ManifestFile {
@@ -167,6 +166,7 @@ pub(crate) fn run(root: &RepoRoot, args: Args) -> Result<Outcome> {
             args.staging.display(),
             manifest_path.display()
         ),
+        report: None,
     })
 }
 

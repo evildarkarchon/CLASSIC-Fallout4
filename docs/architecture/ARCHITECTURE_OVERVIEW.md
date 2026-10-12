@@ -114,5 +114,5 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 ## Transition/Deprecation Note
 
-Historical docs that describe Python runtime entrypoints as first-class app architecture should be treated as legacy context. For active development, prioritize C++ frontends and Rust core; Python survives only as repository tooling under `tools/`.
+Historical docs that describe Python runtime entrypoints as first-class app architecture should be treated as legacy context. For active development, prioritize C++ frontends and Rust core; repository tooling is the `cargo xtask` crate, and no Python remains in the repository.
 

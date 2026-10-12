@@ -34,7 +34,7 @@ use sha2::{Digest, Sha256};
 use super::json::{FramedDigest, canonical_bytes, parse_strict};
 use super::pack::{LoadedPack, contained};
 use super::schema::{PlanParticipant, RunPlan, Scenario, is_canonical_relative_path};
-use crate::RepoRoot;
+use crate::{RepoRoot, digest};
 
 /// Contract name of the expectation digest.
 const EXPECTATION_CONTRACT: &str = "classic-conformance-expectation-v1";
@@ -449,7 +449,7 @@ pub(crate) fn uuid_v4() -> String {
     let mut bytes: [u8; 16] = hasher.finalize()[..16].try_into().expect("16 bytes");
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+    let hex = digest::hex(&bytes);
     format!(
         "{}-{}-{}-{}-{}",
         &hex[..8],

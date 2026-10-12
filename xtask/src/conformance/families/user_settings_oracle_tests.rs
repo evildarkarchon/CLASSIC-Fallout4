@@ -317,7 +317,7 @@ fn committed_observation(
     actual["finalTree"][1] = json!({
         "path": {"path": SETTINGS},
         "kind": "file",
-        "bytesHex": encode_hex(&published),
+        "bytesHex": digest::hex(&published),
     });
     (actual, published)
 }
@@ -378,7 +378,7 @@ fn committed_updates_must_carry_authentic_raw_bytes() {
             actual["commit"]["revision"] = json!(revision(Some(b"other")));
         }),
         ("uppercase hex", |actual, bytes| {
-            actual["finalTree"][1]["bytesHex"] = json!(encode_hex(bytes).to_uppercase());
+            actual["finalTree"][1]["bytesHex"] = json!(digest::hex(bytes).to_uppercase());
         }),
         ("pre-normalized YAML", |actual, _| {
             let entry = actual["finalTree"][1].as_object_mut().unwrap();
@@ -391,7 +391,7 @@ fn committed_updates_must_carry_authentic_raw_bytes() {
         }),
         ("bytes that are not YAML", |actual, _| {
             let bytes = b"a: [";
-            actual["finalTree"][1]["bytesHex"] = json!(encode_hex(bytes));
+            actual["finalTree"][1]["bytesHex"] = json!(digest::hex(bytes));
             actual["commit"]["revision"] = json!(revision(Some(bytes)));
         }),
     ];

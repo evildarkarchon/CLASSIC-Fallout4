@@ -95,6 +95,7 @@ fn staged(input: &Map<String, Value>) -> Result<(), String> {
         .ok_or_else(|| "installationData must list {fixtureRef, path} documents".to_owned())
 }
 
+/// Requires `input[key]` to be a JSON boolean.
 fn boolean(input: &Map<String, Value>, key: &str) -> Result<(), String> {
     input[key]
         .is_boolean()
@@ -102,6 +103,7 @@ fn boolean(input: &Map<String, Value>, key: &str) -> Result<(), String> {
         .ok_or_else(|| format!("{key} must be a boolean"))
 }
 
+/// Requires the scenario to name exactly the one capability `capability`.
 fn only_capability(capabilities: &[String], capability: &str) -> Result<(), String> {
     (capabilities == [capability])
         .then_some(())
@@ -119,6 +121,10 @@ fn observation_fields(fields: &Value) -> Result<(), String> {
         .ok_or_else(|| "observationFields must be sorted, unique field names".to_owned())
 }
 
+/// Checks a `user-settings.update` input: boolean `commit` and
+/// `installationRootExists` flags, a supported `previewMode`, a
+/// `requestedUpdate` object, at most one document staged at the settings path,
+/// and an `externalEdit` that is null or a staged edit of that path.
 fn update(input: &Map<String, Value>) -> Result<(), String> {
     boolean(input, "commit")?;
     boolean(input, "installationRootExists")?;
@@ -145,6 +151,10 @@ fn update(input: &Map<String, Value>) -> Result<(), String> {
     })
 }
 
+/// Checks a `user-settings.migrate` input: boolean `apply` and `restore`
+/// flags, and `beforeApply` / `beforeRestore` interference controls that are
+/// null or a supported kind with exactly that kind's members (an external edit
+/// must target a supported settings location).
 fn migrate(input: &Map<String, Value>) -> Result<(), String> {
     boolean(input, "apply")?;
     boolean(input, "restore")?;
@@ -175,6 +185,8 @@ fn migrate(input: &Map<String, Value>) -> Result<(), String> {
     Ok(())
 }
 
+/// Checks a `user-settings.legacy-import` input: it stages exactly the
+/// settings document and `state.json`.
 fn legacy_import(input: &Map<String, Value>) -> Result<(), String> {
     let paths: BTreeSet<&str> = input["installationData"]
         .as_array()

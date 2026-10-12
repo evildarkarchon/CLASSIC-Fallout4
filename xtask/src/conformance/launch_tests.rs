@@ -18,8 +18,8 @@ fn launch_for(command: ParticipantCommand) -> Launch {
 
 #[test]
 fn rust_and_tui_run_their_cargo_tests() {
-    let table = CommandTable::repository("msvc", "default");
-    let semantic = table.command("rust", "performance").unwrap();
+    let table = CommandTable::repository(Compiler::Msvc, "default");
+    let semantic = table.command(Participant::Rust, "performance").unwrap();
     assert_eq!(semantic.program, "cargo");
     assert_eq!(
         semantic.args,
@@ -36,21 +36,25 @@ fn rust_and_tui_run_their_cargo_tests() {
     assert_eq!(semantic.timeout, Duration::from_secs(1200));
     assert!(semantic.source_paths.contains(&LAUNCHER.to_owned()));
 
-    let scan = table.command("rust", "autoscan-report").unwrap();
+    let scan = table.command(Participant::Rust, "autoscan-report").unwrap();
     assert!(
         scan.args
             .contains(&"writes_scan_run_conformance_receipt".to_owned())
     );
-    let settings = table.command("rust", "user-settings").unwrap();
+    let settings = table.command(Participant::Rust, "user-settings").unwrap();
     assert!(settings.args.contains(&"compatibility_contract".to_owned()));
-    let launch = table.command("rust", "crash-log-scan-launch").unwrap();
+    let launch = table
+        .command(Participant::Rust, "crash-log-scan-launch")
+        .unwrap();
     assert!(
         launch
             .args
             .contains(&"writes_launch_conformance_receipt".to_owned())
     );
 
-    let bridge = table.command("rust", "report-discovery").unwrap();
+    let bridge = table
+        .command(Participant::Rust, "report-discovery")
+        .unwrap();
     assert_eq!(bridge.program, "pwsh");
     assert!(
         bridge
@@ -65,14 +69,14 @@ fn rust_and_tui_run_their_cargo_tests() {
             .contains("files::tests::writes_report_discovery_conformance_receipt")
     );
 
-    let service = table.command("rust", "update-services").unwrap();
+    let service = table.command(Participant::Rust, "update-services").unwrap();
     assert!(
         service
             .source_paths
             .contains(&"xtask/src/conformance/update_service.rs".to_owned())
     );
 
-    let tui = table.command("tui", "user-settings").unwrap();
+    let tui = table.command(Participant::Tui, "user-settings").unwrap();
     assert!(tui.args.contains(&"--ignored".to_owned()));
     assert!(
         tui.source_paths.is_empty(),
@@ -82,20 +86,20 @@ fn rust_and_tui_run_their_cargo_tests() {
 
 #[test]
 fn native_participants_run_the_build_wrappers_test_only() {
-    let table = CommandTable::repository("clang-cl", "ci-system-qt");
+    let table = CommandTable::repository(Compiler::ClangCl, "ci-system-qt");
     for (participant, script, test) in [
         (
-            "cxx",
+            Participant::Cxx,
             "classic-cli/build_cli.ps1",
             "classic-cxx-conformance",
         ),
         (
-            "cli",
+            Participant::Cli,
             "classic-cli/build_cli.ps1",
             "classic-cli-consumer-conformance",
         ),
         (
-            "gui",
+            Participant::Gui,
             "classic-gui/build_gui.ps1",
             "classic-gui-consumer-conformance",
         ),
@@ -114,13 +118,14 @@ fn native_participants_run_the_build_wrappers_test_only() {
     }
     assert!(
         table
-            .command("gui", "user-settings")
+            .command(Participant::Gui, "user-settings")
             .unwrap()
             .args
             .ends_with(&["-Preset".to_owned(), "ci-system-qt".to_owned()])
     );
-    assert!(table.command("node", "user-settings").is_none());
-    let cxx = table.command("cxx", "user-settings").unwrap();
+    // A participant xtask does not know (a retired binding) has no command.
+    assert!(Participant::from_id("node").is_none());
+    let cxx = table.command(Participant::Cxx, "user-settings").unwrap();
     assert!(
         cxx.source_paths
             .contains(&"cpp-bindings/classic-cpp-bridge/src/settings.rs".to_owned())
@@ -129,8 +134,8 @@ fn native_participants_run_the_build_wrappers_test_only() {
 
 #[test]
 fn attempts_classify_their_own_failures() {
-    let command = CommandTable::repository("msvc", "default")
-        .command("cxx", "demo")
+    let command = CommandTable::repository(Compiler::Msvc, "default")
+        .command(Participant::Cxx, "demo")
         .unwrap();
     let launch = launch_for(command);
     assert!(Attempt::exited(0).failures(&launch).is_empty());
@@ -162,8 +167,8 @@ fn attempts_classify_their_own_failures() {
 
     // Only the wrappers' prerequisite messages count as environment failures.
     let mut cargo = launch_for(
-        CommandTable::repository("msvc", "default")
-            .command("rust", "demo")
+        CommandTable::repository(Compiler::Msvc, "default")
+            .command(Participant::Rust, "demo")
             .unwrap(),
     );
     cargo.participant = "rust".into();

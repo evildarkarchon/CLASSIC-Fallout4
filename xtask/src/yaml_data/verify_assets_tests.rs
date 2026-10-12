@@ -76,7 +76,7 @@ fn trims_and_lowercases_sha256_and_appends_the_release_manifest_asset() {
             Asset {
                 name: "manifest.json".into(),
                 url: "https://example.test/manifest.json".into(),
-                sha256: probe::sha256_hex(&bytes),
+                sha256: digest::sha256_hex(&bytes),
             },
         ]
     );

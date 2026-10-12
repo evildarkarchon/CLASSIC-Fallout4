@@ -1,7 +1,7 @@
 # Crash Log Scan Run parity fixture
 
-This immutable corpus is copied into a temporary directory by Rust, C++, Node,
-and Python tests. `manifest.json` owns the normalized Standard and Targeted
+This immutable corpus is copied into a temporary directory by Rust and C++
+tests. `manifest.json` owns the normalized Standard and Targeted
 expectations, the source-checked contract-variant inventory, and retained
 negative export checks. Executable adapter and frontend coverage comes from
 the blocking pack at `tests/conformance/packs/crash_log_scan_run/v1.json` and
@@ -14,8 +14,7 @@ The Installed YAML Data fixture also owns the malformed Local Ignore recovery
 corpus. Its Reset To Default expectations cover retained Main/game selection,
 single-use continuation resume, typed conflict, operational failures,
 pre-reset and post-critical-section cancellation, byte-exact backup bytes, reset
-diagnostics, and byte-identical Autoscan Report content across Rust, C++, Node,
-and Python. Replacement-publication and post-replacement durability-unknown
+diagnostics, and byte-identical Autoscan Report content across Rust and C++. Replacement-publication and post-replacement durability-unknown
 receipts remain blocking internal fault-projection evidence because no portable
 public filesystem condition can trigger them deterministically across adapters.
 

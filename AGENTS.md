@@ -35,7 +35,7 @@ For old-to-new path and command translations, see `docs/workspace-migration-matr
 
 ## Always-On Repository Rules
 
-1. Prioritize active work in `classic-cli/`, `classic-gui/`, `foundation/`, `business-logic/`, `cpp-bindings/`, and `ui-applications/`.
+1. Prioritize active work in `classic-cli/`, `classic-gui/`, `foundation/`, `business-logic/`, `cpp-bindings/`, `ui-applications/`, and `xtask/`.
 2. Keep all business logic in Rust. Put shared behavior, state transitions, data mutation, persistence rules, and validation in Rust core crates unless the task is explicitly interface-only.
 3. Keep non-interface layers thin. The CXX bridge and the C++ CLI/GUI wrap Rust APIs rather than reimplementing logic, unless FFI cost is demonstrated to be too high for that specific path.
 4. The CXX bridge is consumer-driven: it exposes exactly what `classic-cli` and `classic-gui` production code calls. Add an export in the same change as its first production call site; remove it in the same change as its last. A core change updates the bridge only where a frontend consumes the affected capability. Business logic never moves into the bridge to compensate.
@@ -59,8 +59,7 @@ For old-to-new path and command translations, see `docs/workspace-migration-matr
 - Native C++ targets are Windows-focused and MSVC-ABI-based; the build wrappers default to MSVC and also support `-Compiler clang-cl`, which keeps the MSVC ABI while using clang-cl for CMake, vcpkg, and Cargo `cc-rs`/`cxx_build` C++ bridge glue.
 - When running Rust or C++ MSVC-targeted commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it, so Git's `usr/bin/link.exe` does not override the MSVC-compatible linker.
 - Belt-and-suspenders for the above: `cmake/ClassicLinkerCheck.cmake` is included by both `classic-gui/CMakeLists.txt` and `classic-cli/CMakeLists.txt` and validates the linker CMake resolved for the active MSVC/MSVC-ABI configure (falling back to PATH only when CMake has not resolved one yet). The guard still fails fast with `FATAL_ERROR` when it detects Git for Windows' `link.exe` or any other non-MSVC-compatible linker, but it no longer rejects a valid VS Code/CMake Tools configure just because Git's `usr/bin` appears earlier on PATH.
-- Rust repository tooling is `cargo xtask <command>` (the repo-root `xtask/` crate, which links no product crate; `cargo xtask --help` lists the commands, exit codes, and output format).
-- The conformance engine is `cargo xtask conformance check | run | verdict` (`docs/development/conformance.md`); the repository gates CI runs directly are in `docs/development/repository-gates.md`. The repository tracks no Python; there is no Python environment to set up.
+- Repository tooling is `cargo xtask <command>` (the repo-root `xtask/` crate, which links no product crate; `cargo xtask --help` lists the commands, exit codes, and output format). That includes the conformance engine, `cargo xtask conformance check | run | verdict` (`docs/development/conformance.md`); the repository gates CI runs directly are in `docs/development/repository-gates.md`. The repository tracks no Python; there is no Python environment to set up.
 - The repo owns three disjoint tag namespaces: `v*` for binary releases, `yaml-data-v*` for YAML-data publishes, and `app-notification-v*` for app-update notifications. Never let a data or notification publish move GitHub's "latest release" pointer off a binary release — that is what `--latest=false` guards at every `gh release edit` step. Commands, preflights, and the full contract live in the project skill and `docs/api/app-update-notification-delivery.md`.
 
 ## graphify

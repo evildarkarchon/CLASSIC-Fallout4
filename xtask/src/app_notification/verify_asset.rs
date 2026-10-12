@@ -17,7 +17,7 @@ use anyhow::{Context, Result, bail};
 use serde_json::Value;
 
 use crate::publish::probe::{self, Polled, Request, Schedule};
-use crate::{Finding, Outcome, RepoRoot};
+use crate::{Finding, Outcome, RepoRoot, digest};
 
 /// Sent with every probe so the requests are identifiable in server logs.
 const USER_AGENT: &str = "classic-app-notification-publish-probe";
@@ -65,7 +65,7 @@ pub(crate) fn run(root: &RepoRoot, args: Args, progress: &mut dyn FnMut(&str)) -
             }
             let bytes =
                 std::fs::read(path).with_context(|| format!("reading {}", path.display()))?;
-            let digest = probe::sha256_hex(&bytes);
+            let digest = digest::sha256_hex(&bytes);
             progress(&format!(
                 "expecting body SHA-256 {digest} (computed from {})",
                 path.display()
@@ -99,20 +99,19 @@ pub(crate) fn run(root: &RepoRoot, args: Args, progress: &mut dyn FnMut(&str)) -
                     ""
                 }
             ),
+            report: None,
         },
         Polled::TimedOut { last, .. } => Outcome::from_findings(
-            vec![Finding {
-                path: args
-                    .expected_body_path
+            vec![Finding::file(
+                args.expected_body_path
                     .as_deref()
                     .map_or_else(|| args.url.clone(), |path| root.relative(path)),
-                line: 1,
-                rule: "asset-not-reachable",
-                message: format!(
+                "asset-not-reachable",
+                format!(
                     "{} did not become reachable within {}s (last error: {last})",
                     args.url, args.timeout_seconds
                 ),
-            }],
+            )],
             String::new(),
             "app-notification verify-asset: the release asset does not serve the staged manifest"
                 .to_owned(),
@@ -143,7 +142,7 @@ pub(crate) fn probe_once(url: &str, expected_sha256: Option<&str>) -> Result<(),
         return Err("manifest is missing a non-empty release_tag".to_owned());
     }
     if let Some(expected) = expected_sha256 {
-        let actual = probe::sha256_hex(&response.body);
+        let actual = digest::sha256_hex(&response.body);
         if actual != expected {
             return Err(format!(
                 "body SHA-256 mismatch: expected {expected}, got {actual} \

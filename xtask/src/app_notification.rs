@@ -106,12 +106,7 @@ struct Source {
 /// message. Duplicate mapping keys and multiple documents are parse failures,
 /// as they were under ruamel.
 fn load_source(root: &RepoRoot, path: &Path) -> Result<Source, Finding> {
-    let finding = |line, rule, message| Finding {
-        path: root.relative(path),
-        line,
-        rule,
-        message,
-    };
+    let finding = |line, rule, message| Finding::new(root.relative(path), line, rule, message);
     let text = std::fs::read_to_string(path).map_err(|error| {
         finding(
             1,

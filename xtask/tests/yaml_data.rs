@@ -81,7 +81,8 @@ fn the_live_yaml_data_validates() {
     assert_eq!(
         outcome.expect("validate runs"),
         Outcome::Pass {
-            summary: "validated 2 shippable YAML files".into()
+            summary: "validated 2 shippable YAML files".into(),
+            report: None,
         }
     );
 }
@@ -109,7 +110,8 @@ fn a_clean_tree_passes_and_names_with_spaces_are_kept_as_authored() {
             .0
             .expect("validate runs"),
         Outcome::Pass {
-            summary: "validated 2 shippable YAML files".into()
+            summary: "validated 2 shippable YAML files".into(),
+            report: None,
         }
     );
 }
@@ -571,7 +573,8 @@ fn verify_assets_passes_when_every_asset_serves_the_staged_bytes() {
     assert_eq!(
         outcome.expect("runs"),
         Outcome::Pass {
-            summary: "all 2 asset URL(s) serve manifest bytes anonymously (attempt 1)".into()
+            summary: "all 2 asset URL(s) serve manifest bytes anonymously (attempt 1)".into(),
+            report: None,
         }
     );
     assert!(lines.is_empty(), "{lines:?}");
@@ -597,7 +600,8 @@ fn verify_assets_retries_a_stale_cdn_copy_until_the_staged_bytes_arrive() {
     assert_eq!(
         outcome.expect("runs"),
         Outcome::Pass {
-            summary: "all 2 asset URL(s) serve manifest bytes anonymously (attempt 3)".into()
+            summary: "all 2 asset URL(s) serve manifest bytes anonymously (attempt 3)".into(),
+            report: None,
         }
     );
     // Each sweep re-probes every asset, not just the failing one.
@@ -726,7 +730,8 @@ fn smoke_pages_passes_once_pages_serves_the_staged_manifest() {
             summary: format!(
                 "{} serves staged manifest (sha256={expected}, attempt 2)",
                 server.url("/gh-pages/yaml-data/manifest-latest.json")
-            )
+            ),
+            report: None,
         }
     );
     assert!(lines[0].starts_with(&format!(

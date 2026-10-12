@@ -19,7 +19,7 @@ use serde_json::Value;
 
 use super::client_rules::quoted;
 use crate::publish::probe::{self, Polled, Request, Schedule};
-use crate::{Finding, Outcome, RepoRoot};
+use crate::{Finding, Outcome, RepoRoot, digest};
 
 /// Sent with every probe so the requests are identifiable in server logs.
 const USER_AGENT: &str = "classic-publish-yaml-data/verify-assets";
@@ -114,19 +114,21 @@ pub(crate) fn run(root: &RepoRoot, args: Args, progress: &mut dyn FnMut(&str)) -
             summary: format!(
                 "all {total} asset URL(s) serve manifest bytes anonymously (attempt {attempt})"
             ),
+            report: None,
         },
         Polled::TimedOut { last, .. } => {
             let failed = last.len();
             let findings = last
                 .into_iter()
-                .map(|item| Finding {
-                    path: root.relative(&args.manifest),
-                    line: 1,
-                    rule: "asset-not-serving",
-                    message: format!(
-                        "{}: {} ({})",
-                        item.asset.name, item.diagnostic, item.asset.url
-                    ),
+                .map(|item| {
+                    Finding::file(
+                        root.relative(&args.manifest),
+                        "asset-not-serving",
+                        format!(
+                            "{}: {} ({})",
+                            item.asset.name, item.diagnostic, item.asset.url
+                        ),
+                    )
                 })
                 .collect();
             Outcome::from_findings(
@@ -153,7 +155,7 @@ fn probe_asset(asset: &Asset, socket_timeout: Duration) -> Result<(), String> {
     if response.status != 200 {
         return Err(format!("HTTP {}", response.status));
     }
-    let actual = probe::sha256_hex(&response.body);
+    let actual = digest::sha256_hex(&response.body);
     if actual != asset.sha256 {
         return Err(format!(
             "SHA-256 mismatch: expected {}, got {actual} \
@@ -215,7 +217,7 @@ pub(crate) fn manifest_assets(label: &str, manifest_bytes: &[u8]) -> Result<Vec<
     assets.push(Asset {
         name: "manifest.json".to_owned(),
         url: format!("{base}/manifest.json"),
-        sha256: probe::sha256_hex(manifest_bytes),
+        sha256: digest::sha256_hex(manifest_bytes),
     });
     Ok(assets)
 }

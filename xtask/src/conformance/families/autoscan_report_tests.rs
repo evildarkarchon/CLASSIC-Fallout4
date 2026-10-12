@@ -127,8 +127,8 @@ fn expected(fcx_mode: bool, text: &str) -> Map<String, Value> {
         "semanticInputs": {"fcxMode": fcx_mode},
         "durableEffects": {"reports": [{
             "path": "r.md",
-            "bytesHex": encode_hex(data),
-            "sha256": sha256_hex(data),
+            "bytesHex": digest::hex(data),
+            "sha256": digest::sha256_hex(data),
             "byteLength": data.len()
         }]}
     })
@@ -154,7 +154,7 @@ fn expanded(fcx_mode: bool, text: &str, root: &str) -> Result<String, Normalizat
     let report = &expected["durableEffects"]["reports"][0];
     let data = decode_hex(report["bytesHex"].as_str().unwrap()).unwrap();
     assert_eq!(report["byteLength"], json!(data.len()));
-    assert_eq!(report["sha256"], json!(sha256_hex(&data)));
+    assert_eq!(report["sha256"], json!(digest::sha256_hex(&data)));
     Ok(String::from_utf8(data).unwrap())
 }
 

@@ -89,8 +89,8 @@ The embedded default mirror has an independent content-freshness gate because th
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-The lower-level generic interface remains available for tests, unusual hosts,
-and Node/Python compatibility consumers. Generic callers pass `pages_url`,
+The lower-level generic interface remains available for tests and unusual
+hosts. Generic callers pass `pages_url`,
 `tag_prefix`, and a caller-built `ClientSchemaSet` to
 `check_yaml_update` / `apply_yaml_update_with_decision`, or a single
 `file_name` to `rollback_yaml_update`. Generic checks preserve supplied
@@ -134,8 +134,6 @@ Binding-layer contract:
 - The native CLI exposes those first-party operations as `--check-yaml-updates`, `--apply-yaml-updates`, and `--rollback-yaml-updates`. Check/apply first locate the Installation Root through the same shared locator; with no match they print "CLASSIC Data not found" and exit `2` before the runtime, network, or any install work (there is no working-directory fallback). They then open the typed `UpdatePreferencesDto` from that root, surface User Settings validation or migration diagnostics, and pass its safety-adjusted policy bit to the update bridge; they do not interpret a raw User Settings key path. Rollback is local-only and does not perform a network check.
 - The native GUI opens Update Check and the canonical `GitHub` / `Both` Update Source token as part of one revision-cohesive `GuiSettingsSnapshotDto`. The Settings dialog writes either preference only through the all-or-nothing User Settings Update preview/commit seam; cancel, validation rejection, and revision conflicts cannot partially change update policy. The YAML Data network gate continues to use the accepted `Update Check` value.
 - The lower-level generic C++ bridge helpers (`yaml_check_update`, `yaml_apply_update`, `yaml_rollback_update`) left the bridge with no frontend caller (#309); the generic updater they wrapped remains Rust API.
-- Node exposes the first-party operations only: `checkYamlDataUpdate(enabled, installationRoot?)`, `applyYamlDataUpdateWithDecision(enabled, approved, installationRoot?)`, and `rollbackYamlDataUpdate()`, where `approved` is `JsApprovedUpdate { releaseTag, fileNames, fileSha256 }`. Apply throws on disabled / stale. There is deliberately no generic Node variant accepting caller-supplied channel coordinates or schema entries — an adapter able to declare its own accepted ranges could classify, and then install, under a policy `classic-config-core` does not own. Node/Bun callers pass their package-local `installationRoot` because the native `current_exe()` fallback resolves to the `node.exe` / `bun.exe` tree rather than the CLASSIC install. `rollbackYamlDataUpdate()` returns `JsYamlRollbackTargetOutcome[]` in Rust-expanded target order; a per-target failure is reported as a non-null `errorMessage` on that entry rather than rejecting the whole promise.
-- Python `apply_yaml_update(request)` takes `YamlApplyRequest(pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir=None)`, where `approved` is `ApprovedUpdate(release_tag, file_names, file_sha256)`. It raises `RuntimeError` on disabled / stale. Python callers likewise pass the package-local bundled directory when `python.exe` cannot provide the native fallback location.
 
 All generic compatibility seams still reserve `CLASSIC Ignore.yaml` case-insensitively. Registering it in a caller-supplied schema set cannot make it classifiable or installable, and direct rollback refuses it before cache resolution.
 

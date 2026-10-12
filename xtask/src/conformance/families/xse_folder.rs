@@ -9,8 +9,9 @@
 
 use serde_json::{Value, json};
 
-use super::{InputContext, has_exact_keys, issue, sha256_hex};
+use super::{InputContext, has_exact_keys, issue};
 use crate::conformance::Issue;
+use crate::digest;
 
 /// SHA-256 of the controlled registry YAML every case must carry. Deleting
 /// either XSE record would let a configured-docs request reach the host.
@@ -85,7 +86,7 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
             ));
         }
         registry = Some(this_registry);
-        if sha256_hex(this_registry.as_bytes()) != REGISTRY_SHA256 {
+        if digest::sha256_hex(this_registry.as_bytes()) != REGISTRY_SHA256 {
             issues.push(issue(
                 index,
                 "XSE folder requires the controlled registry metadata",

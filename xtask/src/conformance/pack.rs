@@ -96,12 +96,7 @@ impl Packs {
 ///
 /// Fails when the pack tree or a pack file cannot be read.
 pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<Packs> {
-    let discovery = |message: &str| Finding {
-        path: PACKS_DIR.to_owned(),
-        line: 1,
-        rule: "pack-discovery",
-        message: message.to_owned(),
-    };
+    let discovery = |message: &str| Finding::file(PACKS_DIR, "pack-discovery", message);
     if !root.join(PACKS_DIR).is_dir() {
         findings.push(discovery("the scenario pack directory is missing"));
         return Ok(Packs::default());
@@ -146,15 +141,15 @@ pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<P
     let mut owners: HashMap<&str, &str> = HashMap::new();
     for loaded in &packs {
         if let Some(first) = owners.insert(&loaded.pack.family_id, &loaded.file) {
-            findings.push(Finding {
-                path: loaded.file.clone(),
-                line: loaded.document.line("/familyId"),
-                rule: "pack-identity",
-                message: format!(
+            findings.push(Finding::new(
+                loaded.file.clone(),
+                loaded.document.line("/familyId"),
+                "pack-identity",
+                format!(
                     "familyId {} is already declared by {first}",
                     loaded.pack.family_id
                 ),
-            });
+            ));
         }
     }
     result.loaded = packs;
@@ -739,6 +734,8 @@ fn walk_input(
     }
 }
 
+/// Applies the input rules to every object inside `value` (see
+/// [`walk_input`]), recursing through arrays; `at` is the value's JSON pointer.
 fn walk_value(value: &Value, at: &str, named: &mut BTreeSet<String>, issues: &mut Vec<Issue>) {
     match value {
         Value::Object(map) => walk_input(map, at, named, issues),

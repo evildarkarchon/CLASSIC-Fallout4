@@ -92,6 +92,7 @@ pub(crate) struct ReceiptFailure {
 }
 
 impl ReceiptFailure {
+    /// A failure of `kind` not tied to a scenario, obligation or path.
     fn new(kind: FailureKind, message: impl Into<String>) -> Self {
         Self {
             kind,
@@ -101,11 +102,13 @@ impl ReceiptFailure {
         }
     }
 
+    /// Ties the failure to the scenario or obligation `item`.
     fn item(mut self, item: &str) -> Self {
         self.item = Some(item.to_owned());
         self
     }
 
+    /// Ties the failure to the `$.`-style `path`.
     fn at(mut self, path: &str) -> Self {
         self.path = Some(path.to_owned());
         self
@@ -136,6 +139,8 @@ pub(crate) struct ItemResult {
 }
 
 impl ItemResult {
+    /// The result for `id` with execution `status`; it passes when `failures` is
+    /// empty, and its kinds are the failures' kinds, sorted and unique.
     fn new(id: &str, status: &str, failures: &[ReceiptFailure]) -> Self {
         let kinds: BTreeSet<FailureKind> = failures.iter().map(|failure| failure.kind).collect();
         Self {
@@ -146,6 +151,7 @@ impl ItemResult {
         }
     }
 
+    /// The item as a report document member.
     fn document(&self) -> Value {
         json!({
             "id": self.id,
@@ -183,6 +189,9 @@ impl PreparedReport {
         Self::from_plan(plan, Vec::new(), Vec::new(), failures)
     }
 
+    /// A report for `plan`: its identity (family, version, expectation digest,
+    /// invocation and participant) copied from the plan, with the given per-item
+    /// results and `failures` sorted.
     fn from_plan(
         plan: &RunPlan,
         scenarios: Vec<ItemResult>,
@@ -458,6 +467,9 @@ fn shape(value: &Value) -> Result<Receipt, String> {
     Ok(receipt)
 }
 
+/// Checks one receipt item's shape: a stable id, `capabilityIds` only on
+/// scenario evidence (non-empty, unique, stable), an object observation, and a
+/// `failure` present exactly when `executionStatus` is `failed`.
 fn item_shape(item: &ReceiptItem, consumer: bool) -> Result<(), String> {
     if !is_stable_id(&item.id) {
         return Err("id must be a stable identifier".into());

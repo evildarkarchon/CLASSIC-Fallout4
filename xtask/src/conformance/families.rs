@@ -22,11 +22,10 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
-use sha2::{Digest, Sha256};
 
 use super::Issue;
 use super::schema::{Pack, Scenario};
-use crate::RepoRoot;
+use crate::{RepoRoot, digest};
 
 mod autoscan_report;
 mod aux_operations;
@@ -335,11 +334,6 @@ pub(crate) fn is_string_list(value: &Value) -> bool {
         .is_some_and(|items| items.iter().all(Value::is_string))
 }
 
-/// Lowercase hexadecimal of `bytes`.
-pub(crate) fn encode_hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
-}
-
 /// Decodes canonical (lowercase, even-length) hexadecimal; `None` for any
 /// other text, so a receipt cannot pass bytes in a second spelling.
 pub(crate) fn decode_hex(text: &str) -> Option<Vec<u8>> {
@@ -361,16 +355,8 @@ pub(crate) fn decode_hex(text: &str) -> Option<Vec<u8>> {
 pub(crate) fn revision(content: Option<&[u8]>) -> String {
     content.map_or_else(
         || "missing".to_owned(),
-        |bytes| format!("sha256:{}", sha256_hex(bytes)),
+        |bytes| format!("sha256:{}", digest::sha256_hex(bytes)),
     )
-}
-
-/// Lowercase hex SHA-256 of `bytes`, for pinning controlled fixture content.
-pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
 }
 
 #[cfg(test)]

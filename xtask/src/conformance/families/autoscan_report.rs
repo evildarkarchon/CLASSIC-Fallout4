@@ -14,10 +14,10 @@ use std::path::PathBuf;
 use serde_json::{Map, Value, json};
 
 use super::{
-    Compiled, InputContext, NormalizationError, decode_hex, encode_hex, expectation_issue,
-    read_oracle, sha256_hex,
+    Compiled, InputContext, NormalizationError, decode_hex, expectation_issue, read_oracle,
 };
 use crate::conformance::Issue;
+use crate::digest;
 
 /// Replaces every report `template` with the golden's byte identity.
 pub(super) fn compile(context: &InputContext<'_>) -> Result<Compiled, Issue> {
@@ -63,8 +63,8 @@ pub(super) fn compile(context: &InputContext<'_>) -> Result<Compiled, Issue> {
 
 /// Writes the byte identity of `data` into `report`.
 fn set_bytes(report: &mut Map<String, Value>, data: &[u8]) {
-    report.insert("bytesHex".into(), json!(encode_hex(data)));
-    report.insert("sha256".into(), json!(sha256_hex(data)));
+    report.insert("bytesHex".into(), json!(digest::hex(data)));
+    report.insert("sha256".into(), json!(digest::sha256_hex(data)));
     report.insert("byteLength".into(), json!(data.len()));
 }
 

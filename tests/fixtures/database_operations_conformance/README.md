@@ -1,9 +1,9 @@
 # Database pool fixtures
 
 These input-only fixtures exercise `classic-database-core::DatabasePool` through
-Rust, CXX, Node, and Python. Adapters write the supplied lowercase SQLite hex to a
-disposable `formids.db`, invoke public operations, close every pool, then re-read
-every durable file byte. Missing input remains absent; invalid input is attributed
+the Rust participant. It writes the supplied lowercase SQLite hex to a
+disposable `formids.db`, invokes public operations, closes every pool, then
+re-reads every durable file byte. Missing input remains absent; invalid input is attributed
 to the native open error carrier and remains byte-identical.
 
 `populated.json` holds a 512-byte-page SQLite database created with:

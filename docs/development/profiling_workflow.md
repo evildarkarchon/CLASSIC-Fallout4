@@ -16,7 +16,6 @@ Performance optimization in CLASSIC follows a systematic four-step process:
 ### Required Tools
 
 - **Rust toolchain** with Cargo (for Criterion benchmarks)
-- **uv** package manager (for Python environment)
 
 ### Optional Tools
 
@@ -168,23 +167,26 @@ With a baseline established and hot path identified, implement targeted optimiza
 | Bottleneck | Optimization |
 |------------|--------------|
 | Repeated string allocations | Use string interning or `Arc<str>` |
-| Dictionary membership checks | Use `set()` instead of `list` |
+| Repeated membership checks | Use a `HashSet` instead of scanning a `Vec` |
 | File re-reading | Add caching with mod-time validation |
 | Repeated regex compilation | Pre-compile patterns at module load |
 
 ### Example: Set-Backed List Pattern
 
-```python
-# Before: O(n) membership check
-plugins = ["Plugin1.esp", "Plugin2.esp", ...]
-if plugin in plugins:  # O(n)
-    ...
+```rust
+use std::collections::HashSet;
 
-# After: O(1) membership check
-plugins = ["Plugin1.esp", "Plugin2.esp", ...]
-plugins_set = set(plugins)  # Create once
-if plugin in plugins_set:  # O(1)
-    ...
+// Before: O(n) membership check
+let plugins: Vec<&str> = vec!["Plugin1.esp", "Plugin2.esp" /* ... */];
+if plugins.contains(&plugin) { // O(n)
+    // ...
+}
+
+// After: O(1) membership check
+let plugins_set: HashSet<&str> = plugins.iter().copied().collect(); // Create once
+if plugins_set.contains(plugin) { // O(1)
+    // ...
+}
 ```
 
 ## Step 4: Verify Improvement

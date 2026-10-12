@@ -145,6 +145,20 @@ impl Participant {
             Participant::Tui => "tui",
         }
     }
+
+    /// The participant whose protocol spelling is `id`, or `None` for an id
+    /// xtask has no participant for (for example a retired binding).
+    pub fn from_id(id: &str) -> Option<Self> {
+        [
+            Participant::Rust,
+            Participant::Cxx,
+            Participant::Cli,
+            Participant::Gui,
+            Participant::Tui,
+        ]
+        .into_iter()
+        .find(|participant| participant.id() == id)
+    }
 }
 
 /// The native compiler a CXX, CLI or GUI run uses.
@@ -228,7 +242,8 @@ pub fn run_with_progress(
     match args.command {
         Command::Check(_) => check(root),
         Command::Run(args) => {
-            let compiler = args.compiler.map_or("msvc", Compiler::name);
+            // rust and tui runs may omit --compiler; their commands never use it.
+            let compiler = args.compiler.unwrap_or(Compiler::Msvc);
             let table = CommandTable::repository(compiler, &args.preset);
             run_participant(root, &args, &table, &mut spawn, progress)
         }
@@ -434,12 +449,11 @@ pub fn run_participant(
             Ok(run) => (run.passed, run.findings, run.location),
             Err(error) => (
                 false,
-                vec![Finding {
-                    path: loaded.file.clone(),
-                    line: 1,
-                    rule: "conformance-run",
-                    message: format!("{family} {participant}/{instance}: {error:#}"),
-                }],
+                vec![Finding::file(
+                    loaded.file.clone(),
+                    "conformance-run",
+                    format!("{family} {participant}/{instance}: {error:#}"),
+                )],
                 None,
             ),
         };
@@ -463,17 +477,15 @@ pub fn run_participant(
         failed.join(", ")
     );
     if failed.is_empty() {
-        return Ok(Outcome::Pass { summary });
+        return Ok(Outcome::Pass {
+            summary,
+            report: None,
+        });
     }
     // A failed family always carries at least one finding; keep the outcome a
     // failure even if a report somehow rendered none.
     if findings.is_empty() {
-        findings.push(Finding {
-            path: String::from("."),
-            line: 1,
-            rule: "conformance-run",
-            message: failure.clone(),
-        });
+        findings.push(Finding::file(".", "conformance-run", failure.clone()));
     }
     Ok(Outcome::from_findings(findings, summary, failure))
 }
@@ -499,8 +511,8 @@ fn run_family(
     let family = loaded.pack.family_id.as_str();
     let (participant, instance) = (execution.participant.as_str(), execution.instance.as_str());
     let prepared = plan::prepare(root, loaded)?;
-    let command = table
-        .command(participant, family)
+    let command = Participant::from_id(participant)
+        .and_then(|participant| table.command(participant, family))
         .with_context(|| format!("no {participant} command is registered for {family}"))?;
     let (payload, consumer_paths, expectations) =
         payload_for(loaded, execution, applicability).map_err(anyhow::Error::msg)?;
@@ -678,18 +690,16 @@ fn verdict(root: &RepoRoot, args: &VerdictArgs) -> Result<Outcome> {
             Ok((family, participant)) if by_family.contains_key(family.as_str()) => {
                 grouped.entry(family).or_default().push((path, participant));
             }
-            Ok((family, _)) => findings.push(Finding {
-                path: location,
-                line: 1,
-                rule: FailureKind::StaleReceipt.as_str(),
-                message: format!("the run plan names untracked family {family}"),
-            }),
-            Err(message) => findings.push(Finding {
-                path: location,
-                line: 1,
-                rule: FailureKind::MalformedReceipt.as_str(),
+            Ok((family, _)) => findings.push(Finding::file(
+                location,
+                FailureKind::StaleReceipt.as_str(),
+                format!("the run plan names untracked family {family}"),
+            )),
+            Err(message) => findings.push(Finding::file(
+                location,
+                FailureKind::MalformedReceipt.as_str(),
                 message,
-            }),
+            )),
         }
     }
 
@@ -747,12 +757,11 @@ fn verdict(root: &RepoRoot, args: &VerdictArgs) -> Result<Outcome> {
         .cloned()
         .collect();
     for family in &missing {
-        findings.push(Finding {
-            path: by_family[family.as_str()].file.clone(),
-            line: 1,
-            rule: FailureKind::MissingReceipt.as_str(),
-            message: format!("{family}: no run artifacts for this family"),
-        });
+        findings.push(Finding::file(
+            by_family[family.as_str()].file.clone(),
+            FailureKind::MissingReceipt.as_str(),
+            format!("{family}: no run artifacts for this family"),
+        ));
     }
     let verdict = report::Verdict {
         required,
@@ -792,15 +801,13 @@ fn verdict(root: &RepoRoot, args: &VerdictArgs) -> Result<Outcome> {
         failed.join(", ")
     );
     if verdict.complete() && findings.is_empty() {
-        return Ok(Outcome::Pass { summary });
+        return Ok(Outcome::Pass {
+            summary,
+            report: None,
+        });
     }
     if findings.is_empty() {
-        findings.push(Finding {
-            path: String::from("."),
-            line: 1,
-            rule: "conformance-verdict",
-            message: failure.clone(),
-        });
+        findings.push(Finding::file(".", "conformance-verdict", failure.clone()));
     }
     Ok(Outcome::from_findings(findings, summary, failure))
 }
@@ -912,12 +919,7 @@ impl Issue {
     /// Renders the issue as a finding in `file`, at the line `document`
     /// recorded for the issue's pointer.
     pub fn locate(self, file: &str, document: &Document) -> Finding {
-        Finding {
-            path: file.to_owned(),
-            line: document.line(&self.pointer),
-            rule: self.rule,
-            message: self.message,
-        }
+        Finding::new(file, document.line(&self.pointer), self.rule, self.message)
     }
 }
 
@@ -946,11 +948,8 @@ pub(crate) fn load_document<T: DeserializeOwned>(
     relative: &str,
     schema_rule: &'static str,
 ) -> Result<std::result::Result<Loaded<T>, Finding>> {
-    let finding = |line: usize, rule: &'static str, message: String| Finding {
-        path: relative.to_owned(),
-        line,
-        rule,
-        message,
+    let finding = |line: usize, rule: &'static str, message: String| {
+        Finding::new(relative, line, rule, message)
     };
     let text = match std::fs::read_to_string(root.join(relative)) {
         Ok(text) => text,

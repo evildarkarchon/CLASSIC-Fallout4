@@ -87,14 +87,6 @@ fn get<'a>(
 }
 
 #[test]
-fn sha256_hex_is_lowercase_hex_of_the_bytes() {
-    assert_eq!(
-        sha256_hex(b"abc"),
-        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-    );
-}
-
-#[test]
 fn fetch_returns_status_and_body_and_sends_headers_and_user_agent() {
     let server = Server::start(vec![("/a.yaml", 200, b"hello", None)]);
     let url = server.url("/a.yaml");
