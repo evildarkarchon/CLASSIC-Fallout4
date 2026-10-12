@@ -926,8 +926,8 @@ fn validate_notification_manifest(manifest: &AppNotificationManifest) -> Result<
     // compromised manifest could downgrade the user onto an
     // unauthenticated destination at the exact moment they are being
     // asked to fetch an update. Defense in depth alongside the
-    // publish-side check in `tools/publish_app_notification/validate.py`
-    // — rejecting at runtime ALSO protects clients against a tampered
+    // publish-side check in `cargo xtask app-notification validate`
+    // (`xtask/src/app_notification/validate.rs`) — rejecting at runtime ALSO protects clients against a tampered
     // Pages or Releases asset that bypassed the publish workflow
     // entirely.
     if let Some(display) = manifest.display.as_ref()
@@ -1060,7 +1060,7 @@ fn is_rfc3339(s: &str) -> bool {
 /// normalized, no leading whitespace tolerated, no scheme spoofing via
 /// raw `https://` substring matches inside another URL component).
 /// Mirrors the publish-side check in
-/// `tools/publish_app_notification/validate.py::_validate_display`.
+/// `xtask/src/app_notification/rules.rs::is_https_cta_url`.
 fn is_https_cta_url(s: &str) -> bool {
     url::Url::parse(s)
         .ok()
