@@ -91,7 +91,8 @@ def test_named_forbidden_effect_facts_reject_contradictory_files() -> None:
         assert not derive_observed_fact_ids(document, scenario, observation, policy)
 
 
-@pytest.mark.parametrize("participant", ("cxx",))
+# Rust-only since the #308 bridge trim: CXX is no longer enrolled for this family.
+@pytest.mark.parametrize("participant", ("rust",))
 def test_installed_yaml_receipts_fail_closed(
         tmp_path: Path, participant: str
 ) -> None:

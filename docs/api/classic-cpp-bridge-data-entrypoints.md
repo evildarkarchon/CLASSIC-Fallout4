@@ -16,7 +16,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 | Namespace | Bridge source | Responsibility |
 |---|---|---|
 | `classic::settings` | `src/settings.rs` | typed User Settings snapshots, migration, preview, and commit operations; generic settings cache helpers |
-| `classic::config` | `src/config.rs` | loaded YAML Data access and selected config/cache helpers |
+| `classic::config` | `src/config.rs` | Installation Root discovery and Game Local YAML path persistence |
 | `classic::files` | `src/files.rs` | generic file, backup, log collection, targeted-resolution, and report-reading helpers |
 | `classic::scanner` | `src/scanner.rs` | final tagged Crash Log Scan Run contract, small pure scan helpers, and Papyrus inspection |
 | `classic::update` | `src/update.rs` | binary compatibility checks, app notifications, and YAML Data update workflows |
@@ -59,53 +59,27 @@ not reopen settings during execution.
 
 ## `classic::config`
 
-There is **no positional directory-pair loader**. A `YamlData` handle is only
-reachable by consuming a snapshot — `installed_yaml_data_snapshot_yaml_data(...)`
-for the authoritative runtime path or `explicit_yaml_data_snapshot_yaml_data(...)`
-for deterministic caller-selected files — so C++ cannot select Installed YAML
-Data outside the Rust-owned policy. Its scalar/vector getters return narrowed
-values or CXX DTOs rather than exposing the complete Rust model.
+The namespace exposes exactly the two configuration entry points the native
+frontends call (consumer-driven bridge, #308):
 
-Tooling callers use the typed explicit-file flow:
+- `locate_installation_root(executable_dir, working_dir) -> String` runs
+  config's one shared
+  [Installation Root search](classic-config-core.md#installation-root-location).
+  An empty input means that input is unavailable; an empty result means no
+  Installation Root was found, and the caller owns its "CLASSIC Data not found"
+  message. The CLI and GUI both call it at startup.
+- `save_local_yaml_paths(local_yaml_path, game_root, docs_root)` persists the
+  game and documents folders through the standalone Game Local writer. An empty
+  path argument leaves that key unchanged; failures surface as `rust::Error`.
+  The GUI calls it after the user confirms the Game Setup paths.
 
-1. `explicit_yaml_data_load(ExplicitYamlDataPathsDto, ExplicitYamlDataGameId, selected_version)` reads exactly the supplied Main, game, and Local Ignore files.
-2. `explicit_yaml_data_load_status(...)` returns either a ready state or a typed `ExplicitYamlDataLoadErrorDto` with error kind, optional YAML role, optional path, and message.
-3. `explicit_yaml_data_load_take_snapshot(...)` consumes a ready load, after which `explicit_yaml_data_snapshot_game(...)` preserves the requested typed game, the role and identity getters expose the selected role plus exact retained SHA-256 and byte lengths, and `explicit_yaml_data_snapshot_yaml_data(...)` clones the parsed `YamlData` view.
-
-Fallout 4 VR selects the shared Fallout 4 data role. The explicit flow never consults installed cache or bundled candidates and never generates, repairs, backs up, or falls back from a selected file.
-
-First-party update tooling uses the separate Installed YAML Data inspection flow:
-
-1. `installed_yaml_data_inspect(installation_root, ExplicitYamlDataGameId)` starts config-owned independent selection for Main and the registered game file, reusing the bridge's shared typed YAML Data game identity.
-2. `installed_yaml_data_inspection_status(...)` returns ready state or `InstalledYamlDataInspectionErrorDto`, preserving typed unsupported-game / no-usable-source failures, the failed role, and structured candidate diagnostics.
-3. `installed_yaml_data_inspection_take(...)` consumes a ready operation; the inspection getters return requested game, shared game-data role, each selected file's provenance/schema/exact SHA-256 and byte length, and all non-terminal fallback diagnostics.
-
-Inspection is read-only: it does not create the update cache, promote a `.prev` sibling, mutate a rejected candidate, or read or modify Local Ignore YAML Data.
-
-Runtime callers use the Installed YAML Data load flow for valid, missing, or malformed Local Ignore YAML Data:
-
-1. `installed_yaml_data_load(installation_root, ExplicitYamlDataGameId, selected_game_version)` delegates Main/game selection, existing Local Ignore validation, and missing Local Ignore generation to config core.
-2. `installed_yaml_data_load_status(...)` uses exactly one of `has_snapshot`, `has_recovery_plan`, or `has_error` to report Ready, Local Ignore Recovery Required, or fatal failure. Fatal `InstalledYamlDataLoadErrorDto` roles cover Main/game `NoUsableSource`, Local Ignore read/creation failures, and default validation when a missing Local Ignore must be generated; the DTO also preserves the optional path, structured no-usable-source diagnostics, and core message.
-3. `installed_yaml_data_load_take_snapshot(...)` consumes Ready. Snapshot getters expose parsed `YamlData`, simplify-log removal entries retained from selected Main, requested game and registered role, Main/game provenance/schema/exact-byte identity, Local Ignore state/identity, and structured diagnostics.
-4. `installed_yaml_data_load_take_recovery_plan(...)` consumes Recovery Required into an opaque Rust-owned `LocalIgnoreRecoveryPlan`. Its getters expose retained Main/game metadata, malformed identity, malformed path, selected-game-version mode, and diagnostics without raw bytes or YAML documents. `local_ignore_recovery_plan_has_default_local_ignore_identity(...)` reports whether selected-Main defaults were usable; callers inspect it before the identity getter because CXX projects an unavailable optional identity as an empty DTO.
-5. `local_ignore_recovery_plan_proceed_without_ignore(...)` consumes that plan and returns the retained snapshot with `LocalIgnoreYamlDataState::ProceedWithoutIgnore` and an empty ignore list for this operation. It performs no selection or filesystem operation, so the malformed file remains authoritative and a later load requires recovery again.
-6. `local_ignore_recovery_plan_reset_to_default(...)` consumes the plan into a `LocalIgnoreResetOperation`. `local_ignore_reset_status(...)` distinguishes reset, conflict, and typed operational error before consumption. Reset-result getters expose canonical/backup paths, malformed/backup/replacement identities, structured diagnostics, and the retained `ResetToDefault` snapshot; conflict getters expose expected/current identities and an optional already verified backup path. `LocalIgnoreResetErrorDto` retains every core error kind plus optional `Create`, `Write`, `Flush`, `Sync`, or `Publish` stage. The bridge owns none of the conflict, backup, or atomic-replacement policy.
-
-The adapter owns no source-selection, validation, generation, recovery, repair, or fallback policy. Existing Local Ignore bytes are never replaced implicitly; the bridge exposes neither raw bytes nor parsed YAML documents.
-
-Three free functions project the human-facing Display Label for the enums above, so a C++ frontend renders one without writing a `switch`:
-
-- `installed_yaml_data_provenance_label(InstalledYamlDataProvenance) -> String`
-- `installed_yaml_data_diagnostic_kind_label(InstalledYamlDataDiagnosticKind) -> String`
-- `local_ignore_yaml_data_state_label(LocalIgnoreYamlDataState) -> String`
-
-The label is a separate entry point rather than a DTO field because a Qt view is not line-oriented: it wants the variant and its label in independently styled table columns. `classic-config-core` owns both names under the [Vocabulary naming contract](classic-vocabulary.md), so these labels are identical to the ones the Node and Python surfaces publish.
-
-Labels are presentation only and are reworded freely between releases — branch on the enum, never on the string. Because CXX shared enums are open at the FFI boundary, an out-of-range value returns an empty string rather than an invented label; no value this bridge produces can reach that path.
-
-The namespace also exposes selected cache controls and generic config helpers.
-These are data-access APIs; they are not partial Crash Log Scan Run entry
-points.
+There is no YAML Data loader on the bridge. Explicit, Installed, and Local
+Ignore recovery loading, the `YamlData` getters, the Display Label resolvers for
+the configuration enums, the main-YAML version reader, and the settings-cache
+aliases stay Rust-only: no frontend production code called them. Native scan
+frontends reach Installed YAML Data only through the Crash Log Scan Run, whose
+result carries the selected-file metadata and its own Display Labels (see
+[Scan-run Display Labels](#scan-run-display-labels)).
 
 For the YAML schema and directory contract, see
 [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
@@ -333,21 +307,19 @@ contract's enums, so a C++ frontend renders one without writing a `switch`:
 
 The first two sit on contract-stability twins that delegate their naming to the
 configuration enums they mirror, so these labels are the same strings
-`installed_yaml_data_diagnostic_kind_label` and
-`local_ignore_yaml_data_state_label` return. The one exception is
+`classic-config-core` renders for `InstalledYamlDataDiagnosticKind` and
+`LocalIgnoreYamlDataState`. The one exception is
 `RecoveryRequired`, which the run contract owns itself because a paused run has
 no configuration counterpart.
 
 The third is neither run-owned nor a twin. The run contract reuses the
 configuration crate's provenance type outright; only the *CXX mirror* is
-scanner-local, because cxx namespaces its shared enums per bridge module. So
-`classic::config::installed_yaml_data_provenance_label` returns the same prose
-but cannot accept the value a scan-run result carries. This entry point exists
-purely to close that gap, and it is a C++-only obligation: the Node surface
-reuses one provenance enum across both modules and the Python surface publishes
-a token, so neither needed a second projection. Without it a C++ frontend would
-map one mirror onto the other by hand, which is a second variant mapping able to
-disagree with the forward one.
+scanner-local, because cxx namespaces its shared enums per bridge module. This
+entry point is the only CXX resolver for that prose: the `classic::config`
+label resolvers were removed with the consumer-driven trim (#308) because no
+frontend called them. Without it a C++ frontend would map the mirror onto the
+core variants by hand, which is a second variant mapping able to disagree with
+the forward one.
 
 The next three sit on enums the run crate owns outright — there is no
 configuration function returning the same prose. They already rendered exactly
@@ -363,7 +335,7 @@ choice — they name ordinary steps rather than domain terms — so this entry p
 buys uniformity rather than new prose. It exists so a frontend can resolve every
 scan-run label the same way instead of knowing which enums happen to need one.
 
-Same conventions as the `classic::config` labels above: a separate entry point
+Every label entry point follows the same conventions: a separate entry point
 rather than a DTO field so a Qt view can style variant and label as independent
 table columns; presentation only and reworded freely between releases, so branch
 on the enum and never on the string; an out-of-range value returns an empty

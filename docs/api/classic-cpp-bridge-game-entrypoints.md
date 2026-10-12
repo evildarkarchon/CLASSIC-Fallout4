@@ -59,11 +59,11 @@ The former `src/game.rs` (`classic::game`) module duplicated Version Registry lo
 
 ## `src/scangame.rs` -> `classic::scangame`
 
-This file exposes Game Setup Intake plus the broader scanner/checker bridge functions in this namespace.
+This file exposes Game Setup Intake, the only scangame capability the GUI calls.
 
 - `run_game_setup_intake_from_user_settings(classic_root, xse_log_path) -> GameSetupIntakeDto`
 
-Game Setup Intake is setup-only. ENB, crashgen, BA2, Wrye, INI, and mod-file checks remain separate bridge entry points.
+Game Setup Intake is setup-only. The per-checker ENB, crashgen, BA2, Wrye, INI, and integrity entry points were removed in the consumer-driven trim (#308) because no frontend called them; those checks stay Rust-only in `classic-scangame-core`.
 
 ---
 
@@ -265,7 +265,7 @@ These are the main current narrowing points contributors should keep in mind.
 ## `src/scangame.rs`
 
 - exposes Game Setup Intake as the setup-time bridge surface
-- keeps ENB, crashgen, BA2, Wrye, INI, and integrity helper entry points separate from intake
+- exposes no ENB, crashgen, BA2, Wrye, INI, or integrity checker entry points
 - does not expose `GameScanOrchestrator` or full mod-scan orchestration through CXX
 
 ---
@@ -311,7 +311,7 @@ When `run_game_setup_intake_from_user_settings()` output looks wrong:
 - `src/path.rs::validate_path()` is only `Path::exists()` through `classic_shared_core::path_core::is_valid_path()`
 - `src/path.rs::check_restricted_path()` reflects the current heuristic `classic-scanlog-core` custom-scan restriction rules, including shallow-path rejection
 - `src/xse.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
-- Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks remain separate bridge calls
+- Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks are not bridged
 
 These are current behavior notes, not recommendations for future design.
 

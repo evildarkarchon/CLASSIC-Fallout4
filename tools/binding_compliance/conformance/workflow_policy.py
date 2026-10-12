@@ -292,6 +292,21 @@ _EXECUTION_POLICIES += tuple(
         }
         and policy.participant_id == "cxx"
     )
+    # Rust-only since the consumer-driven config/scangame bridge trim (#308):
+    # no CLI or GUI production code calls the exports these families exercised.
+    and not (
+        family
+        in {
+            "ba2-scan",
+            "config-vocabulary",
+            "crashgen-check",
+            "game-integrity",
+            "installed-yaml-data",
+            "scan-game",
+            "wrye-report",
+        }
+        and policy.participant_id == "cxx"
+    )
 )
 # Autoscan Reports use the shared scan-run launcher while retaining the same
 # semantic adapters and separate diagnostics as the focused families.
