@@ -10,7 +10,10 @@
 //!    distinct fixtures;
 //! 4. normalization: exact JSON paths with rationales;
 //! 5. the engine-wide input rule (below);
-//! 6. the family's own input hook ([`families::validate_inputs`]).
+//! 6. the family's own input hook ([`families::validate_inputs`]);
+//! 7. on a pack with no findings so far, the family's expectation compiler
+//!    ([`families::compile_expectations`]), so an oracle reference that does
+//!    not resolve, or an input that disagrees with its oracle, is a finding.
 //!
 //! **The input rule.** Inputs are fixture references only: a scenario's input
 //! is exactly `{"fixtureRef": r}` with `fixtureRefs == [r]`. Families with
@@ -161,11 +164,20 @@ fn validate(root: &RepoRoot, pack: &Pack) -> Vec<Issue> {
     let fixtures = fixtures(root, pack, &mut issues);
     normalization(pack, &mut issues);
     input_rule(pack, &fixtures, &mut issues);
-    issues.extend(families::validate_inputs(&InputContext {
+    let context = InputContext {
         root,
         pack,
         fixtures: &fixtures,
-    }));
+    };
+    issues.extend(families::validate_inputs(&context));
+    // The expectation compiler reads fixtures and oracles the earlier steps
+    // vouch for, so it runs only on an otherwise clean pack; on a broken one
+    // its findings would only repeat theirs.
+    if issues.is_empty()
+        && let Err(issue) = families::compile_expectations(&context)
+    {
+        issues.push(issue);
+    }
     issues
 }
 
@@ -355,7 +367,7 @@ fn identities(pack: &Pack) -> Vec<Issue> {
 /// Resolves `relative` under `base` and proves it stays there.
 ///
 /// Both sides are canonicalized, so a symlink cannot smuggle a path outside.
-fn contained(base: &Path, relative: &str) -> Option<PathBuf> {
+pub(super) fn contained(base: &Path, relative: &str) -> Option<PathBuf> {
     let resolved = base.join(relative).canonicalize().ok()?;
     resolved.starts_with(base).then_some(resolved)
 }

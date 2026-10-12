@@ -1,5 +1,5 @@
-//! Input hook for the vocabulary families: `config-vocabulary` and
-//! `scan-run-vocabulary`.
+//! Input hook and expectation check for the vocabulary families:
+//! `config-vocabulary` and `scan-run-vocabulary`.
 //!
 //! Each scenario exercises one public label resolver. Its input must be
 //! exactly `{operation, tokens}`, where `tokens` is every token the Rust owner
@@ -15,10 +15,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 use syn::visit::Visit;
 
-use super::{InputContext, issue};
+use super::{Compiled, InputContext, expectation_issue, issue};
 use crate::RepoRoot;
 use crate::conformance::Issue;
 
@@ -117,11 +117,7 @@ const SCAN_OPERATIONS: [Operation; 6] = [
 
 /// Checks that the pack exercises every resolver once with its source tokens.
 pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
-    let operations: &[Operation] = if context.pack.family_id == "config-vocabulary" {
-        &CONFIG_OPERATIONS
-    } else {
-        &SCAN_OPERATIONS
-    };
+    let operations = operations(&context.pack.family_id);
     let mut issues = Vec::new();
     let mut by_name: BTreeMap<&str, usize> = BTreeMap::new();
     for (index, scenario) in context.pack.scenarios.iter().enumerate() {
@@ -168,6 +164,101 @@ pub(super) fn validate(context: &InputContext<'_>) -> Vec<Issue> {
         }
     }
     issues
+}
+
+/// The vocabulary expectation compiler: the authored expectations stay as
+/// they are, but each must label every source token, in source order, and
+/// reject the unknown token. The Rust sources the tokens come from (including
+/// a delegating twin's) are the oracle files, sorted.
+///
+/// The input hook has already checked each scenario's input against the same
+/// tokens; this checks the authored answer, so a resolver whose enum gains a
+/// variant fails until its label is authored.
+pub(super) fn compile(context: &InputContext<'_>) -> Result<Compiled, Issue> {
+    let mut sources = Sources::new(context.root);
+    let mut oracles = BTreeSet::new();
+    for (index, scenario) in context.pack.scenarios.iter().enumerate() {
+        let name = scenario.input.get("operation").and_then(Value::as_str);
+        let Some(operation) = operations(&context.pack.family_id)
+            .iter()
+            .find(|operation| Some(operation.name) == name)
+        else {
+            return Err(expectation_issue(
+                index,
+                "the scenario must name a public resolver of its family",
+            ));
+        };
+        let tokens = sources
+            .tokens(operation)
+            .map_err(|message| expectation_issue(index, message))?;
+        labels(operation.name, &tokens, &scenario.expected).map_err(|message| {
+            expectation_issue(
+                index,
+                format!(
+                    "{} oracle lacks complete labels and unknown behavior: {message}",
+                    operation.symbol
+                ),
+            )
+        })?;
+        oracles.insert(operation.source);
+        if let Some((source, _)) = operation.delegate {
+            oracles.insert(source);
+        }
+    }
+    let mut compiled = Compiled::identity(context.pack);
+    compiled.oracles = oracles.into_iter().map(str::to_owned).collect();
+    Ok(compiled)
+}
+
+/// Checks one authored expectation: `{operation, entries}` where `entries`
+/// labels each token in order (`{token, label: non-empty, rejected: false}`)
+/// and then rejects the unknown token (`{token, label: null, rejected:
+/// true}`).
+fn labels(name: &str, tokens: &[String], expected: &Map<String, Value>) -> Result<(), String> {
+    if !super::has_exact_keys(&Value::Object(expected.clone()), &["operation", "entries"])
+        || expected["operation"] != json!(name)
+    {
+        return Err(format!(
+            "expected must be exactly {{operation: {name}, entries}}"
+        ));
+    }
+    let entries = expected["entries"]
+        .as_array()
+        .filter(|entries| entries.len() == tokens.len() + 1)
+        .ok_or_else(|| format!("expected one entry per source token plus {UNKNOWN}"))?;
+    let wanted = tokens.iter().map(String::as_str).chain([UNKNOWN]);
+    for (token, entry) in wanted.zip(entries) {
+        if !super::has_exact_keys(entry, &["token", "label", "rejected"])
+            || entry["token"] != json!(token)
+        {
+            return Err(format!(
+                "entry for {token} must be {{token, label, rejected}} in source order"
+            ));
+        }
+        let valid = if token == UNKNOWN {
+            entry["label"].is_null() && entry["rejected"] == json!(true)
+        } else {
+            entry["label"]
+                .as_str()
+                .is_some_and(|label| !label.is_empty())
+                && entry["rejected"] == json!(false)
+        };
+        if !valid {
+            return Err(format!(
+                "entry for {token} has the wrong label or rejection"
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// The resolvers of a vocabulary family.
+fn operations(family_id: &str) -> &'static [Operation] {
+    if family_id == "config-vocabulary" {
+        &CONFIG_OPERATIONS
+    } else {
+        &SCAN_OPERATIONS
+    }
 }
 
 /// Parsed Rust sources, cached per path.

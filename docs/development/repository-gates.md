@@ -62,7 +62,11 @@ Packs and catalogs are read as strict JSON (duplicate keys and floating-point
 numbers fail) into closed shapes, so an unknown member fails. Pack inputs name
 fixtures only (`{"fixtureRef": ...}`), fixtures stay beneath the pack's
 `fixtureRoot`, and neither inputs nor fixtures may carry result data; families
-with richer inputs check them in their own input hook. The workflow policy
+with richer inputs check them in their own input hook. Families whose
+expectations reference an independent oracle (user-settings' compatibility
+corpus, autoscan-report's Markdown goldens, the vocabulary families' Rust
+tokens) are compiled against it, so an input or expectation that disagrees
+with its oracle fails too. The workflow policy
 walks each workflow's `jobs` and `steps` with a YAML parser. Every applicable
 (family, participant, execution instance) needs a blocking launcher step and
 an `if: always()` diagnostics upload in its participant job, on the

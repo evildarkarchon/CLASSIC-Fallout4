@@ -4,8 +4,8 @@
 //! participant:
 //!
 //! - every scenario pack under `tests/conformance/packs/` (closed shape,
-//!   identities, fixtures, normalization, the engine-wide input rule and the
-//!   family input hooks);
+//!   identities, fixtures, normalization, the engine-wide input rule, the
+//!   family input hooks and the family expectation compilers);
 //! - `tests/conformance/participants.json` (which families CXX runs);
 //! - `tests/conformance/consumer-obligations.json` (the CLI, GUI and TUI
 //!   consumers);
@@ -57,6 +57,8 @@ pub enum Command {
     /// must stay under the pack's fixtureRoot, and neither inputs nor fixtures
     /// may carry result data. Families whose inputs are richer than one
     /// fixture reference validate them through their own input hook.
+    /// Expectations that reference an independent oracle are compiled
+    /// against it, so a disagreement with the oracle fails the check.
     Check(CheckArgs),
 }
 

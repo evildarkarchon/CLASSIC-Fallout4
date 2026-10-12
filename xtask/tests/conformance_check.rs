@@ -388,3 +388,36 @@ fn the_binary_exits_1_with_findings_on_a_seeded_pack() {
         "{stderr}"
     );
 }
+
+/// `check` runs the expectation compilers, so a disagreement between a pack
+/// and its independent oracle is a `family-expectation` finding on the pack.
+#[test]
+fn oracle_disagreements_are_expectation_findings() {
+    let seeds = [
+        (
+            "tests/fixtures/user_settings_compatibility/expectations.json",
+            "\"contract_version\": 1",
+            "\"contract_version\": 2",
+            "tests/conformance/packs/user_settings/v1.json",
+            "unsupported User Settings compatibility contract version",
+        ),
+        (
+            "tests/conformance/packs/config_vocabulary/v1.json",
+            "\"label\": \"updated\"",
+            "\"label\": \"\"",
+            "tests/conformance/packs/config_vocabulary/v1.json",
+            "oracle lacks complete labels",
+        ),
+        (
+            "tests/conformance/packs/autoscan_report/v1.json",
+            "\"template\": \"cases/empty/expected.md\"",
+            "\"template\": \"cases/empty/missing.md\"",
+            "tests/conformance/packs/autoscan_report/v1.json",
+            "must be an existing regular file",
+        ),
+    ];
+    for (file, needle, replacement, pack, text) in seeds {
+        let findings = check(&real_inputs().replace(file, needle, replacement).root());
+        assert_single(&findings, pack, "family-expectation", text);
+    }
+}
