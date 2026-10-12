@@ -177,7 +177,7 @@ jobs:
 
       - name: Validate Crash Log Scan Run variant coverage
         if: ${{ !cancelled() }}
-        run: python tools/binding_compliance/scan_run_contract.py --repo-root .
+        run: cargo xtask scan-run-contract
 
       - name: Install User Settings conformance YAML parser
         run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"

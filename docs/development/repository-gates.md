@@ -29,7 +29,7 @@ a family that has no pack. The ownership gate uses only the standard library.
 | Check | Command (repo root) | CI step |
 | --- | --- | --- |
 | CXX bridge has no orphan exports | `cargo xtask cxx-bridge-gate` | `ci-cpp.yml`, job `cxx-bridge-gate` (`windows-latest`), step "Check for orphan CXX bridge exports" |
-| Crash Log Scan Run contract variants | `python tools/binding_compliance/scan_run_contract.py --repo-root .` | `ci-rust.yml`, job `test`, step "Validate Crash Log Scan Run variant coverage" |
+| Crash Log Scan Run contract variants | `cargo xtask scan-run-contract` | `ci-rust.yml`, job `test`, step "Validate Crash Log Scan Run variant coverage" |
 | Opaque CXX map reachability | `cargo test -p classic-cpp-bridge --test opaque_map_read_only` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
 | Bundled YAML Data schema version | `cargo test -p classic-config-core --lib client_schemas` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
 | Single Tokio runtime | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | `ci-rust.yml`, job `lint`, step "Run clippy" |
@@ -43,6 +43,17 @@ no `needs:` and runs in parallel with `cli-tests` and `gui-tests`; the build
 wrappers do not call it. Missing exports are caught by the CLI and GUI
 production builds instead. Rules and matcher details:
 [`cxx-bridge-policy.md`](../api/cxx-bridge-policy.md#gate).
+
+The scan-run contract gate reads
+`tests/fixtures/crash_log_scan_run/manifest.json` and reports every finding in
+one run. The manifest's `contractVariants` must match the Rust enums it names
+(found with `syn`). Every variant needs a row in the variant evidence policy
+(`xtask/src/scan_run_contract/variant_policy.rs`) whose scenario is a
+`scenarios[].id` in `tests/conformance/packs/crash_log_scan_run/v1.json`, or a
+retained label when no scenario can reach it. The Reset To Default and failure
+fixtures must be complete, and no `forbiddenExports` symbol may appear in its
+source file. The scan-run workflow policy pins this step: it must stay
+blocking, keep `if: ${{ !cancelled() }}`, and run before the Rust receipt step.
 
 ## Conformance applicability
 
