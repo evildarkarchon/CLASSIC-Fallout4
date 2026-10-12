@@ -1,9 +1,8 @@
 use super::*;
-// Imported here rather than in `settings.rs`: the bridge no longer names these
-// types, because it asks each value for its own Vocabulary Token instead of
-// matching on it.
-use classic_user_settings_core::DocumentClassification;
-use serial_test::serial;
+// Imported here rather than in `settings.rs`: the bridge never names these
+// types, because it asks each value for its own Vocabulary Token and converts
+// no token back into them; only the review-plan fixtures below need them.
+use classic_user_settings_core::{MigrationChangeKind, SourceLocation, UserSettingsSchemaVersion};
 use std::{
     io::Write,
     path::{Path, PathBuf},
@@ -78,90 +77,12 @@ fn test_user_settings_migration_plan_bridge_maps_flat_plan_without_writing() {
     );
 }
 
-#[test]
-fn test_user_settings_migration_plan_bridge_reverses_entire_plan_in_memory() {
-    let root = tempfile::tempdir().unwrap();
-    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
-    let settings_path = root.path().join("CLASSIC Settings.yaml");
-    let before = std::fs::read(&settings_path).unwrap();
-    let before_modified = std::fs::metadata(&settings_path)
-        .unwrap()
-        .modified()
-        .unwrap();
-    let forward = user_settings_plan_migration(&root.path().display().to_string());
-
-    let reversed = user_settings_reverse_migration_plan(&forward).unwrap();
-
-    assert_eq!(reversed.status, "planned");
-    assert_eq!(reversed.required, forward.required);
-    assert!(reversed.has_plan);
-    assert_eq!(reversed.source_location, forward.target_location);
-    assert_eq!(reversed.target_location, forward.source_location);
-    assert_eq!(
-        (
-            reversed.has_source_schema_version,
-            reversed.source_schema_major,
-            reversed.source_schema_minor,
-        ),
-        (
-            forward.has_target_schema_version,
-            forward.target_schema_major,
-            forward.target_schema_minor,
-        )
-    );
-    assert_eq!(reversed.original_content, forward.proposed_content);
-    assert_eq!(reversed.proposed_content, forward.original_content);
-    assert!(reversed.base_revision.starts_with("sha256:"));
-    assert_eq!(reversed.base_revision.len(), "sha256:".len() + 64);
-    assert_eq!(reversed.changes.len(), forward.changes.len());
-    let forward_last = forward.changes.last().unwrap();
-    let reverse_first = &reversed.changes[0];
-    assert_eq!(reverse_first.kind, forward_last.kind);
-    assert_eq!(reverse_first.has_source_path, forward_last.has_target_path);
-    assert_eq!(reverse_first.source_path, forward_last.target_path);
-    assert_eq!(reverse_first.has_target_path, forward_last.has_source_path);
-    assert_eq!(reverse_first.target_path, forward_last.source_path);
-    assert_eq!(reverse_first.has_before, forward_last.has_after);
-    assert_eq!(reverse_first.before, forward_last.after);
-    assert_eq!(reverse_first.has_after, forward_last.has_before);
-    assert_eq!(reverse_first.after, forward_last.before);
-
-    let round_trip = user_settings_reverse_migration_plan(&reversed).unwrap();
-
-    assert_eq!(round_trip.base_revision, forward.base_revision);
-    assert_eq!(round_trip.source_location, forward.source_location);
-    assert_eq!(round_trip.target_location, forward.target_location);
-    assert_eq!(round_trip.original_content, forward.original_content);
-    assert_eq!(round_trip.proposed_content, forward.proposed_content);
-    assert_eq!(round_trip.changes.len(), forward.changes.len());
-    for (actual, expected) in round_trip.changes.iter().zip(&forward.changes) {
-        assert_eq!(actual.kind, expected.kind);
-        assert_eq!(actual.has_source_path, expected.has_source_path);
-        assert_eq!(actual.source_path, expected.source_path);
-        assert_eq!(actual.has_target_path, expected.has_target_path);
-        assert_eq!(actual.target_path, expected.target_path);
-        assert_eq!(actual.has_before, expected.has_before);
-        assert_eq!(actual.before, expected.before);
-        assert_eq!(actual.has_after, expected.has_after);
-        assert_eq!(actual.after, expected.after);
-    }
-    assert_eq!(std::fs::read(&settings_path).unwrap(), before);
-    assert_eq!(
-        std::fs::metadata(&settings_path)
-            .unwrap()
-            .modified()
-            .unwrap(),
-        before_modified
-    );
-}
-
 /// Builds a review-only plan carrying one change per migration change kind.
 ///
 /// Real planning only ever emits the subset of kinds a given document needs, so
 /// a fixture-driven test can never reach every variant. Reconstructing a plan
-/// from binding-safe components is the same path the bridge uses for reversal,
-/// which keeps this exhaustive check on the production conversion rather than a
-/// test-only one.
+/// from binding-safe components keeps this exhaustive check on the production
+/// conversion (`user_settings_migration_plan_dto`) rather than a test-only one.
 fn plan_with_every_migration_change_kind() -> UserSettingsMigrationPlan {
     UserSettingsMigrationPlan::from((
         true,
@@ -201,50 +122,19 @@ fn test_user_settings_migration_change_kinds_project_the_core_vocabulary_tokens(
     assert_eq!(projected, expected);
 }
 
-#[test]
-fn test_user_settings_migration_change_kind_tokens_round_trip_through_the_dto() {
-    // The bridge's reversal path takes tokens back from C++ and rebuilds a
-    // core plan, so emitting and parsing must be the same rule read in two
-    // directions. Anything less corrupts a reversal silently.
-    let dto = user_settings_migration_plan_dto(&plan_with_every_migration_change_kind());
-
-    let rebuilt = user_settings_migration_plan_from_dto(&dto).expect("rebuild plan from DTO");
-
-    let round_tripped: Vec<MigrationChangeKind> = rebuilt
-        .changes()
-        .iter()
-        .map(|change| change.kind())
-        .collect();
-    assert_eq!(round_tripped, MigrationChangeKind::VARIANTS);
-}
-
-#[test]
-fn test_user_settings_migration_change_kind_rejects_an_unknown_token() {
-    let mut dto = user_settings_migration_plan_dto(&plan_with_every_migration_change_kind());
-    dto.changes[0].kind = "not_a_change_kind".to_string();
-
-    let error = user_settings_migration_plan_from_dto(&dto).unwrap_err();
-
-    assert_eq!(
-        error,
-        "unsupported User Settings migration change kind: not_a_change_kind"
-    );
-}
-
 // ── Document vocabulary projection ──────────────────────────────────
 //
-// These drive the *production* DTO conversions for the two document enums a
-// binding-safe constructor can reach exhaustively: `DocumentClassification`,
-// through the legacy-import outcome, and `SourceLocation`, through a
-// review-only plan. Both derive their expectation from the core rather than
+// This drives the *production* DTO conversion for the document enum a
+// binding-safe constructor can reach exhaustively: `SourceLocation`, through a
+// review-only plan. It derives its expectation from the core rather than
 // restating it.
 //
-// `PreferenceOrigin` and `CommitEligibility` are only reachable by opening a
-// real document, so no exhaustive constructor exists for them. That leaves
-// nothing untested, because after this change the bridge holds no per-enum
-// projection code at all — every one of these four is projected by the same
-// `Vocabulary::as_str` call, and the fixture-driven snapshot tests below still
-// pin the token each fixture actually yields.
+// `DocumentClassification`, `PreferenceOrigin` and `CommitEligibility` are
+// only reachable by opening a real document, so no exhaustive constructor
+// exists for them. That leaves nothing untested, because the bridge holds no
+// per-enum projection code at all — every one of these is projected by the
+// same `Vocabulary::as_str` call, and the fixture-driven snapshot tests below
+// still pin the token each fixture actually yields.
 
 /// Builds a review-only plan whose endpoints carry `location` on both sides.
 fn plan_anchored_at(location: SourceLocation) -> UserSettingsMigrationPlan {
@@ -256,33 +146,6 @@ fn plan_anchored_at(location: SourceLocation) -> UserSettingsMigrationPlan {
         b"original".to_vec(),
         b"proposed".to_vec(),
     ))
-}
-
-#[test]
-fn test_user_settings_document_classifications_project_the_core_vocabulary_tokens() {
-    // The expectation is derived from the core, not restated here. A test that
-    // listed the tokens again would be a fourth copy of the vocabulary and
-    // would pass just as happily against a bridge that had drifted.
-    let projected: Vec<String> = DocumentClassification::VARIANTS
-        .iter()
-        .copied()
-        .map(|classification| {
-            legacy_tui_state_import_outcome_dto(
-                &CoreLegacyTuiStateImportOutcome::RequiresSettingsMigration {
-                    classification,
-                    revision: Revision::Missing,
-                },
-            )
-            .classification
-        })
-        .collect();
-    let expected: Vec<String> = DocumentClassification::VARIANTS
-        .iter()
-        .copied()
-        .map(|classification| classification.as_str().to_string())
-        .collect();
-
-    assert_eq!(projected, expected);
 }
 
 #[test]
@@ -301,34 +164,6 @@ fn test_user_settings_source_locations_project_the_core_vocabulary_tokens() {
         .collect();
 
     assert_eq!(projected, expected);
-}
-
-#[test]
-fn test_user_settings_source_location_tokens_round_trip_through_the_dto() {
-    // The bridge's reversal path takes tokens back from C++ and rebuilds a
-    // core plan, so emitting and parsing must be the same rule read in two
-    // directions. Anything less corrupts a reversal silently.
-    for location in SourceLocation::VARIANTS.iter().copied() {
-        let dto = user_settings_migration_plan_dto(&plan_anchored_at(location));
-
-        let rebuilt = user_settings_migration_plan_from_dto(&dto).expect("rebuild plan from DTO");
-
-        assert_eq!(rebuilt.source().location(), location);
-        assert_eq!(rebuilt.target().location(), location);
-    }
-}
-
-#[test]
-fn test_user_settings_source_location_rejects_an_unknown_token() {
-    let mut dto = user_settings_migration_plan_dto(&plan_anchored_at(SourceLocation::Legacy));
-    dto.source_location = "not_a_location".to_string();
-
-    let error = user_settings_migration_plan_from_dto(&dto).unwrap_err();
-
-    assert_eq!(
-        error,
-        "unsupported User Settings source location: not_a_location"
-    );
 }
 
 #[test]
@@ -518,35 +353,33 @@ fn test_user_settings_migration_restore_bridge_maps_newer_document_as_conflict_d
 
 // ── YAML ops tests (pre-existing) ──────────────────────────────
 
-#[test]
-fn test_yaml_ops_new() {
-    let ops = yaml_ops_new();
-    assert!(!yaml_ops_has_document(&ops));
+/// Writes `content` to a fresh temporary YAML file for the load-then-read tests.
+fn yaml_file(content: &str) -> NamedTempFile {
+    let mut file = tempfile::Builder::new().suffix(".yaml").tempfile().unwrap();
+    file.write_all(content.as_bytes()).unwrap();
+    file.flush().unwrap();
+    file
 }
 
 #[test]
-fn test_parse_and_dump_round_trip() {
-    let mut ops = yaml_ops_new();
-    let yaml_str = "game: Fallout4\nversion: 1.10.163\n";
-    yaml_ops_parse(&mut ops, yaml_str).unwrap();
-    assert!(yaml_ops_has_document(&ops));
-
-    let dumped = yaml_ops_dump(&ops).unwrap();
-    assert!(dumped.contains("Fallout4"));
-    assert!(dumped.contains("1.10.163"));
+fn test_yaml_ops_new() {
+    let ops = yaml_ops_new();
+    assert!(ops.doc.is_none());
 }
 
 #[test]
 fn test_get_string_setting() {
+    let file = yaml_file("game: Fallout4\n");
     let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "game: Fallout4\n").unwrap();
+    yaml_ops_load_file(&mut ops, file.path().to_str().unwrap()).unwrap();
     assert_eq!(yaml_ops_get_string(&ops, "game", "default"), "Fallout4");
 }
 
 #[test]
 fn test_get_string_default_when_missing() {
+    let file = yaml_file("other: value\n");
     let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "other: value\n").unwrap();
+    yaml_ops_load_file(&mut ops, file.path().to_str().unwrap()).unwrap();
     assert_eq!(yaml_ops_get_string(&ops, "game", "default"), "default");
 }
 
@@ -557,326 +390,12 @@ fn test_get_string_no_document() {
 }
 
 #[test]
-fn test_get_setting_value_types() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "str_val: hello\nbool_val: true\nint_val: 42\n").unwrap();
-
-    let str_v = yaml_ops_get_setting_value(&ops, "str_val");
-    assert_eq!(str_v.value, "hello");
-    assert_eq!(str_v.value_type, "string");
-    assert!(!str_v.is_null);
-
-    let bool_v = yaml_ops_get_setting_value(&ops, "bool_val");
-    assert_eq!(bool_v.value, "true");
-    assert_eq!(bool_v.value_type, "bool");
-
-    let int_v = yaml_ops_get_setting_value(&ops, "int_val");
-    assert_eq!(int_v.value, "42");
-    assert_eq!(int_v.value_type, "integer");
-}
-
-#[test]
-fn test_get_setting_value_missing() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "a: 1\n").unwrap();
-    let missing = yaml_ops_get_setting_value(&ops, "nonexistent");
-    assert!(missing.is_null);
-    assert_eq!(missing.value_type, "null");
-}
-
-#[test]
-fn test_set_string_setting() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "game: Fallout4\n").unwrap();
-    yaml_ops_set_string_setting(&mut ops, "game", "Skyrim").unwrap();
-    assert_eq!(yaml_ops_get_string(&ops, "game", ""), "Skyrim");
-}
-
-#[test]
-fn test_set_bool_setting() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "enabled: false\n").unwrap();
-    yaml_ops_set_bool_setting(&mut ops, "enabled", true).unwrap();
-    let val = yaml_ops_get_setting_value(&ops, "enabled");
-    assert_eq!(val.value, "true");
-    assert_eq!(val.value_type, "bool");
-}
-
-#[test]
-fn test_get_vec() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "items:\n  - a\n  - b\n  - c\n").unwrap();
-    let vec = yaml_ops_get_vec(&ops, "items");
-    assert_eq!(vec, vec!["a", "b", "c"]);
-}
-
-#[test]
-fn test_get_vec_missing() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "other: value\n").unwrap();
-    let vec = yaml_ops_get_vec(&ops, "nonexistent");
-    assert!(vec.is_empty());
-}
-
-#[test]
-#[serial]
-fn test_cache_management() {
-    let ops = yaml_ops_new();
-    yaml_ops_clear_cache(&ops); // Clear first to ensure a clean state
-    assert_eq!(yaml_ops_cache_size(&ops), 0);
-    let stats = yaml_ops_cache_stats(&ops);
-    assert_eq!(stats.size, 0);
-    assert_eq!(stats.capacity, 128);
-    yaml_ops_clear_cache(&ops); // Should not panic on empty cache
-}
-
-#[test]
-fn test_dump_no_document_error() {
-    let ops = yaml_ops_new();
-    assert!(yaml_ops_dump(&ops).is_err());
-}
-
-#[test]
-fn test_save_no_document_error() {
-    let ops = yaml_ops_new();
-    assert!(yaml_ops_save_file(&ops, "test.yaml").is_err());
-}
-
-#[test]
-fn test_set_setting_no_document_error() {
-    let mut ops = yaml_ops_new();
-    assert!(yaml_ops_set_string_setting(&mut ops, "key", "val").is_err());
-}
-
-#[test]
 fn test_invalid_yaml_parse() {
     let mut ops = yaml_ops_new();
     let result = yaml_ops_load_file(&mut ops, "nonexistent_file_12345.yaml");
     assert!(result.is_err());
 }
 
-#[test]
-fn test_nested_settings() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(
-        &mut ops,
-        "settings:\n  fcx_mode: true\n  show_values: false\n",
-    )
-    .unwrap();
-    let fcx = yaml_ops_get_setting_value(&ops, "settings.fcx_mode");
-    assert_eq!(fcx.value, "true");
-    assert_eq!(fcx.value_type, "bool");
-}
-
-#[test]
-fn test_set_integer_setting() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "max_scans: 4\n").unwrap();
-    yaml_ops_set_integer_setting(&mut ops, "max_scans", 8).unwrap();
-    let val = yaml_ops_get_setting_value(&ops, "max_scans");
-    assert_eq!(val.value, "8");
-    assert_eq!(val.value_type, "integer");
-}
-
-#[test]
-fn test_set_integer_setting_no_document() {
-    let mut ops = yaml_ops_new();
-    assert!(yaml_ops_set_integer_setting(&mut ops, "key", 1).is_err());
-}
-
-#[test]
-fn test_set_vec_setting() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "items:\n  - old\n").unwrap();
-    yaml_ops_set_vec_setting(
-        &mut ops,
-        "items",
-        vec!["a".to_string(), "b".to_string(), "c".to_string()],
-    )
-    .unwrap();
-    let vec = yaml_ops_get_vec(&ops, "items");
-    assert_eq!(vec, vec!["a", "b", "c"]);
-}
-
-#[test]
-fn test_set_vec_setting_empty() {
-    let mut ops = yaml_ops_new();
-    yaml_ops_parse(&mut ops, "items:\n  - old\n").unwrap();
-    yaml_ops_set_vec_setting(&mut ops, "items", vec![]).unwrap();
-    let vec = yaml_ops_get_vec(&ops, "items");
-    assert!(vec.is_empty());
-}
-
-#[test]
-fn test_set_vec_setting_no_document() {
-    let mut ops = yaml_ops_new();
-    assert!(yaml_ops_set_vec_setting(&mut ops, "key", vec!["a".to_string()]).is_err());
-}
-
-// ── Settings cache ops tests (D-09 — new) ──────────────────────
-
-fn make_settings_yaml(content: &str) -> NamedTempFile {
-    let mut file = NamedTempFile::new().unwrap();
-    file.write_all(content.as_bytes()).unwrap();
-    file.flush().unwrap();
-    file
-}
-
-#[test]
-#[serial]
-fn test_settings_load_sync() {
-    settings_clear_cache();
-    let file = make_settings_yaml("key: value\nnumber: 42\n");
-    let count = settings_load_sync("t_sync", &file.path().display().to_string()).unwrap();
-    assert_eq!(count, 1);
-    assert!(settings_is_cached("t_sync"));
-    settings_clear_cache();
-}
-
-#[test]
-#[serial]
-fn test_settings_load_async_blocking() {
-    settings_clear_cache();
-    let file = make_settings_yaml("key: value\n");
-    let count =
-        settings_load_async_blocking("t_async", &file.path().display().to_string()).unwrap();
-    assert_eq!(count, 1);
-    assert!(settings_is_cached("t_async"));
-    settings_clear_cache();
-}
-
-#[test]
-#[serial]
-fn test_settings_load_batch_sync() {
-    settings_clear_cache();
-    let f1 = make_settings_yaml("a: 1\n");
-    let f2 = make_settings_yaml("b: 2\n");
-    let paths = vec![
-        f1.path().display().to_string(),
-        f2.path().display().to_string(),
-    ];
-    let count = settings_load_batch_sync(paths).unwrap();
-    assert_eq!(count, 2);
-    settings_clear_cache();
-}
-
-#[test]
-#[serial]
-fn test_settings_load_batch_async_blocking() {
-    settings_clear_cache();
-    let f1 = make_settings_yaml("a: 1\n");
-    let f2 = make_settings_yaml("b: 2\n");
-    let paths = vec![
-        f1.path().display().to_string(),
-        f2.path().display().to_string(),
-    ];
-    let count = settings_load_batch_async_blocking(paths).unwrap();
-    assert_eq!(count, 2);
-    settings_clear_cache();
-}
-
-#[test]
-#[serial]
-fn test_settings_cache_stats_and_size_on_empty_cache() {
-    settings_clear_cache();
-    settings_reset_cache_stats();
-    let stats = settings_cache_stats();
-    assert_eq!(stats.hits, 0);
-    assert_eq!(stats.misses, 0);
-    assert_eq!(stats.size, 0);
-    assert_eq!(stats.capacity, 64);
-    assert_eq!(settings_cache_size(), 0);
-    assert!(settings_cache_keys().is_empty());
-}
-
-#[test]
-#[serial]
-fn test_settings_is_cached_and_invalidate() {
-    settings_clear_cache();
-    assert!(!settings_is_cached("nope"));
-    assert!(!settings_invalidate("nope"));
-
-    let file = make_settings_yaml("x: 1\n");
-    settings_load_sync("inv_key", &file.path().display().to_string()).unwrap();
-    assert!(settings_is_cached("inv_key"));
-    assert!(settings_invalidate("inv_key"));
-    assert!(!settings_is_cached("inv_key"));
-    settings_clear_cache();
-}
-
-#[test]
-#[serial]
-fn test_settings_clear_cache_is_idempotent() {
-    settings_clear_cache();
-    settings_clear_cache();
-    assert_eq!(settings_cache_size(), 0);
-}
-
-// ── Validator tests (D-09 — new) ───────────────────────────────
-
-#[test]
-fn test_settings_validate_value_int_happy() {
-    assert!(settings_validate_value("42", "int").unwrap());
-    assert!(settings_validate_value("42", "integer").unwrap());
-    assert!(!settings_validate_value("abc", "int").unwrap());
-}
-
-#[test]
-fn test_settings_validate_value_unknown_type_errors() {
-    let err = settings_validate_value("42", "quux").unwrap_err();
-    assert!(err.contains("unknown setting type"));
-}
-
-#[test]
-fn test_settings_validate_value_all_canonical_tokens() {
-    assert!(settings_validate_value("1", "bool").unwrap());
-    assert!(settings_validate_value("1", "boolean").unwrap());
-    assert!(settings_validate_value("3.14", "float").unwrap());
-    assert!(settings_validate_value("3.14", "double").unwrap());
-    assert!(settings_validate_value("/tmp", "path").unwrap());
-    assert!(settings_validate_value("anything", "string").unwrap());
-    assert!(settings_validate_value("anything", "str").unwrap());
-}
-
-#[test]
-fn test_settings_validate_value_case_insensitive() {
-    assert!(settings_validate_value("42", "INT").unwrap());
-    assert!(settings_validate_value("yes", "Bool").unwrap());
-}
-
-#[test]
-fn test_settings_coerce_value_bool_yes() {
-    let out = settings_coerce_value("yes", "bool").unwrap();
-    assert_eq!(out.kind, "bool");
-    assert!(out.bool_val);
-}
-
-#[test]
-fn test_settings_coerce_value_path_vs_string_discriminator() {
-    let p = settings_coerce_value("/tmp/x", "path").unwrap();
-    assert_eq!(p.kind, "path");
-    assert_eq!(p.string_val, "/tmp/x");
-
-    let s = settings_coerce_value("/tmp/x", "string").unwrap();
-    assert_eq!(s.kind, "string");
-    assert_eq!(s.string_val, "/tmp/x");
-}
-
-#[test]
-fn test_settings_coerce_value_int_and_float() {
-    let i = settings_coerce_value("42", "int").unwrap();
-    assert_eq!(i.kind, "int");
-    assert_eq!(i.int_val, 42);
-
-    let f = settings_coerce_value("3.125", "float").unwrap();
-    assert_eq!(f.kind, "float");
-    assert!((f.float_val - 3.125).abs() < 1e-9);
-}
-
-#[test]
-fn test_settings_coerce_value_unknown_type_errors() {
-    assert!(settings_coerce_value("42", "list").is_err());
-}
 
 #[test]
 fn test_user_settings_update_preferences_bridge_is_fail_closed_with_diagnostics() {
@@ -907,7 +426,7 @@ fn test_user_settings_frontend_state_bridge_maps_canonical_fixture() {
     let root = tempfile::tempdir().expect("create temporary CLASSIC root");
     install_user_settings_fixture(root.path(), "gui_geometry.yaml");
 
-    let frontend = user_settings_open_frontend_state(&root.path().display().to_string());
+    let frontend = user_settings_open_gui_settings(&root.path().display().to_string()).frontend_state;
 
     assert!(frontend.auto_switch_after_scan);
     assert_eq!(frontend.auto_switch_after_scan_origin, "document");
@@ -962,7 +481,7 @@ fn test_user_settings_frontend_state_bridge_preserves_invalid_fixture_fallbacks(
     let root = tempfile::tempdir().expect("create temporary CLASSIC root");
     install_user_settings_fixture(root.path(), "invalid_known_values.yaml");
 
-    let frontend = user_settings_open_frontend_state(&root.path().display().to_string());
+    let frontend = user_settings_open_gui_settings(&root.path().display().to_string()).frontend_state;
     let main = frontend
         .window_geometry
         .iter()
@@ -1366,116 +885,10 @@ fn test_user_settings_tui_remembered_state_round_trips_as_one_transition() {
         user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
     assert_eq!(committed.status, "committed");
 
-    let reopened = user_settings_open_frontend_state(&root_string);
+    let reopened = user_settings_open_gui_settings(&root_string).frontend_state;
     assert_eq!(reopened.tui_active_tab, 2);
     assert_eq!(reopened.tui_results_panel_width, 42);
     assert!(reopened.tui_sort_ascending);
-}
-
-#[test]
-fn test_legacy_tui_state_import_reports_verified_receipt_and_coded_errors() {
-    let root = tempfile::tempdir().unwrap();
-    install_user_settings_fixture(root.path(), "unknown_entries.yaml");
-    let legacy_path = root.path().join("state.json");
-    std::fs::write(
-        &legacy_path,
-        br#"{"active_tab":3,"results_panel_width":48,"sort_ascending":true}"#,
-    )
-    .unwrap();
-
-    let handle = user_settings_import_legacy_tui_state(
-        &root.path().display().to_string(),
-        &legacy_path.display().to_string(),
-    )
-    .unwrap();
-    let outcome = user_settings_legacy_tui_import_outcome(&handle);
-
-    assert_eq!(outcome.status, "applied");
-    assert_eq!(outcome.source_path, legacy_path.display().to_string());
-    assert_eq!(outcome.source_revision, outcome.backup_revision);
-    assert!(outcome.published_settings_revision.starts_with("sha256:"));
-    assert!(std::path::Path::new(&outcome.backup_path).exists());
-
-    let restored =
-        user_settings_restore_legacy_tui_import(&root.path().display().to_string(), &handle)
-            .unwrap();
-    assert_eq!(restored.status, "restored");
-    assert!(restored.revision.starts_with("sha256:"));
-
-    let conflict_handle = user_settings_import_legacy_tui_state(
-        &root.path().display().to_string(),
-        &legacy_path.display().to_string(),
-    )
-    .unwrap();
-    let settings_path = root.path().join("CLASSIC Settings.yaml");
-    let mut newer_content = std::fs::read_to_string(&settings_path).unwrap();
-    newer_content.push_str("\n# concurrent frontend edit\n");
-    std::fs::write(&settings_path, newer_content).unwrap();
-
-    let conflict = user_settings_restore_legacy_tui_import(
-        &root.path().display().to_string(),
-        &conflict_handle,
-    )
-    .unwrap();
-    assert_eq!(conflict.status, "conflict");
-    assert!(conflict.expected_revision.starts_with("sha256:"));
-    assert!(conflict.actual_revision.starts_with("sha256:"));
-
-    std::fs::write(&legacy_path, b"{").unwrap();
-    let error = match user_settings_import_legacy_tui_state(
-        &root.path().display().to_string(),
-        &legacy_path.display().to_string(),
-    ) {
-        Ok(_) => panic!("invalid legacy JSON must fail before returning a receipt handle"),
-        Err(error) => error,
-    };
-    assert!(error.starts_with("legacy_tui_state_parse_failed:"));
-}
-
-#[test]
-fn test_legacy_tui_state_import_maps_every_non_applied_outcome() {
-    let no_source =
-        legacy_tui_state_import_outcome_dto(&CoreLegacyTuiStateImportOutcome::NoLegacySource);
-    assert_eq!(no_source.status, "no_legacy_source");
-
-    let migration = legacy_tui_state_import_outcome_dto(
-        &CoreLegacyTuiStateImportOutcome::RequiresSettingsMigration {
-            classification: DocumentClassification::Unversioned,
-            revision: Revision::Missing,
-        },
-    );
-    assert_eq!(migration.status, "requires_settings_migration");
-    assert_eq!(migration.classification, "unversioned");
-    assert_eq!(migration.revision, "missing");
-
-    let untrusted = legacy_tui_state_import_outcome_dto(
-        &CoreLegacyTuiStateImportOutcome::UntrustedSettingsBase {
-            classification: DocumentClassification::Malformed,
-            revision: Revision::Unavailable,
-        },
-    );
-    assert_eq!(untrusted.status, "untrusted_settings_base");
-    assert_eq!(untrusted.classification, "malformed");
-    assert_eq!(untrusted.revision, "unavailable");
-
-    let settings_conflict =
-        legacy_tui_state_import_outcome_dto(&CoreLegacyTuiStateImportOutcome::SettingsConflict {
-            expected_revision: Revision::Missing,
-            actual_revision: Revision::Unavailable,
-        });
-    assert_eq!(settings_conflict.status, "settings_conflict");
-    assert_eq!(settings_conflict.expected_revision, "missing");
-    assert_eq!(settings_conflict.actual_revision, "unavailable");
-
-    let legacy_conflict = legacy_tui_state_import_outcome_dto(
-        &CoreLegacyTuiStateImportOutcome::LegacySourceConflict {
-            expected_revision: Revision::Unavailable,
-            actual_revision: Revision::Missing,
-        },
-    );
-    assert_eq!(legacy_conflict.status, "legacy_source_conflict");
-    assert_eq!(legacy_conflict.expected_revision, "unavailable");
-    assert_eq!(legacy_conflict.actual_revision, "missing");
 }
 
 #[test]
@@ -1534,7 +947,7 @@ fn test_user_settings_window_geometry_update_round_trips_with_canonical_fields()
         user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
     assert_eq!(committed.status, "committed");
 
-    let reopened = user_settings_open_frontend_state(&root_string);
+    let reopened = user_settings_open_gui_settings(&root_string).frontend_state;
     let results = reopened
         .window_geometry
         .iter()
@@ -1558,7 +971,7 @@ fn test_user_settings_window_geometry_update_rejects_unknown_tab_token() {
     let content = "schema_version: \"1.0\"\nCLASSIC_Settings: {}\n";
     std::fs::write(&settings_path, content).unwrap();
     let root_string = root.path().display().to_string();
-    let revision = user_settings_open_frontend_state(&root_string).revision;
+    let revision = user_settings_open_gui_settings(&root_string).frontend_state.revision;
     let mut update = empty_user_settings_update();
     update.window_geometry_updates = vec![ffi::UserSettingsWindowGeometryUpdateDto {
         tab: "settings_dialog".to_string(),

@@ -10,7 +10,11 @@ from conformance.participants import load_participants
 
 
 def test_interface_helpers_have_no_fabricated_core_owner_or_extra_adapter():
-    """The central catalog enrols only the actual CXX surface and its Rust reference."""
+    """The central catalog enrols only the actual CXX surface and its Rust reference.
+
+    markdown-rendering is Rust-only since #309: its CXX runner needed the
+    `normalize_markdown` export, which no frontend calls.
+    """
     from conformance.families.interface_helpers import interface_coverage_policy
 
     root = Path(__file__).resolve().parents[3]
@@ -24,7 +28,7 @@ def test_interface_helpers_have_no_fabricated_core_owner_or_extra_adapter():
                    for p in derive_applicability(
                 document, load_participants(root)
             ).participants
-               } == {"rust", "cxx"}
+               } == ({"rust", "cxx"} if family == "report-discovery" else {"rust"})
         policy = interface_coverage_policy(family)
         for scenario in document["scenarios"]:
             assert derive_observed_fact_ids(

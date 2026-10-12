@@ -20,83 +20,45 @@ from conformance.packs import (
     materialize_run_plan,
 )
 
-PACK_RELATIVE_PATH = Path("tests/conformance/packs/crash_log_scan_run/v1.json")
 DEFAULT_ARTIFACT_ROOT = Path("tools/binding_compliance/artifacts")
 SUPPORTED_COMPILERS = ("msvc", "clang-cl")
 SUPPORTED_FAMILIES = (
-    "markdown-rendering",
     "report-discovery",
-    "yaml-file-values",
-    "yaml-file-values",
-    "message-logging",
     "update-rejection",
-    "settings-load",
-    "settings-yaml",
-    "settings-validation",
-    "registry-operations",
     "version-pe",
     "game-version-parse",
     "fallout4-identity",
     "fallout4-paths",
-    "registry-game",
-    "registry-gui",
-    "web-operations",
     "performance",
-    "update-decisions",
-    "update-services",
-    "xse-operations",
     "xse-folder",
     "installation-paths",
     "game-identity",
-    "runtime-access",
-    "autoscan-report",
-    "crash-log-scan-run",
     "crash-log-scan-launch",
     "user-settings",
-    "crash-suspect",
-    "crashgen-settings",
-    "mod-guidance",
     "formid-lookup",
-    "named-record",
-    "plugin-evidence",
     "installed-yaml-data",
     "config-vocabulary",
-    "scan-run-vocabulary",
     "config-operations",
     "file-backups",
-    "path-backups",
     "game-integrity",
     "game-setup-intake",
-    "yaml-update-operations",
     "file-operations",
     "database-operations",
     "version-registry",
     "scan-game",
-    "papyrus-monitor",
     "wrye-report",
-    "log-collection",
-    "crash-pattern",
-    "formid-finding",
     "ba2-scan",
-    "hash-cache-controls",
     "crashgen-check",
-    "path-operations",
 )
 
 
-def _cxx_source_paths(
-    repo_root: Path, family: str = "crash-log-scan-run"
-) -> tuple[Path, ...]:
+def _cxx_source_paths(repo_root: Path, family: str) -> tuple[Path, ...]:
     """Return current native runner and core inputs bound into source identity."""
 
     paths = (
         # Directory expansion fingerprints newly included helpers automatically;
         # a manually maintained filename list must not leave native code unhashed.
         repo_root / "classic-cli/tests/conformance",
-        repo_root
-        / "classic-cli/tests/conformance/classic_cxx_settings_load_conformance.h",
-        repo_root
-        / "classic-cli/tests/conformance/classic_cxx_settings_validation_conformance.h",
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_version_values_conformance.h",
         # The generic YAML rules and logical-key cache (#239), then
@@ -110,12 +72,8 @@ def _cxx_source_paths(
             / "classic-cli/tests/conformance"
             / ("classic_cxx_" + name + "_conformance.h")
             for name in (
-                "registry",
                 "aux_operations",
                 "performance",
-                "update_decisions",
-                "update_services",
-                "xse_operations",
                 "xse_folder",
                 "installation_paths",
                 "shared_identity",
@@ -125,8 +83,6 @@ def _cxx_source_paths(
             repo_root / "business-logic" / ("classic-" + name + "-core/src")
             for name in ("registry", "web", "update", "xse")
         ),
-        repo_root
-        / "classic-cli/tests/conformance/classic_cxx_vocabulary_conformance.h",
         repo_root / "foundation/classic-vocabulary/src",
         repo_root / "business-logic/classic-durable-publication/src",
         SCRIPT_PATH,
@@ -173,7 +129,7 @@ def _cxx_source_paths(
             repo_root / "business-logic" / "classic-scan-launch" / "src",
             repo_root / "business-logic" / "classic-user-settings-core" / "src",
         )
-    elif family != "crash-log-scan-run":
+    else:
         paths += (
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_semantic_conformance.h",
@@ -185,8 +141,6 @@ def _cxx_source_paths(
             / "classic-cli/tests/conformance/classic_cxx_version_registry_conformance.h",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_scan_game_conformance.h",
-            repo_root
-            / "classic-cli/tests/conformance/classic_cxx_papyrus_monitor_conformance.h",
             repo_root / "cpp-bindings/classic-cpp-bridge/src",
             repo_root / "business-logic/classic-scanlog-core/src",
             repo_root / "business-logic/classic-database-core/src",
@@ -206,24 +160,6 @@ def _cxx_source_paths(
             / "classic-cli/tests/conformance/classic_cxx_config_operations_conformance.h",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_file_operations_conformance.h",
-            repo_root
-            / "classic-cli/tests/conformance/classic_cxx_path_operations_conformance.h",
-        )
-    else:
-        # The Crash Log Scan Run composes owners outside scanlog's contract
-        # module: its run engine, collection and custom-scan policy (#254),
-        # config's Installed YAML Data and Local Ignore recovery (#247),
-        # scangame's Game Setup Intake (#253) and XSE Folder (#252), and FormID
-        # Value Lookup. Fingerprint all of them so a stale receipt cannot
-        # certify an owner whose current bytes it never ran.
-        paths += tuple(
-            repo_root / "business-logic" / crate / "src"
-            for crate in (
-                "classic-scanlog-core",
-                "classic-config-core",
-                "classic-database-core",
-                "classic-scangame-core",
-            )
         )
     return paths
 
@@ -233,7 +169,7 @@ def prepare_cxx_run(
     *,
     compiler: str,
     artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
-    family: str = "crash-log-scan-run",
+    family: str,
 ) -> MaterializedRun:
     """Materialize one CXX execution-instance plan in a fresh artifact directory.
 
@@ -268,9 +204,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=DEFAULT_REPO_ROOT)
     parser.add_argument("--compiler", choices=SUPPORTED_COMPILERS, required=True)
-    parser.add_argument(
-        "--family", choices=SUPPORTED_FAMILIES, default="crash-log-scan-run"
-    )
+    parser.add_argument("--family", choices=SUPPORTED_FAMILIES, required=True)
     parser.add_argument("--artifact-root", type=Path, default=DEFAULT_ARTIFACT_ROOT)
     return parser
 

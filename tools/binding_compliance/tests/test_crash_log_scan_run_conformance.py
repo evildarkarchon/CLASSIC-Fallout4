@@ -172,56 +172,6 @@ def test_live_pack_is_input_only_for_the_base_adapter(tmp_path: Path) -> None:
     ) == len(PARTICIPANT_SOURCES)
 
 
-def test_cxx_preparation_materializes_fresh_input_only_toolchain_instances(
-        tmp_path: Path,
-) -> None:
-    """MSVC and clang-cl receive distinct current plans without the tracked oracle."""
-
-    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
-
-    artifact_root = (
-            REPO_ROOT
-            / "tools"
-            / "binding_compliance"
-            / "artifacts"
-            / "test-cxx-preparation"
-            / tmp_path.name
-    )
-    plans = {}
-    try:
-        for compiler in ("msvc", "clang-cl"):
-            prepared = prepare_cxx_run(
-                REPO_ROOT,
-                compiler=compiler,
-                artifact_root=artifact_root,
-            )
-            plan = prepared.document()
-            plans[compiler] = plan
-
-            assert prepared.artifact_dir.parent.name == f"windows-{compiler}"
-            assert prepared.artifact_dir.parent.parent.name == "cxx"
-            assert not prepared.receipt_path.exists()
-            assert plan["participant"] == {
-                "id": "cxx",
-                "role": "semantic-adapter",
-                "executionInstanceId": f"windows-{compiler}",
-            }
-            assert all("expected" not in scenario for scenario in plan["scenarios"])
-            assert [scenario["id"] for scenario in plan["scenarios"]] == (
-                [
-                    name
-                    for name in EXPECTED_SCENARIO_IDS
-                    if name != "config-issue-construction"
-                ]
-            )
-    finally:
-        if artifact_root.exists():
-            shutil.rmtree(artifact_root)
-
-    assert plans["msvc"]["expectationDigest"] == plans["clang-cl"]["expectationDigest"]
-    assert plans["msvc"]["invocation"]["id"] != plans["clang-cl"]["invocation"]["id"]
-
-
 def test_family_policy_derives_every_required_fact_from_each_exact_oracle() -> None:
     """Coverage facts come from semantic observation predicates, not runner claims."""
 
@@ -1055,7 +1005,11 @@ def _prepare_base_adapter_reports(
 def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
         tmp_path: Path,
 ) -> None:
-    """Three exact participant slices cannot satisfy the blocking denominator."""
+    """The exact semantic slice cannot satisfy the blocking denominator alone.
+
+    Rust is the only semantic participant since CXX left this family (#309), so
+    the full report is still missing every CLI, GUI and TUI consumer receipt.
+    """
 
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
     artifact_root = (
@@ -1099,70 +1053,9 @@ def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
         ).document()
         assert full["result"] == "fail"
         assert full["repositoryComplete"] is False
-        assert any(
-            execution["participantId"] == "cxx"
-            for execution in full["missingExecutions"]
-        )
-    finally:
-        if artifact_root.exists():
-            shutil.rmtree(artifact_root)
-
-
-def test_all_base_adapter_instances_need_consumers_for_full_repository_scope(
-        tmp_path: Path,
-) -> None:
-    """Semantic completeness cannot substitute for CLI, GUI, and TUI receipts."""
-
-    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
-
-    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
-    artifact_root = (
-            REPO_ROOT
-            / "tools"
-            / "binding_compliance"
-            / "artifacts"
-            / "test-full-scan-run-report"
-            / tmp_path.name
-    )
-    try:
-        prepared_reports = _prepare_base_adapter_reports(pack, artifact_root)
-
-        for compiler in ("msvc", "clang-cl"):
-            prepared = prepare_cxx_run(
-                REPO_ROOT,
-                compiler=compiler,
-                artifact_root=artifact_root,
-            )
-            _write_engine_test_receipt(prepared, pack)
-            prepared_reports.append(
-                validate_prepared_run(
-                    pack,
-                    prepared,
-                    receipt_paths=(prepared.receipt_path,),
-                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-                )
-            )
-
-        pack_document = pack.document()
-        exceptions = load_policy_exceptions(REPO_ROOT)
-        consumer_catalog = load_consumer_obligations(REPO_ROOT)
-        applicability = derive_applicability(
-            pack_document,
-            load_participants(REPO_ROOT),
-            policy_exceptions=exceptions,
-            consumer_catalog=consumer_catalog,
-        )
-        report = build_scoped_report(
-            family_id="crash-log-scan-run",
-            profile="full",
-            applicability=applicability,
-            prepared_reports=tuple(prepared_reports),
-        ).document()
-
-        assert report["result"] == "fail"
-        assert report["repositoryComplete"] is False
+        # Semantic completeness cannot substitute for CLI, GUI, and TUI receipts.
         assert {
-                   execution["participantId"] for execution in report["missingExecutions"]
+                   execution["participantId"] for execution in full["missingExecutions"]
                } == {"cli", "gui", "tui"}
     finally:
         if artifact_root.exists():
@@ -1173,8 +1066,6 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
         tmp_path: Path,
 ) -> None:
     """All adapters, native instances, scenarios, families, and consumers agree."""
-
-    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
 
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
     artifact_root = (
@@ -1187,21 +1078,6 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
     )
     try:
         semantic_reports = _prepare_base_adapter_reports(pack, artifact_root)
-        for compiler in ("msvc", "clang-cl"):
-            prepared = prepare_cxx_run(
-                REPO_ROOT,
-                compiler=compiler,
-                artifact_root=artifact_root,
-            )
-            _write_engine_test_receipt(prepared, pack)
-            semantic_reports.append(
-                validate_prepared_run(
-                    pack,
-                    prepared,
-                    receipt_paths=(prepared.receipt_path,),
-                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-                )
-            )
 
         catalog = load_consumer_obligations(REPO_ROOT)
         consumer_reports: list[PreparedRunReport] = []
@@ -1249,7 +1125,8 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
         assert document["enforcement"] == "blocking"
         assert document["result"] == "pass"
         assert document["repositoryComplete"] is True
-        assert len(document["receivedExecutions"]) == 8
+        # Rust plus the CLI and GUI on both compilers and the TUI; CXX left in #309.
+        assert len(document["receivedExecutions"]) == 6
         assert document["missingExecutions"] == []
         assert all(
             [scenario.id for scenario in report.scenarios]
@@ -1292,34 +1169,10 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     )
     runner = runner_path.read_text(encoding="utf-8")
     assert '"classic_cxx_bridge/scanner.h"' in runner
-    assert "ScanRunObserver" in runner
-    assert "scan_run_contract_execute" in runner
-    # The separate resume and abandon entry points and the continuation accessors were
-    # removed on every surface (ADR-0009); the runner settles instead.
-    for removed in (
-        "scan_run_contract_execution_has_continuation",
-        "scan_run_contract_execution_take_continuation",
-        "scan_run_continuation_resume",
-        "scan_run_continuation_abandon",
-        '"before-resume"',
-    ):
-        assert removed not in runner
-    assert '"before-settle"' in runner
-    assert "scan_run_contract_execution_take_pending_recovery" in runner
-    assert "scan_run_pending_recovery_prompt" in runner
-    assert "scan_run_pending_recovery_cancellation_requested" in runner
-    assert "scan_run_pending_recovery_settle" in runner
-    assert '"before-pending-recovery"' in runner
-    # Observer failure is reported by return value under a Rust policy, never tracked here.
-    assert "ScanRunObserverDelivery" in runner
-    assert "ScanRunObserverFailurePolicy::CancelRun" in runner
-    assert "has_observer_delivery_failure" in runner
-    assert '"pendingRecovery"' in runner
-    assert "materialize_post_pause_data" in runner
-    assert 'flow.value("replays"' in runner
-    assert "project_terminal_resume_error" in runner
-    assert '"after-reset-critical-section"' in runner
-    assert '"localIgnorePaddingBytes"' in runner
+    # Crash Log Scan Run left CXX with its request constructors (#309): the runner
+    # keeps no scan-run executor, so no family can reach one through it.
+    assert "scan_run_request_" not in runner
+    assert "scan_run_contract_execute" not in runner
     assert 'scenario.contains("expected")' in runner
     assert "scan_run_fixture_config" not in runner
     assert "manifest.json" not in runner

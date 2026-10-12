@@ -13,6 +13,7 @@ from conformance.command import FAMILY_COVERAGE_POLICIES
 from conformance.coverage import derive_observed_fact_ids
 from conformance.enforcement import enforcement_for_family
 from conformance.packs import load_and_validate_pack, materialize_run_plan
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
 
 from receipt_test_support import copy_participant_catalog
@@ -142,7 +143,13 @@ def test_semantic_receipts_validate_their_scope_and_reject_an_omitted_case(
         )
     pack = load_and_validate_pack(tmp_path, pack_path)
     policy = FAMILY_COVERAGE_POLICIES[family]
-    for participant in ("cxx",):
+    # The analyzer families left CXX with their bridge exports (#309); Rust
+    # receives every pack, so it carries the receipt checks wherever CXX is not
+    # enrolled.
+    participants = (
+        ("cxx",) if family in load_participants(ROOT).family_ids else ("rust",)
+    )
+    for participant in participants:
         run = materialize_run_plan(
             pack,
             participant_id=participant,

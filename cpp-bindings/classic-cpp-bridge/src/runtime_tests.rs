@@ -9,17 +9,11 @@ fn test_init_runtime_idempotent() {
 }
 
 #[test]
-fn test_runtime_is_active() {
-    init_runtime();
-    assert!(is_runtime_active());
-}
-
-#[test]
 fn test_shutdown_is_noop() {
     init_runtime();
     shutdown_runtime();
     // Runtime should still be active after "shutdown"
-    assert!(is_runtime_active());
+    assert!(get_runtime().block_on(async { true }));
 }
 
 #[test]

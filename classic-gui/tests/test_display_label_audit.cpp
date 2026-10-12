@@ -907,9 +907,11 @@ void DisplayLabelAuditTests::every_rendered_gui_display_label_comes_from_a_bridg
     // #167, and stays excluded for the same reason: `presentLog` maps the three
     // variants onto booleans that select control flow and feed counts.
     //
-    // The accessors themselves are untouched on the bridge. They remain the
-    // right surface for labelling a domain enum outside a display line, which is
-    // why two of them are still in use here.
+    // Only the two accessors in use here remain on the bridge; they are the
+    // right surface for labelling a domain enum outside a display line. The
+    // consumer-driven trim (#309) removed the other five with their last
+    // frontend caller, and their names stay in `RENDERED_ENUMS` so a
+    // reintroduced call is still caught.
     const QString path =
         QString::fromUtf8(LABEL_RENDERING_SOURCE.data(), static_cast<qsizetype>(LABEL_RENDERING_SOURCE.size()));
     std::string renderingSource;

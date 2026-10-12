@@ -63,7 +63,8 @@ def test_xse_validator_rejects_path_escape_and_receipt_drift(tmp_path):
     path.write_text(json.dumps({"files": ["../f4se_loader.exe"]}))
     with pytest.raises(ValueError):
         validate_xse_operations_pack(document, tmp_path)
-    for participant in ("cxx",):
+    # xse-operations is Rust-only since #309 (no frontend calls those XSE exports).
+    for participant in ("rust",):
         pack, run, receipt = prepare_receipt_case(
             ROOT,
             tmp_path / participant,

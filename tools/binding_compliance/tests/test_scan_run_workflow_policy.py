@@ -10,6 +10,7 @@ import textwrap
 from pathlib import Path
 
 import pytest
+from conformance.participants import load_participants
 from conformance.workflow_policy import (
     WorkflowPolicyError,
     validate_scan_run_workflow_policy,
@@ -124,6 +125,10 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
 
     if participant == "cxx" and family in {"path-normalization", "message-operations"}:
         pytest.skip("These public operations have no CXX source mapping")
+    # The consumer-driven bridge trim (#307-#309) makes families Rust-only by
+    # dropping them from participants.json; CI then has no CXX step to remove.
+    if participant == "cxx" and family not in load_participants(REPO_ROOT).family_ids:
+        pytest.skip("Rust-only family: CXX is not enrolled in participants.json")
 
     workflow_root = tmp_path / ".github/workflows"
     workflow_root.parent.mkdir(parents=True)
@@ -184,8 +189,8 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
             ),
             (
                     ".github/workflows/ci-cpp.yml",
-                    "run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }}",
-                    "run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }} --profile full",
+                    "run_cxx_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }}",
+                    "run_cxx_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} --profile full",
                     "cannot claim full-repository scope",
             ),
             (

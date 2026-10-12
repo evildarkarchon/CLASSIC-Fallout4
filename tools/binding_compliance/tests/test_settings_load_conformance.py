@@ -47,8 +47,8 @@ def _pack(family: str) -> dict:
 @pytest.mark.parametrize(
     "family,participants",
     [
-        ("settings-load", {"rust", "cxx"}),
-        ("settings-yaml", {"rust", "cxx"}),
+        ("settings-load", {"rust"}),
+        ("settings-yaml", {"rust"}),
         ("settings-yaml-batch", {"rust"}),
     ],
 )

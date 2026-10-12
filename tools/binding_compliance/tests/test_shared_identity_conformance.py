@@ -18,8 +18,12 @@ from receipt_test_support import copy_participant_catalog
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_game_metadata_runs_on_cxx_while_details_stay_rust_only():
-    """Pretty labels run on every enrolled adapter; the details scenario stays Rust-only."""
+def test_game_metadata_and_details_stay_rust_only():
+    """Only the stable tokens run on CXX; pretty labels and details stay Rust-only.
+
+    The display-name export behind `game-identity.metadata` left the bridge in #309
+    because no frontend calls it.
+    """
     document = _pack("game-identity")
     matrix = derive_applicability(document, load_participants(ROOT))
     metadata = next(
@@ -28,6 +32,9 @@ def test_game_metadata_runs_on_cxx_while_details_stay_rust_only():
     assert metadata is not None
     assert {p.id for p in matrix.participants if "metadata" in p.scenario_ids} == {
         "rust",
+    }
+    assert {p.id for p in matrix.participants if "stable" in p.scenario_ids} == {
+        "rust",
         "cxx",
     }
     assert {p.id for p in matrix.participants if "details" in p.scenario_ids} == {
@@ -35,14 +42,14 @@ def test_game_metadata_runs_on_cxx_while_details_stay_rust_only():
     }
 
 
-def test_runtime_access_runs_on_cxx_with_an_explicit_shutdown_intent() -> None:
-    """Health diagnostics and no-op shutdown must be backed by actual calls."""
+def test_runtime_access_is_rust_only_with_an_explicit_shutdown_intent() -> None:
+    """Health diagnostics and no-op shutdown must be backed by actual calls.
+
+    runtime-access left CXX in #309 with `is_runtime_active`, which no frontend calls.
+    """
     pack = _pack("runtime-access")
     matrix = derive_applicability(pack, load_participants(ROOT))
-    assert {participant.id for participant in matrix.participants} == {
-        "rust",
-        "cxx",
-    }
+    assert {participant.id for participant in matrix.participants} == {"rust"}
     assert any(
         predicate.id == "runtime-access.shutdown-intent"
         and predicate.covers_runtime_operation("shutdown_runtime")
@@ -80,7 +87,7 @@ def _pack(family: str) -> dict:
     "family,participants",
     [
         ("game-identity", {"rust", "cxx"}),
-        ("runtime-access", {"rust", "cxx"}),
+        ("runtime-access", {"rust"}),
     ],
 )
 def test_shared_identity_receipts_fail_closed_at_public_receipt_seam(
@@ -122,8 +129,7 @@ def test_shared_identity_receipts_fail_closed_at_public_receipt_seam(
         )
     else:
         assert all(
-            {"stable", "metadata"} <= set(participant.scenario_ids)
-            for participant in matrix.participants
+            "stable" in participant.scenario_ids for participant in matrix.participants
         )
     for participant in matrix.participants:
         if participant.id == "rust":

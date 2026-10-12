@@ -369,6 +369,51 @@ _EXECUTION_POLICIES = tuple(
     replace(policy, job_timeout_minutes=360) if policy.job_id == "cli-tests" else policy
     for policy in _EXECUTION_POLICIES
 )
+# Families whose CXX runner needed bridge exports no frontend calls left CXX in
+# #309; `participants.json` enrols them Rust-only, so their CI steps are gone.
+# The filter runs last because the base CXX policy is the crash-log-scan-run
+# family, and the derived families above still copy it.
+_T2C_RUST_ONLY_FAMILIES = frozenset(
+    {
+        "autoscan-report",
+        "crash-log-scan-run",
+        "crash-pattern",
+        "crash-suspect",
+        "crashgen-settings",
+        "formid-finding",
+        "hash-cache-controls",
+        "log-collection",
+        "markdown-rendering",
+        "message-logging",
+        "mod-guidance",
+        "named-record",
+        "papyrus-monitor",
+        "path-backups",
+        "path-operations",
+        "plugin-evidence",
+        "registry-game",
+        "registry-gui",
+        "registry-operations",
+        "runtime-access",
+        "scan-run-vocabulary",
+        "settings-load",
+        "settings-validation",
+        "settings-yaml",
+        "update-decisions",
+        "update-services",
+        "web-operations",
+        "xse-operations",
+        "yaml-file-values",
+        "yaml-update-operations",
+    }
+)
+_EXECUTION_POLICIES = tuple(
+    policy
+    for policy in _EXECUTION_POLICIES
+    if not (
+        policy.participant_id == "cxx" and policy.family_id in _T2C_RUST_ONLY_FAMILIES
+    )
+)
 
 
 def _required_execution_keys(repo_root: Path) -> set[tuple[str, str, str]]:

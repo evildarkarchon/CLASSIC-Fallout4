@@ -111,6 +111,8 @@ def test_file_receipts_fail_closed(
     }
     # Authored expectations are synthetic receipt input only at this central test
     # seam; the executable native adapters receive the input-only run plan above.
+    # CXX runs only the write scenarios since `file-operations.read-text` left it (#309).
+    planned = {scenario["id"] for scenario in plan["scenarios"]}
     receipt["scenarios"] = [
         {
             "id": scenario["id"],
@@ -120,6 +122,7 @@ def test_file_receipts_fail_closed(
             "failure": None,
         }
         for scenario in document["scenarios"]
+        if scenario["id"] in planned
     ]
     run.receipt_path.write_text(json.dumps(receipt))
     report = validate_prepared_run(pack, run, coverage_policy=policy)

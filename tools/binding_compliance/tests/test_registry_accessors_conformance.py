@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parents[3]
 @pytest.mark.parametrize(
     "family,participants",
     [
-        ("registry-game", {"rust", "cxx"}),
-        ("registry-gui", {"rust", "cxx"}),
+        ("registry-game", {"rust"}),
+        ("registry-gui", {"rust"}),
         ("registry-context", {"rust"}),
         ("registry-paths", {"rust"}),
     ],

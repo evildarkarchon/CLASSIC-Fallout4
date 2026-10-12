@@ -15,12 +15,12 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 | Namespace | Bridge source | Responsibility |
 |---|---|---|
-| `classic::settings` | `src/settings.rs` | typed User Settings snapshots, migration, preview, and commit operations; generic settings cache helpers |
+| `classic::settings` | `src/settings.rs` | typed User Settings snapshots, migration, preview, and commit operations; one read-only YAML string accessor |
 | `classic::config` | `src/config.rs` | loaded YAML Data access and selected config/cache helpers |
-| `classic::files` | `src/files.rs` | generic file, backup, log collection, targeted-resolution, and report-reading helpers |
+| `classic::files` | `src/files.rs` | game-target backup, file writing, and Autoscan Report discovery and reading |
 | `classic::database` | `src/database.rs` | narrowed FormID database pool and lookup operations |
-| `classic::scanner` | `src/scanner.rs` | final tagged Crash Log Scan Run contract, small pure scan helpers, and Papyrus inspection |
-| `classic::update` | `src/update.rs` | binary compatibility checks, app notifications, and YAML Data update workflows |
+| `classic::scanner` | `src/scanner.rs` | final tagged Crash Log Scan Run contract, the Crash Log Scan Launch that builds its requests, and Papyrus monitoring |
+| `classic::update` | `src/update.rs` | app notifications and first-party YAML Data update workflows |
 
 No bridge namespace owns a second copy of Rust policy. In particular, C++ does
 not own complete-run discovery, adaptive scheduling, FCX state, report
@@ -34,27 +34,26 @@ Typed User Settings entry points open an explicit CLASSIC root and project
 Rust-owned snapshots and review artifacts into DTOs. The important workflows
 are:
 
-- open typed Update Preferences, Crash Log Scan, Game Setup, and frontend-state
-  groups
-- plan, reverse, apply, and restore User Settings migrations
+- open typed Update Preferences, Crash Log Scan, and Game Setup groups, or every
+  GUI-consumed group from one revision-cohesive snapshot
+- plan, apply, and restore User Settings migrations
 - preview ordinary updates or explicit bootstrap updates without writing
 - commit an accepted revision-anchored update or report a structured conflict
-- import the legacy TUI namespace through a typed, restorable transition
 
 The bridge never interprets raw first-party User Settings key paths. Unknown
 content is preserved by the Rust owner, and operational failures retain stable
 core error codes in the CXX error message.
 
-Generic settings-cache functions remain separate from first-party User
-Settings ownership. They expose selected loaders, cache statistics, and scalar
-validators for caller-chosen YAML content.
+The `YamlOps` handle (`yaml_ops_new`, `yaml_ops_load_file`, `yaml_ops_get_string`)
+reads one string value from a caller-chosen YAML file. The generic settings
+cache, YAML setters, validators, the legacy TUI import and in-memory plan
+reversal left the bridge with no frontend caller (#309); they remain Rust API.
 
 ### Frontend projection into scan requests
 
-Native frontends open one accepted Crash Log Scan settings snapshot and project
-it into `ScanRunConfigurationDto`, a Standard or Targeted source DTO, optional
-FCX setup context, and the Standard-only Unsolved Logs policy. The adapter does
-not reopen settings during execution.
+Native frontends do not build scan requests from settings themselves: they call
+the Crash Log Scan Launch (below), which opens User Settings read-only and
+returns an executable request plus a read-only view of what it decided.
 
 ---
 
@@ -115,33 +114,19 @@ For the YAML schema and directory contract, see
 
 ## `classic::files`
 
-The files namespace contains independently useful filesystem operations:
+The files namespace contains the filesystem operations the GUI calls:
 
-- hash-cache helpers
-- backup and game-file group management
-- generic encoding-aware reads and writes
-- `LogCollector` inspection for callers whose use-case is log enumeration
-- targeted-input resolution for non-run review tools
-
-The `LogCollector` and targeted-resolution entries delegate to
-`classic_scanlog_core::log_collection`, which owns Crash Log collection since
-#254; their bridge names, namespace, and DTOs are unchanged. The backup
-(`backup_manager_*`, `CxxBackupManager`) and game-file group
-(`game_files_*`, `CxxGameFilesManager`) entries delegate to
-`classic_resource_core::{backup, game_files}`, which own the game-target
-backup and game-file operations since #250; their bridge names, namespace,
-and error strings are unchanged.
-- non-recursive Autoscan Report discovery and report-file reading
+- game-target backup management (`backup_manager_*`, `CxxBackupManager`), which
+  delegates to `classic_resource_core::backup`, the owner of the game-target
+  backup since #250
+- `write_file_string(...)` and the encoding-aware `read_report_file(...)`
+- non-recursive Autoscan Report discovery
 
 These helpers do not provide a direct Autoscan Report writer for scan results.
 Autoscan Report path derivation and persistence for a complete run belong to
-`classic::scanner::scan_run_contract_execute(...)`.
-
-`resolve_targeted_inputs(...)` is a standalone resolver and flattens rejected
-inputs into parallel `rejected_paths` and `rejected_reasons` vectors. The final
-scan contract instead returns paired rejection objects in its discovery DTO.
-Native scan frontends pass raw Targeted candidates to the tagged request and do
-not pre-resolve them with this helper.
+`classic::scanner::scan_run_contract_execute(...)`. Hash-cache controls,
+game-file groups, Crash Log collection, targeted-input resolution and file
+similarity left the bridge with no frontend caller (#309).
 
 `discover_report_files(...)` remains non-recursive, sorts readable matches
 newest first, and returns an empty vector for an unreadable or absent directory.
@@ -204,13 +189,12 @@ through config's shared
 the same locator the GUI calls directly as
 `classic::config::locate_installation_root(executable_dir, working_dir)`
 (empty input = unavailable, empty result = no Installation Root). The bridge passes the accepted update policy
-and reviewed update identity through typed DTOs. Lower-level
-`yaml_check_update`, `yaml_apply_update`, and `yaml_rollback_update` operations
-remain for tests and unusual hosts that intentionally supply their own channel
-coordinates.
+and reviewed update identity through typed DTOs. The lower-level generic
+`yaml_*` operations, which took caller-supplied channel coordinates, and the
+binary-release `github_*` checks left the bridge with no frontend caller (#309).
 
-Binary compatibility and app-notification helpers are independent of Crash Log
-Scan Runs. See [`yaml-update-delivery.md`](yaml-update-delivery.md) and
+The app-notification helper `check_app_notification(...)` is independent of
+Crash Log Scan Runs. See [`yaml-update-delivery.md`](yaml-update-delivery.md) and
 [`app-update-notification-delivery.md`](app-update-notification-delivery.md) for
 their delivery contracts.
 
@@ -218,76 +202,10 @@ their delivery contracts.
 
 ## `classic::scanner` Final Crash Log Scan Run
 
-### Focused semantic analyzers
-
-`crashgen_settings_analyzer_new(...)` constructs one immutable analyzer from an
-owned configuration DTO. Construction validates the configuration and compiles
-matcher state once; callers inspect the construction envelope before sharing
-the opaque handle across concurrent calls.
-
-`crashgen_settings_analyze(...)` accepts one aggregate owned input and returns
-typed Crashgen expectation outcomes separately from disabled-setting notices.
-The bridge preserves the YAML-authored message, fix, severity, kind, and
-Autoscan Report placement without rendering report lines. A successful analysis
-with no findings is represented by a present result containing two empty
-vectors.
-
-Construction and analysis failures use an explicit envelope containing
-`AnalyzerErrorDto`. Its `analyzer_kind`, stable `code`, and human-readable
-`message` mirror the Rust analyzer contract; no C++ layer reinterprets the
-error policy.
-
-`crash_suspect_analyzer_new(...)` follows the same immutable-handle and typed
-construction-envelope convention over owned main-error and stack rule DTOs.
-`crash_suspect_analyze(...)` accepts owned main-error and call-stack evidence
-and returns one `CrashSuspectFindingDto` per matched main-error rule, stack
-rule, or DLL involvement notice. Rule ids, names, and severities use explicit
-presence flags for the DLL variant; no DTO contains report lines, markdown, or
-padding widths. Invalid matcher configuration retains
-`AnalyzerKind::CrashSuspect` and the shared stable analyzer error code.
-
-`mod_guidance_analyzer_new(...)` constructs the aggregate Mod Guidance handle
-from owned conflict, frequent-crash, solution, and important-mod DTOs. The
-construction result reports invalid rules or matcher state before the handle is
-used. `mod_guidance_analyze(...)` accepts owned plugin/load-order, optional GPU,
-and XSE-module facts and returns typed match state plus authored guidance in
-four semantic collections. Conflict configuration and result DTOs use
-`has_fix` plus `fix`, just as optional links use an explicit presence flag; an
-absent fix is never synthesized. The legacy parallel-vector YAML accessor keeps
-`yaml_data_mods_conf_fixes(...)` source-compatible by returning an empty-string
-sentinel for absence, with `yaml_data_mods_conf_has_fixes(...)` providing the
-lossless presence vector. The DTOs contain no report headings, group order,
-icons, separators, markdown, or rendered lines; construction and execution
-failures retain `AnalyzerKind::ModGuidance` and the shared stable analyzer error
-code.
-
-`plugin_evidence_analyzer_new(...)` validates owned plugin-ignore configuration
-and returns the same immutable-handle construction envelope.
-`plugin_evidence_analyze(...)` accepts owned call-stack lines and plugin
-identities, then returns `PluginEvidenceDto` records containing normalized
-identity and occurrence count. A present result with an empty `evidence` vector
-means analysis completed without evidence; an absent result is reserved for an
-error envelope. No Plugin Evidence DTO contains report prose or markdown, and
-failures retain `AnalyzerKind::PluginEvidence` plus the shared stable error code.
-
-`named_record_finding_analyzer_new(...)` validates owned target/ignore patterns,
-compiles matcher state, and returns the same immutable-handle construction
-envelope. `named_record_finding_analyze(...)` accepts owned Crash Log lines and
-returns distinct `NamedRecordFindingDto` values with exact occurrence counts.
-A present result with an empty `findings` vector means analysis completed with
-no matches. The bridge projects no headings, sorting policy, prose, or markdown;
-failures retain `AnalyzerKind::NamedRecordFinding` and the shared stable code.
-
-The `formid_finding_analyzer_*_new(...)` constructors create the aggregate
-FormID Finding handle over disabled lookup, owned in-memory replies, or one
-SQLite adapter. Construction and analysis run through the process-wide shared
-runtime. `formid_finding_analyze(...)` accepts owned Crash Log lines and
-plugin/prefix records, then returns canonical identifiers, checked occurrence
-counts, explicit plugin/value presence flags, and a typed lookup status.
-Unresolved identifiers remain in the result; lookup misses are successful data,
-while malformed replies and operational failures use the shared analyzer
-envelope. No DTO exposes caches, database internals, matcher inputs, report
-prose, or markdown.
+The focused semantic analyzers (Crash Suspect, Crashgen Settings, Mod Guidance,
+Plugin Evidence, Named Record Finding, FormID Finding) left the bridge with no
+frontend caller (#309). A complete run reaches all of them through the Rust
+scan pipeline; there is no per-analyzer CXX entry point.
 
 ### Complete-run entry point
 
@@ -361,100 +279,53 @@ before anything is claimed.
 
 ### Scan-run Display Labels
 
-Seven free functions project the human-facing Display Label for the run
-contract's enums, so a C++ frontend renders one without writing a `switch`:
+Two free functions project the human-facing Display Label for run-contract
+enums the GUI labels outside a rendered display line:
 
-- `scan_run_installed_yaml_data_diagnostic_kind_label(ScanRunInstalledYamlDataDiagnosticKind) -> String`
-- `scan_run_local_ignore_yaml_data_state_label(ScanRunLocalIgnoreYamlDataState) -> String`
 - `scan_run_installed_yaml_data_provenance_label(ScanRunInstalledYamlDataProvenance) -> String`
-- `scan_run_log_disposition_label(ScanRunContractLogDisposition) -> String`
-- `scan_run_log_failure_stage_label(ScanRunContractLogFailureStage) -> String`
-- `scan_run_infrastructure_error_stage_label(ScanRunContractInfrastructureErrorStage) -> String`
-- `scan_run_local_ignore_reset_failure_stage_label(ScanRunLocalIgnoreResetFailureStage) -> String`
+- `scan_run_local_ignore_yaml_data_state_label(ScanRunLocalIgnoreYamlDataState) -> String`
 
-The first two sit on contract-stability twins that delegate their naming to the
-configuration enums they mirror, so these labels are the same strings
-`installed_yaml_data_diagnostic_kind_label` and
-`local_ignore_yaml_data_state_label` return. The one exception is
-`RecoveryRequired`, which the run contract owns itself because a paused run has
-no configuration counterpart.
+The provenance enum is neither run-owned nor a twin: the run contract reuses
+the configuration crate's provenance type outright, and only the *CXX mirror*
+is scanner-local, because cxx namespaces its shared enums per bridge module.
+The Local Ignore state is a contract-stability twin that delegates its naming
+to the configuration enum it mirrors; `RecoveryRequired` is the one variant
+the run contract names itself, because a paused run has no configuration
+counterpart.
 
-The third is neither run-owned nor a twin. The run contract reuses the
-configuration crate's provenance type outright; only the *CXX mirror* is
-scanner-local, because cxx namespaces its shared enums per bridge module. So
-`classic::config::installed_yaml_data_provenance_label` returns the same prose
-but cannot accept the value a scan-run result carries. This entry point exists
-purely to close that gap, and it is a C++-only obligation: the Node surface
-reuses one provenance enum across both modules and the Python surface publishes
-a token, so neither needed a second projection. Without it a C++ frontend would
-map one mirror onto the other by hand, which is a second variant mapping able to
-disagree with the forward one.
+A separate entry point rather than a DTO field lets a Qt view style variant and
+label as independent table columns. Labels are presentation only and reworded
+freely between releases, so branch on the enum and never on the string; an
+out-of-range value returns an empty string rather than an invented label.
 
-The next three sit on enums the run crate owns outright — there is no
-configuration function returning the same prose. They already rendered exactly
-these strings in both C++ frontends, including `Unsolved Logs finalization`,
-`FormID database access`, and `internal invariant validation`, whose
-capitalization no transform of the token could have produced. The CLI deleted a
-`switch` for each; the GUI deleted two, because it never named the disposition
-at all — see the consumption note below.
+`classic-gui/src/workers/scanrunpresentation.cpp` calls both, for the one-row
+progress summary that has no room for a rendered line. Every other scan-run
+Display Label reaches the frontends inside a `Label` segment of a Rust-rendered
+display line, so the other five label entry points left the bridge with their
+last frontend caller (#309). Each frontend's
+`tests/test_display_label_audit.cpp` enforces the split it actually uses.
 
-The last is also a twin, of the workspace's shared durable-publication stage
-vocabulary. Its five labels equal their tokens by that vocabulary's deliberate
-choice — they name ordinary steps rather than domain terms — so this entry point
-buys uniformity rather than new prose. It exists so a frontend can resolve every
-scan-run label the same way instead of knowing which enums happen to need one.
+### Requests
 
-Same conventions as the `classic::config` labels above: a separate entry point
-rather than a DTO field so a Qt view can style variant and label as independent
-table columns; presentation only and reworded freely between releases, so branch
-on the enum and never on the string; an out-of-range value returns an empty
-string rather than an invented label.
+`ScanRunRequest` is an opaque Rust-owned value. Frontends obtain it only from
+the Crash Log Scan Launch below (`scan_run_launch_request`); the bridge exports
+no request constructors (#309), so the valid request matrix — Targeted requests
+carry no movement policy, FCX requests carry run-scoped setup facts — is
+enforced entirely in Rust.
 
-Both C++ frontends now consume these. `classic-cli/src/scan_run_cli.cpp` calls
-all seven; `classic-gui/src/workers/scanrunpresentation.cpp` calls six. The GUI
-omits `scan_run_log_disposition_label` on purpose rather than by oversight: it
-renders no disposition line, mapping the three variants onto booleans that
-select control flow and feed counts, so there is no string for a label to fill.
-The entry point stays exported because it is what makes a future results-view
-disposition column cheap, and because a frontend resolving six of seven labels
-one way and the seventh by hand is the asymmetry these entry points exist to
-prevent. Each frontend's `tests/test_display_label_audit.cpp` enforces the split
-it actually uses.
-
-### Tagged request construction
-
-`ScanRunRequest` and `ScanRunUnsolvedLogs` are opaque Rust-owned values. C++
-constructs exactly the valid request matrix:
-
-- `scan_run_request_standard(configuration, source, unsolved_logs)`
-- `scan_run_request_standard_with_fcx(configuration, source, unsolved_logs, setup_context)`
-- `scan_run_request_targeted(configuration, source)`
-- `scan_run_request_targeted_with_fcx(configuration, source, setup_context)`
-
-Targeted constructors accept no movement policy. FCX constructors require a
-`ScanRunSetupContextDto`, keeping setup facts scoped to one run.
-
-`ScanRunConfigurationDto` contains one `installation_root`, a typed `GameId`,
-the selected game-version mode, non-FCX analysis options, configured FormID
-database paths, an optional configured Unsolved Logs destination, and optional
-explicit concurrency. Rust derives installed YAML Data paths and performs the
-one snapshot load; C++ does not supply separate YAML directories or parse the
-game token. CXX optionals use `has_*` plus the corresponding value. Absent
-concurrency selects adaptively; present zero reaches Rust as a typed
-`RequestValidation` infrastructure error.
-
-Standard movement uses one opaque value returned by:
-
-- `scan_run_unsolved_logs_leave_in_place()`
-- `scan_run_unsolved_logs_move_to_configured_or_default()`
-- `scan_run_unsolved_logs_move_to_custom(path)`
+`ScanRunConfigurationDto` (read back through the launch view) contains one
+`installation_root`, a typed `GameId`, the selected game-version mode, non-FCX
+analysis options, configured FormID database paths, an optional configured
+Unsolved Logs destination, and optional explicit concurrency. CXX optionals use
+`has_*` plus the corresponding value. Absent concurrency selects adaptively;
+present zero reaches Rust as a typed `RequestValidation` infrastructure error.
 
 ### Crash Log Scan Launch
 
-Instead of building the DTOs above by hand, a caller can let Rust build the
-request from saved User Settings and per-run overrides
+Rust builds every request from saved User Settings and per-run overrides
 ([`classic-scan-launch.md`](classic-scan-launch.md), ADR-0009). Launch opens
-User Settings read-only and never writes them; no frontend uses it yet.
+User Settings read-only and never writes them; both C++ frontends launch every
+Crash Log Scan this way.
 
 - `scan_run_launch_standard(installation_root, overrides)` and
   `scan_run_launch_targeted(installation_root, inputs, overrides)` return an
@@ -673,15 +544,14 @@ presents them in. The description itself is not.
 
 ---
 
-## Small Scan And Papyrus Utilities
-
-`detect_vr_log(content)` and `detect_crash_pattern(content)` are small pure
-inspection helpers. They do not execute a scan or persist a report.
+## Papyrus Monitoring
 
 The Papyrus analyzer entry points create an analyzer for an explicit log path,
-start monitoring, inspect updates or full statistics, test existence, and reset
-the analyzer's own incremental state. Papyrus inspection is independent of the
-Crash Log Scan Run lifecycle.
+start monitoring, poll for updated statistics, and test existence. Papyrus
+inspection is independent of the Crash Log Scan Run lifecycle. The pure
+crash-log helpers (`detect_vr_log`, `detect_crash_pattern`,
+`classify_crash_pattern`) and the Papyrus full-analysis and reset entry points
+left the bridge with no frontend caller (#309).
 
 ---
 

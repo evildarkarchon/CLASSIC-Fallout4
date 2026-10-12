@@ -164,7 +164,7 @@ def test_path_fixture_escape_fails_before_execution(
 @pytest.mark.parametrize(
     "family,participants",
     [
-        ("path-operations", {"rust", "cxx"}),
+        ("path-operations", {"rust"}),
     ],
 )
 def test_path_message_receipts_fail_closed(

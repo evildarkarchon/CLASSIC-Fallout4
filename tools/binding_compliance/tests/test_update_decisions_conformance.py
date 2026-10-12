@@ -48,7 +48,8 @@ def test_update_decision_receipts_reject_changed_decision_and_replay(tmp_path):
     from conformance.receipts import validate_prepared_run
     from receipt_test_support import prepare_receipt_case
 
-    for participant in ("cxx",):
+    # update-decisions is Rust-only since #309 (no frontend calls `github_has_update`).
+    for participant in ("rust",):
         pack, run, receipt = prepare_receipt_case(
             ROOT,
             tmp_path / participant,
