@@ -1,17 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Native DTO traversal for the FormID lookup family, included inside the runner namespace.
 //
-// The focused scanner analyzer families left CXX with their bridge exports (#309). What
-// remains is formid-lookup and `semantic_string_values`, which the ba2-scan and
-// crashgen-check runners still use; delete each piece together with its last caller.
-
-/// Projects a bridge-owned string vector without relying on Rust JSON serialization.
-json semantic_string_values(const rust::Vec<rust::String>& values) {
-    json result = json::array();
-    for (const auto& value : values)
-        result.push_back(owned_string(value));
-    return result;
-}
+// The focused scanner analyzer families left CXX with their bridge exports (#309); only
+// formid-lookup remains, so delete this header together with that family.
 
 /// Preserves the authoritative presence bit for a nullable bridge string.
 json semantic_optional(bool present, const rust::String& value) {

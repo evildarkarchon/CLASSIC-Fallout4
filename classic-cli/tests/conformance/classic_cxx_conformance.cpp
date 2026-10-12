@@ -441,7 +441,6 @@ std::vector<std::uint8_t> autoscan_file_bytes(const fs::path& path) {
     return bytes;
 }
 
-#include "classic_cxx_installed_yaml_data_conformance.h"
 #include "classic_cxx_semantic_conformance.h"
 #include "classic_cxx_aux_operations_conformance.h"
 #include "classic_cxx_version_values_conformance.h"
@@ -451,16 +450,11 @@ std::vector<std::uint8_t> autoscan_file_bytes(const fs::path& path) {
 #include "classic_cxx_shared_identity_conformance.h"
 #include "classic_cxx_config_operations_conformance.h"
 #include "classic_cxx_file_backups_conformance.h"
-#include "classic_cxx_game_integrity_conformance.h"
 #include "classic_cxx_database_operations_conformance.h"
 #include "classic_cxx_version_registry_conformance.h"
 #include "classic_cxx_xse_folder_conformance.h"
 #include "classic_cxx_file_operations_conformance.h"
 #include "classic_cxx_installation_paths_conformance.h"
-#include "classic_cxx_scan_game_conformance.h"
-#include "classic_cxx_wrye_report_conformance.h"
-#include "classic_cxx_ba2_scan_conformance.h"
-#include "classic_cxx_crashgen_check_conformance.h"
 #include "classic_cxx_user_settings_conformance.h"
 #include "classic_cxx_game_setup_intake_conformance.h"
 #include "classic_cxx_crash_log_scan_launch_conformance.h"
@@ -483,15 +477,10 @@ json scenario_receipt(const json& plan, const json& scenario) {
                     {"observation", is_semantic_family(plan.at("familyId")) ? execute_semantic_scenario(plan, scenario)
                                     : plan.at("familyId") == "game-setup-intake" ? execute_game_setup_intake_scenario(plan, scenario)
                                     : plan.at("familyId") == "file-backups" ? execute_file_backups_scenario(plan, scenario)
-                                    : plan.at("familyId") == "game-integrity" ? execute_game_integrity_scenario(plan, scenario)
                                     : plan.at("familyId") == "config-operations" ? execute_config_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "file-operations" ? execute_file_operations(plan, scenario)
                                     : plan.at("familyId") == "database-operations" ? execute_database_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "version-registry" ? execute_version_registry_scenario(plan, scenario)
-                                    : plan.at("familyId") == "scan-game" ? execute_scan_game(plan, scenario)
-                                    : plan.at("familyId") == "wrye-report" ? execute_wrye_report(plan, scenario)
-                                    : plan.at("familyId") == "ba2-scan" ? execute_ba2_scan(plan, scenario)
-                                    : plan.at("familyId") == "crashgen-check" ? execute_crashgen_check(plan, scenario)
                                     : (plan.at("familyId") == "game-version-parse" || plan.at("familyId") == "fallout4-identity" || plan.at("familyId") == "fallout4-paths") ? execute_version_values_scenario(plan, scenario)
                                       : plan.at("familyId") == "version-pe" ? execute_aux_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "installation-paths" ? execute_installation_paths_scenario(plan, scenario)
@@ -500,8 +489,6 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                     : plan.at("familyId") == "update-rejection" ? execute_update_rejection_scenario(plan, scenario)
                                     : plan.at("familyId") == "performance" ? execute_performance_scenario(plan, scenario)
                                     : plan.at("familyId") == "game-identity" ? execute_shared_identity_scenario(plan, scenario)
-                                    : plan.at("familyId") == "installed-yaml-data"
-                                        ? execute_installed_yaml_data_scenario(plan, scenario)
                                     : plan.at("familyId") == "crash-log-scan-launch"
                                         ? execute_crash_log_scan_launch_scenario(plan, scenario)
                                     : plan.at("familyId") == "user-settings"
@@ -522,8 +509,7 @@ void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
         (plan.at("familyId") != "user-settings" &&
          plan.at("familyId") != "crash-log-scan-launch" &&
-         plan.at("familyId") != "installed-yaml-data" &&
-         plan.at("familyId") != "game-integrity" && plan.at("familyId") != "game-setup-intake" &&
+         plan.at("familyId") != "game-setup-intake" &&
          plan.at("familyId") != "file-backups" &&
          plan.at("familyId") != "config-operations" && plan.at("familyId") != "file-operations" &&
            plan.at("familyId") != "version-pe" && plan.at("familyId") != "game-version-parse" && plan.at("familyId") != "fallout4-identity" && plan.at("familyId") != "fallout4-paths" &&
@@ -531,10 +517,6 @@ void validate_plan(const json& plan) {
          plan.at("familyId") != "performance" &&
          plan.at("familyId") != "game-identity" &&
          plan.at("familyId") != "database-operations" && plan.at("familyId") != "version-registry" &&
-         plan.at("familyId") != "scan-game" &&
-         plan.at("familyId") != "wrye-report" &&
-         plan.at("familyId") != "ba2-scan" &&
-         plan.at("familyId") != "crashgen-check" &&
          !is_semantic_family(plan.at("familyId")))) {
         throw RunnerError("unsupported CXX conformance run plan");
     }

@@ -2,29 +2,10 @@
   "schemaVersion": 1,
   "families": [
     {
-      "familyId": "ba2-scan",
-      "cxx": {
-        "capabilityIds": [
-          "ba2-scan.bridge"
-        ]
-      }
-    },
-    {
       "familyId": "config-operations",
       "cxx": {
         "capabilityIds": [
-          "config-operations.load-explicit",
-          "config-operations.main-version",
-          "config-operations.persist-local",
-          "config-operations.yaml-values"
-        ]
-      }
-    },
-    {
-      "familyId": "config-vocabulary",
-      "cxx": {
-        "capabilityIds": [
-          "vocabulary.resolve"
+          "config-operations.persist-local"
         ]
       }
     },
@@ -33,14 +14,6 @@
       "cxx": {
         "capabilityIds": [
           "crash-log-scan-launch.prepare"
-        ]
-      }
-    },
-    {
-      "familyId": "crashgen-check",
-      "cxx": {
-        "capabilityIds": [
-          "crashgen-check.check"
         ]
       }
     },
@@ -103,14 +76,6 @@
       }
     },
     {
-      "familyId": "game-integrity",
-      "cxx": {
-        "capabilityIds": [
-          "game-integrity.basic"
-        ]
-      }
-    },
-    {
       "familyId": "game-setup-intake",
       "cxx": {
         "capabilityIds": [
@@ -135,15 +100,6 @@
       }
     },
     {
-      "familyId": "installed-yaml-data",
-      "cxx": {
-        "capabilityIds": [
-          "installed-yaml-data.inspect",
-          "installed-yaml-data.load"
-        ]
-      }
-    },
-    {
       "familyId": "performance",
       "cxx": {
         "capabilityIds": [
@@ -156,15 +112,6 @@
       "cxx": {
         "capabilityIds": [
           "report-discovery.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "scan-game",
-      "cxx": {
-        "capabilityIds": [
-          "scan-game.validate-enb",
-          "scan-game.validate-ini"
         ]
       }
     },
@@ -203,14 +150,6 @@
           "version-registry.enumerate",
           "version-registry.query",
           "version-registry.xse"
-        ]
-      }
-    },
-    {
-      "familyId": "wrye-report",
-      "cxx": {
-        "capabilityIds": [
-          "wrye-report.parse"
         ]
       }
     },

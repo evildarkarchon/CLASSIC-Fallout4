@@ -13,12 +13,14 @@ It is a pure Rust business-logic crate. It does not own a UI surface, binding la
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
-The CXX `ini_validator_detect_all_issues_for_root` wrapper loads INI values through
+Root-based INI issue detection loads INI values through
 `IniValidator::validate_inis` before detecting structured issues. It follows the
 core loader's policy of skipping unreadable or malformed candidates and leaves
 the supplied game files unchanged. The fixture-backed `scan-game` conformance
-pack checks this behavior across Rust, CXX, Node, and Python alongside INI report
-game selection and ENB validation.
+pack checks this behavior in Rust alongside INI report game selection and ENB
+validation. The CXX checker wrappers (INI, ENB, BA2, TOML/crashgen, Wrye,
+integrity) were removed in the consumer-driven bridge trim (#308); only Game
+Setup Intake crosses the bridge.
 
 ---
 

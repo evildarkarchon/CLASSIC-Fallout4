@@ -36,19 +36,12 @@ SUPPORTED_FAMILIES = (
     "crash-log-scan-launch",
     "user-settings",
     "formid-lookup",
-    "installed-yaml-data",
-    "config-vocabulary",
     "config-operations",
     "file-backups",
-    "game-integrity",
     "game-setup-intake",
     "file-operations",
     "database-operations",
     "version-registry",
-    "scan-game",
-    "wrye-report",
-    "ba2-scan",
-    "crashgen-check",
 )
 
 
@@ -134,13 +127,9 @@ def _cxx_source_paths(repo_root: Path, family: str) -> tuple[Path, ...]:
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_semantic_conformance.h",
             repo_root
-            / "classic-cli/tests/conformance/classic_cxx_installed_yaml_data_conformance.h",
-            repo_root
             / "classic-cli/tests/conformance/classic_cxx_database_operations_conformance.h",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_version_registry_conformance.h",
-            repo_root
-            / "classic-cli/tests/conformance/classic_cxx_scan_game_conformance.h",
             repo_root / "cpp-bindings/classic-cpp-bridge/src",
             repo_root / "business-logic/classic-scanlog-core/src",
             repo_root / "business-logic/classic-database-core/src",
