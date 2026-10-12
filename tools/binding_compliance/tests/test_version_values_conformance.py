@@ -26,45 +26,12 @@ import pytest
 
 def test_null_version_query_has_positive_and_negative_executable_inputs():
     """The CXX null helper must be exercised for both null and non-null parsed versions."""
-    from conformance.coverage import load_source_parity_rows
-    from conformance.families.version_values import version_values_coverage_policy
-    from selector_test_support import candidate_predicates
-
     root = Path(__file__).resolve().parents[3]
     pack = load_and_validate_pack(
         root, Path("tests/conformance/packs/game_version_parse/v1.json")
     ).document()
-    row = next(
-        r
-        for r in load_source_parity_rows(root)
-        if r.obligation_id == "parity:cxx:76de962f36a6993c"
-    )
-    assert candidate_predicates(
-        row, pack, version_values_coverage_policy("game-version-parse")
-    )
     assert any(s["expected"] == {"parsed": "0.0.0.0"} for s in pack["scenarios"])
     assert any(s["expected"] == {"parsed": "1.10.163.0"} for s in pack["scenarios"])
-
-
-def test_config_owned_executable_name_has_cross_owner_evidence():
-    """The CXX config resolver must retain its real Rust owner in version-value evidence."""
-    from conformance.coverage import load_source_parity_rows
-    from conformance.families.version_values import version_values_coverage_policy
-    from selector_test_support import candidate_predicates
-
-    root = Path(__file__).resolve().parents[3]
-    pack = load_and_validate_pack(
-        root, Path("tests/conformance/packs/fallout4_paths/v1.json")
-    ).document()
-    row = next(
-        r
-        for r in load_source_parity_rows(root)
-        if r.obligation_id == "parity:cxx:2cd440ef71f6e18d"
-    )
-    assert row.rust_crate == "classic-config-core"
-    assert candidate_predicates(
-        row, pack, version_values_coverage_policy("fallout4-paths")
-    )
 
 
 @pytest.mark.parametrize(
@@ -79,16 +46,13 @@ def test_config_owned_executable_name_has_cross_owner_evidence():
         for participant in participants
     ],
 )
-def test_version_value_receipts_cover_only_applicable_rows(
+def test_version_value_receipts_pass_for_each_enrolled_participant(
         tmp_path, family, participant
 ):
-    """Complete receipts cover actual source rows while no nonexistent adapter is enrolled."""
-    from conformance.coverage import (
-        derive_row_coverage,
-        load_retained_analyzer_kinds,
-        load_source_parity_rows,
-    )
+    """Complete receipts from an enrolled adapter validate and derive their facts."""
+    from conformance.applicability import derive_applicability
     from conformance.families.version_values import version_values_coverage_policy
+    from conformance.participants import load_participants
     from conformance.receipts import validate_prepared_run
     from receipt_test_support import prepare_receipt_case
 
@@ -100,16 +64,14 @@ def test_version_value_receipts_cover_only_applicable_rows(
         participant,
         runner_id="version-value-test",
     )
+    assert participant in {
+        item.id
+        for item in derive_applicability(
+            pack.document(), load_participants(root)
+        ).participants
+    }
     policy = version_values_coverage_policy(family)
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     assert not report.failures
-    coverage = derive_row_coverage(
-        pack.document(),
-        load_source_parity_rows(root),
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(root),
-    )
-    assert coverage.rows
-    assert not coverage.failures
+    assert report.scenarios
+    assert all(scenario.observed_fact_ids for scenario in report.scenarios)

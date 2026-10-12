@@ -63,6 +63,34 @@ def _valid_pack() -> dict[str, Any]:
     }
 
 
+def _write_cxx_enrolment(root: Path, pack_document: dict[str, Any]) -> None:
+    """Enrol CXX for every capability of the synthetic family in ``root``.
+
+    Non-Rust semantic plans are projected through ``participants.json``, so the
+    isolated repository needs a catalog that makes the CXX invocation applicable.
+    """
+
+    capability_ids = sorted(
+        {capability["id"] for capability in pack_document["capabilities"]}
+    )
+    path = root / "tests" / "conformance" / "participants.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "schemaVersion": 1,
+                "families": [
+                    {
+                        "familyId": pack_document["familyId"],
+                        "cxx": {"capabilityIds": capability_ids},
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def _prepare_run(
     tmp_path: Path,
     policy_exceptions: list[dict[str, Any]] | None = None,
@@ -91,6 +119,7 @@ def _prepare_run(
         ),
         encoding="utf-8",
     )
+    _write_cxx_enrolment(tmp_path, pack_document or _valid_pack())
     for arguments in (
         ("init",),
         ("config", "user.email", "conformance-tests@example.invalid"),
@@ -106,9 +135,9 @@ def _prepare_run(
     pack = load_and_validate_pack(tmp_path, pack_path)
     run = materialize_run_plan(
         pack,
-        participant_id="node",
+        participant_id="cxx",
         participant_role="semantic-adapter",
-        execution_instance_id="windows-node",
+        execution_instance_id="windows-msvc",
         source_paths=(runner_path,),
     )
     return pack, run
@@ -128,10 +157,10 @@ def _completed_receipt(
         "invocation": plan["invocation"],
         "participant": plan["participant"],
         "runner": {
-            "id": "classic-node-conformance",
+            "id": "classic-cxx-conformance",
             "version": 1,
             "platform": "windows",
-            "toolchain": "node",
+            "toolchain": "msvc",
         },
         "scenarios": [
             {
@@ -303,17 +332,17 @@ def test_ambiguous_or_unexpected_receipt_evidence_is_malformed(
             }
         )
     elif mutation == "unexpected-participant":
-        receipt["participant"]["id"] = "python"
+        receipt["participant"]["id"] = "rust"
     elif mutation == "unexpected-role":
         receipt["participant"]["role"] = "consumer"
     elif mutation == "unexpected-instance":
-        receipt["participant"]["executionInstanceId"] = "linux-node"
+        receipt["participant"]["executionInstanceId"] = "windows-clang-cl"
     elif mutation == "unexpected-capability":
         receipt["scenarios"][0]["capabilityIds"] = ["example.other"]
     elif mutation == "unexpected-envelope-field":
         receipt["passed"] = True
     elif mutation == "invalid-runner-id":
-        receipt["runner"]["id"] = "Classic Node Conformance"
+        receipt["runner"]["id"] = "Classic CXX Conformance"
     elif mutation == "floating-observation":
         receipt["scenarios"][0]["observation"]["durableEffects"][0]["byteLength"] = 7.0
     elif mutation == "nonstring-execution-status":
@@ -440,10 +469,10 @@ def test_matching_reviewed_exception_accepts_not_applicable_execution(
     """A narrow repository-owned exception may satisfy one exact obligation."""
 
     exception = {
-        "id": "node-example-exception",
+        "id": "cxx-example-exception",
         "capabilityId": "example.execute",
-        "participantId": "node",
-        "rationale": "The example capability is intentionally absent on Node.",
+        "participantId": "cxx",
+        "rationale": "The example capability is intentionally absent on CXX.",
         "policyPage": "docs/api/binding-parity-policy.md",
     }
     pack, run = _prepare_run(tmp_path, [exception])
@@ -481,14 +510,14 @@ def test_not_applicable_rejects_nonmatching_or_unreviewable_exceptions(
     """Exception identity alone cannot authorize a broader applicability gap."""
 
     exception = {
-        "id": "node-example-exception",
+        "id": "cxx-example-exception",
         "capabilityId": "example.execute",
-        "participantId": "node",
-        "rationale": "The example capability is intentionally absent on Node.",
+        "participantId": "cxx",
+        "rationale": "The example capability is intentionally absent on CXX.",
         "policyPage": "docs/api/binding-parity-policy.md",
     }
     if mismatch == "participant":
-        exception["participantId"] = "python"
+        exception["participantId"] = "rust"
     elif mismatch == "capability":
         exception["capabilityId"] = "example.other"
     elif mismatch == "rationale":

@@ -2,19 +2,14 @@
 
 import copy
 import json
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from conformance.coverage import (
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
 from conformance.families.aux_operations import (
     aux_operations_coverage_policy,
     validate_aux_operations_pack,
 )
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
 
 from receipt_test_support import prepare_receipt_case
@@ -36,7 +31,7 @@ def test_web_game_routing_obligates_only_adapters_with_the_public_operation():
         None,
     )
     assert route is not None
-    matrix = derive_applicability(document, load_source_parity_rows(ROOT))
+    matrix = derive_applicability(document, load_participants(ROOT))
     assert {p.id for p in matrix.participants if route["id"] in p.scenario_ids} == {
         "rust",
         "cxx",
@@ -97,16 +92,6 @@ def test_auxiliary_fixture_and_predicate_contract(family: str) -> None:
     for path in paths:
         assert "expected" not in json.loads(path.read_text())
     policy = aux_operations_coverage_policy(family)
-    if family == "web-operations":
-        from selector_test_support import candidate_predicates
-
-        rows = load_source_parity_rows(ROOT)
-        for obligation in (
-                "parity:cxx:7d9536f46f7a602a",
-                "parity:cxx:1c07ae6197b62a4e",
-        ):
-            row = next(row for row in rows if row.obligation_id == obligation)
-            assert candidate_predicates(row, pack, policy), obligation
     for predicate in policy.predicates:
         matched = [
             case["expected"]
@@ -153,15 +138,15 @@ def test_resource_pack_observes_filesystem_results_and_missing_errors() -> None:
     "family,participant",
     [
         (family, participant)
-        # Only CXX still maps web operations through a parity inventory.
+        # CXX is the only non-Rust participant enrolled in web operations.
         for family in ("web-operations",)
         for participant in ("cxx",)
     ],
 )
-def test_auxiliary_receipts_cover_selected_rows_and_reject_mutations(
+def test_auxiliary_receipts_yield_facts_and_reject_mutations(
         tmp_path: Path, family: str, participant: str
 ) -> None:
-    """Source-derived obligations stay covered while altered observations and new APIs fail."""
+    """Exact receipts pass with predicate facts while altered observations fail."""
     relative = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
     pack, run, receipt = prepare_receipt_case(
         ROOT, tmp_path, relative, participant, runner_id="aux-boundary-test"
@@ -169,46 +154,7 @@ def test_auxiliary_receipts_cover_selected_rows_and_reject_mutations(
     policy = aux_operations_coverage_policy(family)
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     assert not report.failures
-    rows = load_source_parity_rows(ROOT)
-    coverage = derive_row_coverage(
-        pack.document(),
-        rows,
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert coverage.rows
-    assert not coverage.failures
-    symbols = {
-        symbol
-        for capability in pack.document()["capabilities"]
-        for symbol in capability["rustSymbols"]
-    }
-    prototype = next(
-        row
-        for row in rows
-        if row.participant_id == participant
-        and row.rust_symbol in symbols
-        and row.mapping_origin == "canonical_rust"
-        and row.required_evidence_kind == "runtime"
-    )
-    added = replace(
-        prototype,
-        obligation_id="parity:test:future-aux-operation",
-        runtime_operation="future_aux_operation",
-    )
-    expanded = derive_row_coverage(
-        pack.document(),
-        (*rows, added),
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert [failure.obligation_id for failure in expanded.failures] == [
-        added.obligation_id
-    ]
+    assert all(scenario.observed_fact_ids for scenario in report.scenarios)
     for field in receipt["scenarios"][0]["observation"]:
         changed = copy.deepcopy(receipt)
         del changed["scenarios"][0]["observation"][field]

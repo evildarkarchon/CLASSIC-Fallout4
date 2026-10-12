@@ -13,6 +13,7 @@ from conformance.consumers import (
     load_consumer_obligations,
     prepare_consumer_run,
 )
+from conformance.participants import DEFAULT_PARTICIPANTS_PATH, load_participants
 from conformance.packs import (
     MaterializationError,
     _run_plan_digest,
@@ -26,6 +27,15 @@ from conformance.receipts import (
     validate_prepared_run,
 )
 from conformance.reports import build_scoped_report
+
+
+def _rust_only_participants(root: Path):
+    """Load an empty (Rust-only) participant catalog beneath ``root``."""
+
+    path = root / DEFAULT_PARTICIPANTS_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('{"schemaVersion": 1, "families": []}', encoding="utf-8")
+    return load_participants(root)
 
 
 def _catalog() -> dict[str, object]:
@@ -170,7 +180,9 @@ def test_applicability_adds_only_catalog_owned_pack_obligations(tmp_path: Path) 
         "consumerObligations": [{"id": "cli.stream-selection"}],
     }
 
-    applicability = derive_applicability(pack, (), consumer_catalog=catalog)
+    applicability = derive_applicability(
+        pack, _rust_only_participants(tmp_path), consumer_catalog=catalog
+    )
 
     consumer = next(item for item in applicability.participants if item.id == "cli")
     assert consumer.document() == {
@@ -278,7 +290,11 @@ def test_consumer_receipt_compares_only_named_obligation_observations(
     ]
     assert coverage.document()["result"] == "pass"
 
-    applicability = derive_applicability(pack.document(), (), consumer_catalog=catalog)
+    applicability = derive_applicability(
+        pack.document(),
+        _rust_only_participants(tmp_path),
+        consumer_catalog=catalog,
+    )
     scoped = build_scoped_report(
         family_id="example-family",
         profile="conformance",
@@ -289,7 +305,7 @@ def test_consumer_receipt_compares_only_named_obligation_observations(
         consumer_coverage=coverage,
     )
     assert scoped.document()["result"] == "pass"
-    assert scoped.document()["coverage"] is None
+    assert "coverage" not in scoped.document()
     assert scoped.document()["consumerCoverage"]["result"] == "pass"
 
 

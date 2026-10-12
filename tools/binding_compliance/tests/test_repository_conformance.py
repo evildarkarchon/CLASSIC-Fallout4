@@ -1,4 +1,4 @@
-"""Repository conformance must account for all packs and source parity rows."""
+"""Repository conformance must account for every tracked pack."""
 
 import shutil
 from pathlib import Path
@@ -57,11 +57,11 @@ def test_downloaded_plan_remains_immutable_and_bound_to_source(
         Path(__file__).resolve().parents[3],
         tmp_path,
         pack_path,
-        "node",
+        "rust",
         runner_id="artifact-relocation-test",
     )
     original = run.run_plan_path.read_bytes()
-    download = tmp_path / "downloaded" / "node-file-fingerprint-conformance"
+    download = tmp_path / "downloaded" / "rust-file-fingerprint-conformance"
     shutil.copytree(run.artifact_dir, download)
     (receipt,) = discover_repository_receipts(tmp_path, Path("downloaded"))
     if changed_source:
@@ -79,8 +79,8 @@ def test_downloaded_plan_remains_immutable_and_bound_to_source(
     assert (receipt.parent / "run_plan.json").read_bytes() == original
 
 
-def test_empty_receipts_report_missing_families_and_runtime_rows() -> None:
-    """Source ownership can retain structural rows but never prove execution."""
+def test_empty_receipts_report_missing_families() -> None:
+    """No receipts means every tracked family is missing and nothing passes."""
     from conformance.repository import build_repository_report
 
     report = build_repository_report(Path(__file__).resolve().parents[3], ())
@@ -88,8 +88,9 @@ def test_empty_receipts_report_missing_families_and_runtime_rows() -> None:
     assert report["repositoryComplete"] is False
     assert "xse-folder" in report["missingFamilies"]
     assert "crash-log-scan-run" in report["missingFamilies"]
-    assert report["uncoveredRows"]
-    assert report["retainedRows"]
+    # Parity-row accounting was deleted with the CXX parity gate (T1).
+    assert "uncoveredRows" not in report
+    assert "retainedRows" not in report
 
 
 def test_empty_repository_cannot_certify_itself(tmp_path: Path) -> None:
@@ -102,23 +103,17 @@ def test_empty_repository_cannot_certify_itself(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("failed_donor", [False, True])
-def test_complete_family_list_cannot_hide_uncovered_runtime_rows(
+def test_complete_family_list_passes_only_when_every_family_report_does(
         monkeypatch: pytest.MonkeyPatch, failed_donor: bool
 ) -> None:
-    """Even all family responses cannot grant absent or failed row evidence."""
+    """One failed family report keeps the full verdict incomplete."""
     from conformance import repository
-    from conformance.coverage import load_source_parity_rows
     from conformance.packs import discover_pack_paths, load_and_validate_pack
 
     root = Path(__file__).resolve().parents[3]
     families = [
         load_and_validate_pack(root, path).document()["familyId"]
         for path in discover_pack_paths(root)
-    ]
-    runtime_ids = [
-        row.obligation_id
-        for row in load_source_parity_rows(root)
-        if row.required_evidence_kind == "runtime"
     ]
     donor = families[0]
 
@@ -130,11 +125,6 @@ def test_complete_family_list_cannot_hide_uncovered_runtime_rows(
             "result": "fail" if failed else "pass",
             "enforcement": "blocking",
             "repositoryComplete": not failed,
-            "coverage": {
-                "rows": [{"obligationId": value} for value in runtime_ids]
-                if failed
-                else []
-            },
         }
 
     monkeypatch.setattr(repository, "_run_plan_family", lambda path: path.parent.name)
@@ -145,6 +135,5 @@ def test_complete_family_list_cannot_hide_uncovered_runtime_rows(
         root, [root / family / "receipt.json" for family in families]
     )
     assert report["missingFamilies"] == []
-    assert report["uncoveredRows"] == sorted(runtime_ids)
-    assert report["repositoryComplete"] is False
-    assert report["result"] == "fail"
+    assert report["repositoryComplete"] is not failed_donor
+    assert report["result"] == ("fail" if failed_donor else "pass")

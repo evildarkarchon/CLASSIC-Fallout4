@@ -8,8 +8,8 @@ from pathlib import Path
 
 from .applicability import derive_applicability, load_policy_exceptions
 from .consumers import load_consumer_obligations
-from .coverage import load_source_parity_rows
 from .packs import discover_pack_paths, load_and_validate_pack
+from .participants import load_participants
 
 
 class WorkflowPolicyError(ValueError):
@@ -378,19 +378,31 @@ def _required_execution_keys(repo_root: Path) -> set[tuple[str, str, str]]:
     which participants are required, or new source mappings could silently skip CI.
     """
 
-    rows = load_source_parity_rows(repo_root)
+    participants = load_participants(repo_root)
     exceptions = load_policy_exceptions(repo_root)
     consumers = load_consumer_obligations(repo_root)
     required: set[tuple[str, str, str]] = set()
+    tracked_families: set[str] = set()
     for path in discover_pack_paths(repo_root):
         document = load_and_validate_pack(repo_root, path).document()
+        tracked_families.add(document["familyId"])
         matrix = derive_applicability(
-            document, rows, policy_exceptions=exceptions, consumer_catalog=consumers
+            document,
+            participants,
+            policy_exceptions=exceptions,
+            consumer_catalog=consumers,
         )
         required.update(
             (document["familyId"], participant.id, instance)
             for participant in matrix.participants
             for instance in participant.execution_instance_ids
+        )
+    # An enrolment for a family with no pack would never run, so a renamed or
+    # deleted pack must not leave a silently dead participants.json entry.
+    untracked = sorted(set(participants.family_ids) - tracked_families)
+    if untracked:
+        raise WorkflowPolicyError(
+            "participants.json enrols untracked families: " + ", ".join(untracked)
         )
     if not required:
         raise WorkflowPolicyError("required execution denominator is empty")
@@ -492,7 +504,7 @@ def _validate_corrosion_source_workflow(repo_root: Path) -> None:
         ("gui-tests", "Build and test GUI"),
     ):
         job = _job_block(source, job_id)
-        if "    needs: [cxx-parity-gate, corrosion-source]" not in job.splitlines():
+        if "    needs: [corrosion-source]" not in job.splitlines():
             raise WorkflowPolicyError("Corrosion source must gate each native build")
         download = _step_block(
             job, "Download pinned Corrosion source", label="Corrosion source download"

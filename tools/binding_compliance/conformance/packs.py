@@ -748,38 +748,30 @@ def _create_artifact_directory(
 def _semantic_scenarios(
     repo_root: Path, document: Mapping[str, Any], participant_id: str
 ) -> list[dict[str, Any]]:
-    """Project opt-in operation scopes identically at preparation and readback.
+    """Project the participant's applicable scenarios at preparation and readback.
 
-    Source mappings and trusted predicates determine scenario membership. An
+    The central ``participants.json`` determines scenario membership, so an
     adapter cannot narrow its own denominator by editing its immutable plan.
-    Families without scoped capabilities retain their original complete plans.
+    Every family is projected (not only operation-scoped ones): a family whose
+    enrolment shrinks must stop sending dropped scenarios to the participant.
+    Consumers are not semantic participants, so the consumer registry is not
+    consulted here.
     """
     scenarios = list(document["scenarios"])
-    if not any(
-        capability.get("operationScoped", False)
-        for capability in document["capabilities"]
-    ):
+    if participant_id == "rust":
+        # Rust owns every capability and pack validation requires each action
+        # to be a declared capability, so Rust always receives the whole pack
+        # and never depends on the participant catalog.
         return scenarios
-    from .applicability import derive_applicability
-    from .consumers import load_consumer_obligations
-    from .coverage import load_source_parity_rows
+    from .applicability import derive_semantic_participants
+    from .participants import load_participants
 
     try:
-        matrix = derive_applicability(
-            document,
-            load_source_parity_rows(repo_root),
-            consumer_catalog=load_consumer_obligations(repo_root)
-            if document["consumerObligations"]
-            else None,
-        )
+        semantic = derive_semantic_participants(document, load_participants(repo_root))
     except ValueError as error:
         raise MaterializationError(str(error)) from error
     participant = next(
-        (
-            item
-            for item in matrix.participants
-            if item.id == participant_id and item.role == "semantic-adapter"
-        ),
+        (item for item in semantic if item.id == participant_id),
         None,
     )
     if participant is None:

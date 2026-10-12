@@ -72,7 +72,7 @@ def test_update_receipts_reject_lost_error_extra_file_and_missing_execution(tmp_
     from conformance.receipts import validate_prepared_run
     from receipt_test_support import prepare_receipt_case
 
-    for participant in ("rust", "cxx", "node", "python"):
+    for participant in ("rust", "cxx"):
         pack, run, receipt = prepare_receipt_case(
             ROOT,
             tmp_path / participant,

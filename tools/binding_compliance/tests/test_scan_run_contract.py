@@ -34,12 +34,7 @@ def test_forbidden_export_inventory_keeps_live_sources_after_metadata_retirement
     surfaces = load_manifest(REPO_ROOT)["forbiddenExports"]
     paths = {entry["path"] for entries in surfaces.values() for entry in entries}
     assert not any("runtime_coverage_registry" in path for path in paths)
-    assert {
-               "cpp-bindings/classic-cpp-bridge/src/scanner/contract.rs",
-               "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-               "docs/implementation/cxx_api_parity/baseline/rust_api_surface.json",
-               "tools/cxx_api_parity/canonical_mappings.json",
-           } <= paths
+    assert "cpp-bindings/classic-cpp-bridge/src/scanner/contract.rs" in paths
     assert set(surfaces) == {"rust", "cxx"}
 
 

@@ -70,7 +70,6 @@ The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](adr/)). Rep
 
 ```powershell
 uv sync --project tools
-uv run --project tools python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 uv run --project tools python -m pytest tools/user_settings_ownership/tests -q
 ```
 

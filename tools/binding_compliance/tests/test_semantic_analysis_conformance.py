@@ -6,22 +6,16 @@ import copy
 import json
 import shutil
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from conformance.command import FAMILY_COVERAGE_POLICIES
-from conformance.coverage import (
-    derive_observed_fact_ids,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from conformance.coverage import derive_observed_fact_ids
 from conformance.enforcement import enforcement_for_family
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
 
-from receipt_test_support import copy_source_inventory
+from receipt_test_support import copy_participant_catalog
 
 ROOT = Path(__file__).resolve().parents[3]
 FAMILIES = (
@@ -126,16 +120,16 @@ def test_occurrence_count_type_and_authored_guidance_are_not_coarsened() -> None
 
 
 @pytest.mark.parametrize("family", FAMILIES)
-def test_semantic_receipts_cover_only_their_executed_rows(
+def test_semantic_receipts_validate_their_scope_and_reject_an_omitted_case(
         tmp_path: Path, family: str
 ) -> None:
-    """Central receipt evidence covers the live scope and rejects an omitted case."""
+    """Central receipt validation passes the projected scope and rejects an omitted case."""
     pack_path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
     fixture_path = Path("tests/fixtures/semantic_conformance") / family
     (tmp_path / pack_path).parent.mkdir(parents=True)
     shutil.copyfile(ROOT / pack_path, tmp_path / pack_path)
     shutil.copytree(ROOT / fixture_path, tmp_path / fixture_path)
-    copy_source_inventory(ROOT, tmp_path)
+    copy_participant_catalog(ROOT, tmp_path)
     for args in (
             ("init",),
             ("config", "user.email", "conformance@example.invalid"),
@@ -189,65 +183,7 @@ def test_semantic_receipts_cover_only_their_executed_rows(
         report = validate_prepared_run(pack, run, coverage_policy=policy)
         assert not report.failures
         assert all(scenario.result == "pass" for scenario in report.scenarios)
-        coverage = derive_row_coverage(
-            pack.document(),
-            load_source_parity_rows(ROOT),
-            policy,
-            (report,),
-            scope_participant_id=participant,
-            retained_analyzers=load_retained_analyzer_kinds(ROOT),
-        )
-        assert not coverage.failures
-        assert coverage.rows
-        if family in ("formid-lookup", "crash-suspect"):
-            rows = load_source_parity_rows(ROOT)
-            prototype = next(
-                row
-                for row in rows
-                if row.participant_id == participant
-                and row.rust_symbol
-                == (
-                    "FormIdValueLookup"
-                    if family == "formid-lookup"
-                    else "CrashSuspectAnalyzer"
-                )
-            )
-            added_method = replace(
-                prototype,
-                obligation_id="parity:test:new-method",
-                runtime_operation="future_adapter",
-                required_evidence_kind="runtime",
-                retained_analyzer_id=None,
-            )
-            full_owner = pack.document()
-            for capability in full_owner["capabilities"]:
-                capability.pop("operationScoped", None)
-            # Full owner expansion also includes existing wrappers exercised by
-            # sibling families. The new callable must add its own unresolved row.
-            baseline_failures = {
-                failure.obligation_id
-                for failure in derive_row_coverage(
-                    full_owner,
-                    rows,
-                    policy,
-                    (report,),
-                    scope_participant_id=participant,
-                    retained_analyzers=load_retained_analyzer_kinds(ROOT),
-                ).failures
-            }
-            expanded = derive_row_coverage(
-                full_owner,
-                (*rows, added_method),
-                policy,
-                (report,),
-                scope_participant_id=participant,
-                retained_analyzers=load_retained_analyzer_kinds(ROOT),
-            )
-            assert [
-                       failure.obligation_id
-                       for failure in expanded.failures
-                       if failure.obligation_id not in baseline_failures
-                   ] == [added_method.obligation_id]
+        assert all(scenario.observed_fact_ids for scenario in report.scenarios)
         if family == "mod-guidance":
             # A nonblank replacement remains a typed observation, but the pack's
             # exact comparator must reject prose different from the authored text.
@@ -269,53 +205,3 @@ def test_semantic_receipts_cover_only_their_executed_rows(
             scenario.result != "pass" for scenario in rejected.scenarios
         )
 
-
-def test_new_bridge_alias_cannot_borrow_an_existing_analyze_operation(
-        tmp_path: Path,
-) -> None:
-    """Current source names distinguish a new function from the invoked public seam."""
-    copy_source_inventory(ROOT, tmp_path)
-    source = (
-            tmp_path / "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
-    )
-    document = json.loads(source.read_text())
-    original = next(
-        row
-        for row in document["entries"]
-        if row["rustSymbol"] == "crash_suspect_analyze"
-    )
-    document["entries"].append(
-        {
-            **original,
-            "id": "future-analyze-alias",
-            "rustSymbol": "future_crash_suspect_analyze",
-        }
-    )
-    lookup = next(
-        row
-        for row in document["entries"]
-        if row["rustSymbol"] == "formid_value_lookup_lookup"
-    )
-    document["entries"].append(
-        {
-            **lookup,
-            "id": "future-lookup-alias",
-            "rustSymbol": "future_formid_value_lookup_lookup",
-        }
-    )
-    source.write_text(json.dumps(document))
-    rows = load_source_parity_rows(tmp_path)
-    assert (
-            next(
-                row
-                for row in rows
-                if row.obligation_id == "parity:cxx:future-analyze-alias"
-            ).runtime_operation
-            == "future_crash_suspect_analyze"
-    )
-    assert (
-            next(
-                row for row in rows if row.obligation_id == "parity:cxx:future-lookup-alias"
-            ).runtime_operation
-            == "future_formid_value_lookup_lookup"
-    )

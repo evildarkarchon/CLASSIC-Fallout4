@@ -1,6 +1,8 @@
 # Executable Cross-Adapter Conformance Specification
 
-> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, and the first input-only Crash Log Scan Run pack is blocking. Its centrally derived family predicates run through public-seam Rust, Node, Python, bridge-only CXX on MSVC and clang-cl, and separate CLI, GUI, and TUI consumer runners. Existing, generated, malformed, Proceed Without Ignore, Reset To Default, successful reset, intervening conflict, portable backup failure, pre-discovery, post-discovery queued, admitted/durable, pre-reset, and post-critical cancellation, observer delivery failure, public request-validation/discovery/intake/report-write/Unsolved Logs finalization failures, replay, and abandonment scenarios execute through all semantic adapters. Native jobs publish bounded attempt, JUnit, log, receipt, run-plan, and scoped-report artifacts even on failure. Replacement-publication and durability-unknown mappings remain under the reset blocking internal-fault analyzer. Injected analysis, FormID database access, initialization, and internal-invariant failure projections remain under the separate structured-failure retained analyzer; neither analyzer grants semantic-adapter coverage. The Crash Log Scan Run copied adapter acknowledgements, positive source markers, and scenario/presentation required-owner lists are retired after blocking receipt promotion. Fixture expectations, source-derived inventory, negative export audits, internal-fault analyzers, and the other binding families' parity/runtime gates remain required.
+> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, and the first input-only Crash Log Scan Run pack is blocking. Its centrally derived family predicates run through public-seam Rust, Node, Python, bridge-only CXX on MSVC and clang-cl, and separate CLI, GUI, and TUI consumer runners. Existing, generated, malformed, Proceed Without Ignore, Reset To Default, successful reset, intervening conflict, portable backup failure, pre-discovery, post-discovery queued, admitted/durable, pre-reset, and post-critical cancellation, observer delivery failure, public request-validation/discovery/intake/report-write/Unsolved Logs finalization failures, replay, and abandonment scenarios execute through all semantic adapters. Native jobs publish bounded attempt, JUnit, log, receipt, run-plan, and scoped-report artifacts even on failure. Replacement-publication and durability-unknown mappings remain under the reset blocking internal-fault analyzer. Injected analysis, FormID database access, initialization, and internal-invariant failure projections remain under the separate structured-failure retained analyzer; neither analyzer grants semantic-adapter coverage. The Crash Log Scan Run copied adapter acknowledgements, positive source markers, and scenario/presentation required-owner lists are retired after blocking receipt promotion. Fixture expectations, source-derived inventory, negative export audits, internal-fault analyzers, and the other binding families' runtime gates remain required.
+
+> **Applicability update (T1, #306).** Semantic applicability no longer comes from parity rows. The central `tests/conformance/participants.json` declares it: every family is Rust-only by default, a family that enrols `cxx` lists the capability IDs CXX must cover, and a scenario applies to CXX when its `action` is one of them. Packs never choose their participants. Parity-row coverage (row dispositions, retained analyzers for rows, the report `coverage` field, and the verdict's `uncoveredRows`/`retainedRows`) is deleted; a scoped report passes on exact receipts for a non-empty required denominator, plus consumer coverage for consumers. Sections below that describe row-based derivation are superseded where they conflict with this note.
 
 ## Target
 
@@ -71,8 +73,9 @@ tools/binding_compliance/
   conformance/
     schema.py                      scenario, run-plan, receipt validation
     packs.py                       discovery, digests, materialization
-    applicability.py               participant and policy-exception rules
-    coverage.py                    capability-to-parity-row expansion
+    applicability.py               participants.json, consumer, and policy-exception rules
+    participants.py                central semantic participant catalog loader
+    coverage.py                    family fact predicates (observed fact IDs)
     compare.py                     exact normalized comparison
     receipts.py                    receipt loading and execution proof
     failures.py                    common failure taxonomy
@@ -82,6 +85,7 @@ tools/binding_compliance/
 
 tests/conformance/
   schemas/                         tracked JSON Schemas
+  participants.json                central semantic applicability (Rust-only by default)
   policy_exceptions.json           narrow documented applicability exceptions
   packs/
     crash_log_scan_run/
@@ -95,7 +99,7 @@ tools/binding_compliance/artifacts/
   binding_compliance_report.md
 ```
 
-`tools/binding_compliance/` owns the generic lifecycle. A family module may understand a Crash Log Scan Run Result or a User Settings snapshot, but no family-specific DTO becomes the engine's public interface. Existing modules such as `parity_rust_surface.py`, `parity_artifact_io.py`, `tools/cxx_api_parity/`, `tools/node_api_parity/`, `tools/python_api_parity/`, `validate_stubs.py`, and focused source audits remain specialized implementations behind the umbrella.
+`tools/binding_compliance/` owns the generic lifecycle. A family module may understand a Crash Log Scan Run Result or a User Settings snapshot, but no family-specific DTO becomes the engine's public interface. Focused source audits remain specialized implementations behind the umbrella.
 
 ## Scenario-pack contract
 
@@ -155,7 +159,7 @@ The example omits domain payloads for readability. Implemented schemas must enfo
 - Fixture references resolve beneath the declared repository-owned fixture root. Absolute paths, parent traversal, and undeclared files fail validation.
 - `expected` contains complete normalized values, expected durable effects, and forbidden effects where relevant. It is authored independently of adapter output.
 - A scenario names canonical Rust capabilities, not binding export names, test files, or test-case strings.
-- Applicability is derived from the canonical parity policy and source mappings. A pack cannot exempt one adapter with a free-form note.
+- Applicability is derived from the central `tests/conformance/participants.json` catalog. A pack cannot choose or exempt a participant with a free-form note.
 - A scenario required for a participant cannot be skipped or marked unsupported. `not_applicable` must carry an ID present in `policy_exceptions.json` and the exception must name the capability, participant, rationale, and owning policy page.
 - Common semantic expectations cannot be weakened in participant-specific sections. Legitimate consumer differences use named consumer-obligation profiles rather than language-specific semantic snapshots.
 - Normalization declarations name exact observation paths. Wildcard removal of arbitrary fields is invalid.
@@ -270,38 +274,22 @@ After normalization, object keys and values compare exactly. Arrays compare in o
 
 ## Applicability and coverage derivation
 
-### Capability mapping
+### Participant catalog
 
-The coverage engine starts from each scenario's canonical Rust capability and expands it through current source-derived parity artifacts:
+Semantic applicability is declared centrally in `tests/conformance/participants.json`:
 
-1. Resolve the canonical Rust crate and symbol set.
-2. Select the CXX parity rows mapped to those symbols.
-3. Include returned/input DTOs, fields, enum variants, and accessors that the public operation exposes through the declared observation families.
-4. Require a completed, matching receipt for every applicable semantic adapter.
-5. Derive observed fact IDs by evaluating family-owned predicates over the validated action and normalized observation, then credit only rows associated with predicates that passed. The receipt cannot self-attest coverage.
+1. Rust owns every capability and runs every scenario of every pack.
+2. A family is Rust-only unless the catalog enrols another semantic participant (today only `cxx`) and lists the capability IDs it must cover.
+3. A scenario applies to an enrolled participant when its `action` is one of those capabilities. Extra non-action `capabilityIds` on a scenario do not exclude it.
+4. Every listed capability must exist in the pack, an enrolment must select at least one scenario, and every enrolled family must have a tracked pack.
+5. Semantic run plans are always projected through the catalog, so an adapter cannot widen or narrow its own denominator by editing its immutable plan.
+6. Consumers (CLI, GUI, TUI) come only from `tests/conformance/consumer-obligations.json`, selected by pack obligation IDs.
 
-The CXX parity artifact must be enriched with canonical `ownerModule`, `rustCrate`, and `coreRustSymbol` metadata rather than claiming that a bridge declaration alone is the core mapping. Mechanically derived counts, identifiers, and hashes are generated diagnostics, never hand-maintained evidence.
+Packs never choose their own participants. The first catalog (T1, #306) is an exact snapshot of the participant sets the retired parity-row derivation produced: 56 CXX families and 382 CXX scenarios.
 
-Every tracked row must end in exactly one honest evidence classification:
+### Fact derivation
 
-- runtime-verifiable through one or more executed capability scenarios;
-- irreducibly structural or negative through a named retained analyzer; or
-- excluded by a documented parity-policy exception.
-
-There is no `mapped_only`, unclassified, or manual-acknowledgement success bucket.
-
-### New-row rule
-
-A new source-derived parity row fails the compliance gate until the same change does one of the following:
-
-- maps it to a scenario that executes on every applicable adapter;
-- adds a new scenario and receipts for every applicable adapter; or
-- classifies a genuinely declaration-only, erased-type, or negative row under a named retained analyzer that proves the relevant property; or
-- adds a reviewed policy exception because the public capability is intentionally inapplicable.
-
-The structural option is not a fallback for behavior that can be observed through a public operation, and a policy exception is not a substitute for valid structural evidence.
-
-Migration status cannot waive this rule for new API work. The one-tier parity policy remains in force throughout the migration.
+Observed fact IDs are still derived by evaluating family-owned predicates over the validated action and normalized observation; the receipt cannot self-attest them. They no longer credit parity rows. A scoped report passes when every required execution produced a current, exact receipt for its applicable scenario set (and, for consumers, every obligation is covered), over a non-empty denominator.
 
 ## CXX and CLI test-host design
 
@@ -392,7 +380,7 @@ The pack includes Standard, Targeted, existing/generated/malformed/repaired Loca
 
 ### CXX CI placement
 
-Keep the current Python-only `cxx-parity-gate` job source-only. Raise the existing `cli-tests` matrix job timeout to 120 minutes, preserving its current setup/full-suite 90-minute envelope. In each matrix leg, run the full CLI wrapper suite first, then invoke `run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }}`. The launcher performs the exact selected wrapper run and its instance-scoped validation after success, nonzero exit, or its own timeout. The second wrapper invocation reconfigures and invokes the build command but must reuse the existing build directory and caches, so it is incremental rather than a second cold native build. Do not create another native job and do not add Qt.
+Raise the existing `cli-tests` matrix job timeout to 120 minutes, preserving its current setup/full-suite 90-minute envelope. In each matrix leg, run the full CLI wrapper suite first, then invoke `run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }}`. The launcher performs the exact selected wrapper run and its instance-scoped validation after success, nonzero exit, or its own timeout. The second wrapper invocation reconfigures and invokes the build command but must reuse the existing build directory and caches, so it is incremental rather than a second cold native build. Do not create another native job and do not add Qt.
 
 Upload one GitHub artifact bundle named `cxx-conformance-${{ matrix.compiler }}` with `if: always()`. Matrix jobs have isolated workspaces, so the on-disk paths remain stable:
 
@@ -434,10 +422,10 @@ The combined report uses stable failure kinds:
 | `malformed_execution_receipt` | Receipt schema, duplicate IDs, unknown IDs, or value types are invalid |
 | `stale_execution_receipt` | Schema, family version, expectation digest, invocation, run plan, or source identity differs from the current launch |
 | `applicability_violation` | Required execution was skipped/unsupported or a policy exception is invalid |
-| `coverage_mapping_gap` | A parity row has no executable, structural, negative, or exception classification |
+| `coverage_mapping_gap` | A consumer obligation has no executed, registered classification |
 | `normalization_failure` | Adapter output cannot be projected without inventing or discarding semantics |
 | `semantic_conformance_mismatch` | Valid normalized actual observation differs from the independent expectation |
-| `structural_contract_drift` | Source, declaration, stub, or parity inventory differs from its contract |
+| `structural_contract_drift` | Source or manifest inventory differs from its contract |
 | `negative_contract_violation` | Forbidden export or duplicated ownership/presentation logic is present |
 
 Reports preserve adapter stdout/stderr and concrete test/JUnit artifact locations as diagnostics, but messages and paths do not become coverage.
@@ -570,7 +558,7 @@ Final exit gate:
 | Shared scan-run fixtures and explicit expected outcomes | Retain and reshape as pack | Remain the independent oracle; never generated from Rust |
 | Node/Python runtime registry claims and test pointers | Delete surface by surface | Every selected parity row tied to an executed matching receipt |
 | Selector counts and hashes | Generate only | Derived from current source mappings and receipts |
-| CXX source parity gate/baseline | Retain | Continues to catch source/ABI/export drift alongside runtime receipts |
+| CXX source parity gate/baseline | Deleted (T1, #306) | Production CLI/GUI builds catch missing exports; `cargo xtask cxx-bridge-gate` (wired by T2) catches orphan exports |
 | Node/Python source parity contracts, declarations, type tests, and stubs | Deleted with the bindings (Retire, #304) | None; the surfaces no longer exist |
 | Forbidden-export audit and runtime namespace probes | Retain narrowly | Source/declaration scans prove unused or hidden API absence; loadable bindings also prove removed names are not generated or re-exported at runtime |
 | Rust Vocabulary owner conformance | Retain | Canonical token/label ownership invariant |
@@ -634,7 +622,6 @@ Tooling and source compliance:
 ```powershell
 uv sync --project tools
 uv run --project tools python -m pytest tools/binding_compliance/tests -q
-python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 python tools/user_settings_ownership/check.py --repo-root .
 python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
 ```
@@ -660,11 +647,11 @@ Focused Rust pack tests run through their owning Cargo packages.
 
 The architecture is complete only when all of the following are true:
 
-1. Every runtime-verifiable CXX parity row has a passing executed receipt, Rust passes the same applicable semantic scenarios, and both required CXX execution instances pass.
-2. Every non-runtime row has one named retained structural/negative analyzer or documented policy exception; there is no manual third bucket.
+1. Every scenario `tests/conformance/participants.json` enrols for CXX has a passing executed receipt on both required CXX execution instances, and Rust passes every scenario.
+2. Applicability comes only from `tests/conformance/participants.json` and the consumer obligation catalog; there is no manual third bucket.
 3. Crash Log Scan Run has semantic-adapter executable coverage for every agreed observation family, both CXX toolchain instances, and separate executable CLI/GUI/TUI consumer coverage.
-4. CXX executes through the approved CLI wrapper in the Windows MSVC and clang-cl matrix; source parity alone cannot satisfy runtime coverage.
-5. Mutation tests prove that a new public row, new enum variant, missing participant, skipped scenario, stale receipt, changed adapter observation, and extra observation fail closed; changing Rust output alone cannot rewrite the tracked expectation and therefore fails comparison.
+4. CXX executes through the approved CLI wrapper in the Windows MSVC and clang-cl matrix; a static check alone cannot satisfy runtime coverage.
+5. Mutation tests prove that a new enum variant, missing participant, skipped scenario, stale receipt, changed adapter observation, and extra observation fail closed; changing Rust output alone cannot rewrite the tracked expectation and therefore fails comparison.
 6. Structural surface gates, forbidden exports, Vocabulary owner invariants, and negative Display Content ownership audits remain green without reduced scope.
 7. The redundant acknowledgement, marker, and registry evidence listed in the migration ledger is deleted only after its replacement becomes blocking.
 8. Adding one scenario or observation changes the shared pack once and automatically obligates every applicable adapter.
@@ -678,7 +665,6 @@ Do not update current API pages to claim executable coverage before it is blocki
 - `docs/development/repository-gates.md` — the conformance-only `full` verdict and the interim direct gates (the binding compliance suite page retired with the Python and Node bindings).
 - `docs/api/binding-parity-overview.md` — capability/scenario coverage and participant roles.
 - `docs/api/binding-parity-policy.md` — same-change executable obligation and narrow applicability exceptions.
-- `docs/api/cxx-parity-gate.md` — distinction between bridge source parity and native CXX semantic conformance.
 - Affected domain API pages — scenario-owned behavior and any contract-shaping observation changes.
 - CI and contributor command references — only after the corresponding profile is blocking.
 

@@ -7,6 +7,7 @@ from .applicability import (
     PolicyExceptionCatalog,
     PolicyExceptionError,
     derive_applicability,
+    derive_semantic_participants,
     load_policy_exceptions,
 )
 from .command import ConformanceCommandError, build_conformance_report_from_receipts
@@ -21,20 +22,12 @@ from .consumers import (
     derive_consumer_coverage,
     load_consumer_obligations,
     prepare_consumer_run,
+    prepared_report_evidence_digest,
 )
 from .coverage import (
     CoverageDerivationError,
-    CoverageFailure,
     CoveragePredicate,
     FamilyCoveragePolicy,
-    RetainedAnalyzerCatalog,
-    RowCoverage,
-    RowCoverageReport,
-    SourceParityRow,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-    prepared_report_evidence_digest,
 )
 from .failures import FailureKind
 from .packs import (
@@ -46,6 +39,11 @@ from .packs import (
     load_and_validate_pack,
     load_prepared_run,
     materialize_run_plan,
+)
+from .participants import (
+    ParticipantCatalog,
+    ParticipantCatalogError,
+    load_participants,
 )
 from .receipts import PreparedRunReport, ReceiptFailure, validate_prepared_run
 from .reports import (
@@ -69,13 +67,14 @@ __all__ = [
     "ConsumerObligationError",
     "ConsumerParticipant",
     "CoverageDerivationError",
-    "CoverageFailure",
     "CoveragePredicate",
     "FailureKind",
     "FamilyCoveragePolicy",
     "MaterializationError",
     "MaterializedRun",
     "PackValidationError",
+    "ParticipantCatalog",
+    "ParticipantCatalogError",
     "PolicyException",
     "PolicyExceptionCatalog",
     "PolicyExceptionError",
@@ -83,25 +82,20 @@ __all__ = [
     "ReceiptFailure",
     "ReportScopeError",
     "RequiredExecution",
-    "RetainedAnalyzerCatalog",
-    "RowCoverage",
-    "RowCoverageReport",
     "ScopedConformanceReport",
     "ScopedReportFailure",
-    "SourceParityRow",
     "ValidatedPack",
     "build_conformance_report_from_receipts",
     "build_scoped_report",
     "derive_applicability",
     "derive_consumer_coverage",
-    "derive_row_coverage",
+    "derive_semantic_participants",
     "discover_pack_paths",
     "load_and_validate_pack",
     "load_consumer_obligations",
+    "load_participants",
     "load_policy_exceptions",
     "load_prepared_run",
-    "load_retained_analyzer_kinds",
-    "load_source_parity_rows",
     "materialize_run_plan",
     "prepare_consumer_run",
     "prepared_report_evidence_digest",

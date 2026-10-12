@@ -9,8 +9,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from .applicability import ApplicabilityMatrix
-from .consumers import ConsumerCoverageReport
-from .coverage import RowCoverageReport, prepared_report_evidence_digest
+from .consumers import ConsumerCoverageReport, prepared_report_evidence_digest
 from .enforcement import enforcement_for_family
 from .failures import FailureKind
 from .receipts import PreparedRunReport
@@ -71,7 +70,6 @@ class ScopedConformanceReport:
     required_executions: tuple[RequiredExecution, ...]
     received_executions: tuple[RequiredExecution, ...]
     failures: tuple[ScopedReportFailure, ...]
-    coverage: RowCoverageReport | None = None
     consumer_coverage: ConsumerCoverageReport | None = None
 
     def document(self) -> dict[str, object]:
@@ -90,9 +88,6 @@ class ScopedConformanceReport:
                 failure.message,
             ),
         )
-        coverage_document = (
-            self.coverage.document() if self.coverage is not None else None
-        )
         consumer_coverage_document = (
             self.consumer_coverage.document()
             if self.consumer_coverage is not None
@@ -101,7 +96,6 @@ class ScopedConformanceReport:
         passed = (
             not missing
             and not ordered_failures
-            and (coverage_document is None or coverage_document["result"] == "pass")
             and (
                 consumer_coverage_document is None
                 or consumer_coverage_document["result"] == "pass"
@@ -122,7 +116,6 @@ class ScopedConformanceReport:
             "receivedExecutions": [item.document() for item in received],
             "missingExecutions": [item.document() for item in missing],
             "failures": [failure.document() for failure in ordered_failures],
-            "coverage": coverage_document,
             "consumerCoverage": consumer_coverage_document,
         }
         return document
@@ -165,7 +158,6 @@ def build_scoped_report(
     prepared_reports: Sequence[PreparedRunReport],
     participant_id: str | None = None,
     execution_instance_id: str | None = None,
-    coverage: RowCoverageReport | None = None,
     consumer_coverage: ConsumerCoverageReport | None = None,
 ) -> ScopedConformanceReport:
     """Build an instance, participant, or full-repository conformance report.
@@ -176,15 +168,6 @@ def build_scoped_report(
     cannot attach a repository label to a partial denominator.
     """
 
-    if coverage is not None:
-        if not coverage.has_trusted_provenance:
-            raise ReportScopeError(
-                "scoped reports require centrally derived row coverage"
-            )
-        if coverage.family_id != family_id:
-            raise ReportScopeError(
-                "row coverage family does not match the report family"
-            )
     if consumer_coverage is not None:
         if not consumer_coverage.has_trusted_provenance:
             raise ReportScopeError(
@@ -239,13 +222,6 @@ def build_scoped_report(
     selected_reports: list[PreparedRunReport] = []
     failures: list[ScopedReportFailure] = []
     required_roles = {participants_by_id[item.participant_id].role for item in required}
-    if "semantic-adapter" in required_roles and coverage is None:
-        failures.append(
-            ScopedReportFailure(
-                FailureKind.COVERAGE_MAPPING,
-                "scoped conformance requires centrally derived source-row coverage",
-            )
-        )
     if "consumer" in required_roles and consumer_coverage is None:
         failures.append(
             ScopedReportFailure(
@@ -288,34 +264,11 @@ def build_scoped_report(
         )
 
     received = tuple(sorted(set(report_keys)))
-    semantic_selected_reports = tuple(
-        report
-        for report in selected_reports
-        if report.participant.get("role") == "semantic-adapter"
-    )
     consumer_selected_reports = tuple(
         report
         for report in selected_reports
         if report.participant.get("role") == "consumer"
     )
-    received_coverage_keys = {
-        (
-            str(report.participant["id"]),
-            str(report.participant["executionInstanceId"]),
-        )
-        for report in semantic_selected_reports
-    }
-    if coverage is not None and (
-        set(coverage.execution_keys) != received_coverage_keys
-        or coverage.prepared_evidence_digest
-        != prepared_report_evidence_digest(semantic_selected_reports)
-    ):
-        failures.append(
-            ScopedReportFailure(
-                FailureKind.COVERAGE_MAPPING,
-                "row coverage is not bound to the selected prepared execution evidence",
-            )
-        )
     received_consumer_coverage_keys = {
         (
             str(report.participant["id"]),
@@ -439,6 +392,5 @@ def build_scoped_report(
         required_executions=required,
         received_executions=received,
         failures=tuple(failures),
-        coverage=coverage,
         consumer_coverage=consumer_coverage,
     )

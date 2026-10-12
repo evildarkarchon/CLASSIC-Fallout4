@@ -24,7 +24,6 @@ EXCLUDED_PARTS = {
     "tests",
     "__test__",
     "__tests__",
-    "parity-artifacts",
     "node_modules",
     ".venv",
     "build",

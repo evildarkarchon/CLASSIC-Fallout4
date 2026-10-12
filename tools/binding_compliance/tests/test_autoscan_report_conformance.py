@@ -7,22 +7,18 @@ import hashlib
 import json
 import shutil
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from conformance.applicability import derive_applicability
 from conformance.command import FAMILY_COVERAGE_POLICIES
 from conformance.compare import NormalizationError
-from conformance.coverage import (
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
 from conformance.enforcement import enforcement_for_family
 from conformance.families.autoscan_report import expand_report_expectation
 from conformance.packs import load_and_validate_pack, materialize_run_plan
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
+from receipt_test_support import copy_participant_catalog
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/autoscan_report/v1.json")
@@ -92,7 +88,7 @@ def test_goldens_remain_independent_and_all_adapters_are_blocking() -> None:
         assert report["sha256"] == hashlib.sha256(oracle.read_bytes()).hexdigest()
         assert report["byteLength"] == len(oracle.read_bytes())
     assert document["consumerObligations"] == []
-    applicability = derive_applicability(document, load_source_parity_rows(ROOT))
+    applicability = derive_applicability(document, load_participants(ROOT))
     assert {p.id for p in applicability.participants} == {"rust", "cxx"}
     assert enforcement_for_family("autoscan-report") == "blocking"
     assert "autoscan-report" in FAMILY_COVERAGE_POLICIES
@@ -102,11 +98,12 @@ def test_goldens_remain_independent_and_all_adapters_are_blocking() -> None:
 def test_receipts_reject_byte_display_effect_and_execution_mutations(
         tmp_path: Path, participant: str
 ) -> None:
-    """Only fresh exact public observations grant coverage; no adapter is an oracle."""
+    """Only fresh exact public observations pass and yield facts; no adapter is an oracle."""
     fixtures = Path("tests/fixtures/autoscan_report_goldens")
     (tmp_path / PACK).parent.mkdir(parents=True)
     shutil.copyfile(ROOT / PACK, tmp_path / PACK)
     shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
+    copy_participant_catalog(ROOT, tmp_path)
     for args in (
             ("init",),
             ("config", "user.email", "test@example.invalid"),
@@ -168,38 +165,7 @@ def test_receipts_reject_byte_display_effect_and_execution_mutations(
     report = validate(receipt)
     assert not report.failures
     assert all(s.result == "pass" for s in report.scenarios)
-    rows = load_source_parity_rows(ROOT)
-    if participant != "rust":
-        coverage = derive_row_coverage(
-            document,
-            rows,
-            policy,
-            (report,),
-            scope_participant_id=participant,
-            retained_analyzers=load_retained_analyzer_kinds(ROOT),
-        )
-        assert coverage.rows and not coverage.failures
-        prototype = next(
-            r
-            for r in rows
-            if r.participant_id == participant and r.rust_symbol == "LogDisposition"
-        )
-        future = replace(
-            prototype,
-            obligation_id="parity:test:future-report-api",
-            runtime_operation="future_method",
-            required_evidence_kind="runtime",
-            retained_analyzer_id=None,
-        )
-        expanded = derive_row_coverage(
-            document,
-            (*rows, future),
-            policy,
-            (report,),
-            scope_participant_id=participant,
-            retained_analyzers=load_retained_analyzer_kinds(ROOT),
-        )
-        assert expanded.failures
+    assert all(s.observed_fact_ids for s in report.scenarios)
     mutations = [
         ("durableEffects", "reports", 0, "bytesHex"),
         ("durableEffects", "reports", 0, "sha256"),

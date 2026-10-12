@@ -16,13 +16,16 @@ PR deletes the step and its row here.
 
 | Check | Command (repo root) | CI step | Removed by |
 | --- | --- | --- | --- |
-| CXX parity gate | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` | `ci-cpp.yml`, job `cxx-parity-gate`, step "Run CXX parity gate" | T1 (`cxx-bridge-gate`) |
 | User Settings exclusive ownership | `python tools/user_settings_ownership/check.py --repo-root .` | `ci-rust.yml`, job `lint`, step "Check User Settings exclusive ownership" | the `user-settings-ownership` xtask port |
 | Scan-run workflow policy | `python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .` | `ci-rust.yml`, job `lint`, step "Check scan-run workflow policy" | engine PR A (`conformance check`) |
 
 The scan-run workflow policy loads the conformance packs, whose User Settings
-family needs `ruamel.yaml`, so the `lint` job installs it first. The other two
-gates use only the standard library.
+family needs `ruamel.yaml`, so the `lint` job installs it first. It also
+loads `tests/conformance/participants.json` and fails when that catalog enrols
+a family that has no pack. The ownership gate uses only the standard library.
+
+Orphan CXX bridge exports are checked by `cargo xtask cxx-bridge-gate`, which
+exists but is wired into CI only by T2.
 
 ## Other direct gates
 
@@ -32,6 +35,17 @@ gates use only the standard library.
 | Opaque CXX map reachability | `cargo test -p classic-cpp-bridge --test opaque_map_read_only` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
 | Bundled YAML Data schema version | `cargo test -p classic-config-core --lib client_schemas` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
 | Single Tokio runtime | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | `ci-rust.yml`, job `lint`, step "Run clippy" |
+
+## Conformance applicability
+
+Which semantic participants run which scenarios is declared in one central
+catalog, `tests/conformance/participants.json`. Every family is Rust-only by
+default; a family that enrols `cxx` lists the capability IDs CXX must cover,
+and CXX then runs exactly the scenarios whose `action` is one of them. Packs
+never choose their own participants, and the CLI, GUI and TUI consumers stay in
+`tests/conformance/consumer-obligations.json`. The workflow policy derives the
+required CI executions from both catalogs, so enrolling a family without a CI
+step fails the scan-run workflow policy gate.
 
 ## Repository conformance verdict
 

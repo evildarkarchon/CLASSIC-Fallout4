@@ -6,7 +6,7 @@ This `publish = false` foundation crate owns the **Vocabulary naming contract**:
 
 ## Why it exists
 
-CLASSIC presents the same facts through three frontends and three binding surfaces. Before this contract, every one of those surfaces wrote its own strings for the same variant, and they had already diverged silently: each copy was independently exhaustive, so every compiler was satisfied, and the binding parity gates compare symbol names and arity rather than values. A wrong string passed CI.
+CLASSIC presents the same facts through three frontends and three binding surfaces. Before this contract, every one of those surfaces wrote its own strings for the same variant, and they had already diverged silently: each copy was independently exhaustive, so every compiler was satisfied, and the binding parity gates of the time compared symbol names and arity rather than values. A wrong string passed CI.
 
 The fix is ownership, not another gate. One definition site, projected everywhere.
 
@@ -25,7 +25,7 @@ The fix is ownership, not another gate. One definition site, projected everywher
 
 These are the whole point of carrying two forms rather than deriving one from the other.
 
-- **Vocabulary Tokens are frozen.** They are parsed by binding consumers, so respelling one is a breaking change across all three surfaces at once. Adding a variant is additive; changing an existing token is not. Both parity baselines and every consumer's code depend on the exact bytes.
+- **Vocabulary Tokens are frozen.** They are parsed by binding consumers, so respelling one is a breaking change across all three surfaces at once. Adding a variant is additive; changing an existing token is not. Every consumer's code depends on the exact bytes.
 - **Display Labels may be reworded freely.** They are presentation only and are never parsed. A wording fix reaches every frontend at once, which is why the labels live here rather than in each frontend.
 
 Neither form is derived from the other. A mechanical transform turns `field_transition` into `Field transition` correctly, and turns `local_ignore_reset` into `Local ignore reset` — wrong, because the glossary capitalizes `Local Ignore` as a domain term. Deriving the label would therefore be right for the easy variants and quietly wrong for exactly the ones that name domain concepts.
@@ -35,7 +35,7 @@ Neither form is derived from the other. A mechanical transform turns `field_tran
 - `VARIANTS` lists every variant exactly once. Nothing at runtime can verify that completeness — no Rust construct reports how many variants an enum has — so treat the constant as part of the variant definition. Adopting enums pin `VARIANTS.len()` in their own sibling test so that adding a variant lands a contributor on the line that says so.
 - Tokens and labels are non-empty, and each form is unique *within* an enum. Uniqueness is deliberately not workspace-wide: two unrelated enums may each have a `missing` variant, and the owning type disambiguates them.
 - `as_str` and `label` are written as exhaustive `match` expressions. That exhaustiveness is the enforcement mechanism — a contributor adding a variant cannot ship it without supplying both forms, because the crate will not compile.
-- This crate is workspace-internal and has no C++, Node, or Python surface. It is deliberately absent from the binding parity matrix and from the Python, Node, and CXX parity baseline generators. Only the enums cross a binding seam; the trait never does.
+- This crate is workspace-internal and has no C++, Node, or Python surface. It deliberately has no bridge module. Only the enums cross a binding seam; the trait never does.
 
 ## Adopting an enum
 
@@ -44,13 +44,9 @@ Neither form is derived from the other. A mechanical transform turns `field_tran
 3. Replace each binding's hand-written token function with `kind.as_str()`, and each parse counterpart with `classic_vocabulary::from_token` — or, on the Node surface, with `crate::vocabulary::js_token` and `crate::vocabulary::from_js_token`.
 
    On Node, check what the surface already publishes before reaching for `js_token`. The casing transform belongs wherever the surface's JavaScript identifier convention applies, and the scan-run surface is the standing exception: it publishes the core token unchanged, spelled out in the `ts_type` attributes on `JsScanRunResult` and `JsScanRunInfrastructureError` and pinned again in `index.d.ts`. Routing one of those through `js_token` would respell `no_crash_logs_found` as `noCrashLogsFound` — a breaking rename of a value consumers match on, which is the one thing this contract's frozen-token guarantee exists to prevent. Delegate with `as_str()` there, as the per-log disposition already does.
-4. Confirm the three committed parity baselines are byte-identical. A moved baseline means the token projection is wrong, not that the baseline needs regenerating.
+4. Build and test the consuming frontends through their wrappers (`classic-cli/build_cli.ps1 -Test`, `classic-gui/build_gui.ps1 -Test`). Replacing a hand-written token function must not change a single token byte; a changed token means the projection is wrong.
 
-   Two exceptions move a baseline legitimately, and they are worth telling apart because only one of them costs anything beyond a refresh.
-
-   The first is replacing an **inherent** `pub fn` with the trait method — the usual shape when the enum already had an `as_str` of its own. Inherent entries are visible to the Node and Python surface parsers where trait-impl members are not, so each deletion costs one row in `docs/implementation/{node,python}_api_parity/baseline/rust_api_surface.json` and needs a `--update-baseline`, while `parity_contract.json`, both binding surface inventories, and both coverage-registry contract hashes stay byte-identical. See [`binding-parity-policy.md`](binding-parity-policy.md#scope-inherent-methods-that-supply-an-already-published-value). A baseline that moves and a contract that does not is the expected shape; a contract that moves here means something really did change.
-
-   The second is an enum a frontend renders, which also needs a Display Label projection on each surface. Those projections are new public adapter symbols, so they *do* move all three baselines and invalidate `contractIdsHash`/`contractCount` in both runtime coverage registries. Regenerate with the [per-gate refresh commands](binding-parity-policy.md) and hand-edit the two registry fixtures — the baseline generators normalize those fields in memory only and never write them back.
+   An enum a frontend renders also needs a Display Label projection on the bridge. That projection is a new bridge export, so it lands in the same change as the frontend call that renders it.
 
 ## Current adopters
 
@@ -70,7 +66,7 @@ Two of the four later adopters are reachable exhaustively through a binding-safe
 
 ### From [`classic-config-core`](classic-config-core.md)
 
-These three are the first adopters whose Display Labels cross a binding seam, and the first adoption to move a parity baseline. Each surface gained a label projection, so a moved baseline here is expected churn rather than a defect — the opposite of the rule that applied to the User Settings enums.
+These three are the first adopters whose Display Labels cross a binding seam, and the first adoption that moved the parity baselines of the time. Each surface gained a label projection, so those moved baselines were expected churn rather than a defect — the opposite of the rule that applied to the User Settings enums.
 
 | Enum | Notes |
 | --- | --- |
@@ -121,7 +117,7 @@ Three the run crate **owns outright**. Nothing mirrors them, so the plain `asser
 
 Three more the run crate owns outright, adopted later so that the scan-run presentation work has Display Labels to put inside a display segment. Nothing about their tokens moved, and no new label entry point was added to the C++ bridge, Node, or Python surfaces — the new labels are meant to reach frontends inside display segments, so no surface gained a label projection and no coverage registry moved.
 
-Two of the three did move a baseline, for the unrelated reason covered by [`binding-parity-policy.md`](binding-parity-policy.md#scope-inherent-methods-that-supply-an-already-published-value): `CrashLogScanRunStatus` and `LocalIgnoreRecoveryDecision` each had an inherent `pub const fn as_str`, which the trait method replaced. Inherent entries are visible to the Node and Python surface parsers where trait-impl members are not, so deleting the two cost exactly two rows in `docs/implementation/{node,python}_api_parity/baseline/rust_api_surface.json` and needed a `--update-baseline`. `parity_contract.json`, both binding surface inventories, and both coverage-registry contract hashes stayed byte-identical — a baseline that moves and a contract that does not is the expected shape, and it is what distinguishes consolidating who produces an already-published string from publishing a new one.
+Two of the three did move a baseline, for the unrelated reason covered by [`binding-parity-policy.md`](binding-parity-policy.md#scope-inherent-methods-that-supply-an-already-published-value): `CrashLogScanRunStatus` and `LocalIgnoreRecoveryDecision` each had an inherent `pub const fn as_str`, which the trait method replaced. Inherent entries were visible to the Node and Python surface parsers of the time where trait-impl members were not, so deleting the two moved only those parsers' surface baselines while the published CXX contract stayed byte-identical — which is what distinguishes consolidating who produces an already-published string from publishing a new one.
 
 | Enum | Notes |
 | --- | --- |

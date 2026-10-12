@@ -262,7 +262,7 @@ def run_participant(
     ``pack_path`` and ``command`` select another family without duplicating
     invocation isolation or failure handling. The return code reports actual
     execution/comparison success even for a shadow family; CI separately keeps
-    its retained parity/runtime gates blocking.
+    its repository gates blocking.
     """
 
     command = command or PARTICIPANT_COMMANDS[participant_id]

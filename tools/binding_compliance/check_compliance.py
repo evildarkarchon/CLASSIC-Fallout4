@@ -143,10 +143,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         f"- Result: **{str(conformance.get('result', 'unknown')).upper()}**",
     ]
-    for key, label in (
-        ("missingFamilies", "Missing families"),
-        ("uncoveredRows", "Uncovered parity rows"),
-    ):
+    for key, label in (("missingFamilies", "Missing families"),):
         values = conformance.get(key)
         if isinstance(values, list) and values:
             lines.append(f"- {label}: {', '.join(f'`{value}`' for value in values)}")

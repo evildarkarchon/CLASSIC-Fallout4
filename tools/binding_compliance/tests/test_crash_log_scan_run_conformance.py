@@ -18,12 +18,7 @@ from conformance.consumers import (
     load_consumer_obligations,
     prepare_consumer_run,
 )
-from conformance.coverage import (
-    derive_observed_fact_ids,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from conformance.coverage import derive_observed_fact_ids
 from conformance.families.crash_log_scan_run import (
     CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
     REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO,
@@ -35,6 +30,7 @@ from conformance.packs import (
     load_and_validate_pack,
     materialize_run_plan,
 )
+from conformance.participants import load_participants
 from conformance.receipts import PreparedRunReport, validate_prepared_run
 from conformance.reports import build_scoped_report
 
@@ -1074,27 +1070,16 @@ def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
         prepared_reports = _prepare_base_adapter_reports(pack, artifact_root)
 
         pack_document = pack.document()
-        parity_rows = load_source_parity_rows(REPO_ROOT)
-        retained = load_retained_analyzer_kinds(REPO_ROOT)
         exceptions = load_policy_exceptions(REPO_ROOT)
         consumer_catalog = load_consumer_obligations(REPO_ROOT)
         applicability = derive_applicability(
             pack_document,
-            parity_rows,
+            load_participants(REPO_ROOT),
             policy_exceptions=exceptions,
             consumer_catalog=consumer_catalog,
         )
         for prepared_report in prepared_reports:
             participant_id = str(prepared_report.participant["id"])
-            coverage = derive_row_coverage(
-                pack_document,
-                parity_rows,
-                CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-                (prepared_report,),
-                scope_participant_id=participant_id,
-                retained_analyzers=retained,
-                policy_exceptions=exceptions,
-            )
             scoped = build_scoped_report(
                 family_id="crash-log-scan-run",
                 profile="conformance",
@@ -1102,25 +1087,15 @@ def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
                 prepared_reports=(prepared_report,),
                 participant_id=participant_id,
                 execution_instance_id=participant_id,
-                coverage=coverage,
             ).document()
             assert scoped["result"] == "pass"
             assert scoped["repositoryComplete"] is False
 
-        full_coverage = derive_row_coverage(
-            pack_document,
-            parity_rows,
-            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-            tuple(prepared_reports),
-            retained_analyzers=retained,
-            policy_exceptions=exceptions,
-        )
         full = build_scoped_report(
             family_id="crash-log-scan-run",
             profile="full",
             applicability=applicability,
             prepared_reports=tuple(prepared_reports),
-            coverage=full_coverage,
         ).document()
         assert full["result"] == "fail"
         assert full["repositoryComplete"] is False
@@ -1169,30 +1144,19 @@ def test_all_base_adapter_instances_need_consumers_for_full_repository_scope(
             )
 
         pack_document = pack.document()
-        parity_rows = load_source_parity_rows(REPO_ROOT)
-        retained = load_retained_analyzer_kinds(REPO_ROOT)
         exceptions = load_policy_exceptions(REPO_ROOT)
         consumer_catalog = load_consumer_obligations(REPO_ROOT)
         applicability = derive_applicability(
             pack_document,
-            parity_rows,
+            load_participants(REPO_ROOT),
             policy_exceptions=exceptions,
             consumer_catalog=consumer_catalog,
-        )
-        coverage = derive_row_coverage(
-            pack_document,
-            parity_rows,
-            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-            tuple(prepared_reports),
-            retained_analyzers=retained,
-            policy_exceptions=exceptions,
         )
         report = build_scoped_report(
             family_id="crash-log-scan-run",
             profile="full",
             applicability=applicability,
             prepared_reports=tuple(prepared_reports),
-            coverage=coverage,
         ).document()
 
         assert report["result"] == "fail"
@@ -1261,22 +1225,12 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
                 )
 
         pack_document = pack.document()
-        parity_rows = load_source_parity_rows(REPO_ROOT)
-        retained = load_retained_analyzer_kinds(REPO_ROOT)
         exceptions = load_policy_exceptions(REPO_ROOT)
         applicability = derive_applicability(
             pack_document,
-            parity_rows,
+            load_participants(REPO_ROOT),
             policy_exceptions=exceptions,
             consumer_catalog=catalog,
-        )
-        coverage = derive_row_coverage(
-            pack_document,
-            parity_rows,
-            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-            tuple(semantic_reports),
-            retained_analyzers=retained,
-            policy_exceptions=exceptions,
         )
         consumer_coverage = derive_consumer_coverage(
             pack_document,
@@ -1289,7 +1243,6 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
             profile="full",
             applicability=applicability,
             prepared_reports=reports,
-            coverage=coverage,
             consumer_coverage=consumer_coverage,
         ).document()
 
@@ -1472,7 +1425,7 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
         ),
     }
     # Seams removed by ADR-0009; a runner still naming one would be exercising a surface the
-    # parity gates assert is gone.
+    # scan-run manifest's forbiddenExports assert is gone.
     removed_markers = {
         "rust": (
             "ContinuationOperationInput::Resume",

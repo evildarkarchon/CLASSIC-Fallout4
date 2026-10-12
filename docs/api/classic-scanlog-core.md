@@ -75,8 +75,8 @@ Settling a pending recovery is the only way to answer a paused run. The
 separate `resume` and `abandon` entry points, the public
 `CrashLogScanRunContinuation` type, the `RunResult::continuation` field, and
 `PendingRecovery::continuation()` were removed (#282) with no deprecated
-aliases; the parity gates and the Scan Run contract manifest's
-`forbiddenExports` assert their absence on every surface. `RunResult` has no
+aliases; the Scan Run contract manifest's `forbiddenExports` asserts
+their absence on every surface. `RunResult` has no
 public continuation field (a compile-fail doctest pins it), so code outside this
 crate builds a `RunResult` with `RunResult::from(SettledRunResult { .. })`.
 
@@ -741,8 +741,8 @@ the separate resume and abandon entry points (CXX
 `scan_run_contract_execution_take_continuation`), the opaque continuation
 classes, and the optional `continuation` field on the run result were removed
 with no deprecated aliases (#282). The Scan Run contract manifest's
-`forbiddenExports` lists them for each owner's source and parity baselines, so
-the gate fails if any reappears. Backing out is settling with no decision, so
+`forbiddenExports` lists them for each owner's source, so the gate fails if
+any reappears. Backing out is settling with no decision, so
 no frontend writes a cancel-then-resume-with-a-placeholder sequence.
 `classic-py-cli` and the Node CLI have no such choice to route: they treat a
 recovery-required result as terminal and never settle it. CXX exposes
@@ -807,8 +807,8 @@ The binding compliance suite checks the inventory against Rust and requires
 each variant to map to a required executable scenario fact or a named retained
 analyzer. Blocking semantic and consumer receipts prove executable coverage;
 copied adapter acknowledgements and positive source markers are retired.
-Negative checks retain the absence of contracted execution exports from source,
-declarations, stubs, runtime registries, and parity baselines.
+Negative checks retain the absence of contracted execution exports from
+source.
 
 ---
 
@@ -860,9 +860,7 @@ for log in result.logs {
 # }
 ```
 
-When a public contract type or variant changes, update the applicable CXX,
-Node, and Python projections, generated declarations/stubs, runtime coverage
-registries, parity baselines, this page, and the binding compliance manifest in
-the same change. Update the source-derived variant evidence policy and affected
+When a public contract type or variant changes, update the applicable CXX
+projection, this page, and the binding compliance manifest in the same change. Update the source-derived variant evidence policy and affected
 executable pack expectations or retained analyzer dispositions as applicable;
 do not restore per-adapter acknowledgement or marker lists.

@@ -14,27 +14,20 @@ from conformance.packs import (
     load_and_validate_pack,
     materialize_run_plan,
 )
+from conformance.participants import DEFAULT_PARTICIPANTS_PATH
 
 
-def copy_source_inventory(repo_root: Path, destination: Path) -> None:
-    """Copy parity rows and the real source needed to corroborate structural dispositions.
+def copy_participant_catalog(repo_root: Path, destination: Path) -> None:
+    """Copy the tracked ``participants.json`` into an isolated repository.
 
-    Native binaries and virtual environments are excluded. Tests still mutate
-    their own copies, so source-spoof and future-export checks remain isolated.
+    Semantic run plans are projected through the central participant catalog,
+    so an isolated copy needs the real catalog to reproduce the real selection.
+    Tests still mutate their own copy, so enrolment checks remain isolated.
     """
-    files = {
-        Path("Cargo.toml"),
-        Path("cpp-bindings/classic-cpp-bridge/build.rs"),
-        Path("docs/implementation/cxx_api_parity/baseline/parity_contract.json"),
-    }
-    files.update(
-        path.relative_to(repo_root)
-        for path in (repo_root / "cpp-bindings/classic-cpp-bridge/src").rglob("*.rs")
-    )
-    for relative in sorted(files):
-        target = destination / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(repo_root / relative, target)
+    relative = DEFAULT_PARTICIPANTS_PATH
+    target = destination / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(repo_root / relative, target)
 
 
 def prepare_receipt_case(
@@ -56,13 +49,9 @@ def prepare_receipt_case(
     shutil.copyfile(repo_root / pack_path, tmp_path / pack_path)
     fixture_path = source_pack.fixture_root.relative_to(repo_root)
     shutil.copytree(source_pack.fixture_root, tmp_path / fixture_path)
-    if any(
-            capability.get("operationScoped", False)
-            for capability in source_pack.document()["capabilities"]
-    ):
-        # Scoped plans derive participation from source inventories even in an
-        # isolated repository; copying their bytes preserves the real selection.
-        copy_source_inventory(repo_root, tmp_path)
+    # Semantic plans derive participation from the central catalog even in an
+    # isolated repository; copying it preserves the real selection.
+    copy_participant_catalog(repo_root, tmp_path)
     for arguments in (
             ("init",),
             ("config", "user.email", "conformance@example.invalid"),

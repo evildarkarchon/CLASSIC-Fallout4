@@ -4,16 +4,10 @@ from __future__ import annotations
 
 import copy
 import json
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from conformance.coverage import (
-    derive_observed_fact_ids,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from conformance.coverage import derive_observed_fact_ids
 from conformance.families.version_registry import VERSION_REGISTRY_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
@@ -92,51 +86,17 @@ def test_remaining_registry_queries_have_separate_executable_facts() -> None:
 def test_version_registry_receipt_lifecycle_fails_closed(
         tmp_path: Path, participant: str
 ) -> None:
-    """Validate genuine receipt transport while rejecting drift, replay, and new APIs."""
+    """Validate genuine receipt transport while rejecting drift and replay."""
     pack, run, receipt = prepare_receipt_case(
         ROOT, tmp_path, PACK, participant, runner_id="version-registry-boundary-test"
     )
-    document = pack.document()
     plan = run.document()
     assert all("expected" not in scenario for scenario in plan["scenarios"])
     policy = VERSION_REGISTRY_COVERAGE_POLICY
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     assert not report.failures
     assert all(scenario.result == "pass" for scenario in report.scenarios)
-    rows = load_source_parity_rows(ROOT)
-    coverage = derive_row_coverage(
-        document,
-        rows,
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert coverage.rows
-    assert not coverage.failures
-    prototype = next(
-        row
-        for row in rows
-        if row.participant_id == participant
-        and row.runtime_operation
-        in {"version_registry_get_by_id", "getVersionById", "get_by_id"}
-    )
-    added = replace(
-        prototype,
-        obligation_id="parity:test:future-version-registry-operation",
-        runtime_operation="future_registry_operation",
-    )
-    expanded = derive_row_coverage(
-        document,
-        (*rows, added),
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert [failure.obligation_id for failure in expanded.failures] == [
-        added.obligation_id
-    ]
+    assert all(scenario.observed_fact_ids for scenario in report.scenarios)
     for index, field, replacement in (
             (0, "result", None),
             (6, "error", None),

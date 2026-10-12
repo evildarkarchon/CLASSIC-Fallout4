@@ -6,23 +6,18 @@ import copy
 import json
 import shutil
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from conformance.command import FAMILY_COVERAGE_POLICIES
-from conformance.coverage import (
-    derive_observed_fact_ids,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from conformance.coverage import derive_observed_fact_ids
 from conformance.packs import (
     PackValidationError,
     load_and_validate_pack,
     materialize_run_plan,
 )
 from conformance.receipts import validate_prepared_run
+from receipt_test_support import copy_participant_catalog
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -92,7 +87,7 @@ def test_new_rust_vocabulary_variant_cannot_hide_behind_a_copied_pack(
 def test_vocabulary_receipts_reject_changed_wording_missing_cases_and_new_operations(
         tmp_path: Path, family: str
 ) -> None:
-    """Only authenticated complete execution covers resolvers; wording stays exact."""
+    """Only authenticated complete execution derives resolver facts; wording stays exact."""
     pack_path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
     for relative in (
             pack_path.parent,
@@ -101,6 +96,7 @@ def test_vocabulary_receipts_reject_changed_wording_missing_cases_and_new_operat
             Path("business-logic/classic-durable-publication/src"),
     ):
         shutil.copytree(ROOT / relative, tmp_path / relative)
+    copy_participant_catalog(ROOT, tmp_path)
     for args in (
             ("init",),
             ("config", "user.email", "conformance@example.invalid"),
@@ -160,36 +156,11 @@ def test_vocabulary_receipts_reject_changed_wording_missing_cases_and_new_operat
         run.receipt_path.write_text(json.dumps(receipt))
         report = validate_prepared_run(pack, run, coverage_policy=policy)
         assert not report.failures
-        rows = load_source_parity_rows(ROOT)
-        covered = derive_row_coverage(
-            pack.document(),
-            rows,
-            policy,
-            (report,),
-            scope_participant_id=participant,
-            retained_analyzers=load_retained_analyzer_kinds(ROOT),
+        assert all(scenario.observed_fact_ids for scenario in report.scenarios)
+        assert all(
+            not predicate.covers_runtime_operation("future_label_operation")
+            for predicate in policy.predicates
         )
-        assert covered.rows and not covered.failures
-        prototype = next(
-            row
-            for row in rows
-            if row.participant_id == participant
-            and row.rust_symbol == pack.document()["capabilities"][0]["rustSymbols"][0]
-        )
-        new_row = replace(
-            prototype,
-            obligation_id="new-public-resolver",
-            runtime_operation="future_label_operation",
-            required_evidence_kind="runtime",
-        )
-        assert derive_row_coverage(
-            pack.document(),
-            (*rows, new_row),
-            policy,
-            (report,),
-            scope_participant_id=participant,
-            retained_analyzers=load_retained_analyzer_kinds(ROOT),
-        ).failures
         for mutation in ("wording", "missing", "skipped", "stale", "extra"):
             changed = copy.deepcopy(receipt)
             if mutation == "wording":

@@ -42,37 +42,9 @@ jobs:
           retention-days: 7
           overwrite: true
 
-  cxx-parity-gate:
-    name: Binding Compliance Gate (C++)
-    runs-on: windows-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      # Interim direct step replacing the retired cxx-ci compliance profile
-      # (Retire, #304); T1 swaps it for the xtask bridge gate. Stdlib only.
-      - name: Run CXX parity gate
-        run: python tools/cxx_api_parity/check_parity_gate.py --repo-root .
-
-      - name: Upload CXX binding compliance diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cxx-parity-diagnostics
-          path: |
-            tools/binding_compliance/artifacts/
-            cpp-bindings/classic-cpp-bridge/parity-artifacts/
-          if-no-files-found: warn
-          retention-days: 7
-
   cli-tests:
     name: CLI Tests (${{ matrix.compiler }})
-    needs: [cxx-parity-gate, corrosion-source]
+    needs: [corrosion-source]
     if: ${{ !cancelled() }}
     runs-on: windows-latest
     timeout-minutes: 360
@@ -1328,7 +1300,7 @@ jobs:
 
   gui-tests:
     name: GUI Tests (${{ matrix.compiler }})
-    needs: [cxx-parity-gate, corrosion-source]
+    needs: [corrosion-source]
     if: ${{ !cancelled() }}
     runs-on: windows-latest
     timeout-minutes: 180

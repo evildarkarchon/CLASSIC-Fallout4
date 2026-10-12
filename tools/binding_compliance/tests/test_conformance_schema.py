@@ -25,6 +25,7 @@ def test_tracked_common_schemas_are_closed_and_versioned() -> None:
             "receipt-v1.schema.json",
             "policy-exceptions-v1.schema.json",
             "consumer-obligations-v1.schema.json",
+            "participants-v1.schema.json",
             "conformance-report-v1.schema.json",
     ):
         schema = _schema(name)
@@ -116,6 +117,19 @@ def test_policy_exception_schema_requires_reviewable_exact_scope() -> None:
     }
     assert exception["additionalProperties"] is False
     assert catalog == {"schemaVersion": 1, "exceptions": []}
+
+
+def test_participants_schema_enrols_only_cxx_by_capability() -> None:
+    """Rust is implicit and consumers live elsewhere, so only cxx can be enrolled."""
+
+    schema = _schema("participants-v1.schema.json")
+    family = schema["properties"]["families"]["items"]
+    enrolment = schema["$defs"]["enrolment"]
+
+    assert family["additionalProperties"] is False
+    assert set(family["properties"]) == {"familyId", "cxx"}
+    assert enrolment["required"] == ["capabilityIds"]
+    assert enrolment["properties"]["capabilityIds"]["minItems"] == 1
 
 
 def test_report_schema_pins_scope_and_enforcement_lifecycle() -> None:

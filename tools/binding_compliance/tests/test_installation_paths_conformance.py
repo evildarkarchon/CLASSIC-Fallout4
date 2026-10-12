@@ -6,11 +6,6 @@ from pathlib import Path
 
 import pytest
 from conformance.applicability import derive_applicability
-from conformance.coverage import (
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
 from conformance.enforcement import enforcement_for_family
 from conformance.families.installation_paths import (
     INSTALLATION_PATHS_COVERAGE_POLICY as POLICY,
@@ -20,6 +15,7 @@ from conformance.families.installation_paths import (
     validate_installation_paths_pack,
 )
 from conformance.packs import load_and_validate_pack
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
 
 from receipt_test_support import prepare_receipt_case
@@ -52,7 +48,7 @@ def test_installation_validation_calls_are_explicitly_owned() -> None:
 def test_installation_paths_require_all_applicable_adapters():
     """Cached methods exist in every adapter, including both supported CXX instances."""
     pack = load_and_validate_pack(ROOT, PACK).document()
-    matrix = derive_applicability(pack, load_source_parity_rows(ROOT))
+    matrix = derive_applicability(pack, load_participants(ROOT))
     assert {p.id for p in matrix.participants} == {"rust", "cxx"}
     assert next(
         p for p in matrix.participants if p.id == "cxx"
@@ -61,21 +57,12 @@ def test_installation_paths_require_all_applicable_adapters():
 
 
 def test_installation_receipt_covers_only_the_invoked_cxx_validators(tmp_path):
-    """An added shared validator must not enroll unexecuted bridge aliases."""
+    """A CXX receipt validates and facts speak only for the invoked validators."""
     pack, run, _ = prepare_receipt_case(
         ROOT, tmp_path, PACK, "cxx", runner_id="installation-validator-scope"
     )
     report = validate_prepared_run(pack, run, coverage_policy=POLICY)
     assert not report.failures
-    coverage = derive_row_coverage(
-        pack.document(),
-        load_source_parity_rows(ROOT),
-        POLICY,
-        (report,),
-        scope_participant_id="cxx",
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert not coverage.failures
     assert any(
         predicate.covers_runtime_operation("path_validate_required_files")
         for predicate in POLICY.predicates

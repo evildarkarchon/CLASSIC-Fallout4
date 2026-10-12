@@ -178,8 +178,8 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
             ),
             (
                     ".github/workflows/ci-cpp.yml",
-                    "needs: [cxx-parity-gate, corrosion-source]\n    if: ${{ !cancelled() }}",
-                    "needs: [cxx-parity-gate, corrosion-source]\n    if: false",
+                    "needs: [corrosion-source]\n    if: ${{ !cancelled() }}",
+                    "needs: [corrosion-source]\n    if: false",
                     "job must run after upstream failures unless cancelled",
             ),
             (
@@ -343,7 +343,7 @@ def test_full_aggregation_cannot_lose_required_jobs_or_artifact_identity(
             "1499b14e4906a2890f5cee1547c8848db261753d",
             "0000000000000000000000000000000000000000",
         ),
-        ("needs: [cxx-parity-gate, corrosion-source]", "needs: [cxx-parity-gate]"),
+        ("needs: [corrosion-source]", "needs: []"),
     ),
 )
 def test_native_jobs_require_the_pinned_shared_corrosion_source(

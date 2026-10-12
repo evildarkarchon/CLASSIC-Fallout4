@@ -8,13 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import TYPE_CHECKING
 
-from .coverage import (
-    CoverageDerivationError,
-    FamilyCoveragePolicy,
-    SourceParityRow,
-    matches_scoped_operation,
-    scoped_operation_predicates,
-)
+from .participants import ParticipantCatalog, ParticipantCatalogError
 from .schema import (
     ConformanceSchemaError,
     is_stable_machine_id,
@@ -134,33 +128,125 @@ DEFAULT_EXECUTION_INSTANCES: Mapping[str, tuple[str, ...]] = {
 }
 
 
+def derive_semantic_participants(
+    pack: Mapping[str, object],
+    participants: ParticipantCatalog,
+    *,
+    execution_instances: Mapping[str, tuple[str, ...]] = DEFAULT_EXECUTION_INSTANCES,
+) -> tuple[ApplicableParticipant, ...]:
+    """Derive the semantic adapters of one pack from ``participants.json`` alone.
+
+    Rust owns every capability. Another semantic adapter participates only
+    when the repository catalog enrols it for the pack's family; it then runs
+    exactly the scenarios whose ``action`` is an enrolled capability. Run-plan
+    projection uses this directly, so preparing a semantic plan never needs
+    the consumer obligation registry. Returns participants sorted by ID.
+
+    Raises ``ParticipantCatalogError`` when the catalog is untrusted, names a
+    capability the pack does not declare, or enrols a participant that would
+    select no scenario; ``PolicyExceptionError`` for malformed packs.
+    """
+
+    if (
+        not isinstance(participants, ParticipantCatalog)
+        or not participants.has_trusted_provenance
+    ):
+        raise ParticipantCatalogError(
+            "applicability requires the repository participant catalog"
+        )
+    owner = pack.get("domainOwner")
+    if not isinstance(owner, Mapping) or not isinstance(owner.get("rustCrate"), str):
+        raise PolicyExceptionError("validated pack has no canonical Rust owner")
+    raw_capabilities = pack.get("capabilities")
+    raw_scenarios = pack.get("scenarios")
+    if not isinstance(raw_capabilities, list) or not isinstance(raw_scenarios, list):
+        raise PolicyExceptionError("validated pack has no capability inventory")
+
+    capability_ids_in_pack: list[str] = []
+    for capability in raw_capabilities:
+        if not isinstance(capability, Mapping):
+            raise PolicyExceptionError("validated pack capability must be an object")
+        capability_id = capability.get("id")
+        symbols = capability.get("rustSymbols")
+        if not isinstance(capability_id, str) or not isinstance(symbols, list):
+            raise PolicyExceptionError("validated pack capability is malformed")
+        capability_ids_in_pack.append(capability_id)
+    capabilities = frozenset(capability_ids_in_pack)
+
+    family_id = str(pack.get("familyId"))
+    participant_capabilities: dict[str, frozenset[str]] = {"rust": capabilities}
+    for participant_id, enrolled in participants.enrolments(family_id).items():
+        unknown = sorted(set(enrolled) - capabilities)
+        if unknown:
+            raise ParticipantCatalogError(
+                f"participant catalog enrols {participant_id} in {family_id} "
+                f"with unknown capability: {', '.join(unknown)}"
+            )
+        participant_capabilities[participant_id] = frozenset(enrolled)
+
+    applicable: list[ApplicableParticipant] = []
+    for participant_id, capability_ids in sorted(participant_capabilities.items()):
+        instances = execution_instances.get(participant_id)
+        if not instances:
+            raise PolicyExceptionError(
+                f"applicable participant {participant_id} has no execution instances"
+            )
+        # A scenario belongs to a participant when its action is enrolled. This
+        # is the pre-catalog parity-row rule, kept so participants.json is an
+        # exact snapshot; extra non-action capabilityIds do not exclude it.
+        scenario_ids: list[str] = []
+        for scenario in raw_scenarios:
+            if not isinstance(scenario, Mapping):
+                raise PolicyExceptionError("validated pack scenario must be an object")
+            scenario_id = scenario.get("id")
+            action = scenario.get("action")
+            if (
+                isinstance(scenario_id, str)
+                and isinstance(action, str)
+                and action in capability_ids
+            ):
+                scenario_ids.append(scenario_id)
+        if not scenario_ids:
+            if participant_id == "rust":
+                continue
+            raise ParticipantCatalogError(
+                f"participant catalog enrolment of {participant_id} in {family_id} "
+                "selects no scenario"
+            )
+        applicable.append(
+            ApplicableParticipant(
+                id=participant_id,
+                role="semantic-adapter",
+                execution_instance_ids=tuple(sorted(instances)),
+                capability_ids=tuple(sorted(capability_ids)),
+                scenario_ids=tuple(scenario_ids),
+            )
+        )
+    return tuple(applicable)
+
+
 def derive_applicability(
     pack: Mapping[str, object],
-    parity_rows: tuple[SourceParityRow, ...],
+    participants: ParticipantCatalog,
     *,
     execution_instances: Mapping[str, tuple[str, ...]] = DEFAULT_EXECUTION_INSTANCES,
     policy_exceptions: Sequence[PolicyException] = (),
     consumer_catalog: ConsumerObligationCatalog | None = None,
-    coverage_policy: FamilyCoveragePolicy | None = None,
 ) -> ApplicabilityMatrix:
-    """Derive adapter and consumer applicability from permanent source mappings.
+    """Derive adapter and consumer applicability from the central catalogs.
 
-    Rust owns every canonical capability. Other semantic adapters participate
-    only when their live parity inventory maps the pack's Rust crate and at
-    least one symbol of the capability. Consumers come only from a centrally
-    loaded catalog selected by pack obligation IDs. Caller-authored run-plan
-    identities are deliberately not inputs to this decision.
+    Semantic adapters come from ``derive_semantic_participants`` (the central
+    ``participants.json``). Consumers come only from a centrally loaded
+    catalog selected by pack obligation IDs. Caller-authored run-plan
+    identities and the pack itself are deliberately not inputs to who
+    participates.
+
+    Raises ``ParticipantCatalogError`` for an untrusted or inconsistent
+    participant catalog and ``PolicyExceptionError`` for malformed packs,
+    policy exceptions, or unregistered consumer obligations.
     """
 
-    owner = pack.get("domainOwner")
-    if not isinstance(owner, Mapping) or not isinstance(owner.get("rustCrate"), str):
-        raise PolicyExceptionError("validated pack has no canonical Rust owner")
-    rust_crate = owner["rustCrate"]
-    raw_capabilities = pack.get("capabilities")
-    raw_scenarios = pack.get("scenarios")
     raw_consumer_obligations = pack.get("consumerObligations")
-    if not isinstance(raw_capabilities, list) or not isinstance(raw_scenarios, list):
-        raise PolicyExceptionError("validated pack has no capability inventory")
     if not isinstance(raw_consumer_obligations, list):
         raise PolicyExceptionError(
             "validated pack has no consumer obligation inventory"
@@ -171,49 +257,15 @@ def derive_applicability(
         raise PolicyExceptionError(
             "consumer obligations require the repository consumer obligation registry"
         )
-
-    capabilities: dict[str, frozenset[str]] = {}
-    capability_crates: dict[str, str] = {}
-    for capability in raw_capabilities:
-        if not isinstance(capability, Mapping):
-            raise PolicyExceptionError("validated pack capability must be an object")
-        capability_id = capability.get("id")
-        symbols = capability.get("rustSymbols")
-        if not isinstance(capability_id, str) or not isinstance(symbols, list):
-            raise PolicyExceptionError("validated pack capability is malformed")
-        capabilities[capability_id] = frozenset(
-            symbol for symbol in symbols if isinstance(symbol, str)
+    applicable = list(
+        derive_semantic_participants(
+            pack, participants, execution_instances=execution_instances
         )
-        capability_crates[capability_id] = capability.get("rustCrate", rust_crate)
-
-    if any(capability.get("operationScoped", False) for capability in raw_capabilities):
-        if coverage_policy is None:
-            # Resolve only centrally registered policies; scenario packs never
-            # supply caller-authored operation lists or participant activation.
-            from .command import FAMILY_COVERAGE_POLICIES
-
-            coverage_policy = FAMILY_COVERAGE_POLICIES.get(str(pack.get("familyId")))
-        if coverage_policy is not None and coverage_policy.family_id != pack.get(
-            "familyId"
-        ):
-            raise CoverageDerivationError("operation policy family does not match pack")
-    scoped_operations = {
-        capability["id"]: scoped_operation_predicates(capability, coverage_policy)
-        for capability in raw_capabilities
-    }
-    explicit_rows = {
-        row_id
-        for predicates in scoped_operations.values()
-        if predicates is not None
-        for predicate in predicates
-        for row_id in predicate.binding_obligation_ids
-    }
-    missing_rows = explicit_rows - {row.obligation_id for row in parity_rows}
-    if missing_rows:
-        raise CoverageDerivationError(
-            "operation predicates reference missing source rows: "
-            + ", ".join(sorted(missing_rows))
-        )
+    )
+    raw_scenarios = pack["scenarios"]
+    capabilities = frozenset(
+        capability["id"] for capability in pack["capabilities"]
+    )
 
     exception_scopes: set[tuple[str, str]] = set()
     for exception in policy_exceptions:
@@ -232,77 +284,6 @@ def derive_applicability(
                 f"{exception.participant_id}/{exception.capability_id}"
             )
         exception_scopes.add(scope)
-
-    participant_capabilities: dict[str, set[str]] = {
-        "rust": set(capabilities),
-    }
-    for row in parity_rows:
-        if row.mapping_origin == "binding_only":
-            # Interface-only operations have no invented core mapping. Only an
-            # exact trusted selector plus matching public operation enrolls them.
-            if row.required_evidence_kind == "runtime":
-                for capability_id, predicates in scoped_operations.items():
-                    if (
-                        predicates is not None
-                        and any(
-                            row.obligation_id in predicate.binding_obligation_ids
-                            for predicate in predicates
-                        )
-                        and matches_scoped_operation(row, predicates)
-                    ):
-                        participant_capabilities.setdefault(
-                            row.participant_id, set()
-                        ).add(capability_id)
-            continue
-        if row.mapping_origin != "canonical_rust" or row.rust_symbol is None:
-            continue
-        for capability_id, symbols in capabilities.items():
-            # Source-owned declarations cannot make a scoped semantic call
-            # applicable. Their permanent analyzers still own those rows.
-            if (
-                scoped_operations[capability_id] is not None
-                and row.required_evidence_kind != "runtime"
-            ):
-                continue
-            if (
-                row.rust_crate == capability_crates[capability_id]
-                and row.rust_symbol in symbols
-                and matches_scoped_operation(row, scoped_operations[capability_id])
-            ):
-                participant_capabilities.setdefault(row.participant_id, set()).add(
-                    capability_id
-                )
-
-    participants: list[ApplicableParticipant] = []
-    for participant_id, capability_ids in sorted(participant_capabilities.items()):
-        instances = execution_instances.get(participant_id)
-        if not instances:
-            raise PolicyExceptionError(
-                f"applicable participant {participant_id} has no execution instances"
-            )
-        scenario_ids: list[str] = []
-        for scenario in raw_scenarios:
-            if not isinstance(scenario, Mapping):
-                raise PolicyExceptionError("validated pack scenario must be an object")
-            scenario_id = scenario.get("id")
-            action = scenario.get("action")
-            if (
-                isinstance(scenario_id, str)
-                and isinstance(action, str)
-                and action in capability_ids
-            ):
-                scenario_ids.append(scenario_id)
-        if not scenario_ids:
-            continue
-        participants.append(
-            ApplicableParticipant(
-                id=participant_id,
-                role="semantic-adapter",
-                execution_instance_ids=tuple(sorted(instances)),
-                capability_ids=tuple(sorted(capability_ids)),
-                scenario_ids=tuple(scenario_ids),
-            )
-        )
 
     declared_obligation_ids: set[str] = set()
     for index, raw_obligation in enumerate(raw_consumer_obligations):
@@ -347,7 +328,7 @@ def derive_applicability(
                     f"consumer {consumer.id} obligations reference unknown scenarios: "
                     + ", ".join(unknown_scenarios)
                 )
-            participants.append(
+            applicable.append(
                 ApplicableParticipant(
                     id=consumer.id,
                     role="consumer",
@@ -363,7 +344,7 @@ def derive_applicability(
                 "pack consumer obligations have no source-owned registration: "
                 + ", ".join(missing)
             )
-    return ApplicabilityMatrix(tuple(sorted(participants, key=lambda item: item.id)))
+    return ApplicabilityMatrix(tuple(sorted(applicable, key=lambda item: item.id)))
 
 
 def _machine_id(value: object, label: str) -> str:

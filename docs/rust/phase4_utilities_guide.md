@@ -26,7 +26,6 @@ C++ consumers access the same underlying Rust logic through the C++ bridge (the 
 
 ```powershell
 cargo test --workspace
-python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 ```
 
 ## Historical note

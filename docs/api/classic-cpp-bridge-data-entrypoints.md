@@ -313,7 +313,7 @@ The separate `scan_run_continuation_resume(...)` and
 `scan_run_contract_execution_take_continuation(...)` accessors, and the opaque
 `ScanRunContinuation` type were removed (#282) with no deprecated aliases. The
 Scan Run contract manifest's `forbiddenExports` lists them for the bridge
-source and the CXX parity baseline, so the gate fails if any reappears.
+source, so the gate fails if any reappears.
 
 ### Pending recovery and settling (ADR-0009)
 
@@ -618,7 +618,7 @@ with the fields the kind does not use left empty:
 | `Emphasis` | a value set apart from the prose | empty | 0 |
 
 The taxonomy is fixed at six kinds for its first version, because each addition
-touches three binding parity baselines.
+touches this DTO and every frontend renderer.
 
 A consuming frontend concatenates a line's segments in order and never reorders
 within a line. It may reorder, group, or omit whole lines. It must not call a

@@ -43,8 +43,8 @@ Nothing is visible at the target until step 5, and step 5 only ever moves a file
 - The verified-backup ordering is publish → reread from disk → byte-compare → abort on mismatch. The reread exists because a backup that silently failed to write is indistinguishable from a good one until it is read back. Aborting is what prevents an accepted recovery from destroying the only copy of a user's data.
 - A digest mismatch in `install_verified` **deletes the staged file** before returning `PublicationError::DigestMismatch`, and touches nothing else — the target and any existing rollback generation are exactly as they were. Deleting is the point: bytes that failed verification must not survive under a name the caller chose for a payload it trusted.
 - `install_verified` writes the rollback generation *before* it replaces the target, not after. A failure at the final move therefore leaves the target absent with its previous content in `<target>.prev`, which is precisely the state self-heal promotes. The reverse order would have no recoverable failure point.
-- Failures are neutral: a stage, a path, and a source error, with no dependency on any caller's error type. Each caller maps them onto its own existing stable error codes, so adopting this crate requires no binding parity refresh.
-- This crate is workspace-internal and has no C++, Node, or Python surface. It is deliberately absent from the binding parity matrix and from the Python, Node, and CXX parity baseline generators.
+- Failures are neutral: a stage, a path, and a source error, with no dependency on any caller's error type. Each caller maps them onto its own existing stable error codes, so adopting this crate requires no bridge change.
+- This crate is workspace-internal and has no C++, Node, or Python surface. It deliberately has no bridge module.
 
 ## Concurrency
 

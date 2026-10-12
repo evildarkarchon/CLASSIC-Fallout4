@@ -49,11 +49,8 @@ _GOLDEN = {
     },
 }
 _SELECTORS = {
-    "markdown-rendering": (
-        ("markdown_to_html", "normalize_markdown"),
-        ("parity:cxx:2c624a0ad743bab6", "parity:cxx:5feb28dc0ac98182"),
-    ),
-    "report-discovery": (("discover_report_files",), ("parity:cxx:a0c197477ec619ba",)),
+    "markdown-rendering": ("markdown_to_html", "normalize_markdown"),
+    "report-discovery": ("discover_report_files",),
 }
 
 
@@ -66,7 +63,7 @@ def _matches(family, case, value):
 
 def interface_coverage_policy(family):
     """Bind only the actual bridge-only exports; no core counterpart is manufactured."""
-    names, selectors = _SELECTORS[family]
+    names = _SELECTORS[family]
     return FamilyCoveragePolicy(
         family,
         tuple(
@@ -76,7 +73,6 @@ def interface_coverage_policy(family):
                 action=f"{family}.observe",
                 observation_family="interface-output",
                 rust_symbols=names,
-                binding_obligation_ids=selectors,
                 runtime_operations=names,
                 matches=partial(_matches, family, case),
             )

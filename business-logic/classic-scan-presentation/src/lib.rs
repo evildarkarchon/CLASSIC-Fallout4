@@ -58,9 +58,8 @@
 //! # Consumers
 //!
 //! `classic-tui` renders from this crate. It depends on it directly, with no binding seam in
-//! the way, which is why it migrated first: it proves the segment model before any DTO or
-//! parity baseline exists. The bridge and native CLI, the Qt GUI, and the Node and Python
-//! surfaces follow.
+//! the way, which is why it migrated first: it proves the segment model before any DTO
+//! exists. The bridge and native CLI and the Qt GUI follow.
 
 mod display;
 mod launch;

@@ -4,19 +4,15 @@ import copy
 import json
 import shutil
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from conformance.applicability import derive_applicability
-from conformance.coverage import (
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
 from conformance.families.shared_registry import coverage_policy, validate_pack
 from conformance.packs import load_and_validate_pack, materialize_run_plan
+from conformance.participants import load_participants
 from conformance.receipts import validate_prepared_run
+from receipt_test_support import copy_participant_catalog
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -61,20 +57,21 @@ def _pack(family: str) -> dict:
         ("registry-operations", {"rust", "cxx"}),
     ],
 )
-def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(
+def test_shared_registry_receipts_fail_closed_at_public_receipt_seam(
         tmp_path: Path, family: str, participants: set[str]
 ) -> None:
-    """Only complete current receipts cover source-selected public operations.
+    """Only complete current receipts from enrolled adapters validate and derive facts.
 
     Authored observations stand in for a transport at this tooling boundary;
     separate native participant runs prove the real API calls. Every mutation
-    reaches the same materialization, receipt validation and row derivation
-    interfaces used by CI.
+    reaches the same materialization and receipt validation interfaces used
+    by CI.
     """
     pack_path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
     original = _pack(family)
     for relative in (pack_path.parent, Path(original["fixtureRoot"])):
         shutil.copytree(ROOT / relative, tmp_path / relative)
+    copy_participant_catalog(ROOT, tmp_path)
     for args in (
             ("init",),
             ("config", "user.email", "conformance@example.invalid"),
@@ -88,9 +85,7 @@ def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(
     pack = load_and_validate_pack(tmp_path, pack_path)
     document = pack.document()
     policy = coverage_policy(family)
-    rows = load_source_parity_rows(ROOT)
-    retained = load_retained_analyzer_kinds(ROOT)
-    matrix = derive_applicability(document, rows)
+    matrix = derive_applicability(document, load_participants(ROOT))
     assert {participant.id for participant in matrix.participants} == participants
     assert all(
         set(participant.scenario_ids) == {case["id"] for case in document["scenarios"]}
@@ -98,8 +93,8 @@ def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(
     )
     for participant in matrix.participants:
         if participant.id == "rust":
-            # Canonical Rust observations are validated in native runs; parity
-            # row accounting below belongs to the source-selected adapters.
+            # Canonical Rust observations are validated in native runs; the
+            # receipt boundary below belongs to the catalog-enrolled adapters.
             continue
         for execution in participant.execution_instance_ids:
             run = materialize_run_plan(
@@ -144,36 +139,7 @@ def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(
             run.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
             report = validate_prepared_run(pack, run, coverage_policy=policy)
             assert not report.failures
-            covered = derive_row_coverage(
-                document,
-                rows,
-                policy,
-                (report,),
-                scope_participant_id=participant.id,
-                retained_analyzers=retained,
-            )
-            assert covered.rows and not covered.failures
-            prototype = next(
-                row
-                for row in rows
-                if row.participant_id == participant.id
-                and row.rust_crate == document["domainOwner"]["rustCrate"]
-                and row.rust_symbol in document["capabilities"][0]["rustSymbols"]
-            )
-            future = replace(
-                prototype,
-                obligation_id="future-path-message-operation",
-                runtime_operation="future_public_method",
-                required_evidence_kind="runtime",
-            )
-            assert derive_row_coverage(
-                document,
-                (*rows, future),
-                policy,
-                (report,),
-                scope_participant_id=participant.id,
-                retained_analyzers=retained,
-            ).failures
+            assert all(scenario.observed_fact_ids for scenario in report.scenarios)
             for mutation in (
                     "changed",
                     "missing-scenario",
@@ -201,11 +167,3 @@ def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(
                     run.receipt_path.write_text(json.dumps(changed), encoding="utf-8")
                 rejected = validate_prepared_run(pack, run, coverage_policy=policy)
                 assert rejected.failures, mutation
-                assert derive_row_coverage(
-                    document,
-                    rows,
-                    policy,
-                    (rejected,),
-                    scope_participant_id=participant.id,
-                    retained_analyzers=retained,
-                ).failures, mutation

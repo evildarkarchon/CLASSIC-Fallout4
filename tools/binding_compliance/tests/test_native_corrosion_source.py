@@ -31,7 +31,7 @@ def test_native_jobs_share_one_verified_corrosion_source_artifact() -> None:
 
     for job_name, build_name in (("cli-tests", "Build and test CLI"), ("gui-tests", "Build and test GUI")):
         job = _job_block(source, job_name)
-        assert "needs: [cxx-parity-gate, corrosion-source]" in job
+        assert "needs: [corrosion-source]" in job
         assert "uses: actions/download-artifact@v8" in job
         assert "name: corrosion-source-v0.6.1" in job
         assert "Expand-Archive" in job

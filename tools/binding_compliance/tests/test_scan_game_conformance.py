@@ -4,16 +4,10 @@ from __future__ import annotations
 
 import copy
 import json
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from conformance.coverage import (
-    derive_observed_fact_ids,
-    derive_row_coverage,
-    load_retained_analyzer_kinds,
-    load_source_parity_rows,
-)
+from conformance.coverage import derive_observed_fact_ids
 from conformance.families.scan_game import SCAN_GAME_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
@@ -84,72 +78,16 @@ def test_scan_game_facts_require_complete_native_results_and_no_writes() -> None
 def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
         tmp_path: Path, participant: str
 ) -> None:
-    """Central validation binds real source rows to complete, invocation-owned receipts."""
+    """Central validation accepts only complete, current, invocation-owned receipts."""
     pack, run, receipt = prepare_receipt_case(
         ROOT, tmp_path, PACK, participant, runner_id="scan-game-boundary-test"
     )
-    document = pack.document()
     plan = run.document()
     assert all("expected" not in scenario for scenario in plan["scenarios"])
     policy = SCAN_GAME_COVERAGE_POLICY
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     assert not report.failures
     assert all(item.result == "pass" for item in report.scenarios)
-    rows = load_source_parity_rows(ROOT)
-    coverage = derive_row_coverage(
-        document,
-        rows,
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert coverage.rows
-    assert not coverage.failures
-    assert all(
-        row.evidence_kind in {"executable", "structural"} for row in coverage.rows
-    )
-    if participant == "python":
-        for symbol in (
-                "EnbValidationResult",
-                "EnbResult",
-                "EnbConfigResult",
-                "ConfigIssue",
-                "IssueSeverity",
-        ):
-            carrier = next(
-                row
-                for row in rows
-                if row.participant_id == "python"
-                and row.rust_symbol == symbol
-                and row.runtime_operation is None
-                and row.mapping_origin == "canonical_rust"
-            )
-            assert carrier.obligation_id in {row.obligation_id for row in coverage.rows}
-    prototype = next(
-        row
-        for row in rows
-        if row.participant_id == participant
-        and row.rust_crate == "classic-scangame-core"
-        and row.rust_symbol in {"IniValidator", "validate_inis"}
-    )
-    added = replace(
-        prototype,
-        obligation_id="parity:test:future-scan-game-method",
-        rust_symbol="IniValidator",
-        runtime_operation="future_scan_game_method",
-    )
-    expanded = derive_row_coverage(
-        document,
-        (*rows, added),
-        policy,
-        (report,),
-        scope_participant_id=participant,
-        retained_analyzers=load_retained_analyzer_kinds(ROOT),
-    )
-    assert [failure.obligation_id for failure in expanded.failures] == [
-        added.obligation_id
-    ]
     for mutation in (
             "missing",
             "skipped",
