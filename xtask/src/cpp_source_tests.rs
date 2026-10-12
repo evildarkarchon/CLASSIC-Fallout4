@@ -45,3 +45,23 @@ fn escaped_quotes_do_not_end_a_string_early() {
     assert!(!blanked.contains("classic::m::f"));
     assert!(blanked.contains("classic::m::g"));
 }
+
+#[test]
+fn comments_only_mode_keeps_literals_and_line_structure() {
+    let source = "auto k = \"CLASSIC_Settings\"; // CLASSIC_Settings\r\n/* x\r\n */ auto u = \"https://e/*x\"; f('/');\r\n";
+    let blanked = blank_comments(source);
+    assert_eq!(blanked.len(), source.len());
+    assert_eq!(blanked.lines().count(), source.lines().count());
+    assert_eq!(blanked.matches("CLASSIC_Settings").count(), 1);
+    assert!(blanked.contains("auto u = \"https://e/*x\"; f('/');"));
+    assert!(blanked.lines().nth(1).unwrap().trim().is_empty());
+}
+
+#[test]
+fn comments_only_mode_keeps_raw_strings() {
+    let source = "auto s = R\"x(a // b)x\"; // gone\n";
+    assert_eq!(
+        blank_comments(source).trim_end(),
+        "auto s = R\"x(a // b)x\";"
+    );
+}

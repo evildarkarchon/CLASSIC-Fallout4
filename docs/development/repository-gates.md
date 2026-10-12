@@ -16,19 +16,19 @@ PR deletes the step and its row here.
 
 | Check | Command (repo root) | CI step | Removed by |
 | --- | --- | --- | --- |
-| User Settings exclusive ownership | `python tools/user_settings_ownership/check.py --repo-root .` | `ci-rust.yml`, job `lint`, step "Check User Settings exclusive ownership" | the `user-settings-ownership` xtask port |
 | Scan-run workflow policy | `python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .` | `ci-rust.yml`, job `lint`, step "Check scan-run workflow policy" | engine PR A (`conformance check`) |
 
 The scan-run workflow policy loads the conformance packs, whose User Settings
 family needs `ruamel.yaml`, so the `lint` job installs it first. It also
 loads `tests/conformance/participants.json` and fails when that catalog enrols
-a family that has no pack. The ownership gate uses only the standard library.
+a family that has no pack.
 
 ## Other direct gates
 
 | Check | Command (repo root) | CI step |
 | --- | --- | --- |
 | CXX bridge has no orphan exports | `cargo xtask cxx-bridge-gate` | `ci-cpp.yml`, job `cxx-bridge-gate` (`windows-latest`), step "Check for orphan CXX bridge exports" |
+| User Settings exclusive ownership | `cargo xtask user-settings-ownership` | `ci-rust.yml`, job `lint`, step "Check User Settings exclusive ownership" |
 | Crash Log Scan Run contract variants | `cargo xtask scan-run-contract` | `ci-rust.yml`, job `test`, step "Validate Crash Log Scan Run variant coverage" |
 | Opaque CXX map reachability | `cargo test -p classic-cpp-bridge --test opaque_map_read_only` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
 | Bundled YAML Data schema version | `cargo test -p classic-config-core --lib client_schemas` | `ci-rust.yml`, job `test`, through `cargo test --workspace --release` |
@@ -43,6 +43,17 @@ no `needs:` and runs in parallel with `cli-tests` and `gui-tests`; the build
 wrappers do not call it. Missing exports are caught by the CLI and GUI
 production builds instead. Rules and matcher details:
 [`cxx-bridge-policy.md`](../api/cxx-bridge-policy.md#gate).
+
+The User Settings ownership gate keeps User Settings with one Rust owner,
+`classic-user-settings-core`. It audits production `.rs`, `.cpp`, `.h` and
+`.hpp` files under `foundation`, `business-logic`, `cpp-bindings`,
+`classic-cli`, `classic-gui` and `ui-applications`, skipping test, build and
+dependency directories and `*_tests.rs` files. It fails on a raw
+`CLASSIC_Settings` key outside the owner, on a returning `ClassicConfig`,
+`PathConfig` or generic YAML `Settings` variant, and on runtime reads of the
+`default_settings` compatibility mirror outside its generator. Comments are
+ignored and string literals are audited. `cargo xtask user-settings-ownership
+--help` lists the rules.
 
 The scan-run contract gate reads
 `tests/fixtures/crash_log_scan_run/manifest.json` and reports every finding in

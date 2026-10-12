@@ -70,7 +70,7 @@ The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](adr/)). Rep
 
 ```powershell
 uv sync --project tools
-uv run --project tools python -m pytest tools/user_settings_ownership/tests -q
+uv run --project tools python -m pytest tools/binding_compliance/tests -q
 ```
 
 The checks CI runs as direct steps are listed in [Repository gates](development/repository-gates.md).

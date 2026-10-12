@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use xtask::{Outcome, RepoRoot, cxx_bridge_gate};
+use xtask::{Outcome, RepoRoot, cxx_bridge_gate, user_settings_ownership};
 
 /// CLASSIC repository tooling.
 ///
@@ -49,6 +49,22 @@ enum Command {
     /// failure fixtures are complete, and that no forbiddenExports symbol
     /// appears in its source file.
     ScanRunContract(xtask::scan_run_contract::Args),
+    /// Post-process Criterion benchmark output: tail percentiles and old
+    /// baseline cleanup.
+    Bench(xtask::bench::Args),
+    /// Fail when anything but classic-user-settings-core interprets User
+    /// Settings.
+    ///
+    /// Audits production .rs/.cpp/.h/.hpp files under foundation,
+    /// business-logic, cpp-bindings, classic-cli, classic-gui and
+    /// ui-applications (test, build and dependency directories and
+    /// *_tests.rs files are skipped; xtask/ is never audited). Fails on raw
+    /// `CLASSIC_Settings` keys outside the owner, on the retired
+    /// `ClassicConfig`/`PathConfig` models or a `Settings` variant on a
+    /// generic YAML enum, and on runtime reads of the `default_settings`
+    /// compatibility mirror outside its generator. Comments are ignored;
+    /// string literals are audited.
+    UserSettingsOwnership(user_settings_ownership::Args),
 }
 
 fn main() -> ExitCode {
@@ -56,6 +72,8 @@ fn main() -> ExitCode {
     let result = RepoRoot::discover(cli.repo_root).and_then(|root| match cli.command {
         Command::CxxBridgeGate(args) => cxx_bridge_gate::run(&root, args),
         Command::ScanRunContract(args) => xtask::scan_run_contract::run(&root, args),
+        Command::Bench(args) => xtask::bench::run(&root, args),
+        Command::UserSettingsOwnership(args) => user_settings_ownership::run(&root, args),
     });
     match result {
         Ok(outcome) => render(outcome),
