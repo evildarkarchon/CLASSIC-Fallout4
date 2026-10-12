@@ -50,7 +50,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`docs/api/classic-database-core.md`](api/classic-database-core.md) — async SQLite/FormID lookup pool and helpers
 - [`docs/api/formid-sqlite-conventions.md`](api/formid-sqlite-conventions.md) — current FormID fixture/schema/path conventions from source and tests
 - [`docs/api/classic-scangame-core.md`](api/classic-scangame-core.md) — game-installation, archive, loose-file, and setup validation workflows
-- [`docs/api/classic-cpp-bridge-game-entrypoints.md`](api/classic-cpp-bridge-game-entrypoints.md) — active C++ bridge entry points for path, game, and scangame workflows
+- [`docs/api/classic-cpp-bridge-game-entrypoints.md`](api/classic-cpp-bridge-game-entrypoints.md) — active C++ bridge entry points for path, XSE, and scangame workflows
 - [`docs/api/classic-cpp-bridge-data-entrypoints.md`](api/classic-cpp-bridge-data-entrypoints.md) — active C++ bridge entry points for config, file I/O, database, and scanlog workflows
 - [`docs/api/classic-cpp-bridge-scan-progress-callback.md`](api/classic-cpp-bridge-scan-progress-callback.md) — current `classic::scanner` batch progress callback contract and bridge-local event ordering
 - [`docs/api/classic-gui-scan-progress-consumer.md`](api/classic-gui-scan-progress-consumer.md) — how the active Qt frontend consumes batch scan progress into visible progress and status state

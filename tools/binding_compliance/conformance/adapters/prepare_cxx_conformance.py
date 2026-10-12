@@ -34,14 +34,9 @@ SUPPORTED_FAMILIES = (
     "settings-yaml",
     "settings-validation",
     "registry-operations",
-    "version-pe",
-    "game-version-parse",
-    "fallout4-identity",
-    "fallout4-paths",
     "registry-game",
     "registry-gui",
     "web-operations",
-    "performance",
     "update-decisions",
     "update-services",
     "xse-operations",
@@ -56,7 +51,6 @@ SUPPORTED_FAMILIES = (
     "crash-suspect",
     "crashgen-settings",
     "mod-guidance",
-    "formid-lookup",
     "named-record",
     "plugin-evidence",
     "installed-yaml-data",
@@ -69,8 +63,6 @@ SUPPORTED_FAMILIES = (
     "game-setup-intake",
     "yaml-update-operations",
     "file-operations",
-    "database-operations",
-    "version-registry",
     "scan-game",
     "papyrus-monitor",
     "wrye-report",
@@ -97,8 +89,6 @@ def _cxx_source_paths(
         / "classic-cli/tests/conformance/classic_cxx_settings_load_conformance.h",
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_settings_validation_conformance.h",
-        repo_root
-        / "classic-cli/tests/conformance/classic_cxx_version_values_conformance.h",
         # The generic YAML rules and logical-key cache (#239), then
         # YamlOperations and the path/mtime YAML-file cache (#240), moved out
         # of classic-settings-core, which then retired (#257); every family
@@ -112,7 +102,6 @@ def _cxx_source_paths(
             for name in (
                 "registry",
                 "aux_operations",
-                "performance",
                 "update_decisions",
                 "update_services",
                 "xse_operations",
@@ -179,10 +168,6 @@ def _cxx_source_paths(
             / "classic-cli/tests/conformance/classic_cxx_semantic_conformance.h",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_installed_yaml_data_conformance.h",
-            repo_root
-            / "classic-cli/tests/conformance/classic_cxx_database_operations_conformance.h",
-            repo_root
-            / "classic-cli/tests/conformance/classic_cxx_version_registry_conformance.h",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_scan_game_conformance.h",
             repo_root

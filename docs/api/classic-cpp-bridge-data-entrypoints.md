@@ -18,7 +18,6 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 | `classic::settings` | `src/settings.rs` | typed User Settings snapshots, migration, preview, and commit operations; generic settings cache helpers |
 | `classic::config` | `src/config.rs` | loaded YAML Data access and selected config/cache helpers |
 | `classic::files` | `src/files.rs` | generic file, backup, log collection, targeted-resolution, and report-reading helpers |
-| `classic::database` | `src/database.rs` | narrowed FormID database pool and lookup operations |
 | `classic::scanner` | `src/scanner.rs` | final tagged Crash Log Scan Run contract, small pure scan helpers, and Papyrus inspection |
 | `classic::update` | `src/update.rs` | binary compatibility checks, app notifications, and YAML Data update workflows |
 
@@ -145,46 +144,6 @@ not pre-resolve them with this helper.
 
 `discover_report_files(...)` remains non-recursive, sorts readable matches
 newest first, and returns an empty vector for an unreadable or absent directory.
-
----
-
-## `classic::database`
-
-The database namespace projects a deliberately small subset of
-`classic-database-core`:
-
-- create and initialize a pool from explicit paths
-- inspect availability and the selected game table
-- perform one lookup or a fixed-size batch lookup
-- clear cache entries and close the pool
-- construct an opaque owned strict FormID Value Lookup from a disabled adapter,
-  fully owned in-memory replies, one SQLite path, or an existing shared `DbPool`
-- perform strict single and positional batch lookups with explicit typed outcome
-  and error envelopes
-
-The legacy `db_pool_get_entry*` and `db_pool_get_entries_batch*` helpers remain
-fail-soft for compatibility: they narrow misses and several failures into empty
-strings, empty vectors, or `found: false`. The additive
-`FormIdValueLookup` handle is the strict path. Its successful outcomes preserve
-`Disabled`, `Missing`, and `Found` as separate enum values, while failures carry
-`FormIdValueLookupErrorCode::MalformedResult` or
-`FormIdValueLookupErrorCode::OperationalFailure` (the CXX projections of the
-core `malformed_result` and `operational_failure` codes), a message, and optional
-FormID/plugin context.
-
-SQLite constructor failures remain attached to the opaque handle and are read
-through `formid_value_lookup_construction_result(...)`; they are not flattened
-into CXX exception text. In-memory construction copies all scripted replies into
-Rust-owned storage and introduces no callback. Batch requests use owned key DTOs
-and return one outcome per input in input order, or one typed whole-batch error
-with no partial outcomes. SQLite construction, single lookup, and batch lookup
-all block through the process-wide shared Tokio runtime helper; the bridge does
-not create another runtime.
-
-The namespace does not expose tuning, rebalance, or detailed statistics.
-Complete scan runs receive configured FormID paths through
-`ScanRunConfigurationDto`; C++ does not attach a pool to an external scan
-orchestrator.
 
 ---
 

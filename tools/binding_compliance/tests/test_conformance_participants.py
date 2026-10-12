@@ -340,12 +340,16 @@ def test_loader_rejects_a_catalog_outside_the_repository(tmp_path: Path) -> None
 
 
 def test_repository_catalog_enrols_only_tracked_cxx_families() -> None:
-    """The tracked catalog loads and enrols CXX in its 56 snapshot families."""
+    """The tracked catalog loads and enrols CXX in its 48 remaining families.
+
+    T1 snapshotted 56; #307 dropped the eight served only by the removed
+    database, version_registry, game and perf bridge modules.
+    """
 
     catalog = load_participants(REPO_ROOT)
 
     assert catalog.has_trusted_provenance
-    assert len(catalog.family_ids) == 56
+    assert len(catalog.family_ids) == 48
     assert all(
         set(catalog.enrolments(family_id)) == {"cxx"}
         for family_id in catalog.family_ids

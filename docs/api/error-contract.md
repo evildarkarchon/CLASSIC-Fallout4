@@ -93,11 +93,9 @@ not pause or the pending recovery was already taken.
 
 **Pattern:** `rust::Error` exceptions for hard failures, empty-string sentinels for fail-soft returns.
 
-**Example 1 -- empty-string sentinel:** `db_pool_get_entry()` in [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) returns `""` on lookup failure because Qt callers check `.isEmpty()` rather than catching exceptions.
+**Example 1 -- empty-string sentinel:** `detect_fallout4_game_path()` in [`cpp-bindings/classic-cpp-bridge/src/path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs) returns `""` when detection fails because Qt callers check `.isEmpty()` rather than catching exceptions.
 
-**Example 2 -- DTO with `found: false`:** `db_pool_get_entry_typed()` in the same file returns a `FormIdEntryDto` with `found: false` for lookup misses. The DTO has fields `{formid, plugin, value, found}` where `found` is a `bool`. C++ callers check `dto.found` before using `dto.value`.
-
-**Example 3 -- request-construction `rust::Error`:** The invariant-preserving `scan_run_request_*` factories in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) return CXX `Result` errors when required request facts cannot be represented. Once construction succeeds, complete-run infrastructure failures use the typed execution envelope above.
+**Example 2 -- request-construction `rust::Error`:** The invariant-preserving `scan_run_request_*` factories in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) return CXX `Result` errors when required request facts cannot be represented. Once construction succeeds, complete-run infrastructure failures use the typed execution envelope above.
 
 ---
 
@@ -177,11 +175,9 @@ CXX reopens and reproduces the plan from the supplied root, approved base revisi
 
 `classic_shared_core::performance_core::TimingError` rejects a timing or byte record before any metric changes: no operation entry is created and no existing counter moves. Its stable `code()` tokens are `timing_sample_not_finite` (NaN or ±infinity), `timing_sample_negative` (below zero; `-0.0` is accepted as zero), `timing_sample_out_of_range` (above `u64::MAX` nanoseconds), and `timing_counter_overflow` (the operation's sample count, accumulated duration, or byte total would wrap). Every binding treats all four as an invalid argument.
 
-| Binding | Shape on failure |
-| --- | --- |
-| C++ (CXX) | `classic::perf::perf_record_timing(...)` is declared `Result<()>` and throws `rust::Error` whose message begins with the stable token (`"timing_sample_negative: ..."`). The bridge's other `perf_*` functions remain infallible. |
+No binding projects these errors today: the CXX `classic::perf` module had no CLI or GUI production caller and was removed (#307). A projection added later must surface `TimingError::coded_message()`, so the text before the first `": "` is always the token.
 
-A dropped timer cannot raise; an overflowing drop record is logged and skipped rather than wrapped. The bridge uses `TimingError::coded_message()`, so the text before the first `": "` is always the token. Branch on the token, not on the rest of the message.
+A dropped timer cannot raise; an overflowing drop record is logged and skipped rather than wrapped. Branch on the token, not on the rest of the message.
 
 ---
 

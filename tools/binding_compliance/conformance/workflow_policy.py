@@ -277,6 +277,21 @@ _EXECUTION_POLICIES += tuple(
         family in {"registry-context", "registry-paths"}
         and policy.participant_id == "cxx"
     )
+    # Served only by bridge modules removed for having no production caller (#307).
+    and not (
+        family
+        in {
+            "database-operations",
+            "fallout4-identity",
+            "fallout4-paths",
+            "formid-lookup",
+            "game-version-parse",
+            "performance",
+            "version-pe",
+            "version-registry",
+        }
+        and policy.participant_id == "cxx"
+    )
 )
 # Autoscan Reports use the shared scan-run launcher while retaining the same
 # semantic adapters and separate diagnostics as the focused families.

@@ -124,6 +124,12 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
 
     if participant == "cxx" and family in {"path-normalization", "message-operations"}:
         pytest.skip("These public operations have no CXX source mapping")
+    if participant == "cxx" and family in {
+        "formid-lookup",
+        "database-operations",
+        "version-registry",
+    }:
+        pytest.skip("Served only by CXX bridge modules removed in #307")
 
     workflow_root = tmp_path / ".github/workflows"
     workflow_root.parent.mkdir(parents=True)

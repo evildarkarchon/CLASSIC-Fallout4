@@ -370,15 +370,11 @@ There is **one default observable store per linked library image**: `get_global_
 - Sample counts, accumulated nanoseconds, and byte totals use checked arithmetic; a record that would wrap any of them is rejected.
 - Rejections happen before any mutation: no entry is created and no counter changes.
 
-`TimingError` variants carry a stable `code()` token: `timing_sample_not_finite`, `timing_sample_negative`, `timing_sample_out_of_range`, and `timing_counter_overflow`. Every binding uses `coded_message()` (`"<code>: <message>"`) as its error text ([error contract](error-contract.md#timing-sample-errors)).
+`TimingError` variants carry a stable `code()` token: `timing_sample_not_finite`, `timing_sample_negative`, `timing_sample_out_of_range`, and `timing_counter_overflow`. `coded_message()` (`"<code>: <message>"`) is the error text any binding projection must use ([error contract](error-contract.md#timing-sample-errors)).
 
 ### Binding projections
 
-| Binding | Entry points | Units | Invalid input |
-|---|---|---|---|
-| [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) (`classic::perf`) | `perf_record_timing -> Result<()>`, `perf_get_summary`, `perf_clear_metrics`, `perf_get_operation_count`, `perf_get_operation_average` | seconds | `rust::Error`, message begins with the stable token |
-
-Missing operations keep their existing projections: absent from summary maps, and `0` / `0.0` from the CXX numeric accessors.
+No binding projects the metrics store today. The CXX `classic::perf` module had no CLI or GUI production caller and was removed with the consumer-driven bridge trim (#307); the Rust API above is unchanged.
 
 ### Seconds-view example
 

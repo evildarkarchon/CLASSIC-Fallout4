@@ -63,14 +63,13 @@ json execute_installation_paths_scenario(const json& plan, const json& scenario)
     // Registry-dependent Fallout4 aliases initialize inside the same controlled
     // cwd. Relative inputs exclude host parent names from document checks.
     VersionRegistryWorkingDirectory cwd(root);
-    (void)classic::version_registry::version_registry_get_all_count();
+    initialize_default_version_registry();
     rust::Vec<rust::String> required;
     required.push_back(rust::String("Fallout4.exe"));
     classic::path::path_validate_required_files(game, rust::Slice<const rust::String>(required.data(), required.size()));
     classic::path::path_validate_is_directory(docs);
     const auto game_path = owned_string(classic::path::find_game_path("Fallout4.exe", "", "Fallout4", false, game, ""));
-    if (owned_string(classic::game::find_game_path("Fallout4.exe", "", "Fallout4", false, game, "")) != game_path ||
-        owned_string(classic::path::detect_fallout4_game_path(game, "OG")) != game_path) {
+    if (owned_string(classic::path::detect_fallout4_game_path(game, "OG")) != game_path) {
         throw RunnerError("public game path aliases disagree");
     }
     const auto docs_path = owned_string(classic::path::detect_fallout4_docs_path(docs, "OG"));
@@ -88,10 +87,8 @@ json execute_installation_paths_scenario(const json& plan, const json& scenario)
     classic::path::path_validate_is_file(game + "/Fallout4.exe");
     if (classic::path::is_restricted_path("validation/owned/scan") ||
         classic::path::check_restricted_path("validation/owned/scan") ||
-        classic::game::check_restricted_path("validation/owned/scan") ||
         !classic::path::is_restricted_path("Windows/System32/test") ||
-        !classic::path::check_restricted_path("Windows/System32/test") ||
-        !classic::game::check_restricted_path("Windows/System32/test")) throw RunnerError("restricted-path classification changed");
+        !classic::path::check_restricted_path("Windows/System32/test")) throw RunnerError("restricted-path classification changed");
     fs::remove_all("validation");
     { std::ofstream log("path-detection.log", std::ios::binary); log << "plugin directory = \"" << game << "/Data/F4SE/Plugins\"\n"; log.close(); if (!log) throw RunnerError("cannot write owned XSE log"); }
     if (owned_string(classic::path::parse_xse_log("path-detection.log")) != game) throw RunnerError("XSE log extraction changed game root");

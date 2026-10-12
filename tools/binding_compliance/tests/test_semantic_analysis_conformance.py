@@ -142,7 +142,9 @@ def test_semantic_receipts_validate_their_scope_and_reject_an_omitted_case(
         )
     pack = load_and_validate_pack(tmp_path, pack_path)
     policy = FAMILY_COVERAGE_POLICIES[family]
-    for participant in ("cxx",):
+    # formid-lookup left CXX with the database bridge module (#307); Rust
+    # still exercises the same central receipt validation.
+    for participant in (("rust",) if family == "formid-lookup" else ("cxx",)):
         run = materialize_run_plan(
             pack,
             participant_id=participant,

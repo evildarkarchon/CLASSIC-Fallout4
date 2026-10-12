@@ -1,6 +1,6 @@
 //! Never-exposed boundary for the opaque `StringMap` / `StringVecMap` types.
 //!
-//! The bridge hands these maps to C++ strictly read-only: C++ may receive a
+//! The bridge may hand these maps to C++ only read-only: C++ may receive a
 //! `&StringMap` / `&StringVecMap` and query it, but no `#[cxx::bridge]` in this
 //! crate may expose
 //!
@@ -14,7 +14,10 @@
 //! frontend that started calling a new mutator would pass it; this test is the
 //! separate guard (ADR-0010, #297). It replaced the retired Python
 //! opaque-map reachability proof and deliberately does not pin the
-//! accessor count: the size of the surface belongs to the bridge gate.
+//! accessor count: the size of the surface belongs to the bridge gate. The
+//! `types` bridge module that held the read-only accessors had no production
+//! caller and was removed (#307), so today no bridge exposes an opaque map at
+//! all; the rule stays so any reintroduction is read-only.
 
 use proc_macro2::{TokenStream, TokenTree};
 use quote::ToTokens;
@@ -213,7 +216,7 @@ fn opaque_maps_have_no_producer_mutator_or_alias_across_the_bridge() {
 /// Wraps bridge `extern "Rust"` declarations in a minimal bridge module.
 fn bridge(body: &str) -> String {
     format!(
-        "#[cxx::bridge(namespace = \"classic::types\")]\nmod ffi {{\n    extern \"Rust\" {{\n        type StringMap;\n        type StringVecMap;\n{body}\n    }}\n}}\n"
+        "#[cxx::bridge(namespace = \"classic::fixture\")]\nmod ffi {{\n    extern \"Rust\" {{\n        type StringMap;\n        type StringVecMap;\n{body}\n    }}\n}}\n"
     )
 }
 

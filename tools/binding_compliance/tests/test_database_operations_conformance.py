@@ -103,7 +103,8 @@ def test_database_lookup_order_misses_and_close_are_material() -> None:
         )
 
 
-@pytest.mark.parametrize("participant", ("cxx",))
+# CXX left this family with its bridge module (#307); Rust is its adapter.
+@pytest.mark.parametrize("participant", ("rust",))
 def test_database_receipt_lifecycle_fails_closed(
         tmp_path: Path, participant: str
 ) -> None:
