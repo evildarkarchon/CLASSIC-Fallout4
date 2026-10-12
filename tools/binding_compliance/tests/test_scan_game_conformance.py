@@ -74,7 +74,8 @@ def test_scan_game_facts_require_complete_native_results_and_no_writes() -> None
         )
 
 
-@pytest.mark.parametrize("participant", ("cxx",))
+# Rust-only since the #308 bridge trim: CXX is no longer enrolled for this family.
+@pytest.mark.parametrize("participant", ("rust",))
 def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
         tmp_path: Path, participant: str
 ) -> None:

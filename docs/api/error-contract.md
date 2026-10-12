@@ -107,7 +107,7 @@ not pause or the pending recovery was already taken.
 
 | Binding | Failure shape |
 | --- | --- |
-| C++ (CXX) | `explicit_yaml_data_load_status()` returns `ExplicitYamlDataLoadErrorDto { kind, has_role, role, has_path, path, message }`. Callers inspect the status before consuming a ready load with `explicit_yaml_data_load_take_snapshot()`; expected load failures are not flattened into `rust::Error`. |
+| C++ (CXX) | Not exposed since the consumer-driven bridge trim (#308): no frontend called the explicit loader. |
 
 The bridge delegates role selection, validation, and error classification to Rust. Callers must not respond to an explicit-file failure by silently selecting installed, cached, bundled, or generated data.
 
@@ -119,7 +119,7 @@ The bridge delegates role selection, validation, and error classification to Rus
 
 | Binding | Failure shape |
 | --- | --- |
-| C++ (CXX) | `installed_yaml_data_inspection_status()` returns `InstalledYamlDataInspectionErrorDto` with a typed error kind, optional failed role, message, and diagnostic DTOs. Expected selection failures are consumed through status/take rather than flattened into `rust::Error`. |
+| C++ (CXX) | Not exposed since the consumer-driven bridge trim (#308): no frontend called the inspection flow. |
 
 Rejected candidates are diagnostic evidence only: adapters do not promote, repair, rewrite, or remove them.
 
@@ -131,7 +131,7 @@ Fatal Rust errors preserve `UnsupportedGame` and `NoUsableSource { role, diagnos
 
 | Binding | Failure shape |
 | --- | --- |
-| C++ (CXX) | `installed_yaml_data_load_status()` distinguishes Ready, Local Ignore Recovery Required, and fatal error before the operation is consumed. Fatal `InstalledYamlDataLoadErrorDto` values retain an exhaustive kind, optional load-specific Main/game/Local Ignore role, optional path, no-usable-source diagnostics, and message. |
+| C++ (CXX) | Not exposed directly since the consumer-driven bridge trim (#308). Native frontends observe Installed YAML Data loading only through the Crash Log Scan Run envelope (`classic::scanner`). |
 
 Reset operational errors are separate from fatal loading errors. Rust `LocalIgnoreResetError` distinguishes unavailable retained defaults, lock/read/backup-directory failures, backup verification, and backup or replacement publication. Publication variants carry `LocalIgnoreResetPublicationStage::{Create, Write, Flush, Sync, Publish}` and occur before canonical replacement, so the malformed original remains authoritative; replacement failures may leave the already verified backup in place. CXX exposes the equivalent reset operation status/error DTO, Node rejects with stable reset metadata, and Python raises dedicated `LocalIgnoreResetError` subclasses. Conflict is expected outcome data on every surface, not an exception. A post-rename Unix directory-sync failure instead becomes `ReplacementDurabilityUnknown` / `replacement_durability_unknown`: defaults are visible, durability is unconfirmed, and every binding receives canonical and verified-backup paths plus malformed, backup, and replacement identities.
 
@@ -139,11 +139,7 @@ Reset operational errors are separate from fatal loading errors. Rust `LocalIgno
 
 ## `CLASSIC Main.yaml` version-reader errors (`schema-gated startup read`)
 
-The schema-gated `CLASSIC_Info.version` reader (`classic_config_core::load_main_yaml_version`) is the native-frontend startup path that replaced the raw `yaml_ops` read in `classic-gui/src/main.cpp`. Its typed core error (`MainYamlVersionError`) projects onto each binding according to the per-language idiom below. Same-family, different-shape-per-binding, just like the notification channel.
-
-| Binding | Shape on failure |
-| --- | --- |
-| C++ (CXX) | `MainYamlVersionDto { version: "", error_kind: "<kind>", error_message: "<Display of MainYamlVersionError>" }`. Empty-string sentinel on the `version` field when `error_kind` is non-empty. `error_kind` values: `"load"` (schema-incompatible or file missing / unparseable), `"version_key_missing"`, `"version_empty"`, `"version_not_string"`, `"version_invalid"` (schema-2.0 shape violation: legacy `CLASSIC ` prefix, prerelease/build suffix, or non-semver garbage), or `"unknown"` (reserved for future `#[non_exhaustive]` variants). See [`cpp-bindings/classic-cpp-bridge/src/config.rs::main_yaml_version_error_kind`](../../cpp-bindings/classic-cpp-bridge/src/config.rs). |
+The schema-gated `CLASSIC_Info.version` reader (`classic_config_core::load_main_yaml_version`) returns a typed core error (`MainYamlVersionError`). No binding projects it: the CXX `MainYamlVersionDto` entry point was removed in the consumer-driven bridge trim (#308) because no frontend called it, and the native frontends take their version from configure time instead.
 
 Callers MUST NOT fall back to a raw YAML read on any of these errors — that defeats the whole point of the schema gate. Cross-crate background: [`classic-config-core.md`](classic-config-core.md#schema-gated-classic-mainyaml-version-reader).
 

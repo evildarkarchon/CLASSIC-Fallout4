@@ -238,10 +238,13 @@ def test_config_receipt_lifecycle_fails_closed(
     assert not report.failures
     assert all(scenario.result == "pass" for scenario in report.scenarios)
     assert all(scenario.observed_fact_ids for scenario in report.scenarios)
+    # CXX now runs only the persist-local scenarios (#308), whose expected
+    # `result` and `error` are null, so each mutation writes a value no
+    # expectation can hold rather than nulling the field.
     for index, field, replacement in (
-            (0, "result", None),
-            (1, "error", None),
-            (2, "files", []),
+            (0, "result", {"tampered": True}),
+            (1, "error", {"code": "tampered"}),
+            (2, "files", [{"path": "tampered.yaml", "content": ""}]),
     ):
         changed = copy.deepcopy(receipt)
         changed["scenarios"][index]["observation"][field] = replacement

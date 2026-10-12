@@ -65,11 +65,11 @@ This is currently the main bridge file where multiple crates meet.
 
 ## `src/scangame.rs` -> `classic::scangame`
 
-This file exposes Game Setup Intake plus the broader scanner/checker bridge functions in this namespace.
+This file exposes Game Setup Intake, the only scangame capability the GUI calls.
 
 - `run_game_setup_intake_from_user_settings(classic_root, xse_log_path) -> GameSetupIntakeDto`
 
-Game Setup Intake is setup-only. ENB, crashgen, BA2, Wrye, INI, and mod-file checks remain separate bridge entry points.
+Game Setup Intake is setup-only. The per-checker ENB, crashgen, BA2, Wrye, INI, and integrity entry points were removed in the consumer-driven trim (#308) because no frontend called them; those checks stay Rust-only in `classic-scangame-core`.
 
 ---
 
@@ -408,7 +408,7 @@ These are the main current narrowing points contributors should keep in mind.
 ## `src/scangame.rs`
 
 - exposes Game Setup Intake as the setup-time bridge surface
-- keeps ENB, crashgen, BA2, Wrye, INI, and integrity helper entry points separate from intake
+- exposes no ENB, crashgen, BA2, Wrye, INI, or integrity checker entry points
 - does not expose `GameScanOrchestrator` or full mod-scan orchestration through CXX
 
 ---
@@ -465,7 +465,7 @@ When `run_game_setup_intake_from_user_settings()` output looks wrong:
 - `src/game.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
 - `src/game.rs` stringifies many failures as `""`; C++ callers cannot recover typed causes without adding new bridge surface
 - `src/game.rs::version_registry_get_xse_config()` drops `script_hashes`, so callers cannot build script-hash validation from this DTO alone
-- Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks remain separate bridge calls
+- Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks are not bridged
 
 These are current behavior notes, not recommendations for future design.
 
