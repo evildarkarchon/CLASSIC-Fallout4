@@ -25,6 +25,7 @@ mod aux_operations;
 mod installation_paths;
 mod scan_run;
 mod settings_load;
+mod update_services;
 mod user_settings;
 mod vocabulary;
 mod xse_folder;
@@ -111,6 +112,7 @@ pub(crate) fn validate_inputs(context: &InputContext<'_>) -> Vec<Issue> {
         | "version-pe-path" => aux_operations::validate(context),
         "xse-folder" => xse_folder::validate(context),
         "installation-paths" => installation_paths::validate(context),
+        "update-services" => update_services::validate(context),
         "settings-load" => settings_load::validate_load(context),
         "settings-yaml" => settings_load::validate_yaml(context),
         "settings-yaml-batch" => settings_load::validate_yaml_batch(context),

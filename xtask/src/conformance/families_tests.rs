@@ -101,6 +101,37 @@ fn assert_reports(messages: &[String], text: &str) {
 }
 
 #[test]
+fn update_services_scripts_stay_local_and_bounded() {
+    let script = json!({
+        "installedVersion": "8.0.0", "timeoutMs": 1000, "checks": 1,
+        "service": {
+            "pages": [{"status": 200, "body": "<html/>", "headers": {"ETag": "\"a\""}}],
+            "api": [{"status": 200, "body": "[]", "headers": {}}, {"stall": true}]
+        }
+    });
+    let run = |fixture: Value| {
+        hook(
+            "update-services",
+            vec![case("update-services.notification", fixture)],
+        )
+    };
+    assert!(run(script.clone()).is_empty());
+
+    let mut redirect = script.clone();
+    redirect["service"]["pages"][0]["headers"] = json!({"Location": "https://example.com"});
+    assert_reports(&run(redirect), "cannot redirect or inject headers");
+    let mut remote = script.clone();
+    remote["service"]["api"][0]["body"] = json!("[{\"assets\": []}]");
+    assert_reports(&run(remote), "remote asset URLs are forbidden");
+    let mut route = script.clone();
+    route["service"]["upload"] = json!([]);
+    assert_reports(&run(route), "only the local pages and api routes");
+    let mut unbounded = script;
+    unbounded["timeoutMs"] = json!(60000);
+    assert_reports(&run(unbounded), "must be bounded");
+}
+
+#[test]
 fn families_without_a_hook_add_no_checks() {
     assert_eq!(input_shape("performance"), InputShape::FixtureRefOnly);
     assert_eq!(input_shape("user-settings"), InputShape::Rich);
