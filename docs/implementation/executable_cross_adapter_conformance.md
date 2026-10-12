@@ -287,6 +287,8 @@ Semantic applicability is declared centrally in `tests/conformance/participants.
 
 Packs never choose their own participants. The first catalog (T1, #306) is an exact snapshot of the participant sets the retired parity-row derivation produced: 56 CXX families and 382 CXX scenarios.
 
+The consumer-driven bridge trim (T2) shrinks the catalog as bridge exports with no production caller are removed. #307 removed the `database`, `version_registry`, `game`, `types` and `perf` modules, which dropped CXX from the eight families they alone served (`database-operations`, `fallout4-identity`, `fallout4-paths`, `formid-lookup`, `game-version-parse`, `performance`, `version-pe`, `version-registry`; 41 scenarios).
+
 ### Fact derivation
 
 Observed fact IDs are still derived by evaluating family-owned predicates over the validated action and normalized observation; the receipt cannot self-attest them. They no longer credit parity rows. A scoped report passes when every required execution produced a current, exact receipt for its applicable scenario set (and, for consumers, every obligation is covered), over a non-empty denominator.

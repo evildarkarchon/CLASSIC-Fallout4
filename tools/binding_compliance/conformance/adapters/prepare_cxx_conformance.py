@@ -25,23 +25,15 @@ SUPPORTED_COMPILERS = ("msvc", "clang-cl")
 SUPPORTED_FAMILIES = (
     "report-discovery",
     "update-rejection",
-    "version-pe",
-    "game-version-parse",
-    "fallout4-identity",
-    "fallout4-paths",
-    "performance",
     "xse-folder",
     "installation-paths",
     "game-identity",
     "crash-log-scan-launch",
     "user-settings",
-    "formid-lookup",
     "config-operations",
     "file-backups",
     "game-setup-intake",
     "file-operations",
-    "database-operations",
-    "version-registry",
 )
 
 
@@ -52,8 +44,6 @@ def _cxx_source_paths(repo_root: Path, family: str) -> tuple[Path, ...]:
         # Directory expansion fingerprints newly included helpers automatically;
         # a manually maintained filename list must not leave native code unhashed.
         repo_root / "classic-cli/tests/conformance",
-        repo_root
-        / "classic-cli/tests/conformance/classic_cxx_version_values_conformance.h",
         # The generic YAML rules and logical-key cache (#239), then
         # YamlOperations and the path/mtime YAML-file cache (#240), moved out
         # of classic-settings-core, which then retired (#257); every family
@@ -65,8 +55,6 @@ def _cxx_source_paths(repo_root: Path, family: str) -> tuple[Path, ...]:
             / "classic-cli/tests/conformance"
             / ("classic_cxx_" + name + "_conformance.h")
             for name in (
-                "aux_operations",
-                "performance",
                 "xse_folder",
                 "installation_paths",
                 "shared_identity",
@@ -124,12 +112,6 @@ def _cxx_source_paths(repo_root: Path, family: str) -> tuple[Path, ...]:
         )
     else:
         paths += (
-            repo_root
-            / "classic-cli/tests/conformance/classic_cxx_semantic_conformance.h",
-            repo_root
-            / "classic-cli/tests/conformance/classic_cxx_database_operations_conformance.h",
-            repo_root
-            / "classic-cli/tests/conformance/classic_cxx_version_registry_conformance.h",
             repo_root / "cpp-bindings/classic-cpp-bridge/src",
             repo_root / "business-logic/classic-scanlog-core/src",
             repo_root / "business-logic/classic-database-core/src",

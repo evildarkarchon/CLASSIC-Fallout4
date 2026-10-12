@@ -18,12 +18,12 @@ Each shared Rust crate and its corresponding C++ bridge module:
 | --- | --- |
 | `classic-shared-core` | [`runtime.rs`](../../cpp-bindings/classic-cpp-bridge/src/runtime.rs) |
 | `classic-registry-core` | [`registry.rs`](../../cpp-bindings/classic-cpp-bridge/src/registry.rs) |
-| `classic-shared-core` `performance_core` (historical note: formerly reached through the `classic-perf-core` seconds facade, retired in #256 with no forwarding shim) | [`perf.rs`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) |
+| `classic-shared-core` `performance_core` (historical note: formerly reached through the `classic-perf-core` seconds facade, retired in #256 with no forwarding shim) | None (the `perf` bridge module had no production caller and was removed in #307) |
 | `classic-message-core` | [`message.rs`](../../cpp-bindings/classic-cpp-bridge/src/message.rs) |
 | `classic-shared-core` `yaml` (historical note: formerly reached through the `classic-settings-core` re-export facade, which had absorbed `classic-yaml-core` in v9.1.0 Phase 1 and was retired in #257 with no forwarding shim; the generic YAML cache, loader, `YamlOperations`, and validator rows name `classic-shared-core`, and the `YamlFile` rows name `classic-config-core`) | [`settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs) |
 | `classic-user-settings-core` | [`settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs) |
-| `classic-version-registry-core` | [`version_registry.rs`](../../cpp-bindings/classic-cpp-bridge/src/version_registry.rs) |
-| `classic-shared-core` `version` and the `classic-version-registry-core` known-version queries (historical note: formerly reached through the `classic-version-core` facade, retired in #258 with no forwarding shim; its loose version and PE helper rows, including the Rust-only `@rust` proxy rows for the error/result types and the `pe_version` module, name `classic-shared-core`, and its known-version rows name `classic-version-registry-core`) | (via [`game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs), PE helper only, owned by `classic-shared-core`) |
+| `classic-version-registry-core` | No dedicated module (the `version_registry` bridge module had no production caller and was removed in #307); Fallout 4 executable and documents names resolve through [`path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs) |
+| `classic-shared-core` `version` and the `classic-version-registry-core` known-version queries (historical note: formerly reached through the `classic-version-core` facade, retired in #258 with no forwarding shim; its loose version and PE helper rows, including the Rust-only `@rust` proxy rows for the error/result types and the `pe_version` module, name `classic-shared-core`, and its known-version rows name `classic-version-registry-core`) | None (the PE helper left with the `game` bridge module, which had no production caller and was removed in #307) |
 | `classic-web-core` | [`web.rs`](../../cpp-bindings/classic-cpp-bridge/src/web.rs) |
 | `classic-update-core` | [`update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) |
 | `classic-config-core` (historical note: absorbed the former `classic-crashgen-settings-core` owner in v9.1.0 Phase 2; rule model now at `classic_config_core::crashgen_rules::*`) | [`config.rs`](../../cpp-bindings/classic-cpp-bridge/src/config.rs) |
@@ -31,13 +31,13 @@ Each shared Rust crate and its corresponding C++ bridge module:
 | `classic-xse-core` | [`xse.rs`](../../cpp-bindings/classic-cpp-bridge/src/xse.rs) |
 | `classic-file-io-core` (note: Crash Log collection and Targeted input resolution rows in these adapters name `classic-scanlog-core` since #254, and game-target backup and game-file operation rows name `classic-resource-core` since #250, with row IDs kept) | [`files.rs`](../../cpp-bindings/classic-cpp-bridge/src/files.rs) |
 | `classic-resource-core` | No dedicated module; game-target backup and game-file operations through [`files.rs`](../../cpp-bindings/classic-cpp-bridge/src/files.rs) |
-| `classic-database-core` | [`database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) |
+| `classic-database-core` | None (the `database` bridge module had no production caller and was removed in #307; Crash Log Scan Runs receive FormID database paths through [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs)) |
 | `classic-scangame-core` | [`scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs) |
 | `classic-scanlog-core` | [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) |
 
 **Historical Phase 3 note (v9.1.0):** the retired constants crate, Python wrapper crate, and binding-side `constants` modules no longer exist as parity owners. `Fallout4Version` and `NULL_VERSION` now belong to `classic-version-registry-core`, `YamlFile` belongs to `classic-config-core` (as `YamlSource`, since issue #246) while the settings constants once reached through `classic-settings-core` live in `classic_shared_core::yaml` (that facade retired in #257), and `GameId` belongs to `classic-shared-core` with matching C++ `shared.rs`, Node `shared.rs`, and `classic_shared` adapter module exposure.
 
-`classic-database-core` also exposes the strict owned `FormIdValueLookup` facade through the C++ bridge. It uses an opaque handle plus owned in-memory reply records and typed outcomes/errors for disabled, missing, found, malformed-result, and operational-failure states. SQLite and shared-pool work run through the existing shared runtime; no callback or binding-owned runtime is part of the contract.
+`classic-database-core`'s strict owned `FormIdValueLookup` facade is Rust-only: its C++ projection left with the `database` bridge module (#307), because no CLI or GUI production code called it.
 
 **Semantic analyzer contract:** `CrashgenSettingsAnalyzer`,
 `CrashSuspectAnalyzer`, `ModGuidanceAnalyzer`, `PluginEvidenceAnalyzer`,

@@ -18,31 +18,6 @@
       }
     },
     {
-      "familyId": "database-operations",
-      "cxx": {
-        "capabilityIds": [
-          "database-operations.pool"
-        ]
-      }
-    },
-    {
-      "familyId": "fallout4-identity",
-      "cxx": {
-        "capabilityIds": [
-          "fallout4-identity.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "fallout4-paths",
-      "cxx": {
-        "capabilityIds": [
-          "fallout4-paths.config-exe",
-          "fallout4-paths.observe"
-        ]
-      }
-    },
-    {
       "familyId": "file-backups",
       "cxx": {
         "capabilityIds": [
@@ -56,14 +31,6 @@
       "cxx": {
         "capabilityIds": [
           "file-operations.write-text"
-        ]
-      }
-    },
-    {
-      "familyId": "formid-lookup",
-      "cxx": {
-        "capabilityIds": [
-          "formid-lookup.lookup"
         ]
       }
     },
@@ -84,26 +51,10 @@
       }
     },
     {
-      "familyId": "game-version-parse",
-      "cxx": {
-        "capabilityIds": [
-          "game-version-parse.observe"
-        ]
-      }
-    },
-    {
       "familyId": "installation-paths",
       "cxx": {
         "capabilityIds": [
           "installation-paths.locate"
-        ]
-      }
-    },
-    {
-      "familyId": "performance",
-      "cxx": {
-        "capabilityIds": [
-          "performance.metrics"
         ]
       }
     },
@@ -131,25 +82,6 @@
           "user-settings.geometry",
           "user-settings.open",
           "user-settings.update"
-        ]
-      }
-    },
-    {
-      "familyId": "version-pe",
-      "cxx": {
-        "capabilityIds": [
-          "version-pe.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "version-registry",
-      "cxx": {
-        "capabilityIds": [
-          "version-registry.crashgen",
-          "version-registry.enumerate",
-          "version-registry.query",
-          "version-registry.xse"
         ]
       }
     },

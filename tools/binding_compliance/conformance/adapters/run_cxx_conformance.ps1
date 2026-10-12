@@ -14,7 +14,7 @@ param(
     [string]$Compiler = "msvc",
     [switch]$TestOnly,
     [Parameter(Mandatory)]
-    [ValidateSet("game-version-parse", "fallout4-identity", "fallout4-paths", "version-pe", "performance", "xse-folder", "installation-paths", "game-identity", "crash-log-scan-launch", "user-settings", "formid-lookup", "config-operations", "file-backups", "game-setup-intake", "file-operations", "database-operations", "version-registry", "update-rejection", "report-discovery")]
+    [ValidateSet("xse-folder", "installation-paths", "game-identity", "crash-log-scan-launch", "user-settings", "config-operations", "file-backups", "game-setup-intake", "file-operations", "update-rejection", "report-discovery")]
     [string]$Family,
     [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
 )

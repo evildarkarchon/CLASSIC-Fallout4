@@ -5,15 +5,10 @@
 
 #include "classic_cxx_bridge/config.h"
 #include "classic_cxx_bridge/files.h"
-#include "classic_cxx_bridge/path.h"
-#include "classic_cxx_bridge/database.h"
-#include "classic_cxx_bridge/version_registry.h"
-#include "classic_cxx_bridge/game.h"
 #include "classic_cxx_bridge/scangame.h"
 #include "classic_cxx_bridge/scanner.h"
 #include "classic_cxx_bridge/settings.h"
 #include "classic_cxx_bridge/xse.h"
-#include "classic_cxx_bridge/perf.h"
 #include "classic_cxx_bridge/update.h"
 #include "classic_cxx_bridge/shared.h"
 
@@ -441,17 +436,11 @@ std::vector<std::uint8_t> autoscan_file_bytes(const fs::path& path) {
     return bytes;
 }
 
-#include "classic_cxx_semantic_conformance.h"
-#include "classic_cxx_aux_operations_conformance.h"
-#include "classic_cxx_version_values_conformance.h"
 #include "classic_cxx_update_rejection_conformance.h"
 #include "classic_cxx_interface_helpers_conformance.h"
-#include "classic_cxx_performance_conformance.h"
 #include "classic_cxx_shared_identity_conformance.h"
 #include "classic_cxx_config_operations_conformance.h"
 #include "classic_cxx_file_backups_conformance.h"
-#include "classic_cxx_database_operations_conformance.h"
-#include "classic_cxx_version_registry_conformance.h"
 #include "classic_cxx_xse_folder_conformance.h"
 #include "classic_cxx_file_operations_conformance.h"
 #include "classic_cxx_installation_paths_conformance.h"
@@ -474,20 +463,14 @@ json scenario_receipt(const json& plan, const json& scenario) {
         return json{{"id", scenario.at("id")},
                     {"executionStatus", "completed"},
                     {"capabilityIds", scenario.at("capabilityIds")},
-                    {"observation", is_semantic_family(plan.at("familyId")) ? execute_semantic_scenario(plan, scenario)
-                                    : plan.at("familyId") == "game-setup-intake" ? execute_game_setup_intake_scenario(plan, scenario)
+                    {"observation", plan.at("familyId") == "game-setup-intake" ? execute_game_setup_intake_scenario(plan, scenario)
                                     : plan.at("familyId") == "file-backups" ? execute_file_backups_scenario(plan, scenario)
                                     : plan.at("familyId") == "config-operations" ? execute_config_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "file-operations" ? execute_file_operations(plan, scenario)
-                                    : plan.at("familyId") == "database-operations" ? execute_database_operations_scenario(plan, scenario)
-                                    : plan.at("familyId") == "version-registry" ? execute_version_registry_scenario(plan, scenario)
-                                    : (plan.at("familyId") == "game-version-parse" || plan.at("familyId") == "fallout4-identity" || plan.at("familyId") == "fallout4-paths") ? execute_version_values_scenario(plan, scenario)
-                                      : plan.at("familyId") == "version-pe" ? execute_aux_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "installation-paths" ? execute_installation_paths_scenario(plan, scenario)
                                     : plan.at("familyId") == "xse-folder" ? execute_xse_folder_scenario(plan, scenario)
                                     : plan.at("familyId") == "report-discovery" ? execute_interface_helpers_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-rejection" ? execute_update_rejection_scenario(plan, scenario)
-                                    : plan.at("familyId") == "performance" ? execute_performance_scenario(plan, scenario)
                                     : plan.at("familyId") == "game-identity" ? execute_shared_identity_scenario(plan, scenario)
                                     : plan.at("familyId") == "crash-log-scan-launch"
                                         ? execute_crash_log_scan_launch_scenario(plan, scenario)
@@ -512,12 +495,8 @@ void validate_plan(const json& plan) {
          plan.at("familyId") != "game-setup-intake" &&
          plan.at("familyId") != "file-backups" &&
          plan.at("familyId") != "config-operations" && plan.at("familyId") != "file-operations" &&
-           plan.at("familyId") != "version-pe" && plan.at("familyId") != "game-version-parse" && plan.at("familyId") != "fallout4-identity" && plan.at("familyId") != "fallout4-paths" &&
            plan.at("familyId") != "report-discovery" && plan.at("familyId") != "update-rejection" && plan.at("familyId") != "xse-folder" && plan.at("familyId") != "installation-paths" &&
-         plan.at("familyId") != "performance" &&
-         plan.at("familyId") != "game-identity" &&
-         plan.at("familyId") != "database-operations" && plan.at("familyId") != "version-registry" &&
-         !is_semantic_family(plan.at("familyId")))) {
+         plan.at("familyId") != "game-identity")) {
         throw RunnerError("unsupported CXX conformance run plan");
     }
     const json& participant = plan.at("participant");
