@@ -1,8 +1,8 @@
 [workspace]
 members = [
     # Foundation
-    # The first two are workspace-internal: no binding surface, absent from the
-    # parity matrix. `classic-shared-core` is not — it is tracked by the CXX parity gate.
+    # The first two are workspace-internal: no binding surface. `classic-shared-core`
+    # is not — the CXX bridge exposes it.
     "foundation/classic-operation-context",
     "foundation/classic-vocabulary",
     "foundation/classic-shared-core",

@@ -8,7 +8,7 @@ This file supplements `AGENTS.md`. Keep always-on architecture rules there; keep
 | --- | --- | --- |
 | Rust-only crates | `cargo fmt`, `cargo clippy`, focused `cargo test` | Affected `docs/api/` pages for public contracts |
 | `classic-cli/` or `classic-gui/` | PowerShell wrappers in `Native C++ Wrappers` | Packaging/install output only when requested; CLI integration fixtures may require submodules |
-| `cpp-bindings/classic-cpp-bridge/` or Rust APIs exposed through C++ | CXX parity gate, then CLI/GUI wrapper tests for changed consumers | `docs/implementation/cxx_api_parity/baseline/`; `docs/api/cxx-parity-gate.md` |
+| `cpp-bindings/classic-cpp-bridge/` or Rust APIs exposed through C++ | `cargo xtask cxx-bridge-gate`, then CLI/GUI wrapper tests for changed consumers | `docs/api/binding-parity-policy.md`; `tests/conformance/participants.json` when the change alters which conformance families CXX runs |
 | `CLASSIC Data/databases/` or schema-version behavior | `classic-config-core` schema-version test and YAML publish validator | `docs/api/yaml-update-delivery.md` for loader, manifest, or delivery contract changes |
 | `CLASSIC Data/app-notification.yaml` or notification publish tooling | Notification source validator, dry-run harness, publish-tool tests | `docs/api/app-update-notification-delivery.md` and affected update/path/error API docs |
 | Linux or cloud validation | Rust-only subsets and source-only gates first | Note any skipped Windows/MSVC-native checks explicitly |
@@ -94,20 +94,20 @@ Use the dedicated Scan Run, User Settings, and consumer launchers under
 `tools/binding_compliance/` for those packs. Missing or stale receipts fail the
 full profile; individual family jobs cannot certify the repository. Preserve
 sibling immutable plans when moving receipt artifacts. The checks CI runs as
-direct steps are listed in `docs/development/repository-gates.md`. The commands
-below remain focused source diagnostics and intentional baseline refresh tools;
-they do not grant runtime proof.
+direct steps are listed in `docs/development/repository-gates.md`, which also
+describes `tests/conformance/participants.json`, the central declaration of which
+families CXX runs. The command below is a focused source diagnostic; it does not
+grant runtime proof.
 
 ### CXX
 
 Use this when bridge source, `cpp-bindings/classic-cpp-bridge/build.rs`, or a Rust public API exposed through the bridge changes.
 
 ```powershell
-python tools/cxx_api_parity/check_parity_gate.py --repo-root .
-python tools/cxx_api_parity/check_parity_gate.py --repo-root . --update-baseline
+cargo xtask cxx-bridge-gate
 ```
 
-Only run `--update-baseline` for intentional source-backed drift. Commit the refreshed files under `docs/implementation/cxx_api_parity/baseline/`; leave `cpp-bindings/classic-cpp-bridge/parity-artifacts/` as local diagnostics. The gate is source-only. For changed consumers, add the relevant CLI or GUI wrapper test command from `Native C++ Wrappers`.
+The gate fails on any bridge export that no `classic-cli/src` or `classic-gui/src` production code calls; there is no baseline to refresh. It is source-only. Until T2 trims the bridge it still reports the known pre-trim orphans, and T2 wires it into CI. For changed consumers, add the relevant CLI or GUI wrapper test command from `Native C++ Wrappers`.
 
 ## Data Publish Workflows
 
@@ -154,5 +154,5 @@ Primary workflows:
 Platform constraints worth remembering:
 
 - `classic-cli/` and `classic-gui/` are Windows-focused native surfaces and require an MSVC-compatible toolchain.
-- The CXX parity gate, YAML publish validator, and app-notification validator are source-only and do not require MSVC.
+- The CXX bridge gate (`cargo xtask cxx-bridge-gate`), YAML publish validator, and app-notification validator are source-only and do not require MSVC.
 - Some Rust workspace paths pull Windows-oriented dependencies through archive/DirectX-related crates; on Linux or generic cloud runners, prefer focused Rust subsets plus source-only gates unless full portability is the point of the task.

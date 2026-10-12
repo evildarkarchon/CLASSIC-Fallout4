@@ -4,8 +4,8 @@
 //! surfaces. Before this crate existed, each of those surfaces wrote its own
 //! strings for the same underlying variant, and they had already drifted apart
 //! without anything detecting it: every copy was independently exhaustive, so
-//! every compiler was satisfied, and the binding parity gates compare symbol
-//! names and arity rather than values.
+//! every compiler was satisfied, and the binding parity gates of the time
+//! compared symbol names and arity rather than values.
 //!
 //! The fix is ownership, not a gate. The Rust core crate that defines a domain
 //! concept also owns what that concept is called, and every adapter projects

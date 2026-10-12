@@ -454,8 +454,8 @@ impl Publisher for SystemPublisher {
                 .map_err(|error| map_publication_error(&error))?;
 
         // Durability uncertainty is deliberately discarded rather than reported. Surfacing it
-        // would require new stable codes across the C++, Node, and Python bindings plus
-        // refreshed parity baselines. Follow-up: GitHub issue #153 ("Deepen Durable
+        // would require new stable codes across the C++ bridge and its frontends.
+        // Follow-up: GitHub issue #153 ("Deepen Durable
         // Publication"), under "Out of Scope" — "Surfacing durability uncertainty on User
         // Settings commit ... tracked separately".
         //

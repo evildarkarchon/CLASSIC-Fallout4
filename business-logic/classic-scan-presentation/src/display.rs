@@ -31,8 +31,9 @@ pub enum DisplaySeverity {
 /// render a path as a clickable link or emphasise a number without re-deriving the wording
 /// around it.
 ///
-/// The taxonomy is fixed at six kinds for its first version. Each addition touches three
-/// binding parity baselines, so growth must be a deliberate decision rather than incidental.
+/// The taxonomy is fixed at six kinds for its first version. Each addition touches the C++
+/// bridge DTO and every frontend renderer, so growth must be a deliberate decision rather
+/// than incidental.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DisplaySegment {
     /// Fixed core-owned prose. Never contains a placeholder.

@@ -158,7 +158,6 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 ```powershell
 # From repo root, with the tools-only environment (uv sync --project tools)
-uv run --project tools python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 uv run --project tools python tools/user_settings_ownership/check.py --repo-root .
 uv run --project tools python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
 uv run --project tools python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded

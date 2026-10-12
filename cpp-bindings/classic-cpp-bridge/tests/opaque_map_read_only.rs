@@ -12,8 +12,8 @@
 //!
 //! The CXX bridge gate only rejects exports with no production caller, so a
 //! frontend that started calling a new mutator would pass it; this test is the
-//! separate guard (ADR-0010, #297). It replaces the Python
-//! `cxx_opaque_map_reachability.py` proof and deliberately does not pin the
+//! separate guard (ADR-0010, #297). It replaced the retired Python
+//! opaque-map reachability proof and deliberately does not pin the
 //! accessor count: the size of the surface belongs to the bridge gate.
 
 use proc_macro2::{TokenStream, TokenTree};

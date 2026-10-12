@@ -52,7 +52,7 @@ const FALLBACK_ASSET_NAME: &str = "manifest.json";
 /// Scoped `pub(crate)` intentionally: the value is already carried to
 /// bindings via the `ManifestUnsupportedVersion { max_supported }` error
 /// payload, so there is no reason to widen the public API surface (which
-/// would require refreshing all three binding parity baselines).
+/// the C++ bridge would then have to carry).
 pub(crate) const MAX_NOTIFICATION_MANIFEST_MAJOR: u32 = 1;
 
 /// Synthetic cache marker written alongside `manifest-latest.json` when a

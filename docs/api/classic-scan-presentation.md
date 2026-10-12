@@ -11,8 +11,8 @@ records the decision and supersedes the ADR-0002 clause that assigned presentati
 ## Status: every frontend renders from it; both bindings carry it
 
 `classic-tui` is the first consumer and depends on this crate directly, with no binding seam in the
-way — which is why it went first: it proves the six-segment model before any DTO or parity baseline
-exists, at which point changing the taxonomy would cost three baseline regenerations.
+way — which is why it went first: it proved the six-segment model before any DTO existed, at
+which point changing the taxonomy would have cost a change on every binding surface.
 
 `classic-cli` is the second, and the first across a binding seam. It never holds a `RunResult`, so
 `classic-cpp-bridge` renders while the Rust value is live and carries the lines across as mirrored
@@ -20,11 +20,11 @@ data on the execution envelope and on every observed event. `cxx` cannot express
 Rust enum, so each segment crosses flattened as a kind tag plus a text, a path, and a count field.
 That flattening is documented under "Display Content on the envelope" in
 [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md), and the six kinds
-are now frozen by a committed parity baseline: adding one costs a baseline regeneration on each of
-the three binding surfaces.
+are now frozen by the bridge DTO: adding one costs a change to that DTO and to every frontend
+renderer.
 
 `classic-gui` is the third, and reuses the same bridge DTOs the CLI does — the Qt phase added no
-bridge surface, so no parity baseline moved. It renders each line into rich text: a severity becomes
+bridge surface. It renders each line into rich text: a severity becomes
 a colour, a `Count` emphasises its value beside Rust's noun, and a `Path` becomes an actionable
 `file:` anchor, which is the whole reason a path is typed as a path rather than as text. See
 [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
@@ -138,8 +138,8 @@ for itself. Taking the `Option` here makes it one rule rather than three.
 
 ### The segment taxonomy is closed
 
-Six kinds, fixed for this version. Each addition touches three binding parity baselines, so growth
-must be a deliberate decision rather than incidental. `Name` carries a domain entity that is not a
+Six kinds, fixed for this version. Each addition touches the C++ bridge DTO and every frontend
+renderer, so growth must be a deliberate decision rather than incidental. `Name` carries a domain entity that is not a
 filesystem path; launch diagnostics are its first emitter, naming games by their display names. It
 was declared before any render path used it so that kind did not have to be bolted on later.
 

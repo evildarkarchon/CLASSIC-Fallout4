@@ -283,7 +283,7 @@ Current behavior:
 
 ### `resolve_xse_folder_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> String`
 
-Forwards to `classic_scangame_core::resolve_xse_folder_for_scan()` (moved from `classic-xse-core` in #252; the C++ name and signature are unchanged). The CXX parity row maps it to `ownerModule: scangame`.
+Forwards to `classic_scangame_core::resolve_xse_folder_for_scan()` (moved from `classic-xse-core` in #252; the C++ name and signature are unchanged).
 
 Current behavior:
 
@@ -295,7 +295,7 @@ Current behavior:
 
 ### `resolve_xse_log_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> Result<String>`
 
-Forwards to `classic_scangame_core::resolve_xse_log_for_scan()` (#283). The CXX parity row maps it to `ownerModule: scangame`. It replaced the GUI's own `f4se.log`/`f4sevr.log` probe, so no frontend names XSE log files.
+Forwards to `classic_scangame_core::resolve_xse_log_for_scan()` (#283). It replaced the GUI's own `f4se.log`/`f4sevr.log` probe, so no frontend names XSE log files.
 
 Current behavior:
 

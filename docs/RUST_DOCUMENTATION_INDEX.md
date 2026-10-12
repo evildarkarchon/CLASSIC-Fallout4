@@ -56,7 +56,6 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`docs/api/classic-gui-scan-progress-consumer.md`](api/classic-gui-scan-progress-consumer.md) — how the active Qt frontend consumes batch scan progress into visible progress and status state
 - [`docs/api/classic-gui-scan-result-ordering.md`](api/classic-gui-scan-result-ordering.md) — how the active Qt frontend correlates completion-order batch results back to original rows with `input_index`
 - [`docs/api/binding-parity-overview.md`](api/binding-parity-overview.md) — current C++ bridge exposure for shared Rust crates
-- [`docs/api/binding-contract-refresh-note.md`](api/binding-contract-refresh-note.md) — when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
 - [`docs/api/classic-scanlog-core.md`](api/classic-scanlog-core.md) — crash-log parsing, orchestration, and report generation
 
 ---

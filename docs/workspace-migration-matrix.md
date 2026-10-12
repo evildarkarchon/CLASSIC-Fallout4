@@ -4,7 +4,7 @@ Use this page as the single source of truth for translating legacy `ClassicLib-r
 
 ## Quick Rules
 
-- Run Cargo, parity, and wrapper workflows from the repository root unless a row below says to change directories first.
+- Run Cargo, conformance, and wrapper workflows from the repository root unless a row below says to change directories first.
 - Use repo-root layer paths: `foundation/`, `business-logic/`, `cpp-bindings/classic-cpp-bridge/`, and `ui-applications/classic-tui/`.
 - The Python and Node binding trees, their commands, and their artifacts have no live translation: they were deleted when the bindings retired (ADR-0010, in [`docs/adr/`](adr/)), and an annotated `archive/` tag on the commit before that change preserves the last tree.
 - **D-07:** `ClassicLib-rs` may appear only inside clearly labeled migration or historical notes. Never use it as live workspace-root guidance.
@@ -17,7 +17,6 @@ Use this page as the single source of truth for translating legacy `ClassicLib-r
 | `cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml` | `cargo test --workspace` | Run from repo root. |
 | `cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check` | `cargo fmt --all -- --check` | Repo root is the only live workspace shell. |
 | `cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings` | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | No legacy manifest-path shim remains. |
-| `python tools/cxx_api_parity/check_parity_gate.py --repo-root ClassicLib-rs` | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` | The repo root is now the bridge parity gate root. |
 
 ## Path-Root Translation
 
@@ -33,9 +32,7 @@ Use this page as the single source of truth for translating legacy `ClassicLib-r
 
 | Legacy artifact/report location | Live artifact/report location | Owned by |
 | --- | --- | --- |
-| `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts/` | `cpp-bindings/classic-cpp-bridge/parity-artifacts/` | CXX parity outputs |
 | `ClassicLib-rs/target/criterion/baseline/` | `target/criterion/baseline/` | Criterion benchmark baselines |
-| `ClassicLib-rs/docs/implementation/cxx_api_parity/baseline/` | `docs/implementation/cxx_api_parity/baseline/` | Checked-in CXX parity contract and summaries |
 
 ## Historical-Note Rules
 
