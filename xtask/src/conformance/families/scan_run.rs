@@ -49,7 +49,8 @@ const RUN_OPTIONAL: [&str; 14] = [
 /// Scan-run members that list staged `{fixtureRef, path}` documents.
 const STAGED_LISTS: [&str; 2] = ["installationData", "logInputs"];
 
-/// Scan-run members that list contained relative paths.
+/// Scan-run members that list contained relative paths, as strings or as
+/// `{path}` objects.
 const PATH_LISTS: [&str; 3] = ["formidDatabasePaths", "forbiddenEffectPaths", "observedPaths"];
 
 /// The exact members of a Crash Log Scan Launch input.
@@ -85,8 +86,9 @@ fn run_plan(input: &Map<String, Value>) -> Result<(), String> {
             return Err(format!("{key} must be a boolean"));
         }
     }
-    if !input["maxConcurrent"].as_u64().is_some_and(|value| value > 0) {
-        return Err("maxConcurrent must be a positive integer".into());
+    // Zero stays allowed: the request-validation scenarios submit it on purpose.
+    if !input["maxConcurrent"].is_u64() {
+        return Err("maxConcurrent must be a non-negative integer".into());
     }
     for key in STAGED_LISTS {
         if let Some(value) = input.get(key) {
@@ -103,7 +105,10 @@ fn run_plan(input: &Map<String, Value>) -> Result<(), String> {
             let contained = value.as_array().is_some_and(|items| {
                 items
                     .iter()
-                    .all(|item| item.as_str().is_some_and(is_canonical_relative_path))
+                    .all(|item| {
+                        let path = if has_exact_keys(item, &["path"]) { &item["path"] } else { item };
+                        path.as_str().is_some_and(is_canonical_relative_path)
+                    })
             });
             if !contained {
                 return Err(format!("{key} must list canonical relative paths"));

@@ -6769,9 +6769,14 @@ dependencies = [
  "anyhow",
  "clap",
  "proc-macro2",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
  "syn 2.0.109",
  "tempfile",
  "walkdir",
+ "yaml-rust2",
 ]
 
 [[package]]

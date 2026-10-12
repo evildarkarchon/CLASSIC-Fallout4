@@ -60,8 +60,8 @@ const ALWAYS: &str = "always()";
 /// The compiler matrix of every native participant job.
 const COMPILERS: [&str; 2] = ["msvc", "clang-cl"];
 
-/// The Crash Log Scan Run contract preflight step, identified by its command.
-const SCAN_RUN_CONTRACT_MARKER: &str = "scan_run_contract.py --repo-root .";
+/// The Crash Log Scan Run contract preflight step's exact command.
+const SCAN_RUN_CONTRACT: &str = "cargo xtask scan-run-contract";
 /// The Rust receipt run the preflight must precede.
 const RUST_SCAN_RUN_LAUNCHER: &str = "run_scan_run_conformance.py --participant rust";
 
@@ -553,9 +553,9 @@ fn corrosion(workflow: &Workflow, findings: &mut Vec<Finding>) {
 /// ci-rust `test`: the Crash Log Scan Run contract preflight.
 fn scan_run_contract_preflight(workflow: &Workflow, findings: &mut Vec<Finding>) {
     let Some(job) = workflow.job("test", findings) else { return };
-    let preflight = job.find(|step| text(&step["run"]).is_some_and(|run| run.contains(SCAN_RUN_CONTRACT_MARKER)));
+    let preflight = job.find(|step| text(&step["run"]).map(str::trim_end) == Some(SCAN_RUN_CONTRACT));
     let [index] = preflight.as_slice() else {
-        findings.push(workflow.finding(&job.path, format!("job test must run the variant preflight ({SCAN_RUN_CONTRACT_MARKER}) exactly once")));
+        findings.push(workflow.finding(&job.path, format!("job test must run the variant preflight ({SCAN_RUN_CONTRACT}) exactly once")));
         return;
     };
     let step = &job.steps()[*index];

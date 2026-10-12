@@ -509,7 +509,7 @@ Deliverables:
 Exit gate:
 
 - The shared corpus drives all applicable adapters through input-only run plans.
-- Source ownership remains exclusively enforced by `tools/user_settings_ownership/check.py` or its retained analyzer wrapper.
+- Source ownership remains exclusively enforced by `cargo xtask user-settings-ownership`.
 - Registry rows for migrated User Settings capabilities can no longer grant coverage without executed receipts.
 
 ### Phase 4 — Existing fixture-backed domains
@@ -624,7 +624,7 @@ Tooling and source compliance:
 ```powershell
 uv sync --project tools
 uv run --project tools python -m pytest tools/binding_compliance/tests -q
-python tools/user_settings_ownership/check.py --repo-root .
+cargo xtask user-settings-ownership
 python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
 ```
 

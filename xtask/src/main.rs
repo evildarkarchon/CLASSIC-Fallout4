@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use xtask::{Outcome, RepoRoot, conformance, cxx_bridge_gate};
+use xtask::{Outcome, RepoRoot, conformance, cxx_bridge_gate, user_settings_ownership};
 
 /// CLASSIC repository tooling.
 ///
@@ -39,6 +39,32 @@ enum Command {
     /// namespace (for example `using namespace classic::<module>;`) fails as an
     /// unsupported reference form.
     CxxBridgeGate(cxx_bridge_gate::Args),
+    /// Check the Crash Log Scan Run contract manifest and the never-exposed
+    /// boundary, collecting every finding.
+    ///
+    /// Reads tests/fixtures/crash_log_scan_run/manifest.json and checks that its
+    /// contract variants match the Rust enums it names (parsed with syn), that
+    /// every variant has evidence in the variant policy whose scenario exists in
+    /// tests/conformance/packs/crash_log_scan_run/v1.json, that the reset and
+    /// failure fixtures are complete, and that no forbiddenExports symbol
+    /// appears in its source file.
+    ScanRunContract(xtask::scan_run_contract::Args),
+    /// Post-process Criterion benchmark output: tail percentiles and old
+    /// baseline cleanup.
+    Bench(xtask::bench::Args),
+    /// Fail when anything but classic-user-settings-core interprets User
+    /// Settings.
+    ///
+    /// Audits production .rs/.cpp/.h/.hpp files under foundation,
+    /// business-logic, cpp-bindings, classic-cli, classic-gui and
+    /// ui-applications (test, build and dependency directories and
+    /// *_tests.rs files are skipped; xtask/ is never audited). Fails on raw
+    /// `CLASSIC_Settings` keys outside the owner, on the retired
+    /// `ClassicConfig`/`PathConfig` models or a `Settings` variant on a
+    /// generic YAML enum, and on runtime reads of the `default_settings`
+    /// compatibility mirror outside its generator. Comments are ignored;
+    /// string literals are audited.
+    UserSettingsOwnership(user_settings_ownership::Args),
     /// Conformance engine: `check` validates every scenario pack,
     /// tests/conformance/participants.json, tests/conformance/consumer-obligations.json
     /// and the CI workflow policy, without running any participant.
@@ -49,6 +75,9 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = RepoRoot::discover(cli.repo_root).and_then(|root| match cli.command {
         Command::CxxBridgeGate(args) => cxx_bridge_gate::run(&root, args),
+        Command::ScanRunContract(args) => xtask::scan_run_contract::run(&root, args),
+        Command::Bench(args) => xtask::bench::run(&root, args),
+        Command::UserSettingsOwnership(args) => user_settings_ownership::run(&root, args),
         Command::Conformance(args) => conformance::run(&root, args),
     });
     match result {

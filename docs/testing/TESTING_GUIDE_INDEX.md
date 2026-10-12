@@ -56,8 +56,13 @@ The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](../adr/)). 
 
 ```powershell
 uv sync --project tools
-uv run --project tools python tools/user_settings_ownership/check.py --repo-root .
 uv run --project tools python tools/binding_compliance/scan_run_workflow_policy.py --repo-root .
+```
+
+Gates already ported to Rust run through `cargo xtask` and need no Python:
+
+```powershell
+cargo xtask user-settings-ownership
 ```
 
 See [Repository gates](../development/repository-gates.md) for where each check runs in CI.

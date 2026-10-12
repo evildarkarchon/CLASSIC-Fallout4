@@ -163,7 +163,7 @@ impl<'a> Sources<'a> {
             .or_insert_with(|| {
                 let text = std::fs::read_to_string(root.join(source))
                     .map_err(|error| format!("cannot read vocabulary source {source}: {error}"))?;
-                syn::parse_file(&text).map_err(|error| format!("cannot parse vocabulary source {source}: {error}"))
+                crate::rust_source::parse_file(source, &text).map_err(|error| format!("{error:#}"))
             })
             .as_ref()
             .map_err(Clone::clone)
@@ -204,15 +204,9 @@ impl<'a> Sources<'a> {
     /// The enum's variants and its `as_str` literal arms and fallback.
     fn declared(&mut self, source: &'static str, symbol: &str) -> Result<Declared, String> {
         let file = self.file(source)?;
-        let variants: Vec<String> = file
-            .items
-            .iter()
-            .find_map(|item| match item {
-                syn::Item::Enum(item) if item.ident == symbol && matches!(item.vis, syn::Visibility::Public(_)) => {
-                    Some(item.variants.iter().map(|variant| variant.ident.to_string()).collect())
-                }
-                _ => None,
-            })
+        let variants: Vec<String> = crate::rust_source::find_enum(file, symbol)
+            .filter(|item| matches!(item.vis, syn::Visibility::Public(_)))
+            .map(|item| item.variants.iter().map(|variant| variant.ident.to_string()).collect())
             .ok_or_else(|| format!("vocabulary source {source} declares no `pub enum {symbol}`"))?;
         let as_str = file
             .items
