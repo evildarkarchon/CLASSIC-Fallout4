@@ -212,6 +212,14 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
                     "variant preflight must run after earlier failures unless cancelled",
             ),
             (
+                    # The pin follows the xtask port (#312); the retired Python
+                    # command no longer satisfies it.
+                    ".github/workflows/ci-rust.yml",
+                    "run: cargo xtask scan-run-contract",
+                    "run: python tools/binding_compliance/scan_run_contract.py --repo-root .",
+                    "variant preflight must occur exactly once",
+            ),
+            (
                     ".github/workflows/ci-cpp.yml",
                     "      - uses: actions/checkout@v6\n        with:\n          submodules: recursive",
                     "      - uses: actions/checkout@v6\n        with:\n          submodules: recursive\n          ref: classic-next",

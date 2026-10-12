@@ -803,9 +803,10 @@ semantic analyzer surfaces and negative absence checks for those retired names.
 
 Cross-interface behavior is pinned by
 [`tests/fixtures/crash_log_scan_run/manifest.json`](../../tests/fixtures/crash_log_scan_run/manifest.json).
-The binding compliance suite checks the inventory against Rust and requires
-each variant to map to a required executable scenario fact or a named retained
-analyzer. Blocking semantic and consumer receipts prove executable coverage;
+`cargo xtask scan-run-contract` checks the inventory against the Rust enums and
+requires each variant to map, in its variant evidence policy
+(`xtask/src/scan_run_contract/variant_policy.rs`), to a scenario of the
+crash-log-scan-run conformance pack or to a named retained label. Blocking semantic and consumer receipts prove executable coverage;
 copied adapter acknowledgements and positive source markers are retired.
 Negative checks retain the absence of contracted execution exports from
 source.
@@ -861,6 +862,6 @@ for log in result.logs {
 ```
 
 When a public contract type or variant changes, update the applicable CXX
-projection, this page, and the binding compliance manifest in the same change. Update the source-derived variant evidence policy and affected
+projection, this page, and the Scan Run contract manifest in the same change. Update the variant evidence policy (`xtask/src/scan_run_contract/variant_policy.rs`) and affected
 executable pack expectations or retained analyzer dispositions as applicable;
 do not restore per-adapter acknowledgement or marker lists.

@@ -855,7 +855,7 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
 
     try:
         rust_job = _job_block(sources[".github/workflows/ci-rust.yml"], "test")
-        variant_marker = "scan_run_contract.py --repo-root ."
+        variant_marker = "cargo xtask scan-run-contract"
         variant_preflight = _step_block(
             rust_job,
             variant_marker,

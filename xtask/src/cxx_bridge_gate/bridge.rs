@@ -67,10 +67,7 @@ pub(super) struct Bridge {
 /// Fails when the file is not valid Rust or a bridge attribute has no
 /// `namespace = "..."` argument.
 pub(super) fn parse_bridges(display_path: &str, source: &str) -> Result<Vec<Bridge>> {
-    let file = syn::parse_file(source).map_err(|error| {
-        let line = error.span().start().line;
-        anyhow::anyhow!("{display_path}:{line}: cannot parse Rust source: {error}")
-    })?;
+    let file = crate::rust_source::parse_file(display_path, source)?;
     let mut bridges = Vec::new();
     collect(&file.items, display_path, &mut bridges)?;
     Ok(bridges)
