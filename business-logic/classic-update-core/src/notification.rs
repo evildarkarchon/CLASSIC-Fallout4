@@ -208,8 +208,9 @@ pub async fn fetch_app_notification_manifest(
 
 /// Build the canonical GitHub Pages URL for the app-notification
 /// manifest, using the `GithubClient`'s configured owner and repo.
-/// Exposed publicly so the CXX/Node/Python binding layers can reuse the
-/// exact URL-building logic rather than duplicating it.
+/// Originally exposed publicly so the CXX/Node/Python binding layers could
+/// reuse the exact URL-building logic rather than duplicating it; since
+/// ADR-0010 no binding calls it.
 pub fn build_app_notification_pages_url(client: &GithubClient) -> String {
     build_pages_url(client)
 }

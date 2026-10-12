@@ -31,8 +31,9 @@ fn resolve_application_dir(current_exe: Option<&Path>) -> Option<PathBuf> {
 /// an override behaves like a fresh process rather than inheriting the
 /// default scope's value.
 fn application_dir_in(registry: &RegistryScope) -> Option<PathBuf> {
-    // Binding layers auto-register APP_DIR so cache paths resolve relative to
-    // the launched application rather than the language runtime executable.
+    // An APP_DIR override (which the retired Python and Node binding layers
+    // auto-registered) makes cache paths resolve relative to the launched
+    // application rather than the language runtime executable.
     registry.get_application_dir().or_else(|| {
         std::env::current_exe()
             .ok()

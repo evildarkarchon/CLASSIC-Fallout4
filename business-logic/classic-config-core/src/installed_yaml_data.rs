@@ -40,8 +40,9 @@ impl Vocabulary for InstalledYamlDataRole {
     const VARIANTS: &'static [Self] = &[Self::Main, Self::Game];
 
     /// These tokens are frozen. They are the exact strings the Python and Node
-    /// surfaces already publish from two separate hand-written tables, so
-    /// respelling one here breaks every consumer of both at once. Note that they
+    /// surfaces published (until ADR-0010 retired both) from two separate
+    /// hand-written tables, so respelling one here would have broken every
+    /// consumer of both at once. Note that they
     /// are *not* what this type's [`std::fmt::Display`] has ever rendered: that
     /// form is the Display Label below, and the two disagree on `Main`.
     fn as_str(self) -> &'static str {
@@ -678,8 +679,8 @@ impl LocalIgnoreResetResult {
 /// This is the workspace's single stage vocabulary — [`durable_publication::PublicationStage`] —
 /// under the name this crate publishes for it. The five variants were always spelled identically
 /// to the shared ones, terminal `Publish` included, so nothing but the name was ever this crate's
-/// own: `Create`, `Write`, `Flush`, `Sync`, and `Publish` reach the bindings byte for byte as
-/// before, and the CXX bridge's frozen FFI enum and the Node binding's mirror are unchanged.
+/// own: `Create`, `Write`, `Flush`, `Sync`, and `Publish` reach the CXX bridge byte for byte as
+/// before, and its frozen FFI enum (and the since-retired Node binding's mirror) stayed unchanged.
 ///
 /// Contrast `classic-user-settings-core`, whose terminal stage is named `Replace` and whose
 /// published `commit_replace_failed` code therefore cannot be an alias of the shared vocabulary.
@@ -1578,9 +1579,8 @@ where
                     path: Some(ignore_path.clone()),
                     kind: InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
                     // Same diagnostic kind for both provenances, distinguished by message. The kind
-                    // vocabulary is mirrored by the CXX FFI enum, the Node string union, and the
-                    // Python tokens, so a new variant would be a four-surface contract change to
-                    // report a difference no frontend branches on. The message carries the fact a
+                    // vocabulary is mirrored by the CXX FFI enum, so a new variant would be a
+                    // bridge contract change to report a difference no frontend branches on. The message carries the fact a
                     // reader actually needs: which file the canonical copy came from.
                     message: if seeded_from_legacy {
                         format!(

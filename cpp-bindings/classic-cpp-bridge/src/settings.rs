@@ -1132,8 +1132,9 @@ fn user_settings_diagnostic_dto(
 // gone rather than delegating.
 
 // The revision token pair is owned by `classic-user-settings-core`
-// (`Revision::token` / `Revision::from_token`) so the CXX, Node, and Python
-// surfaces cannot drift apart. This bridge projects it without exposing the
+// (`Revision::token` / `Revision::from_token`) so no binding surface keeps its
+// own copy (originally so the CXX, Node, and Python surfaces could not drift
+// apart). This bridge projects it without exposing the
 // Rust-only enum layout through CXX.
 
 // ── Construction ────────────────────────────────────────────────────

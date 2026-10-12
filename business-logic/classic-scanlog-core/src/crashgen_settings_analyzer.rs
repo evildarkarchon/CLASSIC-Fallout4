@@ -106,8 +106,9 @@ impl CrashgenSettingsAnalyzer {
 
     /// Constructs an analyzer from carrier-neutral parser output and rejects diagnostics.
     ///
-    /// Binding adapters use this constructor after converting their local input
-    /// carrier through `classic_config_core::parse_crashgen_expectations`. This
+    /// Binding adapters used this constructor (none do since ADR-0010) after
+    /// converting their local input carrier through
+    /// `classic_config_core::parse_crashgen_expectations`. This
     /// keeps strict analyzer-construction policy and its error text in Rust core
     /// while the general configuration parser remains intentionally tolerant.
     pub fn from_parsed_configuration(

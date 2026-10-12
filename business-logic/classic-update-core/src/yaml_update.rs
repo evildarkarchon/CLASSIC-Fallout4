@@ -1378,8 +1378,9 @@ async fn check_yaml_update_with_cache_dir(
 
 /// Resolve the native bundled-YAML directory beside the running executable.
 ///
-/// Binding hosts such as Python and Node must pass an explicit directory because
-/// their executable belongs to the interpreter rather than the CLASSIC install.
+/// Binding hosts such as the retired Python and Node bindings must pass an
+/// explicit directory because their executable belongs to the interpreter
+/// rather than the CLASSIC install.
 /// Resolution failure returns `None` instead of falling back to the process
 /// working directory.
 fn resolve_bundled_yaml_dir() -> Option<PathBuf> {

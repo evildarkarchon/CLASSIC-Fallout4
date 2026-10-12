@@ -2,8 +2,9 @@
 //!
 //! `classic_file_io_core` owns the SHA-256 file-hash cache and its hit/miss
 //! statistics. Every cache store is reachable through an opaque
-//! [`FileHashScope`] handle so a binding adapter (the merged Python
-//! extension) can give each former extension facade (`classic_file_io` and
+//! [`FileHashScope`] handle so a binding adapter (originally the merged Python
+//! extension, retired with ADR-0010) can give each former extension facade
+//! (`classic_file_io` and
 //! `classic_scangame`) its own cache, while the unscoped [`FileHasher`]
 //! functions keep using one process default scope.
 //!
