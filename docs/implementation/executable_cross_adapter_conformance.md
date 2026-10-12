@@ -666,7 +666,7 @@ Do not update current API pages to claim executable coverage before it is blocki
 
 - `docs/development/repository-gates.md` — the conformance-only `full` verdict and the interim direct gates (the binding compliance suite page retired with the Python and Node bindings).
 - `docs/api/binding-parity-overview.md` — capability/scenario coverage and participant roles.
-- `docs/api/cxx-bridge-policy.md` — the consumer-driven bridge rule (it replaced `binding-parity-policy.md` in T2, #310); conformance never keeps a bridge export alive.
+- `docs/api/cxx-bridge-policy.md` — the consumer-driven bridge rule; conformance never keeps a bridge export alive.
 - Affected domain API pages — scenario-owned behavior and any contract-shaping observation changes.
 - CI and contributor command references — only after the corresponding profile is blocking.
 
