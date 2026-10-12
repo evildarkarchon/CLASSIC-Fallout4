@@ -342,13 +342,14 @@ def test_loader_rejects_a_catalog_outside_the_repository(tmp_path: Path) -> None
 def test_repository_catalog_enrols_only_tracked_cxx_families() -> None:
     """The tracked catalog loads and enrols CXX in its trimmed families.
 
-    T1 snapshotted 56 families; the #308 config/scangame trim made seven Rust-only.
+    T1 snapshotted 56 families; the #308 config/scangame trim made seven
+    Rust-only and the #307 removal of five bridge modules made eight more.
     """
 
     catalog = load_participants(REPO_ROOT)
 
     assert catalog.has_trusted_provenance
-    assert len(catalog.family_ids) == 49
+    assert len(catalog.family_ids) == 41
     assert all(
         set(catalog.enrolments(family_id)) == {"cxx"}
         for family_id in catalog.family_ids

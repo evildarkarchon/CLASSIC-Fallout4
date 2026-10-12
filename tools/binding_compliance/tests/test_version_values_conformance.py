@@ -39,9 +39,9 @@ def test_null_version_query_has_positive_and_negative_executable_inputs():
     [
         (family, participant)
         for family, participants in {
-        "game-version-parse": ("cxx",),
-        "fallout4-identity": ("cxx",),
-        "fallout4-paths": ("cxx",),
+        "game-version-parse": ("rust",),
+        "fallout4-identity": ("rust",),
+        "fallout4-paths": ("rust",),
     }.items()
         for participant in participants
     ],

@@ -6,16 +6,12 @@
 #include "classic_cxx_bridge/config.h"
 #include "classic_cxx_bridge/files.h"
 #include "classic_cxx_bridge/path.h"
-#include "classic_cxx_bridge/database.h"
-#include "classic_cxx_bridge/version_registry.h"
-#include "classic_cxx_bridge/game.h"
 #include "classic_cxx_bridge/scangame.h"
 #include "classic_cxx_bridge/scanner.h"
 #include "classic_cxx_bridge/settings.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/web.h"
 #include "classic_cxx_bridge/xse.h"
-#include "classic_cxx_bridge/perf.h"
 #include "classic_cxx_bridge/update.h"
 #include "classic_cxx_bridge/shared.h"
 #include "classic_cxx_bridge/runtime.h"
@@ -298,6 +294,37 @@ private:
     fs::path previous_directory_;
     std::map<std::string, std::optional<std::string>> previous_environment_;
 };
+
+/// Restore process cwd before the temporary registry directory is destroyed.
+class VersionRegistryWorkingDirectory final {
+public:
+    /// Change cwd only within the dedicated serial family participant process.
+    explicit VersionRegistryWorkingDirectory(const fs::path& root) : previous_(fs::current_path()) {
+        fs::current_path(root);
+    }
+    /// Avoid throwing during stack unwinding; failure terminates this isolated runner.
+    ~VersionRegistryWorkingDirectory() {
+        std::error_code error;
+        fs::current_path(previous_, error);
+        if (error) std::terminate();
+    }
+    VersionRegistryWorkingDirectory(const VersionRegistryWorkingDirectory&) = delete;
+    VersionRegistryWorkingDirectory& operator=(const VersionRegistryWorkingDirectory&) = delete;
+private:
+    fs::path previous_;
+};
+
+/// Forces the process-default Version Registry snapshot to load from the current directory.
+///
+/// The registry is a lazily initialised process singleton that reads `CLASSIC Main.yaml`
+/// relative to cwd on first access, so a family that seeds registry metadata must touch it
+/// while cwd is its owned root (see `VersionRegistryWorkingDirectory`). This goes through
+/// `resolve_fallout4_exe_name` because it is a production export that reads the default
+/// snapshot; the dedicated version-registry accessors had no production caller and were
+/// removed with their bridge module (#307), and conformance never keeps an export alive.
+void initialize_default_version_registry() {
+    (void)classic::path::resolve_fallout4_exe_name("");
+}
 
 /// Converts one generated bridge string into an owned standard string.
 std::string owned_string(const rust::String& value) {
@@ -1974,13 +2001,11 @@ json execute_scenario(const json& plan, const json& scenario) {
 
 #include "classic_cxx_semantic_conformance.h"
 #include "classic_cxx_aux_operations_conformance.h"
-#include "classic_cxx_version_values_conformance.h"
 #include "classic_cxx_message_logging_conformance.h"
 #include "classic_cxx_update_rejection_conformance.h"
 #include "classic_cxx_interface_helpers_conformance.h"
 #include "classic_cxx_registry_conformance.h"
 #include "classic_cxx_xse_operations_conformance.h"
-#include "classic_cxx_performance_conformance.h"
 #include "classic_cxx_update_decisions_conformance.h"
 #include "classic_cxx_update_services_conformance.h"
 #include "classic_cxx_shared_identity_conformance.h"
@@ -1989,8 +2014,6 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_config_operations_conformance.h"
 #include "classic_cxx_file_backups_conformance.h"
 #include "classic_cxx_path_backups_conformance.h"
-#include "classic_cxx_database_operations_conformance.h"
-#include "classic_cxx_version_registry_conformance.h"
 #include "classic_cxx_xse_folder_conformance.h"
 #include "classic_cxx_file_operations_conformance.h"
 #include "classic_cxx_installation_paths_conformance.h"
@@ -2021,8 +2044,6 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                     : plan.at("familyId") == "path-backups" ? execute_path_backups_scenario(plan, scenario)
                                     : plan.at("familyId") == "config-operations" ? execute_config_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "file-operations" ? execute_file_operations(plan, scenario)
-                                    : plan.at("familyId") == "database-operations" ? execute_database_operations_scenario(plan, scenario)
-                                    : plan.at("familyId") == "version-registry" ? execute_version_registry_scenario(plan, scenario)
                                     : plan.at("familyId") == "papyrus-monitor" ? execute_papyrus_monitor(plan, scenario)
                                     : plan.at("familyId") == "log-collection" ? execute_log_collection(plan, scenario)
                                     : plan.at("familyId") == "crash-pattern" ? execute_crash_pattern(plan, scenario)
@@ -2031,8 +2052,7 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                     : plan.at("familyId") == "path-operations" ? execute_path_operations_scenario(plan, scenario)
                                       : (plan.at("familyId") == "registry-game" || plan.at("familyId") == "registry-gui") ? execute_registry_accessor_scenario(plan, scenario)
                                       : plan.at("familyId") == "registry-operations" ? execute_registry_operations_scenario(plan, scenario)
-                                    : (plan.at("familyId") == "game-version-parse" || plan.at("familyId") == "fallout4-identity" || plan.at("familyId") == "fallout4-paths") ? execute_version_values_scenario(plan, scenario)
-                                      : (plan.at("familyId") == "web-operations" || plan.at("familyId") == "version-pe") ? execute_aux_operations_scenario(plan, scenario)
+                                      : plan.at("familyId") == "web-operations" ? execute_aux_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "installation-paths" ? execute_installation_paths_scenario(plan, scenario)
                                     : plan.at("familyId") == "yaml-file-values" ? execute_yaml_file_values_scenario(plan, scenario)
                                     : plan.at("familyId") == "xse-folder" ? execute_xse_folder_scenario(plan, scenario)
@@ -2040,7 +2060,6 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                     : (plan.at("familyId") == "markdown-rendering" || plan.at("familyId") == "report-discovery") ? execute_interface_helpers_scenario(plan, scenario)
                                     : plan.at("familyId") == "message-logging" ? execute_message_logging_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-rejection" ? execute_update_rejection_scenario(plan, scenario)
-                                    : plan.at("familyId") == "performance" ? execute_performance_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-services" ? execute_update_services_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-decisions" ? execute_update_decisions_scenario(plan, scenario)
                                     : (plan.at("familyId") == "game-identity" || plan.at("familyId") == "runtime-access") ? execute_shared_identity_scenario(plan, scenario)
@@ -2072,15 +2091,13 @@ void validate_plan(const json& plan) {
          plan.at("familyId") != "file-backups" &&
          plan.at("familyId") != "config-operations" && plan.at("familyId") != "file-operations" &&
          plan.at("familyId") != "path-operations" &&
-           plan.at("familyId") != "version-pe" && plan.at("familyId") != "game-version-parse" && plan.at("familyId") != "fallout4-identity" && plan.at("familyId") != "fallout4-paths" &&
            plan.at("familyId") != "registry-game" && plan.at("familyId") != "registry-gui" &&
            plan.at("familyId") != "markdown-rendering" && plan.at("familyId") != "report-discovery" && plan.at("familyId") != "yaml-file-values" && plan.at("familyId") != "update-rejection" && plan.at("familyId") != "message-logging" && plan.at("familyId") != "registry-operations" && plan.at("familyId") != "web-operations" && plan.at("familyId") != "xse-operations" && plan.at("familyId") != "xse-folder" && plan.at("familyId") != "installation-paths" &&
-         plan.at("familyId") != "performance" && plan.at("familyId") != "update-decisions" && plan.at("familyId") != "update-services" &&
+         plan.at("familyId") != "update-decisions" && plan.at("familyId") != "update-services" &&
          plan.at("familyId") != "game-identity" && plan.at("familyId") != "runtime-access" &&
          plan.at("familyId") != "settings-load" &&
          plan.at("familyId") != "settings-yaml" &&
          plan.at("familyId") != "settings-validation" &&
-         plan.at("familyId") != "database-operations" && plan.at("familyId") != "version-registry" &&
          plan.at("familyId") != "papyrus-monitor" &&
          plan.at("familyId") != "log-collection" &&
          plan.at("familyId") != "crash-pattern" &&

@@ -63,31 +63,6 @@
       }
     },
     {
-      "familyId": "database-operations",
-      "cxx": {
-        "capabilityIds": [
-          "database-operations.pool"
-        ]
-      }
-    },
-    {
-      "familyId": "fallout4-identity",
-      "cxx": {
-        "capabilityIds": [
-          "fallout4-identity.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "fallout4-paths",
-      "cxx": {
-        "capabilityIds": [
-          "fallout4-paths.config-exe",
-          "fallout4-paths.observe"
-        ]
-      }
-    },
-    {
       "familyId": "file-backups",
       "cxx": {
         "capabilityIds": [
@@ -116,14 +91,6 @@
       }
     },
     {
-      "familyId": "formid-lookup",
-      "cxx": {
-        "capabilityIds": [
-          "formid-lookup.lookup"
-        ]
-      }
-    },
-    {
       "familyId": "game-identity",
       "cxx": {
         "capabilityIds": [
@@ -137,14 +104,6 @@
       "cxx": {
         "capabilityIds": [
           "game-setup-intake.run"
-        ]
-      }
-    },
-    {
-      "familyId": "game-version-parse",
-      "cxx": {
-        "capabilityIds": [
-          "game-version-parse.observe"
         ]
       }
     },
@@ -231,14 +190,6 @@
         "capabilityIds": [
           "path-operations.exists",
           "path-operations.validate"
-        ]
-      }
-    },
-    {
-      "familyId": "performance",
-      "cxx": {
-        "capabilityIds": [
-          "performance.metrics"
         ]
       }
     },
@@ -357,25 +308,6 @@
           "user-settings.migrate",
           "user-settings.open",
           "user-settings.update"
-        ]
-      }
-    },
-    {
-      "familyId": "version-pe",
-      "cxx": {
-        "capabilityIds": [
-          "version-pe.observe"
-        ]
-      }
-    },
-    {
-      "familyId": "version-registry",
-      "cxx": {
-        "capabilityIds": [
-          "version-registry.crashgen",
-          "version-registry.enumerate",
-          "version-registry.query",
-          "version-registry.xse"
         ]
       }
     },

@@ -29,7 +29,7 @@ json execute_xse_folder_scenario(const json& plan, const json& scenario) {
     {
         // The registry singleton must initialize before cwd leaves the owned root.
         VersionRegistryWorkingDirectory cwd(root);
-        (void)classic::version_registry::version_registry_get_all_count();
+        initialize_default_version_registry();
     }
     auto folder = owned_string(classic::xse::resolve_xse_folder_for_scan(root.string(), game,
         fixture.at("selectedVersion").get<std::string>(), fixture.at("configuredDocs").get<std::string>()));
@@ -82,7 +82,7 @@ json execute_xse_log_scenario(const json& plan, const json& scenario) {
     }
     // The registry singleton must initialize, and relative folders must resolve, inside the owned root.
     VersionRegistryWorkingDirectory cwd(root);
-    (void)classic::version_registry::version_registry_get_all_count();
+    initialize_default_version_registry();
     try {
         auto log = owned_string(classic::xse::resolve_xse_log_for_scan(root.string(), game,
             fixture.at("selectedVersion").get<std::string>(), fixture.at("configuredDocs").get<std::string>()));

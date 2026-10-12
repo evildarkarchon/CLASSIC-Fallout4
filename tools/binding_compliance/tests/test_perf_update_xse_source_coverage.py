@@ -21,11 +21,13 @@ ROOT = Path(__file__).resolve().parents[3]
             ("xse_operations", XSE_OPERATIONS_COVERAGE_POLICY),
     ),
 )
-@pytest.mark.parametrize("participant", ("cxx",))
+@pytest.mark.parametrize("participant", ("rust", "cxx"))
 def test_owner_receipts_pass_and_facts_reject_future_alias(
         tmp_path, family, policy, participant
 ):
     """Complete receipts pass, and no fact silently speaks for a new method."""
+    if participant == "cxx" and family == "performance":
+        pytest.skip("performance left CXX with the perf bridge module (#307)")
     path = Path(f"tests/conformance/packs/{family}/v1.json")
     pack, run, _receipt = prepare_receipt_case(
         ROOT, tmp_path, path, participant, runner_id="aux-source-boundary"

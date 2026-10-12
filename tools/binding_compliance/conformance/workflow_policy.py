@@ -277,6 +277,21 @@ _EXECUTION_POLICIES += tuple(
         family in {"registry-context", "registry-paths"}
         and policy.participant_id == "cxx"
     )
+    # Served only by bridge modules removed for having no production caller (#307).
+    and not (
+        family
+        in {
+            "database-operations",
+            "fallout4-identity",
+            "fallout4-paths",
+            "formid-lookup",
+            "game-version-parse",
+            "performance",
+            "version-pe",
+            "version-registry",
+        }
+        and policy.participant_id == "cxx"
+    )
     # Rust-only since the consumer-driven config/scangame bridge trim (#308):
     # no CLI or GUI production code calls the exports these families exercised.
     and not (

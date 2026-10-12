@@ -518,9 +518,8 @@ impl OperationStats {
 
 /// Seconds-based summary of one operation in the default store.
 ///
-/// This is the projection used by the `classic_perf` Python module and the
-/// CXX `classic::perf` bridge. Values are computed from whole-nanosecond
-/// rolling statistics.
+/// Values are computed from whole-nanosecond rolling statistics. (Its former
+/// Python and CXX `perf` projections are retired; see #304 and #307.)
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MetricsSummary {
     /// Number of timing samples recorded

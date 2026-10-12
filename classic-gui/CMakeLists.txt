@@ -86,24 +86,19 @@ corrosion_import_crate(
 corrosion_add_cxxbridge(classic_cxx_bridge
     CRATE classic_cpp_bridge
     FILES
-        types.rs
         runtime.rs
         registry.rs
         settings.rs
         shared.rs
         config.rs
         scanner.rs
-        database.rs
         files.rs
         scangame.rs
-        game.rs
         xse.rs
-        version_registry.rs
         path.rs
         web.rs
         update.rs
         message.rs
-        perf.rs
         markdown.rs
 )
 

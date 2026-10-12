@@ -21,7 +21,6 @@
 //! # Modules
 //!
 //! ## Foundation (Wave 1)
-//! - [`types`] - Shared collection wrappers (StringMap, StringVecMap)
 //! - [`runtime`] - Tokio runtime management
 //! - [`registry`] - Global key-value store
 //! - [`settings`] - YAML operations, settings cache, and validators
@@ -29,14 +28,10 @@
 //!
 //! ## Scanning (Wave 2)
 //! - [`scanner`] - Crash log analysis (primary feature)
-//! - [`database`] - FormID database
 //!
 //! ## File I/O (Wave 3)
 //! - [`files`] - File operations, backups, log collection
 //! - [`scangame`] - Game Setup Intake
-//!
-//! ## Game Support (Wave 4)
-//! - [`game`] - Versions, XSE, paths
 //!
 //! ## Rendering (Wave 6)
 //! - [`markdown`] - Markdown-to-HTML conversion for report display
@@ -44,24 +39,17 @@
 //! ## Utilities (Wave 5)
 //! - [`update`] - GitHub update checking
 //! - [`message`] - Logging
-//! - [`perf`] - Performance monitoring
 
 #[cfg(windows)]
 pub mod config;
 #[cfg(windows)]
-pub mod database;
-#[cfg(windows)]
 pub mod files;
-#[cfg(windows)]
-pub mod game;
 #[cfg(windows)]
 pub mod markdown;
 #[cfg(windows)]
 pub mod message;
 #[cfg(windows)]
 pub mod path;
-#[cfg(windows)]
-pub mod perf;
 #[cfg(windows)]
 pub mod registry;
 #[cfg(windows)]
@@ -77,11 +65,7 @@ pub mod settings;
 #[cfg(windows)]
 pub mod shared;
 #[cfg(windows)]
-pub mod types;
-#[cfg(windows)]
 pub mod update;
-#[cfg(windows)]
-pub mod version_registry;
 #[cfg(windows)]
 pub mod web;
 #[cfg(windows)]

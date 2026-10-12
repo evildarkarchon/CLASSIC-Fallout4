@@ -1,13 +1,11 @@
 //! XSE bridge for CXX FFI (D-01, CXXS-09).
 //!
 //! Bridges `classic-xse-core` so C++ frontends can detect F4SE / SKSE / SFSE
-//! installations and resolve version strings without going through the
-//! string-based dispatch in `game.rs`.
+//! installations and resolve version strings.
 //!
-//! Per D-08, the existing string-form helpers (`detect_xse_version_string`,
-//! `is_xse_installed_check`) remain available here AND keep delegation shims
-//! in `game.rs` so existing C++ callers using `classic::game::*` continue
-//! to compile. New code should use `classic::xse::*`.
+//! Per D-08, the string-form helpers (`detect_xse_version_string`,
+//! `is_xse_installed_check`) remain available here. Their former delegation
+//! shims were removed with the retired `game` bridge module (#307).
 
 // XSE Folder resolution reads config-owned Game Local facts, so its Rust owner
 // is the composing scangame entry point rather than `classic-xse-core` (#252).
@@ -40,7 +38,7 @@ fn from_bridge_xse_type(t: ffi::XseType) -> CoreXseType {
 
 // Used by both the typed and string-form helpers.
 fn xse_type_from_str_internal(s: &str) -> Option<CoreXseType> {
-    // Match the existing game.rs::xse_type_from_str logic — case-insensitive
+    // Case-insensitive, matching the retired `game` bridge's string dispatch.
     match s.to_uppercase().as_str() {
         "F4SE" => Some(CoreXseType::F4SE),
         "F4SEVR" => Some(CoreXseType::F4SEVR),
@@ -175,7 +173,7 @@ fn resolve_xse_log_for_scan(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// String-form helpers (D-08 backward-compat, also called from game.rs shims)
+// String-form helpers (D-08 backward-compat)
 // ─────────────────────────────────────────────────────────────────────
 
 pub(crate) fn detect_xse_version_string_impl(exe_path: &str, xse_type_str: &str) -> String {

@@ -33,9 +33,7 @@ json execute_xse_operations_scenario(const json& plan, const json& scenario) {
     const auto version = owned_string(classic::xse::detect_xse_version(loader, kind));
     const bool installed = classic::xse::is_xse_installed(root_string, kind);
     if (version != owned_string(classic::xse::detect_xse_version_string(loader, variant))
-        || installed != classic::xse::is_xse_installed_check(root_string, variant)
-        || version != owned_string(classic::game::detect_xse_version_string(loader, variant))
-        || installed != classic::game::is_xse_installed_check(root_string, variant)) {
+        || installed != classic::xse::is_xse_installed_check(root_string, variant)) {
         throw RunnerError("typed and string-form XSE operations disagree");
     }
     const auto info = classic::xse::xse_get_info(root_string, kind);

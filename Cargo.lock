@@ -782,7 +782,6 @@ dependencies = [
  "cxx",
  "cxx-build",
  "futures",
- "indexmap",
  "log",
  "proc-macro2",
  "pulldown-cmark",

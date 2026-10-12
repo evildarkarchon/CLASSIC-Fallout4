@@ -44,24 +44,19 @@ corrosion_import_crate(
 corrosion_add_cxxbridge(classic_cxx_bridge
     CRATE classic_cpp_bridge
     FILES
-        types.rs
         runtime.rs
         registry.rs
         settings.rs
         shared.rs
         config.rs
         scanner.rs
-        database.rs
         files.rs
         path.rs
         scangame.rs
-        game.rs
         xse.rs
-        version_registry.rs
         web.rs
         update.rs
         message.rs
-        perf.rs
         markdown.rs
 )
 
@@ -286,7 +281,6 @@ if(BUILD_TESTING AND Catch2_FOUND)
         tests/test_scanner.cpp
         tests/test_user_settings_action.cpp
         tests/test_scan_run_launch.cpp
-        tests/test_perf_timing_contract.cpp
         tests/test_installation_root.cpp
         src/yaml_update.cpp
         src/app_update.cpp
