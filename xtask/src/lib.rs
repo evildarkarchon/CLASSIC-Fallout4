@@ -19,6 +19,7 @@
 
 use std::fmt;
 
+pub mod bench;
 pub mod cxx_bridge_gate;
 mod repo;
 
