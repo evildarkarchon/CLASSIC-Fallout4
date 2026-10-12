@@ -6847,6 +6847,7 @@ dependencies = [
  "classic-shared-core",
  "classic-update-core",
  "proc-macro2",
+ "regex",
  "serde",
  "serde_json",
  "sha2 0.11.0",

@@ -130,7 +130,27 @@ All benchmarks support two modes controlled by the `BENCH_MODE` environment vari
 .\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode thorough -Filter "db_|scanlog_formid_resolution" -SaveBaseline -BaselineName "db-baseline-main"
 ```
 
-Baseline location: `target/criterion/{baseline-name}/`
+Baseline location: Criterion saves a copy per benchmark, at
+`target/criterion/{benchmark-id}/{baseline-name}/`.
+
+### Post-processing Criterion Output
+
+```powershell
+# Preview deleting all but the 10 newest auto-named baselines (baseline-YYYY-MM-DD-HHMMSS)
+cargo xtask bench cleanup
+
+# Delete them, keeping only the 5 newest
+cargo xtask bench cleanup --keep 5 --execute
+
+# Write p50/p95/p99 per benchmark to target/criterion/percentiles.json
+cargo xtask bench percentiles
+```
+
+`cleanup` never touches custom baseline names such as `db-baseline-main`.
+`percentiles` reads each benchmark's `new/raw.csv`, which Criterion writes only
+when the benchmarking crate enables Criterion's `csv_output` feature (no
+workspace crate does by default). Add that feature to the crate's `criterion`
+dev-dependency and rerun `cargo bench` first.
 
 ## Step 3: Implement Optimization
 
@@ -220,6 +240,8 @@ Pull requests automatically run benchmarks and compare against the `main` baseli
 | Thorough run | `.\scripts\bench\run_benchmarks.ps1 -Mode thorough` |
 | Save baseline | `.\scripts\bench\run_benchmarks.ps1 -SaveBaseline -BaselineName "name"` |
 | Compare | `.\scripts\bench\compare_baselines.ps1 -Baseline "name"` |
+| Clean up old auto-named baselines | `cargo xtask bench cleanup --execute` |
+| Tail percentiles (needs `csv_output`) | `cargo xtask bench percentiles` |
 | List benchmarks | `.\scripts\bench\run_benchmarks.ps1 -List` |
 | DB baseline suite | `.\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Filter "db_|scanlog_formid_resolution"` |
 | YAML suite | `.\scripts\bench\run_benchmarks.ps1 -Suite yaml` |

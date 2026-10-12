@@ -10,6 +10,8 @@
 
 use std::collections::HashMap;
 
+use crate::cpp_source::blank_comments_and_strings;
+
 /// A name that production code references inside a bridge namespace.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Reference {
@@ -34,147 +36,6 @@ pub(super) struct Unsupported {
 pub(super) struct FileScan {
     pub references: Vec<Reference>,
     pub unsupported: Vec<Unsupported>,
-}
-
-/// Raw-string prefixes (`R"delim(...)delim"`) recognised by the blanker.
-const RAW_PREFIXES: [&str; 5] = ["R", "u8R", "uR", "UR", "LR"];
-
-/// Replaces every comment and string/character literal in `source` with
-/// spaces, keeping newlines so later line numbers match the original file.
-///
-/// Handles `//` comments (including backslash-newline continuation), `/* */`
-/// comments, escaped `"..."`/`'...'` literals with encoding prefixes, raw
-/// strings `R"delim(...)delim"`, and C++14 digit separators (`1'000`), which
-/// must not be mistaken for character literals. An unterminated literal ends
-/// at the end of its line, so one malformed literal cannot blank the file.
-pub(super) fn blank_comments_and_strings(source: &str) -> String {
-    let chars: Vec<char> = source.chars().collect();
-    let mut out = String::with_capacity(source.len());
-    let at = |index: usize| chars.get(index).copied();
-    let blank =
-        |out: &mut String, ch: char| out.push(if ch == '\n' || ch == '\r' { ch } else { ' ' });
-    let mut i = 0;
-    while i < chars.len() {
-        let ch = chars[i];
-        if ch == '/' && at(i + 1) == Some('/') {
-            while i < chars.len() && chars[i] != '\n' {
-                // A trailing backslash splices the next physical line into the
-                // comment (translation phase 2), so keep blanking past it.
-                if chars[i] == '\\'
-                    && (at(i + 1) == Some('\n')
-                        || (at(i + 1) == Some('\r') && at(i + 2) == Some('\n')))
-                {
-                    out.push(' ');
-                    i += 1;
-                    while i < chars.len() && chars[i] != '\n' {
-                        blank(&mut out, chars[i]);
-                        i += 1;
-                    }
-                    if i < chars.len() {
-                        out.push('\n');
-                        i += 1;
-                    }
-                    continue;
-                }
-                blank(&mut out, chars[i]);
-                i += 1;
-            }
-            continue;
-        }
-        if ch == '/' && at(i + 1) == Some('*') {
-            out.push_str("  ");
-            i += 2;
-            while i < chars.len() && !(chars[i] == '*' && at(i + 1) == Some('/')) {
-                blank(&mut out, chars[i]);
-                i += 1;
-            }
-            if i < chars.len() {
-                out.push_str("  ");
-                i += 2;
-            }
-            continue;
-        }
-        if ch.is_alphabetic() || ch == '_' {
-            let start = i;
-            while i < chars.len() && (chars[i].is_alphanumeric() || chars[i] == '_') {
-                i += 1;
-            }
-            let word: String = chars[start..i].iter().collect();
-            if at(i) == Some('"') && RAW_PREFIXES.contains(&word.as_str()) {
-                for _ in start..i {
-                    out.push(' ');
-                }
-                i = blank_raw_string(&chars, i, &mut out);
-            } else {
-                out.push_str(&word);
-            }
-            continue;
-        }
-        if ch.is_ascii_digit() || (ch == '.' && at(i + 1).is_some_and(|next| next.is_ascii_digit()))
-        {
-            // A pp-number may contain `'` digit separators; consume it whole.
-            while i < chars.len() {
-                let c = chars[i];
-                let separator =
-                    c == '\'' && at(i + 1).is_some_and(|next| next.is_ascii_alphanumeric());
-                let exponent_sign = (c == '+' || c == '-')
-                    && i > 0
-                    && matches!(chars[i - 1], 'e' | 'E' | 'p' | 'P');
-                if c.is_ascii_alphanumeric() || c == '_' || c == '.' || separator || exponent_sign {
-                    out.push(c);
-                    i += 1;
-                } else {
-                    break;
-                }
-            }
-            continue;
-        }
-        if ch == '"' || ch == '\'' {
-            out.push(' ');
-            i += 1;
-            while i < chars.len() && chars[i] != ch && chars[i] != '\n' {
-                if chars[i] == '\\' && i + 1 < chars.len() && chars[i + 1] != '\n' {
-                    out.push(' ');
-                    i += 1;
-                }
-                blank(&mut out, chars[i]);
-                i += 1;
-            }
-            if i < chars.len() && chars[i] == ch {
-                out.push(' ');
-                i += 1;
-            }
-            continue;
-        }
-        out.push(ch);
-        i += 1;
-    }
-    out
-}
-
-/// Blanks a raw string whose opening `"` is at `quote`; returns the index just
-/// past it. An unterminated raw string blanks to the end of the input.
-fn blank_raw_string(chars: &[char], quote: usize, out: &mut String) -> usize {
-    let mut i = quote + 1;
-    let mut delimiter = String::new();
-    while i < chars.len() && chars[i] != '(' && chars[i] != '\n' {
-        delimiter.push(chars[i]);
-        i += 1;
-    }
-    let closing: Vec<char> = format!("){delimiter}\"").chars().collect();
-    let mut end = chars.len();
-    let mut j = i;
-    while j < chars.len() {
-        if chars[j..].starts_with(&closing) {
-            end = j + closing.len();
-            break;
-        }
-        j += 1;
-    }
-    for &c in &chars[quote..end] {
-        out.push(if c == '\n' || c == '\r' { c } else { ' ' });
-    }
-    end
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -568,7 +429,3 @@ fn classify(chain: &Chain, form: Form, consumed: usize, context: &Context) -> Cl
         None => Classified::Unsupported(format!("{text} (namespace named without a member)")),
     }
 }
-
-#[cfg(test)]
-#[path = "cpp_tests.rs"]
-mod tests;

@@ -246,7 +246,8 @@ if ($exitCode -eq 0) {
     Write-Host "[Done] Benchmarks completed successfully" -ForegroundColor Green
     if ($SaveBaseline) {
         Write-Host "[Baseline] Saved as: $BaselineName" -ForegroundColor Green
-        Write-Host "[Location] $rustDir/target/criterion/$BaselineName" -ForegroundColor DarkGray
+        # Criterion saves a baseline inside each benchmark's own directory, not as one top-level folder.
+        Write-Host "[Location] $rustDir/target/criterion/<benchmark-id>/$BaselineName" -ForegroundColor DarkGray
     }
 }
 else {

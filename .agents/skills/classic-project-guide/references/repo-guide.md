@@ -157,7 +157,7 @@ Primary workflows:
 | --- | --- |
 | `ci-binding-compliance.yml` | Blocking umbrella: same-revision reusable `rust` and `native` participant workflows, then the conformance-only full receipt verdict |
 | `ci-cpp.yml` | CXX bridge gate (orphan exports) plus CLI and GUI build/test pipeline |
-| `ci-rust.yml` | Rust format, lint (plus the interim User Settings ownership and workflow-policy gates), build, and test pipeline |
+| `ci-rust.yml` | Rust format, lint (plus the `cargo xtask user-settings-ownership` gate and the interim workflow-policy gate), build, and test pipeline |
 | `benchmarks.yml` | Benchmark and performance pipeline |
 | `publish-yaml-data.yml` | Maintainer YAML-data release workflow for `yaml-data-v*` tags |
 | `publish-app-notification.yml` | Maintainer app-update notification workflow for `app-notification-v*` tags |

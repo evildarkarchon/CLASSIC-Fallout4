@@ -80,6 +80,23 @@ impl RepoRoot {
         relative_dir: &str,
         extensions: &[&str],
     ) -> Result<Vec<PathBuf>> {
+        self.walk_files_pruned(relative_dir, extensions, |_| false)
+    }
+
+    /// Like [`walk_files`](Self::walk_files), but never descends into a
+    /// directory below `relative_dir` whose name `skip_dir` accepts. Pruning
+    /// keeps build and dependency trees out of the walk entirely instead of
+    /// filtering their files afterwards.
+    ///
+    /// # Errors
+    ///
+    /// As for [`walk_files`](Self::walk_files).
+    pub(crate) fn walk_files_pruned(
+        &self,
+        relative_dir: &str,
+        extensions: &[&str],
+        skip_dir: impl Fn(&str) -> bool,
+    ) -> Result<Vec<PathBuf>> {
         let dir = self.join(relative_dir);
         if !dir.is_dir() {
             bail!(
@@ -88,7 +105,12 @@ impl RepoRoot {
             );
         }
         let mut files = Vec::new();
-        for entry in WalkDir::new(&dir) {
+        let walk = WalkDir::new(&dir).into_iter().filter_entry(|entry| {
+            entry.depth() == 0
+                || !entry.file_type().is_dir()
+                || !skip_dir(&entry.file_name().to_string_lossy())
+        });
+        for entry in walk {
             let entry = entry.with_context(|| format!("walking {relative_dir}"))?;
             if !entry.file_type().is_file() {
                 continue;

@@ -19,9 +19,14 @@
 
 use std::fmt;
 
+pub mod bench;
+mod cpp_source;
 pub mod cxx_bridge_gate;
 mod publish;
 mod repo;
+mod rust_source;
+pub mod scan_run_contract;
+pub mod user_settings_ownership;
 pub mod yaml_data;
 
 pub use repo::RepoRoot;
