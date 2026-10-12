@@ -650,3 +650,180 @@ fn vocabulary_inputs_carry_exactly_the_source_tokens() {
         "lack complete, unique source tokens",
     );
 }
+
+/// A pack plus the repository it lives in, for driving the expectation
+/// compilers. Shared with the family modules' own sibling tests.
+pub(super) struct PackRepo {
+    /// Keeps a temporary repository alive (`None` for the real repository).
+    _dir: Option<tempfile::TempDir>,
+    pub root: RepoRoot,
+    pub pack: Pack,
+    pub fixtures: BTreeMap<String, Fixture>,
+}
+
+impl PackRepo {
+    /// A temporary repository holding `files` (repo-relative path, bytes) and
+    /// `pack`.
+    pub fn temp(files: &[(&str, &[u8])], pack: Value) -> Self {
+        let dir = tempfile::tempdir().expect("temp dir");
+        for (path, bytes) in files {
+            let full = dir.path().join(path);
+            std::fs::create_dir_all(full.parent().expect("parent")).expect("create dir");
+            std::fs::write(full, bytes).expect("write file");
+        }
+        let root = RepoRoot::new(dir.path().canonicalize().expect("canonical temp dir"));
+        Self::with(Some(dir), root, pack)
+    }
+
+    /// The real repository's pack in `tests/conformance/packs/<directory>`.
+    pub fn real(directory: &str) -> Self {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("xtask lives in the repository")
+            .canonicalize()
+            .expect("canonical repository root");
+        let root = RepoRoot::new(root);
+        let text = std::fs::read_to_string(
+            root.join(&format!("tests/conformance/packs/{directory}/v1.json")),
+        )
+        .expect("read real pack");
+        Self::with(
+            None,
+            root,
+            serde_json::from_str(&text).expect("real pack JSON"),
+        )
+    }
+
+    fn with(dir: Option<tempfile::TempDir>, root: RepoRoot, pack: Value) -> Self {
+        let pack: Pack = serde_json::from_value(pack).expect("pack deserializes");
+        let fixtures = pack
+            .fixtures
+            .keys()
+            .map(|reference| (reference.clone(), Fixture { json: None }))
+            .collect();
+        Self {
+            _dir: dir,
+            root,
+            pack,
+            fixtures,
+        }
+    }
+
+    /// The compiler context over this pack.
+    pub fn context(&self) -> InputContext<'_> {
+        InputContext {
+            root: &self.root,
+            pack: &self.pack,
+            fixtures: &self.fixtures,
+        }
+    }
+
+    /// The compiled expectations, or the compiler's issue message.
+    pub fn compile(&self) -> Result<Compiled, String> {
+        compile_expectations(&self.context()).map_err(|issue| {
+            assert_eq!(issue.rule, EXPECTATION_RULE);
+            issue.message
+        })
+    }
+
+    /// Mutates the pack through its JSON form (for seeding oracle
+    /// disagreements into a real pack).
+    pub fn edit(mut self, mutate: impl FnOnce(&mut Value)) -> Self {
+        let mut value = pack_json(&self.pack);
+        mutate(&mut value);
+        self.pack = serde_json::from_value(value).expect("edited pack deserializes");
+        self
+    }
+}
+
+/// `pack` as JSON (the schema structs only deserialize, so this rebuilds the
+/// members the compilers read).
+fn pack_json(pack: &Pack) -> Value {
+    let scenarios: Vec<Value> = pack
+        .scenarios
+        .iter()
+        .map(|scenario| {
+            let normalization = &scenario.normalization;
+            let mut rules = json!({
+                "rootRelativePaths": normalization.root_relative_paths,
+                "unorderedPaths": normalization.unordered_paths,
+                "excludedPaths": normalization.excluded_paths.iter().map(|exclusion| json!({
+                    "path": exclusion.path, "rationale": exclusion.rationale
+                })).collect::<Vec<_>>(),
+            });
+            if let Some(files) = &normalization.optional_empty_files {
+                rules["optionalEmptyFiles"] = files
+                    .iter()
+                    .map(|file| {
+                        json!({
+                            "path": file.path,
+                            "relativePath": file.relative_path,
+                            "rationale": file.rationale,
+                        })
+                    })
+                    .collect();
+            }
+            json!({
+                "id": scenario.id,
+                "action": scenario.action,
+                "capabilityIds": scenario.capability_ids,
+                "fixtureRefs": scenario.fixture_refs,
+                "input": scenario.input,
+                "expected": scenario.expected,
+                "normalization": rules,
+            })
+        })
+        .collect();
+    json!({
+        "schemaVersion": pack.schema_version,
+        "familyId": pack.family_id,
+        "familyVersion": pack.family_version,
+        "domainOwner": {"rustCrate": pack.domain_owner.rust_crate},
+        "fixtureRoot": pack.fixture_root,
+        "fixtures": pack.fixtures,
+        "capabilities": [],
+        "scenarios": scenarios,
+        "consumerObligations": []
+    })
+}
+
+#[test]
+fn families_without_a_compiler_keep_their_authored_expectations() {
+    let repo = PackRepo::real("performance");
+    let compiled = repo.compile().expect("identity compile");
+    assert!(compiled.oracles.is_empty());
+    let authored: Vec<_> = repo
+        .pack
+        .scenarios
+        .iter()
+        .map(|scenario| scenario.expected.clone())
+        .collect();
+    assert_eq!(compiled.expected, authored);
+}
+
+#[test]
+fn normalization_is_identity_for_families_and_stages_without_an_arm() {
+    let expected = json!({"a": 1}).as_object().cloned().unwrap();
+    let actual = json!({"a": 2}).as_object().cloned().unwrap();
+    for (family, action, stage) in [
+        ("performance", "performance.observe", Stage::BeforeDeclared),
+        ("performance", "performance.observe", Stage::AfterDeclared),
+        (
+            "autoscan-report",
+            "autoscan-report.execute",
+            Stage::AfterDeclared,
+        ),
+        (
+            "user-settings",
+            "user-settings.update",
+            Stage::BeforeDeclared,
+        ),
+        ("user-settings", "user-settings.open", Stage::AfterDeclared),
+    ] {
+        assert_eq!(
+            normalize_observation(family, action, stage, expected.clone(), actual.clone()),
+            Ok((expected.clone(), actual.clone())),
+            "{family} {action} {stage:?}"
+        );
+    }
+}
