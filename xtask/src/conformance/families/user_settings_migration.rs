@@ -461,10 +461,6 @@ fn migration(
 /// is not the exact inverse or does not round-trip, a revision token does not
 /// match the observed bytes, or published bytes differ from the approved
 /// proposal.
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "receipt validation (Engine A3) is the caller")
-)]
 pub(super) fn normalize(
     expected: &Map<String, Value>,
     actual: &Map<String, Value>,

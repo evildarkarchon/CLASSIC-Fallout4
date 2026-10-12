@@ -766,10 +766,6 @@ fn legacy_import(
 /// Fails (at `$.finalTree`) when a committed observation lacks exactly one
 /// raw settings document, its bytes are not lowercase hexadecimal YAML, or
 /// the reported revision does not match them.
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "receipt validation (Engine A3) is the caller")
-)]
 pub(super) fn normalize(
     expected: &Map<String, Value>,
     actual: &Map<String, Value>,

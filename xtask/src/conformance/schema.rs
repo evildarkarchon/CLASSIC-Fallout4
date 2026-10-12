@@ -8,8 +8,9 @@
 //! and relative paths.
 //!
 //! These structs replace the unenforced JSON Schema files that used to sit in
-//! `tests/conformance/schemas/`. Run plans, receipts, attempts and reports get
-//! their structs with the run and verdict commands.
+//! `tests/conformance/schemas/`. Run plans and receipts are read back through
+//! [`RunPlan`] and [`Receipt`]; the attempt and report documents are only
+//! ever written by xtask itself, so they have no reader struct.
 
 use std::collections::BTreeMap;
 
@@ -221,6 +222,165 @@ pub struct ConsumerObligation {
     pub scenario_ids: Vec<String>,
     /// The exact observation the consumer must report.
     pub expected: Map<String, Value>,
+}
+
+/// An input-only run plan, written by `conformance run` beside the reserved
+/// receipt path and handed to one participant invocation.
+///
+/// Exactly one of `scenarios` (semantic adapters) or `obligations`
+/// (consumers) is present, matching `participant.role`. A plan carries no
+/// `expected` member: participants never see the answer.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct RunPlan {
+    /// Always `1`.
+    pub schema_version: u64,
+    /// The pack's family.
+    pub family_id: String,
+    /// The pack's family version.
+    pub family_version: u64,
+    /// Framed digest of the compiled pack, its oracles and its fixtures.
+    pub expectation_digest: String,
+    /// Absolute, OS-native fixture root.
+    pub fixture_root: String,
+    /// Fixture alias to absolute, OS-native path.
+    pub fixtures: BTreeMap<String, String>,
+    /// Sorted repo-relative paths whose bytes form `sourceIdentity`.
+    pub source_paths: Vec<String>,
+    /// Who runs the plan.
+    pub participant: PlanParticipant,
+    /// This invocation's identity.
+    pub invocation: PlanInvocation,
+    /// Semantic-adapter payload: the applicable scenarios, input only.
+    #[serde(default)]
+    pub scenarios: Option<Vec<PlanScenario>>,
+    /// Consumer payload: the owned obligations.
+    #[serde(default)]
+    pub obligations: Option<Vec<PlanObligation>>,
+}
+
+/// The participant a plan or receipt belongs to.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct PlanParticipant {
+    /// `rust`, `cxx`, `cli`, `gui` or `tui`.
+    pub id: String,
+    /// `semantic-adapter` or `consumer`.
+    pub role: String,
+    /// The execution instance, e.g. `rust` or `windows-msvc`.
+    pub execution_instance_id: String,
+}
+
+/// One invocation's identity, echoed by its receipt.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct PlanInvocation {
+    /// UUID v4.
+    pub id: String,
+    /// `git:<HEAD>:sha256:<hex>` over the declared source paths.
+    pub source_identity: String,
+    /// Framed digest of the plan without this member.
+    pub run_plan_digest: String,
+}
+
+/// One scenario as a participant sees it: everything but `expected`.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct PlanScenario {
+    /// Scenario identity.
+    pub id: String,
+    /// The capability to execute.
+    pub action: String,
+    /// Capabilities the scenario touches.
+    pub capability_ids: Vec<String>,
+    /// Fixtures the scenario stages.
+    pub fixture_refs: Vec<String>,
+    /// Input-only parameters.
+    pub input: Map<String, Value>,
+    /// The declared comparison rules.
+    pub normalization: Normalization,
+}
+
+/// One consumer obligation as a consumer sees it.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct PlanObligation {
+    /// Obligation identity.
+    pub id: String,
+    /// Pack scenarios the obligation exercises.
+    pub scenario_ids: Vec<String>,
+}
+
+/// A participant's receipt: its observations for one run plan.
+///
+/// The envelope echoes the plan's identity. `scenarios` belong to semantic
+/// adapters and `obligations` to consumers. There is no `not_applicable`
+/// status and no `policyExceptionId`: a required execution either completes
+/// or fails.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct Receipt {
+    /// Positive; anything but `1` is a stale receipt.
+    pub schema_version: u64,
+    /// Echoed from the plan.
+    pub family_id: String,
+    /// Echoed from the plan.
+    pub family_version: u64,
+    /// Echoed from the plan.
+    pub expectation_digest: String,
+    /// Echoed from the plan.
+    pub invocation: PlanInvocation,
+    /// Echoed from the plan.
+    pub participant: PlanParticipant,
+    /// The runner that produced the receipt.
+    pub runner: Runner,
+    /// Semantic-adapter evidence.
+    #[serde(default)]
+    pub scenarios: Option<Vec<ReceiptItem>>,
+    /// Consumer evidence.
+    #[serde(default)]
+    pub obligations: Option<Vec<ReceiptItem>>,
+}
+
+/// The runner that wrote a receipt.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct Runner {
+    /// Stable runner identity.
+    pub id: String,
+    /// Positive runner version.
+    pub version: u64,
+    /// Stable platform identity, e.g. `windows`.
+    pub platform: String,
+    /// Stable toolchain identity, e.g. `rust`.
+    pub toolchain: String,
+}
+
+/// One scenario's or obligation's execution evidence.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct ReceiptItem {
+    /// Scenario or obligation identity.
+    pub id: String,
+    /// `completed` or `failed`.
+    pub execution_status: String,
+    /// Scenario evidence only: the plan's capability IDs, echoed.
+    #[serde(default)]
+    pub capability_ids: Option<Vec<String>>,
+    /// The observation (an object).
+    pub observation: Value,
+    /// `null` when completed; `{kind, message}` when failed.
+    pub failure: Option<ItemFailure>,
+}
+
+/// Why a participant could not complete one scenario or obligation.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct ItemFailure {
+    /// Stable failure identity.
+    pub kind: String,
+    /// Non-empty explanation.
+    pub message: String,
 }
 
 /// Whether `value` is a stable machine identity: lowercase ASCII words of

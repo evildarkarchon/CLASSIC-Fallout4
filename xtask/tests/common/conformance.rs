@@ -206,6 +206,106 @@ pub fn real_inputs() -> FixtureRepo {
     repo
 }
 
+/// Commits everything in `repo` (signing off: a throwaway repository), so
+/// `HEAD` names the revision run plans bind to.
+pub fn commit(repo: FixtureRepo) -> FixtureRepo {
+    for args in [
+        vec!["-c", "core.autocrlf=false", "add", "-A"],
+        vec![
+            "-c",
+            "user.name=xtask",
+            "-c",
+            "user.email=xtask@example.invalid",
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-q",
+            "--allow-empty",
+            "-m",
+            "fixture",
+        ],
+    ] {
+        let status = Command::new("git")
+            .args(&args)
+            .current_dir(repo.path())
+            .status()
+            .expect("git is on PATH");
+        assert!(status.success(), "git {args:?} failed");
+    }
+    repo
+}
+
+/// What a fake runner writes for each planned scenario.
+pub enum Evidence {
+    /// A completed observation.
+    Observed(Value),
+    /// A participant-reported failure.
+    Failed,
+}
+
+/// The receipt a participant writes for `plan`: the envelope echoed, and each
+/// planned scenario's evidence from `evidence(scenario)` (semantic plans) or
+/// each obligation's observation from `obligation(id)` (consumer plans).
+pub fn receipt_for(
+    plan: &Value,
+    evidence: impl Fn(&Value) -> Evidence,
+    obligation: impl Fn(&str) -> Value,
+) -> Value {
+    let mut receipt = json!({
+        "schemaVersion": plan["schemaVersion"],
+        "familyId": plan["familyId"],
+        "familyVersion": plan["familyVersion"],
+        "expectationDigest": plan["expectationDigest"],
+        "invocation": plan["invocation"],
+        "participant": plan["participant"],
+        "runner": {"id": "fake-runner", "version": 1, "platform": "test", "toolchain": "rust"},
+    });
+    if let Some(scenarios) = plan["scenarios"].as_array() {
+        receipt["scenarios"] = scenarios
+            .iter()
+            .map(|scenario| {
+                let (status, observation, failure) = match evidence(scenario) {
+                    Evidence::Observed(observation) => ("completed", observation, Value::Null),
+                    Evidence::Failed => (
+                        "failed",
+                        json!({}),
+                        json!({"kind": "fake-failure", "message": "the fake runner failed"}),
+                    ),
+                };
+                json!({
+                    "id": scenario["id"],
+                    "executionStatus": status,
+                    "capabilityIds": scenario["capabilityIds"],
+                    "observation": observation,
+                    "failure": failure,
+                })
+            })
+            .collect();
+    } else {
+        receipt["obligations"] = plan["obligations"]
+            .as_array()
+            .expect("a plan has scenarios or obligations")
+            .iter()
+            .map(|item| {
+                let id = item["id"].as_str().expect("obligation id");
+                json!({"id": id, "executionStatus": "completed", "observation": obligation(id), "failure": null})
+            })
+            .collect();
+    }
+    receipt
+}
+
+/// The plan and receipt paths a launch hands its participant.
+pub fn launch_paths(launch: &xtask::conformance::Launch) -> (PathBuf, PathBuf) {
+    (launch.run_plan.clone(), launch.receipt.clone())
+}
+
+/// Reads the plan of `launch`.
+pub fn read_plan(launch: &xtask::conformance::Launch) -> Value {
+    let (plan, _) = launch_paths(launch);
+    serde_json::from_slice(&fs::read(plan).expect("read the run plan")).expect("parse the run plan")
+}
+
 /// A repository holding only a copy of the real `.github/workflows`.
 pub fn real_workflows() -> FixtureRepo {
     let repo = FixtureRepo::empty();

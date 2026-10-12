@@ -79,10 +79,6 @@ fn set_bytes(report: &mut Map<String, Value>, data: &[u8]) {
 /// Fails when the observed root is not a clean absolute Windows or POSIX path
 /// (empty, holding line breaks, NUL, braces or `..`), or the compiled
 /// expectation lacks its reports.
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "receipt validation (Engine A3) is the caller")
-)]
 pub(super) fn expand(
     expected: &Map<String, Value>,
     actual: &Map<String, Value>,

@@ -21,7 +21,10 @@ use anyhow::Result;
 
 use super::json::Document;
 use super::pack::{LoadedPack, Packs};
-use super::schema::{ConsumerObligations, Participants, is_canonical_relative_path, is_stable_id};
+use super::plan::Role;
+use super::schema::{
+    Consumer, ConsumerObligations, Pack, Participants, is_canonical_relative_path, is_stable_id,
+};
 use super::{Issue, load_document};
 use crate::{Finding, RepoRoot};
 
@@ -31,7 +34,7 @@ pub(crate) const PARTICIPANTS: &str = "tests/conformance/participants.json";
 pub(crate) const CONSUMER_OBLIGATIONS: &str = "tests/conformance/consumer-obligations.json";
 
 /// The CXX participant's execution instances: one per compiler.
-const CXX_INSTANCES: [&str; 2] = ["windows-clang-cl", "windows-msvc"];
+pub(crate) const CXX_INSTANCES: [&str; 2] = ["windows-clang-cl", "windows-msvc"];
 /// The consumers the obligation catalog may register.
 const CONSUMERS: [&str; 3] = ["cli", "gui", "tui"];
 
@@ -69,6 +72,113 @@ pub(crate) struct Applicability {
     pub cxx_scenarios: usize,
     /// Registered consumer obligations.
     pub consumer_obligations: usize,
+    /// The semantic participant catalog, when it loaded.
+    pub participants: Option<Participants>,
+    /// The consumer obligation catalog, when it loaded.
+    pub consumers: Option<ConsumerObligations>,
+}
+
+/// One execution a family requires, and the evidence it must report.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Execution {
+    /// `rust`, `cxx`, `cli`, `gui` or `tui`.
+    pub participant: String,
+    /// The execution instance.
+    pub instance: String,
+    /// The participant's role.
+    pub role: Role,
+    /// The scenario IDs (semantic adapters, in pack order) or obligation IDs
+    /// (consumers, in catalog order) the execution must report.
+    pub evidence: Vec<String>,
+}
+
+impl Applicability {
+    /// Every execution `pack` requires: Rust over the whole pack, CXX on both
+    /// compilers over the scenarios whose action it enrols, and each
+    /// registered consumer instance over its obligations the pack declares.
+    pub fn executions(&self, pack: &Pack) -> Vec<Execution> {
+        let family = pack.family_id.as_str();
+        let all: Vec<String> = pack.scenarios.iter().map(|s| s.id.clone()).collect();
+        let mut executions = vec![Execution {
+            participant: "rust".into(),
+            instance: "rust".into(),
+            role: Role::SemanticAdapter,
+            evidence: all,
+        }];
+        let enrolled = self
+            .participants
+            .iter()
+            .flat_map(|catalog| &catalog.families)
+            .find(|entry| entry.family_id == family)
+            .and_then(|entry| entry.cxx.as_ref());
+        if let Some(enrolment) = enrolled {
+            let selected: Vec<String> = pack
+                .scenarios
+                .iter()
+                .filter(|scenario| enrolment.capability_ids.contains(&scenario.action))
+                .map(|scenario| scenario.id.clone())
+                .collect();
+            if !selected.is_empty() {
+                for instance in CXX_INSTANCES {
+                    executions.push(Execution {
+                        participant: "cxx".into(),
+                        instance: instance.into(),
+                        role: Role::SemanticAdapter,
+                        evidence: selected.clone(),
+                    });
+                }
+            }
+        }
+        for consumer in self.consumers_of(family) {
+            let owned = owned_obligations(pack, consumer);
+            if owned.is_empty() {
+                continue;
+            }
+            for instance in &consumer.execution_instance_ids {
+                executions.push(Execution {
+                    participant: consumer.id.clone(),
+                    instance: instance.clone(),
+                    role: Role::Consumer,
+                    evidence: owned.iter().map(|o| o.id.clone()).collect(),
+                });
+            }
+        }
+        executions
+    }
+
+    /// The consumers the catalog registers for `family`.
+    pub fn consumers_of(&self, family: &str) -> Vec<&Consumer> {
+        self.consumers
+            .iter()
+            .flat_map(|catalog| &catalog.families)
+            .filter(|entry| entry.family_id == family)
+            .flat_map(|entry| &entry.consumers)
+            .collect()
+    }
+
+    /// The registered consumer `participant` of `family`, if any.
+    pub fn consumer(&self, family: &str, participant: &str) -> Option<&Consumer> {
+        self.consumers_of(family)
+            .into_iter()
+            .find(|consumer| consumer.id == participant)
+    }
+}
+
+/// The obligations `consumer` owns that `pack` declares, in catalog order.
+pub(crate) fn owned_obligations<'a>(
+    pack: &Pack,
+    consumer: &'a Consumer,
+) -> Vec<&'a super::schema::ConsumerObligation> {
+    let declared: BTreeSet<&str> = pack
+        .consumer_obligations
+        .iter()
+        .map(|o| o.id.as_str())
+        .collect();
+    consumer
+        .obligations
+        .iter()
+        .filter(|obligation| declared.contains(obligation.id.as_str()))
+        .collect()
 }
 
 /// Loads both catalogs, validates them against `packs`, appends findings and
@@ -102,6 +212,7 @@ pub(crate) fn derive(
         Ok(catalog) => {
             let issues = participants(&catalog.value, &by_family, packs, &mut applicability);
             locate(findings, &catalog.file, &catalog.document, issues);
+            applicability.participants = Some(catalog.value);
         }
     }
 
@@ -119,6 +230,7 @@ pub(crate) fn derive(
                 &mut registered,
             );
             locate(findings, &catalog.file, &catalog.document, issues);
+            applicability.consumers = Some(catalog.value);
         }
     }
     // A pack obligation nobody registers would never run.

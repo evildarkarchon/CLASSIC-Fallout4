@@ -82,7 +82,11 @@ enum Command {
     AppNotification(xtask::app_notification::Args),
     /// Conformance engine: `check` validates every scenario pack,
     /// tests/conformance/participants.json, tests/conformance/consumer-obligations.json
-    /// and the CI workflow policy, without running any participant.
+    /// and the CI workflow policy, without running any participant; `run`
+    /// runs one participant over every family that requires it; `verdict`
+    /// decides repository completeness from run artifacts.
+    ///
+    /// `run` prints each family it starts and finishes to stderr.
     Conformance(conformance::Args),
 }
 
@@ -99,7 +103,9 @@ fn main() -> ExitCode {
         Command::AppNotification(args) => {
             xtask::app_notification::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
         }
-        Command::Conformance(args) => conformance::run(&root, args),
+        Command::Conformance(args) => {
+            conformance::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
+        }
     });
     match result {
         Ok(outcome) => render(outcome),
