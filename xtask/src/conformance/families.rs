@@ -201,10 +201,6 @@ pub(crate) fn expectation_issue(index: usize, message: impl Into<String>) -> Iss
 /// normalization (root-relative paths, optional empty files, exclusions,
 /// unordered arrays).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "receipt validation (Engine A3) is the caller")
-)]
 pub(crate) enum Stage {
     /// Before the declared normalization: expected-side expansions that need
     /// the raw observation (autoscan-report's FCX path tokens).
@@ -217,10 +213,6 @@ pub(crate) enum Stage {
 /// A receipt observation that cannot be normalized; reported as a
 /// `normalization_failure`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "receipt validation (Engine A3) is the caller")
-)]
 pub(crate) struct NormalizationError {
     /// Human-readable reason.
     pub message: String,
@@ -230,10 +222,6 @@ pub(crate) struct NormalizationError {
 
 impl NormalizationError {
     /// Builds an error at `path`.
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "receipt validation (Engine A3) is the caller")
-    )]
     pub fn new(message: impl Into<String>, path: &str) -> Self {
         Self {
             message: message.into(),
@@ -261,10 +249,6 @@ pub(crate) type Observation = Map<String, Value>;
 ///
 /// Returns a [`NormalizationError`] when the observation lacks the raw
 /// evidence the normalization authenticates, or the evidence disagrees.
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "receipt validation (Engine A3) is the caller")
-)]
 pub(crate) fn normalize_observation(
     family_id: &str,
     action: &str,

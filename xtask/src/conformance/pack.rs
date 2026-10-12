@@ -62,6 +62,8 @@ pub(crate) struct LoadedPack {
     pub document: Document,
     /// The typed pack.
     pub pack: Pack,
+    /// The compiled expectations, when the pack had no findings.
+    pub compiled: Option<families::Compiled>,
 }
 
 /// Every pack file, split into those that deserialized and those that did not.
@@ -123,7 +125,7 @@ pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<P
                 }
             }
             Ok(loaded) => {
-                let issues = validate(root, &loaded.value);
+                let (issues, compiled) = validate(root, &loaded.value);
                 findings.extend(
                     issues
                         .into_iter()
@@ -133,6 +135,7 @@ pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<P
                     file: loaded.file,
                     document: loaded.document,
                     pack: loaded.value,
+                    compiled,
                 });
             }
         }
@@ -158,8 +161,36 @@ pub(crate) fn load_all(root: &RepoRoot, findings: &mut Vec<Finding>) -> Result<P
     Ok(result)
 }
 
-/// Runs every semantic check on one deserialized pack.
-fn validate(root: &RepoRoot, pack: &Pack) -> Vec<Issue> {
+/// Loads and validates the single pack at the repo-relative `file`, for
+/// re-checking that a pack did not change while a participant ran.
+///
+/// # Errors
+///
+/// Fails when the pack cannot be read, or has findings (listed).
+pub(crate) fn load_one(root: &RepoRoot, file: &str) -> Result<LoadedPack> {
+    let loaded = match load_document::<Pack>(root, file, "pack-schema")? {
+        Ok(loaded) => loaded,
+        Err(finding) => anyhow::bail!("{finding}"),
+    };
+    let (issues, compiled) = validate(root, &loaded.value);
+    if !issues.is_empty() {
+        let listed: Vec<String> = issues
+            .into_iter()
+            .map(|issue| issue.locate(&loaded.file, &loaded.document).to_string())
+            .collect();
+        anyhow::bail!("{}", listed.join("\n"));
+    }
+    Ok(LoadedPack {
+        file: loaded.file,
+        document: loaded.document,
+        pack: loaded.value,
+        compiled,
+    })
+}
+
+/// Runs every semantic check on one deserialized pack; a pack with no
+/// findings also returns its compiled expectations.
+fn validate(root: &RepoRoot, pack: &Pack) -> (Vec<Issue>, Option<families::Compiled>) {
     let mut issues = identities(pack);
     let fixtures = fixtures(root, pack, &mut issues);
     normalization(pack, &mut issues);
@@ -173,12 +204,13 @@ fn validate(root: &RepoRoot, pack: &Pack) -> Vec<Issue> {
     // The expectation compiler reads fixtures and oracles the earlier steps
     // vouch for, so it runs only on an otherwise clean pack; on a broken one
     // its findings would only repeat theirs.
-    if issues.is_empty()
-        && let Err(issue) = families::compile_expectations(&context)
-    {
-        issues.push(issue);
+    if !issues.is_empty() {
+        return (issues, None);
     }
-    issues
+    match families::compile_expectations(&context) {
+        Ok(compiled) => (issues, Some(compiled)),
+        Err(issue) => (vec![issue], None),
+    }
 }
 
 /// Reports every element of `values` that occurs more than once.

@@ -99,6 +99,18 @@ python tools/binding_compliance/check_compliance.py --repo-root . --profile full
 `check_compliance.py` keeps only the `conformance` and `full` profiles until the
 Rust conformance engine replaces it (engine PR B).
 
+The Rust replacements already exist but no CI step calls them yet:
+`cargo xtask conformance run --participant <rust|cxx|cli|gui|tui>` (with
+`--compiler <msvc|clang-cl>` for cxx, cli and gui) runs every family that
+requires the participant, writes each invocation's plan, receipt, attempt and
+report under `--artifact-root` (default `target/conformance`), keeps going past
+failures and names every failed family at the end; `cargo xtask conformance
+verdict --receipts <dir>` decides repository completeness from those artifacts.
+The CXX, CLI and GUI runs call the build wrappers with `-Test -TestOnly`, so a
+wrapper build must exist first. `update-services` and `yaml-update-operations`
+run against an in-process controlled update service instead of
+`tools/binding_compliance/controlled_update_service.py`.
+
 Only `--profile full` with all family receipts can certify repository-wide
 conformance. Full aggregation fails on any missing family, and each family
 report requires every applicable participant and execution instance declared by
