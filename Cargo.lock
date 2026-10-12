@@ -6769,6 +6769,7 @@ dependencies = [
  "anyhow",
  "clap",
  "proc-macro2",
+ "regex",
  "syn 2.0.109",
  "tempfile",
  "walkdir",
