@@ -19,6 +19,7 @@
 
 use std::fmt;
 
+pub mod app_notification;
 pub mod bench;
 pub mod conformance;
 mod cpp_source;

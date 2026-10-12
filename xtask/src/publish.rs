@@ -1,6 +1,7 @@
-//! Helpers shared by the publish subcommands (`yaml-data`, and
-//! `app-notification` once it is ported).
+//! Helpers shared by the publish subcommands (`yaml-data` and
+//! `app-notification`).
 
+pub(crate) mod pages;
 pub(crate) mod probe;
 
 use std::time::{SystemTime, UNIX_EPOCH};

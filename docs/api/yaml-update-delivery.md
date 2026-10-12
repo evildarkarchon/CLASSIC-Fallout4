@@ -270,7 +270,7 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 | CXX bridge first-party helpers (`yaml_data_check_update`, `yaml_data_apply_update`, `yaml_data_rollback_update`) | [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) |
 | Typed CXX/Qt User Settings policy snapshot and atomic GUI edit seam | [`cpp-bindings/classic-cpp-bridge/src/settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs), [`classic-gui/src/core/guiusersettings.cpp`](../../classic-gui/src/core/guiusersettings.cpp) |
 | Publish workflow | [`.github/workflows/publish-yaml-data.yml`](../../.github/workflows/publish-yaml-data.yml) |
-| Publish tooling (`cargo xtask yaml-data`) | [`xtask/src/yaml_data.rs`](../../xtask/src/yaml_data.rs), [`xtask/src/publish/probe.rs`](../../xtask/src/publish/probe.rs) |
+| Publish tooling (`cargo xtask yaml-data`) | [`xtask/src/yaml_data.rs`](../../xtask/src/yaml_data.rs), [`xtask/src/publish/probe.rs`](../../xtask/src/publish/probe.rs), [`xtask/src/publish/pages.rs`](../../xtask/src/publish/pages.rs) (the Pages smoke test shared with `app-notification`) |
 | `client-schema-ranges.yaml` loader | [`business-logic/classic-config-core/src/client_schema_ranges.rs`](../../business-logic/classic-config-core/src/client_schema_ranges.rs) |
 | Drift guard | [`business-logic/classic-config-core/src/client_schemas_tests.rs`](../../business-logic/classic-config-core/src/client_schemas_tests.rs) |
 | Shippable metadata | [`CLASSIC Data/databases/client-schema-ranges.yaml`](../../CLASSIC%20Data/databases/client-schema-ranges.yaml) |

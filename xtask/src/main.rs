@@ -72,6 +72,14 @@ enum Command {
     /// the release and gh-pages steps. `validate` also runs in the
     /// `xtask-linux` CI job. The polling steps print each retry to stderr.
     YamlData(yaml_data::Args),
+    /// App-update notification (`app-notification-v*`) publish steps:
+    /// validate, manifest, verify-asset, smoke-pages, and a local dry-run.
+    ///
+    /// Run by .github/workflows/publish-app-notification.yml in that order
+    /// (without dry-run), around the release and gh-pages steps. `validate`
+    /// and `dry-run` also run in the `xtask-linux` CI job. Polling steps print
+    /// each retry, and dry-run each stage, to stderr.
+    AppNotification(xtask::app_notification::Args),
     /// Conformance engine: `check` validates every scenario pack,
     /// tests/conformance/participants.json, tests/conformance/consumer-obligations.json
     /// and the CI workflow policy, without running any participant.
@@ -87,6 +95,9 @@ fn main() -> ExitCode {
         Command::UserSettingsOwnership(args) => user_settings_ownership::run(&root, args),
         Command::YamlData(args) => {
             yaml_data::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
+        }
+        Command::AppNotification(args) => {
+            xtask::app_notification::run_with_progress(&root, args, &mut |line| eprintln!("{line}"))
         }
         Command::Conformance(args) => conformance::run(&root, args),
     });
