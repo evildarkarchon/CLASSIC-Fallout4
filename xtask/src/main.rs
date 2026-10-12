@@ -39,12 +39,16 @@ enum Command {
     /// namespace (for example `using namespace classic::<module>;`) fails as an
     /// unsupported reference form.
     CxxBridgeGate(cxx_bridge_gate::Args),
+    /// Post-process Criterion benchmark output: tail percentiles and old
+    /// baseline cleanup.
+    Bench(xtask::bench::Args),
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = RepoRoot::discover(cli.repo_root).and_then(|root| match cli.command {
         Command::CxxBridgeGate(args) => cxx_bridge_gate::run(&root, args),
+        Command::Bench(args) => xtask::bench::run(&root, args),
     });
     match result {
         Ok(outcome) => render(outcome),
