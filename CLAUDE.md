@@ -33,7 +33,7 @@ cargo xtask conformance check
 cargo xtask conformance run --participant rust
 ```
 
-No tool runs from the leftover tools-only uv project at `tools/pyproject.toml` any more; it goes with the last Python files. The repository gates that CI runs directly are listed in `docs/development/repository-gates.md`.
+The repository tracks no Python, so there is no Python environment to set up. The repository gates that CI runs directly are listed in `docs/development/repository-gates.md`.
 
 ## graphify
 

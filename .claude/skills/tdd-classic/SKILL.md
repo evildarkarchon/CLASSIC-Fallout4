@@ -253,12 +253,14 @@ its result across the seam.
 
 ### Never Modify Production YAML in Tests
 
-```python
-# FORBIDDEN
-yaml_settings(str, YAML.Settings, "key", "value")
+```rust
+// FORBIDDEN - edits the shipped YAML under `CLASSIC Data/`
+std::fs::write("CLASSIC Data/databases/CLASSIC Main.yaml", edited)?;
 
-# CORRECT - use test YAML or mocks
-yaml_settings(str, YAML.TEST, "key", "value")
+// CORRECT - write test YAML into a temp dir and point the code under test at it
+let dir = tempfile::tempdir()?;
+let yaml_path = dir.path().join("CLASSIC Main.yaml");
+std::fs::write(&yaml_path, test_yaml)?;
 ```
 
 ### Never Use `.expect()` in Async Bridge Code

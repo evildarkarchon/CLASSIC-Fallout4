@@ -129,7 +129,7 @@ install(TARGETS classic-cli RUNTIME DESTINATION .)
 
 # CLASSIC Data — runtime data files (databases, graphics, help, game versions).
 # Only the subdirectories the app actually uses are installed; dev-only files
-# (Python/Pascal scripts, zip archive, local config) at the top level are skipped.
+# (Pascal script, zip archive, local config) at the top level are skipped.
 set(CLASSIC_DATA_DIR "${CMAKE_SOURCE_DIR}/../CLASSIC Data")
 
 install(DIRECTORY "${CLASSIC_DATA_DIR}/databases/"
