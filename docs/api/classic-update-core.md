@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-update-core/`]
 Crate metadata:
 
 - Crate: `classic-update-core`
-- Description: `Pure Rust business logic for auto-update system (NO PyO3)`
+- Description: `Pure Rust business logic for auto-update system`
 
 This crate is CLASSIC's small async update-check layer for GitHub-hosted releases. It owns GitHub release DTOs, a reusable `GithubClient`, strict semver comparison for release tags, and the crate-specific `UpdateError` model.
 
@@ -101,12 +101,16 @@ First-party helpers for native/product callers:
 - `apply_yaml_data_update_with_decision_with(client, pages_url, config, approved)` - testable first-party apply with an explicit Pages endpoint
 - `rollback_yaml_data_update()` - first-party bulk rollback; returns one result per first-party shippable target so bridges can group rolled-back/no-previous/failure lists without duplicating the target list
 
-Lower-level compatibility helpers remain public for tests, unusual hosts, and Node/Python binding consumers:
+Lower-level compatibility helpers remain public for tests and unusual hosts:
 
 - `fetch_yaml_manifest(client, pages_url, tag_prefix, cache_dir)`
 - `check_yaml_update(client, pages_url, tag_prefix, current, config)`
 - `apply_yaml_update_with_decision(client, pages_url, tag_prefix, current, config, approved)`
 - `rollback_yaml_update(file_name)`
+
+Rust-only rule helper (not on the C++ bridge):
+
+- `validate_cache_file_name(name)` - the client's yaml-cache basename rule (no empty, `.`, `..`, separators, `:`, NUL, trailing space or dot, multi-component path, or reserved Windows device stem); `Err(UpdateError::ManifestInvalid)` on refusal. Public so the `cargo xtask yaml-data` publish tooling can pin its mirror of the rule to this one in an agreement test
 
 Contributor note:
 
@@ -362,7 +366,6 @@ In-repo runtime patterns:
 
 - the TUI spawns update checks with `classic_shared_core::get_runtime().spawn(...)` in [`ui-applications/classic-tui/src/app.rs:672`](../../ui-applications/classic-tui/src/app.rs#L672)
 - the C++ bridge blocks on `get_latest_release()` with the shared runtime in [`cpp-bindings/classic-cpp-bridge/src/update.rs:33`](../../cpp-bindings/classic-cpp-bridge/src/update.rs#L33)
-- the Node bindings clone the shared runtime handle and spawn async update work in [`node-bindings/classic-node/src/update.rs:220`](../../node-bindings/classic-node/src/update.rs#L220)
 
 Contributor note:
 
@@ -387,8 +390,6 @@ Related CLASSIC crates and consumers:
 - [`classic-shared-core`](classic-shared-core.md) - shared Tokio runtime policy used by callers of this crate
 - [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) - alternative version helpers with intentionally different, more lenient parsing rules
 - [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) - narrower frontend-oriented bridge over latest-release check + comparison
-- [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) - fuller binding layer preserving `GithubClient` and DTOs
-- [`python-bindings/classic-python-bindings/src/classic_update/github.rs`](../../python-bindings/classic-python-bindings/src/classic_update/github.rs) - Python wrapper over the same client model
 - [`ui-applications/classic-tui/src/app.rs`](../../ui-applications/classic-tui/src/app.rs) - direct in-repo UI consumer
 
 ---
@@ -447,9 +448,9 @@ If you extend this crate, update this document when you change:
 
 Hosts using GitHub-compatible mirrors or an explicit notification manifest can call
 `check_app_notification_configured(owner, repo, installed_version, config_json, cache_dir)`.
-Node exposes `checkAppNotificationConfigured` with the same five positional arguments;
-Python and CXX preserve the snake-case name. Return DTOs and typed failure conventions
-are identical to the default notification check. All parsing, validation, fallback,
+It is Rust API only: the CXX bridge does not export it, because no frontend calls it
+(#309). Return DTOs and typed failure conventions are identical to the default
+notification check. All parsing, validation, fallback,
 classification, and cache persistence remain in Rust.
 
 `config_json` is a JSON object with optional `github_api_base_url` (default

@@ -1,5 +1,7 @@
 # Executable cross-adapter conformance
 
+*Partly superseded by ADR-0010; see it for what still holds.*
+
 Binding parity uses executable, scenario-owned conformance as its behavioral evidence. Rust, CXX, Node, and Python execute the same versioned scenario packs and emit normalized observations that are compared with expectations owned by the scenario rather than with Rust output. CLI, GUI, and TUI participate separately as consumers: they prove that binding-owned facts and Rust-owned Display Content survive their presentation and layout seams without being treated as additional semantic adapters. The existing `tools/binding_compliance/` suite owns scenario discovery, receipt validation, comparison, coverage accounting, failure classification, and the combined report.
 
 This decision deepens the existing compliance module instead of creating a second parity system. The CXX, Node, and Python surface parsers, declaration and stub validators, Rust inventory parser, and source audits remain specialized implementations behind that module. Domain-specific runners and normalizers also remain real seams. Crash Log Scan Run, User Settings, and later domains can have different actions and observation payloads while sharing scenario identity, applicability, execution, receipt, comparison, and reporting rules. Native CI jobs validate participant-scoped reports against the same oracle; only a run holding every required participant receipt may claim repository-wide conformance.

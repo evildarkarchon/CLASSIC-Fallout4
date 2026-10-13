@@ -63,7 +63,8 @@ pub enum OrchestratorError {
 /// Configuration for a game scan operation.
 ///
 /// Provides all the paths and settings the orchestrator needs.
-/// The caller (Python bindings or GUI) is responsible for populating these.
+/// The caller (originally the since-retired Python bindings) is responsible for
+/// populating these.
 #[derive(Debug, Clone)]
 pub struct GameScanConfig {
     /// Path to the game root directory

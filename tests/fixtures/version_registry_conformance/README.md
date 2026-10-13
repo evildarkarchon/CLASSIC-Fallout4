@@ -13,7 +13,5 @@ VR selection, mode filtering, unsupported games, and malformed version strings.
 Each adapter records the exact post-operation file inventory. There are no live
 machine registry, installed-game, network, or executable dependencies.
 
-CXX executes both promoted and legacy public namespaces and requires their
-observations to agree. DTO presence flags and native parse-error sentinels map to
-the same explicit null/error envelope used by Rust, Node, and Python. Match
+Absent values and parse errors use an explicit null/error envelope. Match
 confidence uses lowercase spelling; authored match messages remain exact.

@@ -2,8 +2,9 @@
 //!
 //! [`PathError`] moved here unchanged from `classic-path-core` so the neutral
 //! existence, kind, permission, drive, and read-only primitives have one
-//! domain-neutral owner. Its variants and `Display` messages are observed by the
-//! CXX, Node, and Python path adapters, so they must stay stable.
+//! domain-neutral owner. Its variants and `Display` messages were observed by
+//! the CXX, Node, and Python path adapters (trimmed or retired with ADR-0010),
+//! which is why they were kept stable.
 
 use std::path::PathBuf;
 use thiserror::Error;

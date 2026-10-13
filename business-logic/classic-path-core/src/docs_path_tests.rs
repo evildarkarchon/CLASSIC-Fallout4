@@ -121,3 +121,51 @@ fn test_find_docs_path_fallback_to_platform_detection() {
         }
     }
 }
+
+/// Relative path that makes platform discovery resolve to the Documents folder
+/// itself, which exists on every Windows host, so discovery is guaranteed to
+/// succeed with a path different from any temp-dir cache.
+#[cfg(target_os = "windows")]
+const DISCOVERABLE_RELATIVE_PATH: &str = "";
+
+// Installation-discovery source boundary (#297): a valid cached path is
+// returned before the non-injectable platform discovery runs. Windows-only,
+// because the registry Documents folder is the one discovery result every
+// host is guaranteed to have.
+#[cfg(target_os = "windows")]
+#[test]
+fn valid_cached_docs_path_wins_over_a_discoverable_platform_path() {
+    let finder = DocsPathFinder::new(DISCOVERABLE_RELATIVE_PATH);
+    let discovered = finder
+        .find_docs_path(None)
+        .expect("platform discovery must find the Documents folder on Windows");
+    let temp_dir = TempDir::new().unwrap();
+    let cached = temp_dir.path().to_path_buf();
+    assert_ne!(
+        cached, discovered,
+        "cache and discovery must differ for this test to discriminate"
+    );
+
+    let resolved = finder
+        .find_docs_path(Some(cached.to_str().unwrap()))
+        .expect("valid cached path resolves");
+
+    assert_eq!(resolved, cached);
+}
+
+#[cfg(target_os = "windows")]
+#[test]
+fn invalid_cached_docs_path_falls_back_to_platform_discovery() {
+    let finder = DocsPathFinder::new(DISCOVERABLE_RELATIVE_PATH);
+    let discovered = finder
+        .find_docs_path(None)
+        .expect("platform discovery must find the Documents folder on Windows");
+    let temp_dir = TempDir::new().unwrap();
+    let missing = temp_dir.path().join("missing-cached-docs");
+
+    let resolved = finder
+        .find_docs_path(Some(missing.to_str().unwrap()))
+        .expect("invalid cache falls back to discovery");
+
+    assert_eq!(resolved, discovered);
+}

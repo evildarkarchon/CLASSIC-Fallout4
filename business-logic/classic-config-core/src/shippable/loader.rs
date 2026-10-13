@@ -36,10 +36,10 @@
 //!   [`crate::atomic_install::self_heal`] only promotes `.prev` when the
 //!   canonical target is missing; when both exist it is a strict no-op.
 //! - We deliberately **do not** repurpose `YamlSource::Cache` for the cache
-//!   directory: that variant already names `cache.yaml` and is plumbed
-//!   through Python/Node FFI as a stable enum ordinal, so repurposing it
-//!   would break binding parity. This helper is the new public surface for
-//!   cache-aware shippable loads instead.
+//!   directory: that variant already names `cache.yaml` and was plumbed
+//!   through the (since retired) Python/Node FFI as a stable enum ordinal, so
+//!   repurposing it would have broken binding parity. This helper is the new
+//!   public surface for cache-aware shippable loads instead.
 //!
 //! # Consumer pattern
 //!

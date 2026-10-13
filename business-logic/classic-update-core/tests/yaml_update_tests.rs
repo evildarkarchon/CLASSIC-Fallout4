@@ -21,6 +21,9 @@
 //!   composition failure modes (download failure, checksum mismatch) are
 //!   covered at unit level in this module via small direct calls.
 
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use classic_shared_core::yaml::{SchemaCompat, SchemaVersion};
 use classic_update_core::yaml_update::check_yaml_data_update_with_env;
 use classic_update_core::{

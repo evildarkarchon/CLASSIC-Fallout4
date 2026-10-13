@@ -1,8 +1,8 @@
 //! Integration tests for the notification-check `CACHE_IO` error branch.
 //!
 //! Purpose: exercise the full orchestrator path in [`classic_update_core::notification`]
-//! so that the `NotificationCacheIo` variant — and the Node `CACHE_IO:` /
-//! Python `ClassicNotificationCacheIoError` surfaces that mirror it — is
+//! so that the `NotificationCacheIo` variant — which the retired Node
+//! `CACHE_IO:` / Python `ClassicNotificationCacheIoError` surfaces mirrored — is
 //! observable end-to-end rather than asserted only at the
 //! `map_ensure_cache_result` helper level.
 //!
@@ -37,6 +37,9 @@
 //! `mockito` server. That also means it stays green in fully-offline
 //! CI where outbound HTTPS is blocked — the CacheIo branch fires before
 //! anything downstream runs.
+
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
 
 use classic_update_core::{UpdateError, check_app_notification_with_env};
 use std::collections::HashMap;

@@ -12,9 +12,10 @@
 //! never reload it, and there is no reset operation.
 //!
 //! The unscoped [`get_version_registry`] and [`VersionRegistry::get_instance`]
-//! use one process default scope, which is what Rust, CXX, and Node callers
+//! use one process default scope, which is what Rust and CXX callers
 //! have always observed. A binding adapter that links several former
-//! extension images into one library (the merged Python extension) creates
+//! extension images into one library (originally the merged Python extension,
+//! retired with ADR-0010) creates
 //! [`VersionRegistryScope::new_isolated`] handles so each facade keeps its own
 //! first-use snapshot. Scope selection is always explicit: callers hold a
 //! handle and pass it (or move it into async work); nothing is selected
@@ -202,7 +203,8 @@ impl VersionRegistry {
     /// Reads and parses the file directly instead of through the shared
     /// path/mtime YAML-file cache. Each scope loads its file exactly once, so
     /// the cache would save nothing, and its default scope belongs to another
-    /// owner (the config facade once the Python facades merge): routing a
+    /// owner (the unscoped callers; originally the config facade of the merged
+    /// Python extension, retired with ADR-0010): routing a
     /// snapshot load through it would add that owner's entries and move its
     /// counters, and its path-keyed entries could hand a scope first used from
     /// one root another root's cached parse of the same relative path.

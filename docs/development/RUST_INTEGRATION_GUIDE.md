@@ -11,10 +11,9 @@ This guide describes how Rust integrates into the current CLASSIC codebase, wher
 - Rust core/business logic: [`business-logic/`](../../business-logic) and [`foundation/`](../../foundation)
 - C++ ↔ Rust bridge crate: [`cpp-bindings/classic-cpp-bridge/`](../../cpp-bindings/classic-cpp-bridge)
 
-### Maintained binding surfaces
+### Retired binding surfaces
 
-- Node bindings (NAPI-RS): [`node-bindings/`](../../node-bindings)
-- Python bindings (PyO3): [`python-bindings/`](../../python-bindings)
+The Python and Node bindings retired with ADR-0010 (in [`docs/adr/`](../adr/)); the C++ bridge is the only binding layer.
 
 ### Deprecated runtime scope
 
@@ -32,13 +31,11 @@ The legacy Python runtime and orchestration layer has been removed from the repo
 ### Layer 2: Business logic (`*-core` crates)
 
 - Path: [`business-logic/`](../../business-logic)
-- Purpose: pure Rust domain logic; no PyO3 coupling in core crates
+- Purpose: pure Rust domain logic; no binding-framework coupling in core crates
 
 ### Layer 3: Bindings/adapters
 
 - C++ bridge: [`cpp-bindings/classic-cpp-bridge/`](../../cpp-bindings/classic-cpp-bridge)
-- Node adapters: [`node-bindings/`](../../node-bindings)
-- Python adapters: [`python-bindings/`](../../python-bindings)
 
 ---
 
@@ -56,7 +53,7 @@ The legacy Python runtime and orchestration layer has been removed from the repo
    - Route C++ integration through [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 4. **Python scope distinction**
-   - Maintained: PyO3 bindings in [`python-bindings/`](../../python-bindings)
+   - Retired: the Python and Node bindings (ADR-0010)
    - Removed: the Python app runtime entrypoints/orchestration (docs under [`docs/archive/python-era/`](../archive/python-era))
 
 ---
@@ -86,37 +83,11 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
-### Node parity/runtime checks (when relevant)
-
-```powershell
-# From node-bindings/classic-node
-bun install
-bun run build
-bun run parity:gate:local
-bun run test:bun
-bun run test:node
-```
-
-### Python parity/runtime checks (when relevant)
-
-```powershell
-# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
-# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
-uv sync --project python-bindings --inexact
-python tools/python_api_parity/check_parity_gate.py --repo-root .
-python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
-```
-
----
-
 ## 5. CI Contract
 
 - [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ apps + CTest pipeline
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml): rustfmt, clippy, build, tests
-- [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml): Node parity + runtime tests
-- [`ci-python-bindings.yml`](../../.github/workflows/ci-python-bindings.yml): Python parity + smoke tests
+- [`ci-binding-compliance.yml`](../../.github/workflows/ci-binding-compliance.yml): umbrella plus the conformance-only `full` verdict
 - [`benchmarks.yml`](../../.github/workflows/benchmarks.yml): performance regression checks
 
 When changing build/test instructions in docs, ensure this guide remains consistent with these workflows and [`AGENTS.md`](../../AGENTS.md).
@@ -142,15 +113,6 @@ When changing build/test instructions in docs, ensure this guide remains consist
 1. Update Rust core + [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge)
 2. Update C++ call sites as needed
 3. Run C++ and Rust checks
-4. If Node-facing APIs changed, run parity/test commands in [`classic-node`](../../node-bindings/classic-node)
-
-### D) Python binding maintenance (not runtime orchestration)
-
-1. Update crates under [`python-bindings/`](../../python-bindings)
-2. Validate against relevant Rust crates/tests
-3. Keep scope limited to the maintained bindings
-
----
 
 ## 7. Transition Note
 

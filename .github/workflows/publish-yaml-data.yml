@@ -30,7 +30,6 @@ jobs:
       TAG: ${{ github.ref_name }}
       DATABASES_DIR: CLASSIC Data/databases
       PAGES_BRANCH: gh-pages
-      PYTHON_VERSION: "3.12"
     steps:
       - name: Checkout source (tag)
         uses: actions/checkout@v6
@@ -38,24 +37,18 @@ jobs:
           # Fetch-depth 0 so we can push to gh-pages from the same clone.
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Python dependencies
-        # ruamel.yaml's pure-Python parser tolerates bare-scalar `foo::bar`
-        # strings in flow sequences (present in CLASSIC Fallout4.yaml), which
-        # the libyaml-backed PyYAML C parser rejects. See tools/publish_yaml_data/validate.py
-        # for the parser-choice rationale.
-        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+      - name: Build xtask
+        run: cargo build -p xtask --locked
 
       # Task 11.2: validation job. Fails the workflow before any release is
       # created if schema_version is missing or malformed, or if any
       # client-schema range entry is malformed or inverted.
       - name: Validate shippable YAML schema headers
         run: |
-          python tools/publish_yaml_data/validate.py \
+          cargo xtask yaml-data validate \
             --databases-dir "$DATABASES_DIR" \
             --schema-ranges  "$DATABASES_DIR/client-schema-ranges.yaml"
 
@@ -64,7 +57,7 @@ jobs:
       # dir. Every download_url is built from github.com/<repo>/releases/...
       - name: Generate checksums and manifest
         run: |
-          python tools/publish_yaml_data/generate_manifest.py \
+          cargo xtask yaml-data manifest \
             --tag             "$TAG" \
             --repo            "${{ github.repository }}" \
             --databases-dir   "$DATABASES_DIR" \
@@ -202,7 +195,7 @@ jobs:
       # non-draft release still exists, so nothing is overwritten silently.
       - name: Verify assets reachable anonymously
         run: |
-          python tools/publish_yaml_data/verify_assets_reachable.py \
+          cargo xtask yaml-data verify-assets \
             --manifest "$RUNNER_TEMP/staging/manifest.json"
 
       # Make the release discoverable to Releases-API fallback clients before
@@ -267,7 +260,7 @@ jobs:
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER}"
           REPO="$(echo "${{ github.repository }}" | cut -d/ -f2)"
-          python tools/publish_yaml_data/smoke_test_pages.py \
+          cargo xtask yaml-data smoke-pages \
             --owner "$OWNER" \
             --repo  "$REPO" \
             --expected-body-path "$RUNNER_TEMP/staging/manifest.json"

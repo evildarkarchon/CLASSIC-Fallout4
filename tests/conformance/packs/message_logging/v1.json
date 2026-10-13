@@ -15,7 +15,6 @@
   "capabilities": [
     {
       "id": "message-logging.basic",
-      "operationScoped": true,
       "rustSymbols": [
         "Logger",
         "init",
@@ -30,7 +29,6 @@
     },
     {
       "id": "message-logging.extended",
-      "operationScoped": true,
       "rustSymbols": [
         "Logger"
       ],
@@ -40,7 +38,6 @@
     },
     {
       "id": "message-logging.startup",
-      "operationScoped": true,
       "rustSymbols": [
         "trace",
         "log_startup_binding_contract_validated",
@@ -53,7 +50,6 @@
     },
     {
       "id": "message-logging.format",
-      "operationScoped": true,
       "rustSymbols": [
         "format_contract_event"
       ],

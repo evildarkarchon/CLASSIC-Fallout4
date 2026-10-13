@@ -111,8 +111,8 @@ int main(int argc, char* argv[])
     // bundled YAML is the documented single source of truth for the
     // installed binary's version (see `classic-gui/CMakeLists.txt`).
     // Sourcing the version this way — instead of via the runtime
-    // cache-preferring `classic::config::load_main_yaml_version` bridge
-    // — guarantees a per-user YAML data update cannot move
+    // cache-preferring `classic_config_core::load_main_yaml_version` loader
+    // (Rust-only; not on the bridge) — guarantees a per-user YAML data update cannot move
     // `QApplication::applicationVersion()` ahead of the actual installed
     // executable, which would otherwise misclassify stale binaries as
     // up-to-date in the app-update notification check. Mirrors how the

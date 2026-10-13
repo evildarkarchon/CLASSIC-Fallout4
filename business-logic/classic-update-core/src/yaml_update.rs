@@ -768,7 +768,23 @@ fn is_reserved_windows_device_basename(name: &str) -> bool {
         )
 }
 
-fn validate_cache_file_name(name: &str) -> Result<()> {
+/// Checks that `name` is a plain, installable yaml-cache basename.
+///
+/// This is the client's single cache-basename rule (see the private
+/// `is_valid_cache_file_name` for the full list): it rejects empty, `.`, `..`,
+/// separators, `:` (NTFS alternate data streams), NUL, trailing spaces or dots,
+/// multi-component or rooted paths, and reserved Windows device stems such as
+/// `NUL` or `com1.txt`.
+///
+/// It is public so the repository's publish tooling (`cargo xtask yaml-data`)
+/// can prove, in an agreement test, that its mirror of this rule accepts and
+/// rejects exactly the names the client does. It is Rust-only and is not
+/// exposed on the C++ bridge.
+///
+/// # Errors
+///
+/// Returns [`UpdateError::ManifestInvalid`] naming the rejected file name.
+pub fn validate_cache_file_name(name: &str) -> Result<()> {
     if !is_valid_cache_file_name(name) {
         return Err(UpdateError::ManifestInvalid {
             reason: format!("file name {name:?} is not a valid plain cache-dir basename"),
@@ -1378,8 +1394,9 @@ async fn check_yaml_update_with_cache_dir(
 
 /// Resolve the native bundled-YAML directory beside the running executable.
 ///
-/// Binding hosts such as Python and Node must pass an explicit directory because
-/// their executable belongs to the interpreter rather than the CLASSIC install.
+/// Binding hosts such as the retired Python and Node bindings must pass an
+/// explicit directory because their executable belongs to the interpreter
+/// rather than the CLASSIC install.
 /// Resolution failure returns `None` instead of falling back to the process
 /// working directory.
 fn resolve_bundled_yaml_dir() -> Option<PathBuf> {

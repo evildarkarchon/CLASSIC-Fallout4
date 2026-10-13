@@ -1,4 +1,4 @@
-//! OrchestratorCore - Pure Rust crash log analysis orchestration (NO PyO3)
+//! OrchestratorCore - Pure Rust crash log analysis orchestration
 //!
 //! This module provides the main orchestration layer that coordinates all analysis
 //! components into a unified pipeline for processing crash logs.
@@ -67,7 +67,8 @@ impl Vocabulary for ScanProgressPhase {
     /// These tokens are frozen. This type never had a token method of its own —
     /// the Python and Node surfaces each wrote the same four strings out by hand,
     /// and the C++ bridge maps to a mirrored enum — so these are the spellings
-    /// both binding surfaces already publish rather than new identifiers.
+    /// both string surfaces already published (before ADR-0010 retired them)
+    /// rather than new identifiers.
     fn as_str(self) -> &'static str {
         match self {
             Self::Setup => "setup",
@@ -747,7 +748,7 @@ where
     result
 }
 
-/// Main orchestrator for crash log analysis (Pure Rust - NO PyO3)
+/// Main orchestrator for crash log analysis (Pure Rust)
 ///
 /// Coordinates all analysis components to process crash logs from start to finish.
 /// Uses async I/O and parallel processing for maximum performance.
@@ -1112,7 +1113,7 @@ impl OrchestratorCore {
     ///
     /// Unlike [`with_database_pool`](Self::with_database_pool) which consumes `self` (builder pattern),
     /// this method takes `&mut self` and can be called after construction. This is
-    /// needed when the orchestrator is already owned (e.g., inside a PyO3 `#[pyclass]`).
+    /// needed when the orchestrator is already owned (e.g., inside an adapter wrapper).
     ///
     /// # Arguments
     ///

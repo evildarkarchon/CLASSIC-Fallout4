@@ -17,7 +17,6 @@
         "VersionBackupManager",
         "XseVersion"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "durable-effects"
       ]
@@ -28,7 +27,6 @@
         "create_backup",
         "list_versions"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "durable-effects"
       ]

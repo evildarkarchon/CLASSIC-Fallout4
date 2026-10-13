@@ -4,14 +4,14 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Pure Rust business logic for auto-update system (NO PyO3)"
+description = "Pure Rust business logic for auto-update system"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
 crate-type = ["rlib"]  # Pure Rust library ONLY - NO Python bindings
 
 [dependencies]
-# CLASSIC core dependencies (pure Rust - NO PyO3!)
+# CLASSIC core dependencies (pure Rust)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # Note: classic-shared-core's loose `version` helpers are NOT used here because
 # GitHub releases use proper semver with pre-release support (e.g., 8.0.0-beta.1),

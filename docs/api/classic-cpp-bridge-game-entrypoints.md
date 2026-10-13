@@ -3,10 +3,10 @@
 Contributor-facing documentation for the active C++ bridge entry points in:
 
 - [`cpp-bindings/classic-cpp-bridge/src/path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs)
-- [`cpp-bindings/classic-cpp-bridge/src/game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/xse.rs`](../../cpp-bindings/classic-cpp-bridge/src/xse.rs) (XSE Folder, XSE log and string-form XSE helpers)
 - [`cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs)
 
-This page documents the current CXX FFI surface that active C++ callers use for path detection, version-registry lookups, PE version probing, XSE probing, and setup-time checks.
+This page documents the current CXX FFI surface that active C++ callers use for path detection, XSE probing, and setup-time checks.
 
 It is intentionally about the bridge surface that exists in source today. It does **not** describe a future unified bridge or imply that the bridge exposes every capability of the underlying Rust crates.
 
@@ -51,25 +51,19 @@ It wraps `classic-path-core` directly and resolves Fallout 4 names from version-
 
 The same file also carries the version-labelled backup helpers `backup_create_timestamped(source_path, game_name)` and `backup_list_existing(source_path, game_name)`. They wrap `classic_resource_core::VersionBackupManager` with a `CLASSIC Backups/<game_name>` root beside the source file and a Unix-seconds label; that backup left `classic-path-core` for resource core in #251, so the bridge names and their `classic::path` namespace are unchanged.
 
-## `src/game.rs` -> `classic::game`
+## `src/xse.rs` -> `classic::xse`
 
-This file is the broader mixed bridge surface. It exposes:
+This page covers only the XSE entry points that sit next to path detection: the XSE Folder and XSE log resolvers and the string-form XSE helpers.
 
-- Version Registry lookups and match helpers
-- game-version string parsing
-- PE version extraction from an `.exe` or `.dll`
-- XSE type parsing plus XSE installation/version probing
-- generic game-path lookup plus low-level path/restricted-path checks
-
-This is currently the main bridge file where multiple crates meet.
+The former `src/game.rs` (`classic::game`) module duplicated Version Registry lookups, game-version parsing, PE version extraction, XSE probing and path checks. No CLI or GUI production code called it, so it was removed with the consumer-driven bridge trim (#307); the Rust core APIs it wrapped are unchanged.
 
 ## `src/scangame.rs` -> `classic::scangame`
 
-This file exposes Game Setup Intake plus the broader scanner/checker bridge functions in this namespace.
+This file exposes Game Setup Intake, the only scangame capability the GUI calls.
 
 - `run_game_setup_intake_from_user_settings(classic_root, xse_log_path) -> GameSetupIntakeDto`
 
-Game Setup Intake is setup-only. ENB, crashgen, BA2, Wrye, INI, and mod-file checks remain separate bridge entry points.
+Game Setup Intake is setup-only. The per-checker ENB, crashgen, BA2, Wrye, INI, and integrity entry points were removed in the consumer-driven trim (#308) because no frontend called them; those checks stay Rust-only in `classic-scangame-core`.
 
 ---
 
@@ -117,136 +111,7 @@ Current bridge choices:
 
 ---
 
-## `classic::game` entry points
-
-## Version Registry DTO functions
-
-### `version_registry_get_by_id(id) -> VersionInfoDto`
-
-Forwards to:
-
-- `classic_version_registry_core::get_version_registry()`
-- `VersionRegistry::get_by_id()`
-
-Bridge DTO shape:
-
-- `id`
-- `version_string`
-- `short_name`
-- `game`
-- `docs_name`
-- `steam_id`
-- `is_vr`
-- `found`
-
-Bridge narrowing:
-
-- the DTO exposes only a small slice of `VersionInfo`
-- fields like `display_name`, `description`, `priority`, `address_library`, `exe_hash`, and full crashgen metadata are omitted here
-- a miss returns a sentinel DTO with `found = false` and mostly empty/default fields instead of `Option`
-
-### `version_registry_get_all_ids() -> Vec<String>`
-
-Forwards to `VersionRegistry::get_all()` and returns only the sorted ID list.
-
-### `version_registry_get_all_count() -> usize`
-
-Forwards to `VersionRegistry::get_all().len()`.
-
-### `version_registry_match_version(version_str, game, is_vr) -> MatchResultDto`
-
-Forwards to:
-
-- `classic_version_registry_core::GameVersion::parse()`
-- `VersionRegistry::match_version()`
-
-Bridge DTO shape:
-
-- `matched_id`
-- `confidence`
-- `message`
-- `is_match`
-
-Fail-soft behavior:
-
-- parse failure does not cross FFI as an error
-- instead the bridge returns `is_match = false`, `matched_id = ""`, and a message like `Failed to parse version: ...`
-- `confidence` becomes the bridge-local string `"None"`, not a Rust enum variant
-
-Bridge narrowing:
-
-- the bridge drops `MatchResult.detected`
-- it also drops the full matched `VersionInfo`
-- `confidence` is stringified with `format!("{:?}", ...)`, so the C++ side sees display text, not a typed enum
-
-### `version_registry_get_xse_config(id) -> XseConfigDto`
-
-Forwards to `VersionRegistry::get_by_id(id)` plus `info.xse.as_ref()`.
-
-Bridge DTO shape:
-
-- `acronym`
-- `full_name`
-- `compatible_version`
-- `loader`
-- `file_count`
-- `found`
-
-Bridge narrowing:
-
-- the DTO does not expose `script_hashes`, even though the Rust `XseConfig` model has them
-- a miss returns a sentinel DTO with `found = false`
-
-### `version_registry_get_crashgen_configs(id) -> Vec<CrashgenConfigDto>`
-
-Forwards to `VersionRegistry::get_crashgen_versions(id)`.
-
-### `version_registry_get_crashgen_config(id, crashgen_version) -> CrashgenConfigDto`
-
-Forwards to `VersionRegistry::get_crashgen_for_version(id, crashgen_version)`.
-
-Bridge DTO shape for both crashgen calls:
-
-- `version`
-- `name`
-- `acronym`
-- `dll_file`
-- `description`
-- `download_url`
-
-Bridge narrowing:
-
-- `compatible_range` is not exposed even though the Rust model carries it
-- the single-config lookup returns an all-empty DTO on miss rather than `Option`
-
-## Version parsing and PE probing
-
-### `parse_game_version(version_str) -> GameVersionDto`
-
-Forwards to `classic_version_registry_core::GameVersion::parse()`.
-
-Bridge DTO shape:
-
-- `major`
-- `minor`
-- `patch`
-- `build`
-- `valid`
-
-Fail-soft behavior:
-
-- invalid input becomes `{0, 0, 0, 0, valid = false}`
-- parse errors are not preserved across the bridge
-
-### `extract_pe_version_string(exe_path) -> String`
-
-Forwards to `classic_shared_core::version::pe_version::extract_pe_version()`.
-
-Bridge narrowing:
-
-- formats the Rust `(u16, u16, u16, u16)` tuple as `major.minor.patch.build`
-- returns `""` on any `PeVersionError`
-- the C++ side cannot distinguish invalid path, invalid PE image, missing version resource, or plain I/O failure from this entry point alone
+## `classic::xse` entry points
 
 ## XSE helpers
 
@@ -254,7 +119,7 @@ Bridge narrowing:
 
 Forwards to:
 
-- bridge-local `xse_type_from_str()`
+- bridge-local `xse_type_from_str_internal()`
 - `classic_xse_core::detect_xse_version()`
 
 Current behavior:
@@ -283,7 +148,7 @@ Current behavior:
 
 ### `resolve_xse_folder_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> String`
 
-Forwards to `classic_scangame_core::resolve_xse_folder_for_scan()` (moved from `classic-xse-core` in #252; the C++ name and signature are unchanged). The CXX parity row maps it to `ownerModule: scangame`.
+Forwards to `classic_scangame_core::resolve_xse_folder_for_scan()` (moved from `classic-xse-core` in #252; the C++ name and signature are unchanged).
 
 Current behavior:
 
@@ -295,7 +160,7 @@ Current behavior:
 
 ### `resolve_xse_log_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> Result<String>`
 
-Forwards to `classic_scangame_core::resolve_xse_log_for_scan()` (#283). The CXX parity row maps it to `ownerModule: scangame`. It replaced the GUI's own `f4se.log`/`f4sevr.log` probe, so no frontend names XSE log files.
+Forwards to `classic_scangame_core::resolve_xse_log_for_scan()` (#283). It replaced the GUI's own `f4se.log`/`f4sevr.log` probe, so no frontend names XSE log files.
 
 Current behavior:
 
@@ -309,13 +174,13 @@ Bridge narrowing:
 - `configured_docs_root = ""` is treated as `None`
 - the C++ side gets no reason for missing or unreadable Local.yaml, unknown game/version, or documents discovery failure
 
-## Path helpers
+## `classic::path` generic path helpers
 
 ### `find_game_path(game_exe, xse_loader, game_name, is_vr, cached_path, xse_log_path) -> String`
 
 Forwards to `classic_path_core::GamePathFinder::new(...)` plus `find_game_path(...)`.
 
-This is the generic bridge counterpart to the narrower Fallout 4 helper in `src/path.rs`.
+This is the generic counterpart to the narrower Fallout 4 helper `detect_fallout4_game_path()`.
 
 Current bridge behavior:
 
@@ -366,20 +231,14 @@ The active bridge mostly uses three patterns.
 
 Several entry points erase Rust errors and return a default primitive instead:
 
-- empty string on failure: path detection, PE version extraction, XSE version detection
+- empty string on failure: path detection, XSE version detection
 - `false` on failure: XSE installed check for invalid type strings, path validation miss, restricted-path false branch
 
 This is the dominant fail-soft style in the bridge.
 
 ## 2. Small DTOs with explicit `found` or `valid`
 
-Registry and parsing calls often return structs that keep a success bit alongside partial payload fields:
-
-- `VersionInfoDto.found`
-- `XseConfigDto.found`
-- `GameVersionDto.valid`
-
-Those DTOs still flatten the underlying Rust models heavily.
+The Version Registry and game-version DTOs that used this pattern (`VersionInfoDto.found`, `XseConfigDto.found`, `GameVersionDto.valid`) left with the `classic::game` module (#307). Remaining bridge DTOs on this page use the rendered-text pattern below.
 
 ## 3. Rendered text plus typed setup DTOs
 
@@ -398,17 +257,15 @@ These are the main current narrowing points contributors should keep in mind.
 - does not let callers supply an XSE log path
 - does not expose document INI validation or document diagnostics
 
-## `src/game.rs`
+## `src/xse.rs`
 
-- returns only slices of `VersionInfo`, `XseConfig`, `CrashgenConfig`, and `MatchResult`
-- collapses typed errors into empty strings, `false`, or message text
-- exposes generic game-path lookup, but not the richer validators like `validate_settings_paths()`
-- exposes XSE loader presence and DLL-filename version detection, but not `get_xse_info()` and not Address Library validation
+- collapses typed XSE errors into empty strings or `false` in the string-form helpers
+- exposes XSE loader presence and DLL-filename version detection, but not Address Library validation
 
 ## `src/scangame.rs`
 
 - exposes Game Setup Intake as the setup-time bridge surface
-- keeps ENB, crashgen, BA2, Wrye, INI, and integrity helper entry points separate from intake
+- exposes no ENB, crashgen, BA2, Wrye, INI, or integrity checker entry points
 - does not expose `GameScanOrchestrator` or full mod-scan orchestration through CXX
 
 ---
@@ -419,20 +276,11 @@ These are the main current narrowing points contributors should keep in mind.
 
 When C++ path detection looks wrong, check these in order:
 
-1. confirm whether the frontend is calling `classic::path::*` or `classic::game::find_game_path()`
+1. confirm whether the frontend is calling the Fallout 4 helpers or the generic `classic::path::find_game_path()`
 2. check whether the bridge passed an empty cached path, empty XSE log path, or empty loader name
 3. remember that `classic::path::detect_fallout4_game_path()` never validates `f4se_loader.exe`
-4. if using `classic::game::find_game_path()`, inspect whether `GamePathFinder` was constructed with an `xse_loader`; that changes validation requirements
+4. if using `classic::path::find_game_path()`, inspect whether `GamePathFinder` was constructed with an `xse_loader`; that changes validation requirements
 5. if XSE-log fallback should have worked, inspect the log for a `plugin directory = ...` line and the expected `Data/.../Plugins` depth
-
-## Game / registry flow
-
-When registry-backed data looks incomplete:
-
-1. check whether the bridge entry point intentionally omits the field you expected
-2. verify the version ID exists through `version_registry_get_by_id()` first
-3. remember that `version_registry_get_xse_config()` does not expose `script_hashes`
-4. remember that `version_registry_match_version()` returns stringified confidence and message text, not the full `MatchResult`
 
 ## XSE flow
 
@@ -457,15 +305,13 @@ When `run_game_setup_intake_from_user_settings()` output looks wrong:
 
 ## Source-Backed Limits And Caveats
 
-- `src/path.rs` and `src/game.rs` both expose game-path detection, but only `src/game.rs` is generic and XSE-log-aware
+- `src/path.rs` exposes both the Fallout 4 game-path helper and the generic `find_game_path()`, but only the generic one accepts an XSE loader and XSE log
 - `src/path.rs::detect_fallout4_game_path()` constructs `GamePathFinder` without an XSE loader, so it can accept a Fallout 4 root that lacks `f4se_loader.exe`
 - `src/path.rs` exposes no document validation beyond discovery
-- `src/game.rs::validate_path()` is only `Path::exists()` through `classic_shared_core::path_core::is_valid_path()`
-- `src/game.rs::check_restricted_path()` reflects the current heuristic `classic-scanlog-core` custom-scan restriction rules, including shallow-path rejection
-- `src/game.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
-- `src/game.rs` stringifies many failures as `""`; C++ callers cannot recover typed causes without adding new bridge surface
-- `src/game.rs::version_registry_get_xse_config()` drops `script_hashes`, so callers cannot build script-hash validation from this DTO alone
-- Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks remain separate bridge calls
+- `src/path.rs::validate_path()` is only `Path::exists()` through `classic_shared_core::path_core::is_valid_path()`
+- `src/path.rs::check_restricted_path()` reflects the current heuristic `classic-scanlog-core` custom-scan restriction rules, including shallow-path rejection
+- `src/xse.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
+- Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks are not bridged
 
 These are current behavior notes, not recommendations for future design.
 
@@ -474,6 +320,6 @@ These are current behavior notes, not recommendations for future design.
 ## Contributor Rule Of Thumb
 
 - If you need Fallout 4-only auto-detection convenience, start in `src/path.rs`.
-- If you need registry metadata, generic path lookup, PE version reads, or XSE loader/version probing, start in `src/game.rs`.
+- If you need generic path lookup, start in `src/path.rs`; for XSE Folder, XSE log, or XSE loader/version probing, start in `src/xse.rs`. Registry metadata and PE version reads have no bridge entry point; add one only with its first production call site.
 - If you need setup-time intake diagnostics from typed User Settings, start with `run_game_setup_intake_from_user_settings()` in `src/scangame.rs`.
 - If you need richer Rust behavior than the bridge exposes, change the bridge intentionally and document the new boundary in this file and the crate-level docs in the same change.

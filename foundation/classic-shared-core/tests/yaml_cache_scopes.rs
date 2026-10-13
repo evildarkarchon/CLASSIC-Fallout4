@@ -2,8 +2,9 @@
 //!
 //! `classic_shared_core::yaml` owns two distinct caches: the logical-key
 //! settings cache and the path/mtime-aware YAML-file cache. Each is reachable
-//! through an opaque scope handle so a binding adapter (the merged Python
-//! extension) can give every former extension facade its own store, while the
+//! through an opaque scope handle so a binding adapter (originally the merged
+//! Python extension, retired with ADR-0010) can give every former extension
+//! facade its own store, while the
 //! unscoped free functions keep using one process default scope.
 //!
 //! These tests pin the contract the adapter relies on:

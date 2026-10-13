@@ -1,20 +1,19 @@
 # Phrases about a Crash Log Scan Run that no frontend may write.
 #
 # This file is the deny-list behind the sentence-template detector carried by all
-# five frontend audits:
+# three frontend audits (the Python and Node audits retired with those bindings,
+# ADR-0010):
 #
 #   ui-applications/classic-tui/tests/shared_runtime_audit.rs
 #   classic-cli/tests/test_display_label_audit.cpp
 #   classic-gui/tests/test_display_label_audit.cpp
-#   python-bindings/tests/test_classic_py_cli_display_label_audit.py
-#   node-bindings/classic-node/__test__/display_label_audit.spec.ts
 #
-# One file rather than five inline copies. A deny-list duplicated per frontend
-# would reintroduce, in the test layer, exactly the five-copies drift that
-# `classic-scan-presentation` exists to delete: adding a phrase would mean
-# remembering five lists, and forgetting one would silently unenforce it there.
-# That the roster went from four to five without touching a single detector is
-# the property the shared file was chosen for.
+# One file rather than one inline copy per audit. A deny-list duplicated per
+# frontend would reintroduce, in the test layer, exactly the per-frontend-copies
+# drift that `classic-scan-presentation` exists to delete: adding a phrase would
+# mean remembering every list, and forgetting one would silently unenforce it
+# there. That the roster went from four to five, and later back to three, without
+# touching a single detector is the property the shared file was chosen for.
 #
 # FORMAT
 #   One phrase per line. Blank lines and lines whose first non-blank character is
@@ -24,7 +23,7 @@
 #   and not docstrings.
 #
 #   Every entry must carry at least one character that cannot appear in an
-#   identifier: a space, a comma, a colon, or a period. All five audits assert it.
+#   identifier: a space, a comma, a colon, or a period. All three audits assert it.
 #   That is what lets the three source-scanning ports search comment-stripped code
 #   rather than extracting literals -- an entry spellable as an identifier could
 #   match a variable or function name and report drift that is not there. A bare

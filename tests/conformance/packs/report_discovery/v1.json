@@ -13,7 +13,6 @@
   "capabilities": [
     {
       "id": "report-discovery.observe",
-      "operationScoped": true,
       "rustSymbols": [
         "discover_report_files"
       ],

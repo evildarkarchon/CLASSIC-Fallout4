@@ -8,7 +8,6 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-#include "classic_cxx_bridge/game.h"
 #include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/xse.h"
 

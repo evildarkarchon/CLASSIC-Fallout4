@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-xse-core/`](..
 Crate metadata:
 
 - Crate: `classic-xse-core`
-- Description: `Script Extender (XSE) utilities for CLASSIC (no PyO3)`
+- Description: `Script Extender (XSE) utilities for CLASSIC`
 
 This crate is the Rust-side XSE module for CLASSIC. It identifies which script extender a game uses, resolves the XSE Folder used for Crash Log collection, checks whether the expected loader exists in a game directory, and tries to derive an XSE version from sibling DLL filenames.
 
@@ -34,7 +34,7 @@ Do not use this crate for:
 - crashgen or broader setup scanning orchestration
 - binding-specific wrapper DTOs
 
-Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-version-registry-core`](../../business-logic/classic-version-registry-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++/Node/Python binding layers.
+Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-version-registry-core`](../../business-logic/classic-version-registry-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++ bridge.
 
 ---
 
@@ -53,7 +53,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 - `resolve_xse_folder_from_game_local_facts()` / `resolve_xse_folder_from_game_local_facts_in_version_registry_scope()` - fail-soft XSE Folder derivation from caller-supplied Game Local facts, reading Version Registry metadata from the default snapshot or a caller-selected scope
 - `resolve_xse_log_from_game_local_facts()` / `resolve_xse_log_from_game_local_facts_in_version_registry_scope()` - locate the XSE log inside the XSE Folder the same precedence selects; `Ok(None)` for absence, `XseLogError` for operational failure (see [XSE log](#xse-log-from-game-local-facts))
 - `XseLogError` - the XSE log resolvers' typed operational failure (`Inspect { path, source }`)
-- `xse_folder_name(acronym)` - the sole owner of the on-disk XSE folder-name rule: maps a Version Registry XSE acronym to the folder used both under the documents root (the XSE Folder) and under `Data/<folder>/Plugins`; `F4SEVR` maps to the shared `F4SE` folder, every other acronym (trimmed) is its own folder. Game Setup Intake's `plugins_path` uses it. Rust-only: no CXX, Node, or Python export
+- `xse_folder_name(acronym)` - the sole owner of the on-disk XSE folder-name rule: maps a Version Registry XSE acronym to the folder used both under the documents root (the XSE Folder) and under `Data/<folder>/Plugins`; `F4SEVR` maps to the shared `F4SE` folder, every other acronym (trimmed) is its own folder. Game Setup Intake's `plugins_path` uses it. Rust-only: no CXX export
 - `XseError`, `XseResult<T>` - crate-specific error model
 
 ## Root-level re-exports
@@ -195,7 +195,7 @@ Behavior worth knowing:
 - an explicit `docs_folder_xse` always wins over derived values, and needs no registry entry
 - Version Registry metadata comes from the process default snapshot; `resolve_xse_folder_from_game_local_facts_in_version_registry_scope(..., &VersionRegistryScope)` applies the same order but reads only the caller's [scope](classic-version-registry-core.md#version-registry-scopes), taking its snapshot only for a Fallout 4 game (before the explicit-folder check, as it always has)
 
-Callers that start from an installation's `CLASSIC Data` directory use [`classic_scangame_core::resolve_xse_folder_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document) (and its `_in_version_registry_scope` form), which reads the facts with `classic_config_core::read_game_local_facts` and calls this function. The GUI's setup-detection hint and the C++ bridge's `classic::xse::resolve_xse_folder_for_scan` go through it, and so does Crash Log collection (`classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery, which passes the run's scope). Standard crash scans keep custom folders additive to XSE Folder collection.
+Callers that start from an installation's `CLASSIC Data` directory use [`classic_scangame_core::resolve_xse_folder_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document) (and its `_in_version_registry_scope` form), which reads the facts with `classic_config_core::read_game_local_facts` and calls this function. Crash Log collection goes through it (`classic_scanlog_core::LogCollector::new_for_scan(...)` and the Crash Log Scan Run's Standard discovery, which passes the run's scope). Standard crash scans keep custom folders additive to XSE Folder collection.
 
 This crate is the `domainOwner` of the `xse-folder` Binding Compliance Suite family. Its `xse-folder.derive` capability exercises `resolve_xse_folder_from_game_local_facts` directly with supplied facts (Rust only; no binding exposes the facts resolver). The Local.yaml composition is credited separately to `classic-scangame-core` as `xse-folder.resolve`.
 
@@ -209,7 +209,7 @@ This crate is the `domainOwner` of the `xse-folder` Binding Compliance Suite fam
 - `Err(XseLogError::Inspect { path, source })` means the candidate log could not be inspected for a reason other than absence (for example access denied, or a path that is not a valid file name). Its message starts with `cannot inspect XSE log `.
 - `resolve_xse_log_from_game_local_facts_in_version_registry_scope(..., &VersionRegistryScope)` reads Version Registry metadata only from the caller's scope.
 
-Callers that start from `CLASSIC Data` use [`classic_scangame_core::resolve_xse_log_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document), which is what CXX (`classic::xse::resolve_xse_log_for_scan`), Node (`resolveXseLogForScan`) and Python (`classic_xse.resolve_xse_log_for_scan`) expose. The `xse-folder` family's `xse-folder.log` capability runs those on all four adapters.
+Callers that start from `CLASSIC Data` use [`classic_scangame_core::resolve_xse_log_for_scan`](classic-scangame-core.md#xse-folder-from-the-game-local-document), which is what CXX exposes as `classic::xse::resolve_xse_log_for_scan` (the GUI's setup-detection hint calls it). The `xse-folder` family's `xse-folder.log` capability runs on the Rust and CXX participants.
 
 ## Version helpers
 
@@ -293,8 +293,6 @@ Important direct dependencies:
 Related CLASSIC crates and consumers:
 
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes XSE helpers, including XSE Folder resolution, to C++ callers in [`cpp-bindings/classic-cpp-bridge/src/xse.rs`](../../cpp-bindings/classic-cpp-bridge/src/xse.rs)
-- [`classic-node`](../../node-bindings/classic-node) - wraps the same core APIs for JavaScript in [`node-bindings/classic-node/src/xse.rs`](../../node-bindings/classic-node/src/xse.rs)
-- [`classic_xse` adapter module](../../python-bindings/classic-python-bindings/src/classic_xse/) - wraps the same core APIs for Python in [`python-bindings/classic-python-bindings/src/classic_xse/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_xse/mod.rs)
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - adjacent higher-level scan/setup crate; current source does not directly call `classic-xse-core`, but both participate in setup-time XSE-related workflows
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - upstream source of expected XSE metadata for other layers, even though this crate does not query it directly today
 

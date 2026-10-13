@@ -597,8 +597,8 @@ std::vector<std::string> coreOwnedPhrases()
 /// that occurs verbatim in this frontend's own code as `emit
 /// finished(terminal.succeeded, terminal.failed, ...)`. Extracting literals
 /// removes that whole class of false positive rather than asking the deny-list to
-/// dodge it, and matches the Python audit, which reads literals off the AST for
-/// the same reason.
+/// dodge it, and matches the retired Python audit, which read literals off the
+/// AST for the same reason.
 ///
 /// Comments never appear, for the reason the CXX parity gate's name scan was
 /// fixed: a comment *describing* the drift is not the drift, and this file's own
@@ -907,9 +907,11 @@ void DisplayLabelAuditTests::every_rendered_gui_display_label_comes_from_a_bridg
     // #167, and stays excluded for the same reason: `presentLog` maps the three
     // variants onto booleans that select control flow and feed counts.
     //
-    // The accessors themselves are untouched on the bridge. They remain the
-    // right surface for labelling a domain enum outside a display line, which is
-    // why two of them are still in use here.
+    // Only the two accessors in use here remain on the bridge; they are the
+    // right surface for labelling a domain enum outside a display line. The
+    // consumer-driven trim (#309) removed the other five with their last
+    // frontend caller, and their names stay in `RENDERED_ENUMS` so a
+    // reintroduced call is still caught.
     const QString path =
         QString::fromUtf8(LABEL_RENDERING_SOURCE.data(), static_cast<qsizetype>(LABEL_RENDERING_SOURCE.size()));
     std::string renderingSource;

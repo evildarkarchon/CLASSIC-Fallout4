@@ -395,6 +395,9 @@ fn file_io_core_benchmarks(c: &mut Criterion) {
     // Benchmark read file (async - uses tokio runtime)
     group.bench_function("read_file_1kb_cached", |b| {
         let file_io = FileIOCore::default();
+        // Bench-local runtime so the measured loop owns its executor; benches
+        // are never shipped.
+        #[allow(clippy::disallowed_methods)]
         let rt = tokio::runtime::Runtime::new().unwrap();
 
         // Prime the cache
@@ -407,6 +410,8 @@ fn file_io_core_benchmarks(c: &mut Criterion) {
 
     group.bench_function("read_file_10kb_cached", |b| {
         let file_io = FileIOCore::default();
+        // Bench-local runtime, as above.
+        #[allow(clippy::disallowed_methods)]
         let rt = tokio::runtime::Runtime::new().unwrap();
 
         // Prime the cache

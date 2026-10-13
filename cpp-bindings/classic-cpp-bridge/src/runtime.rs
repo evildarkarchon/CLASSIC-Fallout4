@@ -17,13 +17,6 @@ fn shutdown_runtime() {
     // This function exists for API symmetry so C++ can express intent.
 }
 
-fn is_runtime_active() -> bool {
-    // The LazyLock runtime is always active once initialized.
-    // We verify by running a trivial task.
-    let rt = get_runtime();
-    rt.block_on(async { true })
-}
-
 #[cxx::bridge(namespace = "classic::runtime")]
 mod ffi {
     extern "Rust" {
@@ -32,9 +25,6 @@ mod ffi {
 
         /// Signal shutdown intent (no-op; runtime lives for process lifetime).
         fn shutdown_runtime();
-
-        /// Check if the runtime is active and responsive.
-        fn is_runtime_active() -> bool;
     }
 }
 

@@ -42,7 +42,6 @@
       "rustSymbols": [
         "FileIOCore"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "file-effects"
       ]

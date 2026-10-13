@@ -3,6 +3,9 @@
 //! These tests verify cross-component workflows involving database operations,
 //! caching, and FormID lookups using real SQLite databases.
 
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use classic_database_core::{DatabaseError, DatabasePool};
 use sqlx::sqlite::SqlitePoolOptions;
 use std::path::PathBuf;

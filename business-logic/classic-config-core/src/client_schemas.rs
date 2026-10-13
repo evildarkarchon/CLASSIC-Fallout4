@@ -19,7 +19,10 @@
 //!
 //! The drift-guard CI step (Section 13 of the yaml-update-delivery change)
 //! will compare bundled YAML headers against these constants and fail the
-//! build if a checked-in file would be refused at load time.
+//! build if a checked-in file would be refused at load time. That guard is
+//! the crate-local test in `client_schemas_tests.rs`, which runs under
+//! `cargo test --workspace`; a new constant must be registered in its
+//! `client_schemas_const` table.
 //!
 //! # Migration history
 //!
@@ -86,3 +89,7 @@ pub fn shippable_schema_entries() -> Vec<ShippableSchemaEntry> {
         },
     ]
 }
+
+#[cfg(test)]
+#[path = "client_schemas_tests.rs"]
+mod tests;

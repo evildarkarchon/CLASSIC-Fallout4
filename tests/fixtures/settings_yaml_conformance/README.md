@@ -6,6 +6,7 @@ All file writes use scenario-owned temporary directories.
 
 The explicit update order is shared by every adapter. Unchanged `items` and
 `mapping` precede updated `name`, `ready`, `size`, and `values`, making serialized
-field order agree with the Node JSON transport's sorted-map representation.
+field order agree with a sorted-map representation (the retired Node JSON
+transport used one).
 This lifecycle pack still compares exact saved bytes. The separate batch pack
 tests non-alphabetical ordered-map semantics without normalization.

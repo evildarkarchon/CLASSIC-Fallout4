@@ -427,7 +427,7 @@ impl CommitPublicationStage for PublicationStage {
             Self::Sync => "commit_temp_sync_failed",
             // The shared vocabulary calls this stage `Publish`. Mapping it to anything but
             // `commit_replace_failed` would silently retire that published code and every
-            // operation code derived from it, across three bindings at once.
+            // operation code derived from it, across every binding at once.
             Self::Publish => "commit_replace_failed",
         }
     }
@@ -454,8 +454,8 @@ impl Publisher for SystemPublisher {
                 .map_err(|error| map_publication_error(&error))?;
 
         // Durability uncertainty is deliberately discarded rather than reported. Surfacing it
-        // would require new stable codes across the C++, Node, and Python bindings plus
-        // refreshed parity baselines. Follow-up: GitHub issue #153 ("Deepen Durable
+        // would require new stable codes across the C++ bridge and its frontends.
+        // Follow-up: GitHub issue #153 ("Deepen Durable
         // Publication"), under "Out of Scope" — "Surfacing durability uncertainty on User
         // Settings commit ... tracked separately".
         //

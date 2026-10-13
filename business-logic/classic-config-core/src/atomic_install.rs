@@ -295,9 +295,8 @@ pub fn install_atomic(
 
     // Post-rename durability uncertainty is deliberately discarded on this
     // path, and named here rather than dropped so the decision is reviewable.
-    // Surfacing it would mean a new stable outcome across the C++, Node, and
-    // Python bindings plus refreshed parity baselines, which is out of scope
-    // for a behaviour-preserving change.
+    // Surfacing it would mean a new stable outcome across the C++ bridge and
+    // its frontends, which is out of scope for a behaviour-preserving change.
     //
     // Follow-up: GitHub issue #153 ("Deepen Durable Publication"), under
     // "Out of Scope" — "Surfacing durability uncertainty on User Settings

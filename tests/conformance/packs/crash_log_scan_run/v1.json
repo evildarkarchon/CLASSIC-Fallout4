@@ -92,8 +92,7 @@
       ],
       "observationFamilies": [
         "structured-failure"
-      ],
-      "operationScoped": true
+      ]
     },
     {
       "id": "scan-run.config-issue",
@@ -102,8 +101,7 @@
       ],
       "observationFamilies": [
         "config-issue-values"
-      ],
-      "operationScoped": true
+      ]
     }
   ],
   "scenarios": [

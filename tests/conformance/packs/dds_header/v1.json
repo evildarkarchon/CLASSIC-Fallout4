@@ -33,7 +33,6 @@
       "rustSymbols": [
         "FileIOCore"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "file-headers"
       ]
@@ -44,7 +43,6 @@
       "rustSymbols": [
         "DDSAnalyzer"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "dds-issues"
       ]

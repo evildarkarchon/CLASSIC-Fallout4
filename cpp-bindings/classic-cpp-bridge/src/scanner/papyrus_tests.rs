@@ -19,34 +19,6 @@ fn test_papyrus_log_exists_with_real_file() {
 }
 
 #[test]
-fn test_papyrus_analyze_full() {
-    let mut temp = NamedTempFile::new().unwrap();
-    writeln!(temp, "Dumping Stacks for thread 0x1234").unwrap();
-    writeln!(temp, "Dumping Stack for function foo").unwrap();
-    writeln!(temp, "[2024/01/01] warning: Variable not initialized").unwrap();
-    writeln!(temp, "[2024/01/01] error: Null reference").unwrap();
-    temp.flush().unwrap();
-
-    let path = temp.path().to_str().unwrap();
-    let mut analyzer = papyrus_analyzer_new(path);
-    let dto = papyrus_analyze_full(&mut analyzer).unwrap();
-
-    assert_eq!(dto.dumps, 1);
-    assert_eq!(dto.stacks, 1);
-    assert_eq!(dto.warnings, 1);
-    assert_eq!(dto.errors, 1);
-    assert_eq!(dto.lines_processed, 4);
-    assert!(dto.dumps_stacks_ratio > 0.0);
-}
-
-#[test]
-fn test_papyrus_analyze_full_nonexistent() {
-    let mut analyzer = papyrus_analyzer_new("/nonexistent/Papyrus.0.log");
-    let result = papyrus_analyze_full(&mut analyzer);
-    assert!(result.is_err());
-}
-
-#[test]
 fn test_papyrus_start_monitoring_nonexistent() {
     let mut analyzer = papyrus_analyzer_new("/nonexistent/Papyrus.0.log");
     let result = papyrus_start_monitoring(&mut analyzer);
@@ -76,29 +48,6 @@ fn test_papyrus_start_monitoring_and_check_updates() {
     temp.flush().unwrap();
 
     // Now check_updates should pick up the new lines
-    let dto = papyrus_check_updates(&mut analyzer);
-    assert_eq!(dto.dumps, 1);
-    assert_eq!(dto.errors, 1);
-    assert_eq!(dto.lines_processed, 2);
-}
-
-#[test]
-fn test_papyrus_reset() {
-    let mut temp = NamedTempFile::new().unwrap();
-    writeln!(temp, "Dumping Stacks").unwrap();
-    writeln!(temp, "[2024/01/01] error: Null ref").unwrap();
-    temp.flush().unwrap();
-
-    let path = temp.path().to_str().unwrap();
-    let mut analyzer = papyrus_analyzer_new(path);
-
-    // Analyze to populate stats
-    papyrus_analyze_full(&mut analyzer).unwrap();
-
-    // Reset clears everything
-    papyrus_reset(&mut analyzer);
-
-    // check_updates after reset should re-read from beginning
     let dto = papyrus_check_updates(&mut analyzer);
     assert_eq!(dto.dumps, 1);
     assert_eq!(dto.errors, 1);

@@ -4,13 +4,14 @@
 //! - yaml-rust2 for parsing (pure Rust, YAML 1.2 compliant)
 //! - Parallel file I/O with Tokio
 //! - Efficient memory representation
-//! - NO PyO3 dependency - pure Rust business logic only
+//! - Pure Rust business logic only
 //!
 //! ## ONE RUNTIME RULE
 //! This crate uses the shared global Tokio runtime from classic-shared-core.
 //! All async operations use `classic_shared_core::get_runtime().block_on()`.
 
 pub mod atomic_install;
+pub mod client_schema_ranges;
 pub mod client_schemas;
 pub mod crashgen_expectation_parser;
 pub(crate) mod crashgen_registry_yaml;

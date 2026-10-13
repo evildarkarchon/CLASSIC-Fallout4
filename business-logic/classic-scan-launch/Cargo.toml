@@ -9,7 +9,7 @@ description = "Crash Log Scan Launch: read-only projection of User Settings and 
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
+crate-type = ["rlib"] # Pure Rust library only
 
 [dependencies]
 # One-way edges only (ADR-0009). This crate sits above both owners it composes:

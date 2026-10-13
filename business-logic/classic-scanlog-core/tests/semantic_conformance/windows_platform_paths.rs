@@ -8,7 +8,7 @@ use serde_json::Value;
 pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
     use classic_path_core::{DocsPathError, GamePathError};
     let oracle = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tools/binding_compliance/platform_path_oracle.ps1");
+        .join("tests/semantic_conformance/platform_path_oracle.ps1");
     let child = std::process::Command::new("pwsh")
         .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"])
         .arg(oracle)

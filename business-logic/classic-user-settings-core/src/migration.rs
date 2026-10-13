@@ -95,9 +95,9 @@ impl Vocabulary for MigrationChangeKind {
     ];
 
     /// These tokens are frozen. They are the exact strings the C++ and Python
-    /// surfaces already published, and the strings the Node surface publishes
-    /// after its documented camelCase transform, so respelling one here breaks
-    /// every binding consumer at once.
+    /// surfaces already published, and the strings the retired Node surface
+    /// published after its documented camelCase transform, so respelling one
+    /// here breaks every binding consumer at once.
     fn as_str(self) -> &'static str {
         match self {
             Self::LocationTransition => "location_transition",
