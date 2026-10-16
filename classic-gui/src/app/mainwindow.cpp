@@ -76,13 +76,6 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
     return QString::number(static_cast<double>(elapsedMs) / 1000.0, 'f', 1);
 }
 
-// The two surviving Installed YAML Data label helpers live in `workers/scanrunpresentation.h`.
-// They label a domain enum *outside* a display line, which is the one place a direct label call is
-// still correct: the status row below is a single progress-bar format string with no room for the
-// rendered Installed YAML Data block, so it states the selection in five words instead.
-using classic::gui::installedYamlDataProvenanceLabel;
-using classic::gui::localIgnoreStateLabel;
-
 /// Reduces a rendered Crash Log Scan Run to the one plain line the progress row can hold.
 ///
 /// Terminal scan-run signals carry rich text, because they all end in a `QMessageBox` that can
@@ -1377,8 +1370,6 @@ void MainWindow::onScanCrashLogs()
     m_crashScanLogsCompleted = 0;
     m_crashScanInProgress = true;
     m_lastScanReportDirs.clear();
-    m_hasLastInstalledYamlData = false;
-    m_lastInstalledYamlData = {};
     m_crashScanTimer.start();
     setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
@@ -1514,8 +1505,14 @@ void MainWindow::onScanCompleted(int total, int success, int errors, const QStri
     initResultsReportDir();
 
     // The same shape as every other terminal path in this window: the run states its own outcome,
-    // and this window adds only what the run cannot know. That is the elapsed time, measured from a
-    // clock Rust does not carry, and the Installed YAML Data suffix.
+    // and this window adds only what the run cannot know: the elapsed time, measured from a clock
+    // Rust does not carry.
+    //
+    // The progress row used to end in an Installed YAML Data suffix naming each file's provenance,
+    // schema version, and Local Ignore state. It is gone on purpose: the row reports operation
+    // progress, and the selected YAML Data is diagnostic detail that already reaches the log inside
+    // the rendered run, with a degraded selection still raised as a Scan Warning by
+    // `onScanInstalledYamlDataResolved`.
     //
     // This used to read `Scan completed: %1 logs scanned in %2s (%3 succeeded, %4 failed)`, composed
     // from the counts alone. It was the last sentence about a Crash Log Scan Run that this frontend
@@ -1526,8 +1523,7 @@ void MainWindow::onScanCompleted(int total, int success, int errors, const QStri
     // noun Rust already agreed with its value.
     setStatusMessage(QStringLiteral("%1 (%2s)")
                          .arg(scanRunStatusLine(message))
-                         .arg(format_elapsed_seconds(m_crashScanTimer)) +
-                     installedYamlDataStatusSuffix());
+                         .arg(format_elapsed_seconds(m_crashScanTimer)));
 
     // Auto-switch to Results tab is handled by ResultsController::onScanCompleted()
 }
@@ -1542,8 +1538,7 @@ void MainWindow::onScanCancelled(const QString& message)
     initResultsReportDir();
     setStatusMessage(QStringLiteral("%1 (%2s)")
                          .arg(scanRunStatusLine(message))
-                         .arg(format_elapsed_seconds(m_crashScanTimer)) +
-                     installedYamlDataStatusSuffix());
+                         .arg(format_elapsed_seconds(m_crashScanTimer)));
 }
 
 void MainWindow::onScanNoLogsFound(const QString& message)
@@ -1554,7 +1549,7 @@ void MainWindow::onScanNoLogsFound(const QString& message)
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
     initResultsReportDir();
-    setStatusMessage(scanRunStatusLine(message) + installedYamlDataStatusSuffix());
+    setStatusMessage(scanRunStatusLine(message));
 }
 
 void MainWindow::onScanError(const QString& message)
@@ -1567,8 +1562,7 @@ void MainWindow::onScanError(const QString& message)
     initResultsReportDir();
     setStatusMessage(QStringLiteral("Scan failed after %1s: %2")
                          .arg(format_elapsed_seconds(m_crashScanTimer))
-                         .arg(scanRunStatusLine(message)) +
-                     installedYamlDataStatusSuffix());
+                         .arg(scanRunStatusLine(message)));
 
     showScanRunMessage(this, QMessageBox::Critical, QStringLiteral("Scan Error"), message);
 }
@@ -1587,9 +1581,6 @@ void MainWindow::onScanReportDirectoriesResolved(const QStringList& reportDirs)
 void MainWindow::onScanInstalledYamlDataResolved(
     const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData)
 {
-    m_lastInstalledYamlData = installedYamlData;
-    m_hasLastInstalledYamlData = true;
-
     // The three log blocks that used to live here — the selection summary, the reset backup line,
     // and one line per structured diagnostic — are gone rather than moved. Every fact they carried
     // is a line in the Installed YAML Data block the Rust core renders, and `ScanWorker` logs the
@@ -1602,19 +1593,6 @@ void MainWindow::onScanInstalledYamlDataResolved(
     if (!warning.isEmpty()) {
         onScanWarning(warning);
     }
-}
-
-QString MainWindow::installedYamlDataStatusSuffix() const
-{
-    if (!m_hasLastInstalledYamlData) {
-        return {};
-    }
-    return QStringLiteral(" | YAML Data: Main %1 schema %2, Game %3 schema %4, Local Ignore %5")
-        .arg(installedYamlDataProvenanceLabel(m_lastInstalledYamlData.main.provenance),
-             m_lastInstalledYamlData.main.schemaVersion,
-             installedYamlDataProvenanceLabel(m_lastInstalledYamlData.gameFile.provenance),
-             m_lastInstalledYamlData.gameFile.schemaVersion,
-             localIgnoreStateLabel(m_lastInstalledYamlData.localIgnoreState));
 }
 
 void MainWindow::onShowSettings()

@@ -34,11 +34,11 @@ namespace classic::gui {
 //
 // What that leaves behind, and why:
 //
-//   * Only two bridge label accessors survive, and both label a domain enum
-//     *outside* a display line: `installedYamlDataStatusSuffix` in
-//     `mainwindow.cpp` compresses the YAML Data selection into one status row
-//     that has no room for the rendered block. Rendering a label there is still
-//     correct; re-deriving one that a `Label` segment already carries is not.
+//   * No bridge label accessor is called from this frontend any more. The last
+//     two labelled the YAML Data selection for a suffix on the progress row;
+//     that suffix was debug detail rather than progress and was removed, and
+//     the selection still reaches the log inside the rendered Installed YAML
+//     Data block.
 //   * The four accessors that used to serve infrastructure errors, resume
 //     errors, per-log failures, and Installed YAML Data diagnostics are gone,
 //     because every one of those labels now reaches the user inside the line
@@ -213,16 +213,6 @@ QVector<ScanRunDisplaySegmentPresentation> presentScanRunDisplaySegments(
 }
 
 } // namespace
-
-QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state)
-{
-    return classic::toQString(classic::scanner::scan_run_local_ignore_yaml_data_state_label(state));
-}
-
-QString installedYamlDataProvenanceLabel(classic::scanner::ScanRunInstalledYamlDataProvenance provenance)
-{
-    return classic::toQString(classic::scanner::scan_run_installed_yaml_data_provenance_label(provenance));
-}
 
 QVector<ScanRunDisplayLinePresentation> presentScanRunDisplayLines(
     const rust::Vec<classic::scanner::ScanRunDisplayLine>& lines)

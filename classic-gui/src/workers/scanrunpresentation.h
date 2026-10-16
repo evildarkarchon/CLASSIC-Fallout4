@@ -226,18 +226,6 @@ struct ScanRunTerminalPresentation {
     ScanRunLocalIgnoreRecoveryPresentation recoveryPrompt;
 };
 
-/// Returns the core Display Label for one scan-run Local Ignore YAML Data state.
-///
-/// The wording belongs to the Rust core and is fetched through the bridge, so the CLI, the GUI, and
-/// the TUI cannot describe the same outcome differently. Presentation only — branch on the enum, and
-/// never on this string, because a Display Label may be reworded between releases.
-QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state);
-
-/// Returns the core Display Label for one selected YAML Data provenance.
-///
-/// Same contract as localIgnoreStateLabel: core-owned prose, safe to reword, never parsed.
-QString installedYamlDataProvenanceLabel(classic::scanner::ScanRunInstalledYamlDataProvenance provenance);
-
 /// Projects one rendered Crash Log Scan Run block into Qt-owned display lines.
 ///
 /// The order Rust chose is preserved exactly, both between lines and between the segments inside a
