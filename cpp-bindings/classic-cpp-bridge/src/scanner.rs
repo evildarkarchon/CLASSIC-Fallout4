@@ -15,7 +15,6 @@ pub(crate) use contract::{
     scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled, scan_run_cancellation_new,
     scan_run_contract_execute, scan_run_contract_execution_has_pending_recovery,
     scan_run_contract_execution_take_pending_recovery, scan_run_contract_execution_take_result,
-    scan_run_installed_yaml_data_provenance_label, scan_run_local_ignore_yaml_data_state_label,
     scan_run_pending_recovery_cancellation_requested, scan_run_pending_recovery_prompt,
     scan_run_pending_recovery_settle,
 };
@@ -806,22 +805,6 @@ mod ffi {
             observer: *const ScanRunObserver,
             observer_failure_policy: ScanRunObserverFailurePolicy,
         ) -> Result<ScanRunContractExecutionResult>;
-
-        /// Human-facing Display Label for one selected-file candidate provenance.
-        ///
-        /// It exists beside the configuration crate's own wording because cxx
-        /// namespaces its shared enums per bridge module and a scan-run result
-        /// carries the scanner-local mirror. Presentation only: the label is
-        /// reworkable between releases, so branch on the enum and never on this
-        /// string. An out-of-range enum value yields an empty string.
-        fn scan_run_installed_yaml_data_provenance_label(
-            provenance: ScanRunInstalledYamlDataProvenance,
-        ) -> String;
-        /// Human-facing Display Label for one scan-run Local Ignore state.
-        /// Same stability caveat as above.
-        fn scan_run_local_ignore_yaml_data_state_label(
-            state: ScanRunLocalIgnoreYamlDataState,
-        ) -> String;
 
         /// Launches a Standard Crash Log Scan from saved User Settings and `overrides`.
         ///

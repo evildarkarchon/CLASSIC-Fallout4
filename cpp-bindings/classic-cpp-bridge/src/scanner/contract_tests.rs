@@ -3,11 +3,6 @@ use super::*;
 // descriptions inside one are read through it. The tests fabricate descriptions directly, so
 // they need the type by name.
 use classic_scan_presentation::RecoveryDecisionDescription;
-// Imported here rather than in `contract.rs`: the module itself only projects
-// labels through `crate::vocabulary::display_label`, so the trait is in scope
-// only where the tests read `label()` off a core variant to derive their
-// expectation from.
-use classic_vocabulary::Vocabulary;
 // The request fixtures below build core requests directly, so they name the core
 // source and setup types `contract.rs` no longer needs.
 use classic_scanlog_core::{
@@ -1271,104 +1266,6 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
     assert_eq!(
         execution.error.path,
         missing_data.join("CLASSIC Data").to_string_lossy()
-    );
-}
-
-// --- Vocabulary projection ------------------------------------------------
-//
-// Expectations are derived from `classic-scanlog-core`, never restated. A
-// hand-written array here would be another copy of the vocabulary: it would
-// pass against a bridge that had already drifted, because it would only be
-// comparing this file's copy against itself. Iterating `VARIANTS` also means a
-// new variant is covered without anyone remembering to extend these tests.
-
-#[test]
-/// Every projected CXX variant resolves back to the core Display Label.
-fn every_scan_run_twin_projects_its_core_display_label() {
-    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
-        assert_eq!(
-            scan_run_local_ignore_yaml_data_state_label(map_local_ignore_yaml_data_state(variant)),
-            variant.label(),
-        );
-    }
-}
-
-#[test]
-/// No scan-run Display Label reaches C++ empty.
-fn no_scan_run_display_label_reaches_cxx_empty() {
-    // The label functions fall back to an empty string for a value the forward
-    // projection cannot produce. That fallback must stay unreachable for every
-    // real variant, because an empty label is exactly the "variant that renders
-    // as nothing" the naming contract exists to prevent.
-    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
-        assert!(
-            !scan_run_local_ignore_yaml_data_state_label(map_local_ignore_yaml_data_state(variant))
-                .is_empty()
-        );
-    }
-}
-
-/// Asserts one enum's CXX label projection agrees with the core, for every variant.
-///
-/// Both clauses matter and neither implies the other. The equality is the real
-/// check. The non-empty assertion pins the `display_label` `""` fallback as
-/// unreachable for a real variant — an empty label is exactly the "variant that
-/// renders as nothing" the naming contract exists to prevent, and core
-/// conformance guarantees it only on the core side of the seam.
-fn assert_cxx_labels_match_the_core<Core, Cxx>(
-    project: fn(Core) -> Cxx,
-    label_of: fn(Cxx) -> String,
-) where
-    Core: Vocabulary,
-    Cxx: Copy + PartialEq,
-{
-    for variant in Core::VARIANTS.iter().copied() {
-        let label = label_of(project(variant));
-        assert_eq!(label, variant.label());
-        assert!(!label.is_empty());
-    }
-}
-
-
-#[test]
-/// The scanner-local provenance mirror projects the configuration Display Label.
-///
-/// `InstalledYamlDataProvenance` is not a twin — the run contract reuses the
-/// configuration type outright rather than declaring its own. What is
-/// scanner-local is only the *CXX mirror*, because `#[cxx::bridge]` namespaces
-/// its shared enums per module, so a configuration-namespace provenance label
-/// cannot accept the value a scan-run result carries. This entry point exists
-/// so a C++ frontend resolves the label the same way as the other scan-run
-/// labels rather than hand-mapping one mirror onto another.
-fn the_scanner_provenance_mirror_projects_its_core_display_label() {
-    assert_cxx_labels_match_the_core(
-        map_installed_yaml_data_provenance,
-        scan_run_installed_yaml_data_provenance_label,
-    );
-}
-
-#[test]
-/// A fabricated CXX enum value yields nothing rather than an invented label.
-fn an_out_of_range_scan_run_cxx_enum_value_yields_an_empty_display_label() {
-    // CXX shared enums are open at the FFI boundary: C++ can hand back any
-    // `u8`. The bridge never produces one of these, but returning some other
-    // variant's label - or a hand-written "unknown" string - would put
-    // vocabulary back in the adapter, which is what this work removes.
-    //
-    // Every enum with a label projection: each one is a separate
-    // `display_label` call site, and each could independently grow a fallback
-    // that invents a label instead of rendering nothing.
-    assert_eq!(
-        scan_run_local_ignore_yaml_data_state_label(ffi::ScanRunLocalIgnoreYamlDataState {
-            repr: u8::MAX
-        }),
-        ""
-    );
-    assert_eq!(
-        scan_run_installed_yaml_data_provenance_label(ffi::ScanRunInstalledYamlDataProvenance {
-            repr: u8::MAX
-        }),
-        ""
     );
 }
 

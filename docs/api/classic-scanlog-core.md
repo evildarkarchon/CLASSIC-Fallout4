@@ -357,16 +357,17 @@ choice: these name ordinary steps rather than domain terms, and rewording them
 would change what all three frontends print for no reader's benefit.
 
 The C++ bridge exposes a Display Label projection only where a frontend reads
-one. Of these six, that is `scan_run_local_ignore_yaml_data_state_label`, which
-takes the frozen FFI mirror enum and returns `String`, or `""` for an
-out-of-range value; the consumer-driven bridge trim removed the other five
-because no frontend called them. (The Node and Python projections of all six
-retired with those bindings, ADR-0010.)
+one, and today none of these six qualifies: every label reaches the frontends
+inside a `Label` segment of a rendered display line. The consumer-driven bridge
+trim removed five because no frontend called them, and
+`scan_run_local_ignore_yaml_data_state_label` followed when the GUI dropped the
+progress-row YAML Data suffix that was its last caller. (The Node and Python
+projections of all six retired with those bindings, ADR-0010.)
 
-The label crosses the binding seam as its own entry point rather than being
-folded into a DTO string, because two of the three frontends are C++ and a Qt
-view is not line-oriented — it wants the variant and its label separately, for
-independently styled table columns.
+Should a frontend need one again, the label crosses the binding seam as its own
+entry point rather than being folded into a DTO string, because two of the three
+frontends are C++ and a Qt view is not line-oriented — it wants the variant and
+its label separately, for independently styled table columns.
 
 Adding a variant to a mirrored enum cannot pass silently: the source-to-twin
 `match` stops compiling, and if that guard is ever given up for a catch-all arm

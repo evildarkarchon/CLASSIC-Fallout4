@@ -460,10 +460,11 @@ TEST_CASE("Every CLI Display Label arrives inside a rendered display line", "[di
     // tolerated: re-deriving a label that a segment already carries is how a
     // frontend ends up disagreeing with the sentence built around it.
     //
-    // Only the two accessors the Qt GUI still calls, for labelling outside a
-    // display line, remain on the bridge; the consumer-driven trim (#309) removed
-    // the other five with their last frontend caller. Their names stay in
-    // `RENDERED_ENUMS` so a reintroduced call is still caught here.
+    // None of the seven remain on the bridge. The consumer-driven trim (#309)
+    // removed five with their last frontend caller, and the last two followed
+    // when the Qt GUI dropped the progress-row YAML Data suffix that labelled
+    // outside a display line. Their names stay in `RENDERED_ENUMS` so a
+    // reintroduced call is still caught here.
     const std::string source = read_source("src/scan_run_cli.cpp");
     for (const auto& rendered : RENDERED_ENUMS) {
         INFO(rendered.label_accessor << " is called from src/scan_run_cli.cpp, but " << rendered.type_name

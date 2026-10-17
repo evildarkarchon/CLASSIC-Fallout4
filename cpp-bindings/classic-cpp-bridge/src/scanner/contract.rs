@@ -14,7 +14,6 @@ use classic_scanlog_core::{
     CrashLogScanRunStatus, CrashLogScanSetupResult, ScanProgressPhase,
 };
 use classic_shared_core::GameId;
-use classic_vocabulary::display_label;
 use std::path::PathBuf;
 
 use super::ffi;
@@ -1088,41 +1087,6 @@ fn map_local_ignore_yaml_data_state(
             ffi::ScanRunLocalIgnoreYamlDataState::ResetToDefault
         }
     }
-}
-
-/// Return the human-facing Display Label for one selected-file provenance.
-///
-/// The C++ frontends reach the core only through this bridge, and a Qt view is
-/// not line-oriented — it wants the variant and its label separately so it can
-/// style them as independent table columns. That is why the label crosses the
-/// binding seam as its own entry point rather than being folded into a DTO
-/// string.
-///
-/// This enum is neither run-owned nor a twin: the run contract reuses
-/// `classic_config_core::InstalledYamlDataProvenance` outright. Only the *CXX
-/// mirror* is scanner-local, because `#[cxx::bridge]` namespaces its shared
-/// enums per module — so the configuration module's provenance label cannot
-/// accept the value a scan-run result actually carries. Without this, a C++
-/// frontend would have to map one mirror onto the other by hand, which is a
-/// second variant mapping able to disagree with the forward one — exactly
-/// what [`display_label`] exists to avoid.
-pub(crate) fn scan_run_installed_yaml_data_provenance_label(
-    provenance: ffi::ScanRunInstalledYamlDataProvenance,
-) -> String {
-    display_label(provenance, map_installed_yaml_data_provenance).to_string()
-}
-
-/// Return the human-facing Display Label for one scan-run Local Ignore state.
-///
-/// Same seam reasoning as [`scan_run_installed_yaml_data_provenance_label`].
-/// The wording is the configuration crate's, because the core enum behind this
-/// projection is a contract-stability twin that delegates both naming forms
-/// there. `RecoveryRequired` is the one variant whose prose the run contract
-/// owns itself, since a paused run has no configuration counterpart.
-pub(crate) fn scan_run_local_ignore_yaml_data_state_label(
-    state: ffi::ScanRunLocalIgnoreYamlDataState,
-) -> String {
-    display_label(state, map_local_ignore_yaml_data_state).to_string()
 }
 
 /// Maps the CXX observer failure policy onto the core policy, rejecting CXX's

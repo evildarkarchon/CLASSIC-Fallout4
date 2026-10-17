@@ -189,12 +189,14 @@ struct RenderedEnum {
     std::string_view labelAccessor;
     /// Whether this frontend still calls the accessor.
     ///
-    /// True for exactly the two enums the GUI labels *outside* a display line:
-    /// `installedYamlDataStatusSuffix` compresses the YAML Data selection into
-    /// one progress-bar format string, which has no room for the rendered
-    /// Installed YAML Data block. Everywhere else the label now arrives inside a
-    /// `Label` segment, and calling the accessor again would be re-deriving a
-    /// word the run already said.
+    /// True only for an enum the GUI labels *outside* a display line, on a
+    /// surface too small for a rendered line. No enum qualifies today: the last
+    /// two (Local Ignore state and YAML Data provenance) served a YAML Data
+    /// suffix on the progress row, which was removed as debug detail. Every
+    /// label now arrives inside a `Label` segment, and calling the accessor
+    /// again would be re-deriving a word the run already said. The flag stays so
+    /// a future one-row surface can opt back in deliberately, restoring the
+    /// bridge export in the same change.
     bool labelledOutsideADisplayLine;
     /// Whether the rendering source still handles this type at all.
     ///
@@ -215,8 +217,8 @@ constexpr auto RENDERED_ENUMS = std::to_array<RenderedEnum>({
     {"ScanRunContractLogFailureStage", "scanner::scan_run_log_failure_stage_label", false, false},
     {"ScanRunContractInfrastructureErrorStage", "scanner::scan_run_infrastructure_error_stage_label", false, false},
     {"ScanRunLocalIgnoreResetFailureStage", "scanner::scan_run_local_ignore_reset_failure_stage_label", false, false},
-    {"ScanRunInstalledYamlDataProvenance", "scanner::scan_run_installed_yaml_data_provenance_label", true, true},
-    {"ScanRunLocalIgnoreYamlDataState", "scanner::scan_run_local_ignore_yaml_data_state_label", true, true},
+    {"ScanRunInstalledYamlDataProvenance", "scanner::scan_run_installed_yaml_data_provenance_label", false, false},
+    {"ScanRunLocalIgnoreYamlDataState", "scanner::scan_run_local_ignore_yaml_data_state_label", false, true},
     {"ScanRunInstalledYamlDataDiagnosticKind", "scanner::scan_run_installed_yaml_data_diagnostic_kind_label", false,
      true},
     {"ScanRunContractLogDisposition", "scanner::scan_run_log_disposition_label", false, true},
@@ -897,20 +899,23 @@ void DisplayLabelAuditTests::every_rendered_gui_display_label_comes_from_a_bridg
     // accessor again would re-derive a word the run just said, which the adapter
     // contract forbids in as many words.
     //
-    // Two calls survive and are still required. `installedYamlDataStatusSuffix`
-    // in `mainwindow.cpp` compresses the YAML Data selection into a single
-    // progress-bar format string; there is no rendered line small enough to go
-    // there, so labelling the enum directly is exactly the case the accessors
-    // remain correct for.
+    // The last two calls — Local Ignore state and YAML Data provenance — went
+    // with the YAML Data suffix on the progress row. That suffix compressed the
+    // selection into the progress-bar format string, but it was debug detail
+    // rather than progress, and the rendered Installed YAML Data block already
+    // carries the same facts to the log. With no caller left, both enums are
+    // audited negatively like the rest.
     //
     // Per-log disposition was already excluded before this change, decided on
     // #167, and stays excluded for the same reason: `presentLog` maps the three
     // variants onto booleans that select control flow and feed counts.
     //
-    // Only the two accessors in use here remain on the bridge; they are the
-    // right surface for labelling a domain enum outside a display line. The
-    // consumer-driven trim (#309) removed the other five with their last
-    // frontend caller, and their names stay in `RENDERED_ENUMS` so a
+    // None of the seven accessors remain on the bridge. The consumer-driven
+    // trim (#309) removed five with their last frontend caller, and the last
+    // two followed when the progress-row suffix went. A bridge accessor is
+    // still the right surface for labelling a domain enum outside a display
+    // line, should this frontend grow such a surface again; the export comes
+    // back with that caller. All seven names stay in `RENDERED_ENUMS` so a
     // reintroduced call is still caught.
     const QString path =
         QString::fromUtf8(LABEL_RENDERING_SOURCE.data(), static_cast<qsizetype>(LABEL_RENDERING_SOURCE.size()));

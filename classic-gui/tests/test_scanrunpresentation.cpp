@@ -132,20 +132,12 @@ private slots:
     void every_severity_maps_to_this_frontends_own_styling();
     void rendered_lines_reach_the_terminal_presentation_in_rust_order();
 
-    // Display Label coverage for the two enums this frontend still labels itself.
-    //
-    // Both are labelled *outside* a display line, by the one-row YAML Data status suffix that has no
-    // room for a rendered block. Quoting the canonical strings as literals here is deliberate and is
-    // the one place in this frontend where that is right: it is how a wording a ticket settled gets
-    // pinned across the binding boundary, so a core-side reword has to be a decision rather than an
-    // accident.
-    //
-    // The three sibling blocks that pinned infrastructure stages, reset failure stages, and
-    // diagnostic kinds are gone, not relaxed. Those labels now reach the user inside a `Label`
-    // segment on a line Rust wrote, so pinning them here would assert the presentation crate's
-    // wording a second time — exactly the four-copies-of-one-sentence problem #170 exists to remove.
-    void every_local_ignore_state_renders_its_canonical_display_label();
-    void every_installed_yaml_data_provenance_renders_its_canonical_display_label();
+    // There is no Display Label coverage block here any more, and that is deliberate. The last two
+    // enums this frontend labelled itself — Local Ignore state and YAML Data provenance — served
+    // only the progress-row YAML Data suffix, which was removed as debug detail. Every label now
+    // reaches the user inside a `Label` segment on a line Rust wrote, so pinning one here would
+    // assert the presentation crate's wording a second time — exactly the
+    // four-copies-of-one-sentence problem #170 exists to remove.
 };
 
 void ScanRunPresentationTests::targeted_rejections_preserve_paired_paths_and_reasons()
@@ -680,41 +672,6 @@ void ScanRunPresentationTests::infrastructure_error_preserves_typed_stage_messag
     QCOMPARE(presentation.message,
              QStringLiteral("unreal headline unreal stage\nunreal lead C:/CLASSIC/databases/formids.db"));
     QVERIFY(presentation.richText.contains(QStringLiteral("file:///C:/CLASSIC/databases/formids.db")));
-}
-
-void ScanRunPresentationTests::every_local_ignore_state_renders_its_canonical_display_label()
-{
-    // Generated and ProceedWithoutIgnore are the two that moved. Both were terse GUI-local
-    // inventions that said less than the TUI's wording for the same state.
-    using State = classic::scanner::ScanRunLocalIgnoreYamlDataState;
-    const std::array<std::pair<State, QString>, 5> expected{{
-        {State::Existing, QStringLiteral("existing")},
-        {State::Generated, QStringLiteral("generated from selected Main defaults")},
-        {State::RecoveryRequired, QStringLiteral("recovery required")},
-        {State::ProceedWithoutIgnore, QStringLiteral("proceeded without ignore entries")},
-        {State::ResetToDefault, QStringLiteral("reset to default")},
-    }};
-
-    for (const auto& [state, label] : expected) {
-        QCOMPARE(classic::gui::localIgnoreStateLabel(state), label);
-    }
-}
-
-void ScanRunPresentationTests::every_installed_yaml_data_provenance_renders_its_canonical_display_label()
-{
-    // The one enum in this set whose wording never diverged across the three frontends. Pinned
-    // anyway: it had no string assertion at all before #167, only typed-enum comparisons, so a core
-    // reword would have reached the results view unobserved.
-    using Provenance = classic::scanner::ScanRunInstalledYamlDataProvenance;
-    const std::array<std::pair<Provenance, QString>, 3> expected{{
-        {Provenance::Updated, QStringLiteral("updated")},
-        {Provenance::Previous, QStringLiteral("previous")},
-        {Provenance::Bundled, QStringLiteral("bundled")},
-    }};
-
-    for (const auto& [provenance, label] : expected) {
-        QCOMPARE(classic::gui::installedYamlDataProvenanceLabel(provenance), label);
-    }
 }
 
 void ScanRunPresentationTests::display_line_segments_concatenate_in_the_order_rust_supplied()

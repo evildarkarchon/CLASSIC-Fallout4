@@ -212,31 +212,23 @@ before anything is claimed.
 
 ### Scan-run Display Labels
 
-Two free functions project the human-facing Display Label for run-contract
-enums the GUI labels outside a rendered display line:
+The scanner bridge exports no scan-run Display Label entry points. Every
+scan-run Display Label reaches the frontends inside a `Label` segment of a
+Rust-rendered display line, so frontends never label a run-contract enum
+themselves.
 
-- `scan_run_installed_yaml_data_provenance_label(ScanRunInstalledYamlDataProvenance) -> String`
-- `scan_run_local_ignore_yaml_data_state_label(ScanRunLocalIgnoreYamlDataState) -> String`
+Five label entry points left the bridge with their last frontend caller
+(#309). The last two, `scan_run_installed_yaml_data_provenance_label` and
+`scan_run_local_ignore_yaml_data_state_label`, served only the GUI's one-row
+YAML Data suffix on the progress bar; that suffix was removed as diagnostic
+detail, and the exports went with it. The shared enums themselves stay on the
+bridge as DTO fields: branch on the enum, never on rendered text.
 
-The provenance enum is neither run-owned nor a twin: the run contract reuses
-the configuration crate's provenance type outright, and only the *CXX mirror*
-is scanner-local, because cxx namespaces its shared enums per bridge module.
-The Local Ignore state is a contract-stability twin that delegates its naming
-to the configuration enum it mirrors; `RecoveryRequired` is the one variant
-the run contract names itself, because a paused run has no configuration
-counterpart.
-
-A separate entry point rather than a DTO field lets a Qt view style variant and
-label as independent table columns. Labels are presentation only and reworded
-freely between releases, so branch on the enum and never on the string; an
-out-of-range value returns an empty string rather than an invented label.
-
-`classic-gui/src/workers/scanrunpresentation.cpp` calls both, for the one-row
-progress summary that has no room for a rendered line. Every other scan-run
-Display Label reaches the frontends inside a `Label` segment of a Rust-rendered
-display line, so the other five label entry points left the bridge with their
-last frontend caller (#309). Each frontend's
-`tests/test_display_label_audit.cpp` enforces the split it actually uses.
+A frontend that grows a surface with no room for a rendered line, and so must
+label an enum outside a display line, restores a dedicated entry point in the
+same change rather than mapping variants to words itself. Each frontend's
+`tests/test_display_label_audit.cpp` asserts that none of the seven accessor
+names is called, so a reintroduced call is caught.
 
 ### Requests
 

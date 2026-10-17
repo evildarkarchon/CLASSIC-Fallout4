@@ -49,7 +49,7 @@ private slots:
     // exercises the GUI-thread handoff across a real worker thread, `classic-gui-test-local-ignore-recovery-prompt`
     // drives the actual modal choices, and `classic-gui-test-scanworker-cancellation` runs both
     // decisions plus cancellation through Rust's retained continuation.
-    void installed_yaml_data_propagates_from_worker_to_user_visible_terminal_status();
+    void installed_yaml_data_propagates_from_worker_to_the_window_warning_but_not_the_progress_row();
 };
 
 void ScanSettingsWiringTests::mainwindow_sources_initial_policy_from_rust_defaults()
@@ -776,7 +776,7 @@ void ScanSettingsWiringTests::mainwindow_deduplicates_report_dirs_before_results
              "MainWindow should track report directories case-insensitively before appending them");
 }
 
-void ScanSettingsWiringTests::installed_yaml_data_propagates_from_worker_to_user_visible_terminal_status()
+void ScanSettingsWiringTests::installed_yaml_data_propagates_from_worker_to_the_window_warning_but_not_the_progress_row()
 {
     const QString workerHeaderPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.h");
     QFile workerHeader(workerHeaderPath);
@@ -802,10 +802,13 @@ void ScanSettingsWiringTests::installed_yaml_data_propagates_from_worker_to_user
     const QString mainWindowText = QString::fromUtf8(mainWindowFile.readAll());
     QVERIFY2(mainWindowText.contains(QStringLiteral("&ScanController::scanInstalledYamlDataResolved")),
              "MainWindow should receive the exact Installed YAML Data selected for the run");
-    QVERIFY2(mainWindowText.contains(QStringLiteral("m_lastInstalledYamlData = installedYamlData;")),
-             "MainWindow should retain Installed YAML Data after the worker result is destroyed");
-    QVERIFY2(mainWindowText.contains(QStringLiteral("installedYamlDataStatusSuffix()")),
-             "MainWindow should include selected YAML Data metadata in user-visible terminal status");
+    QVERIFY2(mainWindowText.contains(QStringLiteral("formatInstalledYamlDataWarning(installedYamlData)")),
+             "MainWindow should raise degraded YAML Data selection as a run-level Scan Warning");
+    // The progress row reports operation progress only. The selected YAML Data (provenance, schema
+    // versions, Local Ignore state) is diagnostic detail that already reaches the log inside the
+    // rendered run, so it must not creep back onto the bar as a status suffix.
+    QVERIFY2(!mainWindowText.contains(QStringLiteral("YAML Data: Main")),
+             "MainWindow must not append selected YAML Data metadata to the progress-row status");
 }
 
 QTEST_MAIN(ScanSettingsWiringTests)
