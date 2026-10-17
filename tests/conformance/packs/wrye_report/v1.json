@@ -18,7 +18,6 @@
       "rustSymbols": [
         "parse"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "wrye-issues"
       ]
@@ -31,7 +30,6 @@
         "WryeSeverity",
         "format_report"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "wrye-format"
       ]

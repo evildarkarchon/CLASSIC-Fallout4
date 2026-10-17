@@ -20,7 +20,6 @@
         "from_user_settings",
         "run"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "values"
       ]
@@ -31,7 +30,6 @@
         "normalize_game_setup_version_selection",
         "game_setup_needs_path_detection"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "values"
       ]

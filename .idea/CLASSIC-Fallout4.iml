@@ -35,9 +35,6 @@
       <sourceFolder url="file://$MODULE_DIR$/foundation/classic-shared-core/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/foundation/classic-shared-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/foundation/classic-shared-core/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/python-bindings/classic-python-bindings/benches" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/python-bindings/classic-python-bindings/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/node-bindings/classic-node/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ui-applications/classic-tui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ui-applications/classic-tui/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-durable-publication/src" isTestSource="false" />
@@ -51,9 +48,7 @@
       <excludeFolder url="file://$MODULE_DIR$/classic-core/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
-      <excludeFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/ClassicLib-rs/target" />
-      <excludeFolder url="file://$MODULE_DIR$/python-bindings/.venv" />
     </content>
     <orderEntry type="jdk" jdkName="uv (CLASSIC-Fallout4)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

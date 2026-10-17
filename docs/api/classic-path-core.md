@@ -41,7 +41,7 @@ Do not use this crate for:
 - higher-level game scan orchestration
 - binding-specific wrapper APIs
 
-Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++/Node/Python binding crates.
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++ bridge crate.
 
 ---
 
@@ -76,7 +76,7 @@ The per-user YAML Data cache (`CLASSIC/yaml-cache`) is YAML file policy and move
 - `IniFile` - parsed INI wrapper with case-insensitive section/key lookup
 - `DocumentsChecker` - read-only documents-folder checker
 - `DocumentsCheckResult` / `DocumentsCheckState` - Rust-only rendered documents messages with structured state
-- `IniCheckResult` - structured result for one INI check, also exposed by the Python binding
+- `IniCheckResult` - structured result for one INI check
 
 ### Error APIs
 
@@ -102,7 +102,7 @@ These root exports ended in #245; import them from `classic_shared_core::path_co
 | `is_valid_executable_path` | `is_executable_file_path` (renamed so it cannot be confused with the different `classic_shared_core::version::pe_version::is_valid_executable_path`) |
 | `PathError`, `PathResult` | same names |
 
-The CXX, Node, and Python path adapters keep their existing export names (`is_valid_path`, `isValidExecutablePath`, `PathValidator.is_valid_executable_path`, `removeReadonly`, ...) and delegate to the shared-core owner.
+The C++ bridge does not export these primitives; Rust callers import them from the shared-core owner.
 
 ### Moved custom-scan policy
 
@@ -113,7 +113,7 @@ These root exports ended in the #254 follow-up; import them from `classic_scanlo
 | `is_restricted_path`, `validate_custom_scan_path` | `classic_scanlog_core::` same names |
 | `validate_settings_paths(game, docs, custom_scan, game_exe)` | `classic_scanlog_core::validate_settings_paths` (same signature); its Game/Documents half is `classic_path_core::validate_game_and_documents_paths(game, docs, game_exe)` |
 
-The CXX (`is_restricted_path`, `check_restricted_path`, `path_validate_custom_scan`), Node (`isRestrictedPath`, `validateCustomScanPath`, `validateSettingsPaths`), and Python (`PathValidator.is_restricted_path`, `PathValidator.validate_custom_scan_path`, `PathValidator.validate_settings_paths`) exports keep their names and namespaces and delegate to the scanlog owner.
+The one CXX export of this policy, `classic::path::check_restricted_path`, keeps its name and namespace and delegates to the scanlog owner.
 
 ### Moved version-labelled backup
 
@@ -125,7 +125,7 @@ These root exports ended in #251; import them from `classic_resource_core` inste
 | `XseVersion` | `XseVersion` |
 | `BackupError`, `BackupResult<T>` | `VersionBackupError`, `VersionBackupResult<T>` |
 
-The CXX (`backup_create_timestamped`, `backup_list_existing`), Node (`BackupManager`, `XseVersion`), and Python (`classic_path.BackupManager`, `classic_path.XseVersion`) adapters keep their export names and delegate to the resource-core owner.
+The C++ bridge does not export the version-labelled backup; Rust callers import it from the resource-core owner.
 
 Contributor note:
 
@@ -249,13 +249,6 @@ Important Rust methods:
 - `run_all_check_results(docs_path) -> DocsPathResult<Vec<DocumentsCheckResult>>`
 - `run_all_checks(docs_path) -> DocsPathResult<Vec<String>>`
 - `game_name()`
-
-Python `classic_path.DocumentsChecker` exposes the string-oriented surface only:
-
-- `check_onedrive_in_path(docs_path) -> str | None`
-- `validate_ini_file(docs_path, ini_name) -> IniCheckResult`
-- `run_all_checks(docs_path) -> list[str]`
-- `game_name`
 
 `DocumentsCheckResult` fields:
 
@@ -397,7 +390,6 @@ Related CLASSIC crates and consumers:
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - owns the custom-scan folder policy and composes `validate_game_and_documents_paths()` into its combined `validate_settings_paths()`
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder` and the documents checker for C++ interop
 - [`classic-update-core`](../../business-logic/classic-update-core) - consumes the app-notification cache directory (the YAML Data cache directory is config-owned since issue #246)
-- [`classic-node`](../../node-bindings/classic-node) and [`classic_path` adapter module](../../python-bindings/classic-python-bindings/src/classic_path/) - binding surfaces over this crate's APIs
 - [`classic-tui`](../../ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
 
 In practice, `classic-path-core` sits between config-driven path settings and higher-level scan/setup orchestration.

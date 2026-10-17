@@ -59,7 +59,7 @@ The recovery flow is four steps on the worker thread: execute, check for a pendi
 3. Otherwise the worker synchronously asks `MainWindow` for one explicit choice through `ScanController`. `ScanController::makeLocalIgnoreRecoveryPrompt()` builds that handoff: the returned callable runs on the worker thread, marshals only the Qt-owned presentation across a `Qt::BlockingQueuedConnection`, and returns a typed choice. The operation, pending recovery, and observer remain live on the worker stack throughout, and every path that cannot reach a live controller resolves to `Cancel`.
 4. The worker settles once with `scan_run_pending_recovery_settle(...)` and presents the settled envelope through the same terminal path. A settled run cannot pause again, because Rust's settled result carries no continuation.
 
-The choice becomes the settlement through an exhaustive `switch` producing a `std::optional<ScanRunLocalIgnoreRecoveryDecision>`. A decision is passed as `ScanRunLocalIgnoreRecoverySettlement{true, decision}`. `Cancel` is *no decision* and is passed with `has_decision = false`: Rust cancels the run's own control and finishes it cancelled after discovery, touching nothing on disk, so the worker never cancels first and never picks a placeholder decision. The `optional` shape mirrors the `Option` the Node and Python bindings use, because `LocalIgnoreRecoveryDecision` deliberately carries no abandonment variant. Keeping the `switch` exhaustive means a choice added later trips `-Wswitch` here rather than silently resolving to Proceed Without Ignore.
+The choice becomes the settlement through an exhaustive `switch` producing a `std::optional<ScanRunLocalIgnoreRecoveryDecision>`. A decision is passed as `ScanRunLocalIgnoreRecoverySettlement{true, decision}`. `Cancel` is *no decision* and is passed with `has_decision = false`: Rust cancels the run's own control and finishes it cancelled after discovery, touching nothing on disk, so the worker never cancels first and never picks a placeholder decision. The `optional` shape mirrors the Rust `Option` the settlement takes, because `LocalIgnoreRecoveryDecision` deliberately carries no abandonment variant. Keeping the `switch` exhaustive means a choice added later trips `-Wswitch` here rather than silently resolving to Proceed Without Ignore.
 
 Every paused run is settled, never dropped. Each of these paths settles with no decision:
 
@@ -212,16 +212,15 @@ For completed or cancelled work, report directories are also derived from termin
 
 When intake metadata is present, `ScanWorker` emits the Qt-owned snapshot through
 `installedYamlDataResolved(...)` before terminal lifecycle signals can destroy
-the worker. `ScanController` relays it as `scanInstalledYamlDataResolved(...)`;
-MainWindow clears stale state at scan start, retains the complete snapshot past
-worker lifetime, and includes selected provenance/schema and Local Ignore state
-in terminal status through `installedYamlDataStatusSuffix()`. That suffix is the
-one place this frontend still calls a bridge label accessor directly, and it is
-the case they remain correct for: the status row is a single progress-bar format
-string with no room for the rendered Installed YAML Data block, so it labels the
-enums outside a display line. MainWindow no longer logs identities or
-diagnostics itself — `ScanWorker` logs the rendered run, which carries that block
-in the words every frontend uses. Recovery first
+the worker. `ScanController` relays it as `scanInstalledYamlDataResolved(...)`, and
+MainWindow uses it only to raise the run-level warning below. It does **not**
+retain the snapshot or append selected provenance/schema and Local Ignore state
+to the terminal status: the progress row reports operation progress, and that
+selection is diagnostic detail. The former `installedYamlDataStatusSuffix()`
+was the last place this frontend called a bridge label accessor directly; with
+it gone, the GUI calls none. MainWindow no longer logs identities or
+diagnostics itself — `ScanWorker` logs the rendered run, which carries the
+Installed YAML Data block in the words every frontend uses. Recovery first
 publishes the malformed-file identity, then successful continuation publishes
 the final `ProceedWithoutIgnore` or `ResetToDefault` snapshot and durable reset
 metadata before its terminal lifecycle signal.

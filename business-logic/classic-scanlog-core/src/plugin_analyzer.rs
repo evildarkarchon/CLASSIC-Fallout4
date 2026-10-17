@@ -1,4 +1,4 @@
-//! Plugin analyzer module - High-performance plugin detection and analysis (Pure Rust - NO PyO3)
+//! Plugin analyzer module - High-performance plugin detection and analysis (Pure Rust)
 //!
 //! This module provides plugin detection and analysis using pure Rust data structures.
 
@@ -62,7 +62,7 @@ fn insert_plugin_if_new(
     }
 }
 
-/// Core plugin analyzer - pure Rust implementation (NO PyO3)
+/// Core plugin analyzer - pure Rust implementation
 pub struct PluginAnalyzer {
     ignore_plugins_list: HashSet<String>,
     game_version: String,

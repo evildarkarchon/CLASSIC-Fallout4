@@ -5,8 +5,7 @@ This page describes the current maintained parser surface for scanlog work.
 ## Current location
 
 - Core parser logic lives in `business-logic/classic-scanlog-core`.
-- Python-facing parser APIs live in the one Python adapter crate, `python-bindings/classic-python-bindings` (adapter module `src/classic_scanlog/`), as part of the `classic_scanlog` facade.
-- Node-facing parser APIs are surfaced through `node-bindings/classic-node`.
+- C++-facing parser APIs are surfaced through `cpp-bindings/classic-cpp-bridge` (the Python and Node bindings retired with ADR-0010).
 
 ## Current rule
 
@@ -16,8 +15,6 @@ Parser behavior belongs in the Rust core crate. Binding crates should expose wra
 
 ```powershell
 cargo test -p classic-scanlog-core
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_scanlog
-uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ## Historical note

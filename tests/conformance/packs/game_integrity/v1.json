@@ -20,7 +20,6 @@
         "CheckType",
         "IntegrityCheckResult"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "values"
       ]
@@ -30,7 +29,6 @@
       "rustSymbols": [
         "IntegrityConfig"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "values"
       ]

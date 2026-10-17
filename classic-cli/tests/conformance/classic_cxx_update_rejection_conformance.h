@@ -1,21 +1,5 @@
 // Original default bridge entry points retain separately proved negative runtime boundaries.
 
-/// Restore the caller environment after injecting an intentionally invalid test credential.
-class SyntheticGithubCredential {
-    std::optional<std::string> previous_;
-public:
-    /// A newline is rejected by reqwest while building the Authorization header.
-    explicit SyntheticGithubCredential(const std::string& token) : previous_(read_environment("GITHUB_TOKEN")) {
-        if (token != "synthetic\ninvalid") throw RunnerError("only synthetic malformed credentials are permitted");
-        set_environment("GITHUB_TOKEN", token);
-    }
-    /// Preserve external environment even when an assertion throws.
-    ~SyntheticGithubCredential() {
-        try { set_environment("GITHUB_TOKEN", previous_); }
-        catch (...) { /* The dedicated test process exits; cleanup must not throw during unwinding. */ }
-    }
-};
-
 /// Call unconfigured public APIs and require exact errors produced before transport/cache setup.
 json execute_update_rejection_scenario(const json& plan, const json& scenario) {
     const auto reference = scenario.at("input").at("fixtureRef").get<std::string>();
@@ -30,10 +14,6 @@ json execute_update_rejection_scenario(const json& plan, const json& scenario) {
             throw RunnerError("invalid installed version did not fail at the caller boundary");
         return json{{"boundary", "caller-validation"}, {"error", "invalid-installed-version"}, {"requestBuilt", false}};
     }
-    if (operation != "latest") throw RunnerError("unsupported CXX rejection operation");
-    SyntheticGithubCredential credential(fixture.at("token").get<std::string>());
-    const auto result = classic::update::github_check_for_updates(owner, repo, fixture.at("currentVersion").get<std::string>());
-    if (std::string(result.error_message) != "HTTP error: builder error" || result.has_update || !result.latest_version.empty() || !result.release_notes.empty())
-        throw RunnerError("expected request-builder rejection, not success or a transport failure");
-    return json{{"boundary", "request-builder"}, {"error", "builder-error"}, {"requestBuilt", false}};
+    // `update-rejection.latest` left CXX with the binary-release check it called (#309).
+    throw RunnerError("unsupported CXX rejection operation");
 }

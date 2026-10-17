@@ -186,14 +186,6 @@ fn normalize_report_content(source: &str) -> String {
 
 // ── Public bridge functions ────────────────────────────────────────
 
-/// Normalize CLASSIC report markdown for CommonMark-compliant parsing.
-///
-/// Exposed via CXX so C++ can normalize markdown content before any
-/// processing, if needed independently of `markdown_to_html`.
-fn normalize_markdown(input: &str) -> String {
-    normalize_report_content(input)
-}
-
 /// Convert markdown to a complete HTML document with inline dark-theme CSS.
 ///
 /// The output is a self-contained HTML document suitable for
@@ -221,7 +213,6 @@ fn markdown_to_html(markdown: &str) -> String {
 mod ffi {
     extern "Rust" {
         fn markdown_to_html(markdown: &str) -> String;
-        fn normalize_markdown(input: &str) -> String;
     }
 }
 

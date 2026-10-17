@@ -3,6 +3,9 @@
 //! These tests verify cross-component workflows involving configuration loading,
 //! YAML parsing, and the interaction between classic-yaml-core and classic-config-core.
 
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use classic_config_core::{
     ConfigError, ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole,
     YamlDataCore, load_explicit_yaml_data,

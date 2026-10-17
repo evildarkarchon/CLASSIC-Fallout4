@@ -14,6 +14,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -92,15 +93,6 @@ private:
     mutable scanner::ScanRunContractEventKind event_kind_ = scanner::ScanRunContractEventKind::DiscoveryCompleted;
     mutable std::size_t event_count_ = 0;
 };
-
-/// Builds the smallest valid shared configuration needed to reach discovery.
-scanner::ScanRunConfigurationDto make_configuration(const fs::path& root) {
-    scanner::ScanRunConfigurationDto configuration{};
-    configuration.installation_root = root.string();
-    configuration.game = scanner::ScanRunGameId::Fallout4;
-    configuration.game_version = "auto";
-    return configuration;
-}
 
 /// Copies the immutable shared YAML corpus into one isolated execution root.
 void copy_shared_yaml_tree(const fs::path& root) {
@@ -266,14 +258,34 @@ private:
 
 /// Launches `args` through the CLI's Crash Log Scan Launch seam and returns the executable request.
 ///
-/// The fixture roots carry no User Settings document, so the launch uses Rust's defaults: managed
-/// Fallout 4, automatic game version, and no FCX Mode.
+/// Every request comes from the launch, as in production: the bridge exports no request
+/// constructors (#309). A fixture root with no User Settings document launches with Rust's
+/// defaults: managed Fallout 4, automatic game version, no FCX Mode, and Unsolved Logs left in
+/// place.
 rust::Box<scanner::ScanRunRequest> cli_launch_request(const CliArgs& args, const std::string& root) {
     auto launch = launch_cli_scan_run(args, root);
     if (!launch.has_value() || scanner::scan_run_launch_error(**launch).has_error) {
         throw std::runtime_error("CLI could not launch the fixture Crash Log Scan Run");
     }
     return scanner::scan_run_launch_request(**launch);
+}
+
+/// Launches a Targeted request for exactly `source.inputs` with the launch's defaults.
+///
+/// `max_concurrent` becomes an explicit concurrency override when supplied; otherwise Rust
+/// selects adaptive concurrency.
+rust::Box<scanner::ScanRunRequest> launch_targeted_request(const fs::path& root,
+                                                           const scanner::ScanRunTargetedSourceDto& source,
+                                                           std::optional<std::size_t> max_concurrent = std::nullopt) {
+    CliArgs args{};
+    for (const auto& input : source.inputs) {
+        args.input_paths.emplace_back(input);
+    }
+    if (max_concurrent.has_value()) {
+        args.max_concurrent = static_cast<std::uint32_t>(*max_concurrent);
+        args.max_concurrent_was_explicit = true;
+    }
+    return cli_launch_request(args, root.string());
 }
 
 /// Flattens CLI presentation lines so tests can assert on retained text and its order.
@@ -380,15 +392,21 @@ TEST_CASE("CXX executes the shared Standard fixture with Rust-owned facts", "[br
     }
     fs::create_directories(temporary.path() / "Documents");
 
-    auto configuration = make_configuration(temporary.path());
-    configuration.has_max_concurrent = true;
-    configuration.max_concurrent = fixture::STANDARD_MAX_CONCURRENT;
-    scanner::ScanRunStandardSourceDto source{};
-    source.base_directory = temporary.path().string();
-    source.has_configured_documents_root = true;
-    source.configured_documents_root = (temporary.path() / "Documents").string();
-    const auto request =
-        scanner::scan_run_request_standard(configuration, source, *scanner::scan_run_unsolved_logs_leave_in_place());
+    // The Standard base folder is always the Installation Root; the documents root is the
+    // saved Game Setup folder, so discovery never reaches the host's real Documents folder.
+    {
+        std::ofstream settings(temporary.path() / "CLASSIC Settings.yaml", std::ios::binary);
+        settings << "schema_version: \"1.0\"\n"
+                    "CLASSIC_Settings:\n"
+                    "  Managed Game: Fallout 4\n"
+                    "  Move Unsolved Logs: false\n"
+                    "  Documents Folder Path: '"
+                 << (temporary.path() / "Documents").generic_string() << "'\n";
+    }
+    CliArgs args{};
+    args.max_concurrent = static_cast<std::uint32_t>(fixture::STANDARD_MAX_CONCURRENT);
+    args.max_concurrent_was_explicit = true;
+    const auto request = cli_launch_request(args, temporary.path().string());
     const auto cancellation = scanner::scan_run_cancellation_new();
     const RecordingObserver observer;
 
@@ -441,14 +459,11 @@ TEST_CASE("CXX executes the shared Targeted fixture without Unsolved Logs moveme
         copy_shared_log(temporary.path(), accepted);
     }
 
-    auto configuration = make_configuration(temporary.path());
-    configuration.has_max_concurrent = true;
-    configuration.max_concurrent = fixture::TARGETED_MAX_CONCURRENT;
     scanner::ScanRunTargetedSourceDto source{};
     for (const auto input : fixture::TARGETED_INPUTS) {
         source.inputs.push_back((temporary.path() / input).string());
     }
-    const auto request = scanner::scan_run_request_targeted(configuration, source);
+    const auto request = launch_targeted_request(temporary.path(), source, fixture::TARGETED_MAX_CONCURRENT);
 
     const auto execution = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
 
@@ -488,7 +503,7 @@ TEST_CASE("CXX final result preserves generated Local Ignore metadata and diagno
     const auto crash_log = copy_shared_log(temporary.path(), "crash-generated-ignore.log");
     scanner::ScanRunTargetedSourceDto source{};
     source.inputs.push_back(crash_log.string());
-    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    const auto request = launch_targeted_request(temporary.path(), source);
 
     const auto execution = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
 
@@ -513,7 +528,7 @@ TEST_CASE("CXX shared Local Ignore recovery retains snapshots and rejects replay
     const auto crash_log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
     scanner::ScanRunTargetedSourceDto source{};
     source.inputs.push_back(crash_log.string());
-    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    const auto request = launch_targeted_request(temporary.path(), source);
 
     const auto baseline = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
     REQUIRE(baseline.has_result);
@@ -574,7 +589,7 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     const auto crash_log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
     scanner::ScanRunTargetedSourceDto source{};
     source.inputs.push_back(crash_log.string());
-    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    const auto request = launch_targeted_request(temporary.path(), source);
     const auto baseline = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
     const auto baseline_report = read_file_bytes(native_path(baseline.result.logs[0].autoscan_report));
     const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
@@ -651,8 +666,7 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     }
     scanner::ScanRunTargetedSourceDto pre_cancel_source{};
     pre_cancel_source.inputs.push_back(pre_cancel_log.string());
-    const auto pre_cancel_request = scanner::scan_run_request_targeted(
-        make_configuration(pre_cancel_temporary.path()), pre_cancel_source);
+    const auto pre_cancel_request = launch_targeted_request(pre_cancel_temporary.path(), pre_cancel_source);
     // Settling runs under the paused run's own control, so cancellation is requested on the
     // control the run was started with, after the pause and before settling.
     auto pre_cancel_cancellation = scanner::scan_run_cancellation_new();
@@ -712,8 +726,7 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     }
     scanner::ScanRunTargetedSourceDto backup_failure_source{};
     backup_failure_source.inputs.push_back(backup_failure_log.string());
-    const auto backup_failure_request = scanner::scan_run_request_targeted(
-        make_configuration(backup_failure_temporary.path()), backup_failure_source);
+    const auto backup_failure_request = launch_targeted_request(backup_failure_temporary.path(), backup_failure_source);
     auto backup_failure_initial = scanner::scan_run_contract_execute(
         *backup_failure_request, *scanner::scan_run_cancellation_new(), nullptr,
         scanner::ScanRunObserverFailurePolicy::ContinueRun);
@@ -746,8 +759,7 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     }
     scanner::ScanRunTargetedSourceDto racing_source{};
     racing_source.inputs.push_back(racing_log.string());
-    const auto racing_request = scanner::scan_run_request_targeted(
-        make_configuration(racing_cancellation_temporary.path()), racing_source);
+    const auto racing_request = launch_targeted_request(racing_cancellation_temporary.path(), racing_source);
     // The racing cancel must land on the run's own control, which settling runs under.
     auto racing_cancellation = scanner::scan_run_cancellation_new();
     auto racing_initial = scanner::scan_run_contract_execute(
@@ -794,14 +806,11 @@ TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bri
     }
 
     auto make_request = [&temporary]() {
-        auto configuration = make_configuration(temporary.path());
-        configuration.has_max_concurrent = true;
-        configuration.max_concurrent = 1;
         scanner::ScanRunTargetedSourceDto source{};
         for (const auto accepted : fixture::TARGETED_ACCEPTED) {
             source.inputs.push_back((temporary.path() / accepted).string());
         }
-        return scanner::scan_run_request_targeted(configuration, source);
+        return launch_targeted_request(temporary.path(), source, 1);
     };
 
     SECTION("pre-discovery cancellation has no retained discovery or work") {
@@ -878,7 +887,7 @@ TEST_CASE("Rust cancels a run whose C++ observer reports a delivery failure unde
 
     scanner::ScanRunTargetedSourceDto source{};
     source.inputs.push_back(crash_log.string());
-    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    const auto request = launch_targeted_request(temporary.path(), source);
     const auto cancellation = scanner::scan_run_cancellation_new();
     const FailingObserver observer;
 
@@ -905,7 +914,7 @@ TEST_CASE("A C++ observer delivery failure under the continue policy is reported
     const auto log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
     scanner::ScanRunTargetedSourceDto source{};
     source.inputs.push_back(log.string());
-    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    const auto request = launch_targeted_request(temporary.path(), source);
     const auto cancellation = scanner::scan_run_cancellation_new();
     const FailingObserver observer;
 
@@ -1227,7 +1236,7 @@ PausedSettleRun paused_settle_run() {
     malform_local_ignore(temporary->path());
     scanner::ScanRunTargetedSourceDto source{};
     source.inputs.push_back(log.string());
-    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary->path()), source);
+    const auto request = launch_targeted_request(temporary->path(), source);
     auto cancellation = scanner::scan_run_cancellation_new();
     auto operation = scanner::scan_run_contract_execute(*request, *cancellation, nullptr, scanner::ScanRunObserverFailurePolicy::ContinueRun);
     auto initial = scanner::scan_run_contract_execution_take_result(*operation);
@@ -1349,7 +1358,7 @@ TEST_CASE("A C++ observer delivery failure before a pending recovery makes Rust 
         malform_local_ignore(temporary.path());
         scanner::ScanRunTargetedSourceDto source{};
         source.inputs.push_back(log.string());
-        const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+        const auto request = launch_targeted_request(temporary.path(), source);
         const auto cancellation = scanner::scan_run_cancellation_new();
         const FailingObserver observer;
 

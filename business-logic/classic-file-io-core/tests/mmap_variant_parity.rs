@@ -1,4 +1,6 @@
 #![allow(missing_docs)]
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
 
 use classic_file_io_core::{EncodingDetector, FileIOCore};
 use memmap2::MmapOptions;

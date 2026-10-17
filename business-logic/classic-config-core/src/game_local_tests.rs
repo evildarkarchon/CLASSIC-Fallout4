@@ -1,3 +1,6 @@
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use super::{
     GameLocalFacts, game_local_yaml_path, persist_game_local_paths, read_game_local_facts,
 };

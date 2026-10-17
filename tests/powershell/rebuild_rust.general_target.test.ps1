@@ -25,14 +25,6 @@ if (-not $paramBlock) {
 
 $scriptText = Get-Content -Path $resolvedScriptPath.Path -Raw
 
-if ($scriptText -match "auto-selecting -Target python") {
-    throw "Expected no implicit Python-target fallback. Wheels must build only when -Target python is explicitly set."
-}
-
-if ($scriptText -match '(?s)-not \$PSBoundParameters\.ContainsKey\("Target"\).*?\$resolvedTarget\s*=\s*"python"') {
-    throw "Expected no implicit reassignment to Python target when -Target is omitted."
-}
-
 if ($scriptText -notmatch '(?s)"workspace"\s*\{[\s\S]*?Invoke-RustWorkspaceRebuild[\s\S]*?-CrateFilters\s+\$Crates') {
     throw "Expected -Target workspace to pass positional crate filters into workspace rebuild selection."
 }
@@ -43,20 +35,6 @@ if ($scriptText -match "ignored for -Target workspace") {
 
 if ($scriptText -match '(?m)^\s*"all"\s*\{') {
     throw "Expected -Target all support to be removed from the target switch."
-}
-
-if ($scriptText -match 'ClassicLib-rs[\\/]python-bindings' -or $scriptText -match 'ClassicLib-rs[\\/]node-bindings') {
-    throw "Expected rebuild_rust.ps1 to use repo-root python-bindings/ and node-bindings/classic-node paths only."
-}
-
-foreach ($requiredPath in @('Join-Path $ProjectRoot "python-bindings"', 'Join-Path $ProjectRoot "node-bindings/classic-node"')) {
-    if ($scriptText -notmatch [regex]::Escape($requiredPath)) {
-        throw "Expected rebuild_rust.ps1 to contain repo-root path join '$requiredPath'."
-    }
-}
-
-if ($scriptText -match 'uv venv ClassicLib-rs/python-bindings/.venv') {
-    throw "Expected wrapper guidance to teach repo-root python-bindings/.venv, not ClassicLib-rs/python-bindings/.venv."
 }
 
 $targetParameter = $paramBlock.Parameters |
@@ -106,7 +84,7 @@ if (-not $validateSet) {
     throw "Expected -Target to declare ValidateSet values for supported rebuild scopes."
 }
 
-$expectedTargets = @("python", "workspace", "node")
+$expectedTargets = @("workspace")
 
 $actualTargets = foreach ($arg in $validateSet.PositionalArguments) {
     if ($arg -is [System.Management.Automation.Language.ConstantExpressionAst]) {
@@ -130,12 +108,19 @@ if ("all" -in $actualTargets) {
     throw "Expected -Target all to be removed from supported values."
 }
 
+# The Python and Node binding targets were retired with the bindings (ADR-0010).
+foreach ($retiredTarget in @("python", "node")) {
+    if ($retiredTarget -in $actualTargets) {
+        throw "Expected retired -Target $retiredTarget to be absent from supported values."
+    }
+}
+
 $buildOnlyParameter = $paramBlock.Parameters |
 Where-Object { $_.Name.VariablePath.UserPath -eq "BuildOnly" } |
 Select-Object -First 1
 
-if (-not $buildOnlyParameter) {
-    throw "Expected existing -BuildOnly switch to remain available for Python wheel-only workflows."
+if ($buildOnlyParameter) {
+    throw "Expected the Python-only -BuildOnly switch to be removed with the Python target."
 }
 
 $cratesParameter = $paramBlock.Parameters |
@@ -199,7 +184,7 @@ Where-Object { $_.Name.VariablePath.UserPath -eq "DebugBuild" } |
 Select-Object -First 1
 
 if (-not $debugBuildParameter) {
-    throw "Expected -DebugBuild switch for debug-oriented workspace/node rebuilds."
+    throw "Expected -DebugBuild switch for debug-oriented workspace rebuilds."
 }
 
 Write-Host "PASS: rebuild_rust.ps1 exposes general-purpose target selection metadata."

@@ -29,11 +29,13 @@ $($probe.Extent.Text)
 Test-VcpkgTool -ToolPath `$ToolPath
 "@)
 $gitPath = (Get-Command git.exe -ErrorAction Stop).Source
-$pythonPath = (Get-Command python.exe -ErrorAction Stop).Source
+# whoami.exe ships with every Windows install and exits non-zero for the
+# unknown `version` argument, so the rejection case needs no extra toolchain.
+$failingToolPath = (Get-Command whoami.exe -ErrorAction Stop).Source
 if (-not (& $runner -ToolPath $gitPath)) {
     throw "Expected a cached executable with a successful version command to be reused."
 }
-if (& $runner -ToolPath $pythonPath) {
+if (& $runner -ToolPath $failingToolPath) {
     throw "Expected a cached executable with a failed version command to be rejected."
 }
 if (& $runner -ToolPath (Join-Path $PSScriptRoot "missing-vcpkg.exe")) {

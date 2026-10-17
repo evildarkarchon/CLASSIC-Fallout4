@@ -20,9 +20,6 @@ fn game_id_as_str(id: ffi::GameId) -> String {
 }
 
 /// Return the shared display label through the existing bridge enum conversion.
-fn game_id_display_name(id: ffi::GameId) -> String {
-    from_bridge_game_id(id).display_name().to_string()
-}
 
 #[cxx::bridge(namespace = "classic::shared")]
 mod ffi {
@@ -36,7 +33,7 @@ mod ffi {
 
     extern "Rust" {
         fn game_id_as_str(id: GameId) -> String;
-        fn game_id_display_name(id: GameId) -> String;
+
     }
 }
 

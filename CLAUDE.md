@@ -23,44 +23,14 @@ Read on demand, not up front:
 - `docs/api/README.md` — index of contributor-facing API guides. Read it before changing any public Rust, bridge, GUI-consumer, or binding-facing API (AGENTS.md rule 8).
 - `docs/workspace-migration-matrix.md` — legacy `ClassicLib-rs/` to repo-root path and command translation. Read it only when you hit that retired path root in older docs, specs, or tool config.
 
-## Python Binding Testing Quickstart
+## Repository Tooling Quickstart
 
-The binding-local virtualenv at `python-bindings/.venv/` is a uv-managed project that does **not** carry the maturin-built `classic-python-bindings` wheel (one native extension behind all 18 `classic_*` modules) by default. Run tests in this order:
+The Python and Node bindings are retired (ADR-0010). Repository tooling is the `cargo xtask` crate (`cargo xtask --help`), including the conformance engine (`docs/development/conformance.md`):
 
 ```powershell
-# 1. Pin pyo3's interpreter for any cargo invocation (shell-scoped).
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
-
-# 2. Create/refresh the tooling venv from the locked manifest.
-#    `--inexact` is load-bearing — it stops uv from pruning the
-#    maturin-built `classic-python-bindings` wheel (it is not declared in
-#    pyproject.toml). This also installs ruamel.yaml for
-#    `tools/schema_version_gate.py`; it is a default dependency.
-uv sync --project python-bindings --inexact
-
-# 3. Build the one adapter wheel via maturin, remove obsolete per-module
-#    `classic-*-py` wheels, install it, and verify all 18 imports (also from
-#    a clean environment).
-./rebuild_rust.ps1 -Target python
-
-# 4. Run pytest through the project's venv. `--project` pins the
-#    environment without changing CWD, so pytest sees repo-root paths.
-#    Use `python -m pytest`, NOT the `pytest.exe` entrypoint — the
-#    config crate anchors settings lookup to `sys.argv[0]`'s parent,
-#    which goes wrong if sys.argv[0] is `.venv\Scripts\pytest.exe`.
-uv run --project python-bindings python -m pytest python-bindings/tests -q
+cargo test -p xtask
+cargo xtask conformance check
+cargo xtask conformance run --participant rust
 ```
 
-Each skipped step has a distinct failure mode: skipping step 1 makes cargo's pyo3-build-config chase a stale `VIRTUAL_ENV`; skipping `--inexact` in step 2 wipes the `classic-python-bindings` wheel from the venv on each re-sync; skipping step 3 produces `ModuleNotFoundError` at pytest collection time.
-
-For deeper context (why `.cargo/config.toml` intentionally omits a global PyO3 pin, how step 3 builds the one `classic-python-bindings` wheel behind all 18 `classic_*` facades, or how the parity gates fit on top), see the Python binding test rule and the PyO3 Quick Note in `AGENTS.md`, plus `docs/implementation/python_api_parity/`.
-
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+The repository tracks no Python, so there is no Python environment to set up. The repository gates that CI runs directly are listed in `docs/development/repository-gates.md`.

@@ -18,7 +18,6 @@
         "cache_stats",
         "reset_cache_stats"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "cache-state"
       ]

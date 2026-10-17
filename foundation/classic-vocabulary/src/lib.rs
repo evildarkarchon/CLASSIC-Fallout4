@@ -1,11 +1,12 @@
 //! Workspace-internal **Vocabulary naming contract** for CLASSIC domain enums.
 //!
-//! CLASSIC presents the same facts through three frontends and three binding
-//! surfaces. Before this crate existed, each of those surfaces wrote its own
-//! strings for the same underlying variant, and they had already drifted apart
-//! without anything detecting it: every copy was independently exhaustive, so
-//! every compiler was satisfied, and the binding parity gates compare symbol
-//! names and arity rather than values.
+//! CLASSIC presents the same facts through three frontends and, when this
+//! crate was introduced, three binding surfaces. Before this crate existed,
+//! each of those surfaces wrote its own strings for the same underlying
+//! variant, and they had already drifted apart without anything detecting it:
+//! every copy was independently exhaustive, so every compiler was satisfied,
+//! and the binding parity gates of the time compared symbol names and arity
+//! rather than values.
 //!
 //! The fix is ownership, not a gate. The Rust core crate that defines a domain
 //! concept also owns what that concept is called, and every adapter projects
@@ -45,21 +46,23 @@
 //!
 //! # Casing at the binding seams
 //!
-//! The canonical spelling is snake_case, which the C++ and Python surfaces
-//! consume unchanged. The Node surface converts Rust identifiers to camelCase
-//! at the JavaScript boundary as a documented convention, so it applies one
-//! shared transform over the same canonical token rather than keeping a second
-//! variant list. That transform lives in the Node crate, next to the convention
-//! it implements — this crate deliberately knows nothing about any binding.
+//! The canonical spelling is snake_case, which the C++ surface consumes
+//! unchanged (as the Python surface did until ADR-0010 retired it). The retired
+//! Node surface converted Rust identifiers to camelCase at the JavaScript
+//! boundary as a documented convention, so it applied one shared transform
+//! over the same canonical token rather than keeping a second variant list.
+//! That transform lived in the Node crate, next to the convention it
+//! implemented — this crate deliberately knows nothing about any binding.
 //!
 //! # No binding surface
 //!
-//! This crate is `publish = false` and is absent from the binding parity
+//! This crate is `publish = false` and was absent from the binding parity
 //! matrix, the same category as `classic-operation-context` and
 //! `classic-durable-publication`. Only the *enums* cross a binding seam; the
-//! trait never does. That is what keeps the one-tier binding parity policy —
-//! which applies to public symbols in the business-logic core crates — from
-//! taxing a shared naming convention with three projections of its own.
+//! trait never does. That is what kept the one-tier binding parity policy
+//! (retired with ADR-0010) — which applied to public symbols in the
+//! business-logic core crates — from taxing a shared naming convention with
+//! three projections of its own.
 
 mod conformance;
 
@@ -130,12 +133,13 @@ pub fn from_token<T: Vocabulary>(token: &str) -> Option<T> {
 /// needs this wants the same answer there — render nothing rather than invent a
 /// label or borrow another variant's — and the surfaces differ only in whether
 /// that case is reachable at all: open CXX shared enums admit a fabricated
-/// discriminant, while N-API rejects an unknown string at the boundary.
+/// discriminant, while the retired N-API surface rejected an unknown string at
+/// the boundary.
 ///
 /// It lives here rather than in each binding because nothing about it is
-/// surface-specific. The Node casing transform is the contrasting case: that
-/// one encodes a JavaScript identifier convention, so it belongs to the surface
-/// that has the convention.
+/// surface-specific. The retired Node casing transform was the contrasting
+/// case: that one encoded a JavaScript identifier convention, so it belonged to
+/// the surface that had the convention.
 #[must_use]
 pub fn display_label<T, U>(value: U, project: fn(T) -> U) -> &'static str
 where

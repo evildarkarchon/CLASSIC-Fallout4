@@ -19,7 +19,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 **Location**: `foundation/classic-shared-core/src/yaml/file_cache.rs` and `operations.rs` (moved from `classic-settings-core`, which absorbed the former `classic-yaml-core` in v9.1.0 Phase 1 and retired in #257)
 
-**Scopes**: the store lives behind a `YamlFileCacheScope` handle. `YamlOperations::new()` and the free functions use the process default scope; `YamlOperations::with_cache_scope(YamlFileCacheScope::new_isolated())` gives a caller (such as one Python facade) its own entries and counters. The String-Key Cache below has the matching `LogicalKeyCacheScope`.
+**Scopes**: the store lives behind a `YamlFileCacheScope` handle. `YamlOperations::new()` and the free functions use the process default scope; `YamlOperations::with_cache_scope(YamlFileCacheScope::new_isolated())` gives a caller its own entries and counters. The String-Key Cache below has the matching `LogicalKeyCacheScope`.
 
 **Purpose**: Cache parsed YAML files with automatic invalidation when the source file changes.
 
@@ -182,7 +182,7 @@ let hashes = FileHasher::hash_files_parallel(&files)?;
 FileHasher::clear_cache();
 let size = FileHasher::cache_size();
 
-// A caller-owned scope (e.g. one Python facade) shares nothing with the default
+// A caller-owned scope shares nothing with the default
 let scope = FileHashScope::new_isolated();
 let hash = scope.hash_file(Path::new("game.exe"))?;
 let stats = scope.cache_stats();

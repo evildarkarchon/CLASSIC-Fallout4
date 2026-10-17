@@ -2,8 +2,8 @@
 
 Input-only cases call public validation and coercion for every supported type.
 Observations retain actual booleans, scalar values, and native coercion errors.
-The Rust/CXX/Python family covers false booleans, empty strings, empty paths,
-invalid booleans and invalid integers; it does not invent Node applicability.
+The family covers false booleans, empty strings, empty paths, invalid booleans
+and invalid integers. The Rust participant runs it; CXX does not enrol it.
 
 Receipt JSON forbids floating-point numbers. Float results use an explicit
 `{"float": "3.125e0"}` carrier preserving the numeric type and value.

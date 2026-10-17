@@ -1,8 +1,9 @@
 //! Crashgen Expectation Parser.
 //!
 //! This module owns the carrier-neutral parsing rules for Crashgen Expectation
-//! payloads. YAML, Node, and Python adapters translate their local carrier into
-//! a JSON-like document before crossing this seam.
+//! payloads. The YAML adapter (and formerly the Node and Python adapters)
+//! translates its local carrier into a JSON-like document before crossing this
+//! seam.
 
 use crate::{
     AutoscanReportPlacement, CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue,

@@ -6,7 +6,7 @@
 .DESCRIPTION
     This script updates the version number across all Cargo.toml files in the
     Rust layer directories (foundation/, business-logic/, cpp-bindings/,
-    node-bindings/, python-bindings/, ui-applications/), the
+    ui-applications/), the
     CLASSIC Data/databases/CLASSIC Main.yaml file, and the CMake project
     version lines in classic-cli/CMakeLists.txt and classic-gui/CMakeLists.txt.
 
@@ -104,7 +104,7 @@ SYNTAX
 DESCRIPTION
     This script updates the version number across all Cargo.toml files in the
     Rust layer directories (foundation/, business-logic/, cpp-bindings/,
-    node-bindings/, python-bindings/, ui-applications/), the
+    ui-applications/), the
     CLASSIC Data/databases/CLASSIC Main.yaml file, and the CMake project
     version lines in classic-cli/CMakeLists.txt and classic-gui/CMakeLists.txt.
 
@@ -202,8 +202,6 @@ $RustLayerDirs = @(
     (Join-Path $RootDir "foundation"),
     (Join-Path $RootDir "business-logic"),
     (Join-Path $RootDir "cpp-bindings"),
-    (Join-Path $RootDir "node-bindings"),
-    (Join-Path $RootDir "python-bindings"),
     (Join-Path $RootDir "ui-applications")
 )
 $YamlFile = Join-Path $RootDir "CLASSIC Data" "databases" "CLASSIC Main.yaml"

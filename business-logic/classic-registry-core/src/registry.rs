@@ -7,9 +7,10 @@
 //!
 //! Every typed registry store lives behind a [`RegistryScope`] handle. The
 //! unscoped free functions in this module use one lazily created process
-//! default scope, which is what Rust, CXX, and Node callers have always
+//! default scope, which is what Rust and CXX callers have always
 //! observed. A binding adapter that links several former extension images
-//! into one library (the merged Python extension) creates
+//! into one library (originally the merged Python extension, retired with
+//! ADR-0010) creates
 //! [`RegistryScope::new_isolated`] handles so each facade keeps its own
 //! values, application directory, and `clear_all` effect. Scope selection is
 //! always explicit: callers hold a handle and pass it (or move it into async
@@ -474,8 +475,7 @@ pub fn is_gui_mode() -> bool {
 ///
 /// # Note
 ///
-/// The actual type depends on what was registered. In practice, this will be
-/// a Python object reference when called from PyO3 bindings.
+/// The actual type depends on what was registered.
 ///
 /// # Examples
 ///
@@ -498,7 +498,7 @@ pub fn get_yaml_cache<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
 ///
 /// # Note
 ///
-/// This is typically a Python Qt widget object when called from PyO3 bindings.
+/// The actual type depends on what was registered.
 pub fn get_manual_docs_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
     DEFAULT_SCOPE.get_manual_docs_gui()
 }
@@ -511,7 +511,7 @@ pub fn get_manual_docs_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T
 ///
 /// # Note
 ///
-/// This is typically a Python Qt widget object when called from PyO3 bindings.
+/// The actual type depends on what was registered.
 pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
     DEFAULT_SCOPE.get_game_path_gui()
 }
@@ -527,8 +527,8 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 ///
 /// # Note
 ///
-/// The actual type depends on what was registered. When called from PyO3 bindings,
-/// this will return a `Fallout4Version` enum value.
+/// The actual type depends on what was registered; it is normally a
+/// `Fallout4Version` enum value.
 ///
 /// # Examples
 ///

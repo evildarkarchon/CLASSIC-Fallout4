@@ -30,7 +30,6 @@
   "capabilities": [
     {
       "id": "log-parsing.patterns",
-      "operationScoped": true,
       "rustSymbols": [
         "PatternMatcher"
       ],
@@ -43,7 +42,6 @@
       "rustSymbols": [
         "LogParser"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "parsed-log"
       ]
@@ -89,7 +87,6 @@
         "GpuInfo",
         "GpuVendor"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "gpu-fields"
       ]
@@ -99,7 +96,6 @@
       "rustSymbols": [
         "LogParser"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "node-log-values"
       ]
@@ -110,7 +106,6 @@
         "CrashgenVersion",
         "check_crashgen_version_status"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "version-values"
       ]

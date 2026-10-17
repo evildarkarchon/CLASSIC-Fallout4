@@ -108,9 +108,10 @@ impl Keys {
     /// When set, `classic-config-core` uses this directory instead of
     /// `current_exe().parent()` to anchor settings and data files.
     ///
-    /// Binding layers (Python, Node) auto-register this to `current_dir()`
-    /// at module init so settings resolve relative to the working directory
-    /// rather than the interpreter's install directory.
+    /// The retired Python and Node binding layers auto-registered this to
+    /// `current_dir()` at module init so settings resolved relative to the
+    /// working directory rather than the interpreter's install directory. No
+    /// current production caller sets it; it remains an explicit override.
     pub const APP_DIR: &'static str = "app_dir";
 
     /// Prerelease flag.

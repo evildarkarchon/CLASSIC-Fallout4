@@ -320,8 +320,8 @@ std::vector<std::string> core_owned_phrases() {
 /// be wrong — and it was wrong: `succeeded,` is core-owned prose that occurs
 /// verbatim in ordinary code as `terminal.succeeded, terminal.failed`. Extracting
 /// literals removes that whole class of false positive rather than asking the
-/// deny-list to dodge it, and matches the Python audit, which reads literals off
-/// the AST for the same reason.
+/// deny-list to dodge it, and matches the retired Python audit, which read
+/// literals off the AST for the same reason.
 ///
 /// Comments never appear, for the reason the CXX parity gate's name scan was
 /// fixed: a comment *describing* the drift is not the drift, and this file's own
@@ -460,9 +460,11 @@ TEST_CASE("Every CLI Display Label arrives inside a rendered display line", "[di
     // tolerated: re-deriving a label that a segment already carries is how a
     // frontend ends up disagreeing with the sentence built around it.
     //
-    // The accessors themselves stay. They remain the correct surface for
-    // labelling a domain enum *outside* a display line, and the Qt GUI still
-    // renders that way until its own migration lands.
+    // None of the seven remain on the bridge. The consumer-driven trim (#309)
+    // removed five with their last frontend caller, and the last two followed
+    // when the Qt GUI dropped the progress-row YAML Data suffix that labelled
+    // outside a display line. Their names stay in `RENDERED_ENUMS` so a
+    // reintroduced call is still caught here.
     const std::string source = read_source("src/scan_run_cli.cpp");
     for (const auto& rendered : RENDERED_ENUMS) {
         INFO(rendered.label_accessor << " is called from src/scan_run_cli.cpp, but " << rendered.type_name

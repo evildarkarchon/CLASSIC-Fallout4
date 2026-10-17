@@ -15,9 +15,10 @@
 //!
 //! Every store lives behind a [`YamlFileCacheScope`] handle. The unscoped free
 //! functions and [`YamlOperations::new`](super::YamlOperations::new) use one
-//! lazily created process default scope, which is what Rust, CXX, and Node
+//! lazily created process default scope, which is what Rust and CXX
 //! callers have always observed. A binding adapter that links several former
-//! extension images into one library (the merged Python extension) creates
+//! extension images into one library (originally the merged Python extension,
+//! retired with ADR-0010) creates
 //! [`YamlFileCacheScope::new_isolated`] handles instead, so each facade keeps
 //! its own entries and counters exactly as when it was a separate image.
 

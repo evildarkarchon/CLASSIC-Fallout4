@@ -41,7 +41,7 @@
 //!
 //! # Design Principles
 //!
-//! 1. **Pure Rust Business Logic**: No PyO3 dependencies in this crate
+//! 1. **Pure Rust Business Logic**: No binding-framework dependencies in this crate
 //! 2. **Synchronous Operations**: All I/O is synchronous (fast enough for path operations)
 //! 3. **Platform Abstraction**: Conditional compilation for Windows/Linux differences
 //! 4. **Error Context**: Rich error types with context using `thiserror`

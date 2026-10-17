@@ -26,22 +26,11 @@ json interface_snapshot(const fs::path& root) {
     return json{{"files", values}, {"directories", directories}};
 }
 
-/// Call public CXX rendering/discovery functions without inventing a Rust core counterpart.
+/// Call the public CXX report discovery function without inventing a Rust core counterpart.
 json execute_interface_helpers_scenario(const json& plan, const json& scenario) {
     const auto reference = scenario.at("input").at("fixtureRef").get<std::string>();
     std::ifstream stream(plan.at("fixtures").at(reference).get<std::string>(), std::ios::binary);
     const auto fixture = json::parse(stream);
-    if (plan.at("familyId") == "markdown-rendering") {
-        const auto input = fixture.at("markdown").get<std::string>();
-        const std::string normalized(classic::markdown::normalize_markdown(input));
-        const std::string document(classic::markdown::markdown_to_html(input));
-        const std::string marker = "</style></head><body>";
-        const auto opening = document.find(marker);
-        if (opening == std::string::npos || !document.ends_with("</body></html>")) throw RunnerError("incomplete rendered document");
-        const auto body_start = opening + marker.size();
-        const auto body = document.substr(body_start, document.size() - body_start - std::string("</body></html>").size());
-        return json{{"normalized", normalized}, {"htmlBody", body}, {"documentComplete", document.starts_with("<html><head><style>")}};
-    }
     TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(), scenario.at("id").get<std::string>());
     const auto& root = temporary.path();
     for (const auto& directory : fixture.at("directories")) fs::create_directories(root / directory.get<std::string>());

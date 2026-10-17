@@ -215,5 +215,5 @@ See:
 - [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md)
 
 When an event tag or field changes, update the Rust contract, CXX enum/DTO
-mapping, observer consumers, exhaustive mapping tests, parity baseline, shared
-contract manifest, and these pages together.
+mapping, observer consumers, exhaustive mapping tests, shared contract
+manifest, and these pages together.

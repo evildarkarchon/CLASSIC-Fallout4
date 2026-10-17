@@ -60,9 +60,6 @@ private:
     void saveRememberedPath(RememberedPath path);
     void initResultsReportDir();
 
-    /// Formats retained run-selected YAML Data metadata for terminal status messages.
-    QString installedYamlDataStatusSuffix() const;
-
     /// Runs typed Game Setup Intake and commits only paths explicitly accepted by the user.
     /// Declined proposals and cancelled manual entry leave User Settings unchanged.
     void checkFirstRunPaths();
@@ -162,8 +159,6 @@ private:
     // Targeted scan input state (ephemeral, not persisted)
     QStringList m_targetedInputPaths;
     QStringList m_lastScanReportDirs;
-    bool m_hasLastInstalledYamlData = false;
-    classic::gui::ScanRunInstalledYamlDataPresentation m_lastInstalledYamlData;
     QWidget* m_targetedInputContainer = nullptr;
     QListWidget* m_targetedInputList = nullptr;
     QLabel* m_targetedInputLabel = nullptr;

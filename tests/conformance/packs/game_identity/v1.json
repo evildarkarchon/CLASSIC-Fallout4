@@ -24,7 +24,6 @@
     },
     {
       "id": "game-identity.metadata",
-      "operationScoped": true,
       "rustSymbols": [
         "GameId",
         "display_name"
@@ -35,7 +34,6 @@
     },
     {
       "id": "game-identity.details",
-      "operationScoped": true,
       "rustSymbols": [
         "GameId",
         "exe_name",

@@ -1,11 +1,13 @@
 //! Pins that User Settings never uses the shared path/mtime YAML-file cache.
 //!
-//! The Python `classic_user_settings` facade selects no YAML-file cache scope
-//! because this core only uses `YamlOperations` as a stateless parse, dump,
-//! and dot-path helper. If a future change starts reading or writing User
-//! Settings through `load_yaml_file` / `save_yaml_file`, the entries would land
-//! in the process default scope that `classic_config.clear_yaml_cache()` owns,
-//! and this probe fails so the change can choose a scope instead. The default
+//! User Settings selects no YAML-file cache scope (nor did the retired Python
+//! `classic_user_settings` facade) because this core only uses
+//! `YamlOperations` as a stateless parse, dump, and dot-path helper. If a
+//! future change starts reading or writing User Settings through
+//! `load_yaml_file` / `save_yaml_file`, the entries would land in the process
+//! default scope that other callers own (the retired Python binding's
+//! `classic_config.clear_yaml_cache()` cleared it), and this probe fails so the
+//! change can choose a scope instead. The default
 //! scope is process-global, so this probe lives in its own test binary.
 
 use classic_shared_core::yaml::YamlFileCacheScope;

@@ -41,10 +41,8 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
   - C++ CLI/GUI build + test jobs on Windows for MSVC and clang-cl
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml)
   - Rust format/lint/build/test jobs
-- [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml)
-  - Node binding parity gate and Bun/Node runtime tests
-- [`ci-python-bindings.yml`](../../.github/workflows/ci-python-bindings.yml)
-  - Python binding parity gate, stub validation, and smoke tests
+- [`ci-binding-compliance.yml`](../../.github/workflows/ci-binding-compliance.yml)
+  - umbrella over `ci-rust.yml` and `ci-cpp.yml` plus the conformance-only `full` verdict
 - [`benchmarks.yml`](../../.github/workflows/benchmarks.yml)
   - benchmark regression checks
 
@@ -52,33 +50,18 @@ Use local command sets that mirror these workflows before opening PRs.
 
 ---
 
-## 3) Binding-specific testing flows
+## 3) Repository gates
 
-### Node bindings (`node-bindings/classic-node`)
-
-```powershell
-# From node-bindings/classic-node
-bun install
-bun run build
-bun run cli -- --version
-bun run parity:gate
-bun run test:bun
-bun run test:node
-```
-
-### Python bindings (`python-bindings`)
+The Python and Node bindings are retired (ADR-0010, in [`docs/adr/`](../adr/)). Every repository gate runs through `cargo xtask`:
 
 ```powershell
-# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
-# `--inexact` stops uv from pruning maturin-built classic-*-py wheels.
-# ruamel.yaml (for schema_version_gate.py) is a default dependency, so this installs it.
-uv sync --project python-bindings --inexact
-uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
-uv run --project python-bindings python tools/cxx_api_parity/check_parity_gate.py --repo-root .
-uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --project python-bindings python -m pytest python-bindings/tests -q
+cargo xtask user-settings-ownership
+cargo xtask conformance check
+# Conformance for one participant (rust, tui; cxx, cli, gui need --compiler and a wrapper build)
+cargo xtask conformance run --participant rust
 ```
+
+See [Repository gates](../development/repository-gates.md) for where each check runs in CI, and [Conformance](../development/conformance.md) for the conformance commands.
 
 ---
 
@@ -91,9 +74,6 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
   - [`business-logic/`](../../business-logic)
   - [`cpp-bindings/classic-cpp-bridge/`](../../cpp-bindings/classic-cpp-bridge)
   - [`ui-applications/classic-tui/`](../../ui-applications/classic-tui)
-- Maintained integration bindings:
-  - [`node-bindings/classic-node/`](../../node-bindings/classic-node)
-  - [`python-bindings/`](../../python-bindings)
 The pure-Python runtime and its pytest suite have been removed from the repo. Their documentation is preserved under [`docs/archive/python-era/`](../archive/python-era) as historical record only — it is not part of any contributor test flow.
 
 ---
@@ -109,8 +89,7 @@ The pure-Python runtime and its pytest suite have been removed from the repo. Th
 
 - [ ] Ran relevant C++ wrapper script tests (`classic-cli` / `classic-gui`)
 - [ ] Ran Rust format/lint/tests for touched crates
-- [ ] Ran Node parity/runtime checks if Node-exposed APIs changed
-- [ ] Ran Python parity/stub/runtime checks if Python-exposed APIs changed
+- [ ] Ran `cargo xtask cxx-bridge-gate` and the conformance checks if bridge-exposed APIs changed
 - [ ] Updated docs when architecture/build/test behavior changed
 
 Canonical policy reference: [`AGENTS.md`](../../AGENTS.md).

@@ -8,7 +8,7 @@ description = "Pure Rust configuration loading business logic for CLASSIC"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
+crate-type = ["rlib"] # Pure Rust library only
 
 [dependencies]
 # CLASSIC shared utilities (provides runtime)

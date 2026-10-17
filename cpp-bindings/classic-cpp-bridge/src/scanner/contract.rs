@@ -11,12 +11,9 @@ use classic_scan_presentation::{
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     ConfigIssue as CoreFcxConfigIssue, CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource,
-    CrashLogScanFacts, CrashLogScanRunStatus, CrashLogScanSetupContext, CrashLogScanSetupResult,
-    ScanProgressPhase, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
-    TargetedCrashLogScanSource,
+    CrashLogScanRunStatus, CrashLogScanSetupResult, ScanProgressPhase,
 };
 use classic_shared_core::GameId;
-use classic_vocabulary::display_label;
 use std::path::PathBuf;
 
 use super::ffi;
@@ -31,11 +28,6 @@ impl ScanRunRequest {
     pub(super) fn from_core(inner: contract::Request) -> Self {
         Self { inner }
     }
-}
-
-/// Opaque Standard-only Unsolved Logs intent.
-pub(crate) struct ScanRunUnsolvedLogs {
-    inner: classic_scanlog_core::StandardUnsolvedLogsIntent,
 }
 
 /// Opaque cooperative cancellation control for the final contract.
@@ -56,102 +48,6 @@ pub(crate) struct ScanRunContractExecution {
 /// requested, and the one settlement the run accepts.
 pub(crate) struct ScanRunPendingRecovery {
     inner: PendingRecoveryWithPrompt,
-}
-
-/// Creates Standard intent that leaves failed Crash Logs and reports in place.
-pub(crate) fn scan_run_unsolved_logs_leave_in_place() -> Box<ScanRunUnsolvedLogs> {
-    Box::new(ScanRunUnsolvedLogs {
-        inner: StandardUnsolvedLogsIntent::LeaveInPlace,
-    })
-}
-
-/// Creates Standard intent that moves eligible artifacts to the configured or default destination.
-pub(crate) fn scan_run_unsolved_logs_move_to_configured_or_default() -> Box<ScanRunUnsolvedLogs> {
-    Box::new(ScanRunUnsolvedLogs {
-        inner: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
-    })
-}
-
-/// Creates Standard intent that moves eligible artifacts to a caller-selected destination.
-///
-/// The core contract validates destination semantics during execution so typed
-/// request-validation failures retain the same behavior across adapters.
-pub(crate) fn scan_run_unsolved_logs_move_to_custom(
-    destination: &str,
-) -> Result<Box<ScanRunUnsolvedLogs>, String> {
-    Ok(Box::new(ScanRunUnsolvedLogs {
-        inner: StandardUnsolvedLogsIntent::MoveToCustom(required_path(destination, "destination")?),
-    }))
-}
-
-/// Constructs a non-FCX Standard request while preserving its tagged invariants.
-///
-/// Returns an error when a required path or game identifier cannot be represented.
-/// An explicit zero concurrency remains a typed request-validation failure at execution.
-pub(crate) fn scan_run_request_standard(
-    configuration: &ffi::ScanRunConfigurationDto,
-    source: &ffi::ScanRunStandardSourceDto,
-    unsolved_logs: &ScanRunUnsolvedLogs,
-) -> Result<Box<ScanRunRequest>, String> {
-    let configuration = configuration_to_core(configuration)?;
-    let source = standard_source_to_core(source)?;
-    Ok(Box::new(ScanRunRequest {
-        inner: contract::Request::standard(configuration, source, unsolved_logs.inner.clone()),
-    }))
-}
-
-/// Constructs an FCX-enabled Standard request with explicit run-scoped setup facts.
-///
-/// Returns an error when the shared configuration or source cannot be represented.
-pub(crate) fn scan_run_request_standard_with_fcx(
-    configuration: &ffi::ScanRunConfigurationDto,
-    source: &ffi::ScanRunStandardSourceDto,
-    unsolved_logs: &ScanRunUnsolvedLogs,
-    setup_context: &ffi::ScanRunSetupContextDto,
-) -> Result<Box<ScanRunRequest>, String> {
-    Ok(Box::new(ScanRunRequest {
-        inner: contract::Request::standard_with_fcx(
-            configuration_to_core(configuration)?,
-            standard_source_to_core(source)?,
-            unsolved_logs.inner.clone(),
-            setup_context_to_core(setup_context)?,
-        ),
-    }))
-}
-
-/// Constructs a non-FCX Targeted request, which has no Unsolved Logs capability.
-///
-/// Returns an error when the shared configuration contains invalid required values.
-pub(crate) fn scan_run_request_targeted(
-    configuration: &ffi::ScanRunConfigurationDto,
-    source: &ffi::ScanRunTargetedSourceDto,
-) -> Result<Box<ScanRunRequest>, String> {
-    Ok(Box::new(ScanRunRequest {
-        inner: contract::Request::targeted(
-            configuration_to_core(configuration)?,
-            targeted_source_to_core(source),
-        ),
-    }))
-}
-
-/// Constructs an FCX-enabled Targeted request with explicit run-scoped setup facts.
-///
-/// Targeted construction deliberately accepts no Unsolved Logs intent.
-///
-/// Returns an error when the shared configuration, source, or setup context
-/// contains a required value that cannot be represented.
-pub(crate) fn scan_run_request_targeted_with_fcx(
-    configuration: &ffi::ScanRunConfigurationDto,
-    source: &ffi::ScanRunTargetedSourceDto,
-    setup_context: &ffi::ScanRunSetupContextDto,
-) -> Result<Box<ScanRunRequest>, String> {
-    Ok(Box::new(ScanRunRequest {
-        inner: contract::Request::targeted_with_fcx(
-            configuration_to_core(configuration)?,
-            targeted_source_to_core(source),
-            setup_context_to_core(setup_context)?,
-        ),
-    }))
 }
 
 /// Creates an uncancelled, monotonic control for one final-contract run.
@@ -1193,107 +1089,6 @@ fn map_local_ignore_yaml_data_state(
     }
 }
 
-/// Return the human-facing Display Label for one scan-run diagnostic kind.
-///
-/// The C++ frontends reach the core only through this bridge, and a Qt view is
-/// not line-oriented — it wants the variant and its label separately so it can
-/// style them as independent table columns. That is why the label crosses the
-/// binding seam as its own entry point rather than being folded into a DTO
-/// string.
-///
-/// The wording is the configuration crate's, because the core enum behind this
-/// projection is a contract-stability twin that delegates both naming forms
-/// there. This bridge therefore renders the same prose the configuration
-/// entry points do, without either surface being told twice.
-pub(crate) fn scan_run_installed_yaml_data_diagnostic_kind_label(
-    kind: ffi::ScanRunInstalledYamlDataDiagnosticKind,
-) -> String {
-    display_label(kind, map_installed_yaml_data_diagnostic_kind).to_string()
-}
-
-/// Return the human-facing Display Label for one selected-file provenance.
-///
-/// Same seam reasoning as [`scan_run_installed_yaml_data_diagnostic_kind_label`],
-/// but this enum is neither run-owned nor a twin: the run contract reuses
-/// `classic_config_core::InstalledYamlDataProvenance` outright. Only the *CXX
-/// mirror* is scanner-local, because `#[cxx::bridge]` namespaces its shared
-/// enums per module — so [`crate::config::installed_yaml_data_provenance_label`]
-/// cannot accept the value a scan-run result actually carries.
-///
-/// That makes this entry point a C++-only obligation. The Node surface reuses
-/// one provenance enum across both modules and the Python surface publishes a
-/// token, so neither needed a second projection. Without this, a C++ frontend
-/// would have to map one mirror onto the other by hand, which is a second
-/// variant mapping able to disagree with the forward one — exactly what
-/// [`display_label`] exists to avoid.
-pub(crate) fn scan_run_installed_yaml_data_provenance_label(
-    provenance: ffi::ScanRunInstalledYamlDataProvenance,
-) -> String {
-    display_label(provenance, map_installed_yaml_data_provenance).to_string()
-}
-
-/// Return the human-facing Display Label for one scan-run Local Ignore state.
-///
-/// Same reasoning as [`scan_run_installed_yaml_data_diagnostic_kind_label`].
-/// `RecoveryRequired` is the one variant whose prose the run contract owns
-/// itself, since a paused run has no configuration counterpart.
-pub(crate) fn scan_run_local_ignore_yaml_data_state_label(
-    state: ffi::ScanRunLocalIgnoreYamlDataState,
-) -> String {
-    display_label(state, map_local_ignore_yaml_data_state).to_string()
-}
-
-/// Return the human-facing Display Label for one terminal log disposition.
-///
-/// Same reasoning as [`scan_run_installed_yaml_data_diagnostic_kind_label`] for
-/// why the label crosses the seam as its own entry point. What differs is where
-/// the wording comes from: this enum has no counterpart to mirror, so the run
-/// crate owns its prose outright.
-///
-/// The CLI already renders exactly these three phrases from a `switch` of its
-/// own. This is the entry point that lets it delete that `switch`.
-pub(crate) fn scan_run_log_disposition_label(
-    disposition: ffi::ScanRunContractLogDisposition,
-) -> String {
-    display_label(disposition, map_log_disposition).to_string()
-}
-
-/// Return the human-facing Display Label for one per-log failure stage.
-///
-/// Same reasoning as [`scan_run_log_disposition_label`].
-/// `UnsolvedLogsFinalization` reads as `Unsolved Logs finalization` because
-/// `Unsolved Logs` is a domain term and keeps its glossary capitalization.
-pub(crate) fn scan_run_log_failure_stage_label(
-    stage: ffi::ScanRunContractLogFailureStage,
-) -> String {
-    display_label(stage, map_log_failure_stage).to_string()
-}
-
-/// Return the human-facing Display Label for one run-wide infrastructure stage.
-///
-/// Same reasoning as [`scan_run_log_disposition_label`]. Two labels are more
-/// than a respelling of their token: `FormIdDatabaseAccess` capitalizes `FormID`
-/// as the domain term it is, and `InternalInvariant` reads as `internal
-/// invariant validation`.
-pub(crate) fn scan_run_infrastructure_error_stage_label(
-    stage: ffi::ScanRunContractInfrastructureErrorStage,
-) -> String {
-    display_label(stage, map_infrastructure_error_stage).to_string()
-}
-
-/// Return the human-facing Display Label for one Local Ignore reset failure stage.
-///
-/// Same reasoning as [`scan_run_log_disposition_label`] for the seam, but this
-/// enum *is* a twin — of the workspace's shared durable publication stage
-/// vocabulary, which deliberately keeps each label equal to its token. So this
-/// projection returns the token spelling, and that is a decision rather than an
-/// omission: the reset stage names ordinary steps rather than domain terms.
-pub(crate) fn scan_run_local_ignore_reset_failure_stage_label(
-    stage: ffi::ScanRunLocalIgnoreResetFailureStage,
-) -> String {
-    display_label(stage, map_reset_failure_stage).to_string()
-}
-
 /// Maps the CXX observer failure policy onto the core policy, rejecting CXX's
 /// non-exhaustive out-of-range sentinel before anything runs.
 fn map_observer_failure_policy(
@@ -1410,43 +1205,6 @@ fn log_event_to_dto(
     event
 }
 
-/// Validates bridge primitives and projects them into the core typed configuration.
-///
-/// Optional values honor their presence flags. Explicit zero concurrency is
-/// retained so the final operation can return its typed request-validation error.
-fn configuration_to_core(
-    value: &ffi::ScanRunConfigurationDto,
-) -> Result<contract::Configuration, String> {
-    let installation_root = required_path(&value.installation_root, "installation_root")?;
-    let game = scan_run_game_id_to_core(value.game)?;
-    let max_concurrent = if value.has_max_concurrent {
-        Some(value.max_concurrent)
-    } else {
-        None
-    };
-    let unsolved_logs_destination = optional_flagged_path(
-        value.has_configured_unsolved_logs_destination,
-        &value.configured_unsolved_logs_destination,
-        "configured_unsolved_logs_destination",
-    )?;
-
-    Ok(contract::Configuration {
-        installation_root,
-        game,
-        game_version: value.game_version.clone(),
-        options: contract::Options::new(value.show_formid_values, value.simplify_logs),
-        scan_facts: CrashLogScanFacts {
-            formid_database_paths: value
-                .formid_database_paths
-                .iter()
-                .map(PathBuf::from)
-                .collect(),
-            unsolved_logs_destination,
-        },
-        max_concurrent,
-    })
-}
-
 /// Converts the scanner-local CXX game enum to the shared core identity.
 pub(super) fn scan_run_game_id_to_core(value: ffi::ScanRunGameId) -> Result<GameId, String> {
     match value {
@@ -1463,67 +1221,12 @@ pub(super) fn scan_run_game_id_to_core(value: ffi::ScanRunGameId) -> Result<Game
     }
 }
 
-fn standard_source_to_core(
-    value: &ffi::ScanRunStandardSourceDto,
-) -> Result<StandardCrashLogScanSource, String> {
-    Ok(StandardCrashLogScanSource {
-        base_directory: required_path(&value.base_directory, "base_directory")?,
-        custom_scan_directory: optional_flagged_path(
-            value.has_custom_scan_directory,
-            &value.custom_scan_directory,
-            "custom_scan_directory",
-        )?,
-        configured_documents_root: optional_flagged_path(
-            value.has_configured_documents_root,
-            &value.configured_documents_root,
-            "configured_documents_root",
-        )?,
-    })
-}
-
-fn targeted_source_to_core(value: &ffi::ScanRunTargetedSourceDto) -> TargetedCrashLogScanSource {
-    TargetedCrashLogScanSource {
-        inputs: value.inputs.iter().map(PathBuf::from).collect(),
-    }
-}
-
-fn setup_context_to_core(
-    value: &ffi::ScanRunSetupContextDto,
-) -> Result<CrashLogScanSetupContext, String> {
-    Ok(CrashLogScanSetupContext {
-        game_root: optional_flagged_path(value.has_game_root, &value.game_root, "game_root")?,
-        docs_root: optional_flagged_path(value.has_docs_root, &value.docs_root, "docs_root")?,
-        game_exe_path: optional_flagged_path(
-            value.has_game_exe_path,
-            &value.game_exe_path,
-            "game_exe_path",
-        )?,
-        xse_log_path: optional_flagged_path(
-            value.has_xse_log_path,
-            &value.xse_log_path,
-            "xse_log_path",
-        )?,
-    })
-}
-
 pub(super) fn required_path(raw: &str, field: &str) -> Result<PathBuf, String> {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
         Err(format!("{field} must not be empty"))
     } else {
         Ok(PathBuf::from(trimmed))
-    }
-}
-
-fn optional_flagged_path(
-    has_value: bool,
-    raw: &str,
-    field: &str,
-) -> Result<Option<PathBuf>, String> {
-    if has_value {
-        required_path(raw, field).map(Some)
-    } else {
-        Ok(None)
     }
 }
 

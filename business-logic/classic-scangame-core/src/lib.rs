@@ -10,8 +10,7 @@
 //! - BA2 archive handling
 //! - DDS texture validation
 //!
-//! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
-//! For Python bindings, see the `classic_scangame` module of `classic-python-bindings`.
+//! Pure Rust business logic only; the C++ bridge is a separate adapter crate.
 
 use std::fmt::Write as _;
 

@@ -1,7 +1,7 @@
 //! RecordScanner - Pure Rust record detection and analysis
 //!
 //! This module handles named record detection with high performance.
-//! No PyO3 dependencies - accepts plain data structures.
+//! Accepts plain data structures.
 
 use crate::error::{Result as ScanLogResult, ScanLogError};
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder, BuildError};

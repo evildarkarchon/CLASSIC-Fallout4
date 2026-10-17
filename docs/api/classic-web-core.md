@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`business-logic/classic-web-core/`](..
 Crate metadata:
 
 - Crate: `classic-web-core`
-- Description: `Web utilities for CLASSIC (no PyO3)`
+- Description: `Web utilities for CLASSIC`
 
 This crate is the small shared web-helper layer for CLASSIC's Rust workspace. It does not perform HTTP requests and it does not own any async runtime behavior. Instead, it provides a narrow set of reusable helpers for validating URLs, building URLs, generating CLASSIC user-agent strings, and mapping supported games to a few mod-site URLs.
 
@@ -301,8 +301,6 @@ Important direct dependencies:
 
 Related crates in this repository:
 
-- [`python-bindings/classic-python-bindings/src/classic_web/`](../../python-bindings/classic-python-bindings/src/classic_web/) - Python wrapper over this crate's public surface
-- [`node-bindings/classic-node/src/web.rs`](../../node-bindings/classic-node/src/web.rs) - Node/N-API wrapper over this crate's public surface
 - [`classic-shared-core`](../../foundation/classic-shared-core) - upstream enum definitions for supported games
 
 Current collaboration pattern in the repo:
