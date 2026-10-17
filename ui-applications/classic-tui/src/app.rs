@@ -18,9 +18,9 @@ use classic_scanlog_core::validate_custom_scan_path;
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
 use classic_user_settings_core::{
-    CommitEligibility, LegacyTuiStateImportOutcome, MigrationPlanningOutcome, Revision,
-    UserSettings, UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome, UserSettingsUpdate,
-    UserSettingsUpdatePreview, import_legacy_tui_state,
+    AutomaticMigrationOutcome, CommitEligibility, LegacyTuiStateImportOutcome, Revision,
+    UserSettings, UserSettingsCommitOutcome, UserSettingsUpdate, UserSettingsUpdatePreview,
+    import_legacy_tui_state, migrate_if_required,
 };
 use ratatui::Terminal;
 use ratatui::backend::Backend;
@@ -440,13 +440,16 @@ impl App {
 
     /// Opens the TUI against an explicit CLASSIC root and optional legacy import source.
     ///
-    /// This constructor is the filesystem seam used by focused tests and embedders. The legacy
+    /// This constructor is the filesystem seam used by focused tests and embedders. A required
+    /// User Settings migration is applied silently before the first open; a failed migration is
+    /// only logged, and leaves the document read-only until a later start succeeds. The legacy
     /// path is never read automatically; it is retained only for an explicit Settings action.
     pub fn new_with_settings_root(
         classic_root: impl Into<PathBuf>,
         legacy_tui_state_path: Option<PathBuf>,
     ) -> Self {
         let classic_root = classic_root.into();
+        log_automatic_migration_failure(&migrate_if_required(&classic_root));
         let settings = UserSettings::open(&classic_root);
         Self::from_settings(
             classic_root,
@@ -924,44 +927,6 @@ impl App {
         }
     }
 
-    /// Explicitly applies the currently displayed User Settings migration plan.
-    pub fn apply_user_settings_migration(&mut self) {
-        let outcome = match self.settings.plan_migration() {
-            MigrationPlanningOutcome::NotRequired => {
-                self.scan_status = "User Settings do not require migration".to_string();
-                return;
-            }
-            MigrationPlanningOutcome::Unsupported(diagnostics) => {
-                self.scan_status = diagnostics.first().map_or_else(
-                    || "User Settings migration is unavailable".to_string(),
-                    |diagnostic| format!("Migration unavailable: {}", diagnostic.message()),
-                );
-                return;
-            }
-            MigrationPlanningOutcome::Planned(plan) => plan.apply(&self.classic_root),
-        };
-
-        match outcome {
-            Ok(UserSettingsMigrationApplyOutcome::Applied(receipt)) => {
-                self.settings = UserSettings::open(&self.classic_root);
-                self.scan_status = format!(
-                    "User Settings migrated; verified backup retained at {}",
-                    receipt.backup_path().display()
-                );
-            }
-            Ok(UserSettingsMigrationApplyOutcome::Conflict { .. }) => {
-                self.settings = UserSettings::open(&self.classic_root);
-                self.scan_status =
-                    "User Settings changed in another process; migration was not applied"
-                        .to_string();
-            }
-            Err(error) => {
-                self.scan_status = format!("User Settings migration failed: {error}");
-            }
-        }
-        self.status_clear_at = None;
-    }
-
     /// Explicitly imports the dormant legacy TUI state into the shared canonical store.
     pub fn import_legacy_tui_state(&mut self) {
         let Some(legacy_path) = self.legacy_tui_state_path.clone() else {
@@ -986,7 +951,7 @@ impl App {
             }
             Ok(LegacyTuiStateImportOutcome::RequiresSettingsMigration { .. }) => {
                 self.scan_status =
-                    "Migrate User Settings first, then retry the legacy TUI state import"
+                    "User Settings could not be updated to the current format; restart CLASSIC, then retry the legacy TUI state import"
                         .to_string();
             }
             Ok(LegacyTuiStateImportOutcome::UntrustedSettingsBase { .. }) => {
@@ -1014,8 +979,11 @@ impl App {
     pub fn settings_overlay_text(&self) -> String {
         let mut lines = Vec::new();
         match self.settings.commit_eligibility() {
+            // Only reachable when the silent startup migration failed; its cause is in the log.
             CommitEligibility::RequiresMigration => lines.push(
-                "Migration required. Press M to review/apply the canonical migration.".to_string(),
+                "User Settings could not be updated to the current format and are read-only. \
+                 CLASSIC retries on the next start."
+                    .to_string(),
             ),
             CommitEligibility::BlockedUntrusted => {
                 lines.push("User Settings are degraded and read-only.".to_string())
@@ -1387,11 +1355,33 @@ impl App {
     }
 }
 
+/// Logs why the silent startup migration did not run; success and no-op stay silent.
+///
+/// Migration outcomes never reach the status line: it is reserved for scan progress, and a
+/// document left unmigrated is explained in the Settings overlay instead.
+fn log_automatic_migration_failure(outcome: &AutomaticMigrationOutcome) {
+    match outcome {
+        AutomaticMigrationOutcome::NotRequired | AutomaticMigrationOutcome::Applied(_) => {}
+        AutomaticMigrationOutcome::Unavailable(diagnostics) => {
+            for diagnostic in diagnostics {
+                tracing::warn!(
+                    "User Settings could not be migrated [{}]: {}",
+                    diagnostic.code(),
+                    diagnostic.message()
+                );
+            }
+        }
+        AutomaticMigrationOutcome::Conflict { .. } => tracing::warn!(
+            "User Settings changed in another process during migration; it will be retried on the next start"
+        ),
+        AutomaticMigrationOutcome::Failed(error) => {
+            tracing::warn!("User Settings migration failed: {error}");
+        }
+    }
+}
+
 /// Builds the startup status presented through the existing TUI status convention.
 fn settings_status(settings: &UserSettings, legacy_state_path: Option<&Path>) -> String {
-    if settings.commit_eligibility() == CommitEligibility::RequiresMigration {
-        return "User Settings migration required — open Settings with Ctrl+O".to_string();
-    }
     if settings.commit_eligibility() == CommitEligibility::BlockedUntrusted {
         return settings.diagnostics().first().map_or_else(
             || "User Settings are degraded and read-only".to_string(),

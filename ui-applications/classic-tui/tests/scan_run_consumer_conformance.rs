@@ -273,13 +273,13 @@ fn observe_user_settings(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerR
         "tui.settings-startup" => {
             require_scenarios(obligation, &["flat-classic-config"])?;
             fs::copy(&plan.fixtures["flat_classic_config"], &settings_path)?;
-            let before = fs::read(&settings_path)?;
             let app = App::new_with_settings_root(root.path(), None);
             Ok(json!({
                 "modsPath": app.staging_mods_input.value,
                 "customScanPath": app.custom_scan_input.value,
-                "migrationPrompt": app.settings_overlay_text().contains("Press M"),
-                "unchanged": before == fs::read(&settings_path)?,
+                // The required migration is silent: no overlay guidance and no status-line text.
+                "migrationPrompt": app.settings_overlay_text().contains("igration")
+                    || app.scan_status != "Ready",
             }))
         }
         "tui.settings-scan-projection" => {
@@ -344,27 +344,23 @@ fn observe_user_settings(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerR
                 "unknownRetained": fs::read_to_string(&settings_path)?.contains("ThirdPartyPlugin"),
             }))
         }
-        "tui.settings-migration-interaction" => {
+        "tui.settings-silent-migration" => {
             require_scenarios(obligation, &["migration-flat-restore"])?;
             fs::copy(&plan.fixtures["flat_classic_config"], &settings_path)?;
             let before = fs::read(&settings_path)?;
-            let mut app = App::new_with_settings_root(root.path(), None);
-            let prompted = app.settings_overlay_text().contains("Press M");
-            app.active_overlay = Some(Overlay::Settings);
-            app.handle_event(TerminalEvent::Key(KeyEvent::new(
-                KeyCode::Char('m'),
-                KeyModifiers::NONE,
-            )));
-            // The displayed backup path is the maintained UI result, so inspect that file rather
-            // than minting a separate core migration receipt that bypasses the user's key action.
-            let backup_matches = app
-                .scan_status
-                .split_once("verified backup retained at ")
-                .is_some_and(|(_, path)| fs::read(path).is_ok_and(|bytes| bytes == before));
+            let app = App::new_with_settings_root(root.path(), None);
+            // The migration reports nothing to the user, so find its retained backup on disk
+            // rather than reading a path out of the UI.
+            let backups = root.path().join("CLASSIC Backup/User Settings/Migrations");
+            let backup_matches = fs::read_dir(&backups).is_ok_and(|entries| {
+                entries
+                    .flatten()
+                    .any(|entry| fs::read(entry.path()).is_ok_and(|bytes| bytes == before))
+            });
             Ok(json!({
-                "prompted": prompted,
+                "prompted": app.settings_overlay_text().contains("igration")
+                    || app.scan_status != "Ready",
                 "classification": app.settings.classification().as_str(),
-                "statusReportsBackup": app.scan_status.contains("verified backup retained at "),
                 "changed": before != fs::read(&settings_path)?,
                 "backupMatchesOriginal": backup_matches,
                 "fcxMode": app.settings.crash_log_scan_settings().fcx_mode(),
@@ -423,8 +419,18 @@ fn observe_scan_launch(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerRes
         "unchanged": standard_before == fs::read(settings_path(standard_root.path()))?,
     });
 
-    let (migration_root, mut migration_app, migration_before) =
-        launch_installation(plan, "needs-migration")?;
+    // Startup silently migrates whatever document it finds, so this case opens the App on an
+    // empty root and installs the needs-migration document afterwards: the scan launch rereads
+    // User Settings itself and must still launch, read-only, from that document.
+    let migration_root = tempdir()?;
+    let mut migration_app = App::new_with_settings_root(migration_root.path(), None);
+    fs::copy(
+        plan.fixtures
+            .get("needs-migration")
+            .ok_or_else(|| invalid_data("unknown fixture reference needs-migration"))?,
+        settings_path(migration_root.path()),
+    )?;
+    let migration_before = fs::read(settings_path(migration_root.path()))?;
     let migration_launch = migration_app.prepare_crash_scan_launch(None)?;
     let rendered = render_launch_diagnostics(migration_launch.diagnostics())
         .iter()

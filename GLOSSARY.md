@@ -115,7 +115,11 @@ _Avoid_: implicit save, raw settings mutation, auto-persist
 
 **User Settings Migration Plan**:
 A deterministic, revision-anchored proposal that describes how one supported legacy User Settings document would change schema version, location, shape, or aliases. Planning is reversible in memory and never writes, backs up, or relocates files; applying or restoring a plan is a separate explicit operation.
-_Avoid_: automatic migration, migration write, settings cleanup
+_Avoid_: migration write, settings cleanup
+
+**Silent Startup Migration**:
+The required User Settings Migration Plan that every frontend applies, without asking or reporting anything, before it first opens User Settings. It runs only when the document requires migration, retains the same verified backup as any applied plan, and leaves the document read-only (with its cause logged) when it cannot run. Optional canonicalization of an already-current document is never applied this way.
+_Avoid_: auto-repair, migration prompt, settings upgrade dialog
 
 **User Settings Migration Receipt**:
 The opaque result of explicitly applying a caller-approved User Settings Migration Plan. It attests the source and destination endpoints, the reopened migrated revision, and a retained byte-exact backup that Durable Publication published and reread before the migration itself was published.

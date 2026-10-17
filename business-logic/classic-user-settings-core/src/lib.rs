@@ -3,6 +3,7 @@
 //! The crate opens User Settings relative to an explicit CLASSIC root and
 //! returns typed preference groups without changing the source document.
 
+mod automatic_migration;
 mod commit;
 mod default_settings;
 mod document;
@@ -15,6 +16,7 @@ mod preference;
 mod scan_settings;
 mod update;
 
+pub use automatic_migration::{AutomaticMigrationOutcome, migrate_if_required};
 pub use commit::{
     UserSettingsCommitError, UserSettingsCommitOutcome, UserSettingsFrontendTransitionOutcome,
 };

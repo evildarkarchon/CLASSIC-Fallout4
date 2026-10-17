@@ -314,7 +314,7 @@ Top suspects:
 - Simplify Logs
 - Update Check
 
-**Persistence:** The TUI, GUI, and CLI share the canonical nested `CLASSIC Settings.yaml` store at the CLASSIC root. TUI path and presentation saves are explicit all-or-nothing updates that preserve unknown entries and refuse revision conflicts. `Ctrl+O` presents degraded reads, required migrations, and the explicit verified import for a former TUI `state.json`.
+**Persistence:** The TUI, GUI, and CLI share the canonical nested `CLASSIC Settings.yaml` store at the CLASSIC root. TUI path and presentation saves are explicit all-or-nothing updates that preserve unknown entries and refuse revision conflicts. An older settings file (the flat `ClassicConfig` shape or the previous `CLASSIC Data/` location) is updated to the current format automatically and silently at startup, with a verified backup kept under `CLASSIC Backup/User Settings/Migrations/`. `Ctrl+O` presents degraded reads, a settings file that could not be updated (it stays read-only and is retried on the next start), and the explicit verified import for a former TUI `state.json`.
 
 ---
 

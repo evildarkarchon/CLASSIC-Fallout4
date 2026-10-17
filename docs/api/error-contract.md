@@ -161,9 +161,9 @@ Stale apply and restore revisions are normal conflict outcomes, not operational 
 
 | Binding | Expected outcome and operational error shape |
 | --- | --- |
-| C++ (CXX) | `user_settings_apply_migration(...)` retains an opaque receipt handle and `user_settings_migration_apply_outcome(...)` reports `applied` or `conflict`; `user_settings_restore_migration(...)` reports `restored` or `conflict`. Invalid approvals and operational failures throw `rust::Error` whose message begins with the stable adapter/core code. |
+| C++ (CXX) | `user_settings_migrate_if_required(...)` never throws: it reports `not_required`, `applied`, `unavailable`, `conflict`, or `failed` as the DTO `status`, and a `failed` outcome carries the stable core `UserSettingsMigrationError::code()` as its diagnostic code. Restore has no CXX entry point. |
 
-CXX reopens and reproduces the plan from the supplied root, approved base revision, and exact proposed content; caller-owned DTO bytes are never published. A reversed in-memory plan is review data and cannot substitute for the verified receipt required by restore.
+The CXX adapter plans and applies entirely inside Rust, so no caller-owned DTO bytes are ever published. A reversed in-memory plan is review data and cannot substitute for the verified receipt required by restore.
 
 ---
 

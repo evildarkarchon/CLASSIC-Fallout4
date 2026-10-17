@@ -2,6 +2,7 @@
 #include "installation_root.h"
 #include "progress.h"
 #include "scan_run_cli.h"
+#include "user_settings_action.h"
 
 #ifdef _WIN32
 #include <io.h>
@@ -247,6 +248,7 @@ int run_scan(const CliArgs& args, const CliProcessLocation& location) {
     if (!installation_root) {
         return kCliInstallationRootNotFoundExitCode;
     }
+    migrate_user_settings_silently(*installation_root);
     const DataDirs dirs{*installation_root};
 
     const std::string correlation_id = startup_correlation_id();

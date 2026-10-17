@@ -198,92 +198,24 @@ void presentDegradedUserSettings(QWidget* parent, const classic::gui::GameSetupU
                              .arg(snapshot.classification, detail));
 }
 
-/// Offers the revision-anchored migration plan and applies or restores it only after explicit user actions.
-bool offerUserSettingsMigration(QWidget* parent, const QString& classicRoot)
+/// Silently applies a required User Settings migration before the first open.
+///
+/// The Rust core decides whether a migration is required, retains a verified backup, and rolls back a failed
+/// publication, so there is nothing to ask the user. Success and no-op stay silent; any other outcome is only
+/// logged, because the status bar is reserved for scan progress and the document simply stays read-only until a
+/// later start migrates it.
+void migrateUserSettingsSilently(const QString& classicRoot)
 {
-    const std::string root(classicRoot.toUtf8().constData());
-    const auto plan = classic::settings::user_settings_plan_migration(root);
-    if (!plan.has_plan) {
-        QStringList diagnostics;
-        for (const auto& diagnostic : plan.diagnostics) {
-            diagnostics.append(QStringLiteral("[%1] %2").arg(classic::toQString(diagnostic.code),
-                                                             classic::toQString(diagnostic.message)));
-        }
-        QMessageBox::warning(parent, QStringLiteral("User Settings Migration"),
-                             QStringLiteral("CLASSIC could not prepare a safe migration plan.\n\n%1")
-                                 .arg(diagnostics.join(QLatin1Char('\n'))));
-        return false;
+    const auto outcome =
+        classic::settings::user_settings_migrate_if_required(std::string(classicRoot.toUtf8().constData()));
+    const QString status = classic::toQString(outcome.status);
+    if (status == QStringLiteral("not_required") || status == QStringLiteral("applied")) {
+        return;
     }
-
-    QStringList changes;
-    for (const auto& change : plan.changes) {
-        QString row = classic::toQString(change.kind);
-        if (change.has_source_path || change.has_target_path) {
-            row += QStringLiteral(": %1 -> %2")
-                       .arg(change.has_source_path ? classic::toQString(change.source_path) : QStringLiteral("(none)"),
-                            change.has_target_path ? classic::toQString(change.target_path) : QStringLiteral("(none)"));
-        }
-        changes.append(row);
-    }
-
-    const QString question =
-        QStringLiteral(
-            "This User Settings document requires an explicit migration before updates can be saved. "
-            "CLASSIC will retain and verify a byte-exact backup before publishing the migrated file.\n\n%1\n\n"
-            "Apply this migration now?")
-            .arg(changes.join(QLatin1Char('\n')));
-    if (QMessageBox::question(parent, QStringLiteral("User Settings Migration"), question, QMessageBox::Yes,
-                              QMessageBox::No) != QMessageBox::Yes) {
-        return false;
-    }
-
-    try {
-        auto handle = classic::settings::user_settings_apply_migration(root, plan);
-        const auto outcome = classic::settings::user_settings_migration_apply_outcome(*handle);
-        if (classic::toQString(outcome.status) == QStringLiteral("conflict")) {
-            QMessageBox::warning(
-                parent, QStringLiteral("User Settings Changed"),
-                QStringLiteral(
-                    "User Settings changed before the migration could be committed.\n\nExpected: %1\nFound: %2")
-                    .arg(classic::toQString(outcome.expected_revision), classic::toQString(outcome.actual_revision)));
-            return false;
-        }
-        if (!outcome.has_receipt) {
-            QMessageBox::warning(parent, QStringLiteral("User Settings Migration"),
-                                 QStringLiteral("Migration completed without a verified restore receipt."));
-            return false;
-        }
-
-        QMessageBox completed(parent);
-        completed.setIcon(QMessageBox::Information);
-        completed.setWindowTitle(QStringLiteral("User Settings Migrated"));
-        completed.setText(QStringLiteral("User Settings were migrated and reopened successfully."));
-        completed.setInformativeText(QStringLiteral("Verified backup: %1\nBackup revision: %2\nPublished revision: %3")
-                                         .arg(classic::toQString(outcome.receipt.backup_path),
-                                              classic::toQString(outcome.receipt.backup_revision),
-                                              classic::toQString(outcome.receipt.published_revision)));
-        completed.addButton(QStringLiteral("Keep Migrated Settings"), QMessageBox::AcceptRole);
-        auto* restoreButton =
-            completed.addButton(QStringLiteral("Restore Verified Backup"), QMessageBox::DestructiveRole);
-        completed.exec();
-
-        if (completed.clickedButton() == restoreButton) {
-            const auto restored = classic::settings::user_settings_restore_migration(root, *handle);
-            if (classic::toQString(restored.status) == QStringLiteral("conflict")) {
-                QMessageBox::warning(
-                    parent, QStringLiteral("User Settings Restore Conflict"),
-                    QStringLiteral("The migrated document changed before restore.\n\nExpected: %1\nFound: %2")
-                        .arg(classic::toQString(restored.expected_revision),
-                             classic::toQString(restored.actual_revision)));
-                return false;
-            }
-            QMessageBox::information(parent, QStringLiteral("User Settings Restored"),
-                                     QStringLiteral("The verified pre-migration document was restored successfully."));
-        }
-        return true;
-    } catch (const rust::Error& error) {
-        QMessageBox::warning(parent, QStringLiteral("User Settings Migration Failed"), QString::fromUtf8(error.what()));
-        return false;
+    for (const auto& diagnostic : outcome.diagnostics) {
+        qWarning().noquote() << QStringLiteral("User Settings migration %1 [%2]: %3")
+                                    .arg(status, classic::toQString(diagnostic.code),
+                                         classic::toQString(diagnostic.message));
     }
 }
 } // namespace
@@ -823,6 +755,7 @@ void MainWindow::loadSettings()
     }
     m_dataDir = m_dataRoot + QStringLiteral("/CLASSIC Data");
 
+    migrateUserSettingsSilently(m_dataRoot);
     auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
     if (setup.classification == QStringLiteral("missing")) {
         const auto choice = QMessageBox::question(
@@ -851,9 +784,6 @@ void MainWindow::loadSettings()
                                      diagnostics.join(QLatin1Char('\n')));
             }
         }
-    } else if (setup.commitEligibility == QStringLiteral("requires_migration")) {
-        offerUserSettingsMigration(this, m_dataRoot);
-        setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
     }
     presentDegradedUserSettings(this, setup);
 

@@ -1,4 +1,5 @@
 #include "app_update.h"
+#include "user_settings_action.h"
 
 #include "rust/cxx.h"
 
@@ -158,6 +159,7 @@ int run_check_app_update(const CliArgs& /*args*/, const CliProcessLocation& loca
     if (!classic_root) {
         return kCliInstallationRootNotFoundExitCode;
     }
+    migrate_user_settings_silently(*classic_root);
 
     if (!update_check_enabled_for_root(*classic_root)) {
         return 0;

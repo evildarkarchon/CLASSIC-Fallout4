@@ -790,8 +790,7 @@
               "expected": {
                 "modsPath": "D:/Mod Staging",
                 "customScanPath": "D:/Crash Logs",
-                "migrationPrompt": true,
-                "unchanged": true
+                "migrationPrompt": false
               }
             },
             {
@@ -810,14 +809,13 @@
               }
             },
             {
-              "id": "tui.settings-migration-interaction",
+              "id": "tui.settings-silent-migration",
               "scenarioIds": [
                 "migration-flat-restore"
               ],
               "expected": {
-                "prompted": true,
+                "prompted": false,
                 "classification": "current",
-                "statusReportsBackup": true,
                 "changed": true,
                 "backupMatchesOriginal": true,
                 "fcxMode": true

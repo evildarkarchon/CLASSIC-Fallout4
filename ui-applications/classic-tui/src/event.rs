@@ -33,7 +33,6 @@ impl App {
                 },
                 Overlay::Settings => match key.code {
                     KeyCode::Esc => self.close_overlay(),
-                    KeyCode::Char('m') | KeyCode::Char('M') => self.apply_user_settings_migration(),
                     KeyCode::Char('i') | KeyCode::Char('I') => self.import_legacy_tui_state(),
                     _ => {}
                 },

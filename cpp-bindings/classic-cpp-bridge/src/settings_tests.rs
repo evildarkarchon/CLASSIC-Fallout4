@@ -1,8 +1,4 @@
 use super::*;
-// Imported here rather than in `settings.rs`: the bridge never names these
-// types, because it asks each value for its own Vocabulary Token and converts
-// no token back into them; only the review-plan fixtures below need them.
-use classic_user_settings_core::{MigrationChangeKind, SourceLocation, UserSettingsSchemaVersion};
 use std::{
     io::Write,
     path::{Path, PathBuf},
@@ -25,330 +21,45 @@ fn install_user_settings_fixture(root: &Path, name: &str) {
 }
 
 #[test]
-fn test_user_settings_migration_plan_bridge_maps_flat_plan_without_writing() {
-    let root = tempfile::tempdir().unwrap();
-    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
-    let settings_path = root.path().join("CLASSIC Settings.yaml");
-    let before = std::fs::read(&settings_path).unwrap();
-    let before_modified = std::fs::metadata(&settings_path)
-        .unwrap()
-        .modified()
-        .unwrap();
-
-    let plan = user_settings_plan_migration(&root.path().display().to_string());
-
-    assert_eq!(plan.status, "planned");
-    assert!(plan.required);
-    assert!(plan.has_plan);
-    assert!(plan.base_revision.starts_with("sha256:"));
-    assert_eq!(plan.source_location, "canonical");
-    assert!(!plan.has_source_schema_version);
-    assert_eq!(plan.target_location, "canonical");
-    assert!(plan.has_target_schema_version);
-    assert_eq!((plan.target_schema_major, plan.target_schema_minor), (1, 0));
-    assert!(plan.has_original_content);
-    assert_eq!(plan.original_content, before);
-    assert!(plan.has_proposed_content);
-    let proposed = String::from_utf8(plan.proposed_content.clone()).unwrap();
-    assert!(proposed.contains("schema_version"));
-    assert!(proposed.contains("CLASSIC_Settings"));
-    assert!(plan.diagnostics.is_empty());
-    assert_eq!(plan.changes[0].kind, "schema_version_transition");
-    assert!(!plan.changes[0].has_source_path);
-    assert!(plan.changes[0].has_target_path);
-    assert_eq!(plan.changes[0].target_path, "/schema_version");
-    assert!(!plan.changes[0].has_before);
-    assert!(plan.changes[0].has_after);
-    assert_eq!(plan.changes[0].after, "1.0");
-    assert!(
-        plan.changes
-            .iter()
-            .any(|change| change.kind == "field_transition"
-                && change.source_path == "/fcx_mode"
-                && change.target_path == "/CLASSIC_Settings/FCX Mode")
-    );
-    assert_eq!(std::fs::read(&settings_path).unwrap(), before);
-    assert_eq!(
-        std::fs::metadata(&settings_path)
-            .unwrap()
-            .modified()
-            .unwrap(),
-        before_modified
-    );
-}
-
-/// Builds a review-only plan carrying one change per migration change kind.
-///
-/// Real planning only ever emits the subset of kinds a given document needs, so
-/// a fixture-driven test can never reach every variant. Reconstructing a plan
-/// from binding-safe components keeps this exhaustive check on the production
-/// conversion (`user_settings_migration_plan_dto`) rather than a test-only one.
-fn plan_with_every_migration_change_kind() -> UserSettingsMigrationPlan {
-    UserSettingsMigrationPlan::from((
-        true,
-        (SourceLocation::Legacy, None),
-        (
-            SourceLocation::Canonical,
-            Some(UserSettingsSchemaVersion::new(1, 0)),
-        ),
-        MigrationChangeKind::VARIANTS
-            .iter()
-            .copied()
-            .map(|kind| (kind, None, None, None, None))
-            .collect(),
-        b"original".to_vec(),
-        b"proposed".to_vec(),
-    ))
-}
-
-#[test]
-fn test_user_settings_migration_change_kinds_project_the_core_vocabulary_tokens() {
-    // The expectation is derived from the core, not restated here. A test that
-    // listed the tokens again would be a fourth copy of the vocabulary and
-    // would pass just as happily against a bridge that had drifted.
-    let dto = user_settings_migration_plan_dto(&plan_with_every_migration_change_kind());
-
-    let projected: Vec<&str> = dto
-        .changes
-        .iter()
-        .map(|change| change.kind.as_str())
-        .collect();
-    let expected: Vec<&str> = MigrationChangeKind::VARIANTS
-        .iter()
-        .copied()
-        .map(MigrationChangeKind::as_str)
-        .collect();
-
-    assert_eq!(projected, expected);
-}
-
-// ── Document vocabulary projection ──────────────────────────────────
-//
-// This drives the *production* DTO conversion for the document enum a
-// binding-safe constructor can reach exhaustively: `SourceLocation`, through a
-// review-only plan. It derives its expectation from the core rather than
-// restating it.
-//
-// `DocumentClassification`, `PreferenceOrigin` and `CommitEligibility` are
-// only reachable by opening a real document, so no exhaustive constructor
-// exists for them. That leaves nothing untested, because the bridge holds no
-// per-enum projection code at all — every one of these is projected by the
-// same `Vocabulary::as_str` call, and the fixture-driven snapshot tests below
-// still pin the token each fixture actually yields.
-
-/// Builds a review-only plan whose endpoints carry `location` on both sides.
-fn plan_anchored_at(location: SourceLocation) -> UserSettingsMigrationPlan {
-    UserSettingsMigrationPlan::from((
-        true,
-        (location, None),
-        (location, Some(UserSettingsSchemaVersion::new(1, 0))),
-        Vec::new(),
-        b"original".to_vec(),
-        b"proposed".to_vec(),
-    ))
-}
-
-#[test]
-fn test_user_settings_source_locations_project_the_core_vocabulary_tokens() {
-    let projected: Vec<String> = SourceLocation::VARIANTS
-        .iter()
-        .copied()
-        .map(|location| {
-            user_settings_migration_plan_dto(&plan_anchored_at(location)).source_location
-        })
-        .collect();
-    let expected: Vec<String> = SourceLocation::VARIANTS
-        .iter()
-        .copied()
-        .map(|location| location.as_str().to_string())
-        .collect();
-
-    assert_eq!(projected, expected);
-}
-
-#[test]
-fn test_user_settings_migration_plan_bridge_maps_location_transition() {
-    let root = tempfile::tempdir().unwrap();
-    let legacy_dir = root.path().join("CLASSIC Data");
-    std::fs::create_dir(&legacy_dir).unwrap();
-    let legacy_path = legacy_dir.join("CLASSIC Settings.yaml");
-    let before =
-        std::fs::read(user_settings_fixture_path("previous_location_nested.yaml")).unwrap();
-    std::fs::write(&legacy_path, &before).unwrap();
-
-    let plan = user_settings_plan_migration(&root.path().display().to_string());
-
-    assert_eq!(plan.status, "planned");
-    assert!(plan.required);
-    assert_eq!(plan.source_location, "legacy");
-    assert_eq!(plan.target_location, "canonical");
-    assert_eq!(plan.changes[0].kind, "location_transition");
-    assert_eq!(
-        plan.changes[0].source_path,
-        "CLASSIC Data/CLASSIC Settings.yaml"
-    );
-    assert_eq!(plan.changes[0].target_path, "CLASSIC Settings.yaml");
-    assert_eq!(std::fs::read(&legacy_path).unwrap(), before);
-    assert!(!root.path().join("CLASSIC Settings.yaml").exists());
-}
-
-#[test]
-fn test_user_settings_migration_plan_bridge_maps_terminal_outcomes() {
-    let current_root = tempfile::tempdir().unwrap();
-    install_user_settings_fixture(current_root.path(), "canonical_current_nested.yaml");
-
-    let current = user_settings_plan_migration(&current_root.path().display().to_string());
-
-    assert_eq!(current.status, "not_required");
-    assert!(!current.required);
-    assert!(!current.has_plan);
-    assert!(current.base_revision.is_empty());
-    assert!(current.changes.is_empty());
-    assert!(!current.has_original_content);
-    assert!(!current.has_proposed_content);
-    assert!(current.diagnostics.is_empty());
-
-    let future_root = tempfile::tempdir().unwrap();
-    install_user_settings_fixture(future_root.path(), "newer_major_schema.yaml");
-    let future_path = future_root.path().join("CLASSIC Settings.yaml");
-    let before = std::fs::read(&future_path).unwrap();
-
-    let unsupported = user_settings_plan_migration(&future_root.path().display().to_string());
-
-    assert_eq!(unsupported.status, "unsupported");
-    assert!(!unsupported.required);
-    assert!(!unsupported.has_plan);
-    assert!(unsupported.changes.is_empty());
-    assert_eq!(unsupported.diagnostics.len(), 1);
-    assert_eq!(
-        unsupported.diagnostics[0].code,
-        "future_major_schema_read_only"
-    );
-    assert!(!unsupported.diagnostics[0].message.is_empty());
-    assert_eq!(std::fs::read(&future_path).unwrap(), before);
-}
-
-#[test]
-fn test_user_settings_migration_apply_bridge_exposes_receipt_and_restores_explicitly() {
+fn test_user_settings_migrate_if_required_bridge_applies_flat_migration_with_backup() {
     let root = tempfile::tempdir().unwrap();
     install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
     let settings_path = root.path().join("CLASSIC Settings.yaml");
     let original = std::fs::read(&settings_path).unwrap();
-    let root_string = root.path().display().to_string();
-    let approved = user_settings_plan_migration(&root_string);
 
-    let handle = user_settings_apply_migration(&root_string, &approved).unwrap();
-    let outcome = user_settings_migration_apply_outcome(&handle);
+    let outcome = user_settings_migrate_if_required(&root.path().display().to_string());
 
     assert_eq!(outcome.status, "applied");
-    assert!(outcome.expected_revision.is_empty());
-    assert!(outcome.actual_revision.is_empty());
-    assert!(outcome.has_receipt);
-    assert_eq!(PathBuf::from(&outcome.receipt.source_path), settings_path);
-    assert_eq!(
-        PathBuf::from(&outcome.receipt.destination_path),
-        settings_path
-    );
-    assert!(PathBuf::from(&outcome.receipt.backup_path).starts_with(root.path()));
-    assert_eq!(outcome.receipt.source_location, "canonical");
-    assert!(!outcome.receipt.has_source_schema_version);
-    assert_eq!(outcome.receipt.target_location, "canonical");
-    assert!(outcome.receipt.has_target_schema_version);
-    assert_eq!(
-        (
-            outcome.receipt.target_schema_major,
-            outcome.receipt.target_schema_minor,
-        ),
-        (1, 0)
-    );
-    assert_eq!(outcome.receipt.backup_revision, approved.base_revision);
-    assert!(outcome.receipt.published_revision.starts_with("sha256:"));
-    assert_eq!(
-        std::fs::read(&outcome.receipt.backup_path).unwrap(),
-        original
-    );
-    assert_eq!(
-        std::fs::read(&settings_path).unwrap(),
-        approved.proposed_content
-    );
-
-    let restored = user_settings_restore_migration(&root_string, &handle).unwrap();
-
-    assert_eq!(restored.status, "restored");
-    assert_eq!(restored.revision, approved.base_revision);
-    assert!(restored.expected_revision.is_empty());
-    assert!(restored.actual_revision.is_empty());
-    assert_eq!(std::fs::read(&settings_path).unwrap(), original);
+    assert!(outcome.diagnostics.is_empty());
+    assert_eq!(std::fs::read(&outcome.backup_path).unwrap(), original);
+    assert_ne!(std::fs::read(&settings_path).unwrap(), original);
+    let reopened = user_settings_open_update_preferences(&root.path().display().to_string());
+    assert_eq!(reopened.commit_eligibility, "eligible");
 }
 
 #[test]
-fn test_user_settings_migration_apply_bridge_maps_stale_revision_as_conflict_data() {
+fn test_user_settings_migrate_if_required_bridge_leaves_current_document_untouched() {
     let root = tempfile::tempdir().unwrap();
-    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
-    let settings_path = root.path().join("CLASSIC Settings.yaml");
-    let root_string = root.path().display().to_string();
-    let approved = user_settings_plan_migration(&root_string);
-    let changed = b"schema_version: \"1.0\"\nCLASSIC_Settings: {}\n";
-    std::fs::write(&settings_path, changed).unwrap();
-
-    let handle = user_settings_apply_migration(&root_string, &approved).unwrap();
-    let outcome = user_settings_migration_apply_outcome(&handle);
-
-    assert_eq!(outcome.status, "conflict");
-    assert_eq!(outcome.expected_revision, approved.base_revision);
-    assert!(outcome.actual_revision.starts_with("sha256:"));
-    assert_ne!(outcome.actual_revision, outcome.expected_revision);
-    assert!(!outcome.has_receipt);
-    assert!(outcome.receipt.backup_path.is_empty());
-    assert_eq!(std::fs::read(&settings_path).unwrap(), changed);
-    assert!(!root.path().join("CLASSIC Backup").exists());
-    assert!(user_settings_restore_migration(&root_string, &handle).is_err());
-}
-
-#[test]
-fn test_user_settings_migration_apply_bridge_rejects_mutated_proposed_bytes() {
-    let root = tempfile::tempdir().unwrap();
-    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
+    install_user_settings_fixture(root.path(), "canonical_current_nested.yaml");
     let settings_path = root.path().join("CLASSIC Settings.yaml");
     let original = std::fs::read(&settings_path).unwrap();
-    let root_string = root.path().display().to_string();
-    let mut approved = user_settings_plan_migration(&root_string);
-    approved
-        .proposed_content
-        .extend_from_slice(b"# unapproved\n");
 
-    let error = user_settings_apply_migration(&root_string, &approved)
-        .err()
-        .expect("mutated proposed bytes must be rejected");
+    let outcome = user_settings_migrate_if_required(&root.path().display().to_string());
 
-    assert!(error.starts_with("migration_approval_mismatch:"));
+    assert_eq!(outcome.status, "not_required");
+    assert!(outcome.backup_path.is_empty());
+    assert!(outcome.diagnostics.is_empty());
     assert_eq!(std::fs::read(&settings_path).unwrap(), original);
-    assert!(!root.path().join("CLASSIC Backup").exists());
 }
 
 #[test]
-fn test_user_settings_migration_restore_bridge_maps_newer_document_as_conflict_data() {
+fn test_user_settings_migrate_if_required_bridge_does_not_create_missing_document() {
     let root = tempfile::tempdir().unwrap();
-    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
-    let settings_path = root.path().join("CLASSIC Settings.yaml");
-    let root_string = root.path().display().to_string();
-    let approved = user_settings_plan_migration(&root_string);
-    let handle = user_settings_apply_migration(&root_string, &approved).unwrap();
-    let applied = user_settings_migration_apply_outcome(&handle);
-    let changed = b"schema_version: \"1.0\"\nCLASSIC_Settings:\n  FCX Mode: false\n";
-    std::fs::write(&settings_path, changed).unwrap();
 
-    let restored = user_settings_restore_migration(&root_string, &handle).unwrap();
+    let outcome = user_settings_migrate_if_required(&root.path().display().to_string());
 
-    assert_eq!(restored.status, "conflict");
-    assert!(restored.revision.is_empty());
-    assert_eq!(
-        restored.expected_revision,
-        applied.receipt.published_revision
-    );
-    assert!(restored.actual_revision.starts_with("sha256:"));
-    assert_ne!(restored.actual_revision, restored.expected_revision);
-    assert_eq!(std::fs::read(&settings_path).unwrap(), changed);
+    assert_eq!(outcome.status, "not_required");
+    assert!(!root.path().join("CLASSIC Settings.yaml").exists());
 }
 
 // ── YAML ops tests (pre-existing) ──────────────────────────────

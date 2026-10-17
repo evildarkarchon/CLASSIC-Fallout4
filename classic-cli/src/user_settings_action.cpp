@@ -15,6 +15,19 @@ std::string to_std_string(const rust::String& value) {
 
 } // namespace
 
+/// Delegates the whole transition to Rust; only a migration that could not run is reported.
+void migrate_user_settings_silently(const std::string& classic_root) {
+    const auto outcome = classic::settings::user_settings_migrate_if_required(classic_root);
+    const std::string status = to_std_string(outcome.status);
+    if (status == "not_required" || status == "applied") {
+        return;
+    }
+    for (const auto& diagnostic : outcome.diagnostics) {
+        fmt::print(stderr, "User Settings migration {} [{}]: {}\n", status, to_std_string(diagnostic.code),
+                   to_std_string(diagnostic.message));
+    }
+}
+
 /// Persists the destination only after Rust validates the request and anchors it to a revision.
 bool persist_unsolved_logs_destination_option(const CliArgs& args, const std::string& classic_root) {
     if (args.unsolved_logs_destination.empty() && !args.reset_unsolved_logs_destination) {

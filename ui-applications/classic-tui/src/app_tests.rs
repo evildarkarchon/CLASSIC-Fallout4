@@ -79,10 +79,24 @@ ThirdPartyPlugin:
 }
 
 #[test]
-fn migration_required_and_invalid_values_use_existing_status_conventions() {
-    let (_flat_root, flat) = app_with_settings_yaml("fcx_mode: true\n");
-    assert!(flat.scan_status.contains("migration required"));
-    assert!(flat.settings_overlay_text().contains("Press M"));
+fn flat_settings_migrate_silently_and_invalid_values_use_existing_status_conventions() {
+    let (flat_root, flat) = app_with_settings_yaml("fcx_mode: true\n");
+    assert_eq!(
+        flat.settings.commit_eligibility(),
+        classic_user_settings_core::CommitEligibility::Eligible,
+        "startup must apply the required migration"
+    );
+    assert!(flat.settings.crash_log_scan_settings().fcx_mode());
+    // Silent: the status line is reserved for scan progress, and nothing prompts for the migration.
+    assert_eq!(flat.scan_status, "Ready");
+    assert!(!flat.settings_overlay_text().contains("igration"));
+    assert!(
+        flat_root
+            .path()
+            .join("CLASSIC Backup/User Settings/Migrations")
+            .is_dir(),
+        "the migration must still retain its verified backup"
+    );
 
     let (_invalid_root, invalid) = app_with_settings_yaml(
         "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Max Concurrent Scans: nope\n",
@@ -387,8 +401,11 @@ fn stage_one_crash_log_and_isolate_from_host_logs(root: &std::path::Path) {
 #[test]
 fn standard_scan_runs_from_settings_needing_migration_and_shows_their_diagnostics() {
     let (root, mut app) = app_with_installation(SETTINGS_NEEDING_MIGRATION);
-    stage_one_crash_log_and_isolate_from_host_logs(root.path());
     let settings_path = root.path().join("CLASSIC Settings.yaml");
+    // Startup silently migrated the document, so put the unmigrated shape back: a scan must still
+    // launch, read-only, from a document that needs migration (e.g. one whose migration failed).
+    std::fs::write(&settings_path, SETTINGS_NEEDING_MIGRATION).unwrap();
+    stage_one_crash_log_and_isolate_from_host_logs(root.path());
     let before = std::fs::read(&settings_path).unwrap();
     let opened = classic_user_settings_core::UserSettings::open(root.path());
     assert_eq!(

@@ -246,14 +246,16 @@ void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_mig
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("user_settings_plan_migration")) &&
-                 sourceText.contains(QStringLiteral("QMessageBox::question")),
-             "MainWindow should present a pure migration plan before any migration write");
-    QVERIFY2(sourceText.contains(QStringLiteral("user_settings_apply_migration")) &&
-                 sourceText.contains(QStringLiteral("receipt.backup_revision")),
-             "MainWindow should apply migration through the verified backup receipt contract");
-    QVERIFY2(sourceText.contains(QStringLiteral("user_settings_restore_migration")),
-             "MainWindow should offer explicit restoration through the retained migration receipt");
+    // The Rust core owns the whole transition (requirement check, verified backup, rollback), so
+    // MainWindow delegates to one call and never plans, approves, or restores a migration itself.
+    QVERIFY2(sourceText.contains(QStringLiteral("user_settings_migrate_if_required")),
+             "MainWindow should delegate the required migration to the Rust core");
+    QVERIFY2(!sourceText.contains(QStringLiteral("user_settings_plan_migration")) &&
+                 !sourceText.contains(QStringLiteral("user_settings_apply_migration")) &&
+                 !sourceText.contains(QStringLiteral("user_settings_restore_migration")),
+             "MainWindow should not drive a migration plan, approval, or restore");
+    QVERIFY2(!sourceText.contains(QStringLiteral("User Settings Migrat")),
+             "The silent migration should present no migration dialogs");
     QVERIFY2(!sourceText.contains(QStringLiteral("QFile::rename")) && !sourceText.contains(QStringLiteral("QSaveFile")),
              "MainWindow should not implement migration publication itself");
 }

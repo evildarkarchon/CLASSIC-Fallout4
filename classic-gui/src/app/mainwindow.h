@@ -50,7 +50,8 @@ private:
     void connectSignals();
     void runStartupWorkflows();
 
-    /// Opens typed Game Setup User Settings, offers explicit bootstrap or migration, and refreshes the UI.
+    /// Opens typed Game Setup User Settings, silently applies a required
+    /// migration, offers explicit bootstrap, and refreshes the UI.
     /// Read-only opens never repair or persist the settings document.
     void loadSettings();
 

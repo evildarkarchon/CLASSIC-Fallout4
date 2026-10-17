@@ -2138,7 +2138,7 @@
       "id": "tui.settings-explicit-save"
     },
     {
-      "id": "tui.settings-migration-interaction"
+      "id": "tui.settings-silent-migration"
     }
   ]
 }

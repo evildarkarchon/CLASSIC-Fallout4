@@ -1,4 +1,5 @@
 #include "yaml_update.h"
+#include "user_settings_action.h"
 
 #include "rust/cxx.h"
 
@@ -38,8 +39,8 @@ bool read_update_check_setting(const std::string& classic_root) {
     }
     if (std::string(preferences.commit_eligibility) == "requires_migration") {
         fmt::print(stderr,
-                   "User Settings notice: this {} document must be explicitly migrated before "
-                   "updates can be committed; the YAML Data command is using its typed read-only policy.\n",
+                   "User Settings notice: this {} document could not be migrated automatically, so "
+                   "updates cannot be committed; the YAML Data command is using its typed read-only policy.\n",
                    std::string(preferences.classification));
     }
     return preferences.update_check_enabled;
@@ -173,6 +174,7 @@ int run_check_yaml_updates(const CliArgs& /*args*/, const CliProcessLocation& lo
     if (!installation_root) {
         return kCliInstallationRootNotFoundExitCode;
     }
+    migrate_user_settings_silently(*installation_root);
 
     if (!init_runtime_for_yaml_update()) {
         return 2;
@@ -206,6 +208,7 @@ int run_apply_yaml_updates(const CliArgs& /*args*/, const CliProcessLocation& lo
     if (!installation_root) {
         return kCliInstallationRootNotFoundExitCode;
     }
+    migrate_user_settings_silently(*installation_root);
 
     if (!init_runtime_for_yaml_update()) {
         return 2;
