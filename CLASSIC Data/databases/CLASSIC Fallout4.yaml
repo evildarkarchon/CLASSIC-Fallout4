@@ -212,7 +212,31 @@ Crashgen_Registry:
           severity: warning
   "Addictol":
     display_section: "[Patches]"
-    ignore_keys: []
+    ignore_keys:
+      - bSmallBlockAllocatorUseSelectedHeap
+      - bHighResBloom
+      - bInputSwitch
+      - bSprintSpeedMult
+      - bPuddleCubemaps
+      - bFixesRadioSilence
+      - bAltTabFullscreen
+      - bCsv
+      - bEnabled
+      - bFormLoadTiming
+      - bImageMemory
+      - bImageSampling
+      - bOperationProfiling
+      - bPluginTiming
+      - bHighResLocalMaps
+      - bIgnoreCompatibilityChecks
+      - bDbgFacegenOutput
+      - bIgnorePreInstallBias
+      - bUseNewRedistributable
+      - bProfiler
+      - bRobCoPatcherCache
+      - bESPSubHooks
+      - bAudioProxy
+      - bRobCoPatcherCacheValidate
     checks: []
     settings_rules_version: 1
     settings_rules:
