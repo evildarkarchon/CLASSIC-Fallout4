@@ -114,15 +114,13 @@ When `fallback.marker` is present and its mtime is within TTL, a subsequent Page
 
 ## 3. Error contract (per binding)
 
-All three bindings propagate a single unified `UpdateError` family (design decision D-05) with notification-specific variants `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`. The notification path can also surface shared manifest-validation variants: `ManifestInvalid` when a fetched notification manifest violates cross-field invariants, and `ManifestUnsupportedVersion` when it advertises a newer `manifest_version` major. The shape each binding exposes follows the established per-language idiom:
+The C++ bridge propagates the single unified `UpdateError` family (design decision D-05) with notification-specific variants `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`. The notification path can also surface shared manifest-validation variants: `ManifestInvalid` when a fetched notification manifest violates cross-field invariants, and `ManifestUnsupportedVersion` when it advertises a newer `manifest_version` major. The shape it exposes follows the established bridge idiom:
 
 | Binding | Error shape |
 | --- | --- |
 | C++ (CXX) | `NotificationStatusDto { classification = "error", error_message = "<Display>", …empty-string sentinels… }` |
-| Node (NAPI-RS) | Promise rejects with `Error` whose `message` is prefixed with the variant-keyed code: `"FETCH_FAILED: <detail>"` / `"DECODE: <detail>"` / `"INSTALLED_VERSION_PARSE: <detail>"` / `"CACHE_IO: <detail>"` / `"UPDATE_ERROR: <detail>"`. Consumers discriminate with `err.message.startsWith("FETCH_FAILED:")`. The prefix-on-message shape (rather than a custom `err.code`) is a napi-rs 3.x async-macro constraint — `Status` is a fixed C-style enum, so custom variant codes can't round-trip through `execute_tokio_future_with_finalize_callback` as structured `code` values |
-| Python (PyO3) | Raises a `ClassicNotificationError` subclass keyed to the variant, or the `ClassicNotificationError` base for shared notification-channel failures such as `ManifestInvalid` and `ManifestUnsupportedVersion`; subclass of `ClassicUpdateError` so existing catches still work |
 
-Absence is not a failure: Pages `404 Not Found` plus no matching Releases manifest returns `Ok(NotificationStatus { classification: NotPublished, .. })`. Binding success strings differ by existing convention: CXX/GUI/CLI use `"not_published"`; Node/Python expose `"notPublished"`. Both represent the same benign outcome and MUST NOT be surfaced as an exception, rejected promise, stderr line, non-zero exit, or warning dialog.
+Absence is not a failure: Pages `404 Not Found` plus no matching Releases manifest returns `Ok(NotificationStatus { classification: NotPublished, .. })`. CXX/GUI/CLI use the success string `"not_published"`. It represents a benign outcome and MUST NOT be surfaced as an exception, rejected promise, stderr line, non-zero exit, or warning dialog.
 
 Full precedent + examples: [`error-contract.md`](error-contract.md).
 
@@ -141,14 +139,14 @@ The workflow reads its inputs from [`CLASSIC Data/app-notification.yaml`](../../
 
 ### Workflow stages
 
-1. **Validate workflow tag** — `tools/publish_app_notification/validate.py --workflow-tag "$TAG"` rejects malformed `app-notification-v*` prefix matches such as `app-notification-vnext` before any release or Pages publish work runs.
-2. **Validate source** — `tools/publish_app_notification/validate.py` rejects malformed source fields (missing `release_tag`, unparseable `latest_version`, non-RFC3339 `published_at`, typo'd display keys, non-HTTPS `display.cta_url`).
-3. **Generate** — `tools/publish_app_notification/generate_manifest.py` projects the validated source into `manifest.json`, substituting the tag's UTC publication timestamp when the source leaves `published_at: null`.
+1. **Validate workflow tag** — `cargo xtask app-notification validate --workflow-tag "$TAG"` rejects malformed `app-notification-v*` prefix matches such as `app-notification-vnext` before any release or Pages publish work runs.
+2. **Validate source** — `cargo xtask app-notification validate --source "$SOURCE_ARTIFACT"` rejects malformed source fields (missing `release_tag`, unparseable `latest_version`, non-RFC3339 `published_at`, `min_supported_version` above `latest_version`, typo'd display keys, non-HTTPS `display.cta_url`). The same validation, plus a full dry run, runs on every pull request in the blocking `xtask-linux` job of `ci-rust.yml`.
+3. **Generate** — `cargo xtask app-notification manifest` projects the validated source into `manifest.json`, substituting the tag's UTC publication timestamp when the source leaves `published_at: null`. The bytes are fixed: keys in the client's field order, two-space indent, non-ASCII written as UTF-8, LF line endings and a trailing newline. There is no `.sha256` sidecar.
 4. **Draft release** — `gh release create --draft --latest=false` uploads `manifest.json` as the sole asset. `--latest=false` is applied at every `gh release edit` point so the repo's `latest` pointer stays on the most recent `v*` binary release (spec scenario "Latest pointer preserved").
 5. **Promote to prerelease** — `gh release edit --draft=false --prerelease=true` makes the asset URL anonymously reachable (draft asset URLs 404 anonymously). `fetch_via_releases_fallback` passes `include_prereleases=false` to `get_all_releases`, so no API-fallback client sees the release yet.
-6. **Anonymous-reachability probe** — `tools/publish_app_notification/verify_release_asset.py` fetches the asset URL anonymously with a retry budget. Closes the Codex-reviewed race window where a client could discover the release before the CDN has warmed the asset URL.
+6. **Anonymous-reachability probe** — `cargo xtask app-notification verify-asset --expected-body-path …` fetches the asset URL anonymously with a retry budget and requires the body's SHA-256 to match the staged `manifest.json`, so a same-tag rerun cannot pass against a stale CDN copy. Closes the Codex-reviewed race window where a client could discover the release before the CDN has warmed the asset URL.
 7. **Pages deploy** — writes `app-notification/manifest-latest.json` and `app-notification/manifest-<tag>.json` to `gh-pages`. The `app-notification/` path is disjoint from `yaml-data/`, and both publish workflows share the `publish-gh-pages-${{ github.repository }}` concurrency group so only one maintainer job mutates the branch at a time. Runs while the release is still a prerelease so a Pages failure cannot leave the Releases-API fallback advertising a tag Pages does not serve.
-8. **Pages smoke-test** — reuses `tools/publish_yaml_data/smoke_test_pages.py --pages-path app-notification/manifest-latest.json`; compares the live Pages response body against the staged `manifest.json` so notification-only republishes cannot pass against an older payload.
+8. **Pages smoke-test** — `cargo xtask app-notification smoke-pages --pages-path app-notification/manifest-latest.json` (also the default `--pages-path`); compares the live Pages response body against the staged `manifest.json` so notification-only republishes cannot pass against an older payload.
 9. **Clear prerelease flag** — `gh release edit --prerelease=false --latest=false` runs LAST, only after Pages has been proven to serve the new tag. Only now does the release become visible to `fetch_via_releases_fallback`. Running this step last keeps the Pages-first and Releases-API fallback channels on the same tag at every instant: a failure of step 7 or 8 leaves the release as a prerelease (invisible to fallback) while Pages-first clients still read the previous `manifest-latest.json`.
 
 ### Local dry run
@@ -156,11 +154,10 @@ The workflow reads its inputs from [`CLASSIC Data/app-notification.yaml`](../../
 Maintainers can exercise the publish ordering without pushing an `app-notification-v*` tag:
 
 ```powershell
-$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-uv run --project python-bindings python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v9.2.0 --published-at $publishedAt
+cargo xtask app-notification dry-run --workflow-tag app-notification-v9.2.0
 ```
 
-The harness validates the workflow tag before reading the source artifact, validates [`CLASSIC Data/app-notification.yaml`](../../CLASSIC%20Data/app-notification.yaml), generates the same `manifest.json` bytes as the workflow, stages a local `releases/download/<tag>/manifest.json`, and stages `gh-pages/app-notification/manifest-latest.json` plus `manifest-<tag>.json` under the reported output directory. It then serves those files from localhost and reuses `tools/publish_app_notification/verify_release_asset.py` and `tools/publish_yaml_data/smoke_test_pages.py --base-url` against the staged bytes.
+The dry run validates the workflow tag before reading the source artifact, validates [`CLASSIC Data/app-notification.yaml`](../../CLASSIC%20Data/app-notification.yaml), resolves `published_at` the way the workflow does (`--published-at`, else the local tag's tagger or commit date, else the current UTC time unless `--require-existing-tag` is set), generates the same `manifest.json` bytes as the workflow, stages a local `releases/download/<tag>/manifest.json`, and stages `gh-pages/app-notification/manifest-latest.json` plus `manifest-<tag>.json` under the reported output directory (`--work-dir`, or a preserved temp directory). It then serves those files from localhost and runs the `verify-asset` and `smoke-pages` checks in-process against the staged bytes.
 
 Use `--simulate-release-asset-mismatch` to prove a stale release asset fails before Pages staging, or `--simulate-pages-mismatch` to prove a stale Pages payload fails before the live workflow would clear the prerelease flag. The dry run never creates, edits, deletes, or publishes a GitHub Release, and it never pushes `gh-pages`.
 
@@ -194,9 +191,9 @@ For the native CLI, notification delivery is downstream of typed User Settings p
 
 Hosts using GitHub-compatible mirrors or an explicit notification manifest can call
 `check_app_notification_configured(owner, repo, installed_version, config_json, cache_dir)`.
-Node exposes `checkAppNotificationConfigured` with the same five positional arguments;
-Python and CXX preserve the snake-case name. Return DTOs and typed failure conventions
-are identical to the default notification check. All parsing, validation, fallback,
+It is Rust API only: the CXX bridge does not export it, because no frontend calls it
+(#309). Return DTOs and typed failure conventions are identical to the default
+notification check. All parsing, validation, fallback,
 classification, and cache persistence remain in Rust.
 
 `config_json` is a JSON object with optional `github_api_base_url` (default

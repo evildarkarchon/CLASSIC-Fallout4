@@ -188,8 +188,9 @@ fn first_use_leaves_the_shared_yaml_file_cache_untouched() {
     cwd.enter(root.path());
     assert_eq!(og_display_name(&scope), "Cache Probe Original");
 
-    // The default YAML-file cache scope belongs to another owner (the config
-    // facade once the Python facades merge); a snapshot load must not add
+    // The default YAML-file cache scope belongs to another owner (the unscoped
+    // callers; originally the config facade of the merged Python extension,
+    // retired with ADR-0010); a snapshot load must not add
     // entries to it or move its counters.
     let after = classic_shared_core::yaml::yaml_cache_stats();
     assert_eq!(

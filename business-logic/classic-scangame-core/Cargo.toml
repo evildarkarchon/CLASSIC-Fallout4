@@ -4,14 +4,14 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Pure Rust business logic for game scanning and validation (NO PyO3)"
+description = "Pure Rust business logic for game scanning and validation"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
 crate-type = ["rlib"] # Pure Rust library ONLY - NO Python bindings
 
 [dependencies]
-# CLASSIC core dependencies (pure Rust - NO PyO3!)
+# CLASSIC core dependencies (pure Rust)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-config-core = { path = "../classic-config-core" }
 classic-user-settings-core = { path = "../classic-user-settings-core" }

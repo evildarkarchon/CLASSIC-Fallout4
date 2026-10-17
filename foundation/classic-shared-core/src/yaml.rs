@@ -37,11 +37,11 @@
 //! Each cache's state lives in a scope reached through an opaque handle:
 //! [`LogicalKeyCacheScope`] and [`YamlFileCacheScope`]. The unscoped free
 //! functions and [`YamlOperations::new`] use each cache's process default
-//! scope, so ordinary Rust, CXX, and Node callers observe one cache per linked
+//! scope, so ordinary Rust and CXX callers observe one cache per linked
 //! library image, as they always have. `new_isolated()` creates an independent
-//! scope with the same rules; the merged Python extension gives each former
-//! extension facade its own handles so one facade's loads, clears, and
-//! counter resets stay invisible to another. Handles are passed explicitly
+//! scope with the same rules; the merged Python extension (retired with
+//! ADR-0010) gave each former extension facade its own handles so one facade's
+//! loads, clears, and counter resets stayed invisible to another. Handles are passed explicitly
 //! (never selected from thread-local state), so async work keeps its scope.
 //!
 //! CLASSIC-specific file identity (which YAML files exist and where they

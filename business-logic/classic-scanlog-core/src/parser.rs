@@ -795,9 +795,10 @@ impl LogParser {
     /// faster than sequential extraction when you need multiple sections.
     /// Parses and extracts all named sections from the log using anchor-first segmentation.
     ///
-    /// This is the String-facing version used by the Python binding. Converts to
-    /// `Arc<str>` internally, delegates to `parse_all_sections_arc`, then converts
-    /// back to `String` for the return value.
+    /// This is the String-facing version (originally for the since-retired
+    /// Python binding). Converts to `Arc<str>` internally, delegates to
+    /// `parse_all_sections_arc`, then converts back to `String` for the return
+    /// value.
     ///
     /// All 8 named keys are always present: `settings`, `system`, `callstack`,
     /// `modules`, `xse_modules`, `plugins`, `registers`, `stack_dump`. Keys for

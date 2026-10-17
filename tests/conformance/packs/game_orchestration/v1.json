@@ -21,7 +21,6 @@
         "run_game_checks",
         "run_mod_scans"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "values"
       ]

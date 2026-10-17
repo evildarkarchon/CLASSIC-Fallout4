@@ -44,24 +44,19 @@ corrosion_import_crate(
 corrosion_add_cxxbridge(classic_cxx_bridge
     CRATE classic_cpp_bridge
     FILES
-        types.rs
         runtime.rs
         registry.rs
         settings.rs
         shared.rs
         config.rs
         scanner.rs
-        database.rs
         files.rs
         path.rs
         scangame.rs
-        game.rs
         xse.rs
-        version_registry.rs
         web.rs
         update.rs
         message.rs
-        perf.rs
         markdown.rs
 )
 
@@ -134,7 +129,7 @@ install(TARGETS classic-cli RUNTIME DESTINATION .)
 
 # CLASSIC Data — runtime data files (databases, graphics, help, game versions).
 # Only the subdirectories the app actually uses are installed; dev-only files
-# (Python/Pascal scripts, zip archive, local config) at the top level are skipped.
+# (Pascal script, zip archive, local config) at the top level are skipped.
 set(CLASSIC_DATA_DIR "${CMAKE_SOURCE_DIR}/../CLASSIC Data")
 
 install(DIRECTORY "${CLASSIC_DATA_DIR}/databases/"
@@ -286,7 +281,6 @@ if(BUILD_TESTING AND Catch2_FOUND)
         tests/test_scanner.cpp
         tests/test_user_settings_action.cpp
         tests/test_scan_run_launch.cpp
-        tests/test_perf_timing_contract.cpp
         tests/test_installation_root.cpp
         src/yaml_update.cpp
         src/app_update.cpp

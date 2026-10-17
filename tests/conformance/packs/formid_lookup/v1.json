@@ -35,8 +35,7 @@
       "observationFamilies": [
         "semantic-result",
         "structured-error"
-      ],
-      "operationScoped": true
+      ]
     }
   ],
   "scenarios": [

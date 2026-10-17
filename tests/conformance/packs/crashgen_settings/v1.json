@@ -32,7 +32,6 @@
       "id": "crashgen-settings.config-carriers",
       "rustCrate": "classic-config-core",
       "rustSymbols": ["RuleSeverity", "AutoscanReportPlacement", "OutcomeKind"],
-      "operationScoped": true,
       "observationFamilies": ["semantic-result"]
     }
   ],

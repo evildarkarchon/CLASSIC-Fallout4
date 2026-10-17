@@ -22,9 +22,9 @@ Use this crate when you need to:
 - register process-wide state under a string key
 - retrieve previously-registered values by key and concrete Rust type
 - reuse shared well-known keys through `Keys`
-- bridge simple registry state across Rust, C++, Python, and Node wrappers
+- bridge simple registry state across Rust and the C++ bridge
 - keep lightweight global state in one place without introducing a new singleton per crate
-- give each facade of a multi-facade adapter its own independent registry and application directory through `RegistryScope`
+- give a caller its own independent registry and application directory through `RegistryScope`
 
 Do not use this crate for:
 
@@ -201,9 +201,9 @@ Source-visible behavior to keep in mind:
 
 ## Registry Scopes
 
-`RegistryScope` is an opaque, cheaply cloned handle to one registry store. It exists so the merged Python extension can keep the observable registry state of the former separate extension images: `classic_registry`, `classic_config`, and `classic_scanlog` each hold their own scope, so one facade's `set_application_dir`, `register`, or `clear_all` never reaches another facade's store.
+`RegistryScope` is an opaque, cheaply cloned handle to one registry store. It was introduced so the merged Python extension (retired with ADR-0010) could keep the observable registry state of its former separate extension images. It remains available to any caller that needs a store of its own, so that one caller's `set_application_dir`, `register`, or `clear_all` never reaches another caller's store.
 
-- `RegistryScope::default_scope()` returns the store behind every unscoped root function. Rust, CXX (`classic-cpp-bridge`), and Node (`classic-node`) callers use it, so their behavior is unchanged.
+- `RegistryScope::default_scope()` returns the store behind every unscoped root function. Rust and CXX (`classic-cpp-bridge`) callers use it, so their behavior is unchanged.
 - `RegistryScope::new_isolated()` creates a fresh, empty store that shares nothing with any other scope.
 - Every root function has a same-named method (`register`, `get`, `is_registered`, `unregister`, `clear_all`, `get_game`, `set_game`, `set_application_dir`, `get_application_dir`, and the other convenience helpers) with identical defaults and exact-type lookup rules, applied to that scope's store.
 - Clones share one store; two handles compare equal exactly when they name the same store. `Debug` reports only whether the handle is the default scope and how many entries it holds.
@@ -222,7 +222,7 @@ assert_eq!(facade.get_application_dir(), None);
 assert_eq!(get_application_dir(), Some(PathBuf::from("C:/default")));
 ```
 
-The public-interface probes in [`tests/registry_scopes.rs`](../../business-logic/classic-registry-core/tests/registry_scopes.rs) pin isolation, default-scope identity, the application-directory exact-type collision, and handles moved into async tasks. The cross-facade Python probe is [`python-bindings/tests/test_registry_scopes.py`](../../python-bindings/tests/test_registry_scopes.py).
+The public-interface probes in [`tests/registry_scopes.rs`](../../business-logic/classic-registry-core/tests/registry_scopes.rs) pin isolation, default-scope identity, the application-directory exact-type collision, and handles moved into async tasks.
 
 ---
 
@@ -241,8 +241,8 @@ Most of the crate is generic, but a small part of the public API encodes current
 
 - `set_application_dir(dir: PathBuf)` stores the native override under `Keys::APP_DIR`, replacing any value there
 - `get_application_dir() -> Option<PathBuf>` returns that override only when the stored value is exactly a `PathBuf`
-- `classic-config-core` reads the override to resolve `YamlSource::Cache` when no user config directory exists; binding layers register it at import time
-- exact-type rule: a value of another type registered under `Keys::APP_DIR` (for example a Python object through the generic `register`) is registered and readable through `get`, but `get_application_dir()` reports `None`; `set_application_dir` then replaces it, after which the generic typed read reports `None`
+- `classic-config-core` reads the override to resolve `YamlSource::Cache` when no user config directory exists; no current frontend registers it (the retired Python and Node bindings did so at import time)
+- exact-type rule: a value of another type registered under `Keys::APP_DIR` (for example a `String` through the generic `register`) is registered and readable through `get`, but `get_application_dir()` reports `None`; `set_application_dir` then replaces it, after which the generic typed read reports `None`
 
 ## Generic typed passthrough helpers
 
@@ -321,15 +321,12 @@ Important direct dependencies:
 
 - `dashmap` - concurrent map backing the registry
 - `std::sync::LazyLock` - standard-library lazy initialization of the global map
-- `serde` and `serde_json` - not used for a typed crate API here, but used by some consumers such as Node bindings storing JSON values
+- `serde` and `serde_json` - not used for a typed crate API here (the Node binding that stored JSON values through them retired with ADR-0010)
 
 Related CLASSIC crates and wrappers:
 
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/registry.rs) - exposes CXX-friendly string/bool/i32 registry accessors on top of this crate
-- [`classic_registry` adapter module](../../python-bindings/classic-python-bindings/src/classic_registry/mod.rs) - stores Python objects through a wrapper type in its own facade scope
-- [`classic_config` adapter module](../../python-bindings/classic-python-bindings/src/classic_config/mod.rs) and [`classic_scanlog` adapter module](../../python-bindings/classic-python-bindings/src/classic_scanlog/mod.rs) - register their import-time application directory in their own facade scopes
 - [`classic-config-core`](../../business-logic/classic-config-core/src/yaml_source.rs) - reads the application-directory override from the default scope or, through `YamlSource::path_in_registry_scope`, from a caller-selected scope
-- [`classic-node`](../../node-bindings/classic-node/src/shared.rs) - uses `serde_json::Value` plus fallbacks to common Rust scalar types when reading registry values from Node
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - documents the `Fallout4Version` type that many callers store in this generic registry
 
 The collaboration pattern is consistent across those wrappers: each binding layer chooses a concrete storage type that fits its ABI, then uses the same string keys to share process-wide state.
@@ -382,4 +379,4 @@ If you extend this crate, update this document when you change:
 - the set of well-known keys in `Keys`
 - the storage contract for convenience helpers, especially version-related helpers
 - the concurrency model or global singleton initialization behavior
-- any binding-facing assumptions about stored types for Python, Node, or C++ callers
+- any binding-facing assumptions about stored types for C++ callers

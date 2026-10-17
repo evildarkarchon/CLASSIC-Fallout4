@@ -1,47 +1,29 @@
 // SPDX-License-Identifier: MIT
-// Resolve XSE folders with isolated metadata and Local.yaml inputs.
+// Locate the XSE log with isolated metadata and Local.yaml inputs.
 
-json execute_xse_log_scenario(const json& plan, const json& scenario);
+/// Restores the process cwd before the owned XSE log fixture root is destroyed.
+///
+/// The resolver reads relative fixture folders against cwd, so the scenario switches
+/// into its owned root for the call. Failure to restore terminates this isolated runner,
+/// because every later scenario would otherwise resolve against the wrong directory.
+class XseLogWorkingDirectory final {
+public:
+    /// Change cwd only within the dedicated serial family participant process.
+    explicit XseLogWorkingDirectory(const fs::path& root) : previous_(fs::current_path()) {
+        fs::current_path(root);
+    }
+    /// Avoid throwing during stack unwinding; see the class comment.
+    ~XseLogWorkingDirectory() {
+        std::error_code error;
+        fs::current_path(previous_, error);
+        if (error) std::terminate();
+    }
+    XseLogWorkingDirectory(const XseLogWorkingDirectory&) = delete;
+    XseLogWorkingDirectory& operator=(const XseLogWorkingDirectory&) = delete;
 
-/// Execute the public resolver and traverse its actual optional-path sentinel.
-json execute_xse_folder_scenario(const json& plan, const json& scenario) {
-    if (scenario.at("action").get<std::string>() == "xse-folder.log") return execute_xse_log_scenario(plan, scenario);
-    const auto reference = scenario.at("input").at("fixtureRef").get<std::string>();
-    std::ifstream stream(plan.at("fixtures").at(reference).get<std::string>(), std::ios::binary);
-    const json fixture = json::parse(stream);
-    TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(), scenario.at("id").get<std::string>());
-    const auto& root = temporary.path();
-    const auto game = fixture.at("game").get<std::string>();
-    if (game != "Fallout4" && game != "Fallout4VR" && game != "Unknown") throw RunnerError("unsupported XSE folder game");
-    {
-        std::ofstream output(root / "CLASSIC Main.yaml", std::ios::binary);
-        output << fixture.at("registryYaml").get<std::string>();
-        output.close();
-        // An incomplete registry could send configured-path resolution into host discovery.
-        if (!output) throw RunnerError("cannot seed controlled XSE registry");
-    }
-    if (!fixture.at("localYaml").is_null()) {
-        std::ofstream output(root / ("CLASSIC " + game + " Local.yaml"), std::ios::binary);
-        output << fixture.at("localYaml").get<std::string>();
-        output.close();
-        if (!output) throw RunnerError("cannot seed XSE Local.yaml");
-    }
-    {
-        // The registry singleton must initialize before cwd leaves the owned root.
-        VersionRegistryWorkingDirectory cwd(root);
-        (void)classic::version_registry::version_registry_get_all_count();
-    }
-    auto folder = owned_string(classic::xse::resolve_xse_folder_for_scan(root.string(), game,
-        fixture.at("selectedVersion").get<std::string>(), fixture.at("configuredDocs").get<std::string>()));
-    std::replace(folder.begin(), folder.end(), '\\', '/');
-    json files = json::array();
-    for (const auto& entry : fs::directory_iterator(root)) {
-        const auto bytes = autoscan_file_bytes(entry.path());
-        files.push_back(json{{"path", entry.path().filename().string()}, {"content", std::string(bytes.begin(), bytes.end())}});
-    }
-    std::sort(files.begin(), files.end(), [](const json& a, const json& b) { return a.at("path") < b.at("path"); });
-    return json{{"folder", folder.empty() ? json(nullptr) : json(folder)}, {"files", files}};
-}
+private:
+    fs::path previous_;
+};
 
 /// Locate the XSE log (`xse-folder.log`) against owned registry, Local.yaml and empty logs.
 ///
@@ -80,9 +62,9 @@ json execute_xse_log_scenario(const json& plan, const json& scenario) {
         output.close();
         if (!output) throw RunnerError("cannot seed XSE log");
     }
-    // The registry singleton must initialize, and relative folders must resolve, inside the owned root.
-    VersionRegistryWorkingDirectory cwd(root);
-    (void)classic::version_registry::version_registry_get_all_count();
+    // Relative folders must resolve inside the owned root. The version registry the resolver
+    // consults initializes lazily on its first call, which therefore also happens in that root.
+    XseLogWorkingDirectory cwd(root);
     try {
         auto log = owned_string(classic::xse::resolve_xse_log_for_scan(root.string(), game,
             fixture.at("selectedVersion").get<std::string>(), fixture.at("configuredDocs").get<std::string>()));
@@ -92,4 +74,14 @@ json execute_xse_log_scenario(const json& plan, const json& scenario) {
         if (!std::string_view(error.what()).starts_with("cannot inspect XSE log ")) throw;
         return json{{"log", nullptr}, {"error", "inspect"}};
     }
+}
+
+/// Dispatches XSE folder scenarios; only `xse-folder.log` still runs on CXX.
+///
+/// `xse-folder.resolve` left CXX with the folder-resolution export it called (#309).
+json execute_xse_folder_scenario(const json& plan, const json& scenario) {
+    if (scenario.at("action").get<std::string>() != "xse-folder.log") {
+        throw RunnerError("unsupported xse-folder action");
+    }
+    return execute_xse_log_scenario(plan, scenario);
 }

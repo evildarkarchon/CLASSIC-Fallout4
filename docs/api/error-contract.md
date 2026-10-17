@@ -1,6 +1,6 @@
 # Error Contract Conventions
 
-Documents the per-binding error shape conventions for Rust error types as they cross FFI boundaries. These conventions are intentional design choices, not inconsistencies to fix.
+Documents the C++ bridge error shape conventions for Rust error types as they cross the FFI boundary. These conventions are intentional design choices, not inconsistencies to fix.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -10,11 +10,7 @@ Need an old-to-new path translation first? Use the shared [`workspace migration 
 
 ## Scope
 
-Each binding surface adapts Rust `Result<T, E>` errors into the idiom expected by its consumers. This document covers the three active surfaces:
-
-- C++ (CXX bridge) -- `rust::Error` exceptions and empty-string sentinels
-- Node (NAPI-RS) -- `napi::Error` with structured `code` fields
-- Python (PyO3) -- typed Python exception classes
+The binding surface adapts Rust `Result<T, E>` errors into the idiom expected by its consumers. This document covers the one active surface, the C++ (CXX) bridge: `rust::Error` exceptions and empty-string sentinels. The Python and Node bindings, with their typed exceptions and coded `Error` rejections, retired with ADR-0010 (in [`docs/adr/`](../adr/)).
 
 ### Shared focused-analyzer errors
 
@@ -38,10 +34,6 @@ Mod Guidance Analysis exposes `mod_guidance` with `invalid_configuration` for
 
 - CXX uses an explicit typed construction/analysis envelope so no field is
   flattened into `rust::Error` text.
-- Node throws `napi::Error` with `error.analyzerKind`, `error.code`, and
-  `error.message` set to the exact stable Rust analyzer kind, code, and message.
-- Python raises `classic_scanlog.AnalyzerError` with `analyzer_kind`, `code`,
-  and `message` attributes.
 
 An explicit empty semantic result is a successful focused analysis, not error
 recovery. Direct focused calls return or throw the typed analyzer envelope.
@@ -60,8 +52,6 @@ their own terminal outcomes. See
 `classic-database-core::FormIdValueLookupError` keeps a successful miss out of the error channel. Successful lookup data is `disabled`, `missing`, or `found`; failures use stable code `malformed_result` for blank adapter values and `operational_failure` for initialization, absence of the active game table across all initialized databases, SQL execution, or row-decoding problems. Optional FormID/plugin context is absent for failures that occur before a lookup key is available.
 
 - CXX returns a typed lookup envelope whose error DTO retains code, message, and optional key context instead of flattening the failure into `found: false`.
-- Node rejects with `napi::Error` carrying `code`, `formid`, `plugin`, and `message` properties.
-- Python raises `classic_database.FormIdValueLookupError` with the same four attributes.
 
 These strict facade rules are additive. The older raw `DatabasePool` binding methods retain their documented fail-soft sentinel behavior for compatibility.
 
@@ -103,53 +93,9 @@ not pause or the pending recovery was already taken.
 
 **Pattern:** `rust::Error` exceptions for hard failures, empty-string sentinels for fail-soft returns.
 
-**Example 1 -- empty-string sentinel:** `db_pool_get_entry()` in [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) returns `""` on lookup failure because Qt callers check `.isEmpty()` rather than catching exceptions.
+**Example 1 -- empty-string sentinel:** `detect_fallout4_game_path()` in [`cpp-bindings/classic-cpp-bridge/src/path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs) returns `""` when detection fails because Qt callers check `.isEmpty()` rather than catching exceptions.
 
-**Example 2 -- DTO with `found: false`:** `db_pool_get_entry_typed()` in the same file returns a `FormIdEntryDto` with `found: false` for lookup misses. The DTO has fields `{formid, plugin, value, found}` where `found` is a `bool`. C++ callers check `dto.found` before using `dto.value`.
-
-**Example 3 -- request-construction `rust::Error`:** The invariant-preserving `scan_run_request_*` factories in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) return CXX `Result` errors when required request facts cannot be represented. Once construction succeeds, complete-run infrastructure failures use the typed execution envelope above.
-
----
-
-## Node (NAPI-RS)
-
-**Pattern:** `napi::Error` with a `code` field matching the Rust error variant name (e.g., `"InvalidArg"`, `"ParseError"`).
-
-Node Crash Log Scan Run execution follows the same typed-envelope rationale as CXX. `scanRunExecute(...)` resolves the generated `JsScanRunSuccess | JsScanRunFailure` union, so `result` and `error` are mutually exclusive by construction; `JsScanRunInfrastructureError` retains the stable lowercase stage, message, and optional path. Expected lifecycle states and per-log failures remain result data. Settling a pending recovery more than once rejects with an `Error` whose `code` is `scan_run_continuation_consumed`; Reset To Default conflict/backup/replacement failures reject with their stable reset code plus applicable identities, backup path, affected path, and publication stage. Replacement durability uncertainty has its own stable code and verified-backup recovery receipt. These are not infrastructure failures. JavaScript observer throws or delivery failures are reported separately as `observerError`, which is the delivery failure the Rust result carries; `cancelOnObserverError` selects the Rust observer failure policy that decides whether the failure also cancels the run. No analysis-only, batch, report-writer, or global-FCX export is an alternative error channel.
-
-Every one of those rejections also carries `displayLines` — what the failure says, in Rust's words, so a consumer reporting it does not have to write the sentence. The rendered lines deliberately omit the stable code that `code` still carries, which is the split in miniature: prose for a person, a token to branch on. Branch on `code`, never on a line.
-
-All five resume rejections now go through one builder, so `scan_run_continuation_consumed` gained the `kind` property the reset rejections already had. It duplicates `code`, and its `code` and `message` are unchanged; it exists because the replay case used to construct its own pair by hand, which is what would otherwise have left it as the one rejection with nothing to say.
-
-`scanRunSettle(...)` (ADR-0009) is the only recovery entry point; `scanRunResume(...)` and `scanRunAbandon(...)` were removed (#282). It rejects with `scan_run_continuation_consumed` on replay or concurrent double settlement, with or without a decision, and with the Reset To Default codes, their metadata, and `displayLines`. Settling with no decision narrows that to the consumed case, because cancellation short-circuits ahead of every stage that produces a reset or infrastructure failure. A run-wide failure of the settled run resolves as `JsScanRunFailure`; a successful settlement resolves `JsScanRunSettledSuccess`, which has no recovery prompt or pending recovery.
-
-**Example 1:** `config_error_to_napi_err()` in [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs) converts `ConfigError` variants to NAPI errors with structured codes. JavaScript consumers use `catch (e) { if (e.code === "ParseError") ... }`.
-
-**Example 2:** `settings_error_to_napi_err()` in the same file converts `SettingsError` variants with codes like `"NotFound"`, `"YamlError"`, etc.
-
-**Example 3:** `runtime_to_napi_err()` handles `anyhow::Error` wrapping with automatic downcast to typed errors.
-
-Tests verify both `error.message` and `error.code` to ensure the structured error contract holds.
-
----
-
-## Python (PyO3)
-
-**Pattern:** Typed Python exception classes (e.g., `RustConfigParseError`, `RustConfigIOError`) with message inspection.
-
-Python Crash Log Scan Run execution is the deliberate structured-operation exception to that general rule. `classic_scanlog.scan_run_execute(...)` returns `ScanRunExecution`, where exactly one of `result` and `error` is populated. `ScanRunInfrastructureError` preserves the six stable lifecycle stages, message, and optional relevant path; expected lifecycle outcomes and per-log failures remain result data. Continuation replay raises `ScanRunContinuationConsumedError`; Reset To Default conflict, backup, replacement, and replacement-durability-unknown failures raise dedicated `ScanRunLocalIgnoreReset*Error` subclasses. Every exception exposes a stable lowercase code, and the reset subclasses preserve applicable identity/path/stage or recovery-receipt metadata; all remain distinct from infrastructure failure. A Python observer exception is reported independently through `observer_error`, the delivery failure the Rust result carries, and cancels the run only when the caller selects that Rust observer failure policy with `cancel_on_observer_error`. Python exposes no orchestration, resettable batch cancellation, report-writer, or global-FCX compatibility error path.
-
-Every one of those exceptions also carries `display_lines` — what the failure says, in Rust's words, so a consumer reporting it does not have to write the sentence. The rendered lines deliberately omit the stable code that `code` still carries, which is the split in miniature: prose for a person, a token to branch on. Branch on `code`, never on a line. `ScanRunExecution` carries the same field for whichever of `result` and `error` it holds, matching the single-envelope shape the C++ bridge has.
-
-All five resume exceptions now go through one builder, so `ScanRunContinuationConsumedError` gained the `kind` attribute the four reset subclasses have published since they were written. It duplicates `code`, and its `code` and `message` are unchanged. It is kept because this was the one member of the resume family without it, so `except (...) as error: error.kind` raised `AttributeError` for exactly one variant; the shared builder is what made it free, not what made it correct. Node publishes the same property on its own resume rejections, but that is not the reason — binding surfaces are held to the core's contract, not to each other's shapes.
-
-`scan_run_settle(...)` (ADR-0009) is the only recovery entry point; `scan_run_resume(...)` and `scan_run_abandon(...)` were removed (#282). It raises `ScanRunContinuationConsumedError` on sequential or concurrent replay, with or without a decision, and the four `ScanRunLocalIgnoreReset*Error` subclasses for Reset To Default. Settling with no decision narrows that to the consumed case, because cancellation short-circuits ahead of every stage that produces a reset or infrastructure failure. A run-wide failure of the settled run is returned in `ScanRunSettledExecution.error`, not raised.
-
-**Example 1:** `config_error_to_pyerr()` in [`python-bindings/classic-python-bindings/src/classic_config/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_config/mod.rs) maps each `ConfigError` variant to a specific Python exception class.
-
-**Example 2:** [`python-bindings/classic-python-bindings/src/support/mod.rs`](../../python-bindings/classic-python-bindings/src/support/mod.rs) provides `define_exceptions!` and `register_exceptions!` macros plus the `ToPyErr` trait and `ResultExt` extension for consistent exception wiring across every facade module of the one Python adapter crate.
-
-**Example 3:** Tests use `pytest.raises(RustConfigParseError)` with message inspection to verify both the exception type and the error context.
+**Example 2 -- request-construction `rust::Error`:** The invariant-preserving `scan_run_request_*` factories in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) return CXX `Result` errors when required request facts cannot be represented. Once construction succeeds, complete-run infrastructure failures use the typed execution envelope above.
 
 ---
 
@@ -159,23 +105,19 @@ All five resume exceptions now go through one builder, so `ScanRunContinuationCo
 
 | Binding | Failure shape |
 | --- | --- |
-| C++ (CXX) | `explicit_yaml_data_load_status()` returns `ExplicitYamlDataLoadErrorDto { kind, has_role, role, has_path, path, message }`. Callers inspect the status before consuming a ready load with `explicit_yaml_data_load_take_snapshot()`; expected load failures are not flattened into `rust::Error`. |
-| Node (NAPI-RS) | `loadExplicitYamlData(...)` rejects with an `Error` whose stable lowercase `code` is `unsupported_game`, `read`, `invalid_utf8`, `parse`, or `invalid_role_data`. File-specific failures also carry `yamlRole` (`main`, `game`, or `local_ignore`) and `path`. |
-| Python (PyO3) | `classic_config.load_explicit_yaml_data(...)` raises a subclass of `ExplicitYamlDataLoadError`: `ExplicitYamlDataUnsupportedGameError`, `ExplicitYamlDataReadError`, `ExplicitYamlDataInvalidUtf8Error`, `ExplicitYamlDataParseError`, or `ExplicitYamlDataInvalidRoleDataError`. Every instance exposes the matching lowercase `code`; file-specific failures also expose `yaml_role` and `path`, while non-file failures set them to `None`. |
+| C++ (CXX) | Not exposed since the consumer-driven bridge trim (#308): no frontend called the explicit loader. |
 
-All three surfaces delegate role selection, validation, and error classification to Rust. Callers must not respond to an explicit-file failure by silently selecting installed, cached, bundled, or generated data.
+The bridge delegates role selection, validation, and error classification to Rust. Callers must not respond to an explicit-file failure by silently selecting installed, cached, bundled, or generated data.
 
 ---
 
 ## Installed YAML Data inspection errors (`unified-installed-yaml-data-inspection`)
 
-`classic_config_core::inspect_installed_yaml_data` returns `UnsupportedGame` before filesystem inspection or `NoUsableSource { role, diagnostics }` after exhausting the allowed candidates for a required role. Non-terminal candidate failures remain structured diagnostics with optional role, provenance, and path plus a typed stable kind. Rust/CXX use enum variants such as `InvalidRoleData`, Node string enums serialize those same PascalCase variant names, and Python projects stable snake-case tokens such as `invalid_role_data`.
+`classic_config_core::inspect_installed_yaml_data` returns `UnsupportedGame` before filesystem inspection or `NoUsableSource { role, diagnostics }` after exhausting the allowed candidates for a required role. Non-terminal candidate failures remain structured diagnostics with optional role, provenance, and path plus a typed stable kind. Rust/CXX use enum variants such as `InvalidRoleData`; the stable snake-case token is `invalid_role_data`.
 
 | Binding | Failure shape |
 | --- | --- |
-| C++ (CXX) | `installed_yaml_data_inspection_status()` returns `InstalledYamlDataInspectionErrorDto` with a typed error kind, optional failed role, message, and diagnostic DTOs. Expected selection failures are consumed through status/take rather than flattened into `rust::Error`. |
-| Node (NAPI-RS) | `inspectInstalledYamlData(...)` rejects with an `Error` whose `code` is `unsupported_game` or `no_usable_source`; the latter also carries `yamlRole` and structured `diagnostics`. |
-| Python (PyO3) | `classic_config.inspect_installed_yaml_data(...)` raises `InstalledYamlDataUnsupportedGameError` or `InstalledYamlDataNoUsableSourceError` under `InstalledYamlDataInspectionError`. Instances expose `code`, optional `yaml_role`, and structured `diagnostics`. |
+| C++ (CXX) | Not exposed since the consumer-driven bridge trim (#308): no frontend called the inspection flow. |
 
 Rejected candidates are diagnostic evidence only: adapters do not promote, repair, rewrite, or remove them.
 
@@ -187,23 +129,15 @@ Fatal Rust errors preserve `UnsupportedGame` and `NoUsableSource { role, diagnos
 
 | Binding | Failure shape |
 | --- | --- |
-| C++ (CXX) | `installed_yaml_data_load_status()` distinguishes Ready, Local Ignore Recovery Required, and fatal error before the operation is consumed. Fatal `InstalledYamlDataLoadErrorDto` values retain an exhaustive kind, optional load-specific Main/game/Local Ignore role, optional path, no-usable-source diagnostics, and message. |
-| Node (NAPI-RS) | `loadInstalledYamlData(...)` resolves malformed content as a typed recovery-required outcome. Fatal rejections use `unsupported_game`, `no_usable_source`, `local_ignore_read`, `local_ignore_default_invalid`, `local_ignore_create`, or `invalid_selected_data`, plus applicable `yamlRole`, `path`, and `diagnostics`. |
-| Python (PyO3) | `classic_config.load_installed_yaml_data(...)` returns a typed recovery-required outcome for malformed content. Fatal failures raise the matching dedicated `InstalledYamlDataLoadError` subclass; every instance exposes the same lowercase `code` and applicable `yaml_role`, `path`, and `diagnostics` attributes. |
+| C++ (CXX) | Not exposed directly since the consumer-driven bridge trim (#308). Native frontends observe Installed YAML Data loading only through the Crash Log Scan Run envelope (`classic::scanner`). |
 
-Reset operational errors are separate from fatal loading errors. Rust `LocalIgnoreResetError` distinguishes unavailable retained defaults, lock/read/backup-directory failures, backup verification, and backup or replacement publication. Publication variants carry `LocalIgnoreResetPublicationStage::{Create, Write, Flush, Sync, Publish}` and occur before canonical replacement, so the malformed original remains authoritative; replacement failures may leave the already verified backup in place. CXX exposes the equivalent reset operation status/error DTO, Node rejects with stable reset metadata, and Python raises dedicated `LocalIgnoreResetError` subclasses. Conflict is expected outcome data on every surface, not an exception. A post-rename Unix directory-sync failure instead becomes `ReplacementDurabilityUnknown` / `replacement_durability_unknown`: defaults are visible, durability is unconfirmed, and every binding receives canonical and verified-backup paths plus malformed, backup, and replacement identities.
+Reset operational errors are separate from fatal loading errors. Rust `LocalIgnoreResetError` distinguishes unavailable retained defaults, lock/read/backup-directory failures, backup verification, and backup or replacement publication. Publication variants carry `LocalIgnoreResetPublicationStage::{Create, Write, Flush, Sync, Publish}` and occur before canonical replacement, so the malformed original remains authoritative; replacement failures may leave the already verified backup in place. CXX carries the reset outcome and its stable metadata on the scan-run envelope (`has_local_ignore_reset` and the reset failure stage). Conflict is expected outcome data, not an exception. A post-rename Unix directory-sync failure instead becomes `ReplacementDurabilityUnknown` / `replacement_durability_unknown`: defaults are visible, durability is unconfirmed, and every binding receives canonical and verified-backup paths plus malformed, backup, and replacement identities.
 
 ---
 
 ## `CLASSIC Main.yaml` version-reader errors (`schema-gated startup read`)
 
-The schema-gated `CLASSIC_Info.version` reader (`classic_config_core::load_main_yaml_version`) is the native-frontend startup path that replaced the raw `yaml_ops` read in `classic-gui/src/main.cpp`. Its typed core error (`MainYamlVersionError`) projects onto each binding according to the per-language idiom below. Same-family, different-shape-per-binding, just like the notification channel.
-
-| Binding | Shape on failure |
-| --- | --- |
-| C++ (CXX) | `MainYamlVersionDto { version: "", error_kind: "<kind>", error_message: "<Display of MainYamlVersionError>" }`. Empty-string sentinel on the `version` field when `error_kind` is non-empty. `error_kind` values: `"load"` (schema-incompatible or file missing / unparseable), `"version_key_missing"`, `"version_empty"`, `"version_not_string"`, `"version_invalid"` (schema-2.0 shape violation: legacy `CLASSIC ` prefix, prerelease/build suffix, or non-semver garbage), or `"unknown"` (reserved for future `#[non_exhaustive]` variants). See [`cpp-bindings/classic-cpp-bridge/src/config.rs::main_yaml_version_error_kind`](../../cpp-bindings/classic-cpp-bridge/src/config.rs). |
-| Node (NAPI-RS) | `Promise.reject(new Error(...))` whose `message` is prefixed with one of `"LOAD: "`, `"VERSION_KEY_MISSING: "`, `"VERSION_EMPTY: "`, `"VERSION_NOT_STRING: "`, `"VERSION_INVALID: "`, or `"UNKNOWN: "`. **Shape matches the notification channel**: the `#[napi] async fn` surface threads `napi::Error<Status>`, where `Status` is a fixed C-style enum with no room for per-variant codes — the message prefix is the only representation that round-trips through the async bridge while preserving a stable discriminator. See [`node-bindings/classic-node/src/config.rs::main_yaml_version_error_to_napi`](../../node-bindings/classic-node/src/config.rs). |
-| Python (PyO3) | Raises a `ClassicMainYamlVersionError` subclass whose name encodes the variant (`ClassicMainYamlVersionLoadError`, `ClassicMainYamlVersionKeyMissingError`, `ClassicMainYamlVersionEmptyError`, `ClassicMainYamlVersionNotStringError`, `ClassicMainYamlVersionInvalidError`). Consumers that want to catch any failure use `except ClassicMainYamlVersionError`. See [`python-bindings/classic-python-bindings/src/classic_config/main_yaml_version.rs`](../../python-bindings/classic-python-bindings/src/classic_config/main_yaml_version.rs). |
+The schema-gated `CLASSIC_Info.version` reader (`classic_config_core::load_main_yaml_version`) returns a typed core error (`MainYamlVersionError`). No binding projects it: the CXX `MainYamlVersionDto` entry point was removed in the consumer-driven bridge trim (#308) because no frontend called it, and the native frontends take their version from configure time instead.
 
 Callers MUST NOT fall back to a raw YAML read on any of these errors — that defeats the whole point of the schema gate. Cross-crate background: [`classic-config-core.md`](classic-config-core.md#schema-gated-classic-mainyaml-version-reader).
 
@@ -216,10 +150,8 @@ A stale content revision and a validation rejection are normal commit outcomes r
 | Binding | Expected outcome and operational error shape |
 | --- | --- |
 | C++ (CXX) | `user_settings_commit_update(...) -> Result<UserSettingsCommitResultDto>` returns `committed`, `conflict`, or `rejected`; operational failures throw `rust::Error` whose message begins with the stable core code. |
-| Node (NAPI-RS) | `commitUserSettingsUpdate(...)` returns `committed`, `conflict`, or `rejected`; operational failures reject with `napi::Error` whose `code` is the stable core code and whose message carries context. |
-| Python (PyO3) | An accepted `UserSettingsUpdatePreview.commit(...)` returns `UserSettingsCommitOutcome` (`committed` or `conflict`); operational failures raise the typed `classic_user_settings.UserSettingsCommitError`, with the stable code prefixed in its message. Calling `commit` on a rejected preview raises `ValueError` before filesystem work. |
 
-The CXX and Node request adapters compare the supplied preview revision and revalidate the raw update before delegating to the locked core commit, so they never trust flattened preview fields as an accepted Rust artifact. Python retains its exact core `AcceptedUserSettingsUpdate` inside the preview wrapper and calls it directly.
+The CXX request adapter compares the supplied preview revision and revalidates the raw update before delegating to the locked core commit, so it never trusts flattened preview fields as an accepted Rust artifact.
 
 ---
 
@@ -230,10 +162,8 @@ Stale apply and restore revisions are normal conflict outcomes, not operational 
 | Binding | Expected outcome and operational error shape |
 | --- | --- |
 | C++ (CXX) | `user_settings_apply_migration(...)` retains an opaque receipt handle and `user_settings_migration_apply_outcome(...)` reports `applied` or `conflict`; `user_settings_restore_migration(...)` reports `restored` or `conflict`. Invalid approvals and operational failures throw `rust::Error` whose message begins with the stable adapter/core code. |
-| Node (NAPI-RS) | `applyUserSettingsMigration(...)` and `JsUserSettingsMigrationReceipt.restore(...)` return conflict data. Mutated approvals reject with `error.code == "migration_plan_approval_mismatch"`; malformed review DTO tokens reject with `error.code == "migration_plan_review_invalid"`; core operational failures reject with `error.code` set to the stable migration code. |
-| Python (PyO3) | `UserSettingsMigrationPlan.apply(...)` and `UserSettingsMigrationReceipt.restore(...)` return applied/restored or conflict outcomes. Operational failures raise the typed `classic_user_settings.UserSettingsMigrationError`, with the stable code prefixed in its message. |
 
-CXX and Node reopen and reproduce the plan from the supplied root, approved base revision, and exact proposed content; caller-owned DTO bytes are never published. Python retains the immutable core plan and receipt directly. A reversed in-memory plan is review data and cannot substitute for the verified receipt required by restore.
+CXX reopens and reproduces the plan from the supplied root, approved base revision, and exact proposed content; caller-owned DTO bytes are never published. A reversed in-memory plan is review data and cannot substitute for the verified receipt required by restore.
 
 ---
 
@@ -241,13 +171,9 @@ CXX and Node reopen and reproduce the plan from the supplied root, approved base
 
 `classic_shared_core::performance_core::TimingError` rejects a timing or byte record before any metric changes: no operation entry is created and no existing counter moves. Its stable `code()` tokens are `timing_sample_not_finite` (NaN or ±infinity), `timing_sample_negative` (below zero; `-0.0` is accepted as zero), `timing_sample_out_of_range` (above `u64::MAX` nanoseconds), and `timing_counter_overflow` (the operation's sample count, accumulated duration, or byte total would wrap). Every binding treats all four as an invalid argument.
 
-| Binding | Shape on failure |
-| --- | --- |
-| C++ (CXX) | `classic::perf::perf_record_timing(...)` is declared `Result<()>` and throws `rust::Error` whose message begins with the stable token (`"timing_sample_negative: ..."`). The bridge's other `perf_*` functions remain infallible. |
-| Node (NAPI-RS) | `recordTimingMetric(...)` throws an `Error` whose `code` is `"InvalidArg"` and whose message begins with the stable token. Its TypeScript return stays `void`. |
-| Python (PyO3) | `classic_perf.record_timing(...)`, `classic_perf.Timer.finish()` (overflow only), and `classic_shared.RustPerformanceMonitor.stop_timer(...)` / `.record_metric(...)` raise `ValueError` whose message begins with the stable token. `record_metric` raises `ValueError`, not `OverflowError`, for a negative `duration_ms`. |
+No binding projects these errors today: the CXX `classic::perf` module had no CLI or GUI production caller and was removed (#307). A projection added later must surface `TimingError::coded_message()`, so the text before the first `": "` is always the token.
 
-A dropped timer cannot raise; an overflowing drop record is logged and skipped rather than wrapped. All three use `TimingError::coded_message()`, so the text before the first `": "` is always the token. Branch on the token, not on the rest of the message. The token travels in the message rather than in a dedicated `code` field so Node keeps the documented `InvalidArg` invalid-argument code and Python keeps the built-in `ValueError` type.
+A dropped timer cannot raise; an overflowing drop record is logged and skipped rather than wrapped. Branch on the token, not on the rest of the message.
 
 ---
 
@@ -260,24 +186,16 @@ Absence is not part of this failure path. When Pages returns `404 Not Found` and
 | Binding | Shape on failure |
 | --- | --- |
 | C++ (CXX) | `NotificationStatusDto { classification: "error", error_message: "<Display of UpdateError>", …empty-string sentinels on every other string field… }`. See [`cpp-bindings/classic-cpp-bridge/src/update.rs::notification_error_dto`](../../cpp-bindings/classic-cpp-bridge/src/update.rs). |
-| Node (NAPI-RS) | `Promise.reject(new Error(...))` whose `message` is prefixed with one of `"FETCH_FAILED: "`, `"DECODE: "`, `"INSTALLED_VERSION_PARSE: "`, `"CACHE_IO: "`, or `"UPDATE_ERROR: "` (catch-all). Consumers discriminate with `err.message.startsWith("FETCH_FAILED:")`. **Shape divergence from the general Node-binding rule is intentional**: the `#[napi] async fn` surface threads `napi::Error<Status>` through `execute_tokio_future_with_finalize_callback`, and `Status` is a fixed C-style enum with no room for custom per-variant codes. A message prefix is the only representation that round-trips through the async bridge while preserving the variant-keyed discriminator the spec promises. See [`node-bindings/classic-node/src/update.rs::notification_error_to_napi`](../../node-bindings/classic-node/src/update.rs) and the matching JSDoc in [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts). |
-| Python (PyO3) | Raises a `ClassicNotificationError` subclass whose name encodes the variant (e.g. `ClassicNotificationFetchFailed`), or the `ClassicNotificationError` base for shared notification-channel failures such as `ManifestInvalid` and `ManifestUnsupportedVersion`. Subclass of `ClassicUpdateError` so existing catch blocks keep working. |
 
-For the absent-manifest success case, CXX emits `NotificationStatusDto { classification: "not_published", error_message: "", ... }`; Node resolves with `classification: "notPublished"`; Python returns `NotificationStatus.classification == "notPublished"`.
+For the absent-manifest success case, CXX emits `NotificationStatusDto { classification: "not_published", error_message: "", ... }`.
 
 Full cross-crate flow context: [`app-update-notification-delivery.md`](app-update-notification-delivery.md) §3.
 
 ---
 
-## Why They Differ
+## Why The Bridge Uses Sentinels
 
-The three binding surfaces intentionally use different error shapes because each consumer ecosystem has established idioms:
-
-- **C++ uses empty-string sentinels** because Qt callers (`classic-gui/`) are written to check `.isEmpty()` and display "not found" UI. Changing to exceptions would break existing call sites and require rewriting the GUI error handling flow.
-
-- **Node uses `error.code` strings** because the Node ecosystem convention is `catch (e) { if (e.code === "ParseError") ... }`. This is idiomatic for JS/TS consumers and integrates naturally with error-handling middleware.
-
-- **Python uses typed exception classes** because the Python ecosystem convention is `except RustConfigParseError as e:` with `isinstance` checks. This is idiomatic for Python consumers and enables fine-grained exception handling.
+**C++ uses empty-string sentinels** because Qt callers (`classic-gui/`) are written to check `.isEmpty()` and display "not found" UI. Changing to exceptions would break existing call sites and require rewriting the GUI error handling flow.
 
 The project's Out of Scope section explicitly excluded standardizing these shapes: "Intentional design -- Qt fail-soft callers depend on empty-string sentinel return."
 
@@ -288,24 +206,3 @@ The project's Out of Scope section explicitly excluded standardizing these shape
 ### C++
 
 No dedicated error-conversion helper functions. Each bridge function uses `block_on()` with an inline `match` on `Result`. Errors either propagate as `rust::Error` exceptions or return sentinel values.
-
-### Node
-
-- `config_error_to_napi_err()` -- converts `ConfigError` variants to `napi::Error` with structured codes
-- `settings_error_to_napi_err()` -- converts `SettingsError` variants
-- `runtime_to_napi_err()` -- wraps `anyhow::Error` with automatic downcast
-
-Source: [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs)
-
-### Python
-
-- `define_exceptions!` -- creates the standard 3-tier exception hierarchy per module
-- `register_exceptions!` -- registers exception classes in a Python module
-- `ToPyErr` trait -- standard interface for error-to-`PyErr` conversion
-- `ResultExt` -- extension trait for converting `Result<T, E>` to `PyResult<T>`
-- `without_gil` -- GIL release helper for blocking operations
-- `timing_error_to_py()` -- maps `TimingError` to `ValueError(coded_message())`; defined privately in both [`classic_perf` adapter module](../../python-bindings/classic-python-bindings/src/classic_perf/mod.rs) and [`classic_shared` adapter module's `performance_py.rs`](../../python-bindings/classic-python-bindings/src/classic_shared/performance_py.rs); both are modules of the one Python adapter crate, so the two views also share one default metrics store
-
-Source: [`python-bindings/classic-python-bindings/src/support/mod.rs`](../../python-bindings/classic-python-bindings/src/support/mod.rs)
-
-Per-module converters like `config_error_to_pyerr()` live in each facade module of the adapter: [`python-bindings/classic-python-bindings/src/classic_config/mod.rs`](../../python-bindings/classic-python-bindings/src/classic_config/mod.rs)

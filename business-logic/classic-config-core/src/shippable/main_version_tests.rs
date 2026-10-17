@@ -1,3 +1,6 @@
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use super::super::YamlLoadError;
 use crate::yaml_cache::ensure_yaml_cache_dir_with_env;
 use classic_shared_core::yaml::clear_global_yaml_cache;
@@ -60,8 +63,9 @@ fn windows_env(tmp: &Path) -> Vec<(&'static str, String)> {
 }
 
 // ---------------------------------------------------------------------------
-// load_main_yaml_version — schema-gated `CLASSIC_Info.version` extractor used
-// by the C++/Node/Python startup bridges. The tests below are the regression
+// load_main_yaml_version — schema-gated `CLASSIC_Info.version` extractor once
+// used by the C++/Node/Python startup bridges (none export it since ADR-0010;
+// it is Rust-only). The tests below are the regression
 // gate that replaced the GUI's raw `yaml_ops_get_string("CLASSIC_Info.version",
 // "")` call; they exist to prove the loader rejects the legacy `CLASSIC v...`
 // shape on `schema_version: 1.x` and refuses blank / non-string values on the

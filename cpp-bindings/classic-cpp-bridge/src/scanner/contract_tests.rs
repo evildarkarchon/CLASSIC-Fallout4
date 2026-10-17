@@ -3,11 +3,12 @@ use super::*;
 // descriptions inside one are read through it. The tests fabricate descriptions directly, so
 // they need the type by name.
 use classic_scan_presentation::RecoveryDecisionDescription;
-// Imported here rather than in `contract.rs`: the module itself only projects
-// labels through `crate::vocabulary::display_label`, so the trait is in scope
-// only where the tests read `label()` off a core variant to derive their
-// expectation from.
-use classic_vocabulary::Vocabulary;
+// The request fixtures below build core requests directly, so they name the core
+// source and setup types `contract.rs` no longer needs.
+use classic_scanlog_core::{
+    CrashLogScanFacts, CrashLogScanSetupContext, StandardCrashLogScanSource,
+    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
+};
 use tempfile::tempdir;
 
 const FIXTURE_LOG_SMALL: &str = include_str!(
@@ -40,33 +41,135 @@ fn sample_configuration() -> ffi::ScanRunConfigurationDto {
     }
 }
 
-fn sample_standard_source() -> ffi::ScanRunStandardSourceDto {
-    ffi::ScanRunStandardSourceDto {
-        base_directory: "root".to_string(),
-        has_custom_scan_directory: false,
-        custom_scan_directory: String::new(),
-        has_configured_documents_root: false,
-        configured_documents_root: String::new(),
-    }
-}
-
 fn sample_targeted_source() -> ffi::ScanRunTargetedSourceDto {
     ffi::ScanRunTargetedSourceDto {
         inputs: vec!["first.log".to_string(), "second.log".to_string()],
     }
 }
 
-fn sample_setup_context() -> ffi::ScanRunSetupContextDto {
-    ffi::ScanRunSetupContextDto {
-        has_game_root: true,
-        game_root: "game".to_string(),
-        has_docs_root: true,
-        docs_root: "docs".to_string(),
-        has_game_exe_path: false,
-        game_exe_path: String::new(),
-        has_xse_log_path: false,
-        xse_log_path: String::new(),
+// --- Request fixtures -------------------------------------------------------
+//
+// The bridge no longer exports request constructors: frontends build every
+// request through the Crash Log Scan Launch. These tests exercise execution,
+// recovery and cancellation, which need hand-shaped configurations a launch
+// cannot express, so they build the core request directly and wrap it the same
+// way `scan_run_launch_request` does.
+
+/// Projects the configuration DTO into the core configuration, honouring presence flags.
+fn configuration_to_core(
+    value: &ffi::ScanRunConfigurationDto,
+) -> Result<contract::Configuration, String> {
+    let installation_root = required_path(&value.installation_root, "installation_root")?;
+    let game = scan_run_game_id_to_core(value.game)?;
+    let max_concurrent = if value.has_max_concurrent {
+        Some(value.max_concurrent)
+    } else {
+        None
+    };
+    let unsolved_logs_destination = optional_flagged_path(
+        value.has_configured_unsolved_logs_destination,
+        &value.configured_unsolved_logs_destination,
+        "configured_unsolved_logs_destination",
+    )?;
+
+    Ok(contract::Configuration {
+        installation_root,
+        game,
+        game_version: value.game_version.clone(),
+        options: contract::Options::new(value.show_formid_values, value.simplify_logs),
+        scan_facts: CrashLogScanFacts {
+            formid_database_paths: value
+                .formid_database_paths
+                .iter()
+                .map(PathBuf::from)
+                .collect(),
+            unsolved_logs_destination,
+        },
+        max_concurrent,
+    })
+}
+
+/// Projects a flagged optional path, rejecting a present-but-blank value.
+fn optional_flagged_path(
+    has_value: bool,
+    raw: &str,
+    field: &str,
+) -> Result<Option<PathBuf>, String> {
+    if has_value {
+        required_path(raw, field).map(Some)
+    } else {
+        Ok(None)
     }
+}
+
+/// Builds a non-FCX Standard request through the core constructor.
+fn standard_request(
+    configuration: &ffi::ScanRunConfigurationDto,
+    source: &ffi::ScanRunStandardSourceDto,
+    unsolved_logs: StandardUnsolvedLogsIntent,
+) -> Result<Box<ScanRunRequest>, String> {
+    let source = StandardCrashLogScanSource {
+        base_directory: required_path(&source.base_directory, "base_directory")?,
+        custom_scan_directory: optional_flagged_path(
+            source.has_custom_scan_directory,
+            &source.custom_scan_directory,
+            "custom_scan_directory",
+        )?,
+        configured_documents_root: optional_flagged_path(
+            source.has_configured_documents_root,
+            &source.configured_documents_root,
+            "configured_documents_root",
+        )?,
+    };
+    Ok(Box::new(ScanRunRequest::from_core(
+        contract::Request::standard(configuration_to_core(configuration)?, source, unsolved_logs),
+    )))
+}
+
+/// Projects the Targeted source DTO into the core source.
+fn targeted_source(value: &ffi::ScanRunTargetedSourceDto) -> TargetedCrashLogScanSource {
+    TargetedCrashLogScanSource {
+        inputs: value.inputs.iter().map(PathBuf::from).collect(),
+    }
+}
+
+/// Builds a non-FCX Targeted request through the core constructor.
+fn targeted_request(
+    configuration: &ffi::ScanRunConfigurationDto,
+    source: &ffi::ScanRunTargetedSourceDto,
+) -> Result<Box<ScanRunRequest>, String> {
+    Ok(Box::new(ScanRunRequest::from_core(
+        contract::Request::targeted(configuration_to_core(configuration)?, targeted_source(source)),
+    )))
+}
+
+/// Builds an FCX Targeted request with explicit run-scoped setup facts.
+fn targeted_fcx_request(
+    configuration: &ffi::ScanRunConfigurationDto,
+    source: &ffi::ScanRunTargetedSourceDto,
+    setup: &ffi::ScanRunSetupContextDto,
+) -> Result<Box<ScanRunRequest>, String> {
+    let setup = CrashLogScanSetupContext {
+        game_root: optional_flagged_path(setup.has_game_root, &setup.game_root, "game_root")?,
+        docs_root: optional_flagged_path(setup.has_docs_root, &setup.docs_root, "docs_root")?,
+        game_exe_path: optional_flagged_path(
+            setup.has_game_exe_path,
+            &setup.game_exe_path,
+            "game_exe_path",
+        )?,
+        xse_log_path: optional_flagged_path(
+            setup.has_xse_log_path,
+            &setup.xse_log_path,
+            "xse_log_path",
+        )?,
+    };
+    Ok(Box::new(ScanRunRequest::from_core(
+        contract::Request::targeted_with_fcx(
+            configuration_to_core(configuration)?,
+            targeted_source(source),
+            setup,
+        ),
+    )))
 }
 
 fn write_minimal_scan_yaml_tree(_root: &std::path::Path, data: &std::path::Path) {
@@ -108,91 +211,6 @@ fn write_minimal_scan_yaml_tree(_root: &std::path::Path, data: &std::path::Path)
     .unwrap();
 }
 
-#[test]
-fn standard_request_constructor_builds_non_fcx_leave_in_place_request() {
-    let unsolved_logs = scan_run_unsolved_logs_leave_in_place();
-    let request = scan_run_request_standard(
-        &sample_configuration(),
-        &sample_standard_source(),
-        &unsolved_logs,
-    )
-    .expect("valid Standard request should be constructible");
-
-    let contract::Request::Standard(request) = &request.inner else {
-        panic!("expected Standard request tag");
-    };
-    assert!(!request.fcx_enabled());
-    assert_eq!(
-        request.configuration().installation_root,
-        PathBuf::from("root")
-    );
-    assert_eq!(request.configuration().game, GameId::Fallout4);
-    assert_eq!(
-        request.unsolved_logs(),
-        &classic_scanlog_core::StandardUnsolvedLogsIntent::LeaveInPlace
-    );
-}
-
-#[test]
-fn request_constructors_preserve_every_valid_tagged_combination() {
-    let configured = scan_run_unsolved_logs_move_to_configured_or_default();
-    let custom = scan_run_unsolved_logs_move_to_custom("custom-unsolved")
-        .expect("non-empty custom destination should be accepted");
-
-    let standard = scan_run_request_standard(
-        &sample_configuration(),
-        &sample_standard_source(),
-        &configured,
-    )
-    .unwrap();
-    let contract::Request::Standard(standard) = &standard.inner else {
-        panic!("expected Standard request tag");
-    };
-    assert_eq!(
-        standard.unsolved_logs(),
-        &classic_scanlog_core::StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
-    );
-
-    let standard_fcx = scan_run_request_standard_with_fcx(
-        &sample_configuration(),
-        &sample_standard_source(),
-        &custom,
-        &sample_setup_context(),
-    )
-    .unwrap();
-    let contract::Request::Standard(standard_fcx) = &standard_fcx.inner else {
-        panic!("expected Standard request tag");
-    };
-    assert!(standard_fcx.fcx_enabled());
-    assert_eq!(
-        standard_fcx.unsolved_logs(),
-        &classic_scanlog_core::StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(
-            "custom-unsolved"
-        ))
-    );
-
-    let targeted =
-        scan_run_request_targeted(&sample_configuration(), &sample_targeted_source()).unwrap();
-    let contract::Request::Targeted(targeted) = &targeted.inner else {
-        panic!("expected Targeted request tag");
-    };
-    assert!(!targeted.fcx_enabled());
-    assert_eq!(
-        targeted.source().inputs,
-        vec![PathBuf::from("first.log"), PathBuf::from("second.log")]
-    );
-
-    let targeted_fcx = scan_run_request_targeted_with_fcx(
-        &sample_configuration(),
-        &sample_targeted_source(),
-        &sample_setup_context(),
-    )
-    .unwrap();
-    let contract::Request::Targeted(targeted_fcx) = &targeted_fcx.inner else {
-        panic!("expected Targeted request tag");
-    };
-    assert!(targeted_fcx.fcx_enabled());
-}
 
 #[test]
 fn cancellation_is_monotonic_and_observable() {
@@ -716,7 +734,7 @@ fn event_mapping_covers_discovery_concurrency_and_every_log_variant() {
 #[test]
 fn execute_without_observer_returns_targeted_rejections_as_a_terminal_result() {
     let request =
-        scan_run_request_targeted(&sample_configuration(), &sample_targeted_source()).unwrap();
+        targeted_request(&sample_configuration(), &sample_targeted_source()).unwrap();
     let cancellation = scan_run_cancellation_new();
 
     // SAFETY: null is the documented representation of an omitted observer.
@@ -736,51 +754,13 @@ fn execute_without_observer_returns_targeted_rejections_as_a_terminal_result() {
     assert!(!execution.result.has_installed_yaml_data);
 }
 
-#[test]
-fn request_construction_rejects_invalid_values_and_preserves_empty_fcx_context() {
-    assert!(scan_run_unsolved_logs_move_to_custom("  ").is_err());
-    let mut invalid_game = sample_configuration();
-    invalid_game.game = ffi::ScanRunGameId { repr: u8::MAX };
-    let error = scan_run_request_targeted(&invalid_game, &sample_targeted_source())
-        .err()
-        .expect("unknown CXX game discriminants must fail request construction");
-    assert!(error.contains("unsupported ScanRunGameId discriminant: 255"));
-
-    let empty_setup = ffi::ScanRunSetupContextDto {
-        has_game_root: false,
-        game_root: String::new(),
-        has_docs_root: false,
-        docs_root: String::new(),
-        has_game_exe_path: false,
-        game_exe_path: String::new(),
-        has_xse_log_path: false,
-        xse_log_path: String::new(),
-    };
-    let request = scan_run_request_targeted_with_fcx(
-        &sample_configuration(),
-        &sample_targeted_source(),
-        &empty_setup,
-    )
-    .unwrap();
-    let contract::Request::Targeted(request) = &request.inner else {
-        panic!("expected Targeted request tag");
-    };
-    assert!(request.fcx_enabled());
-    let setup = request
-        .setup_context()
-        .expect("explicit empty setup context must remain present");
-    assert!(setup.game_root.is_none());
-    assert!(setup.docs_root.is_none());
-    assert!(setup.game_exe_path.is_none());
-    assert!(setup.xse_log_path.is_none());
-}
 
 #[test]
 fn explicit_zero_concurrency_reaches_typed_request_validation_error() {
     let mut configuration = sample_configuration();
     configuration.has_max_concurrent = true;
     configuration.max_concurrent = 0;
-    let request = scan_run_request_targeted(&configuration, &sample_targeted_source()).unwrap();
+    let request = targeted_request(&configuration, &sample_targeted_source()).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
@@ -816,12 +796,8 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
         has_configured_documents_root: true,
         configured_documents_root: documents.to_string_lossy().into_owned(),
     };
-    let request = scan_run_request_standard(
-        &configuration,
-        &source,
-        &scan_run_unsolved_logs_leave_in_place(),
-    )
-    .unwrap();
+    let request = standard_request(&configuration, &source, StandardUnsolvedLogsIntent::LeaveInPlace)
+        .unwrap();
     let cancellation = scan_run_cancellation_new();
 
     // SAFETY: null is the documented representation of an omitted observer.
@@ -945,7 +921,7 @@ fn execute_retains_structured_setup_result_data() {
         has_xse_log_path: false,
         xse_log_path: String::new(),
     };
-    let request = scan_run_request_targeted_with_fcx(&configuration, &source, &setup).unwrap();
+    let request = targeted_fcx_request(&configuration, &source, &setup).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
@@ -1016,7 +992,7 @@ fn execute_projects_generated_local_ignore_metadata_and_diagnostic_at_the_final_
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
-    let request = scan_run_request_targeted(&configuration, &source)
+    let request = targeted_request(&configuration, &source)
         .expect("valid generated-ignore request should be constructible");
 
     // SAFETY: null is the documented representation of an omitted observer.
@@ -1067,7 +1043,7 @@ fn cxx_settlement_resumes_retained_recovery_once_and_projects_typed_replay_failu
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
-    let request = scan_run_request_targeted(&configuration, &source)
+    let request = targeted_request(&configuration, &source)
         .expect("valid recovery request should be constructible");
 
     // SAFETY: null is the documented representation of an omitted observer.
@@ -1272,7 +1248,7 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
-    let request = scan_run_request_targeted(&configuration, &source).unwrap();
+    let request = targeted_request(&configuration, &source).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
@@ -1290,183 +1266,6 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
     assert_eq!(
         execution.error.path,
         missing_data.join("CLASSIC Data").to_string_lossy()
-    );
-}
-
-// --- Vocabulary projection ------------------------------------------------
-//
-// Expectations are derived from `classic-scanlog-core`, never restated. A
-// hand-written array here would be another copy of the vocabulary: it would
-// pass against a bridge that had already drifted, because it would only be
-// comparing this file's copy against itself. Iterating `VARIANTS` also means a
-// new variant is covered without anyone remembering to extend these tests.
-
-#[test]
-/// Every projected CXX variant resolves back to the core Display Label.
-fn every_scan_run_twin_projects_its_core_display_label() {
-    for variant in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
-        .iter()
-        .copied()
-    {
-        assert_eq!(
-            scan_run_installed_yaml_data_diagnostic_kind_label(
-                map_installed_yaml_data_diagnostic_kind(variant)
-            ),
-            variant.label(),
-        );
-    }
-
-    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
-        assert_eq!(
-            scan_run_local_ignore_yaml_data_state_label(map_local_ignore_yaml_data_state(variant)),
-            variant.label(),
-        );
-    }
-}
-
-#[test]
-/// No scan-run Display Label reaches C++ empty.
-fn no_scan_run_display_label_reaches_cxx_empty() {
-    // The label functions fall back to an empty string for a value the forward
-    // projection cannot produce. That fallback must stay unreachable for every
-    // real variant, because an empty label is exactly the "variant that renders
-    // as nothing" the naming contract exists to prevent.
-    for variant in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
-        .iter()
-        .copied()
-    {
-        assert!(
-            !scan_run_installed_yaml_data_diagnostic_kind_label(
-                map_installed_yaml_data_diagnostic_kind(variant)
-            )
-            .is_empty()
-        );
-    }
-
-    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
-        assert!(
-            !scan_run_local_ignore_yaml_data_state_label(map_local_ignore_yaml_data_state(variant))
-                .is_empty()
-        );
-    }
-}
-
-/// Asserts one enum's CXX label projection agrees with the core, for every variant.
-///
-/// Written once and applied per enum because the four run-owned enums differ
-/// only in their types: repeating the loop four times would be four chances to
-/// paste the wrong `label_of` beside the right `project`, which is the class of
-/// mistake a test cannot catch about itself.
-///
-/// Both clauses matter and neither implies the other. The equality is the real
-/// check. The non-empty assertion pins the `display_label` `""` fallback as
-/// unreachable for a real variant — an empty label is exactly the "variant that
-/// renders as nothing" the naming contract exists to prevent, and core
-/// conformance guarantees it only on the core side of the seam.
-fn assert_cxx_labels_match_the_core<Core, Cxx>(
-    project: fn(Core) -> Cxx,
-    label_of: fn(Cxx) -> String,
-) where
-    Core: Vocabulary,
-    Cxx: Copy + PartialEq,
-{
-    for variant in Core::VARIANTS.iter().copied() {
-        let label = label_of(project(variant));
-        assert_eq!(label, variant.label());
-        assert!(!label.is_empty());
-    }
-}
-
-#[test]
-/// Every enum the run crate owns outright projects its core Display Label to C++.
-///
-/// Separate from the twin test above because these four have no counterpart to
-/// delegate to: the run crate is the single definition site for their prose, so
-/// what this pins is only that the bridge relays it unchanged.
-fn every_scan_run_run_owned_enum_projects_its_core_display_label() {
-    assert_cxx_labels_match_the_core(map_log_disposition, scan_run_log_disposition_label);
-    assert_cxx_labels_match_the_core(map_log_failure_stage, scan_run_log_failure_stage_label);
-    assert_cxx_labels_match_the_core(
-        map_infrastructure_error_stage,
-        scan_run_infrastructure_error_stage_label,
-    );
-    // A twin of the shared durable publication stage vocabulary rather than
-    // run-owned, but it needs no separate twin assertion here: the core-side
-    // delegation is what `classic-scanlog-core` proves, and all this seam owes
-    // is that the bridge relays whatever the core settled on.
-    assert_cxx_labels_match_the_core(
-        map_reset_failure_stage,
-        scan_run_local_ignore_reset_failure_stage_label,
-    );
-}
-
-#[test]
-/// The scanner-local provenance mirror projects the configuration Display Label.
-///
-/// `InstalledYamlDataProvenance` is not a twin — the run contract reuses the
-/// configuration type outright rather than declaring its own. What is
-/// scanner-local is only the *CXX mirror*, because `#[cxx::bridge]` namespaces
-/// its shared enums per module, so `classic::config::installed_yaml_data_provenance_label`
-/// cannot accept the value a scan-run result carries. Node and Python have no
-/// such split and needed no second entry point; this one exists so a C++
-/// frontend resolves all seven scan-run labels the same way rather than
-/// hand-mapping one mirror onto another.
-fn the_scanner_provenance_mirror_projects_its_core_display_label() {
-    assert_cxx_labels_match_the_core(
-        map_installed_yaml_data_provenance,
-        scan_run_installed_yaml_data_provenance_label,
-    );
-}
-
-#[test]
-/// A fabricated CXX enum value yields nothing rather than an invented label.
-fn an_out_of_range_scan_run_cxx_enum_value_yields_an_empty_display_label() {
-    // CXX shared enums are open at the FFI boundary: C++ can hand back any
-    // `u8`. The bridge never produces one of these, but returning some other
-    // variant's label - or a hand-written "unknown" string - would put
-    // vocabulary back in the adapter, which is what this work removes.
-    assert_eq!(
-        scan_run_installed_yaml_data_diagnostic_kind_label(
-            ffi::ScanRunInstalledYamlDataDiagnosticKind { repr: u8::MAX }
-        ),
-        ""
-    );
-    // Both twins, because both are open at the boundary. Covering only one
-    // would leave the other free to grow a fallback that invents a label.
-    assert_eq!(
-        scan_run_local_ignore_yaml_data_state_label(ffi::ScanRunLocalIgnoreYamlDataState {
-            repr: u8::MAX
-        }),
-        ""
-    );
-    // Every enum with a label projection, for the same reason: each one is a
-    // separate `display_label` call site, and each could independently grow a
-    // fallback that invents a label instead of rendering nothing.
-    assert_eq!(
-        scan_run_log_disposition_label(ffi::ScanRunContractLogDisposition { repr: u8::MAX }),
-        ""
-    );
-    assert_eq!(
-        scan_run_log_failure_stage_label(ffi::ScanRunContractLogFailureStage { repr: u8::MAX }),
-        ""
-    );
-    assert_eq!(
-        scan_run_infrastructure_error_stage_label(ffi::ScanRunContractInfrastructureErrorStage {
-            repr: u8::MAX
-        }),
-        ""
-    );
-    assert_eq!(
-        scan_run_local_ignore_reset_failure_stage_label(ffi::ScanRunLocalIgnoreResetFailureStage {
-            repr: u8::MAX
-        }),
-        ""
-    );
-    assert_eq!(
-        scan_run_installed_yaml_data_provenance_label(ffi::ScanRunInstalledYamlDataProvenance {
-            repr: u8::MAX
-        }),
-        ""
     );
 }
 
@@ -1986,7 +1785,7 @@ fn paused_cxx_run(log_name: &str) -> PausedCxxRun {
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
-    let request = scan_run_request_targeted(&configuration, &source)
+    let request = targeted_request(&configuration, &source)
         .expect("valid recovery request should be constructible");
     let cancellation = scan_run_cancellation_new();
     // SAFETY: null is the documented representation of an omitted observer.
@@ -2088,7 +1887,7 @@ fn cxx_execution_without_a_pause_offers_no_pending_recovery() {
     let root = tempdir().expect("create empty root");
     let mut configuration = sample_configuration();
     configuration.installation_root = root.path().to_string_lossy().into_owned();
-    let request = scan_run_request_targeted(&configuration, &sample_targeted_source())
+    let request = targeted_request(&configuration, &sample_targeted_source())
         .expect("valid request should be constructible");
     // SAFETY: null is the documented representation of an omitted observer.
     let mut execution = unsafe {
@@ -2286,7 +2085,7 @@ fn the_envelope_reports_a_delivery_failure_from_a_result_or_an_infrastructure_er
 #[test]
 /// An envelope whose run delivered every event reports no delivery failure.
 fn the_envelope_reports_no_delivery_failure_when_none_happened() {
-    let request = scan_run_request_targeted(&sample_configuration(), &sample_targeted_source())
+    let request = targeted_request(&sample_configuration(), &sample_targeted_source())
         .expect("sample request should be constructible");
     let cancellation = scan_run_cancellation_new();
     scan_run_cancellation_cancel(&cancellation);
@@ -2308,7 +2107,7 @@ fn the_envelope_reports_no_delivery_failure_when_none_happened() {
 #[test]
 /// An out-of-range policy is rejected before the run starts or the pending recovery is spent.
 fn an_out_of_range_observer_failure_policy_is_rejected_before_anything_runs() {
-    let request = scan_run_request_targeted(&sample_configuration(), &sample_targeted_source())
+    let request = targeted_request(&sample_configuration(), &sample_targeted_source())
         .expect("sample request should be constructible");
     let invalid = ffi::ScanRunObserverFailurePolicy { repr: u8::MAX };
     // SAFETY: null is the documented representation of an omitted observer.

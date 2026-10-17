@@ -195,7 +195,8 @@ struct RenderedEnum {
     /// suffix on the progress row, which was removed as debug detail. Every
     /// label now arrives inside a `Label` segment, and calling the accessor
     /// again would be re-deriving a word the run already said. The flag stays so
-    /// a future one-row surface can opt back in deliberately.
+    /// a future one-row surface can opt back in deliberately, restoring the
+    /// bridge export in the same change.
     bool labelledOutsideADisplayLine;
     /// Whether the rendering source still handles this type at all.
     ///
@@ -598,8 +599,8 @@ std::vector<std::string> coreOwnedPhrases()
 /// that occurs verbatim in this frontend's own code as `emit
 /// finished(terminal.succeeded, terminal.failed, ...)`. Extracting literals
 /// removes that whole class of false positive rather than asking the deny-list to
-/// dodge it, and matches the Python audit, which reads literals off the AST for
-/// the same reason.
+/// dodge it, and matches the retired Python audit, which read literals off the
+/// AST for the same reason.
 ///
 /// Comments never appear, for the reason the CXX parity gate's name scan was
 /// fixed: a comment *describing* the drift is not the drift, and this file's own
@@ -909,9 +910,13 @@ void DisplayLabelAuditTests::every_rendered_gui_display_label_comes_from_a_bridg
     // #167, and stays excluded for the same reason: `presentLog` maps the three
     // variants onto booleans that select control flow and feed counts.
     //
-    // The accessors themselves are untouched on the bridge. They remain the
-    // right surface for labelling a domain enum outside a display line, should
-    // this frontend grow such a surface again.
+    // None of the seven accessors remain on the bridge. The consumer-driven
+    // trim (#309) removed five with their last frontend caller, and the last
+    // two followed when the progress-row suffix went. A bridge accessor is
+    // still the right surface for labelling a domain enum outside a display
+    // line, should this frontend grow such a surface again; the export comes
+    // back with that caller. All seven names stay in `RENDERED_ENUMS` so a
+    // reintroduced call is still caught.
     const QString path =
         QString::fromUtf8(LABEL_RENDERING_SOURCE.data(), static_cast<qsizetype>(LABEL_RENDERING_SOURCE.size()));
     std::string renderingSource;

@@ -9,7 +9,7 @@ description = "Crash Log Scan Run Display Content for CLASSIC"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
+crate-type = ["rlib"] # Pure Rust library only
 
 [dependencies]
 # One-way edges only. `classic-scanlog-core` must never depend on this crate:

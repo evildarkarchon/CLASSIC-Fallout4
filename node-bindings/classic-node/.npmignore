@@ -1,7 +1,0 @@
-target/
-src/
-build.rs
-Cargo.toml
-Cargo.lock
-__test__/
-.cargo/

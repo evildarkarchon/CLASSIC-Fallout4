@@ -1,7 +1,8 @@
 //! Rolling `Duration` timing metrics (Pure Rust)
 //!
 //! This module is the sole timing implementation for CLASSIC. Every binding
-//! (CXX, Node, and both Python performance views) records into the
+//! that exposed timing (CXX, Node, and both Python performance views, before
+//! ADR-0010 retired or trimmed them) recorded into the
 //! [`PerformanceMetrics`] collector defined here.
 //!
 //! # Default store
@@ -27,8 +28,8 @@
 //!   checked arithmetic. A record that would wrap any of them is rejected.
 //!
 //! A rejected record returns a [`TimingError`] and leaves every counter for
-//! every operation unchanged. Python bindings are the `classic_shared` and
-//! `classic_perf` modules of the `classic-python-bindings` adapter crate.
+//! every operation unchanged. The C++ bridge exposes them through its `perf`
+//! module.
 
 use dashmap::DashMap;
 use dashmap::mapref::entry::Entry;
@@ -78,9 +79,9 @@ impl fmt::Display for MetricCounter {
 
 /// Reason a timing or byte record was rejected.
 ///
-/// Every variant is raised before any metric state changes. Bindings project
-/// all variants as their invalid-argument error (Python `ValueError`, Node
-/// `InvalidArg`, CXX `rust::Error`).
+/// Every variant is raised before any metric state changes. The former timing
+/// bindings projected all variants as their invalid-argument error (Python
+/// `ValueError`, Node `InvalidArg`, CXX `rust::Error`).
 #[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum TimingError {
     /// The floating-point sample was NaN or infinite.
@@ -124,9 +125,9 @@ impl TimingError {
 
     /// Binding wire format: `"<code>: <message>"`.
     ///
-    /// Every adapter (CXX `rust::Error`, Node `InvalidArg`, Python
-    /// `ValueError`) uses this exact text so callers can split on the first
-    /// `": "` to recover [`TimingError::code`].
+    /// Every former timing adapter (CXX `rust::Error`, Node `InvalidArg`,
+    /// Python `ValueError`) used this exact text so callers could split on the
+    /// first `": "` to recover [`TimingError::code`].
     pub fn coded_message(&self) -> String {
         format!("{}: {self}", self.code())
     }
@@ -518,9 +519,8 @@ impl OperationStats {
 
 /// Seconds-based summary of one operation in the default store.
 ///
-/// This is the projection used by the `classic_perf` Python module and the
-/// CXX `classic::perf` bridge. Values are computed from whole-nanosecond
-/// rolling statistics.
+/// Values are computed from whole-nanosecond rolling statistics. (Its former
+/// Python and CXX `perf` projections are retired; see #304 and #307.)
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MetricsSummary {
     /// Number of timing samples recorded

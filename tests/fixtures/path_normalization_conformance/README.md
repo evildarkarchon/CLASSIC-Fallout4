@@ -1,7 +1,8 @@
 # Path Normalization fixtures
 
 These inputs migrate the deterministic `normalizePath`, `joinPaths` and
-`validatePathsBatch` checks from the Node Tier-1 auxiliary smoke case. Each
+`validatePathsBatch` checks from the retired Node binding's Tier-1 auxiliary
+smoke case. Each
 participant creates the same disposable directory and file, joins components
 through its public binding, normalizes the returned path, and validates an ordered
 batch containing directories, files and an absent path.

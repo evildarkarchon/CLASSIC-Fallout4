@@ -22,15 +22,13 @@
       ],
       "observationFamilies": [
         "monitor-stages"
-      ],
-      "operationScoped": true
+      ]
     },
     {
       "id": "papyrus-monitor.full",
       "rustSymbols": [
         "PapyrusStats"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "full-stats"
       ]

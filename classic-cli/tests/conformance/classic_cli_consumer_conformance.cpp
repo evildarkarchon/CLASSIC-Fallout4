@@ -373,15 +373,18 @@ json observe_recovery_case(const json& plan, std::string_view scenario_id) {
     copy_fixture(plan, "validCrashLog", crash_log);
 
     RuntimeEnvironment environment(temporary.path());
-    scanner::ScanRunConfigurationDto configuration{};
-    configuration.installation_root = temporary.path().string();
-    configuration.game = scanner::ScanRunGameId::Fallout4;
-    configuration.game_version = "auto";
-    configuration.has_max_concurrent = true;
-    configuration.max_concurrent = 1;
-    scanner::ScanRunTargetedSourceDto source{};
-    source.inputs.push_back(crash_log.string());
-    const auto request = scanner::scan_run_request_targeted(configuration, source);
+    // The request comes from the CLI's own Crash Log Scan Launch seam, as a CLI scan builds it.
+    // The root carries no User Settings document, so the launch uses Rust's defaults: managed
+    // Fallout 4, automatic game version, and no FCX Mode.
+    CliArgs args{};
+    args.max_concurrent = 1;
+    args.max_concurrent_was_explicit = true;
+    args.input_paths.push_back(crash_log.string());
+    auto launch = launch_cli_scan_run(args, temporary.path().string());
+    if (!launch.has_value() || scanner::scan_run_launch_error(**launch).has_error) {
+        throw RunnerError("CLI could not launch the recovery fixture Crash Log Scan Run");
+    }
+    const auto request = scanner::scan_run_launch_request(**launch);
 
     CliScanRunCancellation cancellation(false);
     const auto selected = recovery_choice(scenario_id);

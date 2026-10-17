@@ -15,7 +15,6 @@
   "capabilities": [
     {
       "id": "web-operations.routes",
-      "operationScoped": true,
       "rustSymbols": ["game_url"],
       "observationFamilies": ["game-routes"]
     },

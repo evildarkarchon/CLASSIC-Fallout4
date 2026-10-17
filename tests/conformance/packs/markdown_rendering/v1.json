@@ -15,7 +15,6 @@
   "capabilities": [
     {
       "id": "markdown-rendering.observe",
-      "operationScoped": true,
       "rustSymbols": [
         "markdown_to_html",
         "normalize_markdown"

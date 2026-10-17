@@ -31,7 +31,7 @@ There is intentionally no source-fixture auto-update mode.
 
 The central `autoscan-report` conformance family at
 `tests/conformance/packs/autoscan_report/v1.json` also uses these same immutable
-inputs and `expected.md` files. Rust, Node, Python, and native CXX execute the
+inputs and `expected.md` files. The Rust participant executes the
 complete public Scan Run seam and return actual persisted bytes, byte length,
 SHA-256, terminal facts, typed Display Content, and filesystem effects. The
 central validator reads the existing Markdown oracle; adapter plans contain

@@ -44,15 +44,13 @@ The typed read path retains relative strings exactly; Crash Log Scan preparation
 - **Every other game** (`Fallout4`, `Skyrim`, `Starfield`) reads exactly the rows saved under its own key, with no de-duplication. A Fallout 4 (non-VR) scan never reads `Fallout4VR` rows, so it sees exactly the rows it saw before this rule.
 - The raw keyed map stays readable through `formid_databases()`, and the stored document shape is unchanged. The write side is the game-aware save below.
 
-Bindings expose the same rule as a precomputed per-game projection taken from one snapshot, so it cannot drift from the raw map:
+The C++ bridge exposes the same rule as a precomputed per-game projection taken from one snapshot, so it cannot drift from the raw map:
 
 | Surface | Field | Shape |
 | --- | --- | --- |
 | CXX | `CrashLogScanSettingsDto::scan_formid_database_paths` | `FormIdDatabasePathDto { game, path }` rows grouped in supported-game order |
-| Node | `JsCrashLogScanSettings.scanFormidDatabases` | `Record<string, string[]>` keyed by game token |
-| Python | `CrashLogScanSettings.scan_formid_databases` | `dict[str, list[str]]` keyed by game token |
 
-Games whose scan reads no rows are absent from all three. The `user-settings` conformance pack pins the rule with the `canonical-current-nested` (Fallout4 rows only), `vr-shared-and-legacy-formid-databases` (both keys, with a duplicate), and `vr-legacy-formid-databases` (legacy VR rows only) scenarios through the `scan_formid_databases` observation field.
+Games whose scan reads no rows are absent. The `user-settings` conformance pack pins the rule with the `canonical-current-nested` (Fallout4 rows only), `vr-shared-and-legacy-formid-databases` (both keys, with a duplicate), and `vr-legacy-formid-databases` (legacy VR rows only) scenarios through the `scan_formid_databases` observation field.
 
 ### Game-aware save (the VR save rule)
 
@@ -65,8 +63,6 @@ Games whose scan reads no rows are absent from all three. The `user-settings` co
 | Surface | Save request | Effect diagnostics |
 | --- | --- | --- |
 | CXX | `UserSettingsUpdateDto::has_formid_database_save`, `formid_database_save_game`, `formid_database_save_paths` | `UserSettingsUpdatePreviewDto::diagnostics` when accepted; `UserSettingsCommitResultDto::diagnostics` when committed |
-| Node | `JsUserSettingsUpdate.formidDatabasesForGame: { game: JsGameId, paths }` | `JsUserSettingsUpdatePreview.diagnostics` when accepted; `JsUserSettingsCommitResult.diagnostics` when committed |
-| Python | `UserSettingsUpdate.set_formid_databases_for_game(game, paths)` | `UserSettingsUpdatePreview.diagnostics` when accepted; `UserSettingsCommitOutcome.diagnostics` when committed |
 
 The GUI Settings dialog lists `GuiCrashLogScanSettings::scanFormIdDatabases` for the managed game (so a VR user with legacy rows sees the merged list), saves through `GuiUserSettingsChanges::formIdDatabaseSave`, and shows any committed effect diagnostics in an information box. The `user-settings` conformance pack pins the rule with `commit-fallout4-vr-formid-save-removes-legacy-key`, `commit-other-game-formid-save-preserves-every-other-game`, and `preview-fallout4-formid-save-keeps-legacy-vr-rows`; a requested selector `/CLASSIC_Settings/FormID Databases/<game>` names the save.
 
@@ -144,11 +140,11 @@ The active repo surfaces are split across this same boundary.
 
 ## Retired flat binding surface
 
-Node and Python do not expose a flat settings facade. Their inspection and scan-start paths use the canonical typed User Settings group.
+No binding exposes a flat settings facade. The C++ bridge's inspection and scan-start paths use the canonical typed User Settings group. (The Node and Python bindings, which did the same, retired with ADR-0010.)
 
 ## Surfaces that expose typed User Settings FormID databases
 
-The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin, plus the game-aware scan projection described above. Their update-preview adapters validate requested replacement maps without writing. The native CLI consumes the narrow CXX typed group; the Node and Python CLIs read no rows themselves: they launch through Crash Log Scan Launch (`ScanRunLaunch`, [`classic-scan-launch.md`](classic-scan-launch.md)), which selects the scanned game's rows with `formid_databases_for_game`, including the Fallout 4 VR read rule. `scanRunExecute` consumes only that explicit request configuration. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision. The Rust TUI launches through Crash Log Scan Launch (`classic_scan_launch::prepare_launch`), which calls `formid_databases_for_game` for the scanned game, so the TUI selects no rows itself. Every maintained frontend takes the scanned game's rows from the Rust read and projects explicit `CrashLogScanFacts`; scanlog core never opens a settings document.
+The CXX User Settings adapter exposes `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin, plus the game-aware scan projection described above. Its update-preview adapter validates requested replacement maps without writing. The native CLI consumes the narrow CXX typed group and launches through Crash Log Scan Launch ([`classic-scan-launch.md`](classic-scan-launch.md)), which selects the scanned game's rows with `formid_databases_for_game`, including the Fallout 4 VR read rule. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision. The Rust TUI launches through Crash Log Scan Launch (`classic_scan_launch::prepare_launch`), which calls `formid_databases_for_game` for the scanned game, so the TUI selects no rows itself. Every maintained frontend takes the scanned game's rows from the Rust read and projects explicit `CrashLogScanFacts`; scanlog core never opens a settings document.
 
 The CLI, GUI, and TUI `*.settings-scan-projection` consumer obligations in `tests/conformance/consumer-obligations.json` each observe a Fallout 4 case and a Fallout 4 VR managed-game case through the frontend's own scan-launch boundary.
 

@@ -314,7 +314,7 @@ Top suspects:
 - Simplify Logs
 - Update Check
 
-**Persistence:** The TUI, GUI, CLI, Node, and Python interfaces share the canonical nested `CLASSIC Settings.yaml` store at the CLASSIC root. TUI path and presentation saves are explicit all-or-nothing updates that preserve unknown entries and refuse revision conflicts. `Ctrl+O` presents degraded reads, required migrations, and the explicit verified import for a former TUI `state.json`.
+**Persistence:** The TUI, GUI, and CLI share the canonical nested `CLASSIC Settings.yaml` store at the CLASSIC root. TUI path and presentation saves are explicit all-or-nothing updates that preserve unknown entries and refuse revision conflicts. `Ctrl+O` presents degraded reads, required migrations, and the explicit verified import for a former TUI `state.json`.
 
 ---
 

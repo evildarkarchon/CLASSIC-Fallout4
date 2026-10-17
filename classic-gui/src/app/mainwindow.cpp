@@ -53,7 +53,6 @@
 
 #include "classic_cxx_bridge/config.h"
 #include "classic_cxx_bridge/files.h"
-#include "classic_cxx_bridge/game.h"
 #include "classic_cxx_bridge/message.h"
 #include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/registry.h"

@@ -11,8 +11,8 @@ records the decision and supersedes the ADR-0002 clause that assigned presentati
 ## Status: every frontend renders from it; both bindings carry it
 
 `classic-tui` is the first consumer and depends on this crate directly, with no binding seam in the
-way — which is why it went first: it proves the six-segment model before any DTO or parity baseline
-exists, at which point changing the taxonomy would cost three baseline regenerations.
+way — which is why it went first: it proved the six-segment model before any DTO existed, at
+which point changing the taxonomy would have cost a change on every binding surface.
 
 `classic-cli` is the second, and the first across a binding seam. It never holds a `RunResult`, so
 `classic-cpp-bridge` renders while the Rust value is live and carries the lines across as mirrored
@@ -20,11 +20,11 @@ data on the execution envelope and on every observed event. `cxx` cannot express
 Rust enum, so each segment crosses flattened as a kind tag plus a text, a path, and a count field.
 That flattening is documented under "Display Content on the envelope" in
 [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md), and the six kinds
-are now frozen by a committed parity baseline: adding one costs a baseline regeneration on each of
-the three binding surfaces.
+are now frozen by the bridge DTO: adding one costs a change to that DTO and to every frontend
+renderer.
 
 `classic-gui` is the third, and reuses the same bridge DTOs the CLI does — the Qt phase added no
-bridge surface, so no parity baseline moved. It renders each line into rich text: a severity becomes
+bridge surface. It renders each line into rich text: a severity becomes
 a colour, a `Count` emphasises its value beside Rust's noun, and a `Path` becomes an actionable
 `file:` anchor, which is the whole reason a path is typed as a path rather than as text. See
 [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
@@ -34,34 +34,8 @@ onto a choice of output stream and nothing else, so shared wording reaches a pip
 single escape sequence; the TUI maps the same severities onto a terminal palette; the GUI maps them
 onto hex colours from its dark theme and turns the paths into links. All three print the same words.
 
-`classic-node` is the first surface that carries the lines without rendering anything itself. It has
-no frontend to be: it mirrors the same flattening onto napi objects and hands them to whatever a
-consumer builds. That is why it reuses the bridge's shape rather than inventing a Node-idiomatic one
-with optional payloads — a consumer reading two bindings would otherwise read the same segment two
-ways. See [`node-python-contract-map.md`](node-python-contract-map.md).
-
-The demo CLI shipped with that binding, `node-bindings/classic-node/cli/run-scan.ts`, is the fourth
-renderer and the worked example of a consumer written against the binding rather than against Rust.
-It renders identically to `classic-cli` — segments joined by single spaces, no styling, no
-capitalization rule, paths whole, severity spent entirely on the choice of output stream — which is
-what a Node frontend gets for free by reading the lines instead of writing its own.
-
-The `classic_scanlog` module of the Python adapter is the second carrying binding and the last surface to adopt the model. It
-mirrors the same flattening onto pyo3 classes, differing from Node only where the shape of the
-surface differs: Python has one execution envelope with `result` and `error` presence, so a single
-`display_lines` covers both payloads the way the bridge's does, and its five resume rejections are
-exceptions, so each carries the field beside its stable `code`.
-
-`classic-py-cli` is the fifth renderer, and the frontend that fell behind. It is where the
-raw-token bug this whole effort begins from survived after the same bug had been fixed in the TUI:
-it told a user a run `failed during formid_database_access`. It renders as the native CLI and the
-Node demo CLI do, and it gained the display-label audit it had never had — the direct reason that
-drift survived here — so it is covered by the same enforcement as the other three from now on.
-
-The Python CLI is also the one frontend that spends severity on nothing. It writes one stream of
-plain lines through an output envelope every command shares, so routing by severity would change
-that shared contract rather than this run's presentation. Mapping every severity onto plain text is
-explicitly correct, and the severity stays on the line for the day that frontend grows a use for it.
+The Node and Python bindings, which carried the same flattened lines to their own demo CLIs, are
+retired (ADR-0010, in [`docs/adr/`](../adr/)).
 
 See
 [`../implementation/scan_run_presentation_consolidation.md`](../implementation/scan_run_presentation_consolidation.md).
@@ -164,8 +138,8 @@ for itself. Taking the `Option` here makes it one rule rather than three.
 
 ### The segment taxonomy is closed
 
-Six kinds, fixed for this version. Each addition touches three binding parity baselines, so growth
-must be a deliberate decision rather than incidental. `Name` carries a domain entity that is not a
+Six kinds, fixed for this version. Each addition touches the C++ bridge DTO and every frontend
+renderer, so growth must be a deliberate decision rather than incidental. `Name` carries a domain entity that is not a
 filesystem path; launch diagnostics are its first emitter, naming games by their display names. It
 was declared before any render path used it so that kind did not have to be bolted on later.
 
@@ -286,7 +260,7 @@ Two consequences worth naming, because they look like omissions:
 - **The retained-discovery sentence beside a recovery prompt.** How much work an accepted decision
   resumes is a count the prompt's own input does not carry — `render_local_ignore_recovery` reads
   Installed YAML Data, not the run's discovery. It stays each frontend's, and is the one remaining
-  caller of the local `plural` helper the TUI, the native CLI, and the Node demo CLI each kept.
+  caller of the local `plural` helper the TUI and the native CLI each kept.
   Moving it means the prompt taking a `RunResult`; that is a deliberate change, not a fix to make in
   passing.
 - **The resume error's stable code.** `ResumeErrorKind` is token-only by decision: it is an error
@@ -334,64 +308,41 @@ treatments are the split they claim to be. It does not restate a single sentence
 
 ## Binding surface
 
-All three: the C++ bridge, the Node binding, and the Python binding. Display Content is rendered
-**before** it crosses a seam and travels as mirrored data, because a `RunResult` cannot be held
-across one. A segment flattens to a kind tag plus a text field, a path field, and a count field, with
-unused fields empty; for a count, the text field carries the core-resolved noun. All three seams
-consume that one flattening, which is what lets a wording fix reach every consumer without three
-separate readings of the same segment.
+The C++ bridge. (The Node and Python bindings carried the same flattening until they retired with
+ADR-0010.) Display Content is rendered **before** it crosses a seam and travels as mirrored data,
+because a `RunResult` cannot be held across one. A segment flattens to a kind tag plus a text field,
+a path field, and a count field, with unused fields empty; for a count, the text field carries the
+core-resolved noun. Any seam consumes that one flattening, which is what lets a wording fix reach
+every consumer without separate readings of the same segment.
 
-Where the seams differ is only in where the field can sit and how each language spells the two tags.
+The bridge has one execution envelope with presence flags, so a single `display_lines` on it covers
+the run result, the infrastructure error, and the resume error.
 
-- **The bridge** has one execution envelope with presence flags, so a single `display_lines` on it
-  covers the run result, the infrastructure error, and the resume error.
-- **Node** resolves two envelopes instead — a success and a failure — and rejects a resume error
-  rather than returning it, so the same coverage costs three `displayLines` fields: one on each
-  envelope and one on the rejected error object beside its stable `code`.
-- **Python** has one envelope like the bridge, so one `display_lines` covers `result` and `error`
-  alike, plus one on each of the five resume exceptions.
+Events carry it too, and so does a launch: the bridge's `ScanRunLaunchRequestDto.display_lines`
+holds one line per launch diagnostic, in the same order as the typed `diagnostics` beside it.
 
-Events carry it identically on all three, and so does a launch: the bridge's
-`ScanRunLaunchRequestDto.display_lines`, Node's `ScanRunLaunch.displayLines`, and Python's
-`ScanRunLaunch.display_lines` each hold one line per launch diagnostic, in the same order as the
-typed `diagnostics` beside them.
-
-The recovery prompt rides the same seams and is rendered under the same rule — while the Rust value
+The recovery prompt rides the same seam and is rendered under the same rule — while the Rust value
 is live — but only for a run whose status is Local Ignore Recovery Required, which is exactly when
 the execution offers a pending recovery to answer with. Every other run carries no prompt rather than an
-empty one, so a consumer cannot mistake "nothing to ask" for "ask with no options":
+empty one, so a consumer cannot mistake "nothing to ask" for "ask with no options". The bridge
+carries `has_recovery_prompt` beside a `ScanRunRecoveryPrompt`, because `cxx` has no optional
+struct — the same presence-flag convention `has_local_ignore_reset` already uses.
 
-- **The bridge** carries `has_recovery_prompt` beside a `ScanRunRecoveryPrompt`, because `cxx` has no
-  optional struct — the same presence-flag convention `has_local_ignore_reset` already uses.
-- **Node** carries `recoveryPrompt?: JsScanRunRecoveryPrompt` on the success envelope, and **Python**
-  a `recovery_prompt: ScanRunRecoveryPrompt | None` getter on `ScanRunExecution`. Both languages have
-  a native absent form, and `undefined`/`None` is what a consumer on each surface already reads as
-  "not present".
+The bridge also offers the same prompt through its pending-recovery object, which is what a settling
+frontend reads: `scan_run_pending_recovery_prompt`. It is the same rendering as the envelope's
+prompt, taken from the bundle described above.
 
-Each surface also offers the same prompt through its pending-recovery object, which is what a
-settling frontend reads: `scan_run_pending_recovery_prompt` on the bridge, the
-`ScanRunPendingRecovery.prompt` getter on Node, and the `ScanRunPendingRecovery.prompt` property on
-Python. It is the same rendering as the envelope's prompt, taken from the bundle described above.
+A decision's `description` is an ordinary segment list, flattened exactly as the lines beside it
+are, so a consumer renders one with the renderer it already has. The `decision` itself crosses as
+the bridge's existing recovery-decision enum rather than as a token, so a consumer answers with
+precisely the value it was offered instead of mapping a string back.
 
-A decision's `description` is an ordinary segment list on all three, flattened exactly as the lines
-beside it are, so a consumer renders one with the renderer it already has. The `decision` itself
-crosses as each surface's existing recovery-decision enum rather than as a token, on all three, so a
-consumer answers with precisely the value it was offered instead of mapping a string back.
-
-Two per-seam details worth knowing:
-
-- **Node widens a `Count` to `i64` and saturates**, because JavaScript has no `u64`. Nothing counts
-  anywhere near that far, and the alternative — a silently wrapped negative quantity — would read as
-  nonsense rather than as an obvious ceiling. Python keeps the `u64`.
-- **The severity and the segment kind are spelled per language.** The bridge uses C++ enums, Node
-  uses PascalCase `string_enum` values, and Python uses snake_case token strings, because a
-  snake_case token is what every other tag on that surface already is — a run status, an event kind,
-  a log disposition. Parity is the flattening beneath the tag, not the tag's spelling.
+The severity and the segment kind cross as C++ enums. Parity is the flattening beneath the tag, not
+the tag's spelling.
 
 ## Testing
 
 ```powershell
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 cargo test -p classic-scan-presentation
 ```
 

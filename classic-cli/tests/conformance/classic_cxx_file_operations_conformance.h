@@ -53,7 +53,9 @@ json execute_file_operations(const json& plan, const json& scenario) {
     std::ifstream stream(plan.at("fixtures").at(reference).get<std::string>(), std::ios::binary);
     const json fixture = json::parse(stream);
     const std::string operation = fixture.at("operation").get<std::string>();
-    if (operation != "read-text" && operation != "write-text") {
+    // `file-operations.read-text` left CXX with the encoding-aware read and file
+    // similarity exports it called (#309); only the write path still runs here.
+    if (operation != "write-text") {
         throw RunnerError("unsupported file operation");
     }
     if (scenario.at("action") != "file-operations." + operation) {
@@ -75,51 +77,13 @@ json execute_file_operations(const json& plan, const json& scenario) {
     json result{{"operation", operation}, {"path", path}, {"content", nullptr}, {"error", nullptr},
                 {"beforeFiles", file_operation_files(root)}, {"files", json::array()}};
     try {
-        if (operation == "read-text") {
-            result["content"] = owned_string(classic::files::read_file_with_encoding(target.string()));
-        } else {
-            classic::files::write_file_string(target.string(), fixture.at("content").get<std::string>());
-        }
+        classic::files::write_file_string(target.string(), fixture.at("content").get<std::string>());
     } catch (const rust::Error& error) {
         // The bridge retains the Rust error category before platform-specific prose.
         if (!std::string_view(error.what()).starts_with("I/O error: ")) {
             throw;
         }
         result["error"] = "io_error";
-    }
-    if (operation == "read-text") {
-        // Similarity inputs have a separate owner so read/write inventories stay exact.
-        TemporaryDirectory similarity_root(plan.at("invocation").at("id").get<std::string>(),
-                                          scenario.at("id").get<std::string>() + "-similarity");
-        const auto left = similarity_root.path() / "left.txt";
-        const auto right = similarity_root.path() / "right.txt";
-        const std::string first = "alpha\nbeta\n";
-        { std::ofstream output(left, std::ios::binary); output << first; }
-        result["similarity"] = json::array();
-        for (const auto& second : {first, std::string("gamma\ndelta\n"), std::string("alpha\ngamma\n")}) {
-            { std::ofstream output(right, std::ios::binary | std::ios::trunc); output << second; }
-            const double ratio = classic::files::calculate_file_similarity(left.string(), right.string());
-            std::ostringstream formatted;
-            formatted.imbue(std::locale::classic());
-            formatted << std::fixed << std::setprecision(6) << ratio;
-            result["similarity"].push_back(formatted.str());
-            if (file_operation_files(similarity_root.path()) != json::array({json{{"path", "left.txt"}, {"content", first}}, json{{"path", "right.txt"}, {"content", second}}})) {
-                throw RunnerError("file similarity changed source bytes");
-            }
-        }
-        json alias{{"content", nullptr}, {"error", nullptr}};
-        try {
-            alias["content"] = owned_string(classic::files::read_report_file(target.string()));
-        } catch (const rust::Error& error) {
-            // Both public read entry points must preserve the same native I/O category.
-            if (!std::string_view(error.what()).starts_with("I/O error: ")) {
-                throw;
-            }
-            alias["error"] = "io_error";
-        }
-        if (alias.at("content") != result.at("content") || alias.at("error") != result.at("error")) {
-            throw RunnerError("public read_report_file result differs from read_file_with_encoding");
-        }
     }
     result["files"] = file_operation_files(root);
     return result;

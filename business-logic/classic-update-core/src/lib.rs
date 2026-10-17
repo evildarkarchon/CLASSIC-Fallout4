@@ -5,13 +5,12 @@
 //! - Version comparison and change detection
 //! - Rate limiting and error handling
 //!
-//! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
-//! For Python bindings, see the `classic_update` module of `classic-python-bindings`.
+//! Pure Rust business logic only; the C++ bridge is a separate adapter crate.
 //!
 //! # Architecture
 //!
-//! This is the `-core` crate containing pure Rust business logic. The Python bindings
-//! are in the `classic_update` module of the separate `classic-python-bindings` adapter crate, following the **SEPARATION OF CONCERNS** rule.
+//! This is the `-core` crate containing pure Rust business logic. Frontends reach it
+//! through the separate C++ bridge crate, following the **SEPARATION OF CONCERNS** rule.
 //!
 //! # Examples
 //!

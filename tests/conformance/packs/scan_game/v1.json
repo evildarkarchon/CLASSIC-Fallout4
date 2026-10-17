@@ -51,7 +51,6 @@
     },
     {
       "id": "scan-game.process-logs",
-      "operationScoped": true,
       "rustSymbols": [
         "LogProcessor",
         "process_logs"
@@ -62,7 +61,6 @@
     },
     {
       "id": "scan-game.assemble-reports",
-      "operationScoped": true,
       "rustSymbols": [
         "build_archived_report",
         "build_unpacked_report",

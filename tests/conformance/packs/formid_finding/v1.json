@@ -23,7 +23,6 @@
         "FormIDFindingAnalysisInput",
         "FormIDPlugin"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "formid-findings"
       ]
@@ -33,7 +32,6 @@
       "rustSymbols": [
         "FormIDFindingAnalyzer"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "formid-findings"
       ]
@@ -45,7 +43,6 @@
         "FormIdValueLookupEntry",
         "FormIdValueLookupInMemoryReply"
       ],
-      "operationScoped": true,
       "observationFamilies": [
         "formid-findings"
       ]

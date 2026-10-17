@@ -114,9 +114,10 @@ ScanRunLogPresentation presentLog(const classic::scanner::ScanRunContractLogResu
     presentation.message = log.has_message ? classic::toQString(log.message) : QString{};
     presentation.movedToUnsolvedLogs = log.moved_to_unsolved_logs;
 
-    // Booleans rather than a Display Label, decided on #167 and kept deliberately. The bridge does
-    // expose `scan_run_log_disposition_label` — but every GUI consumer of this field reads it as
-    // control flow or as a count, not as prose: `cancelledBeforeStart` selects whether the log is
+    // Booleans rather than a Display Label, decided on #167 and kept deliberately. The bridge
+    // exports no disposition label (#309 removed it because no frontend rendered one), and every
+    // GUI consumer of this field reads it as control flow or as a count, not as prose:
+    // `cancelledBeforeStart` selects whether the log is
     // reported at all, `succeeded` crosses a signal as a bool, and the aggregate reaches the user as
     // three integers. The disposition a user actually reads arrives inside the rendered per-log
     // line, so labelling it again here would be a second copy of the same word.

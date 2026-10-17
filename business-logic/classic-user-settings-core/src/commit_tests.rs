@@ -92,7 +92,7 @@ fn the_shared_terminal_publish_stage_keeps_this_crates_replace_error_code() {
     // This crate now shares the stage vocabulary but not the naming: the shared module's terminal
     // stage is `Publish`, while the code this crate publishes for it is `commit_replace_failed`.
     // Every operation-specific code in this crate is derived from these five, so a drift here
-    // silently retires a published contract in three bindings at once. Pinned directly rather than
+    // silently retires a published contract in every binding at once. Pinned directly rather than
     // only through a filesystem failure, because no portable condition provokes each stage on
     // demand.
     for (shared, code) in [

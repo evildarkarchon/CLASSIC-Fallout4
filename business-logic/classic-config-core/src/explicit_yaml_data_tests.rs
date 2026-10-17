@@ -1,3 +1,6 @@
+// `#[tokio::test]` expands to a runtime builder that clippy.toml's single-runtime guard cannot skip.
+#![allow(clippy::disallowed_methods)]
+
 use super::{
     ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, GameDataRole,
     load_explicit_yaml_data,

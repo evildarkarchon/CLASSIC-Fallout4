@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "families": [
+    {
+      "familyId": "config-operations",
+      "cxx": {
+        "capabilityIds": [
+          "config-operations.persist-local"
+        ]
+      }
+    },
+    {
+      "familyId": "crash-log-scan-launch",
+      "cxx": {
+        "capabilityIds": [
+          "crash-log-scan-launch.prepare"
+        ]
+      }
+    },
+    {
+      "familyId": "file-backups",
+      "cxx": {
+        "capabilityIds": [
+          "file-backups.managed",
+          "file-backups.remove"
+        ]
+      }
+    },
+    {
+      "familyId": "file-operations",
+      "cxx": {
+        "capabilityIds": [
+          "file-operations.write-text"
+        ]
+      }
+    },
+    {
+      "familyId": "game-identity",
+      "cxx": {
+        "capabilityIds": [
+          "game-identity.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "game-setup-intake",
+      "cxx": {
+        "capabilityIds": [
+          "game-setup-intake.run"
+        ]
+      }
+    },
+    {
+      "familyId": "installation-paths",
+      "cxx": {
+        "capabilityIds": [
+          "installation-paths.locate"
+        ]
+      }
+    },
+    {
+      "familyId": "report-discovery",
+      "cxx": {
+        "capabilityIds": [
+          "report-discovery.observe"
+        ]
+      }
+    },
+    {
+      "familyId": "update-rejection",
+      "cxx": {
+        "capabilityIds": [
+          "update-rejection.notification"
+        ]
+      }
+    },
+    {
+      "familyId": "user-settings",
+      "cxx": {
+        "capabilityIds": [
+          "user-settings.defaults",
+          "user-settings.geometry",
+          "user-settings.open",
+          "user-settings.update"
+        ]
+      }
+    },
+    {
+      "familyId": "xse-folder",
+      "cxx": {
+        "capabilityIds": [
+          "xse-folder.log"
+        ]
+      }
+    }
+  ]
+}

@@ -9,7 +9,7 @@ description = "Workspace-internal Vocabulary naming contract for CLASSIC domain 
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
+crate-type = ["rlib"] # Pure Rust library only
 
 # Deliberately dependency-free. The naming contract is a trait plus two
 # functions over `&'static str`; anything it pulled in would be inherited by

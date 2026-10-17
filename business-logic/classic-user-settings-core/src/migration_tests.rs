@@ -16,7 +16,7 @@ fn migration_change_kind_satisfies_the_vocabulary_contract() {
 fn migration_change_kind_tokens_are_the_frozen_published_spelling() {
     // The one place in the workspace where these literals are legitimate: this
     // is the definition of the frozen identifiers, not a restatement of them.
-    // Every other assertion about these strings — in all three bindings —
+    // Every other assertion about these strings — in every binding —
     // derives its expectation from here, so a change to any arm below is a
     // breaking change to every binding consumer and must fail loudly right now.
     assert_eq!(

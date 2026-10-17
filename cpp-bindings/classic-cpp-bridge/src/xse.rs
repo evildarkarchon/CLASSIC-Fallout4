@@ -1,25 +1,15 @@
 //! XSE bridge for CXX FFI (D-01, CXXS-09).
 //!
-//! Bridges `classic-xse-core` so C++ frontends can detect F4SE / SKSE / SFSE
-//! installations and resolve version strings without going through the
-//! string-based dispatch in `game.rs`.
-//!
-//! Per D-08, the existing string-form helpers (`detect_xse_version_string`,
-//! `is_xse_installed_check`) remain available here AND keep delegation shims
-//! in `game.rs` so existing C++ callers using `classic::game::*` continue
-//! to compile. New code should use `classic::xse::*`.
+//! Bridges the XSE helpers the GUI calls: the typed loader name for an
+//! `XseType`, and XSE log location for a Crash Log Scan's setup. The bridge is
+//! consumer-driven, so the rest of `classic-xse-core` (installation and version
+//! detection, XSE Folder resolution) stays Rust-only until a frontend calls it.
 
-// XSE Folder resolution reads config-owned Game Local facts, so its Rust owner
-// is the composing scangame entry point rather than `classic-xse-core` (#252).
-// The bridge keeps exposing it under `classic::xse` for existing C++ callers.
-use classic_scangame_core::resolve_xse_folder_for_scan as core_resolve_xse_folder_for_scan;
-// The XSE log follows XSE Folder rules, so it shares the same composing owner.
+// The XSE log follows XSE Folder rules, which read config-owned Game Local
+// facts, so its Rust owner is the composing scangame entry point rather than
+// `classic-xse-core` (#252).
 use classic_scangame_core::resolve_xse_log_for_scan as core_resolve_xse_log_for_scan;
-use classic_shared_core::GameId;
-use classic_xse_core::{
-    XseInfo as CoreXseInfo, XseType as CoreXseType, detect_xse_version as core_detect_xse_version,
-    get_xse_info as core_get_xse_info, is_xse_installed as core_is_xse_installed,
-};
+use classic_xse_core::XseType as CoreXseType;
 use std::path::Path;
 
 // ─────────────────────────────────────────────────────────────────────
@@ -38,30 +28,6 @@ fn from_bridge_xse_type(t: ffi::XseType) -> CoreXseType {
     }
 }
 
-// Used by both the typed and string-form helpers.
-fn xse_type_from_str_internal(s: &str) -> Option<CoreXseType> {
-    // Match the existing game.rs::xse_type_from_str logic — case-insensitive
-    match s.to_uppercase().as_str() {
-        "F4SE" => Some(CoreXseType::F4SE),
-        "F4SEVR" => Some(CoreXseType::F4SEVR),
-        "SKSE" => Some(CoreXseType::SKSE),
-        "SKSE64" => Some(CoreXseType::SKSE64),
-        "SKSEVR" => Some(CoreXseType::SKSEVR),
-        "SFSE" => Some(CoreXseType::SFSE),
-        _ => None,
-    }
-}
-
-fn game_id_from_str(s: &str) -> Option<GameId> {
-    match s {
-        "Fallout4" => Some(GameId::Fallout4),
-        "Fallout4VR" => Some(GameId::Fallout4VR),
-        "Skyrim" => Some(GameId::Skyrim),
-        "Starfield" => Some(GameId::Starfield),
-        _ => None,
-    }
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // Typed API (CXXS-09 widening — uses XseType shared enum)
 // ─────────────────────────────────────────────────────────────────────
@@ -70,85 +36,12 @@ fn xse_get_loader_name(t: ffi::XseType) -> String {
     from_bridge_xse_type(t).loader_name().to_string()
 }
 
-fn xse_get_dll_prefix(t: ffi::XseType) -> String {
-    // Codex LOW correction: returns the prefix WITH trailing underscore
-    // (e.g., "f4se_") matching classic-xse-core/src/lib.rs:195.
-    from_bridge_xse_type(t).dll_prefix().to_string()
-}
-
-fn xse_get_type_from_game_id(game_id_str: &str) -> String {
-    // Codex LOW correction: from_game_id is INFALLIBLE (returns Self).
-    // Only the string-decoding step can fail.
-    let Some(game_id) = game_id_from_str(game_id_str) else {
-        return String::new();
-    };
-    CoreXseType::from_game_id(game_id).as_str().to_string()
-}
-
-fn is_xse_installed(game_root: &str, t: ffi::XseType) -> bool {
-    // Codex LOW correction: real signature takes &Path.
-    if game_root.is_empty() {
-        return false;
-    }
-    core_is_xse_installed(Path::new(game_root), from_bridge_xse_type(t))
-}
-
-fn detect_xse_version(exe_path: &str, t: ffi::XseType) -> String {
-    // Codex LOW correction: real signature returns XseResult<semver::Version>.
-    if exe_path.is_empty() {
-        return String::new();
-    }
-    core_detect_xse_version(Path::new(exe_path), from_bridge_xse_type(t))
-        .map(|v| v.to_string())
-        .unwrap_or_default()
-}
-
-fn xse_get_info(game_path: &str, t: ffi::XseType) -> ffi::XseInfoDto {
-    // Codex LOW correction: get_xse_info takes &Path; XseInfo.path is PathBuf,
-    // version is Option<semver::Version>.
-    let path_arg = if game_path.is_empty() {
-        Path::new(".")
-    } else {
-        Path::new(game_path)
-    };
-    let info: CoreXseInfo = core_get_xse_info(path_arg, from_bridge_xse_type(t));
-    ffi::XseInfoDto {
-        xse_type: info.xse_type.as_str().to_string(),
-        path: info.path.to_string_lossy().to_string(),
-        version: info.version.map(|v| v.to_string()).unwrap_or_default(),
-        installed: info.installed,
-    }
-}
-
-fn resolve_xse_folder_for_scan(
-    yaml_dir_data: &str,
-    game: &str,
-    selected_game_version: &str,
-    configured_docs_root: &str,
-) -> String {
-    let configured_docs_root = if configured_docs_root.trim().is_empty() {
-        None
-    } else {
-        Some(Path::new(configured_docs_root))
-    };
-
-    core_resolve_xse_folder_for_scan(
-        Path::new(yaml_dir_data),
-        game,
-        selected_game_version,
-        configured_docs_root,
-    )
-    .map(|path| path.to_string_lossy().to_string())
-    .unwrap_or_default()
-}
-
 /// Locate the XSE log through `classic_scangame_core::resolve_xse_log_for_scan`.
 ///
 /// An empty string means "no log" (no XSE Folder resolved, or the folder or
-/// log is missing), matching `resolve_xse_folder_for_scan`'s sentinel. An
-/// operational failure becomes `Err`, which CXX raises in C++ as
-/// `rust::Error` carrying the core's "cannot inspect XSE log ..." message.
-/// An empty `configured_docs_root` means "none".
+/// log is missing). An operational failure becomes `Err`, which CXX raises in
+/// C++ as `rust::Error` carrying the core's "cannot inspect XSE log ..."
+/// message. An empty `configured_docs_root` means "none".
 fn resolve_xse_log_for_scan(
     yaml_dir_data: &str,
     game: &str,
@@ -175,40 +68,6 @@ fn resolve_xse_log_for_scan(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// String-form helpers (D-08 backward-compat, also called from game.rs shims)
-// ─────────────────────────────────────────────────────────────────────
-
-pub(crate) fn detect_xse_version_string_impl(exe_path: &str, xse_type_str: &str) -> String {
-    let Some(xse_type) = xse_type_from_str_internal(xse_type_str) else {
-        return String::new();
-    };
-    if exe_path.is_empty() {
-        return String::new();
-    }
-    core_detect_xse_version(Path::new(exe_path), xse_type)
-        .map(|v| v.to_string())
-        .unwrap_or_default()
-}
-
-pub(crate) fn is_xse_installed_check_impl(game_root: &str, xse_type_str: &str) -> bool {
-    let Some(xse_type) = xse_type_from_str_internal(xse_type_str) else {
-        return false;
-    };
-    if game_root.is_empty() {
-        return false;
-    }
-    core_is_xse_installed(Path::new(game_root), xse_type)
-}
-
-// Bridge fn aliases (the bridge block calls these names directly)
-fn detect_xse_version_string(exe_path: &str, xse_type_str: &str) -> String {
-    detect_xse_version_string_impl(exe_path, xse_type_str)
-}
-fn is_xse_installed_check(game_root: &str, xse_type_str: &str) -> bool {
-    is_xse_installed_check_impl(game_root, xse_type_str)
-}
-
-// ─────────────────────────────────────────────────────────────────────
 // CXX bridge block — D-04 shared enum + extern "Rust" fns
 // ─────────────────────────────────────────────────────────────────────
 
@@ -224,37 +83,15 @@ mod ffi {
         SFSE = 5,
     }
 
-    struct XseInfoDto {
-        xse_type: String,
-        path: String,
-        version: String,
-        installed: bool,
-    }
-
     extern "Rust" {
         // Typed API (CXXS-09 widening)
         fn xse_get_loader_name(t: XseType) -> String;
-        fn xse_get_dll_prefix(t: XseType) -> String;
-        fn xse_get_type_from_game_id(game_id_str: &str) -> String;
-        fn is_xse_installed(game_root: &str, t: XseType) -> bool;
-        fn detect_xse_version(exe_path: &str, t: XseType) -> String;
-        fn xse_get_info(game_path: &str, t: XseType) -> XseInfoDto;
-        fn resolve_xse_folder_for_scan(
-            yaml_dir_data: &str,
-            game: &str,
-            selected_game_version: &str,
-            configured_docs_root: &str,
-        ) -> String;
         fn resolve_xse_log_for_scan(
             yaml_dir_data: &str,
             game: &str,
             selected_game_version: &str,
             configured_docs_root: &str,
         ) -> Result<String>;
-
-        // String-form D-08 backward-compat
-        fn detect_xse_version_string(exe_path: &str, xse_type_str: &str) -> String;
-        fn is_xse_installed_check(game_root: &str, xse_type_str: &str) -> bool;
     }
 }
 

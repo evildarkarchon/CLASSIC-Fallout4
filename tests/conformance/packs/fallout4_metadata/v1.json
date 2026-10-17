@@ -12,7 +12,6 @@
   "capabilities": [
     {
       "id": "fallout4-metadata.observe",
-      "operationScoped": true,
       "rustSymbols": [
         "Fallout4Version",
         "game_version",

@@ -1,10 +1,5 @@
 {
 	"recommendations": [
-		"ms-python.python",
-		"ms-python.debugpy",
-		"ms-python.vscode-pylance",
-		"ms-python.mypy-type-checker",
-		"charliermarsh.ruff",
 		"ryanluker.vscode-coverage-gutters",
 		"tamasfe.even-better-toml",
 		"GitHub.vscode-pull-request-github",

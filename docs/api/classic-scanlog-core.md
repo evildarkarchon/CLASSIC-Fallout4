@@ -53,13 +53,13 @@ through `classic_scangame_core::resolve_xse_folder_for_scan_in_scopes`, so its
 path/mtime YAML-file cache entries and counters land only in `yaml_file_cache`
 (issue #234). A Local Ignore pending recovery keeps every scope. `execute` and
 `execute_in_version_registry_scope` pass the process default hash and
-YAML-file cache scopes, so unscoped Rust, CXX, and Node scan runs keep hashing
-and reading exactly as before. The Python `classic_scanlog` facade runs every
-scan through `execute_in_scopes` with its own isolated Version Registry scope,
-`FileHashScope`, and `YamlFileCacheScope`, chosen at facade entry, so its FCX
-hashing never reaches the `classic_file_io` or `classic_scangame` caches or
-statistics, and `classic_config.clear_yaml_cache()` cannot evict its cached
-Game Local reads. Public-interface probes: `tests/file_hash_scope.rs`,
+YAML-file cache scopes, so unscoped Rust and CXX scan runs keep hashing
+and reading exactly as before. A caller that runs every scan through
+`execute_in_scopes` with its own isolated Version Registry scope,
+`FileHashScope`, and `YamlFileCacheScope` keeps its FCX hashing out of every
+other caller's caches and statistics, and clearing another scope cannot evict
+its cached Game Local reads. (The retired Python `classic_scanlog` facade was
+the caller this was built for; see ADR-0010.) Public-interface probes: `tests/file_hash_scope.rs`,
 `tests/yaml_file_cache_scope.rs`, and `tests/version_registry_scope.rs`.
 
 Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
@@ -75,8 +75,8 @@ Settling a pending recovery is the only way to answer a paused run. The
 separate `resume` and `abandon` entry points, the public
 `CrashLogScanRunContinuation` type, the `RunResult::continuation` field, and
 `PendingRecovery::continuation()` were removed (#282) with no deprecated
-aliases; the parity gates and the Scan Run contract manifest's
-`forbiddenExports` assert their absence on every surface. `RunResult` has no
+aliases; the Scan Run contract manifest's `forbiddenExports` asserts
+their absence on every surface. `RunResult` has no
 public continuation field (a compile-fail doctest pins it), so code outside this
 crate builds a `RunResult` with `RunResult::from(SettledRunResult { .. })`.
 
@@ -356,25 +356,18 @@ labels it inherits equal their tokens, which is that vocabulary's deliberate
 choice: these name ordinary steps rather than domain terms, and rewording them
 would change what all three frontends print for no reader's benefit.
 
-Each surface exposes a Display Label projection for all six:
+The C++ bridge exposes a Display Label projection only where a frontend reads
+one, and today none of these six qualifies: every label reaches the frontends
+inside a `Label` segment of a rendered display line. The consumer-driven bridge
+trim removed five because no frontend called them, and
+`scan_run_local_ignore_yaml_data_state_label` followed when the GUI dropped the
+progress-row YAML Data suffix that was its last caller. (The Node and Python
+projections of all six retired with those bindings, ADR-0010.)
 
-| Surface | Projection |
-| --- | --- |
-| CXX | `scan_run_installed_yaml_data_diagnostic_kind_label`, `scan_run_local_ignore_yaml_data_state_label`, `scan_run_log_disposition_label`, `scan_run_log_failure_stage_label`, `scan_run_infrastructure_error_stage_label`, `scan_run_local_ignore_reset_failure_stage_label` — each takes the frozen FFI mirror enum and returns `String`, or `""` for an out-of-range value |
-| Node | the same six names in camelCase. The two twins take a `string_enum` value; the other four take the published snake_case token as a `string`, because this surface publishes those four as bare token strings rather than as `string_enum` types, and they throw for an unrecognized token |
-| Python | the same six names, each taking the published snake_case token and raising `ValueError` for anything else |
-
-The label crosses the binding seam as its own entry point rather than being
-folded into a DTO string, because two of the three frontends are C++ and a Qt
-view is not line-oriented — it wants the variant and its label separately, for
-independently styled table columns.
-
-The two Node shapes are a consequence of what each enum already published, not a
-new inconsistency: a `string_enum` argument makes an unknown value unreachable,
-while a `string` argument makes a typo reachable and therefore worth reporting.
-Both surfaces that take a free-form token — Node's four and all six on Python —
-reject rather than returning an empty label, because a blank cell in a frontend
-carries nothing to diagnose it by.
+Should a frontend need one again, the label crosses the binding seam as its own
+entry point rather than being folded into a DTO string, because two of the three
+frontends are C++ and a Qt view is not line-oriented — it wants the variant and
+its label separately, for independently styled table columns.
 
 Adding a variant to a mirrored enum cannot pass silently: the source-to-twin
 `match` stops compiling, and if that guard is ever given up for a catch-all arm
@@ -416,8 +409,7 @@ Stable stages are:
 
 Per-log durable failures use `LogFailureStage::{Analysis, ReportWrite,
 UnsolvedLogsFinalization}` inside `RunResult`. See
-[`error-contract.md`](error-contract.md) for the CXX, Node, and Python
-projections.
+[`error-contract.md`](error-contract.md) for the CXX projection.
 
 Focused semantic analyzers use a separate shared `AnalyzerError` containing an
 `AnalyzerKind`, stable `AnalyzerErrorCode`, and human-readable message. The
@@ -446,8 +438,8 @@ The `log_collection` module is the discovery/intake area of this crate. It
 moved here from `classic-file-io-core` (#254), so file I/O no longer depends on
 XSE Folder resolution or `classic-operation-context`. A Crash Log Scan Run's
 Standard discovery builds a `LogCollector` and its Targeted discovery calls
-`resolve_targeted_inputs`; the same primitives stay public because the CXX,
-Node, and Python collection surfaces expose them directly. Calling them does
+`resolve_targeted_inputs`; the same primitives stay public for direct Rust
+callers (no binding exposes them today). Calling them does
 not start, schedule, or finalize a run, and never moves Unsolved Logs.
 
 Root re-exports: `LogCollector`, `CRASH_LOG_PATTERN` (`crash-*.log`),
@@ -542,10 +534,8 @@ are unchanged.
 
 These helpers are synchronous and touch the filesystem. The Crash Log Scan Run
 does not call them; frontends (the TUI settings flow) and the CXX
-(`is_restricted_path`, `check_restricted_path`, `path_validate_custom_scan`),
-Node (`isRestrictedPath`, `validateCustomScanPath`, `validateSettingsPaths`),
-and Python (`classic_path.PathValidator.*`) path surfaces delegate to them with
-unchanged export names.
+`classic::path::check_restricted_path` export delegate to them with unchanged
+names.
 
 ---
 
@@ -571,12 +561,10 @@ Reports, move failed logs, or select run concurrency.
   patterns. This operation classifies a known error, rather than returning the
   complete main-error text.
 
-Node exposes that classifier as `detectCrashPattern` (`null` for no match),
-Python as `detect_crash_pattern` (`None`), and CXX as
-`classify_crash_pattern` (empty string). CXX's existing
-`detect_crash_pattern` retains its legacy full-main-error-text contract for
-compatibility. All token classification is implemented in the Rust core;
-the bindings only convert inputs and the optional result.
+No binding exposes that classifier today; the consumer-driven bridge trim
+removed the CXX `classify_crash_pattern` and `detect_crash_pattern` exports
+because no frontend called them. All token classification is implemented in the
+Rust core.
 
 Deprecated parsing aliases are not an alternate run seam; new code should use
 the canonical parser methods documented in source.
@@ -702,10 +690,9 @@ detection remain independent utilities. They do not start or partially execute
 a Crash Log Scan Run.
 
 `detect_vr_log` recognizes `Fallout4VR.exe`, `Fallout4VR.esm`, `SkyrimVR.exe`
-and `SkyrimVR.esm` case-insensitively. Node `detectVrLog`, Python
-`LogParser.detect_vr_log`, and CXX `detect_vr_log` all delegate to that core
-helper. This preserves CXX's existing Skyrim VR recognition while adding the
-same markers to Node/Python and executable/case support to CXX.
+and `SkyrimVR.esm` case-insensitively. No binding exposes it today; the
+consumer-driven bridge trim removed the CXX `detect_vr_log` export because no
+frontend called it.
 
 ---
 
@@ -724,38 +711,32 @@ runtime or reconstruct the scheduling policy.
 
 ## Binding And Frontend Contract
 
-CXX, Node, and Python expose language-appropriate projections of the same
-request, cancellation, observer, result, and error contract. The CLI, GUI, TUI,
-and binding-local CLIs construct requests and present Rust-owned facts; they do
-not perform discovery, select concurrency, reset FCX state, write reports, or
+CXX exposes a language-appropriate projection of the request, cancellation,
+observer, result, and error contract. The CLI, GUI, and TUI construct requests
+and present Rust-owned facts; they do not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
 
 The pending recovery and settling reach every surface, as one object bundling
 the continuation, the rendered prompt, and whether cancellation was already
 requested. Settling is the only way to answer a paused run on every surface:
 the separate resume and abandon entry points (CXX
-`scan_run_continuation_resume` / `scan_run_continuation_abandon`, Node
-`scanRunResume` / `scanRunAbandon`, Python `scan_run_resume` /
-`scan_run_abandon`), the continuation accessors
+`scan_run_continuation_resume` / `scan_run_continuation_abandon`, and the
+since-retired Node `scanRunResume` / `scanRunAbandon` and Python
+`scan_run_resume` / `scan_run_abandon`), the continuation accessors
 (`scan_run_contract_execution_has_continuation` /
 `scan_run_contract_execution_take_continuation`), the opaque continuation
 classes, and the optional `continuation` field on the run result were removed
 with no deprecated aliases (#282). The Scan Run contract manifest's
-`forbiddenExports` lists them for each owner's source and parity baselines, so
-the gate fails if any reappears. Backing out is settling with no decision, so
-no frontend writes a cancel-then-resume-with-a-placeholder sequence.
-`classic-py-cli` and the Node CLI have no such choice to route: they treat a
-recovery-required result as terminal and never settle it. CXX exposes
+`forbiddenExports` lists them for each owner's source, so the gate fails if
+any reappears. Backing out is settling with no decision, so
+no frontend writes a cancel-then-resume-with-a-placeholder sequence. CXX exposes
 `ScanRunPendingRecovery` with
 `scan_run_contract_execution_has_pending_recovery` /
 `scan_run_contract_execution_take_pending_recovery`,
 `scan_run_pending_recovery_prompt`,
 `scan_run_pending_recovery_cancellation_requested`, and a synchronous
-`scan_run_pending_recovery_settle` (no callback crosses the bridge). Node exposes
-`JsScanRunSuccess.pendingRecovery` and `scanRunSettle`; Python exposes
-`ScanRunExecution.pending_recovery` and `scan_run_settle`. See
-[classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md)
-and [node-python-contract-map.md](node-python-contract-map.md).
+`scan_run_pending_recovery_settle` (no callback crosses the bridge). See
+[classic-cpp-bridge-data-entrypoints.md](classic-cpp-bridge-data-entrypoints.md).
 
 The TUI depends on this crate directly and settles (#279). On `ScanFinished` it
 takes the pending recovery with `classic_scan_presentation::take_pending_recovery`
@@ -790,28 +771,25 @@ surface (#278). CXX observers return `ScanRunObserverDelivery` from
 `on_scan_run_event` instead of throwing, `scan_run_contract_execute` and
 `scan_run_pending_recovery_settle` take a `ScanRunObserverFailurePolicy`, and
 the execution envelope carries `has_observer_delivery_failure` /
-`observer_delivery_failure_message`. Node's `cancelOnObserverError` and
-Python's `cancel_on_observer_error` are the policy (`true` is `CancelRun`), and
-their `observerError` / `observer_error` is the Rust-reported failure; neither
-binding tracks delivery failure itself. The
-native CLI passes `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY` (`CancelRun`) to both
+`observer_delivery_failure_message`. The native CLI passes `CLI_SCAN_RUN_OBSERVER_FAILURE_POLICY` (`CancelRun`) to both
 execute and settle, its observer only returns the failed delivery, and it warns
 about the failure from the envelope's `has_observer_delivery_failure` rather
 than from state of its own.
 
-The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
-and Python. Retired report primitives and fragment-producing methods have no
+The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, and the
+since-retired Node and Python bindings. Retired report primitives and fragment-producing methods have no
 deprecated aliases or forwarding facades; parity includes the six positive
 semantic analyzer surfaces and negative absence checks for those retired names.
 
 Cross-interface behavior is pinned by
 [`tests/fixtures/crash_log_scan_run/manifest.json`](../../tests/fixtures/crash_log_scan_run/manifest.json).
-The binding compliance suite checks the inventory against Rust and requires
-each variant to map to a required executable scenario fact or a named retained
-analyzer. Blocking semantic and consumer receipts prove executable coverage;
+`cargo xtask scan-run-contract` checks the inventory against the Rust enums and
+requires each variant to map, in its variant evidence policy
+(`xtask/src/scan_run_contract/variant_policy.rs`), to a scenario of the
+crash-log-scan-run conformance pack or to a named retained label. Blocking semantic and consumer receipts prove executable coverage;
 copied adapter acknowledgements and positive source markers are retired.
-Negative checks retain the absence of contracted execution exports from source,
-declarations, stubs, runtime registries, and parity baselines.
+Negative checks retain the absence of contracted execution exports from
+source.
 
 ---
 
@@ -863,9 +841,7 @@ for log in result.logs {
 # }
 ```
 
-When a public contract type or variant changes, update the applicable CXX,
-Node, and Python projections, generated declarations/stubs, runtime coverage
-registries, parity baselines, this page, and the binding compliance manifest in
-the same change. Update the source-derived variant evidence policy and affected
+When a public contract type or variant changes, update the applicable CXX
+projection, this page, and the Scan Run contract manifest in the same change. Update the variant evidence policy (`xtask/src/scan_run_contract/variant_policy.rs`) and affected
 executable pack expectations or retained analyzer dispositions as applicable;
 do not restore per-adapter acknowledgement or marker lists.

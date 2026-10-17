@@ -9,7 +9,7 @@
 //   - The remaining risk at the GUI layer is *wiring drift* — a later
 //     refactor dropping the `Update Check` setting from the `enabled`
 //     argument, or accidentally removing the confirm prompt before
-//     `yaml_apply_update`, or leaving the Apply button permanently
+//     `yaml_data_apply_update`, or leaving the Apply button permanently
 //     enabled. Those mistakes don't break a unit test of the bridge, but
 //     they do change the source. A source-inspection test catches them
 //     in the PR where they're introduced.

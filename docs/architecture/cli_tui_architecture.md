@@ -9,7 +9,7 @@ This document describes the maintained command-line frontends in the repo-root w
 | Native CLI | `classic-cli/` | C++20, CLI11 | `classic-cpp-bridge` CXX static bridge |
 | Terminal UI | `ui-applications/classic-tui/` | Rust, Ratatui, Crossterm | Direct `-core` crate dependencies |
 
-The native CLI is the supported non-interactive scanner. The TUI is a native Rust interactive frontend. Neither frontend calls PyO3 or Node bindings.
+The native CLI is the supported non-interactive scanner. The TUI is a native Rust interactive frontend. Neither frontend calls a scripting-language binding.
 
 ## Shared architecture rules
 
@@ -68,7 +68,6 @@ Run native C++ builds and tests only through the repository wrappers:
 Run the Rust TUI and its core dependencies through the root workspace:
 
 ```powershell
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 cargo test --workspace --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```

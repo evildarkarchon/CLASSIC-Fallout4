@@ -1436,9 +1436,8 @@ fn every_publication_failure_projects_onto_its_published_reset_code() {
 /// Stated on its own, outside the table above, because the other caller of the shared module —
 /// `classic-user-settings-core` — names this same terminal stage `Replace` for its own published
 /// codes. The two vocabularies agreeing here is a fact about these enums, not a rule, so it is
-/// checked rather than assumed. If it ever stopped holding, the CXX bridge's frozen FFI enum, the
-/// Node string enum, the Python `"publish"` token, and the scan-run contract's `Publish` failure
-/// stage would all shift together and silently.
+/// checked rather than assumed. If it ever stopped holding, the CXX bridge's frozen FFI enum and
+/// the scan-run contract's `Publish` failure stage would both shift together and silently.
 fn the_shared_terminal_publish_stage_keeps_this_crates_publish_spelling() {
     let projected = project_publication_error(
         LocalIgnoreResetPublicationKind::Replacement,
@@ -2401,9 +2400,9 @@ fn every_installed_yaml_data_role_variant_is_listed_for_iteration() {
 #[test]
 fn installed_yaml_data_role_tokens_are_the_frozen_published_spelling() {
     // This enum never had a token method, so these are not a respelling of one -
-    // they are the exact strings the Python and Node surfaces already publish
-    // from their own hand-written tables, adopted here so those tables can be
-    // deleted without moving a single byte on either surface.
+    // they are the exact strings the Python and Node surfaces (since retired)
+    // published from their own hand-written tables, adopted here so those
+    // tables could be deleted without moving a single byte on either surface.
     assert_eq!(InstalledYamlDataRole::Main.as_str(), "main");
     assert_eq!(InstalledYamlDataRole::Game.as_str(), "game");
 }

@@ -37,7 +37,7 @@ Do not use this crate for:
 - crash-log analysis itself
 - locating, defaulting, validating, serializing, or persisting `CLASSIC Settings.yaml`
 
-Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -144,13 +144,11 @@ Config-owned selection and immutable loading of Installed YAML Data.
 
 `invalid_utf8` is the published spelling, not the `invalid_utf_8` a mechanical snake_case of the variant name would produce. The core adopted the strings the bindings already shipped rather than deriving them, because these tokens are parsed by consumers.
 
-These are the first adopters whose Display Labels cross a binding seam. All three surfaces expose a label projection alongside the variant they already published:
+These were the first adopters whose Display Labels crossed a binding seam. The Node and Python label projections retired with those bindings (ADR-0010), so the one remaining surface is:
 
 | Surface | Projection |
 | --- | --- |
-| CXX | `installed_yaml_data_provenance_label`, `installed_yaml_data_diagnostic_kind_label`, `local_ignore_yaml_data_state_label` — take the frozen FFI mirror enum, return `String` |
-| Node | the same three names in camelCase, taking the `string_enum` value |
-| Python | the same three names, taking the published snake_case token and raising `ValueError` for anything else |
+| CXX | none since the consumer-driven bridge trim (#308), which removed these resolvers because no frontend called them; the scan-run mirrors (`classic::scanner::scan_run_*_label`) render the same prose for the values a run result carries |
 
 The label is separate from the variant rather than folded into a DTO string because a Qt frontend is not line-oriented: it renders the two in independently styled table columns.
 
@@ -215,13 +213,13 @@ Important methods:
 - `display_name_with_game(&self, game: &str) -> String`
 - `load(&self, game: &str) -> anyhow::Result<yaml_rust2::Yaml>`
 
-`YamlSource` derives `Serialize`/`Deserialize`, `Copy`, `Eq`, and `Hash`. The tokens, descriptions, order, `Display`, and serialization are exactly those of the retired `classic_settings_core::YamlFile`; that import path ended in issue #246 with no forwarding re-export. Binding projections keep their published names: CXX `classic::settings::YamlFile` with `yaml_file_as_str` / `yaml_file_description`, Node `JsYamlFile` with `getAllYamlFiles` / `getYamlFileDescription`, and Python `classic_settings.YamlFile`, each backed by `YamlSource`; Node `JsYamlSource` and Python `classic_config.YamlSource` remain the path/display-name projections. The `yaml-file-values` and `yaml-source-values` conformance packs pin both projections.
+`YamlSource` derives `Serialize`/`Deserialize`, `Copy`, `Eq`, and `Hash`. The tokens, descriptions, order, `Display`, and serialization are exactly those of the retired `classic_settings_core::YamlFile`; that import path ended in issue #246 with no forwarding re-export. No binding projects it: the CXX `classic::settings::YamlFile` projection left the bridge with no frontend caller (#309). The `yaml-file-values` and `yaml-source-values` conformance packs pin the Rust behaviour.
 
 Contributor notes:
 
 - `YamlSource::Game` and `YamlSource::GameLocal` require a non-empty `game` string and will panic otherwise.
 - `YamlSource::Cache` uses the `CLASSIC` base directory for user config/cache paths.
-- The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). The Python `classic_config` facade passes its own facade-owned scope so `classic_registry` cannot replace or clear config's application directory now that the facades share one native library.
+- The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). A caller that must not share the application directory with other callers passes its own scope.
 - `load()` reads the full YAML stream, merges documents with `classic_shared_core::yaml`, and returns one merged mapping. A file with a declared schema range (`schema_compat` returns `Some`) loads through the cache-aware shippable selection instead, gated by that range.
 
 ### Per-file schema ranges
@@ -259,7 +257,7 @@ The Game Local document (`CLASSIC Data/CLASSIC {game} Local.yaml`, `YamlSource::
 | `root_folder_docs` | `Game_Info.Root_Folder_Docs` | the game's documents folder |
 | `docs_folder_xse` | `Game_Info.Docs_Folder_XSE` | explicit XSE Folder override |
 
-Each value is trimmed; an absent, non-string, or blank value is `None`. The reader is fail-soft: a missing, unreadable, or malformed document returns `GameLocalFacts::default()`, because these facts only refine path discovery. It reads through the default-scope path/mtime YAML-file cache (`YamlOperations::new()`). `read_game_local_facts_in_yaml_file_cache_scope(..., &YamlFileCacheScope)` reads, fills, and counts only the caller's [scope](classic-shared-core.md#cache-scopes) instead; the Python `classic_scanlog` facade reaches it through its scan runs so `classic_config.clear_yaml_cache()` cannot evict its entries (#234). `GameLocalFacts::from_yaml(&Yaml)` extracts the same facts from an already-loaded document.
+Each value is trimmed; an absent, non-string, or blank value is `None`. The reader is fail-soft: a missing, unreadable, or malformed document returns `GameLocalFacts::default()`, because these facts only refine path discovery. It reads through the default-scope path/mtime YAML-file cache (`YamlOperations::new()`). `read_game_local_facts_in_yaml_file_cache_scope(..., &YamlFileCacheScope)` reads, fills, and counts only the caller's [scope](classic-shared-core.md#cache-scopes) instead; a scan run executed in its own scopes reaches it, so clearing another scope cannot evict its entries (#234). `GameLocalFacts::from_yaml(&Yaml)` extracts the same facts from an already-loaded document.
 
 `GameLocalFacts` carries no YAML and no policy, so crates that must not depend on config consume its plain paths. The XSE Folder resolver takes them as `classic_xse_core::XseGameLocalFacts` through `resolve_xse_folder_from_game_local_facts[_in_version_registry_scope]`; [`classic_scangame_core::resolve_xse_folder_for_scan[_in_version_registry_scope]`](classic-scangame-core.md#xse-folder-from-the-game-local-document) is the composing caller: it reads the facts here and copies `docs_folder_xse` and `root_folder_docs` across, and every setup, scan, and C++ bridge caller resolves through it (#252). There is no XSE-to-config Cargo edge, and XSE no longer reads Local.yaml itself.
 
@@ -269,7 +267,7 @@ Each value is trimmed; an absent, non-string, or blank value is `None`. The read
 
 The writer creates parent directories when needed, merges an existing multi-document YAML stream, updates only `Game_Info.Root_Folder_Game` and `Game_Info.Root_Folder_Docs`, and preserves unrelated content. It never reads or writes `CLASSIC Settings.yaml`.
 
-Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, Node `persistGameLocalPaths(...) -> Promise<void>`, and Python `persist_game_local_paths(...) -> None`. Each adapter only converts optional path values and delegates document behavior to the Rust writer.
+The C++ bridge exposes the same operation as CXX `save_local_yaml_paths(...)`. It only converts optional path values and delegates document behavior to the Rust writer.
 
 ## Installation Root Location
 
@@ -296,12 +294,10 @@ There is no fallback: `None` means no Installation Root, and each caller turns t
 Callers: the GUI (`MainWindow::findDataRoot()` passes `QCoreApplication::applicationDirPath()` and `QDir::currentPath()`), the TUI (`classic_tui::state::locate_installation_root()`, which refuses to start with a "CLASSIC Data not found" message instead of falling back to the executable folder), update-core's first-party YAML Data check/apply when no `bundled_yaml_dir` layout hint is supplied, and every CLI:
 
 - the C++ CLI (`classic-cli/src/installation_root.cpp`) passes its `GetModuleFileNameW` folder and working directory for the scan, `--check-app-update`, `--check-yaml-updates`, and `--apply-yaml-updates` paths;
-- the Node CLI (`node-bindings/classic-node/cli/run-scan.ts`) passes its own script folder as the executable folder (the parent and grandparent candidates reach the package root from both `cli/` and `dist/cli/`) plus the working directory;
-- the Python CLI (`classic-py`) passes its package folder and the working directory, unless an explicit `--installation-root` is given, which must itself hold `CLASSIC Data`.
 
 On no match each CLI prints a "CLASSIC Data not found" message naming both search starts and exits with status `2` before any scan, settings, or update work; none falls back to the working directory.
 
-Binding adapters expose it as CXX `classic::config::locate_installation_root(executable_dir, working_dir) -> rust::String` (empty input = unavailable, empty result = not found), Node `locateInstallationRoot(executableDir?, workingDir?) -> string | null` (synchronous), and Python `classic_config.locate_installation_root(executable_dir=None, working_dir=None) -> str | None`. The executable [`installation-paths`](binding-compliance-suite.md) conformance family proves each candidate position, first-match-wins, and the no-match result on all four adapters.
+The C++ bridge exposes it as CXX `classic::config::locate_installation_root(executable_dir, working_dir) -> rust::String` (empty input = unavailable, empty result = not found). The executable `installation-paths` [conformance](../development/conformance.md) family proves each candidate position, first-match-wins, and the no-match result on the Rust and CXX participants.
 
 ## YAML Data install, rollback, self-heal, and generation
 
@@ -330,7 +326,7 @@ Standalone helpers: `generate_ignore_file(content)` and `generate_local_yaml(con
 
 These write relative to the current working directory, create the Local YAML parent directory when needed, and return `false` without touching an existing file. `generate_all_files_async()` uses `tokio::try_join!`, so one generation error fails the combined call. This is first-run file creation only; Local Ignore generation from selected Main defaults during Installed YAML Data loading is the separate, durably published path in `installed_yaml_data`.
 
-Binding projections keep their published names and module homes: Node `JsFileGenerator`, `generateIgnoreFile`, `generateLocalYaml`, and Python `classic_file_io.FileGenerator`, `FileGeneratorConfig`, `generate_ignore_file_async`, `generate_local_yaml_async`. The `file-generation` conformance pack pins them. The YAML Data Update Channel's binding install/rollback APIs are projected from `classic-update-core`.
+No binding projects these generators; the `file-generation` conformance pack pins the Rust behavior. The YAML Data Update Channel's install/rollback APIs are projected from `classic-update-core`.
 
 ## Explicit YAML Data Loading
 
@@ -445,9 +441,9 @@ For an unchanged file, reset publishes the malformed bytes at a uniquely owned `
 
 `LocalIgnoreResetError` distinguishes unavailable retained defaults, lock/read/backup-directory failures, backup verification, and backup or replacement publication. Publication failures carry `LocalIgnoreResetPublicationStage::{Create, Write, Flush, Sync, Publish}` and occur before canonical replacement, so the malformed original remains authoritative while the verified backup may already exist. `ReplacementDurabilityUnknown` is a separate post-rename outcome: complete retained defaults are visible at the canonical path, but the Unix parent-directory durability barrier failed. It carries the canonical and verified-backup paths plus malformed, backup, and replacement identities so callers can recover without treating the operation as either a safe failure or a durable success.
 
-`LocalIgnoreResetPublicationStage` is this crate's published *name* for the workspace's single stage vocabulary, [`classic_durable_publication::PublicationStage`](classic-durable-publication.md). This crate carries no stage definition of its own. Every variant, terminal `Publish` included, is spelled exactly as it always was, so the frozen CXX FFI enum, the Node string enum, the Python `"create"`/`"write"`/`"flush"`/`"sync"`/`"publish"` tokens, and the Crash Log Scan Run contract's re-projection onto `LocalIgnoreResetFailureStage` are all unchanged. The other caller of that vocabulary, `classic-user-settings-core`, names the same terminal stage `Replace`; the agreement here is therefore a fact about these two enums rather than a rule about callers, and a test pins it.
+`LocalIgnoreResetPublicationStage` is this crate's published *name* for the workspace's single stage vocabulary, [`classic_durable_publication::PublicationStage`](classic-durable-publication.md). This crate carries no stage definition of its own. Every variant, terminal `Publish` included, is spelled exactly as it always was, so the frozen CXX FFI enum and the Crash Log Scan Run contract's re-projection onto `LocalIgnoreResetFailureStage` are unchanged. The other caller of that vocabulary, `classic-user-settings-core`, names the same terminal stage `Replace`; the agreement here is therefore a fact about these two enums rather than a rule about callers, and a test pins it.
 
-Aliasing rather than redeclaring does widen what this type offers by the shared type's own inherent API: `Hash`, `as_str()`, and `Display`. **`Display` and `Debug` do not render alike** — `as_str()`/`Display` produce the lowercase `"publish"` used for tokens, while `Debug` produces `Publish`. `LocalIgnoreResetError`'s messages interpolate `{stage:?}`, so they still read `at Publish`; a test pins that spelling precisely because a `{stage}` typo would now silently lowercase a published message rather than failing to compile. The Python binding keeps its own lowercase token match rather than calling `as_str()`, so no binding derives its output from the widened surface.
+Aliasing rather than redeclaring does widen what this type offers by the shared type's own inherent API: `Hash`, `as_str()`, and `Display`. **`Display` and `Debug` do not render alike** — `as_str()`/`Display` produce the lowercase `"publish"` used for tokens, while `Debug` produces `Publish`. `LocalIgnoreResetError`'s messages interpolate `{stage:?}`, so they still read `at Publish`; a test pins that spelling precisely because a `{stage}` typo would now silently lowercase a published message rather than failing to compile. No binding derives its output from the widened surface.
 
 `InstalledYamlDataLoadError::UnsupportedGame` is returned before cache or installation file access. `NoUsableSource { role, diagnostics }` identifies a required Main or game role after every allowed candidate is exhausted. Unrecoverable Local Ignore reads remain `LocalIgnoreRead`; malformed content is not a fatal error. `LocalIgnoreDefaultInvalid` rejects an unusable selected-Main template only when a missing Local Ignore must be generated; it does not replace a recovery-required outcome for an existing malformed file. `LocalIgnoreCreate` reports staging or no-clobber publication failure, and `InvalidSelectedData` covers an invalid final projection into `YamlDataCore`. No failure publishes a partial snapshot.
 
@@ -530,11 +526,11 @@ These helpers bridge the config layer to [`classic-version-registry-core`](../..
 
 Building a `YamlDataCore` backfills crashgen name, latest crashgen version, XSE acronym, and game version from Version Registry metadata, but only when the game YAML sets `Game_Info.Main_Root_Name`. Every construction path reads that metadata from one [`VersionRegistryScope`](classic-version-registry-core.md#version-registry-scopes):
 
-- `from_yaml_content()`, `load_installed_yaml_data()`, `load_explicit_yaml_data()`, and `resolve_registry_version_info()` read the process default scope, as Rust, CXX, and Node callers always have
+- `from_yaml_content()`, `load_installed_yaml_data()`, `load_explicit_yaml_data()`, and `resolve_registry_version_info()` read the process default scope, as Rust and CXX callers always have
 - the `*_in_version_registry_scope()` forms read only the caller's scope, including the eager Local Ignore recovery snapshots built during an installed load; `resolve_registry_version_info_in()` reads only the snapshot it is given
 - the scope's snapshot is taken lazily, so a document without `Main_Root_Name` never takes it
 
-The Python `classic_config` facade passes its own facade-owned scope to `YamlData.from_yaml_content`, `load_installed_yaml_data`, and `load_explicit_yaml_data`, so now that the facades share one native library another facade's first use cannot decide config's registry metadata.
+A caller that passes its own scope to the `*_in_version_registry_scope()` forms is isolated from every other caller, so another caller's first use cannot decide its registry metadata.
 
 ---
 
@@ -632,7 +628,6 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 - [`classic-durable-publication`](classic-durable-publication.md) - durability sequence under `install_atomic` and the Local Ignore reset, the `.prev` rollback generation, and the install lock that `rollback` and `self_heal` also take
 - [`classic-update-core`](classic-update-core.md) - YAML Data Update Channel; drives `install_atomic` and `rollback` against the YAML cache location owned here
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and evaluates the crashgen rule model through `CrashgenSettingsAnalyzer`
-- [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime
 
 In practice, `classic-config-core` is the data-loading layer between raw YAML files and higher-level analysis/UI/binding code.
@@ -777,7 +772,7 @@ Do not use this module for parsing TOML settings files, formatting final autosca
 
 ### Crashgen Expectation Parser
 
-`crashgen_expectation_parser` owns the carrier-neutral parsing seam for Crashgen Expectations. YAML loading, Node bindings, and Python bindings translate their local carrier shape into a JSON-like `serde_json::Value`, then call:
+`crashgen_expectation_parser` owns the carrier-neutral parsing seam for Crashgen Expectations. YAML loading translates its local carrier shape into a JSON-like `serde_json::Value`, then call:
 
 - `parse_crashgen_expectations(document, default_version) -> CrashgenExpectationParseResult`
 
@@ -945,7 +940,7 @@ Keep `Vr` support intact unless the downstream callers and rule schema are chang
 ### YAML ownership for the rule schema
 
 - `classic-config-core` (this crate) parses `Crashgen_Registry.*.settings_rules` YAML into `CrashgenSettingsRules` via `CrashgenEntryRaw`; those rules, not deprecated `checks`, drive scanlog/scangame validation
-- Node and Python binding layers convert their own transport shapes into a neutral document and call the same Crashgen Expectation Parser
+- any other carrier converts its own transport shape into a neutral document and calls the same Crashgen Expectation Parser (the retired Node and Python bindings were the earlier such carriers)
 - keep the rule-model module focused on typed parsing/evaluation, not binding-specific wrappers or TOML settings parsing
 
 ### Rule-model usage example
@@ -1055,6 +1050,28 @@ YAML Data Update Channel so native callers do not duplicate the file list or
 schema ranges. If a new first-party shippable YAML file is added, update this
 metadata and the schema drift guard together.
 
+### Client schema ranges loader (Rust-only)
+
+`client_schema_ranges` loads `CLASSIC Data/databases/client-schema-ranges.yaml`,
+the publish metadata that pairs each shippable file name with the
+`[min_client_schema, max_client_schema]` range advertised in the YAML Data
+`manifest.json`:
+
+- `load_client_schema_ranges(path)` / `parse_client_schema_ranges(text)` return
+  `Vec<ClientSchemaRange { name, client_schemas_const, min_client_schema,
+  max_client_schema }>` in file order, with both bounds parsed as
+  `SchemaVersion`
+- the first violation is returned as `ClientSchemaRangesError`: not exactly one
+  YAML document, no top-level `files` list, an entry that is not a mapping or
+  has no string `name`, a non-string `client_schemas_const`, a missing or
+  unquoted bound, a bound `SchemaVersion` refuses, or `min > max`
+
+The cache-basename and duplicate-name rules for `name` belong to
+`classic-update-core` (`yaml_update::validate_cache_file_name`). The schema drift
+guard reads the ranges through this loader, and the `cargo xtask yaml-data`
+publish tooling mirrors its rules, pinned by an agreement test. The loader is not
+on the C++ bridge.
+
 ### The shippable selection module is private
 
 `classic-config-core::shippable` is `pub(crate)`. Its cache-then-bundled
@@ -1118,23 +1135,8 @@ Field naming note: `source_path` rather than `source` is deliberate;
 `thiserror` reserves the `source` field name for the error-chain link and
 would demand `StdError` on the field type.
 
-Binding surfaces (see [`error-contract.md`](error-contract.md) for shape
-rationale):
-
-- C++ CXX bridge exposes `classic::config::load_main_yaml_version(bundled_yaml_dir: &str)`
-  returning `MainYamlVersionDto { version, error_kind, error_message }`.
-  Empty-string sentinels on success; `error_kind` is one of `"load"`,
-  `"version_key_missing"`, `"version_empty"`, `"version_not_string"`, or
-  `"unknown"` (reserved for future non-exhaustive variants).
-- Node binding exposes `loadMainYamlVersion(bundledYamlDir?: string | null): Promise<string>`.
-  Rejects with an `Error` whose `message` is prefixed with the variant
-  code (`LOAD:`, `VERSION_KEY_MISSING:`, `VERSION_EMPTY:`,
-  `VERSION_NOT_STRING:`, `UNKNOWN:`), matching the `check_app_notification`
-  precedent for async napi-rs surfaces.
-- Python binding exposes `load_main_yaml_version(bundled_yaml_dir=None)`
-  and the typed exception hierarchy rooted at
-  `ClassicMainYamlVersionError`, with one subclass per core variant
-  (`ClassicMainYamlVersionLoadError`,
-  `ClassicMainYamlVersionKeyMissingError`,
-  `ClassicMainYamlVersionEmptyError`,
-  `ClassicMainYamlVersionNotStringError`).
+Binding surfaces: none. The CXX entry point (`classic::config::load_main_yaml_version`
+and its `MainYamlVersionDto`) was removed in the consumer-driven bridge trim
+(#308) because no frontend called it; the GUI and CLI bake their version at
+configure time instead (see `classic-gui/src/main.cpp`). Rust callers receive
+the typed `MainYamlVersionError` directly.

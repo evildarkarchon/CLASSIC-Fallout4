@@ -21,7 +21,6 @@
   "capabilities": [
     {
       "id": "installation-paths.inspect",
-      "operationScoped": true,
       "rustSymbols": [
         "GamePathFinder",
         "find_game_path",
@@ -41,7 +40,6 @@
     },
     {
       "id": "installation-paths.custom-scan",
-      "operationScoped": true,
       "rustCrate": "classic-scanlog-core",
       "rustSymbols": [
         "validate_custom_scan_path",
@@ -54,7 +52,6 @@
     },
     {
       "id": "installation-paths.primitives",
-      "operationScoped": true,
       "rustCrate": "classic-shared-core",
       "rustSymbols": [
         "check_drive_exists",
@@ -74,7 +71,6 @@
     },
     {
       "id": "installation-paths.locate",
-      "operationScoped": true,
       "rustCrate": "classic-config-core",
       "rustSymbols": [
         "locate_installation_root"

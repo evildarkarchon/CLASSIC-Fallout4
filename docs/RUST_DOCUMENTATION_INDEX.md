@@ -9,7 +9,7 @@ This index tracks Rust-centric documentation for the **active** CLASSIC architec
 - Active shared/runtime crates: [`foundation/`](../foundation)
 - Active core: [`business-logic/`](../business-logic)
 - Active bridge to native frontends: [`cpp-bindings/classic-cpp-bridge/`](../cpp-bindings/classic-cpp-bridge)
-- Maintained integration bindings: [`node-bindings/classic-node/`](../node-bindings/classic-node), [`python-bindings/`](../python-bindings)
+- Retired Python and Node bindings: removed from the repo (ADR-0010, in [`docs/adr/`](adr/))
 - Active Rust TUI app: [`ui-applications/classic-tui/`](../ui-applications/classic-tui)
 - Retired pure-Python runtime: removed from the repo; docs preserved under [`docs/archive/python-era/`](archive/python-era)
 
@@ -50,14 +50,12 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`docs/api/classic-database-core.md`](api/classic-database-core.md) — async SQLite/FormID lookup pool and helpers
 - [`docs/api/formid-sqlite-conventions.md`](api/formid-sqlite-conventions.md) — current FormID fixture/schema/path conventions from source and tests
 - [`docs/api/classic-scangame-core.md`](api/classic-scangame-core.md) — game-installation, archive, loose-file, and setup validation workflows
-- [`docs/api/classic-cpp-bridge-game-entrypoints.md`](api/classic-cpp-bridge-game-entrypoints.md) — active C++ bridge entry points for path, game, and scangame workflows
+- [`docs/api/classic-cpp-bridge-game-entrypoints.md`](api/classic-cpp-bridge-game-entrypoints.md) — active C++ bridge entry points for path, XSE, and scangame workflows
 - [`docs/api/classic-cpp-bridge-data-entrypoints.md`](api/classic-cpp-bridge-data-entrypoints.md) — active C++ bridge entry points for config, file I/O, database, and scanlog workflows
 - [`docs/api/classic-cpp-bridge-scan-progress-callback.md`](api/classic-cpp-bridge-scan-progress-callback.md) — current `classic::scanner` batch progress callback contract and bridge-local event ordering
 - [`docs/api/classic-gui-scan-progress-consumer.md`](api/classic-gui-scan-progress-consumer.md) — how the active Qt frontend consumes batch scan progress into visible progress and status state
 - [`docs/api/classic-gui-scan-result-ordering.md`](api/classic-gui-scan-result-ordering.md) — how the active Qt frontend correlates completion-order batch results back to original rows with `input_index`
-- [`docs/api/binding-parity-overview.md`](api/binding-parity-overview.md) — current C++ bridge, Node, and Python exposure comparison for shared Rust crates
-- [`docs/api/node-python-contract-map.md`](api/node-python-contract-map.md) — where the active Node and Python public contracts, wrapper files, and parity artifacts live
-- [`docs/api/binding-contract-refresh-note.md`](api/binding-contract-refresh-note.md) — when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
+- [`docs/api/binding-parity-overview.md`](api/binding-parity-overview.md) — current C++ bridge exposure for shared Rust crates
 - [`docs/api/classic-scanlog-core.md`](api/classic-scanlog-core.md) — crash-log parsing, orchestration, and report generation
 
 ---
@@ -75,25 +73,15 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 
 - [`docs/development/async_development_guide.md`](development/async_development_guide.md)
 - [`docs/rust/rust_async_pattern.md`](rust/rust_async_pattern.md)
-- [`docs/rust/gil_release_pattern_pyo3_0.27.md`](rust/gil_release_pattern_pyo3_0.27.md)
-
-### PyO3 and Python binding surfaces (maintained integration surface)
-
-- [`docs/development/pyo3_integration_patterns.md`](development/pyo3_integration_patterns.md)
-- [`docs/rust/PyO3-0.27-migration.md`](rust/PyO3-0.27-migration.md)
-- [`docs/rust/pyo3_quick_reference.md`](rust/pyo3_quick_reference.md)
-
-> Scope note: this section documents maintained binding surfaces under [`python-bindings/`](../python-bindings), not deprecated Python app runtime entrypoints.
 
 ### Development and troubleshooting
 
 - [`docs/rust/development_with_rust.md`](rust/development_with_rust.md)
-- [`docs/rust/troubleshooting_rust.md`](rust/troubleshooting_rust.md)
 - [`docs/development/RUST_INTEGRATION_GUIDE.md`](development/RUST_INTEGRATION_GUIDE.md)
 
 ### Performance and benchmarking
 
-- [`docs/performance/performance_monitoring.md`](performance/performance_monitoring.md)
+- [`docs/archive/python-era/performance_monitoring.md`](archive/python-era/performance_monitoring.md) (archived; written for the retired Python-facing acceleration model)
 - [`docs/performance/rust_db_benchmark_baseline.md`](performance/rust_db_benchmark_baseline.md)
 - [`docs/archive/performance_optimization_complete.md`](archive/performance_optimization_complete.md) (archived historical report)
 
@@ -120,7 +108,7 @@ Need binding-path or artifact translations as well? Start with the [Workspace Mi
 
 - Rust quality/build/test pipeline: [`ci-rust.yml`](../.github/workflows/ci-rust.yml)
 - C++ frontend build/test pipeline that consumes Rust artifacts: [`ci-cpp.yml`](../.github/workflows/ci-cpp.yml)
-- Node parity/runtime checks for Rust-exposed APIs: [`ci-typescript.yml`](../.github/workflows/ci-typescript.yml)
+- Umbrella and conformance-only `full` verdict: [`ci-binding-compliance.yml`](../.github/workflows/ci-binding-compliance.yml)
 - Performance regression checks: [`benchmarks.yml`](../.github/workflows/benchmarks.yml)
 
 ---
@@ -130,7 +118,7 @@ Need binding-path or artifact translations as well? Start with the [Workspace Mi
 Older documents may still discuss hybrid Python-runtime execution or fallback-heavy flows. Treat those as historical unless they are explicitly aligned with:
 
 1. Current active architecture (`classic-cli` + `classic-gui` + repo-root Rust workspace layers)
-2. Maintained binding surfaces (`python-bindings`, `node-bindings/classic-node`)
+2. The C++ bridge (`cpp-bindings/classic-cpp-bridge`); the Python and Node bindings are retired (ADR-0010)
 3. Retired pure-Python runtime scope (see `docs/archive/python-era/`)
 
 > Migration note: a historical `ClassicLib-rs/...` mention is not live workspace guidance; translate it through the [Workspace Migration Matrix](workspace-migration-matrix.md).
