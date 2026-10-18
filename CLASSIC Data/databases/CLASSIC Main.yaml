@@ -506,7 +506,7 @@ Version_Registry:
           dll_file: "buffout4.dll"
           description: "Buffout 4 NG"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
-        - version: "1.4.0"
+        - version: "1.7.0"
           name: "Addictol"
           acronym: "Addictol"
           dll_file: "addictol.dll"

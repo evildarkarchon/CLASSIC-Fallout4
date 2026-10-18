@@ -1,22 +1,9 @@
 # CLASSIC CHANGELOG #
 
 ### 9.1.0 CHANGES
-- Overhaul the update system to use GitHub Pages instead of GitHub API.
-- Add YAML update delivery system to allow for dynamic updates to the program's databases.
-- Change interface font to "Inter" and enable antialiasing.
-- Remove restrictions for drag-and-dropped logs for the GUI and explicitly specified logs on the CLI.
-- Add a **NEW** badge on the GUI Results tab for reports generated during the current session (compared against a startup snapshot of existing `*-AUTOSCAN.md` files, not file modification times).
-- Fix drag-and-drop widget not expanding layout as well as sizing of the clear button.
-- Fix drag-and-drop showing a 🚫 indicator in certain circumstances
-- The CLI no longer falls back to the current working directory when CLASSIC Data is missing; it stops with a "CLASSIC Data not found" error instead.
-- CLI Standard scans look for Crash Logs under the Installation Root, not the current working directory. Use `--scan-path` to scan a different folder.
-- GUI FCX scans with missing folders run and report setup problems instead of refusing to start.
-- The TUI can scan crash logs when its settings need migration, and starting a scan no longer saves the typed path inputs; save them explicitly when you want them kept.
-- Clearing the TUI's custom scan folder input now scans without the saved custom scan folder for that run, instead of quietly using the saved one.
-- Fallout 4 VR scans in the GUI, TUI, Node CLI and Python CLI now use the shared Fallout 4 rows.
-- The Node CLI without `--game` now scans the managed game instead of always scanning Fallout 4; `--game` itself still accepts only `Fallout4`.
-- Fallout 4 and Fallout 4 VR scans now read only their own XSE log (`f4se.log` or `f4sevr.log`), with no fallback to the other edition's log.
-- FCX scans for Fallout 4 VR with the game version on `auto` now expect `Fallout4VR.exe` as the game executable; the GUI previously fell back to `Fallout4.exe`.
+- Features, bugfixes and optimizations (so many I can't even remember)
+- YAML auto-update (experimental)
+- Overhauled update checker (experimental)
 
 ### 9.0.0 CHANGES
 - Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.
@@ -239,7 +226,7 @@ This is just a reflection of my copy of the code and may or may not make it into
 - Updated *CLASSIC Readme* with explanations for all of the new features.
 - CLASSIC now keeps AUTOSCAN report files in the same folder with their crash logs.
 - Changed the file structure, now all required files are organized inside *CLASSIC Data* folder.
-[Please report if it still fails to generate your Fallout 4 VR file and folder paths from the shared CLASSIC Fallout4.yaml data]
+[Please report if it still fails to generate your Fallout 4 VR file and folder paths in CLASSIC FO4VR.yaml]
 
 ### 7.07 | "Everything Everywhere All At Once" Update
 #### NEW FEATURES
