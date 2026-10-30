@@ -25,7 +25,7 @@
 
 use classic_path_core::DocsPathFinder;
 use classic_shared_core::GameId;
-use classic_shared_core::version::parse_version;
+use classic_shared_core::version::pe_version::extract_pe_version;
 use classic_version_registry_core::{Fallout4Version, VersionInfo, VersionRegistryScope};
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -219,6 +219,25 @@ impl XseType {
             Self::SFSE => "sfse_",
         }
     }
+
+    /// Get the runtime DLL filename built for one game runtime.
+    ///
+    /// Each XSE release ships one runtime DLL per supported game runtime, named
+    /// after that runtime's first three version components. The loader injects
+    /// the DLL that matches the running game.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use classic_xse_core::XseType;
+    ///
+    /// assert_eq!(XseType::F4SE.runtime_dll_name(1, 11, 240), "f4se_1_11_240.dll");
+    /// assert_eq!(XseType::F4SEVR.runtime_dll_name(1, 2, 72), "f4sevr_1_2_72.dll");
+    /// ```
+    #[must_use]
+    pub fn runtime_dll_name(self, major: u32, minor: u32, patch: u32) -> String {
+        format!("{}{major}_{minor}_{patch}.dll", self.dll_prefix())
+    }
 }
 
 impl FromStr for XseType {
@@ -376,15 +395,20 @@ impl XseInfo {
 // Version Detection
 // ============================================================================
 
-/// Detect XSE version from a loader executable.
+/// Detect the XSE version from its loader executable's embedded version resource.
 ///
-/// Attempts to extract version information from the XSE loader filename
-/// or by checking for version-specific DLL files.
+/// Reads the loader's PE `VS_FIXEDFILEINFO` file version and drops the
+/// placeholder leading component that every XSE resource carries, so a stamped
+/// `0.0.6.23` reports as `0.6.23`. Sibling runtime DLLs such as
+/// `f4se_1_10_163.dll` are deliberately not consulted: their filenames name the
+/// *game* runtime the build targets, not the script extender's own version, and
+/// an install may carry several of them. To read the version of the DLL that a
+/// given runtime loads, use [`detect_xse_runtime_dll_version`].
 ///
 /// # Arguments
 ///
 /// * `loader_path` - Path to the XSE loader executable
-/// * `xse_type` - The XSE type to detect
+/// * `xse_type` - The XSE type to detect (used in diagnostics)
 ///
 /// # Returns
 ///
@@ -393,7 +417,8 @@ impl XseInfo {
 /// # Errors
 ///
 /// Returns `XseError::NotFound` if the loader doesn't exist,
-/// or `XseError::VersionDetectionFailed` if version cannot be determined.
+/// or `XseError::VersionDetectionFailed` if the loader cannot be read as a PE
+/// file or carries no version resource.
 ///
 /// # Examples
 ///
@@ -407,42 +432,63 @@ impl XseInfo {
 /// }
 /// ```
 pub fn detect_xse_version(loader_path: &Path, xse_type: XseType) -> XseResult<Version> {
-    if !loader_path.exists() {
-        return Err(XseError::NotFound(loader_path.to_path_buf()));
+    read_xse_binary_version(loader_path, xse_type)
+}
+
+/// Detect the XSE version of a runtime DLL from its embedded version resource.
+///
+/// Runtime DLLs carry the same `FILEVERSION 0, major, minor, beta` stamp as the
+/// loader, so `f4se_1_11_240.dll` from F4SE 0.7.9 reports `0.7.9`. Build the
+/// path with [`XseType::runtime_dll_name`] for the detected game runtime. The
+/// DLL's version is the XSE release that actually runs in that game.
+///
+/// # Errors
+///
+/// Returns `XseError::NotFound` if the DLL doesn't exist,
+/// or `XseError::VersionDetectionFailed` if it cannot be read as a PE file or
+/// carries no version resource.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_xse_core::{detect_xse_runtime_dll_version, XseType};
+/// use std::path::Path;
+///
+/// let dll = Path::new("C:\\Games\\Fallout4").join(XseType::F4SE.runtime_dll_name(1, 11, 240));
+/// if let Ok(version) = detect_xse_runtime_dll_version(&dll, XseType::F4SE) {
+///     println!("F4SE runtime DLL version: {version}");
+/// }
+/// ```
+pub fn detect_xse_runtime_dll_version(dll_path: &Path, xse_type: XseType) -> XseResult<Version> {
+    read_xse_binary_version(dll_path, xse_type)
+}
+
+/// Read an XSE loader's or runtime DLL's version resource as an XSE version.
+fn read_xse_binary_version(path: &Path, xse_type: XseType) -> XseResult<Version> {
+    if !path.exists() {
+        return Err(XseError::NotFound(path.to_path_buf()));
     }
 
-    // Try to find version-specific DLL in the same directory
-    if let Some(parent) = loader_path.parent() {
-        let dll_prefix = xse_type.dll_prefix();
+    extract_pe_version(path)
+        .map(xse_version_from_file_version)
+        .map_err(|error| {
+            XseError::VersionDetectionFailed(format!(
+                "Could not read {} version from {}: {error}",
+                xse_type.as_str(),
+                path.display()
+            ))
+        })
+}
 
-        // Look for DLLs matching the pattern (e.g., f4se_1_10_163.dll)
-        if let Ok(entries) = std::fs::read_dir(parent) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if let Some(filename) = path.file_name().and_then(|n| n.to_str())
-                    && filename.starts_with(dll_prefix)
-                    && filename.ends_with(".dll")
-                {
-                    // Extract version from filename
-                    if let Some(version_str) = filename
-                        .strip_prefix(dll_prefix)
-                        .and_then(|s| s.strip_suffix(".dll"))
-                    {
-                        // Replace underscores with dots for version parsing
-                        let version_dotted = version_str.replace('_', ".");
-                        if let Ok(version) = parse_version(&version_dotted) {
-                            return Ok(version);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Err(XseError::VersionDetectionFailed(format!(
-        "Could not detect version from {}",
-        loader_path.display()
-    )))
+/// Convert an XSE binary's four-part PE file version into its semantic version.
+///
+/// The script extenders share one resource template, `FILEVERSION 0, major, minor,
+/// beta`, so the leading component is always a placeholder zero and the
+/// release number lives in the remaining three: F4SE 0.6.23 is stamped
+/// `0.0.6.23` and SKSE64 2.2.6 is stamped `0.2.2.6`.
+fn xse_version_from_file_version(file_version: (u16, u16, u16, u16)) -> Version {
+    let (_placeholder, major, minor, beta) = file_version;
+    Version::new(u64::from(major), u64::from(minor), u64::from(beta))
 }
 
 /// Check if XSE is installed in a directory.

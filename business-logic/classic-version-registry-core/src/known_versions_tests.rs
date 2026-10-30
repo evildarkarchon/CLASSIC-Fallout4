@@ -50,6 +50,17 @@ fn known_f4se_versions_are_the_non_vr_compatible_versions() {
 }
 
 #[test]
+fn known_f4se_versions_include_every_per_runtime_release() {
+    let registry = shipped_registry();
+
+    // AE-series releases are recorded per runtime, not as compatible_version.
+    for release in [(0, 7, 4), (0, 7, 7), (0, 7, 9)] {
+        let version = Version::new(release.0, release.1, release.2);
+        assert!(registry.is_known_f4se_version(&version), "{version}");
+    }
+}
+
+#[test]
 fn free_functions_answer_from_the_default_snapshot() {
     let og = Version::new(1, 10, 163);
     let f4se_og = Version::new(0, 6, 23);

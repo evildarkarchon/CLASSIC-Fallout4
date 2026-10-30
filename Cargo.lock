@@ -996,6 +996,7 @@ dependencies = [
  "regex",
  "rustc-hash 2.1.2",
  "scraper",
+ "semver",
  "serde",
  "serde_json",
  "sha2 0.11.0",

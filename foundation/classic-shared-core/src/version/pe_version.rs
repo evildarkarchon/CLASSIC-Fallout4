@@ -163,6 +163,9 @@ pub fn extract_pe_version(path: &Path) -> PeVersionResult<(u16, u16, u16, u16)> 
     ))
 }
 
+#[cfg(any(test, feature = "test-support"))]
+pub mod test_support;
+
 #[cfg(test)]
 #[path = "pe_version_tests.rs"]
 mod tests;

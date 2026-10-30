@@ -675,6 +675,15 @@ Version_Registry:
         acronym: F4SE
         full_name: Fallout 4 Script Extender (F4SE)
         compatible_version: "0.7.8"
+        # F4SE ships one release per game runtime; the installed runtime selects
+        # its row. compatible_version above stays for older CLASSIC builds.
+        runtime_versions:
+          "1.11.137": "0.7.4"
+          "1.11.159": "0.7.5"
+          "1.11.169": "0.7.6"
+          "1.11.191": "0.7.7"
+          "1.11.221": "0.7.8"
+          "1.11.240": "0.7.9"
         loader: f4se_loader.exe
         file_count: 29
       compatible_range:

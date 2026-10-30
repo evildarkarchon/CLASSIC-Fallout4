@@ -233,7 +233,7 @@ Source-visible behavior:
 
 - both consider only `get_all_for_game("Fallout4", Some(false))`, so VR entries are never known versions
 - the game query compares each entry's `major.minor.patch`, dropping the fourth (build) component, by exact equality
-- the F4SE query parses each entry's `xse.compatible_version` with the lenient shared-core `try_parse_version()`; entries without an XSE section or with an unparseable string never match
+- the F4SE query parses each entry's `xse.compatible_version` and every `xse.runtime_versions` release with the lenient shared-core `try_parse_version()`; entries without an XSE section and unparseable strings never match
 
 These were `classic_version_core::is_known_fallout4_version()` / `is_known_f4se_version()` until issue #244. That crate re-exported the free functions unchanged until it was retired in #258 with no forwarding shim; callers import this crate.
 
@@ -295,7 +295,14 @@ The model types expose constructor helpers that are useful in tests, defaults, a
 - `AddressLibraryConfig::new(...)`
 - `XseConfig::new(...)`
 - `XseConfig::with_script_hashes(...)`
+- `XseConfig::with_runtime_versions(pairs)` - attaches per-runtime XSE releases, sorted by runtime
 - `CompatibleRange::new(...)`
+
+`XseConfig::expected_version_for(runtime: Option<&GameVersion>) -> Option<&str>` resolves the XSE release the registry expects for the installed game runtime. Script extenders ship one release per game runtime, so an entry whose `compatible_range` spans several runtimes lists each one in `runtime_versions`:
+
+- a runtime listed in `runtime_versions` (matched on `major.minor.patch`; build ignored) returns its own release
+- an empty `runtime_versions`, or a `None` runtime (the game executable's version was unreadable), returns `compatible_version`
+- a runtime missing from a non-empty `runtime_versions` returns `None`. Game Setup Intake reports that as `Unsupported` instead of comparing against another runtime's release
 - `CompatibleRange::from_strings(...)`
 - `CrashgenConfig::new(...)`
 - `CrashgenConfig::with_range(...)`
@@ -336,6 +343,7 @@ Contributor-relevant keys for each `Version_Registry.versions[]` entry include:
 - `docs_name`, `steam_id`, `priority`, `is_vr`, `deprecated`, `exe_hash`
 - `address_library.{filename, format, nexus_url}`
 - `xse.{acronym, full_name, compatible_version, loader, file_count, script_hashes}`
+- optional `xse.runtime_versions`: a map of quoted game runtime (`"1.11.240"`) to quoted XSE release (`"0.7.9"`). Rows with an unparseable runtime or an empty release are dropped. The key is additive: CLASSIC builds that predate it ignore it and keep reading `compatible_version`, so published YAML stays readable by older releases
 - `compatible_range.{min, max}`
 - `crashgen_versions`
 

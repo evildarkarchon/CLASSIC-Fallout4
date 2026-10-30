@@ -65,6 +65,8 @@ This setting is required for mods to work properly.
 -----
 [skipped] xse_version: XSE version check skipped because the loader is missing.
 -----
+[skipped] xse_loader_version: XSE loader version check skipped because the loader is missing.
+-----
 [failed] address_library: Plugins folder not found at {{FCX_GAME_ROOT}}{{PATH_SEPARATOR}}Data\F4SE\Plugins.
 -----
 [unsupported] xse_script_hashes: F4SE has no curated script hash expectations.

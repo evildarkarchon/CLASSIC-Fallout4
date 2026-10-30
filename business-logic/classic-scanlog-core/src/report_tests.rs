@@ -457,6 +457,52 @@ fn autoscan_report_assembler_omits_absent_mod_conflict_fix_line() {
         )
         .join("");
 
-    assert!(text.contains("    The mods are redundant with each other.\n    -----\n"));
-    assert!(!text.contains("    \n    -----\n"));
+    // The description is the whole body: no empty fix line sits between it and
+    // the separator.
+    assert!(text.contains(
+        "**Upscaling ❌ CONFLICTS WITH : FSR 3 Antialiasing**\n\n\
+         The mods are redundant with each other.  \n\n-----\n"
+    ));
+}
+
+#[test]
+fn autoscan_report_assembler_renders_mod_conflicts_with_markdown_hard_breaks() {
+    // Discord no longer treats a bare newline as a line break, so every body
+    // line must end in a two-space hard break, and authored indentation must not
+    // survive (after a blank line it would open a code block).
+    let guidance = ModGuidanceAnalysisResult {
+        conflicts: vec![crate::ModConflictGuidance {
+            state: ModGuidanceMatchState::Matched,
+            mod_a: "FROST.esp".to_string(),
+            mod_b: "PPF.esm".to_string(),
+            name_a: "Frost Survival Simulator".to_string(),
+            name_b: "Previs Repair Pack".to_string(),
+            description: "Using both mods can break precombines.\n".to_string(),
+            fix: Some("    Remove PRP and switch to FROST Cell Fixes (FCF).   ".to_string()),
+            link: Some("https://www.nexusmods.com/fallout4/mods/59652?tab=files".to_string()),
+        }],
+        ..ModGuidanceAnalysisResult::default()
+    };
+
+    let text = AutoscanReportAssembler::new()
+        .assemble(
+            &base_facts(),
+            AutoscanReportContributions {
+                mod_guidance: Some(guidance),
+                ..AutoscanReportContributions::default()
+            },
+        )
+        .join("");
+
+    assert!(
+        text.contains(
+            "[!] CAUTION : Conflicting mods detected\n\n\
+             **Frost Survival Simulator ❌ CONFLICTS WITH : Previs Repair Pack**\n\n\
+             Using both mods can break precombines.  \n\
+             Remove PRP and switch to FROST Cell Fixes (FCF).  \n\
+             Link: https://www.nexusmods.com/fallout4/mods/59652?tab=files  \n\
+             \n-----\n\n"
+        ),
+        "{text}"
+    );
 }

@@ -29,6 +29,8 @@ serde = { workspace = true, features = ["derive"] }
 [dev-dependencies]
 # Testing
 tempfile = { workspace = true }
+# Synthesizes version-stamped loader executables for XSE version tests.
+classic-shared-core = { path = "../../foundation/classic-shared-core", features = ["test-support"] }
 
 [lints.rust]
 deprecated = "deny"

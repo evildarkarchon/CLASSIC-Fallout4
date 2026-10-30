@@ -94,7 +94,18 @@ pub struct XseConfig {
     /// Full display name (e.g., "Fallout 4 Script Extender (F4SE)").
     pub full_name: String,
     /// Compatible XSE version (e.g., "0.6.23").
+    ///
+    /// The expectation for the entry's own game version, and the fallback when
+    /// `runtime_versions` is empty or the installed runtime is unknown.
     pub compatible_version: String,
+    /// The XSE release built for each game runtime, as (runtime, XSE version)
+    /// pairs sorted by runtime.
+    ///
+    /// Script extenders ship one release per game runtime, so an entry whose
+    /// `compatible_range` spans several runtimes (Fallout 4 AE: 1.11.137,
+    /// 1.11.159, …) lists each one here. Empty for single-runtime entries.
+    /// See [`Self::expected_version_for`].
+    pub runtime_versions: Vec<(GameVersion, String)>,
     /// Loader executable name (e.g., "f4se_loader.exe").
     pub loader: String,
     /// Expected number of script files (e.g., 29).
@@ -105,6 +116,31 @@ pub struct XseConfig {
 }
 
 impl XseConfig {
+    /// Return the XSE version expected for the installed game `runtime`.
+    ///
+    /// Runtimes match on `major.minor.patch`; the build component is ignored, as
+    /// XSE releases name runtimes by three components. Resolution:
+    ///
+    /// - a runtime listed in `runtime_versions` gets its own release;
+    /// - with no `runtime_versions`, or when `runtime` is `None` because the game
+    ///   executable's version could not be read, `compatible_version` applies;
+    /// - a known runtime missing from a non-empty `runtime_versions` returns
+    ///   `None`. The registry has no release recorded for it, and comparing
+    ///   against another runtime's release would report a false mismatch.
+    #[must_use]
+    pub fn expected_version_for(&self, runtime: Option<&GameVersion>) -> Option<&str> {
+        let Some(runtime) = runtime.filter(|_| !self.runtime_versions.is_empty()) else {
+            return Some(&self.compatible_version);
+        };
+        self.runtime_versions
+            .iter()
+            .find(|(listed, _)| {
+                (listed.major, listed.minor, listed.patch)
+                    == (runtime.major, runtime.minor, runtime.patch)
+            })
+            .map(|(_, version)| version.as_str())
+    }
+
     /// Create a new XSE configuration.
     #[must_use]
     pub fn new(
@@ -118,6 +154,7 @@ impl XseConfig {
             acronym: acronym.into(),
             full_name: full_name.into(),
             compatible_version: compatible_version.into(),
+            runtime_versions: Vec::new(),
             loader: loader.into(),
             file_count,
             script_hashes: Vec::new(),
@@ -138,10 +175,25 @@ impl XseConfig {
             acronym: acronym.into(),
             full_name: full_name.into(),
             compatible_version: compatible_version.into(),
+            runtime_versions: Vec::new(),
             loader: loader.into(),
             file_count,
             script_hashes,
         }
+    }
+
+    /// Attach per-runtime XSE releases; see [`Self::runtime_versions`].
+    ///
+    /// The pairs are sorted by runtime so lookups and diagnostics do not depend on
+    /// YAML map ordering.
+    #[must_use]
+    pub fn with_runtime_versions(
+        mut self,
+        mut runtime_versions: Vec<(GameVersion, String)>,
+    ) -> Self {
+        runtime_versions.sort_by_key(|(runtime, _)| *runtime);
+        self.runtime_versions = runtime_versions;
+        self
     }
 }
 

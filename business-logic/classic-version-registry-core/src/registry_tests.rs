@@ -747,3 +747,62 @@ fn test_crashgen_config_download_urls() {
         }
     }
 }
+
+#[test]
+fn shipped_ae_entry_records_one_f4se_release_per_runtime() {
+    let registry = create_test_registry();
+    let xse = version_entry(&registry, "FO4_AE")
+        .xse
+        .as_ref()
+        .expect("AE xse section");
+
+    let pairs: Vec<(String, &str)> = xse
+        .runtime_versions
+        .iter()
+        .map(|(runtime, release)| (runtime.to_string(), release.as_str()))
+        .collect();
+    assert_eq!(
+        pairs,
+        [
+            ("1.11.137.0".to_string(), "0.7.4"),
+            ("1.11.159.0".to_string(), "0.7.5"),
+            ("1.11.169.0".to_string(), "0.7.6"),
+            ("1.11.191.0".to_string(), "0.7.7"),
+            ("1.11.221.0".to_string(), "0.7.8"),
+            ("1.11.240.0".to_string(), "0.7.9"),
+        ]
+    );
+
+    // Single-runtime entries keep relying on compatible_version alone.
+    for id in ["FO4_OG", "FO4_NG", "FO4_VR"] {
+        let xse = version_entry(&registry, id)
+            .xse
+            .as_ref()
+            .expect("xse section");
+        assert!(xse.runtime_versions.is_empty(), "{id}");
+    }
+}
+
+#[test]
+fn runtime_versions_parsing_drops_unparseable_rows() {
+    let yaml = r#"
+Version_Registry:
+  versions:
+    - id: TEST
+      game: Fallout4
+      version: "1.11.240.0"
+      xse:
+        acronym: F4SE
+        compatible_version: "0.7.9"
+        runtime_versions:
+          "1.11.240": " 0.7.9 "
+          "not-a-runtime": "0.7.8"
+          "1.11.221": ""
+"#;
+    let registry = VersionRegistry::load_from_yaml_str(yaml, true).expect("test YAML loads");
+    let xse = version_entry(&registry, "TEST").xse.as_ref().expect("xse");
+
+    assert_eq!(xse.runtime_versions.len(), 1);
+    assert_eq!(xse.runtime_versions[0].0.to_string(), "1.11.240.0");
+    assert_eq!(xse.runtime_versions[0].1, "0.7.9");
+}

@@ -1,4 +1,5 @@
 use super::*;
+use classic_shared_core::version::pe_version::test_support::versioned_pe_bytes;
 use classic_user_settings_core::{
     UserSettings, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
 };
@@ -300,8 +301,17 @@ fn explicit_vr_selection_from_fallout4_uses_vr_executable_docs_and_xse() {
     fs::create_dir_all(&game_root).expect("game root");
     fs::create_dir_all(&docs_root).expect("docs root");
     fs::write(game_root.join("Fallout4VR.exe"), b"not a real pe").expect("fake vr exe");
-    fs::write(game_root.join("f4sevr_loader.exe"), b"loader").expect("vr loader");
-    fs::write(game_root.join("f4sevr_0_6_20.dll"), b"dll").expect("vr version dll");
+    fs::write(
+        game_root.join("f4sevr_loader.exe"),
+        versioned_pe_bytes((0, 0, 6, 20)),
+    )
+    .expect("vr loader");
+    // Real installs name the runtime DLL after the game version it targets.
+    fs::write(
+        game_root.join("f4sevr_1_2_72.dll"),
+        versioned_pe_bytes((0, 0, 6, 20)),
+    )
+    .expect("vr runtime dll");
 
     let result = GameSetupIntake::new(GameId::Fallout4, "VR")
         .with_game_root(&game_root)
@@ -539,8 +549,17 @@ fn unsupported_game_id_returns_registry_diagnostic() {
 #[test]
 fn complete_xse_checks_use_registry_expectations() {
     let (_temp, game_root, docs_root) = setup_roots();
-    fs::write(game_root.join("f4se_loader.exe"), b"loader").expect("loader");
-    fs::write(game_root.join("f4se_0_6_23.dll"), b"dll").expect("version dll");
+    fs::write(
+        game_root.join("f4se_loader.exe"),
+        versioned_pe_bytes((0, 0, 6, 23)),
+    )
+    .expect("loader");
+    // Real installs name the runtime DLL after the game version it targets.
+    fs::write(
+        game_root.join("f4se_1_10_163.dll"),
+        versioned_pe_bytes((0, 0, 6, 23)),
+    )
+    .expect("runtime dll");
     let plugins = game_root.join("Data").join("F4SE").join("Plugins");
     fs::create_dir_all(&plugins).expect("plugins");
     fs::write(plugins.join("version-1-10-163-0.bin"), b"address lib").expect("address lib");
@@ -559,6 +578,13 @@ fn complete_xse_checks_use_registry_expectations() {
     );
     assert!(
         result.checks.iter().any(|check| {
+            check.kind == GameSetupCheckKind::XseLoaderVersion
+                && check.state == GameSetupCheckState::Passed
+        }),
+        "expected XSE loader version to pass"
+    );
+    assert!(
+        result.checks.iter().any(|check| {
             check.kind == GameSetupCheckKind::AddressLibrary
                 && check.state == GameSetupCheckState::Passed
         }),
@@ -570,5 +596,175 @@ fn complete_xse_checks_use_registry_expectations() {
                 && check.state == GameSetupCheckState::Failed
         }),
         "expected script hashes to fail because scripts are absent"
+    );
+}
+
+/// The XSE version check and the loader version sanity check from one run.
+struct AeXseChecks {
+    version: GameSetupCheck,
+    loader_version: GameSetupCheck,
+}
+
+/// A four-part PE file version, as stamped by `versioned_pe_bytes`.
+type PeVersion = (u16, u16, u16, u16);
+/// A runtime DLL to install: `(game runtime major.minor.patch, its PE version)`.
+type RuntimeDll = ((u32, u32, u32), PeVersion);
+
+/// Run AE setup intake with a game executable, F4SE loader and optional runtime
+/// DLLs stamped with the given PE versions. Each DLL is named after the runtime
+/// it targets.
+fn ae_xse_checks(
+    exe_version: PeVersion,
+    loader_version: PeVersion,
+    runtime_dlls: &[RuntimeDll],
+) -> AeXseChecks {
+    let (_temp, game_root, docs_root) = setup_roots();
+    fs::write(
+        game_root.join("Fallout4.exe"),
+        versioned_pe_bytes(exe_version),
+    )
+    .expect("exe");
+    fs::write(
+        game_root.join("f4se_loader.exe"),
+        versioned_pe_bytes(loader_version),
+    )
+    .expect("loader");
+    for ((major, minor, patch), dll_version) in runtime_dlls {
+        fs::write(
+            game_root.join(XseType::F4SE.runtime_dll_name(*major, *minor, *patch)),
+            versioned_pe_bytes(*dll_version),
+        )
+        .expect("runtime dll");
+    }
+
+    let result = GameSetupIntake::new(GameId::Fallout4, "AnniversaryEdition")
+        .with_game_root(&game_root)
+        .with_docs_root(&docs_root)
+        .run();
+
+    let find = |kind| {
+        result
+            .checks
+            .iter()
+            .find(|check| check.kind == kind)
+            .cloned()
+            .expect("check present")
+    };
+    AeXseChecks {
+        version: find(GameSetupCheckKind::XseVersion),
+        loader_version: find(GameSetupCheckKind::XseLoaderVersion),
+    }
+}
+
+#[test]
+fn ae_xse_version_reads_the_runtime_dll_for_the_installed_runtime() {
+    // A real 0.7.9 install, with a leftover 0.7.8 DLL for an older runtime that
+    // must not be consulted.
+    let checks = ae_xse_checks(
+        (1, 11, 240, 0),
+        (0, 0, 7, 9),
+        &[((1, 11, 240), (0, 0, 7, 9)), ((1, 11, 221), (0, 0, 7, 8))],
+    );
+    assert_eq!(checks.version.state, GameSetupCheckState::Passed);
+    assert_eq!(
+        checks.version.message,
+        "Detected F4SE version 0.7.9 in f4se_1_11_240.dll; expected 0.7.9 for game runtime 1.11.240."
+    );
+    assert_eq!(checks.loader_version.state, GameSetupCheckState::Passed);
+    assert_eq!(
+        checks.loader_version.message,
+        "F4SE loader version 0.7.9 is the release for game runtime 1.11.240."
+    );
+
+    // 0.7.8 is the release for 1.11.221.
+    let checks = ae_xse_checks(
+        (1, 11, 221, 0),
+        (0, 0, 7, 8),
+        &[((1, 11, 221), (0, 0, 7, 8))],
+    );
+    assert_eq!(checks.version.state, GameSetupCheckState::Passed);
+    assert_eq!(checks.loader_version.state, GameSetupCheckState::Passed);
+}
+
+#[test]
+fn ae_xse_version_fails_when_the_runtime_has_no_dll() {
+    // A 0.7.8 install cannot run 1.11.240: it ships no f4se_1_11_240.dll.
+    let checks = ae_xse_checks(
+        (1, 11, 240, 0),
+        (0, 0, 7, 8),
+        &[((1, 11, 221), (0, 0, 7, 8))],
+    );
+    assert_eq!(checks.version.state, GameSetupCheckState::Failed);
+    assert!(
+        checks
+            .version
+            .message
+            .contains("runtime DLL f4se_1_11_240.dll was not found"),
+        "{}",
+        checks.version.message
+    );
+    // The loader is still checked against the release for the runtime.
+    assert_eq!(checks.loader_version.state, GameSetupCheckState::Failed);
+    assert!(
+        checks.loader_version.message.contains("is not 0.7.9"),
+        "{}",
+        checks.loader_version.message
+    );
+}
+
+#[test]
+fn ae_xse_loader_version_fails_when_the_loader_is_from_another_release() {
+    // Partial update: the runtime DLL is right but the loader was left behind.
+    let checks = ae_xse_checks(
+        (1, 11, 240, 0),
+        (0, 0, 7, 8),
+        &[((1, 11, 240), (0, 0, 7, 9))],
+    );
+    assert_eq!(checks.version.state, GameSetupCheckState::Passed);
+    assert_eq!(checks.loader_version.state, GameSetupCheckState::Failed);
+    assert_eq!(
+        checks.loader_version.message,
+        "F4SE loader version 0.7.8 is not 0.7.9, the release for game runtime 1.11.240; \
+         reinstall F4SE 0.7.9 so the loader and runtime DLL come from the same release."
+    );
+}
+
+#[test]
+fn ae_xse_checks_for_an_unrecorded_runtime_fall_back_to_the_runtime_dll() {
+    // A runtime inside AE's compatible_range with no recorded F4SE release.
+    let checks = ae_xse_checks(
+        (1, 11, 250, 0),
+        (0, 0, 7, 10),
+        &[((1, 11, 250), (0, 0, 7, 10))],
+    );
+    assert_eq!(checks.version.state, GameSetupCheckState::Unsupported);
+    assert!(
+        checks
+            .version
+            .message
+            .contains("records no F4SE release for game runtime 1.11.250"),
+        "{}",
+        checks.version.message
+    );
+    // With no registry release, the loader must at least match the runtime DLL.
+    assert_eq!(checks.loader_version.state, GameSetupCheckState::Passed);
+    assert_eq!(
+        checks.loader_version.message,
+        "F4SE loader version 0.7.10 matches f4se_1_11_250.dll."
+    );
+
+    let checks = ae_xse_checks(
+        (1, 11, 250, 0),
+        (0, 0, 7, 9),
+        &[((1, 11, 250), (0, 0, 7, 10))],
+    );
+    assert_eq!(checks.loader_version.state, GameSetupCheckState::Failed);
+    assert!(
+        checks
+            .loader_version
+            .message
+            .contains("does not match f4se_1_11_250.dll version 0.7.10"),
+        "{}",
+        checks.loader_version.message
     );
 }

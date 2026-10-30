@@ -46,7 +46,8 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 
 - `XseType` - supported script-extender families and their naming helpers
 - `XseInfo` - simple installation-status payload for one game directory and XSE type
-- `detect_xse_version()` - version detection from a loader path plus sibling DLL filenames
+- `detect_xse_version()` - version detection from the loader executable's embedded PE version resource
+- `detect_xse_runtime_dll_version()` - version detection from one runtime DLL's embedded PE version resource
 - `is_xse_installed()` - loader existence check for a game directory
 - `get_xse_info()` - combined installation + optional version probe
 - `XseGameLocalFacts` - XSE's narrow input for config-owned Game Local facts (`docs_folder_xse`, `root_folder_docs`)
@@ -90,6 +91,7 @@ Important methods and traits:
 - `XseType::from_game_id(game_id) -> XseType`
 - `XseType::loader_name() -> &'static str`
 - `XseType::dll_prefix() -> &'static str`
+- `XseType::runtime_dll_name(major, minor, patch) -> String` - the runtime DLL built for one game runtime, for example `F4SE.runtime_dll_name(1, 11, 240) == "f4se_1_11_240.dll"`
 - `FromStr` with `type Err = XseError`
 
 Behavior worth knowing:
@@ -129,21 +131,22 @@ Behavior worth knowing:
 Source-visible flow:
 
 1. Fail with `XseError::NotFound` if `loader_path` does not exist.
-2. Read the loader's parent directory.
-3. Scan directory entries for filenames that:
-   - start with `xse_type.dll_prefix()`
-   - end with `.dll`
-4. Strip the prefix and `.dll`, then replace `_` with `.`.
-5. Parse the resulting string with `parse_version()`.
-6. Return the first parseable version found.
-7. If no parseable match is found, return `XseError::VersionDetectionFailed`.
+2. Read the loader's PE `VS_FIXEDFILEINFO` file version with `extract_pe_version()` from [`classic_shared_core::version::pe_version`](classic-shared-core.md#loose-versions-and-pe-helpers-version).
+3. Drop the leading component and use the remaining three as `major.minor.patch`.
+4. If the loader is not a readable PE file or carries no version resource, return `XseError::VersionDetectionFailed`.
 
 Important contributor details:
 
-- detection uses DLL filenames, not PE metadata and not log parsing
-- the loader filename itself is not parsed for version information
-- `parse_version()` comes from [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) and ignores a fourth version component, so `1_10_163_0` becomes semver `1.10.163`
-- directory iteration comes from `std::fs::read_dir()`, so if multiple matching DLLs exist, the returned version is simply the first parseable one encountered
+- every script extender stamps its binaries from one resource template, `FILEVERSION 0, major, minor, beta`, so the leading component is a placeholder zero: F4SE 0.6.23 is stamped `0.0.6.23` and SKSE64 2.2.6 is stamped `0.2.2.6`
+- sibling runtime DLLs such as `f4se_1_10_163.dll` are deliberately not consulted. Their filenames name the *game* runtime the build targets, not the extender's version, and one install can carry several of them. An older implementation parsed those filenames and reported the game version as the F4SE version
+- the loader's version is the version of the installed extender package; it is not the version of whichever runtime DLL the loader will inject (use `detect_xse_runtime_dll_version()` for that)
+- `xse_type` only feeds the diagnostic message
+
+## `detect_xse_runtime_dll_version()`
+
+`detect_xse_runtime_dll_version(dll_path, xse_type) -> XseResult<Version>` reads one runtime DLL's version exactly as `detect_xse_version()` reads the loader's: same `NotFound` and `VersionDetectionFailed` errors, same leading-placeholder conversion. Runtime DLLs carry the same stamp as their release's loader, so F4SE 0.7.9's `f4se_1_11_240.dll` reports `0.7.9`.
+
+Build `dll_path` from the game root and `XseType::runtime_dll_name()` for the detected game runtime. That DLL is the build that actually runs in the game. Game Setup Intake therefore uses its version for the `xse_version` check. A separate `xse_loader_version` check confirms that the loader is the release meant for that runtime, since each release's loader pairs with its own runtime DLLs. A leftover DLL for some other runtime is never read.
 
 ## `is_xse_installed()`
 
@@ -255,8 +258,8 @@ Variants:
 What contributors should know:
 
 - `FromStr for XseType` returns `InvalidType` for unknown names
-- `detect_xse_version()` returns `NotFound` when the loader path is absent and `VersionDetectionFailed` when no parseable matching DLL is found
-- `IoError` exists through `#[from] std::io::Error`, but the current `detect_xse_version()` implementation swallows `read_dir()` failure by using `if let Ok(entries) = ...`; not every directory-read problem becomes an error today
+- `detect_xse_version()` and `detect_xse_runtime_dll_version()` return `NotFound` when the path is absent and `VersionDetectionFailed` when the file cannot be read as a PE file or has no version resource
+- `IoError` exists through `#[from] std::io::Error`, but `detect_xse_version()` folds a loader read failure into `VersionDetectionFailed` rather than surfacing `IoError`
 - `PathError` is part of the public API; XSE Folder discovery uses `DocsPathFinder` but returns `None` rather than exposing path-discovery errors
 - `IncompatibleVersion` is public API surface, but current `src/lib.rs` does not construct it anywhere
 
@@ -284,7 +287,7 @@ Contributor note:
 
 Important direct dependencies:
 
-- `classic-shared-core` - provides `GameId` for `XseType::from_game_id()`, the `version::parse_version()` helper used by `detect_xse_version()`, and the `path_core::PathError` wrapped by `XseError::PathError`
+- `classic-shared-core` - provides `GameId` for `XseType::from_game_id()`, the `version::pe_version::extract_pe_version()` helper used by `detect_xse_version()`, and the `path_core::PathError` wrapped by `XseError::PathError`
 - `classic-path-core` - `DocsPathFinder` for XSE Folder discovery
 - `semver` - `XseInfo.version` and `detect_xse_version()` return type
 - `serde` - serialization derives on `XseType`
@@ -327,8 +330,7 @@ If the caller already has a loader path, call `detect_xse_version()` directly in
 
 - the full public surface is in `src/lib.rs`; there are no public modules to extend independently
 - `get_xse_info()` intentionally hides version-detection failures by returning `version: None` instead of an `XseError`
-- `detect_xse_version()` uses filename parsing only; it does not read PE metadata, registry data, or log content
-- if multiple matching DLLs exist beside the loader, the returned version depends on `read_dir()` iteration order
+- `detect_xse_version()` reads only the loader's PE version resource; it does not read runtime DLL filenames, registry data, or log content
 - `XseError::IncompatibleVersion` and `XseError::PathError` are public, but the current crate code does not visibly produce them in its main detection flow
 - version compatibility policy currently lives outside this crate; callers must bring their own expected-version data and compare it themselves
 - the public API still mentions several XSE families beyond Fallout 4, but many surrounding CLASSIC workflows remain Fallout 4-oriented

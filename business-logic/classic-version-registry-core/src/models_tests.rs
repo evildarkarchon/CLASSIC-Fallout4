@@ -335,3 +335,55 @@ fn test_version_info_crashgen_with_all_restricted_ranges() {
     assert_eq!(compatible.len(), 1);
     assert_eq!(compatible[0].version, "2.0.0");
 }
+
+fn ae_style_xse_config() -> XseConfig {
+    XseConfig::new("F4SE", "F4SE", "0.7.8", "f4se_loader.exe", 29).with_runtime_versions(vec![
+        // Deliberately out of order: the builder sorts by runtime.
+        (GameVersion::parse("1.11.240").unwrap(), "0.7.9".to_string()),
+        (GameVersion::parse("1.11.221").unwrap(), "0.7.8".to_string()),
+    ])
+}
+
+#[test]
+fn xse_expected_version_selects_the_release_for_the_installed_runtime() {
+    let xse = ae_style_xse_config();
+
+    // The build component never affects the match.
+    let runtime = GameVersion::parse("1.11.240.0").unwrap();
+    assert_eq!(xse.expected_version_for(Some(&runtime)), Some("0.7.9"));
+    let runtime = GameVersion::parse("1.11.221.7").unwrap();
+    assert_eq!(xse.expected_version_for(Some(&runtime)), Some("0.7.8"));
+
+    let runtimes: Vec<String> = xse
+        .runtime_versions
+        .iter()
+        .map(|(runtime, _)| runtime.to_string())
+        .collect();
+    assert_eq!(runtimes, ["1.11.221.0", "1.11.240.0"]);
+}
+
+#[test]
+fn xse_expected_version_has_no_answer_for_an_unlisted_runtime() {
+    // A newer runtime the registry has not recorded yet must not be compared
+    // against an older runtime's release.
+    let runtime = GameVersion::parse("1.11.250.0").unwrap();
+    assert_eq!(
+        ae_style_xse_config().expected_version_for(Some(&runtime)),
+        None
+    );
+}
+
+#[test]
+fn xse_expected_version_falls_back_to_compatible_version() {
+    // Unknown runtime (unreadable executable) on a multi-runtime entry.
+    assert_eq!(
+        ae_style_xse_config().expected_version_for(None),
+        Some("0.7.8")
+    );
+
+    // Single-runtime entries list no runtimes and always use compatible_version.
+    let og = XseConfig::new("F4SE", "F4SE", "0.6.23", "f4se_loader.exe", 29);
+    let runtime = GameVersion::parse("1.10.163.0").unwrap();
+    assert_eq!(og.expected_version_for(Some(&runtime)), Some("0.6.23"));
+    assert_eq!(og.expected_version_for(None), Some("0.6.23"));
+}

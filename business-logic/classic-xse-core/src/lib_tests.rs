@@ -77,6 +77,100 @@ fn test_xse_info_loader_path() {
 }
 
 #[test]
+fn xse_file_version_drops_the_placeholder_leading_component() {
+    // F4SE 0.6.23 and SKSE64 2.2.6 as stamped in their loaders' version resources.
+    assert_eq!(
+        xse_version_from_file_version((0, 0, 6, 23)),
+        Version::new(0, 6, 23)
+    );
+    assert_eq!(
+        xse_version_from_file_version((0, 2, 2, 6)),
+        Version::new(2, 2, 6)
+    );
+}
+
+#[test]
+fn detect_xse_version_reads_the_loader_version_resource() {
+    use classic_shared_core::version::pe_version::test_support::versioned_pe_bytes;
+
+    // A runtime DLL sits beside the loader, exactly as in a real install; its
+    // game-version filename must not leak into the result.
+    let root = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        root.path().join("f4se_loader.exe"),
+        versioned_pe_bytes((0, 0, 6, 23)),
+    )
+    .expect("write loader");
+    std::fs::write(root.path().join("f4se_1_10_163.dll"), b"").expect("write dll");
+
+    let version = detect_xse_version(&root.path().join("f4se_loader.exe"), XseType::F4SE)
+        .expect("version resource is readable");
+    assert_eq!(version, Version::new(0, 6, 23));
+
+    let info = get_xse_info(root.path(), XseType::F4SE);
+    assert!(info.installed);
+    assert_eq!(info.version, Some(Version::new(0, 6, 23)));
+}
+
+#[test]
+fn runtime_dll_name_uses_the_prefix_and_three_runtime_components() {
+    assert_eq!(
+        XseType::F4SE.runtime_dll_name(1, 10, 163),
+        "f4se_1_10_163.dll"
+    );
+    assert_eq!(
+        XseType::SKSE64.runtime_dll_name(1, 6, 1170),
+        "skse64_1_6_1170.dll"
+    );
+}
+
+#[test]
+fn detect_xse_runtime_dll_version_reads_the_dll_version_resource() {
+    use classic_shared_core::version::pe_version::test_support::versioned_pe_bytes;
+
+    let root = tempfile::tempdir().expect("tempdir");
+    let dll = root.path().join(XseType::F4SE.runtime_dll_name(1, 11, 240));
+    std::fs::write(&dll, versioned_pe_bytes((0, 0, 7, 9))).expect("write dll");
+
+    assert_eq!(
+        detect_xse_runtime_dll_version(&dll, XseType::F4SE).expect("readable"),
+        Version::new(0, 7, 9)
+    );
+
+    let missing = root.path().join(XseType::F4SE.runtime_dll_name(1, 11, 221));
+    assert!(matches!(
+        detect_xse_runtime_dll_version(&missing, XseType::F4SE),
+        Err(XseError::NotFound(_))
+    ));
+}
+
+#[test]
+fn detect_xse_version_ignores_runtime_dll_filenames() {
+    // Regression: the runtime DLL's filename names the game version it targets,
+    // so it must never be reported as the script extender's own version.
+    let root = tempfile::tempdir().expect("tempdir");
+    std::fs::write(root.path().join("f4se_loader.exe"), b"").expect("write loader");
+    std::fs::write(root.path().join("f4se_1_10_163.dll"), b"").expect("write dll");
+
+    let result = detect_xse_version(&root.path().join("f4se_loader.exe"), XseType::F4SE);
+    assert!(
+        matches!(result, Err(XseError::VersionDetectionFailed(_))),
+        "{result:?}"
+    );
+
+    let info = get_xse_info(root.path(), XseType::F4SE);
+    assert!(info.installed);
+    assert_eq!(info.version, None);
+}
+
+#[test]
+fn detect_xse_version_reports_a_missing_loader_as_not_found() {
+    let root = tempfile::tempdir().expect("tempdir");
+    let result = detect_xse_version(&root.path().join("f4se_loader.exe"), XseType::F4SE);
+    assert!(matches!(result, Err(XseError::NotFound(_))), "{result:?}");
+}
+
+#[test]
 fn docs_relative_path_uses_proton_safe_separator() {
     assert_eq!(docs_relative_path("Fallout4"), "My Games/Fallout4");
     assert_eq!(docs_relative_path("Fallout4VR"), "My Games/Fallout4VR");

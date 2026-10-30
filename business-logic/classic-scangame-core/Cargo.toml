@@ -45,6 +45,8 @@ scraper = { workspace = true }
 
 # Parsing and pattern matching
 regex = { workspace = true }
+# XSE loader / runtime DLL version comparison in Game Setup Intake
+semver = { workspace = true }
 memchr = { workspace = true }
 aho-corasick = { workspace = true }
 
@@ -77,6 +79,8 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+# Synthesizes version-stamped loader executables for XSE version tests.
+classic-shared-core = { path = "../../foundation/classic-shared-core", features = ["test-support"] }
 
 [target.'cfg(windows)'.dependencies]
 ba2 = { workspace = true }
