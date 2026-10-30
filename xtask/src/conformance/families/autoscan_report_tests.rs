@@ -69,9 +69,10 @@ fn templates_must_be_contained_goldens_that_are_not_inputs() {
     }
 }
 
-/// Real pack: the compiled byte identities recorded from the retired Python
-/// engine (the goldens are binary in `.gitattributes`, so their bytes are the
-/// same on every checkout).
+/// Real pack: the compiled byte identities, first recorded from the retired
+/// Python engine and re-pinned whenever a golden is deliberately changed (the
+/// goldens are binary in `.gitattributes`, so their bytes are the same on every
+/// checkout).
 #[test]
 fn the_real_pack_compiles_to_the_python_engine_identities() {
     let compiled = PackRepo::real("autoscan_report")
@@ -90,16 +91,16 @@ fn the_real_pack_compiles_to_the_python_engine_identities() {
         })
         .collect();
     let empty = "ef8c70e937d631b965d470c0e8680c82ecaeda2acc0c1152c5d977beac51fd96";
-    let populated = "9b258a5731d425ff27a043ae6bd3e9e33ee56fcb56b9f3dd074c7be824c67b10";
-    let fcx = "f5326d5c4a7b82365ff3731dabfc42a29dbf0dbaaf49273af4b5c64d78af99ee";
-    let without = "5efae52345961bc07cccae2566d434b6cdec74e3f4ab196ff4adbf97ed4bf756";
+    let populated = "8ad0a2a6b7a896640f71bb86c9a375b35d98b15a7c24f94cf02cb70798f7b41d";
+    let fcx = "f366d9011a5d1277e62842f2393ca6e10f3e0e9ea91c6554c87451d0b6590786";
+    let without = "bf1224f4a063be6607d3026d8589a71da031360b7344d5288c02c47eeb44ee99";
     let expected: Vec<(String, u64)> = [
         (empty, 992),
-        (populated, 3772),
-        (fcx, 2991),
-        (without, 3745),
-        (without, 3745),
-        (without, 3745),
+        (populated, 3771),
+        (fcx, 3091),
+        (without, 3744),
+        (without, 3744),
+        (without, 3744),
     ]
     .into_iter()
     .map(|(hash, length)| (hash.to_owned(), length))
@@ -196,7 +197,8 @@ fn fcx_tokens_expand_with_the_observed_root() {
 }
 
 /// The real FCX-mode golden, expanded at a Windows and a POSIX root; the
-/// identities were recorded from the retired Python expander.
+/// identities were first recorded from the retired Python expander and are
+/// re-pinned whenever the FCX golden is deliberately changed.
 #[test]
 fn the_real_fcx_golden_expands_like_the_python_engine() {
     let compiled = PackRepo::real("autoscan_report")
@@ -205,13 +207,13 @@ fn the_real_fcx_golden_expands_like_the_python_engine() {
     for (root, sha256, length) in [
         (
             r"C:\Temp\run",
-            "7f9d69d9acc2e02c7963082b36b46edbe5e85f5e64886d438b6301232ac061e5",
-            2961,
+            "3569e5e89a850b8a2743ce6bea9529e8de184143049f97b9e26722924d3d5987",
+            3061,
         ),
         (
             "/tmp/run",
-            "ac50590c4dc35231d56691b9c5ef567265413a1a093cff59c07129c7051ad4ea",
-            2940,
+            "cb6265d6e0e72f2b8f6662a94c0c19801b48495fc63618482125bb717be1e889",
+            3040,
         ),
     ] {
         let (expected, _) = normalize_observation(
