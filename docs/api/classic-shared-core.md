@@ -96,7 +96,7 @@ The sole owner of the domain-neutral loose version and PE helpers. See [Loose ve
 - `parse_version()`, `try_parse_version()`, `compare_versions()`, `format_version()`
 - `extract_version_from_filename()`, `extract_version_from_log()`, `extract_all_versions()`
 - `VersionError`, `VersionResult<T>`
-- public submodule `version::pe_version`: `is_valid_executable_path()`, `extract_pe_version()`, `PeVersionError`, `PeVersionResult<T>` (also re-exported at the `version` root)
+- public submodule `version::pe_version`: `is_valid_executable_path()`, `extract_pe_version()`, `PeVersionError`, `PeVersionResult<T>` (also re-exported at the `version` root), plus `version::pe_version::test_support` behind the `test-support` feature (see [Feature Flags](#feature-flags))
 
 ### `yaml`
 
@@ -963,6 +963,7 @@ Contributor-relevant feature flags from `Cargo.toml`:
 
 - default features: none
 - `gui-bridge` - enables `async_bridge`, pulling in optional `slint` and `tokio-util`
+- `test-support` - exposes `version::pe_version::test_support::versioned_pe_bytes(file_version)`, which builds a minimal, non-loadable PE32+ image whose only content is a `VS_VERSIONINFO` resource stamped with the given `(major, minor, patch, build)`. Enable it only from another crate's `[dev-dependencies]` (`classic-xse-core` and `classic-scangame-core` do) so tests can feed a real version resource to `extract_pe_version()` without committing binaries. The module is always compiled for this crate's own tests
 
 What `gui-bridge` changes:
 

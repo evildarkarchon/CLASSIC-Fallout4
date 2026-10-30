@@ -129,11 +129,11 @@
         "loaderName": "f4se_loader.exe",
         "dllPrefix": "f4se_",
         "installed": true,
-        "version": "1.10.163",
+        "version": null,
         "info": {
           "typeName": "F4SE",
           "installed": true,
-          "version": "1.10.163"
+          "version": null
         },
         "files": [
           {
@@ -236,11 +236,11 @@
         "loaderName": "f4sevr_loader.exe",
         "dllPrefix": "f4sevr_",
         "installed": true,
-        "version": "1.10.163",
+        "version": null,
         "info": {
           "typeName": "F4SEVR",
           "installed": true,
-          "version": "1.10.163"
+          "version": null
         },
         "files": [
           {
@@ -343,11 +343,11 @@
         "loaderName": "skse_loader.exe",
         "dllPrefix": "skse_",
         "installed": true,
-        "version": "1.10.163",
+        "version": null,
         "info": {
           "typeName": "SKSE",
           "installed": true,
-          "version": "1.10.163"
+          "version": null
         },
         "files": [
           {
@@ -450,11 +450,11 @@
         "loaderName": "skse64_loader.exe",
         "dllPrefix": "skse64_",
         "installed": true,
-        "version": "1.10.163",
+        "version": null,
         "info": {
           "typeName": "SKSE64",
           "installed": true,
-          "version": "1.10.163"
+          "version": null
         },
         "files": [
           {
@@ -557,11 +557,11 @@
         "loaderName": "sksevr_loader.exe",
         "dllPrefix": "sksevr_",
         "installed": true,
-        "version": "1.10.163",
+        "version": null,
         "info": {
           "typeName": "SKSEVR",
           "installed": true,
-          "version": "1.10.163"
+          "version": null
         },
         "files": [
           {
@@ -664,11 +664,11 @@
         "loaderName": "sfse_loader.exe",
         "dllPrefix": "sfse_",
         "installed": true,
-        "version": "1.10.163",
+        "version": null,
         "info": {
           "typeName": "SFSE",
           "installed": true,
-          "version": "1.10.163"
+          "version": null
         },
         "files": [
           {

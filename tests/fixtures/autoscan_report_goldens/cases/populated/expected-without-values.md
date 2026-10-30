@@ -54,12 +54,15 @@ second settings line with trailing spaces
 ### Checking For Mods That May Conflict With Each Other
 
 [!] CAUTION : Conflicting mods detected
-Alpha Conflict café ❌ CONFLICTS WITH : Beta Conflict 雪
-    Authored conflict line one
-Authored conflict line two with trailing spaces
-    Keep exactly one plugin.
-    Link: https://example.invalid/conflict
-    -----
+
+**Alpha Conflict café ❌ CONFLICTS WITH : Beta Conflict 雪**
+
+Authored conflict line one  
+Authored conflict line two with trailing spaces  
+Keep exactly one plugin.  
+Link: https://example.invalid/conflict  
+
+-----
 
 ### Checking For Mods That Can Cause Frequent Crashes
 

@@ -341,6 +341,20 @@ impl VersionRegistry {
                 .map(|v| v as u32)
                 .unwrap_or(0);
 
+            // Parse runtime_versions as a map of game runtime -> XSE release.
+            // Like the other XSE fields this is lenient: an unparseable runtime or
+            // an empty release is dropped rather than failing the whole entry.
+            let runtime_versions: Vec<(GameVersion, String)> = yaml_ops
+                .get_hashmap_value(&xse_yaml, "runtime_versions")
+                .into_iter()
+                .filter(|(_, xse_version)| !xse_version.trim().is_empty())
+                .filter_map(|(runtime, xse_version)| {
+                    GameVersion::parse(&runtime)
+                        .ok()
+                        .map(|runtime| (runtime, xse_version.trim().to_string()))
+                })
+                .collect();
+
             XseConfig::with_script_hashes(
                 acronym,
                 full_name,
@@ -349,6 +363,7 @@ impl VersionRegistry {
                 file_count,
                 script_hashes,
             )
+            .with_runtime_versions(runtime_versions)
         });
 
         // Parse compatible range

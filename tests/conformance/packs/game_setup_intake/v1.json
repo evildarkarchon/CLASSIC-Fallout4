@@ -51,7 +51,7 @@
       "expected": {
         "status": "ready",
         "hasErrors": true,
-        "totalChecks": 11,
+        "totalChecks": 12,
         "failedChecks": 1,
         "actionCount": 0,
         "pathUpdateCount": 0,
@@ -96,7 +96,7 @@
       "expected": {
         "status": "ready",
         "hasErrors": true,
-        "totalChecks": 11,
+        "totalChecks": 12,
         "failedChecks": 1,
         "actionCount": 0,
         "pathUpdateCount": 1,

@@ -101,6 +101,23 @@ fn append_mod_found_entry(lines: &mut Vec<String>, plugin_ids: &[String], title:
     }
 }
 
+/// Appends each line of authored `text` with a Markdown hard break (two trailing spaces).
+///
+/// Surrounding blank lines are dropped, and each line's own leading and trailing
+/// whitespace is replaced. That way authored indentation cannot open a code block
+/// and authored trailing spaces cannot stack onto the hard break. An interior blank
+/// line still ends the paragraph, as the author wrote it.
+fn push_hard_break_lines(lines: &mut Vec<String>, text: &str) {
+    for line in text.trim().lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            lines.push("\n".to_string());
+        } else {
+            lines.push(format!("{line}  \n"));
+        }
+    }
+}
+
 /// Per-log facts that affect Autoscan Report rendering.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct AutoscanReportFacts {
@@ -507,25 +524,34 @@ impl AutoscanReportAssembler {
     }
 
     /// Renders matched conflict guidance without leaking formatting into the analyzer.
+    ///
+    /// Each conflict renders as a bold header paragraph followed by a body paragraph
+    /// whose lines end in Markdown hard breaks (two trailing spaces). Discord's renderer
+    /// now folds bare single newlines into one line, so without the hard breaks the
+    /// header, description, fix and link collapse into a single sentence. The body is
+    /// not indented: after a blank line, a four-space indent would open a code block.
     fn render_mod_conflicts(result: &ModGuidanceAnalysisResult) -> Vec<String> {
         if result.conflicts.is_empty() {
             return Vec::new();
         }
 
-        let mut lines = vec!["[!] CAUTION : Conflicting mods detected\n".to_string()];
+        let mut lines = vec!["[!] CAUTION : Conflicting mods detected\n\n".to_string()];
         for conflict in &result.conflicts {
             lines.push(format!(
-                "{} ❌ CONFLICTS WITH : {}\n",
-                conflict.name_a, conflict.name_b
+                "**{} ❌ CONFLICTS WITH : {}**\n\n",
+                conflict.name_a.trim(),
+                conflict.name_b.trim()
             ));
-            lines.push(format!("    {}\n", conflict.description));
+            push_hard_break_lines(&mut lines, &conflict.description);
             if let Some(fix) = &conflict.fix {
-                lines.push(format!("    {fix}\n"));
+                push_hard_break_lines(&mut lines, fix);
             }
             if let Some(link) = &conflict.link {
-                lines.push(format!("    Link: {link}\n"));
+                lines.push(format!("Link: {}  \n", link.trim()));
             }
-            lines.push("    -----\n\n".to_string());
+            // The blank line keeps `-----` from becoming a setext heading underline
+            // for the link line in CommonMark viewers.
+            lines.push("\n-----\n\n".to_string());
         }
         lines
     }

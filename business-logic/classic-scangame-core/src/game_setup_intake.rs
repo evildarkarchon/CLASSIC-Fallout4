@@ -16,7 +16,10 @@ use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, MatchConfidence, VersionInfo, VersionRegistry,
     VersionRegistryScope,
 };
-use classic_xse_core::{XseType, get_xse_info, xse_folder_name};
+use classic_xse_core::{
+    XseError, XseType, detect_xse_runtime_dll_version, get_xse_info, xse_folder_name,
+};
+use semver::Version;
 
 /// Top-level state for a Game Setup Intake run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -92,8 +95,13 @@ pub enum GameSetupCheckKind {
     DocumentsFolder,
     /// XSE loader installation state.
     XseLoader,
-    /// XSE loader version compatibility.
+    /// XSE version compatibility, read from the runtime DLL the detected game
+    /// runtime loads (for example `f4se_1_11_240.dll`).
     XseVersion,
+    /// XSE loader version sanity: the loader must be the release meant for the
+    /// detected game runtime, since each release's loader pairs with its own
+    /// runtime DLLs.
+    XseLoaderVersion,
     /// Address Library file state.
     AddressLibrary,
     /// XSE script file hashes.
@@ -114,6 +122,7 @@ impl GameSetupCheckKind {
             Self::DocumentsFolder => "documents_folder",
             Self::XseLoader => "xse_loader",
             Self::XseVersion => "xse_version",
+            Self::XseLoaderVersion => "xse_loader_version",
             Self::AddressLibrary => "address_library",
             Self::XseScriptHashes => "xse_script_hashes",
         }
@@ -450,7 +459,7 @@ impl GameSetupIntake {
             path_updates.push(GameSetupPathUpdate::new("docs_root", docs_root.clone()));
         }
 
-        run_executable_checks(
+        let detected_runtime = run_executable_checks(
             &paths,
             version_context.info.as_ref(),
             hash_scope,
@@ -465,6 +474,7 @@ impl GameSetupIntake {
             self.game_id,
             &paths,
             version_context.info.as_ref(),
+            detected_runtime.as_ref(),
             registry,
             hash_scope,
             &mut checks,
@@ -903,19 +913,24 @@ fn docs_relative_path(docs_name: &str) -> String {
     format!("My Games/{docs_name}")
 }
 
+/// Run the game-executable checks (PE version, hash, install location).
+///
+/// Returns the executable's detected PE version, the installed game runtime, so
+/// later checks can use it without re-reading the executable. `None` when the
+/// executable is unresolved, missing, or its version resource is unreadable.
 fn run_executable_checks(
     paths: &GameSetupResolvedPaths,
     info: Option<&VersionInfo>,
     hash_scope: &FileHashScope,
     checks: &mut Vec<GameSetupCheck>,
-) {
+) -> Option<RegistryGameVersion> {
     let Some(exe_path) = &paths.game_exe_path else {
         checks.push(GameSetupCheck::new(
             GameSetupCheckKind::ExecutableVersion,
             GameSetupCheckState::Skipped,
             "Executable checks need a resolved game root.",
         ));
-        return;
+        return None;
     };
 
     if !exe_path.exists() {
@@ -924,18 +939,20 @@ fn run_executable_checks(
             GameSetupCheckState::Failed,
             format!("Game executable not found at {}.", exe_path.display()),
         ));
-        return;
+        return None;
     }
 
-    match (extract_pe_version(exe_path), info) {
-        (Ok((major, minor, patch, build)), Some(info)) => {
-            let detected = RegistryGameVersion::new(
-                u32::from(major),
-                u32::from(minor),
-                u32::from(patch),
-                u32::from(build),
-            );
-            let state = if info.is_compatible_with(&detected) {
+    let detected_runtime = extract_pe_version(exe_path).map(|(major, minor, patch, build)| {
+        RegistryGameVersion::new(
+            u32::from(major),
+            u32::from(minor),
+            u32::from(patch),
+            u32::from(build),
+        )
+    });
+    match (&detected_runtime, info) {
+        (Ok(detected), Some(info)) => {
+            let state = if info.is_compatible_with(detected) {
                 GameSetupCheckState::Passed
             } else {
                 GameSetupCheckState::Failed
@@ -946,13 +963,7 @@ fn run_executable_checks(
                 format!("Detected executable version {detected}."),
             ));
         }
-        (Ok((major, minor, patch, build)), None) => {
-            let detected = RegistryGameVersion::new(
-                u32::from(major),
-                u32::from(minor),
-                u32::from(patch),
-                u32::from(build),
-            );
+        (Ok(detected), None) => {
             checks.push(GameSetupCheck::new(
                 GameSetupCheckKind::ExecutableVersion,
                 GameSetupCheckState::Unsupported,
@@ -1013,6 +1024,8 @@ fn run_executable_checks(
             "Game executable is outside Program Files.".to_string()
         },
     ));
+
+    detected_runtime.ok()
 }
 
 fn run_documents_checks(
@@ -1061,10 +1074,16 @@ fn run_documents_checks(
     }
 }
 
+/// Run the XSE loader, version, Address Library and script-hash checks.
+///
+/// `detected_runtime` is the game executable's PE version. It selects which XSE
+/// release the Version Registry expects, because script extenders ship one
+/// release per game runtime.
 fn run_xse_checks(
     game_id: GameId,
     paths: &GameSetupResolvedPaths,
     info: Option<&VersionInfo>,
+    detected_runtime: Option<&RegistryGameVersion>,
     registry: &VersionRegistry,
     hash_scope: &FileHashScope,
     checks: &mut Vec<GameSetupCheck>,
@@ -1098,52 +1117,248 @@ fn run_xse_checks(
         },
     ));
 
-    match (
-        xse_info.version.as_ref(),
-        info.and_then(|info| info.xse.as_ref()),
-    ) {
-        (Some(actual), Some(expected)) => {
-            let state = parse_version(&expected.compatible_version)
-                .ok()
-                .map(|expected_version| {
-                    if &expected_version == actual {
-                        GameSetupCheckState::Passed
-                    } else {
-                        GameSetupCheckState::Failed
-                    }
-                })
-                .unwrap_or(GameSetupCheckState::Unsupported);
-            checks.push(GameSetupCheck::new(
-                GameSetupCheckKind::XseVersion,
-                state,
-                format!(
-                    "Detected {} version {}; expected {}.",
-                    expected.acronym, actual, expected.compatible_version
-                ),
-            ));
-        }
-        (None, Some(expected)) if xse_info.installed => checks.push(GameSetupCheck::new(
-            GameSetupCheckKind::XseVersion,
-            GameSetupCheckState::Failed,
-            format!(
-                "{} is installed, but its version could not be detected.",
-                expected.acronym
-            ),
-        )),
-        (_, None) => checks.push(GameSetupCheck::new(
-            GameSetupCheckKind::XseVersion,
-            GameSetupCheckState::Unsupported,
-            "No Version Registry XSE expectation is available for this game version.",
-        )),
-        (None, Some(_)) => checks.push(GameSetupCheck::new(
+    // The runtime DLL is named after the game runtime, so it is located from the
+    // game executable's PE version. When that is unreadable, the selected
+    // registry entry's own game version is the best available stand-in.
+    let runtime = detected_runtime
+        .copied()
+        .or_else(|| info.map(|info| info.version));
+    let expected = info.and_then(|info| info.xse.as_ref());
+    let expected_release = expected
+        .and_then(|xse| xse.expected_version_for(runtime.as_ref()))
+        .and_then(|release| parse_version(release).ok());
+
+    if xse_info.installed {
+        let runtime_dll = run_xse_runtime_dll_check(
+            game_root,
+            xse_type,
+            runtime.as_ref(),
+            expected.is_some(),
+            expected_release.as_ref(),
+            checks,
+        );
+        run_xse_loader_version_check(
+            xse_type,
+            xse_info.version.as_ref(),
+            runtime.as_ref(),
+            expected_release.as_ref(),
+            runtime_dll.as_ref(),
+            checks,
+        );
+    } else {
+        checks.push(GameSetupCheck::new(
             GameSetupCheckKind::XseVersion,
             GameSetupCheckState::Skipped,
             "XSE version check skipped because the loader is missing.",
-        )),
+        ));
+        checks.push(GameSetupCheck::new(
+            GameSetupCheckKind::XseLoaderVersion,
+            GameSetupCheckState::Skipped,
+            "XSE loader version check skipped because the loader is missing.",
+        ));
     }
 
     run_address_library_check(paths, info, registry, checks);
     run_xse_script_hash_checks(paths, info, hash_scope, checks);
+}
+
+/// A runtime DLL found for the detected game runtime, with its XSE version.
+struct XseRuntimeDll {
+    name: String,
+    version: Version,
+}
+
+/// Format a game runtime as the three components XSE releases name it by.
+fn runtime_label(runtime: &RegistryGameVersion) -> String {
+    format!("{}.{}.{}", runtime.major, runtime.minor, runtime.patch)
+}
+
+/// Check the XSE version of the runtime DLL the detected game runtime loads.
+///
+/// That DLL is the XSE build that actually runs in the game, so its version is
+/// the one compared against the Version Registry release for the runtime.
+/// `expected_release` is `None` when the registry records no release for the
+/// runtime (or its string does not parse). Returns the DLL when its version was
+/// read, for [`run_xse_loader_version_check`].
+fn run_xse_runtime_dll_check(
+    game_root: &Path,
+    xse_type: XseType,
+    runtime: Option<&RegistryGameVersion>,
+    has_xse_expectation: bool,
+    expected_release: Option<&Version>,
+    checks: &mut Vec<GameSetupCheck>,
+) -> Option<XseRuntimeDll> {
+    let acronym = xse_type.as_str();
+    let Some(runtime) = runtime else {
+        checks.push(GameSetupCheck::new(
+            GameSetupCheckKind::XseVersion,
+            GameSetupCheckState::Skipped,
+            "XSE version check needs the game runtime version to locate the runtime DLL.",
+        ));
+        return None;
+    };
+    let label = runtime_label(runtime);
+    let name = xse_type.runtime_dll_name(runtime.major, runtime.minor, runtime.patch);
+
+    let version = match detect_xse_runtime_dll_version(&game_root.join(&name), xse_type) {
+        Ok(version) => version,
+        Err(XseError::NotFound(_)) => {
+            checks.push(GameSetupCheck::new(
+                GameSetupCheckKind::XseVersion,
+                GameSetupCheckState::Failed,
+                format!(
+                    "{acronym} runtime DLL {name} was not found; the installed {acronym} does not \
+                     support game runtime {label}, or its installation is incomplete."
+                ),
+            ));
+            return None;
+        }
+        Err(_) => {
+            checks.push(GameSetupCheck::new(
+                GameSetupCheckKind::XseVersion,
+                GameSetupCheckState::Failed,
+                format!(
+                    "{acronym} runtime DLL {name} is installed, but its version could not be detected."
+                ),
+            ));
+            return None;
+        }
+    };
+
+    let (state, message) = match expected_release {
+        Some(expected) => (
+            if &version == expected {
+                GameSetupCheckState::Passed
+            } else {
+                GameSetupCheckState::Failed
+            },
+            format!(
+                "Detected {acronym} version {version} in {name}; expected {expected} for game \
+                 runtime {label}."
+            ),
+        ),
+        None if has_xse_expectation => (
+            GameSetupCheckState::Unsupported,
+            format!(
+                "Detected {acronym} version {version} in {name}, but the Version Registry \
+                 records no {acronym} release for game runtime {label}."
+            ),
+        ),
+        None => (
+            GameSetupCheckState::Unsupported,
+            format!(
+                "Detected {acronym} version {version} in {name}, but no Version Registry XSE \
+                 expectation is available for this game version."
+            ),
+        ),
+    };
+    checks.push(GameSetupCheck::new(
+        GameSetupCheckKind::XseVersion,
+        state,
+        message,
+    ));
+    Some(XseRuntimeDll { name, version })
+}
+
+/// Check that the XSE loader is the release meant for the detected game runtime.
+///
+/// Each release's loader pairs with its own runtime DLLs. A loader from another
+/// release, left by a partial update or by a different game version's install,
+/// is a setup error even when the runtime DLL itself is right. The loader is
+/// compared against the registry release for the runtime. When the registry
+/// records none, it is compared against the runtime DLL, so the two at least
+/// come from one release.
+fn run_xse_loader_version_check(
+    xse_type: XseType,
+    loader_version: Option<&Version>,
+    runtime: Option<&RegistryGameVersion>,
+    expected_release: Option<&Version>,
+    runtime_dll: Option<&XseRuntimeDll>,
+    checks: &mut Vec<GameSetupCheck>,
+) {
+    /// What the loader version is compared against, in order of preference.
+    enum Reference<'a> {
+        Release(&'a Version),
+        RuntimeDll(&'a XseRuntimeDll),
+    }
+
+    let acronym = xse_type.as_str();
+    let reference = match (expected_release, runtime_dll) {
+        (Some(expected), _) => Reference::Release(expected),
+        (None, Some(dll)) => Reference::RuntimeDll(dll),
+        (None, None) => {
+            // With nothing to compare against there is no expectation to fail,
+            // even when the loader's version is unreadable; this matches how an
+            // unresolved game version is reported.
+            checks.push(GameSetupCheck::new(
+                GameSetupCheckKind::XseLoaderVersion,
+                GameSetupCheckState::Unsupported,
+                format!(
+                    "No Version Registry release or runtime DLL is available to check the \
+                     {acronym} loader version against."
+                ),
+            ));
+            return;
+        }
+    };
+    let Some(loader_version) = loader_version else {
+        checks.push(GameSetupCheck::new(
+            GameSetupCheckKind::XseLoaderVersion,
+            GameSetupCheckState::Failed,
+            format!("{acronym} loader is installed, but its version could not be detected."),
+        ));
+        return;
+    };
+    let for_runtime = runtime
+        .map(|runtime| format!(" for game runtime {}", runtime_label(runtime)))
+        .unwrap_or_default();
+
+    let (state, message) = match reference {
+        Reference::Release(expected) => {
+            if loader_version == expected {
+                (
+                    GameSetupCheckState::Passed,
+                    format!(
+                        "{acronym} loader version {loader_version} is the release{for_runtime}."
+                    ),
+                )
+            } else {
+                (
+                    GameSetupCheckState::Failed,
+                    format!(
+                        "{acronym} loader version {loader_version} is not {expected}, the \
+                     release{for_runtime}; reinstall {acronym} {expected} so the loader and \
+                     runtime DLL come from the same release."
+                    ),
+                )
+            }
+        }
+        Reference::RuntimeDll(dll) => {
+            if loader_version == &dll.version {
+                (
+                    GameSetupCheckState::Passed,
+                    format!(
+                        "{acronym} loader version {loader_version} matches {}.",
+                        dll.name
+                    ),
+                )
+            } else {
+                (
+                    GameSetupCheckState::Failed,
+                    format!(
+                        "{acronym} loader version {loader_version} does not match {} version {}; \
+                     reinstall {acronym} so the loader and runtime DLL come from the same release.",
+                        dll.name, dll.version
+                    ),
+                )
+            }
+        }
+    };
+    checks.push(GameSetupCheck::new(
+        GameSetupCheckKind::XseLoaderVersion,
+        state,
+        message,
+    ));
 }
 
 fn run_address_library_check(

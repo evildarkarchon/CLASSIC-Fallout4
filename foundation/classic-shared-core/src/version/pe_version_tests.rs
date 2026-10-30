@@ -93,3 +93,14 @@ fn test_extract_pe_version_error_messages() {
         "unexpected message: {invalid}"
     );
 }
+
+/// The test-support builder yields a PE whose version resource round-trips, so
+/// other crates can rely on it in place of committed binaries.
+#[test]
+fn test_extract_pe_version_reads_a_synthesized_version_resource() {
+    for version in [(0, 0, 6, 23), (1, 10, 163, 0), (0xFFFF, 1, 0xFFFF, 2)] {
+        let temp = tempfile::NamedTempFile::with_suffix(".exe").unwrap();
+        std::fs::write(temp.path(), test_support::versioned_pe_bytes(version)).unwrap();
+        assert_eq!(extract_pe_version(temp.path()).unwrap(), version);
+    }
+}

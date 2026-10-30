@@ -289,7 +289,7 @@ When XSE output looks inconsistent:
 1. confirm whether the input path is a loader path or a game root; the bridge uses both shapes in different functions
 2. check whether the frontend passed a valid XSE type string
 3. remember that `is_xse_installed_check()` only checks loader existence
-4. remember that `detect_xse_version_string()` depends on sibling DLL filenames, not PE metadata or registry expectations
+4. remember that `detect_xse_version_string()` reads the loader's PE version resource, not sibling DLL filenames or registry expectations
 5. if install is true but version is empty, that is source-backed behavior in lower layers; loader detection and version detection are separate
 
 ## Game Setup Intake flow

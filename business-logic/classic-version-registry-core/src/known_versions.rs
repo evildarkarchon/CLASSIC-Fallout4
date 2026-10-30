@@ -32,12 +32,13 @@ impl VersionRegistry {
             })
     }
 
-    /// Report whether `version` equals the F4SE version a non-VR Fallout 4
+    /// Report whether `version` equals an F4SE version a non-VR Fallout 4
     /// entry declares as compatible.
     ///
-    /// Each entry's `xse.compatible_version` string is parsed with the
-    /// lenient shared-core [`try_parse_version`]; entries without an XSE
-    /// section or with an unparseable string never match.
+    /// Each entry contributes its `xse.compatible_version` plus every release
+    /// in `xse.runtime_versions`, each parsed with the lenient shared-core
+    /// [`try_parse_version`]; entries without an XSE section and unparseable
+    /// strings never match.
     ///
     /// [`try_parse_version`]: classic_shared_core::version::try_parse_version
     #[must_use]
@@ -45,9 +46,14 @@ impl VersionRegistry {
         self.get_all_for_game("Fallout4", Some(false))
             .into_iter()
             .filter_map(|info| info.xse.as_ref())
-            .filter_map(|xse| {
-                classic_shared_core::version::try_parse_version(&xse.compatible_version)
+            .flat_map(|xse| {
+                std::iter::once(xse.compatible_version.as_str()).chain(
+                    xse.runtime_versions
+                        .iter()
+                        .map(|(_, xse_version)| xse_version.as_str()),
+                )
             })
+            .filter_map(classic_shared_core::version::try_parse_version)
             .any(|parsed| parsed == *version)
     }
 }
