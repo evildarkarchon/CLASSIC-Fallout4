@@ -68,11 +68,7 @@ pub fn is_restricted_path(path: &Path) -> bool {
     }
 
     // Check if it's a root directory (e.g., C:\, D:\, /)
-    if path.parent().is_none() || path.components().count() <= 2 {
-        return true;
-    }
-
-    false
+    path.parent().is_none() || path.components().count() <= 2
 }
 
 /// Validate a custom scan path.
