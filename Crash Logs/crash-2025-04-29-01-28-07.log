@@ -237,7 +237,7 @@ STACK:
 	[RSP+348 ] 0x7FFB1D770030     (void* -> f4se_1_10_163.dll+0050030	cmp [rax+0x28], eax)
 	[RSP+350 ] 0x7FFB1D7B1A70     (char*) "%s
 "
-	[RSP+358 ] 0x7FFB1D7EB770     (char*) "full save path: C:\Users\evild\Documents\My Games\Fallout4\Saves\\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.f4se"
+	[RSP+358 ] 0x7FFB1D7EB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.f4se"
 	[RSP+360 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
 	[RSP+368 ] 0x0                (size_t) [0]
 	[RSP+370 ] 0x0                (size_t) [0]
@@ -302,7 +302,7 @@ STACK:
 	[RSP+548 ] 0x7FFB36D7329E     (void* -> usvfs_x64.dll+00B329E	mov rax, rbx)
 	[RSP+550 ] 0x7FFC3A2F8869     (void* -> KERNELBASE.dll+0078869	nop [rax+rax*1], eax)
 	[RSP+558 ] 0x240677EF19       (void*)
-	[RSP+560 ] 0x240677F1E0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+560 ] 0x240677F1E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+568 ] 0x240677EEB0       (void*)
 	[RSP+570 ] 0x0                (size_t) [0]
 	[RSP+578 ] 0x7FFC3A2CD5ED     (void* -> KERNELBASE.dll+004D5ED	nop [rax+rax*1], eax)
@@ -333,15 +333,15 @@ STACK:
 	[RSP+640 ] 0x10000325F        (size_t) [4294980191]
 	[RSP+648 ] 0x7FFC3CBBC190     (void* -> ntdll.dll+015C190	jmp 0x00007FFC00020008)
 	[RSP+650 ] 0x7FFC3CBBC190     (void* -> ntdll.dll+015C190	jmp 0x00007FFC00020008)
-	[RSP+658 ] 0x240677F1E0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+658 ] 0x240677F1E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+660 ] 0x16B35061150      (BSFile*)
 	[RSP+668 ] 0x7FFC000200A1     (void*)
 	[RSP+670 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
 	[RSP+678 ] 0x0                (size_t) [0]
 	[RSP+680 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
-	[RSP+688 ] 0x16B350611BC      (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+688 ] 0x16B350611BC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+690 ] 0x0                (size_t) [0]
-	[RSP+698 ] 0x240677F1E0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+698 ] 0x240677F1E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+6A0 ] 0x0                (size_t) [0]
 	[RSP+6A8 ] 0x0                (size_t) [0]
 	[RSP+6B0 ] 0x246              (size_t) [582]
@@ -349,7 +349,7 @@ STACK:
 	[RSP+6C0 ] 0x0                (size_t) [0]
 	[RSP+6C8 ] 0x1683D03EDA0      (void*)
 	[RSP+6D0 ] 0x16B35061150      (BSFile*)
-	[RSP+6D8 ] 0x240677F1E0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+6D8 ] 0x240677F1E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+6E0 ] 0x0                (size_t) [0]
 	[RSP+6E8 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
 	[RSP+6F0 ] 0x0                (size_t) [0]
@@ -364,7 +364,7 @@ STACK:
 	[RSP+738 ] 0x7FF757FB525E     (void* -> Fallout4.exe+1B5525E	mov rbp, [rsp+0x60] |  BSFile::Open(bool,bool)_1B5525E)
 	[RSP+740 ] 0x16B35061150      (BSFile*)
 	[RSP+748 ] 0x0                (size_t) [0]
-	[RSP+750 ] 0x240677F1E0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+750 ] 0x240677F1E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+758 ] 0x0                (size_t) [0]
 	[RSP+760 ] 0x200              (size_t) [512]
 	[RSP+768 ] 0x0                (size_t) [0]
@@ -372,16 +372,16 @@ STACK:
 	[RSP+778 ] 0x240677F100       (void*)
 	[RSP+780 ] 0x1                (size_t) [1]
 	[RSP+788 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
-	[RSP+790 ] 0x240677F1E0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+790 ] 0x240677F1E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+798 ] 0x7FF757FB4D45     (void* -> Fallout4.exe+1B54D45	test ebp, ebp |  BSFile::BSFile(char*,NiFile::OpenMode,unsigned___int64,bool)_1B54D45)
 	[RSP+7A0 ] 0x1                (size_t) [1]
 	[RSP+7A8 ] 0x16B35061150      (BSFile*)
-	[RSP+7B0 ] 0x16B350611BC      (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+7B0 ] 0x16B350611BC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+7B8 ] 0x4                (size_t) [4]
 	[RSP+7C0 ] 0x1                (size_t) [1]
 	[RSP+7C8 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
 	[RSP+7D0 ] 0xFFFFFFFF         (size_t) [4294967295]
-	[RSP+7D8 ] 0x240677F1E0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
+	[RSP+7D8 ] 0x240677F1E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2.fos.tmp"
 	[RSP+7E0 ] 0x1                (size_t) [1]
 	[RSP+7E8 ] 0x7FF75713A38C     (void* -> Fallout4.exe+0CDA38C	mov rdi, rax |  BGSSaveLoadFile::BGSSaveLoadFile(char*,bool,uint)_CDA38C)
 	[RSP+7F0 ] 0x16B350602E0      (char*) "Autosave10_E320C381_426565_Commonwealth_000222_20250429012806_11_2"

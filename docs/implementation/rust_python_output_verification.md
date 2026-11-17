@@ -23,7 +23,7 @@ Testing Rust Parser...
 ✅ IDENTICAL: Parser outputs match exactly
 ```
 
-**Test Log**: `Examples/crash-2023-09-10-12-08-20 magnificent069.log`
+**Test Log**: `sample_logs/FO4/crash-2023-09-10-12-08-20 sample-1cf5c2ff.log`
 
 ### What Was Tested
 

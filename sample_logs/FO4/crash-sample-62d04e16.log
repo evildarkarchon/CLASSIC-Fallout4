@@ -332,7 +332,7 @@ ull save path: C:\users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Exitsave0
 	[RSP+5E0] 0x17E39F100        (void*)
 	[RSP+5E8] 0x6FFFEE195270     (void* -> f4se_1_10_984.dll+00C5270	jo 0x00006FFFEE1952DD)
 	[RSP+5F0] 0x3C4400           (void*)
-	[RSP+5F8] 0x3B5801           (char*) "INECONFIGDIR=\??\Z:\home\niko\.local\share\Steam\steamapps\compatdata\377160\pfx"
+	[RSP+5F8] 0x3B5801           (char*) "INECONFIGDIR=\??\Z:\home\<USER>\.local\share\Steam\steamapps\compatdata\377160\pfx"
 	[RSP+600] 0x17E39F600        (void*)
 	[RSP+608] 0x20D440B00        (void*)
 	[RSP+610] 0x6FFFEE1950E8     (void* -> f4se_1_10_984.dll+00C50E8	pushfq)

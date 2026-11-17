@@ -163,7 +163,7 @@ STACK:
 	[RSP+248 ] 0xFFFFFFFF00000000 (size_t)
 	[RSP+250 ] 0x1                (size_t)
 	[RSP+258 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+260 ] 0x67AE0FDF40       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.txt"
+	[RSP+260 ] 0x67AE0FDF40       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.txt"
 	[RSP+268 ] 0x7FF7A4844D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+270 ] 0x1                (size_t)
 	[RSP+278 ] 0xFFFFFF00         (size_t)
@@ -174,7 +174,7 @@ STACK:
 		Flags: 0x0000400A
 		Form ID: 0xFF002237
 		Form Type: 22
-	[RSP+298 ] 0x67AE0FE080       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos"
+	[RSP+298 ] 0x67AE0FE080       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos"
 	[RSP+2A0 ] 0x0                (size_t)
 	[RSP+2A8 ] 0x2                (size_t)
 	[RSP+2B0 ] 0x67AE0FE160       (void*)
@@ -290,21 +290,21 @@ STACK:
 	[RSP+5E0 ] 0x20700000000      (size_t)
 	[RSP+5E8 ] 0x0                (size_t)
 	[RSP+5F0 ] 0x92AB67DF07A9     (size_t)
-	[RSP+5F8 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+5F8 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+600 ] 0x0                (size_t)
 	[RSP+608 ] 0x7FFA8BD2BCEF     (void* -> usvfs_x64.dll+009BCEF)
 	[RSP+610 ] 0x0                (size_t)
 	[RSP+618 ] 0x7FFAD8D8FC50     (void* -> ntdll.dll+009FC50)
 	[RSP+620 ] 0x7FFAD8D8FC50     (void* -> ntdll.dll+009FC50)
-	[RSP+628 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+628 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+630 ] 0x2091B610100      (BSFile*)
 	[RSP+638 ] 0x7FFAC00200A1     (void*)
 	[RSP+640 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+648 ] 0x10000000         (size_t)
 	[RSP+650 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+658 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+658 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+660 ] 0x0                (size_t)
-	[RSP+668 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+668 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+670 ] 0x174              (size_t)
 	[RSP+678 ] 0x208FCC5A800      (Script*)
 		File: ""
@@ -316,7 +316,7 @@ STACK:
 	[RSP+690 ] 0x0                (size_t)
 	[RSP+698 ] 0x20782DF5380      (void*)
 	[RSP+6A0 ] 0x2091B610100      (BSFile*)
-	[RSP+6A8 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+6A8 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+6B0 ] 0x0                (size_t)
 	[RSP+6B8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6C0 ] 0x0                (size_t)
@@ -326,12 +326,12 @@ STACK:
 	[RSP+6E0 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6E8 ] 0xFFFFFFFF00000000 (size_t)
 	[RSP+6F0 ] 0x0                (size_t)
-	[RSP+6F8 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+6F8 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+700 ] 0x1                (size_t)
 	[RSP+708 ] 0x7FF7A484525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+710 ] 0x2091B610100      (BSFile*)
 	[RSP+718 ] 0x0                (size_t)
-	[RSP+720 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+720 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+728 ] 0x92CCC9D0E6790000 (size_t)
 	[RSP+730 ] 0x200              (size_t)
 	[RSP+738 ] 0x0                (size_t)
@@ -339,16 +339,16 @@ STACK:
 	[RSP+748 ] 0xFFFFFFFF00000000 (size_t)
 	[RSP+750 ] 0x20A00000001      (void*)
 	[RSP+758 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+760 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+760 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+768 ] 0x7FF7A4844D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+770 ] 0x1                (size_t)
 	[RSP+778 ] 0x2091B610100      (BSFile*)
-	[RSP+780 ] 0x2091B61016C      (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+780 ] 0x2091B61016C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+788 ] 0x7FF9CBA0C1EC     (void* -> Buffout4.dll+004C1EC)
 	[RSP+790 ] 0x1                (size_t)
 	[RSP+798 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7A0 ] 0xFFFFFFFF         (size_t)
-	[RSP+7A8 ] 0x67AE0FE480       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
+	[RSP+7A8 ] 0x67AE0FE480       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ui_issue.fos.tmp"
 	[RSP+7B0 ] 0x1                (size_t)
 	[RSP+7B8 ] 0x7FF7A39CA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7C0 ] 0x20AD8018680      (char*) "ui_issue"

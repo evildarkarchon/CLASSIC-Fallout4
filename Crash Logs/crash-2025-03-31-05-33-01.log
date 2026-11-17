@@ -252,7 +252,7 @@ STACK:
 	[RSP+340 ] 0x7FFE64458AE0     (char*) "C:\Modding\Instances\FO4\mods\Papyrus Common Library\F4SE\Plugins\PapyrusCommonLibrary\src\Internal\Callbacks\Messaging.cpp"
 	[RSP+348 ] 0x37               (size_t) [55]
 	[RSP+350 ] 0x7FFE64458B60     (char*) "void __cdecl Internal::Messaging::Callback(struct F4SE::MessagingInterface::Message *)"
-	[RSP+358 ] 0x7FFE7D99B770     (char*) "full save path: C:\Users\evild\Documents\My Games\Fallout4\Saves\\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.f4se"
+	[RSP+358 ] 0x7FFE7D99B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.f4se"
 	[RSP+360 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
 	[RSP+368 ] 0x0                (size_t) [0]
 	[RSP+370 ] 0x0                (size_t) [0]
@@ -317,7 +317,7 @@ STACK:
 	[RSP+548 ] 0x7FFF80C5329E     (void* -> usvfs_x64.dll+00B329E	mov rax, rbx)
 	[RSP+550 ] 0x7FFFB117D369     (void* -> KERNELBASE.dll+006D369	nop [rax+rax*1], eax)
 	[RSP+558 ] 0xD8A0AFE329       (void*)
-	[RSP+560 ] 0xD8A0AFE5F0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
+	[RSP+560 ] 0xD8A0AFE5F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
 	[RSP+568 ] 0xF600F4           (size_t) [16122100]
 	[RSP+570 ] 0x0                (size_t) [0]
 	[RSP+578 ] 0x7FFFB115D66D     (void* -> KERNELBASE.dll+004D66D	nop [rax+rax*1], eax)
@@ -348,7 +348,7 @@ STACK:
 	[RSP+640 ] 0x100000000        (size_t) [4294967296]
 	[RSP+648 ] 0x7FFFB381F9C0     (void* -> ntdll.dll+015F9C0	jmp 0x00007FFF80020008)
 	[RSP+650 ] 0x7FFFB381F9C0     (void* -> ntdll.dll+015F9C0	jmp 0x00007FFF80020008)
-	[RSP+658 ] 0xD8A0AFE5F0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
+	[RSP+658 ] 0xD8A0AFE5F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
 	[RSP+660 ] 0x22774DE9680      (BSFile*)
 	[RSP+668 ] 0x7FFF800200A1     (void*)
 	[RSP+670 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
@@ -356,7 +356,7 @@ STACK:
 	[RSP+680 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
 	[RSP+688 ] 0x0                (size_t) [0]
 	[RSP+690 ] 0x0                (size_t) [0]
-	[RSP+698 ] 0xD8A0AFE5F0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
+	[RSP+698 ] 0xD8A0AFE5F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
 	[RSP+6A0 ] 0x226F4DAF8A0      (void*)
 	[RSP+6A8 ] 0x226F4813140      (void*)
 	[RSP+6B0 ] 0x246              (size_t) [582]
@@ -364,7 +364,7 @@ STACK:
 	[RSP+6C0 ] 0x0                (size_t) [0]
 	[RSP+6C8 ] 0x225BC9CEC80      (void*)
 	[RSP+6D0 ] 0x22774DE9680      (BSFile*)
-	[RSP+6D8 ] 0xD8A0AFE5F0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
+	[RSP+6D8 ] 0xD8A0AFE5F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
 	[RSP+6E0 ] 0x0                (size_t) [0]
 	[RSP+6E8 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
 	[RSP+6F0 ] 0x0                (size_t) [0]
@@ -379,7 +379,7 @@ STACK:
 	[RSP+738 ] 0x7FF66341525E     (void* -> Fallout4.exe+1B5525E	mov rbp, [rsp+0x60] |  BSFile::Open(bool,bool)_1B5525E)
 	[RSP+740 ] 0x22774DE9680      (BSFile*)
 	[RSP+748 ] 0x0                (size_t) [0]
-	[RSP+750 ] 0xD8A0AFE5F0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
+	[RSP+750 ] 0xD8A0AFE5F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
 	[RSP+758 ] 0x0                (size_t) [0]
 	[RSP+760 ] 0x200              (size_t) [512]
 	[RSP+768 ] 0x0                (size_t) [0]
@@ -387,16 +387,16 @@ STACK:
 	[RSP+778 ] 0xD8A0AFE500       (void*)
 	[RSP+780 ] 0x1                (size_t) [1]
 	[RSP+788 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
-	[RSP+790 ] 0xD8A0AFE5F0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
+	[RSP+790 ] 0xD8A0AFE5F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
 	[RSP+798 ] 0x7FF663414D45     (void* -> Fallout4.exe+1B54D45	test ebp, ebp |  BSFile::BSFile(char*,NiFile::OpenMode,unsigned___int64,bool)_1B54D45)
 	[RSP+7A0 ] 0x1                (size_t) [1]
 	[RSP+7A8 ] 0x22774DE9680      (BSFile*)
-	[RSP+7B0 ] 0x22774DE96EC      (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
+	[RSP+7B0 ] 0x22774DE96EC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
 	[RSP+7B8 ] 0x4                (size_t) [4]
 	[RSP+7C0 ] 0x1                (size_t) [1]
 	[RSP+7C8 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
 	[RSP+7D0 ] 0xFFFFFFFF         (size_t) [4294967295]
-	[RSP+7D8 ] 0xD8A0AFE5F0       (char*) "C:\Users\evild\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
+	[RSP+7D8 ] 0xD8A0AFE5F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2.fos.tmp"
 	[RSP+7E0 ] 0x1                (size_t) [1]
 	[RSP+7E8 ] 0x7FF66259A38C     (void* -> Fallout4.exe+0CDA38C	mov rdi, rax |  BGSSaveLoadFile::BGSSaveLoadFile(char*,bool,uint)_CDA38C)
 	[RSP+7F0 ] 0x22774949880      (char*) "Save4_784E27A1_426565_Commonwealth_000212_20250331053300_63_2"
