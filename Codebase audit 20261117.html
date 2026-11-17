@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLASSIC Codebase Audit</title>
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --surface: #fcfcfb;
+    --surface-2: #f0efea;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hair: #e1e0d9;
+    --rule: #c3c2b7;
+    --ring: rgba(11, 11, 11, 0.10);
+    --accent: #2f5f8a;
+    --code-bg: #eeede7;
+    --sev-high: #d03b3b;
+    --sev-med: #ec835a;
+    --sev-low: #898781;
+    --good: #0ca30c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121211;
+      --surface: #1a1a19;
+      --surface-2: #232322;
+      --ink: #f0efec;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --hair: #2c2c2a;
+      --rule: #383835;
+      --ring: rgba(255, 255, 255, 0.10);
+      --accent: #8fb8dc;
+      --code-bg: #262625;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 96px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
+  h2 { font-size: 20px; margin: 48px 0 12px; padding-top: 16px; border-top: 1px solid var(--rule); }
+  h3 { font-size: 16px; margin: 28px 0 8px; }
+  p { margin: 0 0 12px; }
+  a { color: var(--accent); }
+  .lede { color: var(--ink-2); max-width: 74ch; }
+  .meta { color: var(--ink-2); font-size: 13px; margin: 0 0 20px; }
+  .meta code { font-size: 12px; }
+  code {
+    font: 12.5px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+  }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; margin: 16px 0 0; }
+
+  /* stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 20px 0 8px; }
+  @media (max-width: 640px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 14px 16px; }
+  .tile .label { font-size: 12.5px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+  .tile .value { font-size: 32px; font-weight: 650; line-height: 1.15; margin-top: 4px; }
+  .tile .note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* severity marker: glyph + label, never colour alone */
+  .sev { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .sev::before { content: ""; width: 10px; height: 10px; flex: none; }
+  .sev.high::before { background: var(--sev-high); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .sev.medium::before { background: var(--sev-med); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .sev.low::before { background: var(--sev-low); border-radius: 50%; }
+
+  .panel { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 16px 18px; margin: 12px 0; }
+  .panel > :last-child { margin-bottom: 0; }
+  .callout { border-left: 3px solid var(--accent); }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; }
+  li { margin: 4px 0; }
+
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  th { font-weight: 600; color: var(--ink-2); font-size: 12.5px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  /* filters */
+  .filters { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--hair); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chip, select, input[type="search"] {
+    font: inherit; font-size: 13px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: 5px 12px;
+  }
+  select, input[type="search"] { border-radius: 8px; }
+  input[type="search"] { flex: 1 1 180px; min-width: 140px; }
+  .chip { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .chip[aria-pressed="true"] .sev { color: var(--surface); }
+  .chip:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .count { font-size: 13px; color: var(--ink-2); margin-left: auto; }
+  .linkbtn { background: none; border: 0; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; padding: 4px; text-decoration: underline; }
+
+  /* finding cards */
+  .area-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 32px 0 6px; }
+  .area-head h3 { margin: 0; }
+  .area-head span { color: var(--muted); font-size: 13px; }
+  details.finding { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; margin: 8px 0; }
+  details.finding > summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: 52px 1fr; gap: 4px 10px; align-items: start; }
+  details.finding > summary::-webkit-details-marker { display: none; }
+  .fid { font: 600 12.5px/1.6 ui-monospace, Consolas, monospace; color: var(--ink-2); }
+  .ftitle { font-weight: 600; }
+  .badges { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-size: 12px; color: var(--ink-2); }
+  .badge { white-space: nowrap; }
+  .badge b { font-weight: 600; color: var(--ink); }
+  .fbody { padding: 2px 16px 14px 78px; border-top: 1px solid var(--hair); }
+  @media (max-width: 640px) { .fbody { padding-left: 16px; } }
+  .fbody dl { margin: 12px 0 0; display: grid; grid-template-columns: 110px 1fr; gap: 8px 14px; }
+  @media (max-width: 640px) { .fbody dl { grid-template-columns: 1fr; gap: 2px; } .fbody dd { margin-bottom: 8px; } }
+  .fbody dt { font-size: 12px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.04em; padding-top: 2px; }
+  .fbody dd { margin: 0; }
+  .fbody dd ul { margin: 0; padding-left: 18px; }
+  .fbody dd.dec { border-left: 3px solid var(--accent); padding-left: 10px; }
+  .badge.decided { border: 1px solid var(--rule); border-radius: 999px; padding: 0 7px; color: var(--ink); font-weight: 600; }
+  .badge.decided::before { content: "\2713\00a0"; }
+  .empty { color: var(--ink-2); padding: 24px 0; }
+  .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 800px) { .cols { grid-template-columns: 1fr; } }
+  .cols .panel { margin: 0; }
+  .cols h3 { margin-top: 0; }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 48px; border-top: 1px solid var(--hair); padding-top: 12px; }
+  @media print { .filters { position: static; } details.finding { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>CLASSIC codebase audit</h1>
+  <p class="meta">17 November 2026 · branch <code>classic-next</code> at <code>0746c60c</code> · read-only review, nothing was built or run · revised with the maintainer's decisions · one approved change made afterwards: the log corpora were sanitised (<a href="#T19">T19</a>)</p>
+  <p class="lede">The codebase is in good shape where it has been deliberately designed: the scan-run contract, durable publication, User Settings, and the conformance gates are careful work. The problems cluster in three places: older scan-engine code that predates those contracts, GUI lifecycle paths that no test exercises, and Python-era leftovers in support crates, docs, and the repository itself. Seven findings are rated high because they produce wrong behaviour for ordinary users today.</p>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#summary">Summary</a>
+    <a href="#first">Fix first</a>
+    <a href="#findings">All findings</a>
+    <a href="#strengths">Strengths</a>
+    <a href="#questions">Decisions</a>
+    <a href="#roadmap">Suggested order</a>
+    <a href="#method">Method and limits</a>
+  </nav>
+
+  <h2 id="summary">Summary</h2>
+  <div class="tiles" id="tiles"></div>
+  <div class="panel scroll">
+    <table id="matrix" aria-label="Findings by area and severity"></table>
+  </div>
+  <div class="panel callout">
+    <p><strong>How much to trust each finding.</strong> Five reviewers each read one area of the code; I then re-read the cited code for every high-severity finding and a sample of the rest. Each finding carries one of three labels:</p>
+    <ul>
+      <li><strong>Re-verified</strong>: I read the cited lines myself and the claim holds.</li>
+      <li><strong>Reviewer-traced</strong>: a reviewer read and traced the code; I did not re-check it.</li>
+      <li><strong>Probable</strong>: the mechanism was read, but the trigger or consequence was not confirmed. The finding says what would settle it.</li>
+    </ul>
+    <p>Nothing was executed through <code>cargo</code> or the build wrappers. Corpus statistics (for example "32 of 1,013 sample logs") come from a reviewer's Python emulation of the Rust logic over <code>sample_logs/</code>, not from the engine itself.</p>
+  </div>
+
+  <h2 id="first">Fix first</h2>
+  <p class="lede">These are small changes with the largest user-visible effect. All seven high-severity findings are here, plus the cheap update-path hardening.</p>
+  <div class="panel scroll">
+    <table>
+      <thead><tr><th>Finding</th><th>What users see today</th><th>Effort</th></tr></thead>
+      <tbody>
+        <tr><td><a href="#S1">S1</a></td><td>Crash logs from users over the plugin limit fail analysis and get no Autoscan Report, then are moved to Unsolved Logs.</td><td>S</td></tr>
+        <tr><td><a href="#S2">S2</a></td><td>Two similar logs in one run can share parsed segments, so one report is built from the other log's call stack.</td><td>S</td></tr>
+        <tr><td><a href="#F2">F2</a></td><td>Pressing Backup when nothing matches, or when a copy fails midway, destroys the previous backup.</td><td>S</td></tr>
+        <tr><td><a href="#F1">F1</a></td><td>Game-file hash verdicts in the GUI stay stale until restart, even after the user fixes the files.</td><td>S</td></tr>
+        <tr><td><a href="#G2">G2</a></td><td>Stopping Papyrus monitoring calls <code>deleteLater()</code> through a null pointer.</td><td>S</td></tr>
+        <tr><td><a href="#G4">G4</a></td><td>Backups are written to <code>CLASSIC_Backups</code> instead of the canonical <code>CLASSIC Backups</code>, so "Open CLASSIC Backups" never shows them.</td><td>S</td></tr>
+        <tr><td><a href="#G1">G1</a></td><td>Closing the GUI mid-scan waits 5 s, then hard-terminates a thread inside Rust.</td><td>M</td></tr>
+        <tr><td><a href="#U3">U3</a>, <a href="#U4">U4</a></td><td>The shipped updater reads <code>.env</code> from the launch directory and downloads with no size cap.</td><td>S</td></tr>
+        <tr><td><a href="#T1">T1</a></td><td>Publish workflows hold a write token while running actions pinned only by mutable tag.</td><td>S</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="findings">All findings</h2>
+  <div class="filters" role="group" aria-label="Filter findings">
+    <button class="chip" data-sev="high" aria-pressed="false"><span class="sev high">High</span></button>
+    <button class="chip" data-sev="medium" aria-pressed="false"><span class="sev medium">Medium</span></button>
+    <button class="chip" data-sev="low" aria-pressed="false"><span class="sev low">Low</span></button>
+    <select id="areaSel" aria-label="Area"><option value="">All areas</option></select>
+    <select id="confSel" aria-label="Verification">
+      <option value="">Any verification</option>
+      <option value="lead">Re-verified</option>
+      <option value="reviewer">Reviewer-traced</option>
+      <option value="probable">Probable</option>
+    </select>
+    <input type="search" id="q" placeholder="Search title, path, text" aria-label="Search findings">
+    <button class="linkbtn" id="expand">Expand all</button>
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <div id="list"></div>
+  <noscript><p class="panel">This report renders its findings with JavaScript. Enable scripts for this local file to see them.</p></noscript>
+
+  <h2 id="strengths">Strengths worth keeping</h2>
+  <div class="panel">
+    <ul>
+      <li><strong>The scan-run contract makes invalid requests unrepresentable.</strong> Targeted runs cannot request log movement and FCX cannot be requested without setup context, both pinned by <code>compile_fail</code> doctests (<code>scan_run/contract.rs:184-234</code>).</li>
+      <li><strong><code>classic-durable-publication</code> is well built.</strong> Same-directory staging, <code>sync_all</code> before the move, write-through <code>MoveFileEx</code>, durability uncertainty returned as a value, and one lock shared by install, rollback, and settings.</li>
+      <li><strong>Update consent is bound to bytes.</strong> The approved update carries the tag and per-file SHA; apply re-fetches and rejects drift before touching disk. Asset URLs are pinned by scheme, host, owner, repo, tag, and decoded asset name.</li>
+      <li><strong>User Settings fail closed.</strong> Malformed documents block commits while retaining the bytes, commits re-check the revision under the lock, and migration writes a verified content-addressed backup.</li>
+      <li><strong>SQL identifier handling is complete.</strong> <code>validate_table_identifier</code> runs before every interpolation in <code>pool_sqlx.rs</code>, and all values are bound.</li>
+      <li><strong>The gates test themselves.</strong> The workflow policy pins each gate step's command, order, runner, and timeout, and its tests delete, reorder, and weaken steps to prove the check fails.</li>
+      <li><strong>Runtime discipline holds.</strong> One <code>LazyLock&lt;Runtime&gt;</code>, enforced by <code>clippy.toml</code>; across 284 production Rust files there are about 100 <code>unwrap</code>/<code>expect</code> calls, no <code>todo!</code>, and one <code>unsafe</code> block outside the FFI boundary.</li>
+      <li><strong>The FFI observer contract is typed.</strong> The observer is <code>noexcept</code>, delivery failure is a typed value under a Rust-applied policy, and out-of-range shared enums are rejected before a run starts.</li>
+      <li><strong>CLI robustness.</strong> Ctrl+C sets an atomic that a monitor thread relays to Rust, prompting is gated on an interactive stdin, and exit codes are distinct (0, 1, 2, 130).</li>
+    </ul>
+  </div>
+
+  <h2 id="questions">Decisions and what is still open</h2>
+  <p class="lede">The first version of this report asked eleven questions about intent. The maintainer's answers are recorded here and on each affected finding.</p>
+  <div class="panel scroll">
+    <table>
+      <thead><tr><th>Question</th><th>Decision</th><th>Finding</th></tr></thead>
+      <tbody>
+        <tr><td>Are incomplete logs Unsolved?</td><td>Yes. Move them and generate no report.</td><td><a href="#S4">S4</a></td></tr>
+        <tr><td>Does Simplify Logs rewrite the crash log?</td><td>No. It should write a sidecar file and leave the original.</td><td><a href="#S7">S7</a></td></tr>
+        <tr><td>What does rollback undo?</td><td>The last applied update, tracked by an install receipt.</td><td><a href="#U1">U1</a></td></tr>
+        <tr><td>Are <code>.env</code> and <code>GITHUB_TOKEN</code> for shipped binaries?</td><td>No. Development only.</td><td><a href="#U3">U3</a></td></tr>
+        <tr><td>Should YAML updates change Version Registry facts?</td><td>Yes, so the current loading is a gap against ADR-0006.</td><td><a href="#F5">F5</a></td></tr>
+        <tr><td>Which backup folder name is canonical?</td><td><code>CLASSIC Backups</code>. The Rust default is wrong and the proposed fix is approved.</td><td><a href="#G4">G4</a></td></tr>
+        <tr><td>Is the missing Cancel button intentional?</td><td>Yes. Cancel exists for session close, which must cancel and wait.</td><td><a href="#G1">G1</a></td></tr>
+        <tr><td>Is write-only state kept on purpose?</td><td>No. Data nothing reads is dead code.</td><td><a href="#F14">F14</a></td></tr>
+        <tr><td>How are releases and the FormID database made?</td><td>Both by hand.</td><td><a href="#T4">T4</a></td></tr>
+        <tr><td>Do sample logs keep contributor names?</td><td>No. Handles and user ids are to be sanitised.</td><td><a href="#T19">T19</a></td></tr>
+        <tr><td>Binding-related material</td><td>Obsolete, since the bindings were removed.</td><td><a href="#T20">T20</a>, <a href="#T13">T13</a>, <a href="#T10">T10</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Second round</h3>
+  <p class="lede">The first answers left seven follow-ups. These are the maintainer's answers to those.</p>
+  <div class="panel scroll">
+    <table>
+      <thead><tr><th>Question</th><th>Decision</th><th>Finding</th></tr></thead>
+      <tbody>
+        <tr><td>Are the release tags protected?</td><td>No. Nothing on GitHub protects them.</td><td><a href="#T21">T21</a></td></tr>
+        <tr><td>What happens to existing <code>CLASSIC_Backups</code> folders?</td><td>Move into <code>CLASSIC Backups</code> on first use; read in place if the move fails.</td><td><a href="#G4">G4</a></td></tr>
+        <tr><td>How far does "dead code" reach?</td><td>To everything consumed only by conformance tests. Conformance itself needs an overhaul now the bindings are gone.</td><td><a href="#F18">F18</a></td></tr>
+        <tr><td>What makes a log Unsolved?</td><td>No stack trace of any form. A missing plugin list alone does not. Unsolved logs are moved so they are not scanned again.</td><td><a href="#S4">S4</a></td></tr>
+        <tr><td>Was the <code>[FF]</code> plugin-limit notice dropped on purpose?</td><td>No. Restore it.</td><td><a href="#S4">S4</a></td></tr>
+        <tr><td>Where does the simplified log go?</td><td>A <code>-simple</code> copy in a <code>Simplified Logs</code> folder in the main CLASSIC directory, not inside <code>Crash Logs/</code>.</td><td><a href="#S7">S7</a></td></tr>
+        <tr><td>Is the umbrella CI workflow renamed or made a required check?</td><td>Neither for now. It stays as it is; the CI hierarchy is reworked later.</td><td><a href="#T20">T20</a></td></tr>
+        <tr><td>Commit the sanitised logs?</td><td>Yes. Committed locally as <code>b0a4188f</code>.</td><td><a href="#T19">T19</a></td></tr>
+        <tr><td>Rewrite history for the sanitised logs?</td><td>Only if it avoids a force-push. It cannot, so history is left alone and the working tree was sanitised.</td><td><a href="#T19">T19</a></td></tr>
+        <tr><td>Is <code>Crash Logs/</code> tracked on purpose?</td><td>Yes. It is the maintainer's own growing corpus.</td><td><a href="#T10">T10</a>, <a href="#S11">S11</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Still open</h3>
+  <div class="panel">
+    <p>No question is waiting on the maintainer. Two items are deferred, not decided:</p>
+    <ul>
+      <li><strong>CI hierarchy.</strong> The umbrella workflow's name, and whether it is a required status check on <code>classic-next</code>, are left for the later CI rework (<a href="#T20">T20</a>, <a href="#T21">T21</a>).</li>
+      <li><strong>Push.</strong> Commit <code>b0a4188f</code> is local only (<a href="#T19">T19</a>).</li>
+    </ul>
+  </div>
+
+  <h2 id="roadmap">Suggested order</h2>
+  <div class="cols">
+    <div class="panel">
+      <h3>Now: small fixes, real bugs</h3>
+      <ul>
+        <li><a href="#S1">S1</a>, <a href="#S2">S2</a>, <a href="#S3">S3</a> in the scan engine</li>
+        <li><a href="#F1">F1</a>, <a href="#F2">F2</a> in support crates</li>
+        <li><a href="#G2">G2</a>, <a href="#G4">G4</a>, <a href="#G5">G5</a>, <a href="#G7">G7</a> in the frontends</li>
+        <li><a href="#U3">U3</a>, <a href="#U4">U4</a> update hardening</li>
+        <li><a href="#T1">T1</a> for the two publish workflows</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Next: lifecycle and coverage</h3>
+      <ul>
+        <li><a href="#G1">G1</a>, <a href="#G3">G3</a>, <a href="#G6">G6</a>, <a href="#G8">G8</a> GUI shutdown, startup, threading, panic hook</li>
+        <li><a href="#S11">S11</a> run the tracked log corpus as a smoke test</li>
+        <li><a href="#S4">S4</a>, <a href="#S7">S7</a> now that intent is decided, and <a href="#S6">S6</a></li>
+        <li><a href="#T19">T19</a> commit the sanitised logs and add a check; <a href="#T21">T21</a> protect the release tags</li>
+        <li><a href="#U1">U1</a>, <a href="#U5">U5</a>, <a href="#U6">U6</a> update correctness and tests</li>
+        <li><a href="#F3">F3</a>, <a href="#F6">F6</a> INI and backup patterns</li>
+        <li><a href="#T2">T2</a>, <a href="#T5">T5</a>, <a href="#T6">T6</a>, <a href="#T7">T7</a> CI</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Later: consolidation</h3>
+      <ul>
+        <li><a href="#G9">G9</a>, <a href="#G10">G10</a>, <a href="#G11">G11</a>, <a href="#G15">G15</a> move frontend and bridge logic into Rust core</li>
+        <li><a href="#S5">S5</a> real per-log parallelism, after measuring</li>
+        <li><a href="#U2">U2</a>, <a href="#U8">U8</a>, <a href="#F5">F5</a> YAML selection, with ADR-0006 updates</li>
+        <li><a href="#F14">F14</a>, <a href="#F18">F18</a>, <a href="#F15">F15</a>, <a href="#F16">F16</a> retire dead surface, its conformance families, and unused dependencies</li>
+        <li><a href="#T4">T4</a>, <a href="#T10">T10</a>, <a href="#T11">T11</a>, <a href="#T16">T16</a>, <a href="#T18">T18</a>, <a href="#T20">T20</a> release process and repo hygiene</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 id="method">Method and limits</h2>
+  <div class="panel">
+    <p><strong>What was done.</strong> A mechanical pass over the whole workspace (lint configuration, dependency duplication, panic and <code>unsafe</code> sites, CI shape, tracked-file hygiene), then five parallel read-only reviews: the scan pipeline; config, update, and settings; foundation and support crates; frontends and the CXX bridge; tooling, CI, and docs. I then re-read the code behind every high-severity finding and a sample of medium and low ones.</p>
+    <p><strong>What was not read.</strong> Roughly 114,000 lines of Rust and 30,000 of C++ are tracked; the reviewers read the large and central files fully and skimmed or skipped the rest. Not reached, among others: <code>scan_run/contract.rs</code> lines 560-770 and 1610-2170, <code>analyzer.rs</code>, <code>fcx_handler.rs</code>; <code>explicit_yaml_data.rs</code> and most of <code>classic-user-settings-core</code> beyond commit, migration, and document; most <code>classic-scangame-core</code> checkers (<code>ba2.rs</code>, <code>unpacked.rs</code>, <code>wrye.rs</code>, <code>enb.rs</code>, and others); the TUI's <code>scan_run.rs</code>, <code>ui.rs</code>, and tabs; the rest of <code>xtask/src/conformance/</code> and <code>cxx_bridge_gate/</code>. Test files were mostly grepped, not read. Absence of findings in those files is not evidence they are clean.</p>
+    <p><strong>What changed in the repository.</strong> The audit itself changed nothing. Afterwards, with the maintainer's approval, the tracked log corpora were sanitised (<a href="#T19">T19</a>): 896 sample logs renamed, 136 path occurrences masked in 16 files, and one doc line updated. Those changes are committed locally as <code>b0a4188f</code> and not pushed. Line numbers in findings refer to source files at <code>0746c60c</code>, which that commit did not touch.</p>
+    <p><strong>What was not done.</strong> No build, test, clippy, or benchmark run; no GitHub API calls; no dynamic confirmation of any bug. Performance findings state mechanisms, not measured speedups. The Qt null-pointer consequence in G2 and the <code>glob</code> behaviour in S3 follow from library semantics and were not executed.</p>
+  </div>
+
+  <footer>Generated by a read-only audit session. Paths are relative to the repository root; line numbers refer to commit <code>0746c60c</code>.</footer>
+</main>
+
+<script>
+"use strict";
+const AREAS = {
+  S: "Scan engine",
+  U: "Update, config, and settings",
+  F: "Foundation and support crates",
+  G: "Frontends and CXX bridge",
+  T: "CI, release, tooling, and hygiene"
+};
+const AREA_SCOPE = {
+  S: "classic-scanlog-core, classic-scan-presentation, classic-scan-launch",
+  U: "classic-config-core, classic-update-core, classic-user-settings-core, classic-durable-publication, classic-web-core",
+  F: "foundation/*, database, file-io, scangame, path, registry, resource, xse, version-registry",
+  G: "classic-gui, classic-cli, classic-cpp-bridge, classic-tui, cmake",
+  T: "xtask, .github, root scripts, docs, tracked content"
+};
+const CONF = { lead: "Re-verified", reviewer: "Reviewer-traced", probable: "Probable" };
+
+/* id, sev, cat, effort, conf, title, where[], what, why, fix */
+const F = [
+// ───────────── Scan engine ─────────────
+{id:"S1",sev:"high",cat:"correctness",eff:"S",conf:"lead",
+ t:"Logs from users over the plugin limit fail analysis and get no Autoscan Report",
+ w:["business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs:173-179","business-logic/classic-scanlog-core/src/autoscan_report_contribution_collector.rs:203-219","business-logic/classic-scanlog-core/src/plugin_analyzer.rs:49-63"],
+ what:"Buffout logs wrap the load-order index past the limit: `sample_logs/FO4/crash-2023-01-14-00-17-41 sample-4605937b.log` has `[00] Fallout4.esm` at line 733 and `[00] Boston Breeder.esp` at line 989, straight after `[FE]` and `[FF]`. The plugin map de-duplicates by name only, so both reach `normalize_plugins`, which returns `InvalidConfiguration` (\"load-order prefix '00' is assigned to multiple plugins\"). The collector retries only `MalformedResult` and `OperationalFailure`; this error aborts the whole log.",
+ why:"The users who most need a diagnosis get a failed log. With `Move Unsolved Logs` on by default the log is also moved out of `Crash Logs`, re-copied from the XSE folder on the next Standard run, and moved again as `-1.log`, `-2.log`. A reviewer's emulation puts 32 of 1,013 FO4 sample logs on this path.",
+ fix:"Treat an ambiguous prefix the way the generic `FE` prefix is already treated at lines 168-172: leave it unresolved instead of erroring. Add a plugin-limit log to the autoscan report goldens, which today have only `empty`, `fcx`, and `populated`."},
+{id:"S2",sev:"high",cat:"correctness",eff:"S",conf:"lead",
+ t:"Segment cache is keyed on a sampled hash and can return another log's segments",
+ w:["business-logic/classic-scanlog-core/src/parser.rs:274-294","business-logic/classic-scanlog-core/src/parser.rs:1182-1209"],
+ what:"`calculate_hash` hashes only the line count, the first 10 lines, 5 middle lines, and the last 10 lines. One `LogParser` lives in the per-run orchestrator, so every log in a run shares the cache. Each log is parsed once per run, so the cache cannot produce a legitimate hit.",
+ why:"When a user crashes twice at the same spot, the later log's FormID findings, named records, and suspect rules can be computed from the other log's stack while the header still comes from the right log, so the report looks plausible. A reviewer's emulation found 4 colliding groups among the 299 Skyrim samples and none among the FO4 samples. The cache also pins up to 100 logs' lines for the run.",
+ fix:"Call `parse_all_sections_impl` directly on the scan path. If a cache must stay for the public utility, key it on a hash of the full content."},
+{id:"S3",sev:"medium",cat:"correctness",eff:"S",conf:"lead",
+ t:"Standard discovery passes unescaped paths to glob, so brackets in a path hide every log",
+ w:["business-logic/classic-scanlog-core/src/log_collection.rs:209-212","business-logic/classic-scanlog-core/src/log_collection.rs:294-297","business-logic/classic-scanlog-core/src/log_collection.rs:486-510","business-logic/classic-scanlog-core/src/log_collection.rs:742"],
+ what:"Four sites build the pattern as `dir.join(pattern).to_string_lossy()` and hand it to `glob::glob`. Targeted resolution at line 742 already uses `glob::Pattern::escape`; Standard discovery does not.",
+ why:"With a path such as `D:\\[Modding]\\CLASSIC`, `[...]` is read as a character class and nothing matches, so the run ends as \"no Crash Logs found\". An unbalanced `[` makes the pattern invalid and becomes an infrastructure error. The glob behaviour follows from the crate's semantics and was not executed.",
+ fix:"Escape the directory part at all four sites, or enumerate with `read_dir` and match the file name. Mirror the existing Targeted test for Standard."},
+{id:"S4",sev:"medium",cat:"correctness",eff:"M",conf:"reviewer",
+ t:"Incomplete-log detection, the plugin-limit notice, and Unsolved Logs triggers are dead in production",
+ w:["business-logic/classic-scanlog-core/src/orchestrator.rs:563-575","business-logic/classic-scanlog-core/src/plugin_analyzer.rs:282-320","business-logic/classic-scanlog-core/src/lib.rs:45","business-logic/classic-scanlog-core/src/lib.rs:54"],
+ what:"`detect_failed_log`, `detect_incomplete_log`, `mark_failed`, and `mark_incomplete` have no production caller. `collect_plugins` discards the limit flags that `check_plugin_limit` computes, and nothing reads the `Mods_Plugin_Limit` text. Module-level `#[allow(dead_code)]` on `orchestrator` and `scan_intake` hides this from the compiler (I confirmed the two attributes; the caller search is the reviewer's).",
+ why:"A log with no plugin list gets a normal-looking report with no notice that the scan was partial. Unsolved Logs movement fires only on I/O errors, analyzer configuration errors, and report-write failures, while the glossary defines it as logs that \"could not be successfully analyzed\".",
+ fix:"Replace the dead rule with the intended one: a log is Unsolved when it has no stack trace of any form. `detect_incomplete_log` tests for an empty plugin list and `detect_failed_log` for fewer than 20 lines; neither is the intended test, so rewrite them, then call the result early in `process_log_with_progress` so an Unsolved log is moved before any analysis and gets no report. Restore the plugin-limit notice by using the two flags `collect_plugins` discards at `orchestrator.rs:1626`, and feed `check_plugin_limit` the log's own versions. Add golden cases from `sample_logs/FO4`, where at least 20 logs carry an `[FF]` plugin entry. Narrow the two module-level `allow(dead_code)` attributes.",
+ dec:"Unsolved means no stack trace of any form. A missing plugin list alone does not make a log Unsolved. Unsolved logs are moved and get no report, so later runs do not scan them again. Removing the `[FF]` plugin-limit notice was not intended and it should be restored. Note that S1's re-copy loop defeats the \"not scanned again\" goal for logs still in the XSE folder: Standard discovery copies them back in on every run."},
+{id:"S5",sev:"medium",cat:"performance",eff:"M",conf:"reviewer",
+ t:"Scan concurrency gives no CPU parallelism",
+ w:["business-logic/classic-scanlog-core/src/scan_run.rs:939-998","business-logic/classic-scanlog-core/src/orchestrator.rs:1246-1361","cpp-bindings/classic-cpp-bridge/src/runtime_support.rs:15-20"],
+ what:"All admitted logs are futures in one `FuturesUnordered` polled by one task. The three scan crates contain no `tokio::spawn` or `spawn_blocking`, and the bridge drives the run with `block_on` on the caller's thread. Parsing and every analyzer are synchronous between awaits, yet the limit is sized from `num_cpus`.",
+ why:"A large batch is analysed on one core while N logs are held in memory. FCX hashing, YAML loading, and glob walks also run synchronously inside the async function. The achievable speedup is unmeasured.",
+ fix:"Keep the single ordered observer pump (ADR-0002) but run each log's parse-and-analyse section through `spawn_blocking` or a rayon scope. Measure first; otherwise document that the limit is I/O concurrency only."},
+{id:"S6",sev:"medium",cat:"correctness",eff:"S",conf:"reviewer",
+ t:"Papyrus tailing double-counts and splits partial lines",
+ w:["business-logic/classic-scanlog-core/src/papyrus.rs:199","business-logic/classic-scanlog-core/src/papyrus.rs:237-279"],
+ what:"`check_for_updates` takes the size from metadata, reads to end, then sets `last_position` to the earlier size, so bytes appended in between are processed twice. A trailing partial line is processed immediately and its remainder later as a second line. `analyze_full` sets the position from a possibly lossy string length.",
+ why:"The GUI's Papyrus monitor drifts while the game is writing. On a non-UTF-8 log the inflated position can make every poll look like a truncation (that last case is probable, not confirmed).",
+ fix:"Advance `last_position` by bytes consumed up to the last newline and carry the remainder. Use the raw byte count in `analyze_full`. Add partial-write and non-UTF-8 tests."},
+{id:"S7",sev:"medium",cat:"docs",eff:"S",conf:"lead",
+ t:"Simplify Logs does not do what the shipped settings comment says",
+ w:["CLASSIC Data/databases/CLASSIC Main.yaml:55-57","business-logic/classic-scanlog-core/src/orchestrator.rs:1435-1453"],
+ what:"The settings comment says \"simplifying changes each scanned Crash Log permanently\", but the engine only filters lines in memory; no code rewrites the crash log. Removal is `line.contains(remove_str)` with no empty-string guard.",
+ why:"Users are warned about a destructive effect that does not happen, or the feature was lost. One empty `exclude_log_records` entry would strip every line of every log when Simplify Logs is on (the empty-entry pass-through is the reviewer's trace).",
+ fix:"Write the simplified log to a sidecar file and leave the original crash log untouched. Rewrite the settings comment to say so, and reject empty and whitespace-only entries when the remove list is built.",
+ dec:"Simplify Logs leaves the original untouched and writes a copy with a `-simple` suffix, for example `crash-2024-06-05-08-20-22-simple.log`, into a `Simplified Logs` folder in the main CLASSIC directory, beside `Crash Logs/` and not inside it. This placement matters: Standard discovery globs `Crash Logs/**/crash-*.log` recursively (`log_collection.rs:484-486`) and the copy's name matches that pattern, so a file beside the original or in a subfolder of `Crash Logs/` would be scanned as a new crash log on the next run and simplified again. A folder in the main directory needs no discovery change. One case remains: a custom scan folder or Targeted scan pointed at `Simplified Logs` would still pick the copies up, so reject that folder as a scan input."},
+{id:"S8",sev:"low",cat:"performance",eff:"S",conf:"reviewer",
+ t:"Each log is copied about ten times per scan, including one copy nobody reads",
+ w:["business-logic/classic-scanlog-core/src/orchestrator.rs:1424-1482","business-logic/classic-scanlog-core/src/autoscan_report_contribution_collector.rs:179-229","business-logic/classic-scanlog-core/src/report.rs:846-910"],
+ what:"The log goes from file to `Vec<String>` to `VecDeque` to `Vec<Arc<str>>` to joined text to a lowercased copy (`combined_crash_lower_lines`) that has no reader. The collector clones the crash lines three more times, and `ReportComposer::compose_sequential` re-clones accumulated lines per fragment.",
+ why:"Avoidable allocation on the per-log path. Small per log; it matters on large batches.",
+ fix:"Delete the unread lowercased copy and keep one line representation. The collector's `to_vec` clones follow ADR-0005's owned-input contract, so removing those needs an ADR change."},
+{id:"S9",sev:"low",cat:"design",eff:"M",conf:"reviewer",
+ t:"Public utilities with no consumer, several of them broken",
+ w:["business-logic/classic-scanlog-core/src/parser.rs:1275-1356","business-logic/classic-scanlog-core/src/patterns.rs:66-85","business-logic/classic-scanlog-core/src/formid_analyzer.rs:10"],
+ what:"`StreamingLogParser::set_section_boundaries` makes `process_line` return an empty section every time; `find_patterns` caches on the first five lines and panics on `chunk_size = Some(0)`; `PatternMatcher::find_all` caches every input forever; `LogParser::new` ignores its `custom_boundaries` argument. No frontend, bridge, or TUI code calls any of them.",
+ why:"API surface that looks supported and is documented in `docs/api/classic-scanlog-core.md`, but is wrong where nobody exercises it.",
+ fix:"Fix and test, or reduce to `pub(crate)`. ADR-0002 and ADR-0005 keep these public, so removal needs a maintainer decision."},
+{id:"S10",sev:"low",cat:"correctness",eff:"S",conf:"reviewer",
+ t:"is_restricted_path matches substrings anywhere in the path",
+ w:["business-logic/classic-scanlog-core/src/custom_scan.rs:20-76"],
+ what:"The check is `path_str.contains(\"windows\")`, `\"appdata\"`, `\"program files\"` over the whole lowercased path. The doc says the game directory and Documents are restricted; neither is checked.",
+ why:"`D:\\Games\\Windows Store Mods\\Logs`, or a user name containing \"windows\", is rejected as a custom scan folder.",
+ fix:"Compare whole path components against known system roots and correct the doc."},
+{id:"S11",sev:"medium",cat:"testing",eff:"M",conf:"reviewer",
+ t:"The 1,300 tracked sample logs are not used by any correctness test",
+ w:["benches/common/fixtures.rs:76","tests/fixtures/autoscan_report_goldens/cases/"],
+ what:"`git grep sample_logs` finds only the bench helper and a manual script. The golden corpus has three cases.",
+ why:"S1 and S2 are both visible on this corpus and a smoke run would have caught them.",
+ fix:"Add an ignored-by-default or nightly test that runs `scan_run::contract::execute` over `sample_logs/` and the 150 logs in `Crash Logs/`, which the maintainer keeps current with new crash-log generator versions. Assert that every log either finishes with a report or is classified Unsolved by the rule in S4, and that no two different inputs yield identical segments."},
+
+// ───────────── Update / config / settings ─────────────
+{id:"U1",sev:"medium",cat:"correctness",eff:"M",conf:"reviewer",
+ t:"Rollback swaps every file that has a .prev, not just the files the last update touched",
+ w:["business-logic/classic-update-core/src/yaml_update.rs:2101-2130","business-logic/classic-config-core/src/atomic_install.rs:323-380"],
+ what:"`rollback_yaml_data_update` swaps `<file>` with `<file>.prev` for each shippable target whenever a `.prev` exists. Apply installs only files whose SHA differs, so each `.prev` can come from a different release, and nothing records which.",
+ why:"If update A changed both files and update B changed only Main, rollback reverts Main one step and Fallout4 to its pre-A bytes. A second rollback toggles forward again.",
+ fix:"Write an install receipt at apply time (release tag plus per-file previous and current SHA) and roll back only the files in the last receipt. Validate the `.prev` candidate before promoting it.",
+ dec:"Use the install receipt: rollback undoes the last applied update only."},
+{id:"U2",sev:"medium",cat:"correctness",eff:"M",conf:"reviewer",
+ t:"A cached updated YAML always shadows the bundled copy, with no recency check",
+ w:["business-logic/classic-config-core/src/installed_yaml_data.rs:2020-2052"],
+ what:"`select_file` returns the cache copy whenever it is schema-compatible and valid; bundled is consulted only when the cache copy is missing or rejected. Nothing clears or compares the cache on a binary upgrade.",
+ why:"After installing a newer CLASSIC whose bundled data is newer than an old cached update, the old cache wins until an online update is applied. With Update Check off, that is indefinite. This follows from the precedence in ADR-0006, so it is a design consequence, not a violation.",
+ fix:"Add a monotonic data stamp and prefer bundled when newer, or invalidate the cache when the binary version changes. Update ADR-0006 and `yaml-update-delivery.md` alongside."},
+{id:"U3",sev:"medium",cat:"security",eff:"S",conf:"lead",
+ t:"The shipped update client loads .env from the working directory, contradicting the delivery doc",
+ w:["business-logic/classic-update-core/src/github.rs:180-186","business-logic/classic-update-core/src/yaml_update.rs:652-657","docs/api/yaml-update-delivery.md:179"],
+ what:"`GithubClient::new`, the constructor used by every shipped check and apply path, runs `dotenvy::dotenv()` and reads `GITHUB_TOKEN`. The reviewer traced the token onto the manifest-asset and file-asset GETs; the doc says it \"is never transmitted for the Pages or release-asset legs\".",
+ why:"Any `.env` in the launch directory injects variables into the whole process before the HTTP client is built, including proxy variables that reqwest honours. A stale `GITHUB_TOKEN` is sent to github.com and can turn the anonymous path into a 401.",
+ fix:"Remove `dotenvy::dotenv()` and the `GITHUB_TOKEN` read from the shipped constructor and keep them behind a development-only constructor or Cargo feature that release builds do not enable. Stop attaching the token to non-API legs so the code matches the doc.",
+ dec:"`.env` and `GITHUB_TOKEN` are for development only; shipped binaries must not read them."},
+{id:"U4",sev:"medium",cat:"security",eff:"S",conf:"lead",
+ t:"No size bound on any downloaded body; size_bytes is parsed and ignored",
+ w:["business-logic/classic-update-core/src/yaml_update.rs:139-140","business-logic/classic-update-core/src/yaml_update.rs:666","business-logic/classic-update-core/src/yaml_update.rs:1062","business-logic/classic-update-core/src/github.rs:188-191"],
+ what:"Download legs call `response.bytes().await` with no cap; the only bound is the request timeout. No `https_only` or redirect policy is set on the client builder (I confirmed both by search).",
+ why:"With signatures deferred, HTTPS plus the manifest SHA is the whole trust chain. A hostile or broken endpoint can make the client buffer whatever 30 s of bandwidth allows before the SHA check rejects it. The real files are tens of kilobytes.",
+ fix:"Reject a `Content-Length` or accumulated length above a small cap, require the length to equal `size_bytes` before hashing, and set `.https_only(true)` on production constructors."},
+{id:"U5",sev:"medium",cat:"testing",eff:"M",conf:"reviewer",
+ t:"Update-core tests write into the real per-user cache, and no test covers a successful install",
+ w:["business-logic/classic-update-core/src/yaml_update.rs:1354","business-logic/classic-update-core/tests/yaml_update_tests.rs:1781"],
+ what:"Generic check, apply, and rollback call `ensure_yaml_cache_dir()` against the real environment; only the first-party check has an env seam. On this machine `%LOCALAPPDATA%\\CLASSIC\\yaml-cache\\` contains a test-fixture manifest and stray `.install.lock` files. `is_canonical_asset_url` hard-codes `https://github.com`, so no mock can serve an asset.",
+ why:"Tests mutate developer and CI user state, and outcomes can depend on the machine. The highest-risk path (successful install, 404, post-download SHA mismatch, truncated body) is untested end to end.",
+ fix:"Thread an explicit cache directory through the generic functions and add a test-configurable asset origin, then add success and failure install tests."},
+{id:"U6",sev:"medium",cat:"correctness",eff:"S",conf:"probable",
+ t:"The Releases-fallback DTO treats nullable GitHub fields as required",
+ w:["business-logic/classic-update-core/src/github.rs:61-88","business-logic/classic-update-core/src/github.rs:450-454"],
+ what:"`GithubRelease { name: String, body: String, … }` is deserialised for every release on every page. GitHub declares `name` and `body` nullable. The same function maps every 403 to `RateLimitExceeded` and does not treat 429 as rate limiting.",
+ why:"One release with a null title or notes would break the fallback for both channels exactly when Pages is down. Unconfirmed: no such release was checked against the live API.",
+ fix:"Give the fallback a minimal DTO with `Option` or `#[serde(default)]` on the rest and add a null-field test."},
+{id:"U7",sev:"low",cat:"durability",eff:"S",conf:"reviewer",
+ t:"Game Local path persistence bypasses the durable-publication crate",
+ w:["business-logic/classic-config-core/src/game_local.rs:111-171","foundation/classic-shared-core/src/yaml/operations.rs:308-327"],
+ what:"`persist_game_local_paths` does an unlocked read-modify-write and saves through `save_yaml_file`, which writes a fixed `<file>.yaml.tmp` with no `sync_all`, then renames.",
+ why:"Two CLASSIC processes share one temp path and can lose each other's update; a power loss can leave a truncated file that reads back as silent defaults.",
+ fix:"Route the save through `classic_durable_publication::publish` with a sibling lock held across the read-modify-write."},
+{id:"U8",sev:"low",cat:"design",eff:"M",conf:"reviewer",
+ t:"A second, divergent YAML selection path is still public",
+ w:["business-logic/classic-config-core/src/yaml_source.rs:232-277","business-logic/classic-config-core/src/shippable/loader.rs:255-340","business-logic/classic-config-core/src/generation.rs:77-95"],
+ what:"Public `YamlSource::load` reaches a loader that runs a mutating `self_heal` on read, gates on schema only, and resolves bundled paths against the working directory. No production caller was found, only tests and conformance scenarios.",
+ why:"ADR-0006 says a production caller \"cannot reopen a bundled or cached YAML path\". This surface does, so a future caller could reintroduce the old policy by accident. Two comments still describe a loader that self-heals on every read.",
+ fix:"Move these behind `#[cfg(test)]` or a conformance-only feature, and correct the two stale comments."},
+{id:"U9",sev:"low",cat:"correctness",eff:"S",conf:"reviewer",
+ t:"On the YAML channel, a 304 with an unusable cached body never clears the ETag",
+ w:["business-logic/classic-update-core/src/manifest_fetch.rs:137-161","business-logic/classic-update-core/src/yaml_update.rs:544-555"],
+ what:"When Pages answers 304 and the cached body is missing or invalid, `try_pages` errors and leaves the ETag in place. The notification channel repairs itself; the YAML channel does not.",
+ why:"Every later check repeats 304 then API fallback (anonymous limit 60 per hour) until the next publish changes the ETag.",
+ fix:"On a 304 with an unusable body, delete the ETag and retry one unconditional GET."},
+{id:"U10",sev:"low",cat:"durability",eff:"M",conf:"reviewer",
+ t:"Rollback-generation handling has small non-atomic windows and no orphan cleanup",
+ w:["business-logic/classic-durable-publication/src/publication.rs:554-613","business-logic/classic-config-core/src/atomic_install.rs:344-366"],
+ what:"`rotate_rollback_generation` deletes the old `.prev` before renaming the target to `.prev`. The three-step rollback swap does not undo step 1 if step 2 or 3 fails. Staged `*.new.<pid>…` files left by a crash are never swept.",
+ why:"Rare, but each case loses the single rollback generation or mislabels the outcome.",
+ fix:"Use one atomic replace for rotation, rename scratch back when step 2 fails, and sweep stale staged siblings while holding the install lock."},
+{id:"U11",sev:"low",cat:"correctness",eff:"S",conf:"reviewer",
+ t:"The settings schema classifier treats every same-major version as newer-compatible",
+ w:["business-logic/classic-user-settings-core/src/document.rs:490-498"],
+ what:"The arm matches on `version.major == CURRENT_SCHEMA_VERSION.major` without comparing the minor. The current version is 1.0, so the result happens to be right.",
+ why:"The first minor bump will classify existing 1.0 documents as `NewerCompatible` instead of older-compatible.",
+ fix:"Compare the minor explicitly and add a test with a synthetic current minor above zero."},
+{id:"U12",sev:"low",cat:"design",eff:"S",conf:"lead",
+ t:"classic-web-core hard-codes a stale version and has one trivial production use",
+ w:["business-logic/classic-web-core/src/lib.rs:59","cpp-bindings/classic-cpp-bridge/src/web.rs:21-23"],
+ what:"`CLASSIC_VERSION = \"8.0.0\"` while the crate is 9.1.0. The reviewer found the only production call is a `qDebug` line whose comment says it exists so the CXX web surface is exercised; the real HTTP user agent is built elsewhere.",
+ why:"The log misreports the user agent, and a bridge export kept alive by a log line sits awkwardly with the consumer-driven bridge rule.",
+ fix:"Derive the version from `CARGO_PKG_VERSION` and have update-core use the helper, or remove the export and the log line."},
+
+// ───────────── Foundation / support crates ─────────────
+{id:"F1",sev:"high",cat:"correctness",eff:"S",conf:"lead",
+ t:"File-hash cache is keyed by path only, so Game Setup Intake reports stale hashes for the life of the process",
+ w:["business-logic/classic-file-io-core/src/hash.rs:135-152","business-logic/classic-scangame-core/src/game_setup_intake.rs:384-386","cpp-bindings/classic-cpp-bridge/src/scangame.rs:28"],
+ what:"`FileHashScope::hash_file` returns the cached string whenever the path is present, with no size or mtime check. The reviewer traced the GUI's intake to the process-wide default scope and found no production call to `clear_cache`.",
+ why:"In the long-lived GUI, a user who sees \"executable hash failed\", fixes the files, and re-runs the check gets the old verdict until restart. The reverse also holds: a file that later becomes wrong keeps passing.",
+ fix:"Store `(len, modified)` beside each hash and treat a mismatch as a miss, or give each intake run `FileHashScope::new_isolated()`. Add a test that rewrites a file between two runs."},
+{id:"F2",sev:"high",cat:"correctness",eff:"S",conf:"lead",
+ t:"BackupManager::create_backup deletes the existing backup before it knows a new one can be made",
+ w:["business-logic/classic-resource-core/src/backup.rs:167-203"],
+ what:"Line 172 runs `fs::remove_dir_all(&backup_dir)` first. Files are then matched and copied one by one with `?`. If nothing matches, the new empty directory is removed and `NotFound` is returned.",
+ why:"Pressing Backup when the component is no longer installed, the game root is wrong, or a DLL is locked destroys the previous backup and leaves nothing or a partial set.",
+ fix:"Build the new backup in a sibling temp directory and swap it in only after at least one file copied and all copies succeeded. Add tests for \"existing backup plus zero matches\" and \"copy fails midway\"."},
+{id:"F3",sev:"medium",cat:"correctness",eff:"S",conf:"probable",
+ t:"Documents INI check calls non-UTF-8 INIs corrupted; Archive Invalidation check only tests that a section exists",
+ w:["business-logic/classic-path-core/src/ini_parser.rs:93-110","business-logic/classic-path-core/src/checker.rs:310-362"],
+ what:"`IniFile::load` calls `configparser::Ini::load(path)` with no encoding handling, and any load error becomes \"file appears to be corrupted… Consider deleting and regenerating this file.\" For `{Game}Custom.ini` the check reports Archive Invalidation enabled as soon as `[Archive]` exists, without reading `bInvalidateOlderFiles`.",
+ why:"The game reads these INIs as ANSI, so a valid INI with a non-ASCII byte may be reported as corrupted with advice to delete it. An empty `[Archive]` section passes as enabled. The false-corrupted case depends on `Ini::load` using `read_to_string`, which was not confirmed.",
+ fix:"Read bytes and decode with the detection already in `classic-scangame-core/src/config_cache.rs:396-406`, then `Ini::read`. Check the two Archive keys explicitly."},
+{id:"F4",sev:"medium",cat:"safety",eff:"S",conf:"lead",
+ t:"The unsafe mmap's justification does not hold, and large files decode differently from small ones",
+ w:["business-logic/classic-file-io-core/src/core.rs:1012-1075","business-logic/classic-file-io-core/src/encoding.rs:18-32"],
+ what:"The comment calls `map_copy_read_only` a snapshot-style mitigation; a copy-on-write view still reflects pages another process changes. The code validates with `from_utf8(&mmap)` then copies with `to_string()`, two passes over memory another process can change, and copies the whole file anyway. For files of 1 MB or more, encoding is detected from the first 8,192 bytes only.",
+ why:"A latent soundness hole for no memory benefit. The reviewer also found that a multi-byte character straddling the 8 KB boundary can flip detection to Windows-1252 and decode the whole log as mojibake, and that BOM handling differs across the size threshold; those cases were reasoned, not executed.",
+ fix:"Delete the mmap branch and use one read-then-decode path for all sizes. That removes the crate's only `unsafe`, so its lint can become `unsafe_code = \"deny\"` like its siblings."},
+{id:"F5",sev:"medium",cat:"design",eff:"M",conf:"reviewer",
+ t:"The Version Registry loads CLASSIC Main.yaml relative to the working directory, outside Installed YAML Data selection",
+ w:["business-logic/classic-version-registry-core/src/registry.rs:168-196","business-logic/classic-version-registry-core/src/registry.rs:264","docs/adr/0006-rust-owns-installed-yaml-data.md"],
+ what:"`try_load_from_yaml` probes three CWD-relative paths, then falls back to `include_str!` of the checked-in YAML. The snapshot is a `OnceLock` with no reload, and entries that fail to parse are dropped silently.",
+ why:"Launched from another directory, the registry uses the embedded copy, so executable hashes and XSE mappings would not follow a YAML-data update. A typo in one entry removes that game version with no diagnostic. This is in tension with ADR-0006's exclusivity wording; the API doc treats it as intended.",
+ fix:"Build the snapshot from the bytes config-core selected instead of a CWD probe or the embedded copy. The snapshot is a `OnceLock`, so either rebuild it after an applied update or document that the new registry takes effect on restart. Log skipped entries.",
+ dec:"A YAML-data update should change Version Registry facts, so this is a gap against ADR-0006, not an intended exception. Correct `docs/api/classic-version-registry-core.md`, which describes the current loading as intended."},
+{id:"F6",sev:"medium",cat:"correctness",eff:"S",conf:"reviewer",
+ t:"BackupManager patterns are case-sensitive and miss files they are meant to cover",
+ w:["business-logic/classic-resource-core/src/backup.rs:43-56","business-logic/classic-resource-core/src/backup.rs:285-297"],
+ what:"`matches_pattern` uses `starts_with`/`ends_with` without case folding. XSE patterns miss `skse64_*.dll`, `f4sevr_*.dll`, `sfse_*`, and every loader `.exe`. The ENB pattern `enbseries` names a directory, but only files are accepted. `ReShade.ini` matches two patterns and is copied twice.",
+ why:"`D3D11.dll` or `reshade.ini` is skipped silently on a case-insensitive filesystem. An XSE restore puts DLLs back without their loader, which is the mismatch the new XSE runtime check fails.",
+ fix:"Lowercase both sides, source loader and DLL names from xse-core, handle directories, and de-duplicate matches."},
+{id:"F7",sev:"medium",cat:"design",eff:"S",conf:"reviewer",
+ t:"DatabasePool is created per scan run and never closed, and its docs describe behaviour it does not have",
+ w:["business-logic/classic-scanlog-core/src/scan_run.rs:889-898","business-logic/classic-database-core/src/pool_sqlx.rs:1944-1996"],
+ what:"`build_orchestrator` creates a pool per run and nothing calls `close()` (I confirmed the per-run construction and found no close call in `scan_run.rs` or `orchestrator.rs`), so `Drop` logs \"DatabasePool dropped without calling close()\". Docs promise WAL mode and a singleton; pools are opened read-only with no journal mode set.",
+ why:"A warning on every FormID-enabled run trains readers to ignore it, and the TTL and eviction tuning cannot matter for a cache that lives for one run.",
+ fix:"Close the pool at the end of the run or genuinely share one across runs. Correct the docs and build connect options with `SqliteConnectOptions::new().filename(path)` instead of a formatted URL."},
+{id:"F8",sev:"medium",cat:"performance",eff:"M",conf:"reviewer",
+ t:"FCX config-issue detection walks the entire game tree for four named files",
+ w:["business-logic/classic-scangame-core/src/config_cache.rs:145-224","business-logic/classic-scanlog-core/src/scan_run.rs:1640-1657"],
+ what:"`detect_config_issues_for_scan` builds `ConfigFileCache::new(game_root, &[])`, which walks every file and SHA-256s every repeated `.ini`/`.conf` name, then keeps only issues from four named files. The map is keyed by lowercase filename and the first occurrence in an unsorted walk wins.",
+ why:"Every FCX run pays for a full walk of a modded `Data` tree, and a copy in an earlier-listed folder such as `Backup` could shadow the real INI.",
+ fix:"Probe the known locations directly for the issues-only path. If the cache stays, key by relative path and treat a hash failure as not a duplicate."},
+{id:"F9",sev:"low",cat:"correctness",eff:"S",conf:"reviewer",
+ t:"Batch lookup buckets of 512 and 1024 exceed SQLite's 500-term compound SELECT limit",
+ w:["business-logic/classic-database-core/src/pool_sqlx.rs:67-68","business-logic/classic-database-core/src/pool_sqlx.rs:1301-1341"],
+ what:"`batch_size` is clamped to 1024 and a chunk of 257 or more pairs selects a 512- or 1024-term `UNION ALL`. The bundled SQLite carries `MAX_COMPOUND_SELECT=500`.",
+ why:"Latent: production uses 128. A larger `batch_size` through the public fail-soft API would log an error and return all misses, and three benchmarks appear to time failing queries.",
+ fix:"Cap the bucket list at 256 and add an integration test at the largest bucket against a real database."},
+{id:"F10",sev:"low",cat:"correctness",eff:"S",conf:"lead",
+ t:"FileIOCore has a zero-permit hang, uneven cache invalidation, and options that do nothing",
+ w:["business-logic/classic-file-io-core/src/core.rs:155-165","business-logic/classic-file-io-core/src/core.rs:219-237"],
+ what:"`write_limit = max_concurrent_io.max(1) / 2` is 0 for an input of 1, although the comment says \"min 1\", so a write semaphore would never grant. The reviewer also found that `append_file` and `write_multiple_files` do not invalidate the read cache, and that `default_encoding` is stored but never read.",
+ why:"No production caller hits the hang or the stale read today, but both are one call away. The read cache costs a full copy of every crash log.",
+ fix:"Use `(n / 2).max(1)`. Either invalidate in every writer or drop the read and metadata caches."},
+{id:"F11",sev:"low",cat:"correctness",eff:"S",conf:"probable",
+ t:"Game-path and Documents discovery depend on a UTF-8 XSE log and the legacy Shell Folders key",
+ w:["business-logic/classic-path-core/src/game_path.rs:297-305","business-logic/classic-path-core/src/platform/windows.rs:83-89"],
+ what:"`parse_xse_log` uses `fs::read_to_string`. `get_documents_path` reads only `HKCU\\…\\Explorer\\Shell Folders\\Personal`.",
+ why:"A non-UTF-8 XSE log fails that discovery strategy, and Microsoft documents Shell Folders as a compatibility key. The encoding F4SE actually writes was not confirmed.",
+ fix:"Read bytes and decode with detection. Resolve Documents with `SHGetKnownFolderPath(FOLDERID_Documents)` and keep the registry as fallback."},
+{id:"F12",sev:"low",cat:"performance",eff:"S",conf:"reviewer",
+ t:"Setup intake reads the whole game executable repeatedly and hashes it even with no expected hash",
+ w:["foundation/classic-shared-core/src/version/pe_version.rs:136","business-logic/classic-scangame-core/src/game_setup_intake.rs:982-1009"],
+ what:"`extract_pe_version` reads the full file to get one version resource and runs twice in auto mode. The executable is then hashed before checking whether an expected hash exists.",
+ why:"Two full reads plus a full SHA-256 of the game executable per intake, on the GUI's setup path.",
+ fix:"Reuse the detected version, map the PE file instead of reading it, and hash only when an expectation exists."},
+{id:"F13",sev:"low",cat:"correctness",eff:"S",conf:"reviewer",
+ t:"YAML file cache trusts mtime <=, records mtime after reading, and deep-clones on every hit",
+ w:["foundation/classic-shared-core/src/yaml/operations.rs:207-258"],
+ what:"An entry is fresh when `modified <= cached.modified`, so a restored older file is served from cache. The stored mtime is read after the content. Each hit deep-copies the tree.",
+ why:"A rare stale read and avoidable allocation on each cached load.",
+ fix:"Compare `(len, mtime)` for equality, stat before reading, and return `Arc<Yaml>`."},
+{id:"F14",sev:"low",cat:"design",eff:"M",conf:"reviewer",
+ t:"classic-registry-core is write-only global state in production",
+ w:["business-logic/classic-registry-core/src/registry.rs:158-174","cpp-bindings/classic-cpp-bridge/src/registry.rs:11-18","classic-gui/src/main.cpp:129-130"],
+ what:"The frontends write `is_gui_mode` and the game name through the bridge. The only non-test Rust reader of the crate is `get_application_dir()`, which no production code sets.",
+ why:"A crate, two bridge exports, and a process-wide map of `dyn Any` with no observable effect, in a codebase that otherwise passes explicit scopes.",
+ fix:"Remove the two bridge exports with their GUI and CLI call sites, remove the config-core override, then retire the crate and its conformance family.",
+ dec:"Data that nothing reads is dead code: retire it. The wider rule for conformance-only code is F18."},
+{id:"F18",sev:"medium",cat:"design",eff:"L",conf:"lead",
+ t:"Capabilities consumed only by conformance tests are dead code",
+ w:["business-logic/classic-scangame-core/src/orchestrator.rs","business-logic/classic-resource-core/src/game_files.rs","foundation/classic-shared-core/src/path_core.rs","foundation/classic-shared-core/src/performance_core.rs","foundation/classic-shared-core/src/yaml/logical_key_cache.rs","docs/adr/0010-retire-python-and-node-bindings.md"],
+ what:"No non-test source file outside its own crate references `GameScanOrchestrator`, `GameFilesManager`, `VersionBackupManager`, `PathHandler`, `StringProcessor`, `performance_core`, or the logical-key YAML cache: I searched all tracked Rust and C++ sources excluding tests, benches, and `xtask`, and each name appears only in its defining file and its crate's `lib.rs`. A reviewer reports the same for the BA2, unpacked, logs, Wrye, ENB, integrity, and crashgen checkers behind `GameScanOrchestrator`. Only unit tests and conformance scenario packs exercise them; ADR-0010 kept those Rust-only packs when the bindings were retired. `docs/api/classic-cpp-bridge-game-entrypoints.md` still says the bridge wraps `VersionBackupManager`, which the search contradicts.",
+ why:"The GUI's game-files worker runs only Setup Intake while a full parallel orchestrator is maintained, built, and conformance-tested beside it. Conformance families that certify code nobody ships cost CI time and make the verdict look broader than the product.",
+ fix:"Confirm each item's caller list, then remove the unconsumed capabilities together with their conformance families, packs, and API doc pages, and revise ADR-0010 to say conformance covers consumed behaviour only. Do it per capability so each removal is reviewable. This also shrinks F16's unused-dependency list.",
+ dec:"Code that nothing consumes beyond conformance tests is dead. The conformance procedures need an overhaul now that the bindings are gone. If a capability is needed later, re-add it in a shape that suits its consumer."},
+{id:"F15",sev:"low",cat:"design",eff:"M",conf:"reviewer",
+ t:"Selection-to-version mapping is implemented three times and the copies disagree",
+ w:["business-logic/classic-scangame-core/src/game_setup_intake.rs:1508-1523","business-logic/classic-version-registry-core/src/fallout4_version.rs:63-64","business-logic/classic-scangame-core/src/xse.rs:31-54"],
+ what:"The two version parsers in shared-core and version-registry-core are not duplicates; they produce different types for different facts. The real duplication is selection-to-registry-id mapping, in three places. `Fallout4Version::from_str` accepts `\"1.10.163\"`; the intake normaliser turns the same string into `\"auto\"`.",
+ why:"One settings value can resolve differently for XSE folder resolution and for setup intake.",
+ fix:"Have the intake parse through `Fallout4Version` and rename scangame's `xse::GameVersion`, which collides with the registry type."},
+{id:"F16",sev:"low",cat:"design",eff:"S",conf:"lead",
+ t:"Unused dependencies and stale module docs",
+ w:["business-logic/classic-scangame-core/Cargo.toml","Cargo.toml","foundation/classic-shared-core/src/performance_core.rs:31"],
+ what:"`classic-scangame-core` declares 15 dependencies that nothing under its `src`, `tests`, or `benches` references (crossbeam, num_cpus, dashmap, parking_lot, lru, rustc-hash, xxhash-rust, string_cache, smartstring, memchr, anyhow, serde, serde_json, futures, ddsfile). Workspace dependencies `phf` and `tokio-util` are used by no member. The reviewer also found module docs referring to a bridge `perf` module that does not exist and to \"Phase 3B-3C\" work.",
+ why:"Build time and audit surface: the lockfile carries 684 packages.",
+ fix:"Drop the unused dependencies, move test-only ones to `[dev-dependencies]`, and correct the three doc statements."},
+{id:"F17",sev:"low",cat:"testing",eff:"M",conf:"reviewer",
+ t:"Host-dependent tests and missing failure-mode tests in support crates",
+ w:["business-logic/classic-path-core/src/platform/windows_tests.rs:3-38","business-logic/classic-file-io-core/src/core_tests.rs:665-677"],
+ what:"The Windows registry tests query the real registry and accept either outcome; two docs-path tests expect a real Documents folder. There is no seam to inject registry results. The BOM test asserts only `contains`.",
+ why:"F1 to F4, F9, and F10 all sit in untested branches.",
+ fix:"Add a registry-reader closure parameter, following the pattern `user_cache_root_with_env` already uses, and add one test with each fix."},
+
+// ───────────── Frontends / bridge ─────────────
+{id:"G1",sev:"high",cat:"threading",eff:"M",conf:"lead",
+ t:"GUI exit during a scan never cancels; ThreadManager hard-terminates the thread after 5 seconds",
+ w:["classic-gui/src/core/threadmanager.cpp:27-47","classic-gui/src/controllers/scancontroller.cpp:122-127","classic-gui/src/app/mainwindow.cpp:1342-1350"],
+ what:"`ScanController::cancelScan()` has no caller in `classic-gui/src`, and `MainWindow` has no `closeEvent`. Quitting destroys `ThreadManager`, whose `stopWorker` calls `quit()` (a no-op while the worker is inside Rust `block_on`), `wait(5000)`, then `thread->terminate()`.",
+ why:"The UI thread waits up to 5 s with no window, then kills a thread inside Rust and tokio. Reports or Unsolved Logs moves can be cut off mid-way, and a terminated thread holding a heap or loader lock can hang process exit. The same path hits an in-flight update check.",
+ fix:"Add `MainWindow::closeEvent` (and route `onExit` through it) that calls `cancelScan()`, ignores the close, and keeps the event loop alive until the worker's terminal signal, then closes. Remove `terminate()` from `ThreadManager`. Give the in-flight update check the same treatment.",
+ dec:"There is no Cancel button by design; the cancel plumbing exists for closing the session during a scan. Closing must cancel and wait."},
+{id:"G2",sev:"high",cat:"threading",eff:"S",conf:"lead",
+ t:"Stopping Papyrus monitoring calls deleteLater() through a null pointer",
+ w:["classic-gui/src/app/mainwindow.cpp:1848-1851","classic-gui/src/app/mainwindow.cpp:1861-1873","classic-gui/src/app/papyrusdialog.cpp:61-64","classic-gui/src/app/papyrusdialog.cpp:83-87"],
+ what:"The stop branch runs `m_papyrusDialog->close(); m_papyrusDialog->deleteLater(); m_papyrusDialog = nullptr;`. `close()` synchronously runs `closeEvent`, which emits `stopRequested`, which is direct-connected to a lambda that re-enters `onTogglePapyrusMonitor()`. The inner call nulls `m_papyrusDialog`; the outer frame then calls `deleteLater()` on null. `m_papyrusDialog` is a raw pointer, not a `QPointer`.",
+ why:"Undefined behaviour on the normal way to stop monitoring (the toggle button, the dialog's STOP button, and the error path). Whether it crashes depends on Qt's `deleteLater` implementation; it was not run. The reviewer also found the Rust analyzer box is never freed. No GUI test touches the Papyrus classes.",
+ fix:"Capture the pointer into a local, null the member first, then `close()` and `deleteLater()` the local. Release the analyzer box in the worker destructor. Add a start/stop test."},
+{id:"G3",sev:"medium",cat:"ffi",eff:"S",conf:"lead",
+ t:"Startup can terminate on an uncaught rust::Error when first-run settings creation fails",
+ w:["classic-gui/src/app/mainwindow.cpp:759-788","classic-gui/src/core/gamesetupusersettings.cpp:111-136","classic-gui/src/main.cpp:133"],
+ what:"`GameSetupUserSettings::bootstrap()` reaches `user_settings_commit_bootstrap` with no `try` around it; the `try` in `loadSettings()` only starts after this block. `loadSettings()` runs from the `MainWindow` constructor, which `main()` builds outside any `try`.",
+ why:"A user whose install folder is read-only or locked clicks Yes on \"Create User Settings\" and the process aborts with no message. The trigger condition is plausible but was not reproduced.",
+ fix:"Move the open and bootstrap block inside the existing `try`, or catch in `commitUpdate` and return a failed status with a diagnostic."},
+{id:"G4",sev:"high",cat:"correctness",eff:"S",conf:"lead",
+ t:"BackupManager writes game-file backups to CLASSIC_Backups instead of the canonical CLASSIC Backups",
+ w:["business-logic/classic-resource-core/src/backup.rs:109","ui-applications/classic-tui/src/app/backup_workflow.rs:75","cpp-bindings/classic-cpp-bridge/src/files.rs:36","classic-gui/src/app/mainwindow.cpp:1619-1660","tests/conformance/packs/file_backups/v1.json:72","docs/api/classic-resource-core.md:294"],
+ what:"The canonical folder is `CLASSIC Backups` (space), confirmed by the maintainer. `BackupManager::new` defaults to `game_root.join(\"CLASSIC_Backups\")` (underscore), the bridge passes `None` for the base, and the TUI hard-codes the same underscore name. The GUI's \"Open CLASSIC Backups\" button and `VersionBackupManager` both use the correct spaced name. The wrong name is also pinned by `backup_tests.rs:41`, the `file_backups` conformance pack, the CLI conformance header, and `docs/api/classic-resource-core.md`.",
+ why:"Backups land in a folder the GUI button never opens, so after Backup the button shows the YAML-data backup folder or creates an empty `CLASSIC Backups` beside the real one. Users cannot find their backups, and anyone who has already backed up with a current build has them under the wrong name.",
+ fix:"Change the default in `BackupManager::new` to `CLASSIC Backups` and define the name once in Rust so the TUI and GUI stop spelling it themselves (a bridge accessor for the base directory, added with its GUI call site). Update the unit test, the conformance pack and header, and the API doc in the same change. Decide how to treat an existing `CLASSIC_Backups` folder: read it as a fallback or move it on first use.",
+ dec:"`CLASSIC Backups` is canonical and the fix above is approved. An existing `CLASSIC_Backups` folder is moved into place on first use and read in place if the move fails."},
+{id:"G5",sev:"medium",cat:"ffi",eff:"S",conf:"lead",
+ t:"CLI takes argv in the ANSI code page but hands it to the bridge as UTF-8",
+ w:["classic-cli/src/main.cpp:48","classic-cli/src/cli_args.cpp:57","classic-cli/src/scan_run_cli.cpp:352-355"],
+ what:"`int main(int argc, char* argv[])` with no `wmain`, no CLI11 `ensure_utf8`, and no UTF-8 `activeCodePage` manifest (searched `classic-cli/` and `cmake/`). The reviewer traced `--scan-path` and positional inputs straight into `rust::String`, which throws on non-UTF-8 bytes.",
+ why:"A path such as `C:\\Users\\Иван\\…` on a CP1251 system, or a crash log dragged onto the exe, ends in a fatal error. Characters outside the code page become `?` before `main` runs.",
+ fix:"Call `argv = app.ensure_utf8(argv);` before parsing, or embed a UTF-8 `activeCodePage` manifest. Add a non-ASCII-path integration scenario."},
+{id:"G6",sev:"medium",cat:"threading",eff:"M",conf:"reviewer",
+ t:"Blocking bridge calls on the Qt GUI thread",
+ w:["classic-gui/src/app/settingsdialog.cpp:671-715","classic-gui/src/controllers/backupcontroller.cpp:38-88","classic-gui/src/app/mainwindow.cpp:234"],
+ what:"\"Check for Updates Now\" calls `check_app_notification` directly in the slot (HTTP under `block_on`, up to about 35 s offline), though `UpdateWorker` exists for this call. Backup, restore, and remove run file copies from button lambdas. `checkFirstRunPaths()` runs full Game Setup Intake in the `MainWindow` constructor on every start. Accepting Settings during a YAML apply makes the destructor wait unboundedly.",
+ why:"Multi-second \"Not Responding\" freezes.",
+ fix:"Reuse `UpdateWorker` and `YamlUpdateWorker`, guard `accept()` with `canCloseDialog()`, and move backup operations and startup intake to workers."},
+{id:"G7",sev:"medium",cat:"correctness",eff:"S",conf:"lead",
+ t:"TUI global hotkeys pre-empt text entry; q quits from a path field, even mid-scan",
+ w:["ui-applications/classic-tui/src/event.rs:146-169","ui-applications/classic-tui/src/app.rs:561-577"],
+ what:"`handle_key` matches `Char('q')` (quit) and `Char('1')` to `Char('4')` (tab switch) and returns before the tab handler that inserts characters. The reviewer notes the app starts with focus in a text input, and quit does not cancel a running scan.",
+ why:"Typing `D:\\Games\\Fallout 4` switches tabs at \"4\", and any path containing \"q\" exits the app. Searching \"2024\" in Results is impossible.",
+ fix:"Skip global character shortcuts when a text input has focus (keep F-keys and Ctrl chords). On quit with a scan in progress, cancel and drain or ask. Add an event test that types `q4`."},
+{id:"G8",sev:"medium",cat:"ffi",eff:"S",conf:"reviewer",
+ t:"Rust panics are invisible in the GUI and lost in the TUI",
+ w:["cpp-bindings/classic-cpp-bridge/src/scanner/contract.rs:1168-1170","ui-applications/classic-tui/src/main.rs:17-57"],
+ what:"There is no `panic::set_hook` and no production `catch_unwind` in the workspace. CXX shims abort on unwind, and the GUI is a `WIN32` subsystem executable with no stderr. In the TUI the report is printed before the terminal guard leaves the alternate screen, so it is wiped.",
+ why:"Crashes arrive as \"it just closed\" with nothing to triage.",
+ fix:"Install a hook in `logging::init()` that writes the panic and backtrace to the log file before the default hook. In the TUI, chain a hook that restores the terminal first."},
+{id:"G9",sev:"medium",cat:"architecture",eff:"M",conf:"reviewer",
+ t:"Custom-scan-folder validation lives in two frontends and not in the core",
+ w:["classic-gui/src/app/mainwindow.cpp:1202-1251","ui-applications/classic-tui/src/app.rs:879-891","business-logic/classic-scanlog-core/src/custom_scan.rs:102-110"],
+ what:"The \"may not be inside `Crash Logs`\" rule is written twice: the GUI lowercases and string-prefix compares; the TUI canonicalises and uses `starts_with`. The core validator checks only directory and restricted-path. The CLI appears to pass `--scan-path` straight to launch.",
+ why:"A repository rule 2 violation that already produces three behaviours.",
+ fix:"Move the rule into `validate_custom_scan_path` or `classic-scan-launch` so launch rejects it for every frontend, then delete the copies."},
+{id:"G10",sev:"medium",cat:"architecture",eff:"M",conf:"reviewer",
+ t:"The User Settings preview-then-commit protocol is re-implemented three times in C++ over string statuses",
+ w:["classic-gui/src/core/gamesetupusersettings.cpp:89-136","classic-gui/src/core/guiusersettings.cpp:261-315","classic-cli/src/user_settings_action.cpp:32-84"],
+ what:"Each caller previews, compares `base_revision` in C++, invents its own conflict diagnostic, then commits, although the bridge commit already reopens, compares, and re-previews. Results cross as strings: 23 `QStringLiteral(\"committed\"…)` comparisons in the GUI alone, while `scanner.rs` uses CXX shared enums for the same job.",
+ why:"Persistence state transitions live in C++, each save opens the document three or more times, and a mistyped token fails silently at runtime.",
+ fix:"Call commit directly with the expected revision, remove the preview exports if they lose their last caller, and replace status strings with shared enums."},
+{id:"G11",sev:"medium",cat:"architecture",eff:"M",conf:"reviewer",
+ t:"Business logic lives in the bridge crate, and the TUI has diverged from it",
+ w:["cpp-bindings/classic-cpp-bridge/src/files.rs:76-103","cpp-bindings/classic-cpp-bridge/src/markdown.rs:117-200","ui-applications/classic-tui/src/app/results_workflow.rs:481-530"],
+ what:"`discover_report_files` (the `*-AUTOSCAN.md` filter and sort) and report normalisation exist only in the bridge. The TUI lists every `*.md` in a different directory set and has no normalisation. The bridge also holds the exe-name rule and the YAML channel owner/repo literals.",
+ why:"Rule 4 says business logic never moves into the bridge. Here that produces different report lists and rendering in the GUI and TUI.",
+ fix:"Move report discovery and normalisation into a core crate used by both frontends, and the channel coordinates to update-core."},
+{id:"G12",sev:"medium",cat:"security",eff:"M",conf:"lead",
+ t:"Report viewers follow any link a report contains",
+ w:["cpp-bindings/classic-cpp-bridge/src/markdown.rs:196-201","classic-gui/src/widgets/markdownviewer.cpp:71","ui-applications/classic-tui/src/app.rs:101-103"],
+ what:"The renderer uses `Parser::new_ext(.., Options::empty())` plus `push_html`, which passes raw HTML and any link scheme through. The GUI sets `setOpenExternalLinks(true)`, and the TUI calls `open::that(url)` with no scheme check.",
+ why:"Reports derive from crash logs that helpers routinely receive from strangers. If report generation lets log text become a Markdown link, one click hands an attacker-chosen target to the shell. Exploitability is unverified: it depends on whether report generation escapes log-derived text.",
+ fix:"Apply one Rust-owned link policy (http and https only) in both the HTML renderer and the TUI opener, and drop raw HTML events."},
+{id:"G13",sev:"low",cat:"threading",eff:"S",conf:"reviewer",
+ t:"A targeted-input rejection warning stalls the whole scan behind a modal dialog",
+ w:["classic-gui/src/controllers/scancontroller.cpp:87-100","classic-gui/src/app/mainwindow.cpp:1499-1502"],
+ what:"`discoveryCompleted` is a blocking queued connection whose handler runs `QMessageBox::exec()` before emitting `scanReportDirectoriesResolved`, so the worker is parked in the Rust observer callback until the user clicks OK.",
+ why:"Launch and discovery warnings behave differently, and the comment says the run does not wait for the user.",
+ fix:"Emit `scanReportDirectoriesResolved` first and post the warning with a queued invoke."},
+{id:"G14",sev:"low",cat:"correctness",eff:"S",conf:"reviewer",
+ t:"Accepting Settings loads settings twice",
+ w:["classic-gui/src/app/mainwindow.cpp:684","classic-gui/src/app/mainwindow.cpp:1527-1534"],
+ what:"`onShowSettings` calls `loadSettings()` and then emits `settingsChanged`, whose only receiver is `loadSettings`.",
+ why:"An untrusted settings document produces its warning twice, and any window resize since the last tab switch snaps back when Settings is accepted.",
+ fix:"Drop one of the two triggers and split geometry restore out of the reload path."},
+{id:"G15",sev:"medium",cat:"architecture",eff:"L",conf:"reviewer",
+ t:"Frontends still compose and persist domain artifacts",
+ w:["classic-gui/src/app/mainwindow.cpp:1555-1592","classic-gui/src/app/mainwindow.cpp:140-172","classic-gui/src/workers/scanrunpresentation.cpp:63-104","classic-cli/src/scan_run_cli.cpp:147-184"],
+ what:"The GUI builds the Game Files report Markdown and its filename itself, and composes the Local YAML path `CLASSIC %1 Local.yaml` (I confirmed the pattern at line 142; the reviewer reports the game argument is hard-coded to Fallout4). The FCX setup projection is rendered in three near-identical copies across GUI, CLI, and TUI.",
+ why:"This is the wording and behaviour drift the presentation crate set out to remove, and the hard-coded game name is wrong for any other managed game.",
+ fix:"Let scangame core own the report artifact, have `persist_game_local_paths` take root and game, and render the FCX setup block in `classic-scan-presentation`."},
+{id:"G16",sev:"medium",cat:"correctness",eff:"S",conf:"lead",
+ t:"TUI reports success for features that are stubs",
+ w:["ui-applications/classic-tui/src/app.rs:1129-1147","ui-applications/classic-tui/src/app/backup_workflow.rs:100-106"],
+ what:"`toggle_papyrus` only flips a bool and prints \"Papyrus monitoring enabled\". `start_game_files_scan` prints \"Game files scan integration pending\". The reviewer also found `game_root_for_backup` falls back to the CLASSIC root when no game root is saved, where the GUI refuses.",
+ why:"The user is told monitoring is on when nothing runs, and backup or restore can operate on the CLASSIC install folder.",
+ fix:"Disable or label the unimplemented actions, and refuse backups without a game root."},
+{id:"G17",sev:"low",cat:"ffi",eff:"S",conf:"reviewer",
+ t:"Update DTO discriminators are a u32 tag and strings, each hand-copied in three places",
+ w:["cpp-bindings/classic-cpp-bridge/src/update.rs:35-39","classic-cli/src/yaml_update.cpp:27-31","classic-gui/src/workers/yamlupdateworker.cpp:18-22"],
+ what:"Comments say the copies are \"kept in lockstep\". Errors are formatted with \"GUI-parseable prefixes\".",
+ why:"Drift is caught only at runtime, with no `-Wswitch` help.",
+ fix:"Use CXX shared enums as `scanner.rs` does, plus a typed error kind."},
+{id:"G18",sev:"medium",cat:"build",eff:"S",conf:"probable",
+ t:"The CLI install and package likely omit fmt.dll",
+ w:["classic-cli/CMakeLists.txt:116-128","classic-cli/CMakePresets.json:5-15"],
+ what:"The default preset uses the dynamic `x64-windows` triplet and `fmt.dll` sits beside the built exe, but the only install rule is `install(TARGETS classic-cli RUNTIME DESTINATION .)` with no runtime dependency set.",
+ why:"A CPack ZIP would fail on a clean machine. Unconfirmed: no install tree was inspected and release packaging may take another path.",
+ fix:"Add `RUNTIME_DEPENDENCY_SET` or set `X_VCPKG_APPLOCAL_DEPS_INSTALL=ON`, and smoke-run the installed exe from the wrapper."},
+{id:"G19",sev:"low",cat:"build",eff:"S",conf:"reviewer",
+ t:"Build-graph gaps",
+ w:["cmake/ClassicAppVersion.cmake:13","cpp-bindings/classic-cpp-bridge/build.rs:3-23","classic-gui/src/CMakeLists.txt:133"],
+ what:"The version is read with `file(STRINGS)` and no `CMAKE_CONFIGURE_DEPENDS`, so a YAML-only bump leaves the baked version stale. Every non-Debug config maps to Rust `release` with `strip = true` although `release-with-debug` exists. `build.rs` reruns only on `src/`, not `include/`. `Qt6::Network` is linked though no GUI source includes it. Catch2 is found `QUIET`, silently disabling CLI unit tests if missing.",
+ why:"Stale version stamps, Rust frames that cannot be debugged in RelWithDebInfo, and package bloat.",
+ fix:"Register the YAML as a configure dependency, map RelWithDebInfo to `release-with-debug`, add `rerun-if-changed=include/`, and make Catch2 required when testing is on."},
+{id:"G20",sev:"low",cat:"build",eff:"M",conf:"reviewer",
+ t:"The two build wrappers are near-copies that have drifted",
+ w:["classic-gui/build_gui.ps1:132-141","classic-cli/build_cli.ps1:74-83"],
+ what:"`-TestTimeoutSec` and `ctest --timeout` exist only in the GUI wrapper; the `_CTestArgsContinuation` workaround only in the CLI wrapper. Both hard-code a Visual Studio install path as fallback.",
+ why:"Fixes land in one wrapper and not the other, and a hung CLI test hangs that wrapper indefinitely.",
+ fix:"Move toolchain discovery, reuse markers, and test-name handling into a shared `tools/` module, and add the timeout to the CLI wrapper."},
+{id:"G21",sev:"low",cat:"ffi",eff:"S",conf:"reviewer",
+ t:"unsafe impl Send for CxxObserverAdapter is sound today but rests on an unstated invariant",
+ w:["cpp-bindings/classic-cpp-bridge/src/scanner/contract.rs:448-454","classic-gui/src/main.cpp:95-105"],
+ what:"The observer is invoked inline inside a future driven by `block_on`, so it runs on the calling C++ thread, and both C++ observers are stack objects that outlive the call. Nothing enforces that. Separately, `init_runtime` and `init_logging` do not return `Result`, so the startup `catch (const rust::Error&)` branches can never run.",
+ why:"A future change to how the run is driven would silently call Qt and console code off-thread.",
+ fix:"State the invariant in the SAFETY comment and `debug_assert` the creating thread in `on_event`. Make `init_runtime` return `Result` or remove the dead catches."},
+{id:"G22",sev:"low",cat:"design",eff:"M",conf:"reviewer",
+ t:"Dead and oversized frontend code",
+ w:["classic-gui/src/app/errordialog.cpp","classic-gui/src/core/featurecontext.h","classic-cli/src/thread_pool.cpp","classic-gui/src/app/mainwindow.cpp"],
+ what:"`ErrorDialog` and `FeatureContext` are referenced nowhere outside their own files. `ThreadPool` is compiled only into the test executable. `mainwindow.cpp` (2,096 lines) mixes widget construction, settings orchestration, first-run intake, update presentation, and report writing.",
+ why:"Unused code is still built and tested, and the cancel export passes the orphan gate only through an uncalled method (see G1).",
+ fix:"Remove or wire up the unused pieces and split `MainWindow` into per-tab builders plus a settings and startup coordinator."},
+{id:"G23",sev:"medium",cat:"testing",eff:"M",conf:"reviewer",
+ t:"No tests for the lifecycle paths above",
+ w:["classic-gui/tests/","classic-cli/tests/test_cli_args.cpp","ui-applications/classic-tui/tests/event_tests.rs"],
+ what:"No test references `PapyrusWorker` or `PapyrusDialog`; nothing exercises shutdown or cancel with a scan in flight, the settings reload, non-ASCII CLI arguments, or typing `q` and digits into TUI inputs.",
+ why:"G1, G2, G5, G7, and G14 all sit in untested lifecycle paths.",
+ fix:"Add one focused test per finding as it is fixed."},
+
+// ───────────── CI / release / tooling ─────────────
+{id:"T1",sev:"medium",cat:"ci-security",eff:"S",conf:"lead",
+ t:"Publish workflows run mutable action refs with a write-scoped token",
+ w:[".github/workflows/publish-yaml-data.yml:14-15",".github/workflows/publish-app-notification.yml:12-13",".github/workflows/ci-cpp.yml:265"],
+ what:"Every `uses:` is a mutable ref: `actions/checkout@v6`, `actions/cache@v5`, `actions/upload-artifact@v6`, `actions/download-artifact@v8`, `dtolnay/rust-toolchain@stable` (a branch), `jurplel/install-qt-action@v4`. Both publish workflows grant `contents: write`, and no workflow sets `persist-credentials: false`.",
+ why:"Likelihood is low, but the blast radius is every installed client: a moved ref could push to the repo, rewrite releases, and publish YAML data that clients download.",
+ fix:"Pin actions to commit SHAs, starting with the two publish workflows, and set `persist-credentials: false` on their checkout. `workflow_policy.rs` pins the `@v6`/`@v8` strings, so the policy and its tests change together."},
+{id:"T2",sev:"medium",cat:"ci-reliability",eff:"S",conf:"reviewer",
+ t:"The yaml-data publish never validates its tag",
+ w:[".github/workflows/publish-yaml-data.yml:9-10","xtask/src/yaml_data/manifest.rs:36-38","docs/api/yaml-update-delivery.md:220"],
+ what:"Docs define `yaml-data-v<YYYY>.<MM>.<DD>[.<N>]`, but the trigger is the glob `yaml-data-v*` and the manifest uses the string as given. The app-notification workflow has an explicit tag step. Neither checks the tagged commit is on `classic-next`.",
+ why:"A parseable typo such as `yaml-data-v2062.04.17` would outrank every later release for fallback clients until deleted.",
+ fix:"Add a tag-validation step mirroring `parse_yaml_data_tag` and a `git merge-base --is-ancestor` check to both publish workflows."},
+{id:"T3",sev:"medium",cat:"release",eff:"M",conf:"probable",
+ t:"-Package zips unsigned binaries, and signing failures are swallowed",
+ w:["classic-cli/build_cli.ps1:524-539","classic-gui/build_gui.ps1:534-545","tools/sign-binaries.ps1:241-286"],
+ what:"Signing targets the install directory, then `cpack` stages from the build tree. `Invoke-CodeSigning` catches everything and discards the result. The PFX password defaults to a literal and is passed on the command line. Packaging was not executed.",
+ why:"A packaged release can ship unsigned with a green build, and the certificate is self-signed anyway.",
+ fix:"Sign in the build tree before packaging, add a `-RequireSigning` switch that fails the build, and decide whether self-signing is worth keeping."},
+{id:"T4",sev:"medium",cat:"release",eff:"M",conf:"reviewer",
+ t:"Binary releases are manual and built from untracked local state",
+ w:["classic-cli/CMakeLists.txt:135-151","classic-gui/src/CMakeLists.txt:179-193","README.md:87-94"],
+ what:"There is no `v*` workflow. The install rule copies the whole working-tree `CLASSIC Data/databases/` directory with a short exclude list, and `Fallout4 FormIDs Main.db` is not tracked or documented. The README says releases are a `.7z`; CPack makes two ZIPs.",
+ why:"Release contents depend on whatever sits in the maintainer's directory, and a clean checkout cannot reproduce a release.",
+ fix:"Keep the manual process but write it down: a release checklist that starts from a clean checkout, names each step, and records SHA-256 sums of the artifacts. Switch the install rule to an allow-list so stray local files cannot ship. Document how `Fallout4 FormIDs Main.db` is built and record its checksum per release. Correct the README's `.7z` statement.",
+ dec:"Releases and `Fallout4 FormIDs Main.db` are made by hand. That stays; the finding is now that neither procedure is written down or checked."},
+{id:"T5",sev:"medium",cat:"tooling",eff:"S",conf:"reviewer",
+ t:"About 1,000 lines of script tests are never run",
+ w:["tests/powershell/cpp_build_scripts.test.ps1","tools/tests/set_version_scope_tests.ps1","cmake/test_classic_app_version_extractor.cmake"],
+ what:"No workflow, wrapper, or `add_test` invokes the PowerShell and CMake script tests covering the build wrappers, version bump, vcpkg bootstrap, and linker guard.",
+ why:"A test that never runs gives false assurance over the surface the conformance gates depend on.",
+ fix:"Add a short `script-tests` job that runs them, or delete the ones no longer wanted."},
+{id:"T6",sev:"medium",cat:"ci-reliability",eff:"S",conf:"lead",
+ t:"The lint and build jobs share one target cache key",
+ w:[".github/workflows/ci-rust.yml:60",".github/workflows/ci-rust.yml:106"],
+ what:"Lines 60 and 106 have an identical `…-cargo-build-…` key, but `lint` produces debug clippy artifacts and `build` produces release artifacts. The key hashes `*.rs` under four layer roots only, omitting `xtask/**` and `Cargo.toml`, while the toolchain floats on stable.",
+ why:"Only one job can save that key, so the other restores artifacts it cannot use. Whether this thrashes the repository cache limit is unverified.",
+ fix:"Give `lint` its own key at minimum; better, use a purpose-built Rust cache action or sccache."},
+{id:"T7",sev:"medium",cat:"ci-reliability",eff:"S",conf:"lead",
+ t:"CI has no cancellation, repeats the test suite, and the format job is disabled",
+ w:[".github/workflows/ci-binding-compliance.yml:3-10",".github/workflows/ci-rust.yml:13-16",".github/workflows/ci-rust.yml:151-158"],
+ what:"No CI workflow has a `concurrency:` block (only the two publish workflows do). The suite runs in release, then again with `--all-features`. The `format` job has `if: \"false\"` plus `continue-on-error`. `--locked` appears only on the xtask build steps.",
+ why:"Superseded pushes keep running jobs with 120 to 360 minute timeouts, formatting is unenforced, and lock drift is caught only indirectly.",
+ fix:"Add `concurrency` with cancel-in-progress for pull requests, narrow the all-features run to crates that have features, add `--locked`, and either restore or remove the format job. The test and clippy commands are pinned in `workflow_policy.rs`, so edit both."},
+{id:"T8",sev:"low",cat:"docs",eff:"S",conf:"lead",
+ t:"Live docs point at a benchmarks.yml workflow that does not exist",
+ w:["README.md:200",".agents/skills/classic-project-guide/references/repo-guide.md:158","docs/README.md:85","benchmark-config.yaml:3"],
+ what:"`.github/workflows/` holds five files, none named `benchmarks.yml`, yet the README, the project guide and both mirrors, and five docs pages reference it. `benchmark-config.yaml` has no reader.",
+ why:"Readers and agents are told a regression gate exists; the 5% and 10% thresholds are enforced by nothing.",
+ fix:"Remove the references and `benchmark-config.yaml`, or restore the workflow."},
+{id:"T9",sev:"low",cat:"docs",eff:"S",conf:"lead",
+ t:"sample_logs is still documented as a git submodule",
+ w:["README.md:138-142",".gitmodules",".github/workflows/ci-cpp.yml:78-80"],
+ what:"`.gitmodules` is tracked at 0 bytes and the tree has no gitlinks; about 1,300 logs are tracked directly. The reviewer found the README and project guide still tell readers to run `git submodule update --init --recursive`, and one CI job still checks out with `submodules: recursive`.",
+ why:"The documented command is a no-op that suggests missing fixtures.",
+ fix:"Update the two docs, delete `.gitmodules`, and drop `submodules: recursive`."},
+{id:"T10",sev:"low",cat:"hygiene",eff:"S",conf:"reviewer",
+ t:"Retired-tooling leftovers and large unused binaries are tracked",
+ w:["CLASSIC Data/CLASSIC Data.zip","docs/implementation/workspace_layout/baseline/ci-receipts.zip","conductor/",".specify/","Crash Logs/"],
+ what:"A 16.7 MB data zip last changed in 2024 (I confirmed the size), three CI-receipt zips, and `.specify/`, `conductor/`, `.kilo/`, `.gsd/`, `roadmap/`, `skills-lock.json`, and backup copies of agent settings that nothing references. `conductor/tech-stack.md` describes a Python/PySide6 stack as current.",
+ why:"Clone weight, plus agent tools that auto-load `conductor/` or `.specify/` would be told this is a Python project.",
+ fix:"Remove them from the index, moving anything worth keeping under `docs/archive/`. `Crash Logs/` is not part of this: it is a deliberate corpus. Two things follow from that. It is tracked only because its files were force-added past the root `*.log` ignore rule, so add an explicit `!Crash Logs/**` rule like the one `sample_logs/` has, or new logs will be skipped by `git add`. And `.vscode/tasks.json:35` has a task that deletes the directory.",
+ dec:"`Crash Logs/` is tracked on purpose: a growing corpus of the maintainer's own logs that keeps pace with new crash-log generator versions."},
+{id:"T11",sev:"low",cat:"hygiene",eff:"S",conf:"lead",
+ t:".gitignore ignores files the repository depends on",
+ w:[".gitignore:6",".gitignore:38",".gitignore:312"],
+ what:"`git ls-files -ci --exclude-standard` lists `Cargo.lock` (matched by `*.lock`), seven `.claude/` files including the skill mirror, four zips, and `Fallout4 FID Mods.txt` as tracked but ignored. Unanchored patterns such as `*.log` and `test_*.txt` apply everywhere.",
+ why:"A new file under the `.claude/` skill mirror, or a source file matching a generic pattern, is silently skipped by `git add`. `AGENTS.md` warns about mirror rot but names only `.opencode/skills/`.",
+ fix:"Drop the lock-file patterns, give `.claude/` explicit include rules, anchor generic names to the root, and name the `.claude` mirror in `AGENTS.md`."},
+{id:"T12",sev:"low",cat:"release",eff:"S",conf:"reviewer",
+ t:"set_version.ps1 leaves the lockfile stale and overstates its guarantees",
+ w:["set_version.ps1:1","set_version.ps1:207","set_version.ps1:645-657"],
+ what:"It declares `#Requires -Version 5.1` but uses multi-segment `Join-Path`, which needs PowerShell 6+. It bumps 22 crate versions without refreshing `Cargo.lock`, and exits 0 if any one file changed even when another pattern missed.",
+ why:"A version bump needs an undocumented follow-up, and a partial bump reports success.",
+ fix:"Require PowerShell 7, refresh the lockfile at the end, verify all targets, and exit non-zero on any miss."},
+{id:"T13",sev:"low",cat:"docs",eff:"S",conf:"reviewer",
+ t:"Python-era docs sit in live locations with no historical label",
+ w:["docs/development/gil_audit.md","performance_baselines/README.md","docs/adr/0008-executable-cross-adapter-conformance.md:98"],
+ what:"`gil_audit.md` is a PyO3 audit with no retirement note. `performance_baselines/README.md` gives a `ClassicLib-rs/Cargo.toml` command as current. ADR-0008 links to a missing file. `docs/adr/` has no index and the ADRs carry no status line.",
+ why:"Small, but each contradicts the repository's stated doc rules.",
+ fix:"Move `gil_audit.md` to an archive folder, rewrite the baselines README to repo-root commands, and fix or remove the ADR link."},
+{id:"T14",sev:"low",cat:"tooling",eff:"M",conf:"probable",
+ t:"The conformance launcher can hang past its own timeout",
+ w:["xtask/src/conformance/launch.rs:482-521","xtask/src/conformance/launch.rs:556-607"],
+ what:"After the wait loop, the stdout and stderr drain threads are joined with no deadline, so a descendant that outlives the child keeps the pipe open. The only timeout test uses a single child. Not reproduced.",
+ why:"A leaked build-server process would stall a run until the 360-minute job timeout instead of the family timeout.",
+ fix:"Use a Job Object with kill-on-close on Windows or bound the drain joins, and add a test with a grandchild holding the pipe."},
+{id:"T15",sev:"low",cat:"ci-reliability",eff:"S",conf:"reviewer",
+ t:"Smaller publish-workflow inconsistencies",
+ w:[".github/workflows/publish-yaml-data.yml:206-234",".github/workflows/publish-app-notification.yml:211-274"],
+ what:"Both checkouts fetch full history for a push that actually uses a fresh shallow clone. The token is interpolated into script text instead of an env var. The two channels clear the prerelease flag at opposite points, and one comment about failure behaviour is untrue when only the smoke test times out.",
+ why:"Wasted work and comments that mislead during an incident.",
+ fix:"Drop `fetch-depth: 0`, pass the token through env, pick one ordering, and correct the comment."},
+{id:"T16",sev:"low",cat:"tooling",eff:"M",conf:"reviewer",
+ t:"Per-crate lint tables have drifted",
+ w:["Cargo.toml:153","cpp-bindings/classic-cpp-bridge/Cargo.toml:86","ui-applications/classic-tui/Cargo.toml:65"],
+ what:"Every member declares its own `[lints.rust]` table; only `xtask` inherits `[workspace.lints]` (I confirmed this). The reviewer found `rust_2024_compatibility` is `warn` in 10 crates, `deny` in 11, and absent in one, although all are edition 2024, and that the bridge lacks `unused = \"deny\"`.",
+ why:"The intended policy is not visible in one place.",
+ fix:"Move the common set into `[workspace.lints.rust]` and inherit, keeping documented exceptions as attributes with reasons."},
+{id:"T17",sev:"low",cat:"tooling",eff:"S",conf:"reviewer",
+ t:"The strict JSON parser accepts a signed \\u escape",
+ w:["xtask/src/conformance/json.rs:324-333"],
+ what:"`hex4` passes the four-character slice to `u32::from_str_radix(digits, 16)`, which accepts a leading `+`.",
+ why:"A small hole in a parser whose purpose is strictness; no practical exploit.",
+ fix:"Require all four bytes to be ASCII hex digits before parsing, and add a test."},
+{id:"T18",sev:"low",cat:"supply-chain",eff:"S",conf:"lead",
+ t:"No pinned toolchain and no dependency auditing",
+ w:["Cargo.toml",".github/workflows/ci-rust.yml:21","Cargo.lock"],
+ what:"Every crate declares `rust-version = \"1.96.0\"`, but there is no `rust-toolchain.toml` and CI installs floating stable. There is no `deny.toml`, `cargo audit` step, or Dependabot/Renovate config. The lockfile has 684 packages with duplicated majors (`windows-sys` five times, `hashbrown` four).",
+ why:"A new stable release can break `-D warnings` CI without any repository change, and advisories against 684 packages go unnoticed.",
+ fix:"Add `rust-toolchain.toml`, a scheduled `cargo deny check advisories` job, and a dependency-update bot limited to grouped weekly PRs."},
+{id:"T19",sev:"medium",cat:"privacy",eff:"M",conf:"lead",
+ t:"Tracked crash logs exposed community handles in file names (sanitised in commit b0a4188f)",
+ w:["sample_logs/","Crash Logs/","docs/implementation/rust_python_output_verification.md:26"],
+ what:"Correction: an earlier version of this finding said 178 files contained a real `C:\\Users\\<name>` path. That was wrong. The 164 such files in `sample_logs/` already used a `<USER>` placeholder; I had counted files containing the string, not files containing a name. The real exposure was file names: 896 of 1,312 sample logs carried a submitter's handle. Separately, 15 files in `Crash Logs/` held the maintainer's own profile name and one sample log held a Linux home-directory name.",
+ why:"Anyone who can read the repository could read contributors' handles, with no record that they agreed to it.",
+ fix:"Done and committed locally as `b0a4188f` on `classic-next`, not pushed. 896 logs were renamed to `crash-<timestamp> sample-<id>.log` or `crash-sample-<id>.log`, where the id is the first 8 hex digits of the file's git blob id; git records all 896 as 100% renames, so no content changed. 62 keep a synthetic non-ASCII token (kana, CJK, Cyrillic, fullwidth, astral-plane) so non-ASCII path coverage survives. 136 path occurrences in 16 files were masked to `<USER>` at byte level, leaving encodings and line endings as found. One doc line that named a log by handle was updated. Still to do: push, and add an `xtask` check so new logs cannot reintroduce names, since `Crash Logs/` keeps growing with the maintainer's own logs.",
+ dec:"Handles and user ids are sanitised. History is not rewritten: removing the old names from published history needs a force-push to every branch and tag that contains them, which the maintainer avoids. The old names therefore remain readable in history."},
+{id:"T21",sev:"medium",cat:"ci-security",eff:"S",conf:"reviewer",
+ t:"Release tags are unprotected, and pushing one publishes to every client",
+ w:[".github/workflows/publish-yaml-data.yml:9-10",".github/workflows/publish-app-notification.yml:12-13"],
+ what:"The maintainer confirms no GitHub protection covers the `v*`, `yaml-data-v*`, or `app-notification-v*` tags. Pushing a `yaml-data-v*` or `app-notification-v*` tag is the whole trigger for a workflow that holds `contents: write` and publishes data installed clients fetch. I did not query GitHub; this rests on the maintainer's statement.",
+ why:"Any account or token with push access can publish, move, or delete a release tag. Combined with T1 (mutable action refs holding a write token) and T2 (no tag validation), a single compromised credential or action reaches every client.",
+ fix:"Add a tag ruleset that restricts creating, updating, and deleting the three tag patterns to the maintainer, and consider requiring the publish workflows to run from a protected environment with an approval step.",
+ dec:"Confirmed unprotected. Whether the umbrella CI workflow is a required check on `classic-next` is still unanswered."},
+{id:"T20",sev:"low",cat:"docs",eff:"M",conf:"lead",
+ t:"The live CI umbrella and much of the source still carry binding-era names and wording",
+ w:[".github/workflows/ci-binding-compliance.yml:1","business-logic/classic-database-core/src/pool_sqlx.rs:1272","business-logic/classic-file-io-core/src/hash.rs:11","business-logic/classic-config-core/src/yamldata.rs:920"],
+ what:"`ci-binding-compliance.yml` (\"CI - Binding Compliance\") is not binding-specific: it is the blocking umbrella that runs `ci-rust.yml`, `ci-cpp.yml`, and the conformance verdict. About 20 tracked files reference it by that name. Separately, 49 non-test Rust source files under `business-logic/` and `foundation/` still mention Python, PyO3, or Node. Some are accurate history (\"formerly the Node and Python adapters\"); others state it as current (\"3-5x faster than Python hashlib\", \"converted from a Python set\", \"foreign-language `set_game_table` bindings\").",
+ why:"The name suggests the main CI gate is obsolete along with the bindings, when it is the one workflow that certifies the repository. Stale present-tense comments describe callers that no longer exist.",
+ fix:"Rename the workflow to describe what it does, updating the workflow policy pins, docs, and all three skill mirrors in the same change. Sweep the comments: rewrite the ones that describe retired bindings as current, and keep the ones that record why a frozen token has its value.",
+ dec:"The bindings are gone, so binding-related wording is obsolete. `ci-binding-compliance.yml` stays as it is for now; the CI hierarchy, including its name, will be reworked later or as the work goes. Only the comment sweep is actionable today."}
+];
+
+/* ───────────── rendering ───────────── */
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const fmt = s => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+const SEV_LABEL = { high: "High", medium: "Medium", low: "Low" };
+const SEV_ORDER = ["high", "medium", "low"];
+const EFF = { S: "Small", M: "Medium", L: "Large" };
+
+function tiles() {
+  const n = sev => F.filter(f => f.sev === sev).length;
+  const lead = F.filter(f => f.conf === "lead").length;
+  const notes = { high: "wrong behaviour for ordinary users", medium: "real cost or latent bug", low: "cleanup and hardening" };
+  let html = `<div class="tile"><div class="label">Findings</div><div class="value">${F.length}</div><div class="note">${lead} re-verified by me</div></div>`;
+  for (const s of SEV_ORDER) {
+    html += `<div class="tile"><div class="label"><span class="sev ${s}">${SEV_LABEL[s]}</span></div><div class="value">${n(s)}</div><div class="note">${notes[s]}</div></div>`;
+  }
+  document.getElementById("tiles").innerHTML = html;
+}
+
+function matrix() {
+  let html = "<thead><tr><th>Area</th>" + SEV_ORDER.map(s => `<th class="num"><span class="sev ${s}">${SEV_LABEL[s]}</span></th>`).join("") + '<th class="num">Total</th></tr></thead><tbody>';
+  for (const a of Object.keys(AREAS)) {
+    const inA = F.filter(f => f.id[0] === a);
+    html += `<tr><td><a href="#area-${a}">${esc(AREAS[a])}</a></td>` +
+      SEV_ORDER.map(s => `<td class="num">${inA.filter(f => f.sev === s).length}</td>`).join("") +
+      `<td class="num">${inA.length}</td></tr>`;
+  }
+  html += "</tbody>";
+  document.getElementById("matrix").innerHTML = html;
+}
+
+const state = { sev: new Set(), area: "", conf: "", q: "" };
+
+function matches(f) {
+  if (state.sev.size && !state.sev.has(f.sev)) return false;
+  if (state.area && f.id[0] !== state.area) return false;
+  if (state.conf && f.conf !== state.conf) return false;
+  if (state.q) {
+    const hay = (f.id + " " + f.t + " " + f.cat + " " + f.w.join(" ") + " " + f.what + " " + f.why + " " + f.fix).toLowerCase();
+    if (!hay.includes(state.q)) return false;
+  }
+  return true;
+}
+
+function card(f) {
+  const where = f.w.map(p => `<li><code>${esc(p)}</code></li>`).join("");
+  return `<details class="finding" id="${f.id}"${f.sev === "high" ? " open" : ""}>
+    <summary>
+      <span class="fid">${f.id}</span><span class="ftitle">${fmt(f.t)}</span>
+      <span class="badges">
+        <span class="sev ${f.sev}">${SEV_LABEL[f.sev]}</span>
+        <span class="badge">${esc(f.cat)}</span>
+        <span class="badge">Effort: <b>${EFF[f.eff]}</b></span>
+        <span class="badge">${CONF[f.conf]}</span>
+        ${f.dec ? '<span class="badge decided">Decided</span>' : ""}
+      </span>
+    </summary>
+    <div class="fbody"><dl>
+      <dt>Where</dt><dd><ul>${where}</ul></dd>
+      <dt>What</dt><dd>${fmt(f.what)}</dd>
+      <dt>Impact</dt><dd>${fmt(f.why)}</dd>
+      <dt>Suggestion</dt><dd>${fmt(f.fix)}</dd>
+      ${f.dec ? `<dt>Decision</dt><dd class="dec">${fmt(f.dec)}</dd>` : ""}
+    </dl></div>
+  </details>`;
+}
+
+function render() {
+  const shown = F.filter(matches);
+  let html = "";
+  for (const a of Object.keys(AREAS)) {
+    const inA = shown.filter(f => f.id[0] === a);
+    if (!inA.length) continue;
+    html += `<div class="area-head" id="area-${a}"><h3>${esc(AREAS[a])}</h3><span>${esc(AREA_SCOPE[a])}</span></div>`;
+    html += inA.map(card).join("");
+  }
+  document.getElementById("list").innerHTML = html || '<p class="empty">No findings match these filters.</p>';
+  document.getElementById("count").textContent = shown.length === F.length ? `${F.length} findings` : `${shown.length} of ${F.length} findings`;
+}
+
+function openHash() {
+  const id = location.hash.slice(1);
+  if (!id) return;
+  let el = document.getElementById(id);
+  if (!el && /^[SUFGT]\d+$/.test(id)) {
+    // A linked finding may be filtered out; clear filters so the link always lands.
+    state.sev.clear(); state.area = ""; state.conf = ""; state.q = "";
+    document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+    document.getElementById("areaSel").value = "";
+    document.getElementById("confSel").value = "";
+    document.getElementById("q").value = "";
+    render();
+    el = document.getElementById(id);
+  }
+  if (el && el.tagName === "DETAILS") { el.open = true; el.scrollIntoView({ block: "start" }); }
+}
+
+document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click", () => {
+  const s = chip.dataset.sev;
+  const on = chip.getAttribute("aria-pressed") !== "true";
+  chip.setAttribute("aria-pressed", String(on));
+  if (on) state.sev.add(s); else state.sev.delete(s);
+  render();
+}));
+const areaSel = document.getElementById("areaSel");
+for (const a of Object.keys(AREAS)) areaSel.insertAdjacentHTML("beforeend", `<option value="${a}">${esc(AREAS[a])}</option>`);
+areaSel.addEventListener("change", () => { state.area = areaSel.value; render(); });
+document.getElementById("confSel").addEventListener("change", e => { state.conf = e.target.value; render(); });
+document.getElementById("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
+const expandBtn = document.getElementById("expand");
+expandBtn.addEventListener("click", () => {
+  const all = [...document.querySelectorAll("details.finding")];
+  const open = all.some(d => !d.open);
+  all.forEach(d => { d.open = open; });
+  expandBtn.textContent = open ? "Collapse all" : "Expand all";
+});
+window.addEventListener("hashchange", openHash);
+
+tiles(); matrix(); render(); openHash();
+</script>
+</body>
+</html>
