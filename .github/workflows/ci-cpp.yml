@@ -144,6 +144,23 @@ jobs:
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
 
+      # The image's standalone LLVM (C:\Program Files\LLVM) can lag the MSVC STL,
+      # which rejects older Clang with STL1000 (image 20261116 paired Clang 20.1.8
+      # with an STL requiring Clang 22). Visual Studio's bundled clang-cl ships
+      # matched to its own STL, so it goes first on PATH for the wrapper to find.
+      - name: Prefer Visual Studio's bundled clang-cl
+        if: matrix.compiler == 'clang-cl'
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $vsRoot = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Llvm.Clang -property installationPath
+          if (-not $vsRoot) { throw 'No Visual Studio install with the bundled Clang component was found.' }
+          $llvmBin = Join-Path $vsRoot 'VC\Tools\Llvm\x64\bin'
+          $clangCl = Join-Path $llvmBin 'clang-cl.exe'
+          if (-not (Test-Path -LiteralPath $clangCl -PathType Leaf)) { throw "Bundled clang-cl not found at '$clangCl'." }
+          & $clangCl --version
+          $llvmBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build and test CLI
         timeout-minutes: 90
         run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler ${{ matrix.compiler }}
@@ -297,6 +314,23 @@ jobs:
       - name: Verify Qt resolution policy
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/verify_qt_resolution.ps1
+
+      # The image's standalone LLVM (C:\Program Files\LLVM) can lag the MSVC STL,
+      # which rejects older Clang with STL1000 (image 20261116 paired Clang 20.1.8
+      # with an STL requiring Clang 22). Visual Studio's bundled clang-cl ships
+      # matched to its own STL, so it goes first on PATH for the wrapper to find.
+      - name: Prefer Visual Studio's bundled clang-cl
+        if: matrix.compiler == 'clang-cl'
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $vsRoot = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Llvm.Clang -property installationPath
+          if (-not $vsRoot) { throw 'No Visual Studio install with the bundled Clang component was found.' }
+          $llvmBin = Join-Path $vsRoot 'VC\Tools\Llvm\x64\bin'
+          $clangCl = Join-Path $llvmBin 'clang-cl.exe'
+          if (-not (Test-Path -LiteralPath $clangCl -PathType Leaf)) { throw "Bundled clang-cl not found at '$clangCl'." }
+          & $clangCl --version
+          $llvmBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Build and test GUI
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
