@@ -19,6 +19,7 @@ fn base_facts() -> AutoscanReportFacts {
         crashgen_status: Some(CrashgenVersionStatus::Valid),
         fake_bot_compatible_mode: false,
         fcx_setup: None,
+        plugin_limit_notice: None,
     }
 }
 

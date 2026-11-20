@@ -198,7 +198,7 @@ pub fn render_resume_error(error: &ResumeError) -> Vec<DisplayLine> {
 /// where they say something the label cannot.
 fn render_terminal_status(result: &RunResult) -> DisplayLine {
     let label = Label(result.status.label());
-    let completed = result.succeeded + result.failed;
+    let completed = result.succeeded + result.failed + result.unsolved;
 
     match result.status {
         // `total` counts what discovery accepted, which is not the same as what was scanned
@@ -216,6 +216,19 @@ fn render_terminal_status(result: &RunResult) -> DisplayLine {
                 Text("failed and"),
                 count_usize(result.cancelled, LOG),
                 Text("not started"),
+            ],
+        ),
+        // Unsolved logs were not analyzed, so "scanned" would overstate the run; this
+        // branch names them instead. Failures and not-started logs take precedence above.
+        RunStatus::Completed if result.unsolved > 0 => DisplayLine::new(
+            Notice,
+            vec![
+                label,
+                Text("-"),
+                count_usize(result.total, LOG),
+                Text("discovered,"),
+                count_usize(result.unsolved, LOG),
+                Text("unsolved"),
             ],
         ),
         RunStatus::Completed => DisplayLine::new(
@@ -255,6 +268,8 @@ fn render_outcome_summary(result: &RunResult) -> DisplayLine {
             Text("succeeded,"),
             count_usize(result.failed, LOG),
             Text("failed,"),
+            count_usize(result.unsolved, LOG),
+            Text("unsolved,"),
             count_usize(result.cancelled, LOG),
             Text("not started"),
         ],
@@ -671,6 +686,8 @@ const fn severity_for_disposition(disposition: LogDisposition) -> DisplaySeverit
     match disposition {
         LogDisposition::Succeeded => Success,
         LogDisposition::Failed => Failure,
+        // Nothing failed, but the log yielded no analysis, which the user should notice.
+        LogDisposition::Unsolved => Warning,
         LogDisposition::CancelledBeforeStart => Notice,
     }
 }

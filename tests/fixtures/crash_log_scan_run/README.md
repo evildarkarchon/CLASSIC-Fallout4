@@ -25,7 +25,10 @@ Report persistence, Unsolved Logs finalization, and FormID database access
 FormID values are requested). Receipts compare stable stage, nonempty-message
 contract, relevant path, disposition, movement, and ordered artifact types.
 The same failure profile proves the `no_crash_logs_found` and `setup_failed`
-run statuses and a successful move to a custom Unsolved Logs folder. Synthetic
+run statuses and a successful move to a custom Unsolved Logs folder.
+`unsolved-crash.log` holds only the two header lines a crashgen writes before
+anything else, so it has no stack trace; its scenario proves the `unsolved`
+disposition, no Autoscan Report, no structured failure, and the move. Synthetic
 analysis, initialization, and internal-invariant mappings stay under the named
 `scan-run-structured-failure-internal-faults` analyzer and grant no adapter
 runtime coverage: FormID lookup failures during analysis fall back to disabled

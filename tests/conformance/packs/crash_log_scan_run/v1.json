@@ -8,6 +8,7 @@
   "fixtureRoot": "tests/fixtures/crash_log_scan_run",
   "fixtures": {
     "validCrashLog": "valid-crash.log",
+    "unsolvedCrashLog": "unsolved-crash.log",
     "mainYaml": "CLASSIC Data/databases/CLASSIC Main.yaml",
     "gameYaml": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
     "localIgnoreYaml": "CLASSIC Data/CLASSIC Ignore.yaml",
@@ -1340,6 +1341,18 @@
               {
                 "kind": "text",
                 "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "unsolved,",
                 "path": "",
                 "count": 0
               },
@@ -2757,6 +2770,18 @@
               {
                 "kind": "text",
                 "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "unsolved,",
                 "path": "",
                 "count": 0
               },
@@ -9116,6 +9141,115 @@
           },
           {
             "path": "Unsolved Logs",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "standard-unsolved-log-moved",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "unsolvedCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "unsolvedCrashLog",
+            "path": "Custom Standard/Crash Logs/crash-unsolved.log"
+          }
+        ],
+        "directoryInputs": [],
+        "observedPaths": [
+          {
+            "path": "Custom Standard/Crash Logs/crash-unsolved.log"
+          },
+          {
+            "path": "Custom Standard/Crash Logs/crash-unsolved-AUTOSCAN.md"
+          },
+          {
+            "path": "Custom Unsolved Logs/crash-unsolved.log"
+          },
+          {
+            "path": "Custom Unsolved Logs/crash-unsolved-AUTOSCAN.md"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Custom Standard"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Custom Documents"
+          }
+        },
+        "unsolvedLogs": "move-to-custom",
+        "unsolvedLogsPath": {
+          "path": "Custom Unsolved Logs"
+        }
+      },
+      "expected": {
+        "status": "completed",
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Custom Standard/Crash Logs/crash-unsolved.log"
+            },
+            "autoscanReport": null,
+            "disposition": "unsolved",
+            "failures": [],
+            "messageNonEmpty": true,
+            "movedToUnsolvedLogs": true
+          }
+        ],
+        "durableEffects": [
+          {
+            "path": "Custom Standard/Crash Logs/crash-unsolved.log",
+            "kind": "missing"
+          },
+          {
+            "path": "Custom Standard/Crash Logs/crash-unsolved-AUTOSCAN.md",
+            "kind": "missing"
+          },
+          {
+            "path": "Custom Unsolved Logs/crash-unsolved.log",
+            "kind": "file"
+          },
+          {
+            "path": "Custom Unsolved Logs/crash-unsolved-AUTOSCAN.md",
             "kind": "missing"
           }
         ]

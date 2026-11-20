@@ -98,6 +98,7 @@ pub const TARGETS: &[VariantTarget] = &[
     runtime!("discovery_source.targeted", "targeted-happy-path"),
     runtime!("log_disposition.succeeded", "standard-happy-path"),
     runtime!("log_disposition.failed", "report-write-failure"),
+    runtime!("log_disposition.unsolved", "standard-unsolved-log-moved"),
     runtime!("log_disposition.cancelled_before_start", "post-discovery-queued-cancelled"),
     retained!("log_failure_stage.analysis", FAILURE_INTERNAL_FAULTS),
     runtime!("log_failure_stage.report_write", "report-write-failure"),

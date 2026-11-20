@@ -129,6 +129,9 @@ pub(crate) struct AutoscanReportFacts {
     pub crashgen_status: Option<CrashgenVersionStatus>,
     pub fake_bot_compatible_mode: bool,
     pub fcx_setup: Option<Arc<CrashLogScanSetupResult>>,
+    /// Authored YAML notice for a load order past the plugin limit, present only when
+    /// this log hit the limit.
+    pub plugin_limit_notice: Option<String>,
 }
 
 /// Semantic Mod Guidance groups rendered in the canonical Autoscan Report order.
@@ -214,13 +217,18 @@ impl AutoscanReportAssembler {
             }
         }
 
+        // The plugin-limit notice leads the plugin section: a load order past the limit
+        // explains plugin-related errors better than any one plugin suspect can.
+        let mut plugin_fragments =
+            Self::plugin_limit_fragments(facts.plugin_limit_notice.as_deref());
+        plugin_fragments.extend(Self::plugin_evidence_fragments(
+            contributions.plugin_evidence.as_ref(),
+            &facts.crashgen_name,
+        ));
         Self::add_section_with_header(
             &mut composer,
             report_gen.generate_plugin_suspect_header(),
-            Self::plugin_evidence_fragments(
-                contributions.plugin_evidence.as_ref(),
-                &facts.crashgen_name,
-            ),
+            plugin_fragments,
         );
         Self::add_section_with_header(
             &mut composer,
@@ -305,6 +313,21 @@ impl AutoscanReportAssembler {
                 .to_string(),
         );
         lines
+    }
+
+    /// Renders the authored plugin-limit notice as hard-broken lines closed by a blank line.
+    ///
+    /// Returns no fragment when there is no notice or its text is blank.
+    fn plugin_limit_fragments(notice: Option<&str>) -> Vec<ReportFragment> {
+        let mut lines = Vec::new();
+        if let Some(notice) = notice {
+            push_hard_break_lines(&mut lines, notice);
+        }
+        if lines.is_empty() {
+            return Vec::new();
+        }
+        lines.push("\n".to_string());
+        vec![ReportFragment::from_lines(lines)]
     }
 
     /// Renders a present Plugin Evidence result while preserving absent analysis as no section.

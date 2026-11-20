@@ -475,6 +475,18 @@
               },
               {
                 "kind": "text",
+                "text": "unsolved,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
                 "text": "not started",
                 "path": "",
                 "count": 0
@@ -1012,6 +1024,18 @@
               {
                 "kind": "text",
                 "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "unsolved,",
                 "path": "",
                 "count": 0
               },
@@ -1591,6 +1615,18 @@
               },
               {
                 "kind": "text",
+                "text": "unsolved,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
                 "text": "not started",
                 "path": "",
                 "count": 0
@@ -2133,6 +2169,18 @@
               {
                 "kind": "text",
                 "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "unsolved,",
                 "path": "",
                 "count": 0
               },
@@ -2692,6 +2740,18 @@
               },
               {
                 "kind": "text",
+                "text": "unsolved,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
                 "text": "not started",
                 "path": "",
                 "count": 0
@@ -3229,6 +3289,18 @@
               {
                 "kind": "text",
                 "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "unsolved,",
                 "path": "",
                 "count": 0
               },

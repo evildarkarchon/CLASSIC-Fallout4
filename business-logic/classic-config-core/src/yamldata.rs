@@ -921,6 +921,7 @@ pub(crate) fn parse_and_merge_yaml_content(
 ///
 /// * `warn_noplugins` - A `String` containing a warning message for cases where no plugins are active or available.
 /// * `warn_outdated` - A `String` holding a warning message indicating the game version or configuration is outdated.
+/// * `mods_plugin_limit` - A `String` holding the Autoscan Report notice for a load order past the plugin limit.
 ///
 /// * `xse_acronym` - A `String` holding the acronym for the XSE (XML Scripting Engine) configuration setting.
 ///
@@ -988,6 +989,11 @@ pub struct YamlDataCore {
     pub warn_noplugins: String,
     /// Warning message indicating the game version or configuration is outdated
     pub warn_outdated: String,
+    /// Autoscan Report notice for a Crash Log whose plugin list carries the `[FF]`
+    /// plugin-limit index, loaded from Main YAML `Mods_Warn.Mods_Plugin_Limit`.
+    ///
+    /// Empty when the key is absent; the report then omits the notice.
+    pub mods_plugin_limit: String,
 
     // XSE configuration
     /// Acronym for the XSE (XML Scripting Engine) configuration setting.
@@ -1116,6 +1122,11 @@ impl YamlDataCore {
             warn_outdated: yaml_ops.get_string_value(
                 game_data,
                 "Warnings_CRASHGEN.Warn_Outdated",
+                "",
+            ),
+            mods_plugin_limit: yaml_ops.get_string_value(
+                main_data,
+                "Mods_Warn.Mods_Plugin_Limit",
                 "",
             ),
             xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),

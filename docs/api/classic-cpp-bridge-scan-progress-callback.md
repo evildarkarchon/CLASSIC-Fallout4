@@ -91,7 +91,9 @@ Fields unrelated to the selected tag contain bridge defaults and must be
 ignored.
 
 Progress phases are `Setup`, `Parse`, `Analyze`, and `Finalize`. Finished
-dispositions are `Succeeded`, `Failed`, and `CancelledBeforeStart`.
+dispositions are `Succeeded`, `Failed`, `Unsolved`, and `CancelledBeforeStart`.
+`Unsolved` (a log with no stack trace) is not a failure; the terminal result
+counts it in `unsolved`, apart from `failed`.
 
 `display_lines` is the one field the tag does not select: every event kind
 renders, so it is always populated. It carries what this event *says*, in Rust's

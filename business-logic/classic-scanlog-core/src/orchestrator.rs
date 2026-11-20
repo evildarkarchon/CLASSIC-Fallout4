@@ -108,9 +108,10 @@ impl Vocabulary for ScanProgressPhase {
 
 struct ScanAnalysisContext {
     processed_lines: Vec<String>,
+    /// Whether the log carries a stack trace of any form; a log without one is Unsolved.
+    has_stack_trace: bool,
     combined_crash_lines: Vec<String>,
     combined_crash_text: String,
-    combined_crash_lower_lines: Vec<String>,
     plugin_lines: Vec<String>,
     xse_modules_for_settings: HashSet<String>,
     crashgen_settings: CrashgenSettingsSnapshot,
@@ -120,12 +121,53 @@ struct ScanAnalysisContext {
 struct CrashgenScanContext {
     crashlog_filename: String,
     crashgen_version_str: String,
+    /// Raw game-version header line from this log, empty when the header lacks one.
+    detected_game_version_str: String,
     main_error: String,
     fake_bot_compatible_mode: bool,
     effective_crashgen_name: String,
     crashgen_status: Option<CrashgenVersionStatus>,
     crashgen_version: Option<(u32, u32, u32)>,
     config_layout: ConfigLayout,
+}
+
+/// Message recorded for an Unsolved Crash Log, one with no stack trace of any form.
+///
+/// A missing plugin list alone does not make a log Unsolved; only the absence of both
+/// the probable call stack and the raw stack dump does.
+pub(crate) const UNSOLVED_NO_STACK_TRACE_MESSAGE: &str = "Unsolved Crash Log: it has no stack trace \
+     (no PROBABLE CALL STACK or STACK section), so CLASSIC cannot analyze it";
+
+/// Returns whether parsed segments carry a stack trace of any form.
+///
+/// Either crashgen trace counts: the `PROBABLE CALL STACK:` frames or the raw
+/// `STACK:` dump. Registers alone are not a trace, and a header with nothing but
+/// blank lines under it is treated as missing.
+fn segments_have_stack_trace(segments: &HashMap<String, Vec<Arc<str>>>) -> bool {
+    [segment_key::CALLSTACK, segment_key::STACK_DUMP]
+        .into_iter()
+        .filter_map(|key| segments.get(key))
+        .flatten()
+        .any(|line| !line.trim().is_empty())
+}
+
+/// Plugin facts parsed from one Crash Log's plugin list.
+#[derive(Default)]
+struct PluginCollection {
+    /// Plugins in load order, or `None` when the list was absent or failed to parse.
+    plugins: Option<IndexMap<String, String>>,
+    plugin_count: usize,
+    /// Whether the list shows the `[FF]` index on a game version where it means the limit.
+    plugin_limit_reached: bool,
+}
+
+/// Returns `value` unless it is blank, otherwise `fallback`.
+fn non_empty_or<'a>(value: &'a str, fallback: &'a str) -> &'a str {
+    if value.trim().is_empty() {
+        fallback
+    } else {
+        value
+    }
 }
 
 /// Resolve the effective concurrency for batch log processing.
@@ -173,10 +215,7 @@ impl ScanAnalysisContext {
         .flat_map(|segment_lines| segment_lines.iter().map(|line| line.to_string()))
         .collect();
         let combined_crash_text = combined_crash_lines.join("\n");
-        let combined_crash_lower_lines = combined_crash_lines
-            .iter()
-            .map(|line| line.to_lowercase())
-            .collect();
+        let has_stack_trace = segments_have_stack_trace(segments);
 
         let plugin_lines = segments
             .get(segment_key::PLUGINS)
@@ -209,9 +248,9 @@ impl ScanAnalysisContext {
 
         Self {
             processed_lines,
+            has_stack_trace,
             combined_crash_lines,
             combined_crash_text,
-            combined_crash_lower_lines,
             plugin_lines,
             xse_modules_for_settings,
             crashgen_settings,
@@ -269,6 +308,8 @@ pub struct AnalysisConfig {
     pub crashgen_latest: String,
 
     /// Latest crashgen version for VR variant
+    // Written but never read; retiring write-only state is separate dead-code work.
+    #[allow(dead_code)]
     pub crashgen_latest_vr: String,
 
     /// Game version
@@ -278,9 +319,13 @@ pub struct AnalysisConfig {
     pub game_version_vr: String,
 
     /// XSE acronym (e.g., "F4SE")
+    // Read only by the sibling unit tests.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub xse_acronym: String,
 
     /// Game root name (e.g., "Fallout4" from Main_Root_Name setting)
+    // Written but never read; retiring write-only state is separate dead-code work.
+    #[allow(dead_code)]
     pub game_root_name: String,
 
     /// Bare SemVer string sourced from `CLASSIC_Info.version` in `CLASSIC Main.yaml`
@@ -306,6 +351,11 @@ pub struct AnalysisConfig {
 
     /// List of strings to remove from crash logs when simplify_logs is enabled
     pub remove_list: Vec<String>,
+
+    /// Authored notice rendered when a Crash Log's plugin list shows the `[FF]`
+    /// plugin-limit index for a game version where that index means the limit was hit.
+    /// Empty disables the notice.
+    pub plugin_limit_notice: String,
 
     /// Structured main-error suspect rules.
     pub suspect_error_rules: Vec<SuspectErrorRule>,
@@ -363,6 +413,8 @@ impl AnalysisConfig {
     /// // Add ignore lists
     /// config.ignore_plugins = vec!["Fallout4.esm".to_string()];
     /// ```
+    // Exercised only by the sibling unit tests; there is no production caller.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn new(game: String, selected_game_version: String) -> Self {
         let selected_version =
             classic_config_core::resolve_registry_version_info(&game, &selected_game_version);
@@ -386,6 +438,7 @@ impl AnalysisConfig {
             fcx_mode: false,
             simplify_logs: false,
             remove_list: Vec::new(),
+            plugin_limit_notice: String::new(),
             suspect_error_rules: Vec::new(),
             suspect_stack_rules: Vec::new(),
             mods_core: Vec::new(),
@@ -486,6 +539,7 @@ pub fn build_analysis_config_from_yaml(
         fcx_mode,
         simplify_logs,
         remove_list,
+        plugin_limit_notice: yaml.mods_plugin_limit.clone(),
         suspect_error_rules: yaml.suspect_error_rules.clone(),
         suspect_stack_rules: yaml.suspect_stack_rules.clone(),
         mods_core: yaml.game_mods_core.clone(),
@@ -560,18 +614,9 @@ pub struct AnalysisResult {
     /// Number of suspect patterns matched
     pub suspect_count: usize,
 
-    // === Python-compatible statistics (Counter[str]) ===
-    /// Number of logs successfully scanned (always 1 for single log, decremented on failure)
-    pub scanned: u32,
-
-    /// Number of logs detected as incomplete (missing plugin segment)
-    pub incomplete: u32,
-
-    /// Number of logs that failed to scan (too short or parse error)
-    pub failed: u32,
-
-    /// Whether the scan triggered a failure condition (for Python compatibility)
-    pub trigger_scan_failed: bool,
+    /// Whether the log is Unsolved: it has no stack trace of any form, so analysis
+    /// stopped before any analyzer ran. An Unsolved result is never a success.
+    pub unsolved: bool,
 }
 
 impl AnalysisResult {
@@ -627,11 +672,7 @@ impl AnalysisResult {
             formid_count: 0,
             plugin_count: 0,
             suspect_count: 0,
-            // Default statistics - will be updated during processing
-            scanned: 1,
-            incomplete: 0,
-            failed: 0,
-            trigger_scan_failed: false,
+            unsolved: false,
         }
     }
 
@@ -677,28 +718,20 @@ impl AnalysisResult {
             formid_count: 0,
             plugin_count: 0,
             suspect_count: 0,
-            // Failed logs have scanned=0, failed=1
-            scanned: 0,
-            incomplete: 0,
-            failed: 1,
-            trigger_scan_failed: true,
+            unsolved: false,
         }
     }
 
-    /// Mark this result as having an incomplete log (missing plugin segment).
+    /// Creates the result for an Unsolved Crash Log, one with no stack trace of any form.
     ///
-    /// This updates the statistics to indicate the log was incomplete.
-    pub fn mark_incomplete(&mut self) {
-        self.incomplete = 1;
-    }
-
-    /// Mark this result as failed (too short or parse error).
-    ///
-    /// This updates the statistics to indicate scan failure.
-    pub fn mark_failed(&mut self) {
-        self.scanned = 0;
-        self.failed = 1;
-        self.trigger_scan_failed = true;
+    /// It carries no report and records [`UNSOLVED_NO_STACK_TRACE_MESSAGE`] as its detail.
+    /// The scan run gives it the Unsolved disposition rather than Failed, because nothing
+    /// went wrong: the log simply holds nothing CLASSIC can analyze.
+    pub fn unsolved(log_path: String) -> Self {
+        Self {
+            unsolved: true,
+            ..Self::failure(log_path, UNSOLVED_NO_STACK_TRACE_MESSAGE.to_string())
+        }
     }
 }
 
@@ -1094,6 +1127,8 @@ impl OrchestratorCore {
     /// # Ok(())
     /// # }
     /// ```
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     pub fn with_database_pool(mut self, pool: Arc<DatabasePool>) -> Result<Self> {
         self.formid_finding_analyzer = self.formid_finding_analyzer_for_pool(pool.clone());
         self.db_pool = Some(pool);
@@ -1127,12 +1162,16 @@ impl OrchestratorCore {
     /// Returns whether this orchestrator has a database pool attached.
     ///
     /// This can be used to determine if rich FormID resolution is available.
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     #[must_use]
     pub fn has_database_pool(&self) -> bool {
         self.db_pool.is_some()
     }
 
     /// Returns a reference to the database pool, if available.
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     #[must_use]
     pub fn database_pool(&self) -> Option<&Arc<DatabasePool>> {
         self.db_pool.as_ref()
@@ -1181,6 +1220,8 @@ impl OrchestratorCore {
     }
 
     /// Returns whether the orchestrator has been initialized via async_enter.
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     #[must_use]
     pub fn is_initialized(&self) -> bool {
         self.initialized
@@ -1243,6 +1284,8 @@ impl OrchestratorCore {
     /// # Ok(())
     /// # }
     /// ```
+    // Exercised only by the sibling unit tests; there is no production caller.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub async fn process_log(&self, log_path: String) -> Result<AnalysisResult> {
         self.process_log_with_progress(log_path, |_| {}).await
     }
@@ -1278,13 +1321,19 @@ impl OrchestratorCore {
 
         enter_phase(ScanProgressPhase::Setup);
         let context = self.prepare_scan_context(&log_path).await?;
+        if !context.has_stack_trace {
+            // Unsolved is decided before any analyzer runs, so the log gets no Autoscan
+            // Report. A Standard run then moves it to Unsolved Logs, so later runs do not
+            // scan it again.
+            return Ok(AnalysisResult::unsolved(log_path));
+        }
 
         enter_phase(ScanProgressPhase::Parse);
         let crashgen = self.resolve_crashgen_context(&log_path, &context);
 
         enter_phase(ScanProgressPhase::Analyze);
         // Preserve plugin load order for semantic guidance and downstream report sorting.
-        let (plugins_map, plugin_count) = self.collect_plugins(&context);
+        let plugin_collection = self.collect_plugins(&context, &crashgen);
         let collector = AutoscanReportContributionCollector::new(
             self.crashgen_settings_analyzer(&crashgen.effective_crashgen_name),
             &self.suspect_analyzer,
@@ -1304,7 +1353,7 @@ impl OrchestratorCore {
                 combined_crash_text: &context.combined_crash_text,
                 combined_crash_lines: &context.combined_crash_lines,
                 system_segment_lines: &context.system_segment_lines,
-                plugins: plugins_map.as_ref(),
+                plugins: plugin_collection.plugins.as_ref(),
             })
             .await?;
         let suspect_count = contributions.suspect_count();
@@ -1322,6 +1371,7 @@ impl OrchestratorCore {
                 crashgen_status: crashgen.crashgen_status,
                 fake_bot_compatible_mode: crashgen.fake_bot_compatible_mode,
                 fcx_setup: self.scan_run_setup.clone(),
+                plugin_limit_notice: self.plugin_limit_notice(&plugin_collection),
             },
             contributions,
         );
@@ -1340,7 +1390,7 @@ impl OrchestratorCore {
 
         // Update statistics
         result.formid_count = formid_count;
-        result.plugin_count = plugin_count;
+        result.plugin_count = plugin_collection.plugin_count;
         result.suspect_count = suspect_count;
 
         if let Some(phase_timings_us) = phase_timings_us.as_ref() {
@@ -1386,6 +1436,8 @@ impl OrchestratorCore {
     /// # Ok(())
     /// # }
     /// ```
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     pub fn config(&self) -> &AnalysisConfig {
         &self.config
     }
@@ -1481,55 +1533,24 @@ impl OrchestratorCore {
         processed_lines.into_iter().collect()
     }
 
-    /// Detects if a crash log is incomplete (missing plugin segment).
-    ///
-    /// Uses the named segment map: checks whether the `plugins` segment is empty.
-    ///
-    /// # Arguments
-    ///
-    /// * `segments` - Named segment map from `parse_all_sections_arc`
-    ///
-    /// # Returns
-    ///
-    /// `true` if the plugins segment is empty or absent.
-    pub fn detect_incomplete_log(&self, segments: &HashMap<String, Vec<Arc<str>>>) -> bool {
-        segments
-            .get(segment_key::PLUGINS)
-            .map(|p| p.is_empty())
-            .unwrap_or(true)
-    }
-
-    /// Compat overload: detect incomplete log from a plain string slice.
-    ///
-    /// Used by callers that still pass a `&[String]` plugins segment.
-    pub fn detect_incomplete_log_slice(&self, segment_plugin: &[String]) -> bool {
-        segment_plugin.is_empty()
-    }
-
-    /// Detects if a crash log has failed (too short to analyze).
-    ///
-    /// This matches Python's `_detect_failed_log()` logic.
-    ///
-    /// # Arguments
-    ///
-    /// * `crash_data` - The full crash log data
-    ///
-    /// # Returns
-    ///
-    /// `true` if the log is too short (fewer than 20 lines).
-    pub fn detect_failed_log(&self, crash_data: &[String]) -> bool {
-        // Python considers log failed if it has fewer than 20 lines
-        crash_data.len() < 20
-    }
-
     async fn prepare_scan_context(&self, log_path: &str) -> Result<ScanAnalysisContext> {
         let log_content = self.file_io.read_file(Path::new(log_path)).await?;
         let raw_lines: Vec<String> = log_content.lines().map(String::from).collect();
         let processed_lines = self.reformat_crash_data_inline(&raw_lines);
-        Ok(ScanAnalysisContext::from_processed_lines(
-            &self.parser,
-            processed_lines,
-        ))
+        let mut context = ScanAnalysisContext::from_processed_lines(&self.parser, processed_lines);
+        if self.config.simplify_logs && !self.config.remove_list.is_empty() {
+            // Unsolved describes the log on disk, not CLASSIC's filtered view of it. A
+            // Simplify Logs rule that strips stack lines must not get an intact log moved to
+            // Unsolved Logs, so the check re-reads the unfiltered segments. Without Simplify
+            // Logs the only rewrite is plugin-index padding, which never touches a trace.
+            let raw_line_arcs: Vec<Arc<str>> = raw_lines
+                .iter()
+                .map(|line| Arc::from(line.as_str()))
+                .collect();
+            context.has_stack_trace =
+                segments_have_stack_trace(&self.parser.parse_all_sections_arc(&raw_line_arcs));
+        }
+        Ok(context)
     }
 
     fn resolve_crashgen_context(
@@ -1598,6 +1619,7 @@ impl OrchestratorCore {
         CrashgenScanContext {
             crashlog_filename,
             crashgen_version_str,
+            detected_game_version_str,
             main_error,
             fake_bot_compatible_mode,
             effective_crashgen_name,
@@ -1607,26 +1629,52 @@ impl OrchestratorCore {
         }
     }
 
+    /// Parses this log's plugin list and classifies its `[FF]` plugin-limit marker.
+    ///
+    /// The limit check reads the game and crashgen versions from this log's own header,
+    /// because what `[FF]` means depends on the game and crashgen that wrote the log, not
+    /// on the configured game. The configured versions are used only when the header
+    /// lacks one. A parse failure yields no plugins and no limit, as before.
     fn collect_plugins(
         &self,
         context: &ScanAnalysisContext,
-    ) -> (Option<IndexMap<String, String>>, usize) {
+        crashgen: &CrashgenScanContext,
+    ) -> PluginCollection {
         let Some(ref analyzer) = self.plugin_analyzer else {
-            return (None, 0);
+            return PluginCollection::default();
         };
         if context.plugin_lines.is_empty() {
-            return (None, 0);
+            return PluginCollection::default();
         }
+        let game_version = non_empty_or(
+            &crashgen.detected_game_version_str,
+            &self.config.game_version,
+        );
+        let crashgen_version =
+            non_empty_or(&crashgen.crashgen_version_str, &self.config.crashgen_latest);
         analyzer
             .loadorder_scan_log(
                 &context.plugin_lines,
-                Some(self.config.game_version.as_str()),
-                Some(self.config.crashgen_latest.as_str()),
+                Some(game_version),
+                Some(crashgen_version),
             )
-            .map_or((None, 0), |(plugins, _limit_triggered, _limit_disabled)| {
-                let plugin_count = plugins.len();
-                (Some(plugins), plugin_count)
-            })
+            .map_or_else(
+                |_| PluginCollection::default(),
+                // A disabled check (NG with a pre-1.37 crashgen, whose [FF] is not the
+                // limit) never reports the limit as triggered, so it needs no notice.
+                |(plugins, limit_triggered, _limit_check_disabled)| PluginCollection {
+                    plugin_count: plugins.len(),
+                    plugins: Some(plugins),
+                    plugin_limit_reached: limit_triggered,
+                },
+            )
+    }
+
+    /// Returns the authored plugin-limit notice when this log hit the limit and the
+    /// installed YAML Data supplies notice text.
+    fn plugin_limit_notice(&self, plugins: &PluginCollection) -> Option<String> {
+        let notice = &self.config.plugin_limit_notice;
+        (plugins.plugin_limit_reached && !notice.trim().is_empty()).then(|| notice.clone())
     }
 
     /// Creates a RecordScanner configured for this orchestrator.
@@ -1635,6 +1683,8 @@ impl OrchestratorCore {
     ///
     /// A `RecordScanner` instance configured with the classic records list
     /// and ignore records from the analysis configuration.
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     pub fn create_record_scanner(&self) -> RecordScanner {
         RecordScanner::new(
             self.config.classic_records_list.clone(),
@@ -1654,6 +1704,8 @@ impl OrchestratorCore {
     /// # Returns
     ///
     /// A tuple of (parsed_version, CrashgenVersionStatus).
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     pub fn check_crashgen_version_list(
         &self,
         crashgen_version_str: &str,
@@ -1665,6 +1717,8 @@ impl OrchestratorCore {
     }
 
     /// Checks crashgen version using the detected game version and registry-backed version floors.
+    // Exercised only by the sibling unit tests; there is no production caller.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn check_crashgen_version_for_detected_game(
         &self,
         crashgen_version_str: &str,
@@ -1794,6 +1848,8 @@ impl OrchestratorCore {
     /// # Returns
     ///
     /// `true` if loadorder.txt exists.
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     pub fn check_loadorder_exists(dir_path: &Path) -> bool {
         dir_path.join("loadorder.txt").exists()
     }
@@ -1825,6 +1881,8 @@ impl OrchestratorCore {
     /// # Returns
     ///
     /// `true` if all required features are available.
+    // No caller at all, not even a test: dead surface left for the dead-code retirement work.
+    #[allow(dead_code)]
     #[must_use]
     pub fn is_feature_complete(&self) -> bool {
         // Required features:

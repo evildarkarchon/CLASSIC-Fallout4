@@ -25,6 +25,10 @@
 
 ### Checking for Plugin-related Errors
 
+***❌ CAUTION : ONE OF YOUR PLUGINS HAS THE [FF] PLUGIN INDEX VALUE!***  
+THIS MEANS YOU ALMOST CERTAINLY WENT OVER THE GAME PLUGIN LIMIT!  
+Disable some of your esm/esp plugins and re-run the Crash Logs Scan.  
+
 * COULDN'T FIND ANY PLUGIN SUSPECTS *
 
 ### Checking FormIDs

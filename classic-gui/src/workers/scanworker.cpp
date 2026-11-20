@@ -289,8 +289,9 @@ void ScanWorker::doScan(const QString& installationRoot, const QStringList& targ
         switch (terminal.kind) {
         case TerminalKind::Completed:
             emit progress(100.0F, QStringLiteral("Complete"));
-            emit progressDetailed(100.0F, QStringLiteral("Complete"), terminal.succeeded + terminal.failed,
-                                  terminal.total);
+            // Unsolved logs finished too, so they belong in the completed count.
+            emit progressDetailed(100.0F, QStringLiteral("Complete"),
+                                  terminal.succeeded + terminal.failed + terminal.unsolved, terminal.total);
             emit finished(terminal.total, terminal.succeeded, terminal.failed, terminal.richText);
             break;
         case TerminalKind::CancelledBeforeDiscovery:

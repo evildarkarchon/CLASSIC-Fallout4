@@ -17,6 +17,8 @@ The scenarios cover:
   wrapped prefix resolves to its first claimant (the plugin actually loaded),
   the generic `[FE]` full-plugin marker stays unresolved, an `FF` runtime
   FormID is filtered, and an indexed `[FE:000]` light plugin still resolves.
+  The `[FF]` entry on an OG game version also renders the authored
+  `Mods_Warn.Mods_Plugin_Limit` notice at the head of the plugin section.
 - `fcx`: a successful FCX-enabled full run with its public setup result and
   canonical setup text retained in the persisted report.
 - FormID enrichment variants of `populated`, all compared against

@@ -151,6 +151,8 @@ std::string_view disposition_name(scanner::ScanRunContractLogDisposition disposi
         return "succeeded";
     case scanner::ScanRunContractLogDisposition::Failed:
         return "failed";
+    case scanner::ScanRunContractLogDisposition::Unsolved:
+        return "unsolved";
     case scanner::ScanRunContractLogDisposition::CancelledBeforeStart:
         return "cancelled_before_start";
     }

@@ -117,6 +117,8 @@ struct ScanRunLogPresentation {
     int discoveryIndex = 0;
     bool succeeded = false;
     bool failed = false;
+    /// No stack trace, so no analysis and no report; not a failure.
+    bool unsolved = false;
     bool cancelledBeforeStart = false;
     QString crashLog;
     QString autoscanReport;
@@ -212,6 +214,7 @@ struct ScanRunTerminalPresentation {
     int total = 0;
     int succeeded = 0;
     int failed = 0;
+    int unsolved = 0;
     int cancelled = 0;
     QVector<ScanRunLogPresentation> logs;
     bool hasInstalledYamlData = false;
