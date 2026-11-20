@@ -12,6 +12,11 @@ The scenarios cover:
   main-error/stack/DLL Crash Suspect sources, all four Mod Guidance groups,
   Plugin Evidence matches, resolved and unresolved FormIDs, FormID lookup hit
   and miss rows, and Named Record matches.
+- `plugin-limit`: a load order past the plugin limit, where Buffout wraps the
+  two-digit index so `[FF]` is followed by a second `[00]` and `[01]`. Each
+  wrapped prefix resolves to its first claimant (the plugin actually loaded),
+  the generic `[FE]` full-plugin marker stays unresolved, an `FF` runtime
+  FormID is filtered, and an indexed `[FE:000]` light plugin still resolves.
 - `fcx`: a successful FCX-enabled full run with its public setup result and
   canonical setup text retained in the persisted report.
 - FormID enrichment variants of `populated`, all compared against

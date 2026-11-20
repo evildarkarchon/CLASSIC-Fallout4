@@ -149,6 +149,10 @@ impl FormIDFindingAnalyzer {
 }
 
 /// Normalizes and validates caller-owned plugin/load-order facts.
+///
+/// Returns a prefix-to-plugin map. When several plugins claim the same prefix, the first
+/// claimant in load order owns it; see the wrap comment below. Only an empty name or a
+/// malformed prefix is an `InvalidConfiguration` error.
 fn normalize_plugins(plugins: Vec<FormIDPlugin>) -> AnalyzerResult<HashMap<String, String>> {
     let mut normalized = HashMap::with_capacity(plugins.len());
     for plugin in plugins {
@@ -170,13 +174,11 @@ fn normalize_plugins(plugins: Vec<FormIDPlugin>) -> AnalyzerResult<HashMap<Strin
             // the three-digit light-plugin index needed to resolve an FExxx FormID safely.
             continue;
         }
-        if let Some(existing) = normalized.insert(prefix.clone(), name.to_string())
-            && existing != name
-        {
-            return Err(invalid_configuration(format!(
-                "FormID Finding load-order prefix '{prefix}' is assigned to multiple plugins"
-            )));
-        }
+        // Past the plugin limit, Buffout wraps the two-digit index, so `[FF]` is followed by a
+        // second `[00]`, `[01]`, ... Those wrapped plugins are over the limit and never loaded,
+        // so a runtime FormID with that prefix belongs to the first plugin that claimed it.
+        // Rejecting the duplicate here used to fail the whole log and drop its report.
+        normalized.entry(prefix).or_insert_with(|| name.to_string());
     }
     Ok(normalized)
 }

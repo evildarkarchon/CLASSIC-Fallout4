@@ -122,6 +122,64 @@ fn analyze_ignores_ambiguous_generic_fe_plugins_but_resolves_indexed_light_plugi
     );
 }
 
+/// Buffout wraps the two-digit load-order index once a load order passes the plugin
+/// limit, so `[FF]` is followed by a second `[00]`, `[01]`, ... The plugins after the wrap
+/// are over the limit and never loaded, so each prefix belongs to its first claimant and the
+/// log must not fail.
+#[test]
+fn analyze_resolves_prefixes_wrapped_past_the_plugin_limit_to_their_first_plugin() {
+    let analyzer = FormIDFindingAnalyzer::new(FormIdValueLookup::disabled());
+    let result = classic_shared_core::get_runtime()
+        .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
+            crash_lines: vec![
+                "Form ID: 0x00012345".to_string(),
+                "Form ID: 0x01ABCDEF".to_string(),
+                "Form ID: 0x02ABCDEF".to_string(),
+            ],
+            plugins: vec![
+                plugin("Fallout4.esm", "00"),
+                plugin("Regular.esp", "01"),
+                plugin("Middle.esp", "02"),
+                plugin("LastFull.esp", "FF"),
+                plugin("WrappedA.esp", "00"),
+                plugin("WrappedB.esp", "01"),
+            ],
+        }))
+        .expect("a load order wrapped past the plugin limit must not fail semantic analysis");
+
+    let resolved: Vec<(&str, Option<&str>, FormIDValueLookupStatus)> = result
+        .findings
+        .iter()
+        .map(|finding| {
+            (
+                finding.identifier.as_str(),
+                finding.plugin.as_deref(),
+                finding.value_lookup_status,
+            )
+        })
+        .collect();
+    assert_eq!(
+        resolved,
+        vec![
+            (
+                "00012345",
+                Some("Fallout4.esm"),
+                FormIDValueLookupStatus::Disabled
+            ),
+            (
+                "01ABCDEF",
+                Some("Regular.esp"),
+                FormIDValueLookupStatus::Disabled
+            ),
+            (
+                "02ABCDEF",
+                Some("Middle.esp"),
+                FormIDValueLookupStatus::Disabled
+            ),
+        ]
+    );
+}
+
 #[test]
 fn analyze_keeps_lookup_hits_and_misses_as_distinct_data() {
     let lookup = FormIdValueLookup::in_memory(vec![FormIdValueLookupEntry::new(

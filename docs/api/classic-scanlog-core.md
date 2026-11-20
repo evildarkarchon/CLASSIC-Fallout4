@@ -626,7 +626,9 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
   Assembly alone sorts findings and renders the legacy named-record prose.
 - `FormIDFindingAnalyzer` accepts owned Crash Log lines and plugin/prefix facts,
   aggregates distinct canonical FormIDs with checked occurrence counts, resolves
-  plugins, and optionally enriches resolved findings through the opaque strict
+  plugins (when a load order wrapped past the plugin limit gives one prefix to
+  several plugins, the first claimant owns it; only an empty name or malformed
+  prefix is `InvalidConfiguration`), and optionally enriches resolved findings through the opaque strict
   `FormIdValueLookup` facade. Its result retains unresolved identifiers and
   distinguishes lookup disabled, miss, and hit states without carrying report
   prose. Lookup misses are data; malformed replies and operational failures use
