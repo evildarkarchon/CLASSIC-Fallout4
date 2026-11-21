@@ -611,8 +611,11 @@ the canonical parser methods documented in source.
 ### Focused analyzers
 
 The six supported Focused Semantic Analyzers share one ownership contract: an
-immutable reusable handle accepts one owned input and returns one aggregate
-typed semantic result. Results preserve findings, counts, states, and authored
+immutable reusable handle is built from owned YAML Data configuration, reads
+one borrowed input per call, and returns one owned aggregate typed semantic
+result ([ADR-0012](../adr/0012-focused-analyzers-borrow-per-call-facts.md)).
+Each `*AnalysisInput<'a>` borrows the caller's Crash Log facts, so the scan
+path hands every analyzer the same prepared evidence without copying it. Results preserve findings, counts, states, and authored
 YAML Data guidance, but never expose report lines or presentation policy. A
 completed no-match call returns an explicit empty result. There is no public
 Autoscan Report Contribution enum; the aggregate collector is private because
@@ -621,7 +624,8 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
 - `CrashgenSettingsAnalyzer` is a complete semantic focused analyzer.
   Its fallible constructor validates typed Crashgen configuration and
   normalizes plugin predicate matcher state once. The immutable, cloneable
-  handle accepts one owned `CrashgenSettingsAnalysisInput` and is `Send + Sync`.
+  handle accepts one borrowed `CrashgenSettingsAnalysisInput` (settings snapshot
+  and installed modules by reference) and is `Send + Sync`.
 - `CrashgenSettingsAnalysisResult` always represents completed analysis,
   including the explicit success case where both `expectation_outcomes` and
   `disabled_setting_notices` are empty. Outcomes preserve the YAML-authored
@@ -629,8 +633,8 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
   Report Placement without carrying markdown or report lines.
 - `CrashSuspectAnalyzer` validates and compiles owned main-error and stack rules
   during construction. Its immutable, cloneable `Send + Sync` handle accepts
-  one owned `CrashSuspectAnalysisInput` containing main-error and call-stack
-  evidence.
+  one borrowed `CrashSuspectAnalysisInput` containing main-error and call-stack
+  evidence as `&str`.
 - `CrashSuspectAnalysisResult` contains one `CrashSuspectFinding` for each
   matched main-error rule, matched stack rule, or DLL involvement notice. Rule
   findings retain authored ids, names, and severities; DLL involvement retains
@@ -640,8 +644,8 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
 - `ModGuidanceAnalyzer` validates owned conflict, frequent-crash, solution,
   and important-mod configuration and compiles all literal matcher state during
   construction. Its immutable, cloneable `Send + Sync` handle accepts one
-  owned `ModGuidanceAnalysisInput` containing plugin load-order ids, optional
-  GPU facts, and XSE module names.
+  borrowed `ModGuidanceAnalysisInput` referencing the plugin load-order map,
+  optional GPU facts, and XSE module names.
 - `ModGuidanceAnalysisResult` preserves typed matched, missing, and GPU-mismatch
   state together with authored names, descriptions, optional fixes, links, warnings,
   and matched plugin ids. It carries no headings, group order, icons,
@@ -650,20 +654,21 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
   Autoscan Report Assembly omits that remediation line.
 - `PluginEvidenceAnalyzer` validates and normalizes owned game-plugin ignore
   configuration during construction. Its immutable, cloneable `Send + Sync`
-  handle accepts one owned `PluginEvidenceAnalysisInput` containing call-stack
-  lines and plugin identities in caller-provided casing.
+  handle accepts one borrowed `PluginEvidenceAnalysisInput` containing a
+  call-stack line slice and borrowed plugin identities in caller-provided casing.
 - `PluginEvidenceAnalysisResult` contains normalized `PluginEvidence` identities
   with per-line occurrence counts in candidate order. It carries no report prose,
   markdown, headings, or sorting policy; completed no-match analysis is an
   explicit empty result.
 - `NamedRecordFindingAnalyzer` validates owned target/ignore patterns and compiles
   both Aho-Corasick matchers during construction. Its immutable, cloneable
-  `Send + Sync` handle accepts owned Crash Log lines and returns distinct exact
+  `Send + Sync` handle borrows a slice of Crash Log lines and returns distinct exact
   extracted records with checked occurrence counts in first-observed order.
 - `NamedRecordFindingAnalysisResult` carries no report text or sorting policy;
   completed no-match analysis is an explicit empty result. Autoscan Report
   Assembly alone sorts findings and renders the legacy named-record prose.
-- `FormIDFindingAnalyzer` accepts owned Crash Log lines and plugin/prefix facts,
+- `FormIDFindingAnalyzer` borrows Crash Log lines and plugin/prefix facts
+  (`FormIDPlugin<'a>`),
   aggregates distinct canonical FormIDs with checked occurrence counts, resolves
   plugins, and optionally enriches resolved findings through the opaque strict
   `FormIdValueLookup` facade. Its result retains unresolved identifiers and

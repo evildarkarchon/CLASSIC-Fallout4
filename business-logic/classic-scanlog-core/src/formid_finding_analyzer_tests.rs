@@ -6,11 +6,8 @@ use classic_database_core::{
 use sqlx::sqlite::SqlitePoolOptions;
 use tempfile::NamedTempFile;
 
-fn plugin(name: &str, prefix: &str) -> FormIDPlugin {
-    FormIDPlugin {
-        name: name.to_string(),
-        prefix: prefix.to_string(),
-    }
+fn plugin<'a>(name: &'a str, prefix: &'a str) -> FormIDPlugin<'a> {
+    FormIDPlugin { name, prefix }
 }
 
 /// Creates an owned SQLite fixture that lacks the analyzer's active game table.
@@ -38,7 +35,7 @@ fn analyze_aggregates_resolved_and_unresolved_identifiers() {
     let analyzer = FormIDFindingAnalyzer::new(FormIdValueLookup::disabled());
     let result = classic_shared_core::get_runtime()
         .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-            crash_lines: vec![
+            crash_lines: &[
                 "Form ID: 0x01123456".to_string(),
                 "Form ID: 0x01123456".to_string(),
                 "Form ID: 0xFE123ABC".to_string(),
@@ -81,7 +78,7 @@ fn analyze_returns_explicit_empty_success_when_no_identifiers_are_present() {
     let analyzer = FormIDFindingAnalyzer::new(FormIdValueLookup::disabled());
     let result = classic_shared_core::get_runtime()
         .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-            crash_lines: vec!["no identifier on this line".to_string()],
+            crash_lines: &["no identifier on this line".to_string()],
             plugins: Vec::new(),
         }))
         .expect("no findings is a completed semantic result");
@@ -94,7 +91,7 @@ fn analyze_ignores_ambiguous_generic_fe_plugins_but_resolves_indexed_light_plugi
     let analyzer = FormIDFindingAnalyzer::new(FormIdValueLookup::disabled());
     let result = classic_shared_core::get_runtime()
         .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-            crash_lines: vec![
+            crash_lines: &[
                 "Form ID: 0xFE123ABC".to_string(),
                 "Form ID: 0xFE456DEF".to_string(),
             ],
@@ -132,7 +129,7 @@ fn analyze_keeps_lookup_hits_and_misses_as_distinct_data() {
     let analyzer = FormIDFindingAnalyzer::new(lookup);
     let result = classic_shared_core::get_runtime()
         .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-            crash_lines: vec![
+            crash_lines: &[
                 "Form ID: 0x01123456".to_string(),
                 "Form ID: 0x02ABCDEF".to_string(),
             ],
@@ -162,7 +159,7 @@ fn analyze_maps_lookup_failure_to_the_shared_typed_error() {
     let analyzer = FormIDFindingAnalyzer::new(lookup);
     let error = classic_shared_core::get_runtime()
         .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-            crash_lines: vec!["Form ID: 0x01123456".to_string()],
+            crash_lines: &["Form ID: 0x01123456".to_string()],
             plugins: vec![plugin("Broken.esp", "01")],
         }))
         .expect_err("lookup failure must fail semantic analysis");
@@ -184,7 +181,7 @@ fn analyze_maps_an_absent_active_game_table_to_operational_failure() {
 
         let error = analyzer
             .analyze(FormIDFindingAnalysisInput {
-                crash_lines: vec!["Form ID: 0x01123456".to_string()],
+                crash_lines: &["Form ID: 0x01123456".to_string()],
                 plugins: vec![plugin("Broken.esp", "01")],
             })
             .await
@@ -205,7 +202,7 @@ fn analyze_rejects_invalid_plugin_prefix_as_typed_configuration_error() {
     let analyzer = FormIDFindingAnalyzer::new(FormIdValueLookup::disabled());
     let error = classic_shared_core::get_runtime()
         .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-            crash_lines: vec!["Form ID: 0x01123456".to_string()],
+            crash_lines: &["Form ID: 0x01123456".to_string()],
             plugins: vec![plugin("Broken.esp", "1")],
         }))
         .expect_err("malformed load-order facts must be rejected");

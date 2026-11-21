@@ -240,7 +240,7 @@ impl AutoscanReportAssembler {
         );
 
         composer.add(report_gen.generate_footer());
-        composer.compose().to_list()
+        composer.compose().into_lines()
     }
 
     /// Renders present FormID Finding results while preserving absent analysis as no section.
@@ -842,25 +842,17 @@ impl ReportFragment {
         }
     }
 
-    /// Combine two fragments
-    pub fn combine(&self, other: &ReportFragment) -> Self {
-        if !self.has_content && !other.has_content {
-            return Self::empty();
-        }
-
-        let mut combined = Vec::with_capacity(self.content.len() + other.content.len());
-        combined.extend(self.content.iter().cloned());
-        combined.extend(other.content.iter().cloned());
-
-        Self {
-            content: Arc::new(combined),
-            has_content: self.has_content || other.has_content,
-        }
-    }
-
     /// Convert to a list of strings
     pub fn to_list(&self) -> Vec<String> {
         self.content.to_vec()
+    }
+
+    /// Consumes the fragment, moving its lines out when this is the only handle.
+    ///
+    /// A fragment produced by `ReportComposer::compose` is never shared, so the
+    /// final report lines move out instead of being cloned once more (audit S8).
+    pub fn into_lines(self) -> Vec<String> {
+        Arc::try_unwrap(self.content).unwrap_or_else(|shared| shared.as_ref().clone())
     }
 }
 
@@ -887,26 +879,38 @@ impl ReportComposer {
         self.fragments.extend(fragments);
     }
 
-    /// Compose all fragments into a single fragment
-    pub fn compose(&self) -> ReportFragment {
-        if self.fragments.is_empty() {
-            return ReportFragment::empty();
+    /// Compose all fragments into a single fragment, in insertion order.
+    ///
+    /// Concatenates in one pass. The earlier pairwise fold re-cloned every
+    /// accumulated line once per later fragment, which is quadratic in the
+    /// fragment count (audit S8). The composer is consumed so fragments that
+    /// nothing else shares give up their lines without a copy.
+    pub fn compose(self) -> ReportFragment {
+        let mut fragments = self.fragments;
+        if fragments.len() <= 1 {
+            return fragments.pop().unwrap_or_else(ReportFragment::empty);
         }
 
-        if self.fragments.len() == 1 {
-            return self.fragments[0].clone();
+        let total = fragments
+            .iter()
+            .map(|fragment| fragment.content.len())
+            .sum();
+        let mut lines = Vec::with_capacity(total);
+        let mut has_content = false;
+        for fragment in fragments {
+            has_content |= fragment.has_content;
+            match Arc::try_unwrap(fragment.content) {
+                Ok(owned) => lines.extend(owned),
+                Err(shared) => lines.extend(shared.iter().cloned()),
+            }
         }
 
-        self.compose_sequential()
-    }
-
-    /// Sequential composition for small numbers of fragments
-    fn compose_sequential(&self) -> ReportFragment {
-        let mut result = self.fragments[0].clone();
-        for fragment in &self.fragments[1..] {
-            result = result.combine(fragment);
+        // Every constructor keeps `has_content == !content.is_empty()`, so an
+        // all-empty composition comes out identical to `ReportFragment::empty()`.
+        ReportFragment {
+            content: Arc::new(lines),
+            has_content,
         }
-        result
     }
 }
 

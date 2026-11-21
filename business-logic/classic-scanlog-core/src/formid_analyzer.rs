@@ -18,18 +18,24 @@ static FORMID_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
 pub fn extract_formids_batch(callstack_segments: Vec<Vec<String>>) -> Vec<Vec<String>> {
     callstack_segments
         .par_iter()
-        .map(|segment| {
-            segment
-                .iter()
-                .filter_map(|line| {
-                    let identifier = FORMID_PATTERN
-                        .captures(line)?
-                        .get(1)?
-                        .as_str()
-                        .to_uppercase();
-                    (!identifier.starts_with("FF")).then(|| format!("Form ID: {identifier}"))
-                })
-                .collect()
+        .map(|segment| extract_formids(segment))
+        .collect()
+}
+
+/// Extracts FormIDs from one borrowed segment with the batch's rules.
+///
+/// The FormID Finding analyzer borrows its Crash Log lines (ADR-0012), so it
+/// calls this directly instead of wrapping the lines in an owned one-segment batch.
+pub(crate) fn extract_formids(lines: &[String]) -> Vec<String> {
+    lines
+        .iter()
+        .filter_map(|line| {
+            let identifier = FORMID_PATTERN
+                .captures(line)?
+                .get(1)?
+                .as_str()
+                .to_uppercase();
+            (!identifier.starts_with("FF")).then(|| format!("Form ID: {identifier}"))
         })
         .collect()
 }

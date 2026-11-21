@@ -10,8 +10,10 @@ use classic_database_core::{
     FormIdValueLookupOutcome,
 };
 use classic_scanlog_core::*;
+use indexmap::IndexMap;
 use serde_json::{Value, json};
 use std::{
+    collections::HashSet,
     error::Error,
     fs,
     io::{self, Write},
@@ -241,31 +243,76 @@ fn solution_result(values: Vec<ModSolutionGuidance>) -> Vec<Value> {
     values.into_iter().map(|v| json!({"state":match_state(v.state),"id":v.id,"name":v.name,"description":v.description,"matchedPluginIds":v.matched_plugin_ids})).collect()
 }
 
-/// Converts owned fixture facts into the public crash-suspect input.
-fn crash_suspect_input(r: &Value) -> RunnerResult<CrashSuspectAnalysisInput> {
-    Ok(CrashSuspectAnalysisInput {
+/// Owned fixture facts behind one borrowed crash-suspect input.
+struct CrashSuspectFacts {
+    main_error: String,
+    call_stack: String,
+}
+
+impl CrashSuspectFacts {
+    /// Borrows the facts as the public input.
+    fn input(&self) -> CrashSuspectAnalysisInput<'_> {
+        CrashSuspectAnalysisInput {
+            main_error: &self.main_error,
+            call_stack: &self.call_stack,
+        }
+    }
+}
+
+/// Reads crash-suspect fixture facts.
+fn crash_suspect_facts(r: &Value) -> RunnerResult<CrashSuspectFacts> {
+    Ok(CrashSuspectFacts {
         main_error: text(&r["mainError"])?,
         call_stack: text(&r["callStack"])?,
     })
 }
 
-/// Converts owned fixture facts into the public named-record input.
-fn named_record_input(r: &Value) -> RunnerResult<NamedRecordFindingAnalysisInput> {
-    Ok(NamedRecordFindingAnalysisInput {
-        crash_lines: strings(&r["crashLines"])?,
-    })
+/// Owned fixture facts behind one borrowed plugin-evidence input.
+struct PluginEvidenceFacts {
+    call_stack: Vec<String>,
+    plugins: Vec<String>,
 }
 
-/// Converts owned fixture facts into the public plugin-evidence input.
-fn plugin_evidence_input(r: &Value) -> RunnerResult<PluginEvidenceAnalysisInput> {
-    Ok(PluginEvidenceAnalysisInput {
+impl PluginEvidenceFacts {
+    /// Borrows the facts as the public input.
+    fn input(&self) -> PluginEvidenceAnalysisInput<'_> {
+        PluginEvidenceAnalysisInput {
+            call_stack: &self.call_stack,
+            plugins: self.plugins.iter().map(String::as_str).collect(),
+        }
+    }
+}
+
+/// Reads plugin-evidence fixture facts.
+fn plugin_evidence_facts(r: &Value) -> RunnerResult<PluginEvidenceFacts> {
+    Ok(PluginEvidenceFacts {
         call_stack: strings(&r["crashLines"])?,
         plugins: strings(&r["plugins"])?,
     })
 }
 
-/// Converts owned fixture facts into the public crashgen-settings input.
-fn crashgen_settings_input(r: &Value) -> RunnerResult<CrashgenSettingsAnalysisInput> {
+/// Owned fixture facts behind one borrowed crashgen-settings input.
+struct CrashgenSettingsFacts {
+    settings: CrashgenSettingsSnapshot,
+    installed_plugins: HashSet<String>,
+    crashgen_version: Option<(u32, u32, u32)>,
+    config_layout: ConfigLayout,
+}
+
+impl CrashgenSettingsFacts {
+    /// Borrows the facts as the public input.
+    fn input(&self) -> CrashgenSettingsAnalysisInput<'_> {
+        CrashgenSettingsAnalysisInput {
+            settings: &self.settings,
+            installed_plugins: &self.installed_plugins,
+            crashgen_version: self.crashgen_version,
+            config_layout: self.config_layout,
+        }
+    }
+}
+
+/// Reads crashgen-settings fixture facts.
+fn crashgen_settings_facts(r: &Value) -> RunnerResult<CrashgenSettingsFacts> {
     let mut settings = CrashgenSettingsSnapshot::new();
     for (section, values) in r["settings"]
         .as_object()
@@ -278,7 +325,7 @@ fn crashgen_settings_input(r: &Value) -> RunnerResult<CrashgenSettingsAnalysisIn
             settings.insert(section, key, text(value)?);
         }
     }
-    Ok(CrashgenSettingsAnalysisInput {
+    Ok(CrashgenSettingsFacts {
         settings,
         installed_plugins: strings(&r["installedPlugins"])?.into_iter().collect(),
         crashgen_version: serde_json::from_value(r["crashgenVersion"].clone())?,
@@ -301,7 +348,7 @@ fn reused<A, I, O>(
     run(&analyzer, input)
 }
 
-/// Invokes the public operation using owned facts and serializes only its typed result.
+/// Invokes the public operation over borrowed fixture facts and serializes only its typed result.
 fn analyze(family: &str, c: &Value, r: &Value, warmup: Option<&Value>) -> RunnerResult<Value> {
     Ok(match family {
         "crash-suspect" => {
@@ -345,8 +392,10 @@ fn analyze(family: &str, c: &Value, r: &Value, warmup: Option<&Value>) -> Runner
                     })
                 })
                 .collect::<RunnerResult<Vec<_>>>()?;
-            let input = crash_suspect_input(r)?;
-            let warmup = warmup.map(crash_suspect_input).transpose()?;
+            let facts = crash_suspect_facts(r)?;
+            let warmup_facts = warmup.map(crash_suspect_facts).transpose()?;
+            let input = facts.input();
+            let warmup = warmup_facts.as_ref().map(CrashSuspectFacts::input);
             envelope(AnalyzerKind::CrashSuspect, reused(CrashSuspectAnalyzer::new(main, stack), input, warmup, |a, input| a.analyze(input)).map(|result| {
                 let findings: Vec<_> = result.findings.into_iter().map(|f| match f {
                     CrashSuspectFinding::MainErrorRule { rule_id, name, severity } => json!({"kind":"main_error_rule","ruleId":rule_id,"name":name,"severity":severity}),
@@ -357,25 +406,36 @@ fn analyze(family: &str, c: &Value, r: &Value, warmup: Option<&Value>) -> Runner
             }))
         }
         "named-record" => {
-            let input = named_record_input(r)?;
-            let warmup = warmup.map(named_record_input).transpose()?;
+            let crash_lines = strings(&r["crashLines"])?;
+            let warmup_lines = warmup.map(|w| strings(&w["crashLines"])).transpose()?;
+            let input = NamedRecordFindingAnalysisInput {
+                crash_lines: &crash_lines,
+            };
+            let warmup = warmup_lines
+                .as_deref()
+                .map(|crash_lines| NamedRecordFindingAnalysisInput { crash_lines });
             envelope(AnalyzerKind::NamedRecordFinding, reused(NamedRecordFindingAnalyzer::new(strings(&c["targetRecords"])?, strings(&c["ignoreRecords"])?), input, warmup, |a, input| a.analyze(input)).map(|result| json!({"findings":result.findings.into_iter().map(|v|json!({"record":v.record,"occurrences":v.occurrences})).collect::<Vec<_>>()})))
         }
         "plugin-evidence" => {
-            let input = plugin_evidence_input(r)?;
-            let warmup = warmup.map(plugin_evidence_input).transpose()?;
+            let facts = plugin_evidence_facts(r)?;
+            let warmup_facts = warmup.map(plugin_evidence_facts).transpose()?;
+            let input = facts.input();
+            let warmup = warmup_facts.as_ref().map(PluginEvidenceFacts::input);
             envelope(AnalyzerKind::PluginEvidence, reused(PluginEvidenceAnalyzer::new(strings(&c["ignoredPlugins"])?), input, warmup, |a, input| a.analyze(input)).map(|result| json!({"evidence":result.evidence.into_iter().map(|v|json!({"plugin":v.plugin,"occurrences":v.occurrences})).collect::<Vec<_>>()})))
         }
         "mod-guidance" => {
+            let plugins: IndexMap<String, String> = r["plugins"]
+                .as_array()
+                .ok_or_else(|| invalid("plugins must be an array"))?
+                .iter()
+                .map(|v| Ok((text(&v["name"])?, text(&v["id"])?)))
+                .collect::<RunnerResult<_>>()?;
+            let user_gpu = optional(&r["userGpu"])?;
+            let xse_modules: HashSet<String> = strings(&r["xseModules"])?.into_iter().collect();
             let input = ModGuidanceAnalysisInput {
-                plugins: r["plugins"]
-                    .as_array()
-                    .ok_or_else(|| invalid("plugins must be an array"))?
-                    .iter()
-                    .map(|v| Ok((text(&v["name"])?, text(&v["id"])?)))
-                    .collect::<RunnerResult<_>>()?,
-                user_gpu: optional(&r["userGpu"])?,
-                xse_modules: strings(&r["xseModules"])?.into_iter().collect(),
+                plugins: &plugins,
+                user_gpu: user_gpu.as_deref(),
+                xse_modules: &xse_modules,
             };
             envelope(AnalyzerKind::ModGuidance, ModGuidanceAnalyzer::new(conflicts(&c["conflicts"])?, solutions(&c["frequentCrashes"])?, solutions(&c["solutions"])?, important_mods(&c["importantMods"])?).and_then(|a| a.analyze(input)).map(|result| json!({
                 "conflicts":result.conflicts.into_iter().map(|v|json!({"state":match_state(v.state),"modA":v.mod_a,"modB":v.mod_b,"nameA":v.name_a,"nameB":v.name_b,"description":v.description,"fix":v.fix,"link":v.link})).collect::<Vec<_>>(),
@@ -401,8 +461,10 @@ fn analyze(family: &str, c: &Value, r: &Value, warmup: Option<&Value>) -> Runner
                 ignore_keys: strings(&entry["ignore_keys"])?.into_iter().collect(),
                 settings_rules: parsed.rules,
             };
-            let input = crashgen_settings_input(r)?;
-            let warmup = warmup.map(crashgen_settings_input).transpose()?;
+            let facts = crashgen_settings_facts(r)?;
+            let warmup_facts = warmup.map(crashgen_settings_facts).transpose()?;
+            let input = facts.input();
+            let warmup = warmup_facts.as_ref().map(CrashgenSettingsFacts::input);
             envelope(AnalyzerKind::CrashgenSettings, reused(CrashgenSettingsAnalyzer::from_parsed_configuration(text(&c["crashgenName"])?, entry, parsed.diagnostics), input, warmup, |a, input| a.analyze(input)).map(|result| json!({
                 "expectationOutcomes":result.expectation_outcomes.into_iter().map(|v|json!({"ruleId":v.rule_id,"kind":match v.kind {OutcomeKind::Notice=>"notice",OutcomeKind::Issue=>"issue",OutcomeKind::Success=>"success"},"severity":match v.severity {RuleSeverity::Info=>"info",RuleSeverity::Warning=>"warning",RuleSeverity::Error=>"error"},"message":v.message,"fix":v.fix,"placement":v.placement.as_str(),"section":v.section,"setting":v.setting,"expected":v.expected,"actual":v.actual})).collect::<Vec<_>>(),
                 "disabledSettingNotices":result.disabled_setting_notices.into_iter().map(|v|json!({"settingName":v.setting_name})).collect::<Vec<_>>()

@@ -5,24 +5,24 @@ use std::collections::{BTreeMap, HashMap};
 use classic_database_core::{FormIdValueLookup, FormIdValueLookupError, FormIdValueLookupOutcome};
 
 use crate::analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
-use crate::formid_analyzer::extract_formids_batch;
+use crate::formid_analyzer::extract_formids;
 
-/// One owned plugin identity and its load-order prefix.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FormIDPlugin {
+/// One borrowed plugin identity and its load-order prefix.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FormIDPlugin<'a> {
     /// Plugin filename in caller-provided casing.
-    pub name: String,
+    pub name: &'a str,
     /// Two-digit full-plugin or five-digit `FE` light-plugin prefix.
-    pub prefix: String,
+    pub prefix: &'a str,
 }
 
-/// Owned Crash Log facts consumed by one FormID Finding analysis call.
+/// Borrowed Crash Log facts read by one FormID Finding analysis call.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct FormIDFindingAnalysisInput {
+pub struct FormIDFindingAnalysisInput<'a> {
     /// Crash Log evidence lines in caller-provided casing.
-    pub crash_lines: Vec<String>,
+    pub crash_lines: &'a [String],
     /// Parsed plugin identities and load-order prefixes.
-    pub plugins: Vec<FormIDPlugin>,
+    pub plugins: Vec<FormIDPlugin<'a>>,
 }
 
 /// Stable semantic state of optional FormID Value Lookup for one finding.
@@ -72,19 +72,16 @@ impl FormIDFindingAnalyzer {
         Self { value_lookup }
     }
 
-    /// Analyzes owned Crash Log facts without producing report text.
+    /// Analyzes borrowed Crash Log facts without producing report text.
     ///
     /// Lookup misses remain successful typed data. Malformed lookup replies and
     /// operational failures use the shared analyzer error and fail the whole call.
     pub async fn analyze(
         &self,
-        input: FormIDFindingAnalysisInput,
+        input: FormIDFindingAnalysisInput<'_>,
     ) -> AnalyzerResult<FormIDFindingAnalysisResult> {
-        let plugins = normalize_plugins(input.plugins)?;
-        let extracted = extract_formids_batch(vec![input.crash_lines])
-            .into_iter()
-            .next()
-            .unwrap_or_default();
+        let plugins = normalize_plugins(&input.plugins)?;
+        let extracted = extract_formids(input.crash_lines);
         let identifiers = aggregate_identifiers(extracted)?;
 
         let mut staged = Vec::with_capacity(identifiers.len());
@@ -148,8 +145,8 @@ impl FormIDFindingAnalyzer {
     }
 }
 
-/// Normalizes and validates caller-owned plugin/load-order facts.
-fn normalize_plugins(plugins: Vec<FormIDPlugin>) -> AnalyzerResult<HashMap<String, String>> {
+/// Normalizes and validates caller-provided plugin/load-order facts.
+fn normalize_plugins(plugins: &[FormIDPlugin<'_>]) -> AnalyzerResult<HashMap<String, String>> {
     let mut normalized = HashMap::with_capacity(plugins.len());
     for plugin in plugins {
         let name = plugin.name.trim();

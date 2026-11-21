@@ -41,8 +41,10 @@ Each shared Rust crate and its corresponding C++ bridge module:
 
 **Semantic analyzer contract:** `CrashgenSettingsAnalyzer`,
 `CrashSuspectAnalyzer`, `ModGuidanceAnalyzer`, `PluginEvidenceAnalyzer`,
-`NamedRecordFindingAnalyzer`, and `FormIDFindingAnalyzer` are projected through the
-C++ bridge as immutable reusable handles over owned input. Crashgen
+`NamedRecordFindingAnalyzer`, and `FormIDFindingAnalyzer` are Rust-only: no CLI or
+GUI production code calls them, so the consumer-driven bridge (ADR-0010) exports
+none of them. They are immutable reusable handles over borrowed per-call input
+(ADR-0012). Crashgen
 Settings Analysis returns typed
 Crashgen Expectation Outcomes separately from Disabled Setting Notices and
 preserves YAML-owned placement and authored guidance. Crash Suspect Analysis

@@ -49,7 +49,7 @@ The semantic result of one report-relevant analysis offered to Autoscan Report A
 _Avoid_: report fragment, markdown snippet, rendered lines
 
 **Focused Semantic Analyzer**:
-A reusable analysis interface that accepts owned Crash Log or YAML Data facts and returns one typed Autoscan Report Contribution without report presentation mechanics. A completed analysis with no matches returns an explicit empty result; invalid configuration, malformed dependency data, and operational failure remain typed errors.
+A reusable analysis interface, built once from YAML Data configuration, that reads one Crash Log's facts per call and returns one typed Autoscan Report Contribution without report presentation mechanics. A completed analysis with no matches returns an explicit empty result; invalid configuration, malformed dependency data, and operational failure remain typed errors.
 _Avoid_: fragment producer, report scanner, formatting helper
 
 **Focused Semantic Analyzer Failure**:

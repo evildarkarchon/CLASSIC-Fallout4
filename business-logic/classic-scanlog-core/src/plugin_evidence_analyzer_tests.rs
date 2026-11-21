@@ -7,12 +7,12 @@ fn analyze_returns_typed_plugin_identity_and_occurrence_counts() {
 
     let result = analyzer
         .analyze(PluginEvidenceAnalysisInput {
-            call_stack: vec![
+            call_stack: &[
                 "Alpha.ESP called Beta.esm".to_string(),
                 "alpha.esp called twice on one alpha.esp line".to_string(),
                 "beta.esm appeared again".to_string(),
             ],
-            plugins: vec!["Alpha.ESP".to_string(), "Beta.esm".to_string()],
+            plugins: vec!["Alpha.ESP", "Beta.esm"],
         })
         .unwrap();
 
@@ -51,8 +51,8 @@ fn completed_analysis_without_evidence_is_an_explicit_empty_result() {
 
     let result = analyzer
         .analyze(PluginEvidenceAnalysisInput {
-            call_stack: vec!["unrelated stack line".to_string()],
-            plugins: vec!["Example.esp".to_string()],
+            call_stack: &["unrelated stack line".to_string()],
+            plugins: vec!["Example.esp"],
         })
         .unwrap();
 
@@ -65,16 +65,12 @@ fn analysis_filters_ignored_plugins_modified_by_lines_and_duplicate_identities()
 
     let result = analyzer
         .analyze(PluginEvidenceAnalysisInput {
-            call_stack: vec![
+            call_stack: &[
                 "Fallout4.esm and Useful.ESP".to_string(),
                 "modified by: useful.esp".to_string(),
                 "useful.esp useful.esp".to_string(),
             ],
-            plugins: vec![
-                "Fallout4.esm".to_string(),
-                "Useful.ESP".to_string(),
-                "useful.esp".to_string(),
-            ],
+            plugins: vec!["Fallout4.esm", "Useful.ESP", "useful.esp"],
         })
         .unwrap();
 
@@ -93,12 +89,8 @@ fn analysis_discards_blank_candidates_and_normalizes_padded_duplicates() {
 
     let result = analyzer
         .analyze(PluginEvidenceAnalysisInput {
-            call_stack: vec!["example.esp and unrelated spacing".to_string()],
-            plugins: vec![
-                " ".to_string(),
-                " Example.ESP ".to_string(),
-                "example.esp".to_string(),
-            ],
+            call_stack: &["example.esp and unrelated spacing".to_string()],
+            plugins: vec![" ", " Example.ESP ", "example.esp"],
         })
         .unwrap();
 
@@ -120,8 +112,8 @@ fn one_immutable_handle_is_safe_for_concurrent_analysis_without_leaking_counts()
             std::thread::spawn(move || {
                 analyzer
                     .analyze(PluginEvidenceAnalysisInput {
-                        call_stack: vec!["example.esp".to_string(); occurrences],
-                        plugins: vec!["Example.esp".to_string()],
+                        call_stack: &vec!["example.esp".to_string(); occurrences],
+                        plugins: vec!["Example.esp"],
                     })
                     .unwrap()
             })

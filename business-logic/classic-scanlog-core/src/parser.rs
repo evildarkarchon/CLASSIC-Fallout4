@@ -268,12 +268,31 @@ impl LogParser {
         Self::parse_all_sections_impl(lines)
     }
 
+    /// Segments borrowed lines without copying their text.
+    ///
+    /// Same contract as `parse_all_sections_arc`; each returned slice points into
+    /// the caller's lines. The scan path uses this so a Crash Log's lines are not
+    /// copied into `Arc<str>` just to be segmented (audit S8).
+    pub(crate) fn parse_all_sections_borrowed<'a>(
+        &self,
+        lines: &[&'a str],
+    ) -> HashMap<String, Vec<&'a str>> {
+        Self::parse_all_sections_impl(lines)
+    }
+
     /// Internal single-pass anchor-first segmentation implementation.
-    fn parse_all_sections_impl(lines: &[Arc<str>]) -> HashMap<String, Vec<Arc<str>>> {
+    ///
+    /// Generic over the line carrier so every public form shares one state
+    /// machine. `L::clone` is a refcount bump for `Arc<str>`, a pointer copy
+    /// for `&str`, and a text copy only for `String`.
+    fn parse_all_sections_impl<L>(lines: &[L]) -> HashMap<String, Vec<L>>
+    where
+        L: AsRef<str> + Clone,
+    {
         use crate::segment_key;
 
         // Pre-allocate all 8 named keys (guarantees they're always present)
-        let mut result: HashMap<String, Vec<Arc<str>>> = HashMap::with_capacity(8);
+        let mut result: HashMap<String, Vec<L>> = HashMap::with_capacity(8);
         for key in segment_key::ALL_KEYS {
             result.insert(key.to_string(), Vec::new());
         }
@@ -295,7 +314,7 @@ impl LogParser {
         let mut xse_subheader_found = false;
 
         for line in lines {
-            let trimmed = line.trim();
+            let trimmed = line.as_ref().trim();
 
             // Check game-output anchors first (before xse_subheader check)
             if trimmed.starts_with("SYSTEM SPECS:") {
@@ -343,7 +362,7 @@ impl LogParser {
             };
 
             if let Some(lines) = result.get_mut(key) {
-                lines.push(Arc::clone(line));
+                lines.push(line.clone());
             }
         }
 
@@ -771,20 +790,15 @@ impl LogParser {
     /// Parses and extracts all named sections from the log using anchor-first segmentation.
     ///
     /// This is the String-facing version (originally for the since-retired
-    /// Python binding). Converts to `Arc<str>` internally, delegates to
-    /// `parse_all_sections_arc`, then converts back to `String` for the return
-    /// value.
+    /// Python binding). It runs the same segmentation as
+    /// `parse_all_sections_arc` directly over the `String` lines, copying each
+    /// segmented line once for the owned return value.
     ///
     /// All 8 named keys are always present: `settings`, `system`, `callstack`,
     /// `modules`, `xse_modules`, `plugins`, `registers`, `stack_dump`. Keys for
     /// absent sections map to empty `Vec`.
     pub fn parse_all_sections(&self, lines: &[String]) -> HashMap<String, Vec<String>> {
-        let arc_lines: Vec<Arc<str>> = lines.iter().map(|s| Arc::from(s.as_str())).collect();
-        let arc_result = self.parse_all_sections_arc(&arc_lines);
-        arc_result
-            .into_iter()
-            .map(|(k, v)| (k, v.iter().map(|s| s.to_string()).collect()))
-            .collect()
+        Self::parse_all_sections_impl(lines)
     }
 
     /// Optimized batch operation: complete log analysis in single call

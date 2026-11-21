@@ -110,7 +110,6 @@ struct ScanAnalysisContext {
     processed_lines: Vec<String>,
     combined_crash_lines: Vec<String>,
     combined_crash_text: String,
-    combined_crash_lower_lines: Vec<String>,
     plugin_lines: Vec<String>,
     xse_modules_for_settings: HashSet<String>,
     crashgen_settings: CrashgenSettingsSnapshot,
@@ -149,20 +148,27 @@ pub(crate) fn resolve_batch_concurrency(total_logs: usize, max_concurrent: Optio
 }
 
 impl ScanAnalysisContext {
+    /// Segments `processed_lines` and derives every per-log analysis fact from it.
+    ///
+    /// Segmentation borrows the lines, so the only text copied here is the
+    /// segments the context keeps (crash evidence, plugins, system) plus their
+    /// joined crash text. `processed_lines` itself moves in unchanged.
     fn from_processed_lines(parser: &LogParser, processed_lines: Vec<String>) -> Self {
-        let processed_line_arcs: Vec<Arc<str>> = processed_lines
-            .iter()
-            .map(|line| Arc::from(line.as_str()))
-            .collect();
-        let segments = parser.parse_all_sections_arc(&processed_line_arcs);
-
-        Self::from_arc_sections(processed_lines, &segments)
+        let mut context = {
+            let line_views: Vec<&str> = processed_lines.iter().map(String::as_str).collect();
+            let segments = parser.parse_all_sections_borrowed(&line_views);
+            Self::from_sections(&segments)
+        };
+        // The segment borrows have ended, so the lines can move into the context.
+        context.processed_lines = processed_lines;
+        context
     }
 
-    fn from_arc_sections(
-        processed_lines: Vec<String>,
-        segments: &HashMap<String, Vec<Arc<str>>>,
-    ) -> Self {
+    /// Derives analysis facts from named segments, leaving `processed_lines` empty.
+    ///
+    /// Generic over the segment line carrier so tests can pass `parse_all_sections_arc`
+    /// output while the scan path passes borrowed segments.
+    fn from_sections<L: AsRef<str>>(segments: &HashMap<String, Vec<L>>) -> Self {
         let combined_crash_lines: Vec<String> = [
             segment_key::CALLSTACK,
             segment_key::REGISTERS,
@@ -170,17 +176,18 @@ impl ScanAnalysisContext {
         ]
         .into_iter()
         .filter_map(|key| segments.get(key))
-        .flat_map(|segment_lines| segment_lines.iter().map(|line| line.to_string()))
+        .flat_map(|segment_lines| segment_lines.iter().map(|line| line.as_ref().to_string()))
         .collect();
         let combined_crash_text = combined_crash_lines.join("\n");
-        let combined_crash_lower_lines = combined_crash_lines
-            .iter()
-            .map(|line| line.to_lowercase())
-            .collect();
 
         let plugin_lines = segments
             .get(segment_key::PLUGINS)
-            .map(|segment_lines| segment_lines.iter().map(|line| line.to_string()).collect())
+            .map(|segment_lines| {
+                segment_lines
+                    .iter()
+                    .map(|line| line.as_ref().to_string())
+                    .collect()
+            })
             .unwrap_or_default();
 
         let xse_modules_for_settings = {
@@ -204,14 +211,18 @@ impl ScanAnalysisContext {
 
         let system_segment_lines = segments
             .get(segment_key::SYSTEM)
-            .map(|segment_lines| segment_lines.iter().map(|line| line.to_string()).collect())
+            .map(|segment_lines| {
+                segment_lines
+                    .iter()
+                    .map(|line| line.as_ref().to_string())
+                    .collect()
+            })
             .unwrap_or_default();
 
         Self {
-            processed_lines,
+            processed_lines: Vec::new(),
             combined_crash_lines,
             combined_crash_text,
-            combined_crash_lower_lines,
             plugin_lines,
             xse_modules_for_settings,
             crashgen_settings,
@@ -221,12 +232,12 @@ impl ScanAnalysisContext {
 }
 
 /// Parse crashgen setting lines into a section-aware snapshot for rule evaluation.
-fn parse_crashgen_settings_snapshot(lines: &[Arc<str>]) -> CrashgenSettingsSnapshot {
+fn parse_crashgen_settings_snapshot<L: AsRef<str>>(lines: &[L]) -> CrashgenSettingsSnapshot {
     let mut snapshot = CrashgenSettingsSnapshot::new();
     let mut current_section: Option<String> = None;
 
     for line in lines {
-        let line = line.trim();
+        let line = line.as_ref().trim();
         if line.starts_with('[') {
             current_section = Some(line.to_string());
             continue;
@@ -1410,14 +1421,18 @@ impl OrchestratorCore {
 
     /// Reformats crash data inline as part of the processing pipeline.
     ///
-    /// This method matches Python's `_reformat_crash_data_inline()` behavior exactly:
-    /// 1. Iterates from bottom to top to detect the PLUGINS section
+    /// This method matches Python's `_reformat_crash_data_inline()` output exactly:
+    /// 1. Locates the PLUGINS section (everything after the last `PLUGINS:` header)
     /// 2. Removes entire lines containing strings from `remove_list` if `simplify_logs` is enabled
     /// 3. Pads brackets (replaces spaces with zeros) within the PLUGINS section
     ///
-    /// The PLUGINS section is detected by finding the "PLUGINS:" marker while iterating
-    /// from the bottom of the file upward. Lines below (and including) "PLUGINS:" are
-    /// considered part of the plugins section.
+    /// Lines after the last line starting with "PLUGINS:" are the plugins section;
+    /// the header itself and everything above it are not. A log with no
+    /// "PLUGINS:" header is treated as all plugins section, as the Python original
+    /// did when its bottom-up scan never met the header.
+    ///
+    /// Generic over the line carrier so the scan path can pass lines borrowed
+    /// from the file buffer; the returned vector is the only owned copy (audit S8).
     ///
     /// # Arguments
     ///
@@ -1435,25 +1450,22 @@ impl OrchestratorCore {
     /// Before: "[ 1] MyMod.esp"
     /// After:  "[01] MyMod.esp"
     /// ```
-    pub fn reformat_crash_data_inline(&self, lines: &[String]) -> Vec<String> {
-        use std::collections::VecDeque;
-
-        // Use VecDeque for O(1) prepend operations (like Python's deque)
-        let mut processed_lines: VecDeque<String> = VecDeque::with_capacity(lines.len());
-
-        // State for tracking if currently in the PLUGINS section
-        // Start as true because we iterate from bottom, and PLUGINS is typically at the end
-        let mut in_plugins_section = true;
+    pub fn reformat_crash_data_inline<S: AsRef<str>>(&self, lines: &[S]) -> Vec<String> {
+        // The Python original walked the log bottom-up and prepended to a deque so
+        // it could flip out of the PLUGINS section at the first header it met.
+        // Finding that same header (the last one) up front gives the identical
+        // split in one forward pass that appends in order.
+        let plugins_start = lines
+            .iter()
+            .rposition(|line| line.as_ref().starts_with("PLUGINS:"))
+            .map_or(0, |header| header + 1);
 
         // Pre-compute remove set for efficiency
         let should_simplify = self.config.simplify_logs && !self.config.remove_list.is_empty();
 
-        // Iterate over lines from bottom to top (like Python's reversed())
-        for line in lines.iter().rev() {
-            // Check if we're exiting the PLUGINS section (going upward)
-            if in_plugins_section && line.starts_with("PLUGINS:") {
-                in_plugins_section = false;
-            }
+        let mut processed_lines = Vec::with_capacity(lines.len());
+        for (index, line) in lines.iter().enumerate() {
+            let line = line.as_ref();
 
             // Remove entire lines if Simplify Logs is enabled and line contains a remove string
             if should_simplify
@@ -1461,38 +1473,27 @@ impl OrchestratorCore {
                     .config
                     .remove_list
                     .iter()
-                    .any(|remove_str| line.contains(remove_str))
+                    .any(|remove_str| line.contains(remove_str.as_str()))
             {
-                // Skip this line entirely (don't add to processed_lines)
                 continue;
             }
 
-            // Reformat lines within the PLUGINS section (bracket padding)
-            if in_plugins_section && line.contains('[') {
-                // Replace all spaces inside the load order [brackets] with 0s.
-                // This maintains consistency between different versions of Buffout 4.
-                // Example: "[ 1]" -> "[01]", "[  A]" -> "[00A]"
-                if let Some((indent, rest)) = line.split_once('[')
-                    && let Some((fid, name)) = rest.split_once(']')
-                {
-                    // Only modify if spaces exist inside brackets
-                    if fid.contains(' ') {
-                        let modified_line =
-                            format!("{}[{}]{}", indent, fid.replace(' ', "0"), name);
-                        processed_lines.push_front(modified_line);
-                        continue;
-                    }
-                }
-                // If format is unexpected, keep original line
-                processed_lines.push_front(line.clone());
+            // Replace all spaces inside the load order [brackets] with 0s in the
+            // PLUGINS section. This maintains consistency between different
+            // versions of Buffout 4. Example: "[ 1]" -> "[01]", "[  A]" -> "[00A]".
+            // A line whose format is unexpected is kept as it is.
+            if index >= plugins_start
+                && let Some((indent, rest)) = line.split_once('[')
+                && let Some((fid, name)) = rest.split_once(']')
+                && fid.contains(' ')
+            {
+                processed_lines.push(format!("{}[{}]{}", indent, fid.replace(' ', "0"), name));
             } else {
-                // Line is not in PLUGINS section or doesn't need modification
-                processed_lines.push_front(line.clone());
+                processed_lines.push(line.to_string());
             }
         }
 
-        // Convert VecDeque to Vec (already in correct order due to push_front)
-        processed_lines.into_iter().collect()
+        processed_lines
     }
 
     /// Detects if a crash log is incomplete (missing plugin segment).
@@ -1538,7 +1539,8 @@ impl OrchestratorCore {
 
     async fn prepare_scan_context(&self, log_path: &str) -> Result<ScanAnalysisContext> {
         let log_content = self.file_io.read_file(Path::new(log_path)).await?;
-        let raw_lines: Vec<String> = log_content.lines().map(String::from).collect();
+        // Borrow the lines from the file buffer; reformatting makes the one owned copy.
+        let raw_lines: Vec<&str> = log_content.lines().collect();
         let processed_lines = self.reformat_crash_data_inline(&raw_lines);
         Ok(ScanAnalysisContext::from_processed_lines(
             &self.parser,

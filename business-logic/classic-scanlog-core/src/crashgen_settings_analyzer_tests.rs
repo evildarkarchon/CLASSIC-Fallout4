@@ -52,18 +52,22 @@ fn rules() -> CrashgenSettingsRules {
     }
 }
 
-fn input() -> CrashgenSettingsAnalysisInput {
+/// Analyzes the shared fixture facts; the facts are built here so threaded callers own them.
+fn analyze_fixture(
+    analyzer: &CrashgenSettingsAnalyzer,
+) -> AnalyzerResult<CrashgenSettingsAnalysisResult> {
     let mut settings = CrashgenSettingsSnapshot::new();
     settings.insert("Patches", "Achievements", "true");
     settings.insert("Compatibility", "DisabledSetting", "false");
     settings.insert("Compatibility", "IgnoredSetting", "false");
+    let installed_plugins = HashSet::<String, RandomState>::from(["MIXEDCASE.DLL".to_string()]);
 
-    CrashgenSettingsAnalysisInput {
-        settings,
-        installed_plugins: HashSet::<String, RandomState>::from(["MIXEDCASE.DLL".to_string()]),
+    analyzer.analyze(CrashgenSettingsAnalysisInput {
+        settings: &settings,
+        installed_plugins: &installed_plugins,
         crashgen_version: Some((1, 30, 0)),
         config_layout: ConfigLayout::Og,
-    }
+    })
 }
 
 #[test]
@@ -71,7 +75,7 @@ fn analyze_returns_typed_outcomes_and_separate_disabled_notices() {
     let analyzer =
         CrashgenSettingsAnalyzer::new("Buffout 4".to_string(), entry_with_rules(rules())).unwrap();
 
-    let result = analyzer.analyze(input()).unwrap();
+    let result = analyze_fixture(&analyzer).unwrap();
 
     assert_eq!(result.expectation_outcomes.len(), 2);
     assert_eq!(
@@ -126,7 +130,12 @@ fn completed_analysis_without_matches_is_an_explicit_empty_result() {
             .unwrap();
 
     let result = analyzer
-        .analyze(CrashgenSettingsAnalysisInput::default())
+        .analyze(CrashgenSettingsAnalysisInput {
+            settings: &CrashgenSettingsSnapshot::default(),
+            installed_plugins: &HashSet::new(),
+            crashgen_version: None,
+            config_layout: ConfigLayout::Unknown,
+        })
         .unwrap();
 
     assert_eq!(result, CrashgenSettingsAnalysisResult::default());
@@ -180,7 +189,7 @@ fn one_immutable_handle_is_safe_for_concurrent_analysis() {
     let threads = (0..8)
         .map(|_| {
             let analyzer = Arc::clone(&analyzer);
-            std::thread::spawn(move || analyzer.analyze(input()).unwrap())
+            std::thread::spawn(move || analyze_fixture(&analyzer).unwrap())
         })
         .collect::<Vec<_>>();
 

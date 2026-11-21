@@ -7,13 +7,13 @@ use aho_corasick::AhoCorasick;
 
 use crate::analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
 
-/// Owned Crash Log facts consumed by one Plugin Evidence analysis call.
+/// Borrowed Crash Log facts read by one Plugin Evidence analysis call.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct PluginEvidenceAnalysisInput {
+pub struct PluginEvidenceAnalysisInput<'a> {
     /// Call-stack lines in their caller-provided casing.
-    pub call_stack: Vec<String>,
+    pub call_stack: &'a [String],
     /// Plugin identities parsed from the Crash Log.
-    pub plugins: Vec<String>,
+    pub plugins: Vec<&'a str>,
 }
 
 /// One plugin identity observed in Crash Log call-stack evidence.
@@ -63,10 +63,10 @@ impl PluginEvidenceAnalyzer {
         })
     }
 
-    /// Analyzes owned call-stack and plugin facts without producing report text.
+    /// Analyzes borrowed call-stack and plugin facts without producing report text.
     pub fn analyze(
         &self,
-        input: PluginEvidenceAnalysisInput,
+        input: PluginEvidenceAnalysisInput<'_>,
     ) -> AnalyzerResult<PluginEvidenceAnalysisResult> {
         let mut seen = HashSet::new();
         let plugins = input

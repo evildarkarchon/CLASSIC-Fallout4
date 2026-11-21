@@ -638,9 +638,10 @@ fn scan_analysis_context_builds_from_arc_sections() {
         .collect();
     let segments = parser.parse_all_sections_arc(&arc_lines);
 
-    let context = ScanAnalysisContext::from_arc_sections(processed_lines.clone(), &segments);
+    let context = ScanAnalysisContext::from_sections(&segments);
 
-    assert_eq!(context.processed_lines, processed_lines);
+    // Segment derivation leaves the line copy to `from_processed_lines` (audit S8).
+    assert!(context.processed_lines.is_empty());
     assert_eq!(
         context.combined_crash_lines,
         vec![
@@ -766,8 +767,8 @@ fn semantic_settings_analyzer_routes_to_addictol_rules_and_avoids_scaffold() {
     .unwrap();
     let analysis = analyzer
         .analyze(crate::CrashgenSettingsAnalysisInput {
-            settings: classic_config_core::CrashgenSettingsSnapshot::new(),
-            installed_plugins: xse_modules,
+            settings: &classic_config_core::CrashgenSettingsSnapshot::new(),
+            installed_plugins: &xse_modules,
             crashgen_version: None,
             config_layout: classic_config_core::ConfigLayout::Unknown,
         })

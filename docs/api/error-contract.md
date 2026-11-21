@@ -28,7 +28,7 @@ Mod Guidance Analysis exposes `mod_guidance` with `invalid_configuration` for
   `named_record_finding` with `invalid_configuration` for invalid target/ignore
   configuration, matcher construction, or checked-count analysis failures;
   FormID Finding Analysis exposes `formid_finding` with
-  `invalid_configuration` for invalid owned facts, `malformed_result` for an
+  `invalid_configuration` for invalid plugin/prefix facts, `malformed_result` for an
   invalid strict-lookup reply, or `operational_failure` for lookup execution.
   A lookup miss is successful result data and never an analyzer error.
 

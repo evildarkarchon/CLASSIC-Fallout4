@@ -11,7 +11,7 @@ fn analyze_returns_distinct_records_with_occurrence_counts() {
 
     let result = analyzer
         .analyze(NamedRecordFindingAnalysisInput {
-            crash_lines: vec![
+            crash_lines: &[
                 "ActorBase_Player".to_string(),
                 "Weapon_Pistol".to_string(),
                 "ActorBase_Player".to_string(),
@@ -43,7 +43,7 @@ fn completed_analysis_without_matches_is_an_explicit_empty_result() {
 
     let result = analyzer
         .analyze(NamedRecordFindingAnalysisInput {
-            crash_lines: vec!["unrelated evidence".to_string()],
+            crash_lines: &["unrelated evidence".to_string()],
         })
         .unwrap();
 
@@ -72,7 +72,7 @@ fn construction_compiles_matchers_and_analysis_filters_ignored_evidence() {
     assert!(analyzer.configuration.ignore_matcher.is_some());
     let result = analyzer
         .analyze(NamedRecordFindingAnalysisInput {
-            crash_lines: vec![
+            crash_lines: &[
                 "ActorBase_System".to_string(),
                 "ActorBase_Player".to_string(),
             ],
@@ -98,7 +98,7 @@ fn analysis_matches_mixed_case_ascii_and_unicode_patterns() {
 
     let result = analyzer
         .analyze(NamedRecordFindingAnalysisInput {
-            crash_lines: vec![
+            crash_lines: &[
                 "AcToRbAsE_Player".to_string(),
                 "ACTORBASE_SYSTEM".to_string(),
                 "MÖD_Pläyer".to_string(),
@@ -130,7 +130,7 @@ fn analysis_preserves_legacy_rsp_record_extraction() {
 
     let result = analyzer
         .analyze(NamedRecordFindingAnalysisInput {
-            crash_lines: vec![line],
+            crash_lines: &[line],
         })
         .unwrap();
 
@@ -148,7 +148,7 @@ fn one_immutable_handle_is_safe_for_concurrent_analysis_without_leaking_counts()
             std::thread::spawn(move || {
                 analyzer
                     .analyze(NamedRecordFindingAnalysisInput {
-                        crash_lines: vec!["ActorBase_Player".to_string(); occurrences],
+                        crash_lines: &vec!["ActorBase_Player".to_string(); occurrences],
                     })
                     .unwrap()
             })

@@ -9,11 +9,11 @@ use indexmap::IndexMap;
 use crate::analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
 use crate::record_scanner::RecordScanner;
 
-/// Owned Crash Log facts consumed by one Named Record Finding analysis call.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct NamedRecordFindingAnalysisInput {
+/// Borrowed Crash Log facts read by one Named Record Finding analysis call.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct NamedRecordFindingAnalysisInput<'a> {
     /// Crash Log lines in their caller-provided casing.
-    pub crash_lines: Vec<String>,
+    pub crash_lines: &'a [String],
 }
 
 /// One distinct named record observed in Crash Log evidence.
@@ -57,10 +57,10 @@ impl NamedRecordFindingAnalyzer {
         })
     }
 
-    /// Analyzes owned Crash Log lines without producing report text.
+    /// Analyzes borrowed Crash Log lines without producing report text.
     pub fn analyze(
         &self,
-        input: NamedRecordFindingAnalysisInput,
+        input: NamedRecordFindingAnalysisInput<'_>,
     ) -> AnalyzerResult<NamedRecordFindingAnalysisResult> {
         let Some(target_matcher) = &self.configuration.target_matcher else {
             return Ok(NamedRecordFindingAnalysisResult::default());
@@ -78,7 +78,7 @@ impl NamedRecordFindingAnalyzer {
             {
                 continue;
             }
-            let Some(record) = RecordScanner::extract_record_line(&line, "[RSP+", 30)
+            let Some(record) = RecordScanner::extract_record_line(line, "[RSP+", 30)
                 .filter(|record| !record.is_empty())
             else {
                 continue;

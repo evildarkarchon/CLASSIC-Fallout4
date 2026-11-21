@@ -137,8 +137,8 @@ impl<'a> AutoscanReportContributionCollector<'a> {
                 Some(
                     self.crashgen_settings
                         .analyze(CrashgenSettingsAnalysisInput {
-                            settings: input.crashgen_settings.clone(),
-                            installed_plugins: input.xse_modules.clone(),
+                            settings: input.crashgen_settings,
+                            installed_plugins: input.xse_modules,
                             crashgen_version: input.crashgen_version,
                             config_layout: input.config_layout,
                         })
@@ -151,19 +151,20 @@ impl<'a> AutoscanReportContributionCollector<'a> {
         let crash_suspects = Some(
             self.crash_suspects
                 .analyze(CrashSuspectAnalysisInput {
-                    main_error: input.main_error.to_string(),
-                    call_stack: input.combined_crash_text.to_string(),
+                    main_error: input.main_error,
+                    call_stack: input.combined_crash_text,
                 })
                 .map_err(analyzer_failure)?,
         );
 
         let mod_guidance = if let Some(plugins) = input.plugins {
+            let user_gpu = detected_gpu(input.system_segment_lines);
             Some(
                 self.mod_guidance
                     .analyze(ModGuidanceAnalysisInput {
-                        plugins: plugins.clone(),
-                        user_gpu: detected_gpu(input.system_segment_lines),
-                        xse_modules: input.xse_modules.clone(),
+                        plugins,
+                        user_gpu: user_gpu.as_deref(),
+                        xse_modules: input.xse_modules,
                     })
                     .map_err(analyzer_failure)?,
             )
@@ -176,8 +177,8 @@ impl<'a> AutoscanReportContributionCollector<'a> {
                 Some(
                     self.plugin_evidence
                         .analyze(PluginEvidenceAnalysisInput {
-                            call_stack: input.combined_crash_lines.to_vec(),
-                            plugins: plugins.keys().cloned().collect(),
+                            call_stack: input.combined_crash_lines,
+                            plugins: plugins.keys().map(String::as_str).collect(),
                         })
                         .map_err(analyzer_failure)?,
                 )
@@ -189,15 +190,12 @@ impl<'a> AutoscanReportContributionCollector<'a> {
             None
         } else {
             let analysis_input = || FormIDFindingAnalysisInput {
-                crash_lines: input.combined_crash_lines.to_vec(),
+                crash_lines: input.combined_crash_lines,
                 plugins: input
                     .plugins
                     .into_iter()
                     .flat_map(|plugins| plugins.iter())
-                    .map(|(name, prefix)| FormIDPlugin {
-                        name: name.clone(),
-                        prefix: prefix.clone(),
-                    })
+                    .map(|(name, prefix)| FormIDPlugin { name, prefix })
                     .collect(),
             };
             let result = match self.formid_findings.analyze(analysis_input()).await {
@@ -226,7 +224,7 @@ impl<'a> AutoscanReportContributionCollector<'a> {
             Some(
                 analyzer
                     .analyze(NamedRecordFindingAnalysisInput {
-                        crash_lines: input.combined_crash_lines.to_vec(),
+                        crash_lines: input.combined_crash_lines,
                     })
                     .map_err(analyzer_failure)?,
             )

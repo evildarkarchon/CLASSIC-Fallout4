@@ -7,13 +7,13 @@ use classic_config_core::{SuspectErrorRule, SuspectStackRule};
 
 use crate::analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
 
-/// Owned Crash Log facts consumed by one Crash Suspect analysis call.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct CrashSuspectAnalysisInput {
+/// Borrowed Crash Log facts read by one Crash Suspect analysis call.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CrashSuspectAnalysisInput<'a> {
     /// Main error text extracted from the Crash Log.
-    pub main_error: String,
+    pub main_error: &'a str,
     /// Complete call-stack evidence used by stack rules.
-    pub call_stack: String,
+    pub call_stack: &'a str,
 }
 
 /// Identifies which Crash Suspect evidence source produced a finding.
@@ -121,13 +121,13 @@ impl CrashSuspectAnalyzer {
         })
     }
 
-    /// Analyzes one owned Crash Log input and returns semantic findings.
+    /// Analyzes one borrowed Crash Log input and returns semantic findings.
     pub fn analyze(
         &self,
-        input: CrashSuspectAnalysisInput,
+        input: CrashSuspectAnalysisInput<'_>,
     ) -> AnalyzerResult<CrashSuspectAnalysisResult> {
-        let mut findings = self.main_error_findings(&input.main_error);
-        findings.extend(self.stack_findings(&input.main_error, &input.call_stack));
+        let mut findings = self.main_error_findings(input.main_error);
+        findings.extend(self.stack_findings(input.main_error, input.call_stack));
 
         let main_error_lower = input.main_error.to_lowercase();
         if main_error_lower.contains(".dll") && !main_error_lower.contains("tbbmalloc") {

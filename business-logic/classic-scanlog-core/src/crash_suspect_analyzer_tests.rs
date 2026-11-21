@@ -35,8 +35,8 @@ fn analyze_returns_one_semantic_finding_for_each_matched_rule_and_dll_notice() {
 
     let result = analyzer
         .analyze(CrashSuspectAnalysisInput {
-            main_error: "ACCESS_VIOLATION in plugin.dll".to_string(),
-            call_stack: "StackSignal".to_string(),
+            main_error: "ACCESS_VIOLATION in plugin.dll",
+            call_stack: "StackSignal",
         })
         .unwrap();
 
@@ -116,11 +116,11 @@ fn concurrent_calls_do_not_leak_findings_between_inputs() {
                 analyzer
                     .analyze(CrashSuspectAnalysisInput {
                         main_error: if index % 2 == 0 {
-                            "MATCH".to_string()
+                            "MATCH"
                         } else {
-                            "no finding".to_string()
+                            "no finding"
                         },
-                        call_stack: String::new(),
+                        call_stack: "",
                     })
                     .unwrap()
             })

@@ -297,10 +297,7 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
         fixture.plugin_prefix_pairs().into_iter().collect();
     let plugins = crashlog_plugins
         .iter()
-        .map(|(name, prefix)| FormIDPlugin {
-            name: name.clone(),
-            prefix: prefix.clone(),
-        })
+        .map(|(name, prefix)| FormIDPlugin { name, prefix })
         .collect::<Vec<_>>();
 
     for (scenario_id, formid_count) in [
@@ -319,7 +316,7 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
                     pool.clear_cache(false);
                     let result = runtime
                         .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-                            crash_lines: lines.clone(),
+                            crash_lines: lines,
                             plugins: plugins.clone(),
                         }))
                         .expect("formid resolution should succeed");
@@ -333,7 +330,7 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
     let warm_lines = fixture.formid_callstack_lines(128);
     runtime
         .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-            crash_lines: warm_lines.clone(),
+            crash_lines: &warm_lines,
             plugins: plugins.clone(),
         }))
         .expect("warm cache priming should succeed");
@@ -345,7 +342,7 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
             b.iter(|| {
                 let result = runtime
                     .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
-                        crash_lines: lines.clone(),
+                        crash_lines: lines,
                         plugins: plugins.clone(),
                     }))
                     .expect("formid resolution should succeed");
@@ -503,7 +500,7 @@ fn record_scanning_benchmarks(c: &mut Criterion) {
                 let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
                 b.iter(|| {
                     analyzer.analyze(NamedRecordFindingAnalysisInput {
-                        crash_lines: lines.clone(),
+                        crash_lines: &lines,
                     })
                 });
             },
@@ -622,10 +619,12 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
 
 fn phase5_hotspot_benchmarks(c: &mut Criterion) {
     let important_entries = create_phase5_important_entries();
+    let fixture_plugins = extract_fixture_plugins(SAMPLE_LOG_LARGE);
+    let fixture_xse_modules = create_phase5_important_xse_modules();
     let input = classic_scanlog_core::ModGuidanceAnalysisInput {
-        plugins: extract_fixture_plugins(SAMPLE_LOG_LARGE),
-        user_gpu: Some("amd".to_string()),
-        xse_modules: create_phase5_important_xse_modules(),
+        plugins: &fixture_plugins,
+        user_gpu: Some("amd"),
+        xse_modules: &fixture_xse_modules,
     };
     let analyzer = classic_scanlog_core::ModGuidanceAnalyzer::new(
         Vec::new(),
@@ -650,7 +649,7 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
     guidance_group.bench_function("aggregate_analysis", |b| {
         b.iter(|| {
             analyzer
-                .analyze(black_box(input.clone()))
+                .analyze(black_box(input))
                 .expect("semantic Mod Guidance analysis should succeed")
         });
     });

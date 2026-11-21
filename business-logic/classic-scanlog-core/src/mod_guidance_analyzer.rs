@@ -11,15 +11,15 @@ use indexmap::IndexMap;
 
 use crate::analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
 
-/// Owned Crash Log facts consumed by one aggregate Mod Guidance analysis call.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct ModGuidanceAnalysisInput {
+/// Borrowed Crash Log facts read by one aggregate Mod Guidance analysis call.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ModGuidanceAnalysisInput<'a> {
     /// Installed plugin names mapped to their load-order identifiers.
-    pub plugins: IndexMap<String, String>,
+    pub plugins: &'a IndexMap<String, String>,
     /// Detected GPU vendor, when available.
-    pub user_gpu: Option<String>,
+    pub user_gpu: Option<&'a str>,
     /// Installed XSE module filenames.
-    pub xse_modules: HashSet<String>,
+    pub xse_modules: &'a HashSet<String>,
 }
 
 /// Semantic match state shared by every Mod Guidance result family.
@@ -173,12 +173,12 @@ impl ModGuidanceAnalyzer {
     /// represented by four empty collections, never by absence or an error.
     pub fn analyze(
         &self,
-        input: ModGuidanceAnalysisInput,
+        input: ModGuidanceAnalysisInput<'_>,
     ) -> AnalyzerResult<ModGuidanceAnalysisResult> {
         let plugins = input
             .plugins
-            .into_iter()
-            .map(|(name, id)| (name.to_lowercase(), id))
+            .iter()
+            .map(|(name, id)| (name.to_lowercase(), id.clone()))
             .collect::<Vec<_>>();
         let plugin_names = plugins
             .iter()
@@ -186,7 +186,7 @@ impl ModGuidanceAnalyzer {
             .collect::<HashSet<_>>();
         let xse_modules = input
             .xse_modules
-            .into_iter()
+            .iter()
             .map(|module| module.to_lowercase())
             .collect::<Vec<_>>();
         let important_haystack = plugins
@@ -219,7 +219,7 @@ impl ModGuidanceAnalyzer {
                 self.configuration.important_matcher.as_ref(),
                 &important_haystack,
                 &plugin_names,
-                input.user_gpu.as_deref(),
+                input.user_gpu,
             ),
         })
     }

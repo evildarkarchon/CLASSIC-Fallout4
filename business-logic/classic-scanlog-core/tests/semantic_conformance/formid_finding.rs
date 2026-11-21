@@ -9,7 +9,7 @@ use classic_scanlog_core::{
 };
 use serde_json::{Value, json};
 
-/// Executes explicit lookup construction followed by owned aggregate analysis.
+/// Executes explicit lookup construction followed by borrowed aggregate analysis.
 pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
     let mode = text(&fixture["mode"])?;
     let runtime = classic_shared_core::get_runtime();
@@ -52,24 +52,24 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
         _ => return Err(invalid("unknown FormID Finding mode").into()),
     };
     let analyzer = FormIDFindingAnalyzer::new(lookup);
+    let crash_lines = fixture["lines"]
+        .as_array()
+        .ok_or_else(|| invalid("lines must be an array"))?
+        .iter()
+        .map(text)
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let plugins = fixture["plugins"]
+        .as_array()
+        .ok_or_else(|| invalid("plugins must be an array"))?
+        .iter()
+        .map(|plugin| Ok((text(&plugin["name"])?, text(&plugin["prefix"])?)))
+        .collect::<RunnerResult<Vec<_>>>()?;
     let input = FormIDFindingAnalysisInput {
-        crash_lines: fixture["lines"]
-            .as_array()
-            .ok_or_else(|| invalid("lines must be an array"))?
+        crash_lines: &crash_lines,
+        plugins: plugins
             .iter()
-            .map(text)
-            .collect::<RunnerResult<Vec<_>>>()?,
-        plugins: fixture["plugins"]
-            .as_array()
-            .ok_or_else(|| invalid("plugins must be an array"))?
-            .iter()
-            .map(|plugin| {
-                Ok(FormIDPlugin {
-                    name: text(&plugin["name"])?,
-                    prefix: text(&plugin["prefix"])?,
-                })
-            })
-            .collect::<RunnerResult<Vec<_>>>()?,
+            .map(|(name, prefix)| FormIDPlugin { name, prefix })
+            .collect(),
     };
     match runtime.block_on(analyzer.analyze(input)) {
         Ok(result) => Ok(

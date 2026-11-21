@@ -82,23 +82,26 @@ fn analyzer() -> ModGuidanceAnalyzer {
     .expect("valid Mod Guidance configuration")
 }
 
-fn populated_input() -> ModGuidanceAnalysisInput {
-    ModGuidanceAnalysisInput {
-        plugins: IndexMap::from([
-            ("Alpha.esp".to_string(), "02".to_string()),
-            ("Beta.esp".to_string(), "03".to_string()),
-            ("Frequent.esp".to_string(), "04".to_string()),
-            ("Solution.esp".to_string(), "05".to_string()),
-            ("Rival.esp".to_string(), "06".to_string()),
-        ]),
-        user_gpu: Some("amd".to_string()),
-        xse_modules: HashSet::from(["Installed.dll".to_string(), "Rival.dll".to_string()]),
-    }
+/// Analyzes the populated fixture facts; built here so threaded callers own them.
+fn analyze_populated(analyzer: &ModGuidanceAnalyzer) -> AnalyzerResult<ModGuidanceAnalysisResult> {
+    let plugins = IndexMap::from([
+        ("Alpha.esp".to_string(), "02".to_string()),
+        ("Beta.esp".to_string(), "03".to_string()),
+        ("Frequent.esp".to_string(), "04".to_string()),
+        ("Solution.esp".to_string(), "05".to_string()),
+        ("Rival.esp".to_string(), "06".to_string()),
+    ]);
+    let xse_modules = HashSet::from(["Installed.dll".to_string(), "Rival.dll".to_string()]);
+    analyzer.analyze(ModGuidanceAnalysisInput {
+        plugins: &plugins,
+        user_gpu: Some("amd"),
+        xse_modules: &xse_modules,
+    })
 }
 
 #[test]
 fn aggregate_analysis_preserves_authored_guidance_and_match_state() {
-    let result = analyzer().analyze(populated_input()).unwrap();
+    let result = analyze_populated(&analyzer()).unwrap();
 
     assert_eq!(result.conflicts.len(), 1);
     assert_eq!(result.conflicts[0].state, ModGuidanceMatchState::Matched);
@@ -206,13 +209,13 @@ fn structured_criteria_exceptions_exclusions_and_unknown_gpu_keep_existing_seman
     )
     .unwrap();
     let input = ModGuidanceAnalysisInput {
-        plugins: IndexMap::from([
+        plugins: &IndexMap::from([
             ("First.esp".to_string(), "02".to_string()),
             ("Second.esp".to_string(), "03".to_string()),
             ("Exception.esp".to_string(), "04".to_string()),
         ]),
         user_gpu: None,
-        xse_modules: HashSet::from(["Excluded.dll".to_string()]),
+        xse_modules: &HashSet::from(["Excluded.dll".to_string()]),
     };
 
     let result = analyzer.analyze(input).unwrap();
@@ -232,7 +235,11 @@ fn completed_no_match_analysis_is_an_explicit_empty_result() {
         .expect("empty configuration is valid");
 
     let result = analyzer
-        .analyze(ModGuidanceAnalysisInput::default())
+        .analyze(ModGuidanceAnalysisInput {
+            plugins: &IndexMap::new(),
+            user_gpu: None,
+            xse_modules: &HashSet::new(),
+        })
         .unwrap();
 
     assert_eq!(result, ModGuidanceAnalysisResult::default());
@@ -257,7 +264,7 @@ fn immutable_analyzer_is_reusable_across_threads() {
     let tasks = (0..8)
         .map(|_| {
             let analyzer = Arc::clone(&analyzer);
-            std::thread::spawn(move || analyzer.analyze(populated_input()))
+            std::thread::spawn(move || analyze_populated(&analyzer))
         })
         .collect::<Vec<_>>();
 
@@ -295,9 +302,9 @@ fn important_mod_matching_prefers_the_leftmost_longest_overlapping_literal() {
     ];
     let analyzer = ModGuidanceAnalyzer::new(Vec::new(), Vec::new(), Vec::new(), entries).unwrap();
     let input = ModGuidanceAnalysisInput {
-        plugins: IndexMap::new(),
+        plugins: &IndexMap::new(),
         user_gpu: None,
-        xse_modules: HashSet::from(["Overlap-Long.dll".to_string()]),
+        xse_modules: &HashSet::from(["Overlap-Long.dll".to_string()]),
     };
 
     let result = analyzer.analyze(input).unwrap();
@@ -321,8 +328,9 @@ fn literal_matching_is_unicode_case_insensitive() {
     )
     .unwrap();
     let input = ModGuidanceAnalysisInput {
-        plugins: IndexMap::from([("élite.esp".to_string(), "02".to_string())]),
-        ..ModGuidanceAnalysisInput::default()
+        plugins: &IndexMap::from([("élite.esp".to_string(), "02".to_string())]),
+        user_gpu: None,
+        xse_modules: &HashSet::new(),
     };
 
     let result = analyzer.analyze(input).unwrap();
@@ -355,11 +363,12 @@ fn conflict_matching_preserves_longest_non_overlapping_token_semantics() {
     ];
     let analyzer = ModGuidanceAnalyzer::new(entries, Vec::new(), Vec::new(), Vec::new()).unwrap();
     let input = ModGuidanceAnalysisInput {
-        plugins: IndexMap::from([
+        plugins: &IndexMap::from([
             ("Foobar.esp".to_string(), "02".to_string()),
             ("Bar.esp".to_string(), "03".to_string()),
         ]),
-        ..ModGuidanceAnalysisInput::default()
+        user_gpu: None,
+        xse_modules: &HashSet::new(),
     };
 
     let result = analyzer.analyze(input).unwrap();
@@ -385,8 +394,9 @@ fn conflict_matching_consults_xse_modules_for_plugin_less_dll_pairs() {
     }];
     let analyzer = ModGuidanceAnalyzer::new(entries, Vec::new(), Vec::new(), Vec::new()).unwrap();
     let input = ModGuidanceAnalysisInput {
-        xse_modules: HashSet::from(["Upscaling.dll".to_string(), "FSR3_AA.dll".to_string()]),
-        ..ModGuidanceAnalysisInput::default()
+        xse_modules: &HashSet::from(["Upscaling.dll".to_string(), "FSR3_AA.dll".to_string()]),
+        plugins: &IndexMap::new(),
+        user_gpu: None,
     };
 
     let result = analyzer.analyze(input).unwrap();
@@ -408,8 +418,9 @@ fn conflict_matching_requires_both_xse_module_tokens() {
     }];
     let analyzer = ModGuidanceAnalyzer::new(entries, Vec::new(), Vec::new(), Vec::new()).unwrap();
     let input = ModGuidanceAnalysisInput {
-        xse_modules: HashSet::from(["Upscaling.dll".to_string()]),
-        ..ModGuidanceAnalysisInput::default()
+        xse_modules: &HashSet::from(["Upscaling.dll".to_string()]),
+        plugins: &IndexMap::new(),
+        user_gpu: None,
     };
 
     let result = analyzer.analyze(input).unwrap();
@@ -424,7 +435,7 @@ fn conflict_analysis_preserves_absent_optional_fix() {
     let analyzer =
         ModGuidanceAnalyzer::new(vec![entry], Vec::new(), Vec::new(), Vec::new()).unwrap();
 
-    let result = analyzer.analyze(populated_input()).unwrap();
+    let result = analyze_populated(&analyzer).unwrap();
 
     assert_eq!(result.conflicts.len(), 1);
     assert_eq!(result.conflicts[0].fix, None);

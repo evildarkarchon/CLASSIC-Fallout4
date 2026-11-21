@@ -12,28 +12,17 @@ use classic_config_core::{
 use crate::analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
 use crate::crashgen_registry::CrashgenEntry;
 
-/// Owned facts consumed by one Crashgen Settings Analysis call.
-#[derive(Clone, Debug)]
-pub struct CrashgenSettingsAnalysisInput {
+/// Borrowed facts read by one Crashgen Settings Analysis call.
+#[derive(Clone, Copy, Debug)]
+pub struct CrashgenSettingsAnalysisInput<'a> {
     /// Final section-aware crashgen settings for the Crash Log.
-    pub settings: CrashgenSettingsSnapshot,
+    pub settings: &'a CrashgenSettingsSnapshot,
     /// Installed XSE plugin module names for expectation predicates.
-    pub installed_plugins: HashSet<String>,
+    pub installed_plugins: &'a HashSet<String>,
     /// Parsed crashgen version, when available.
     pub crashgen_version: Option<(u32, u32, u32)>,
     /// Detected crashgen configuration layout.
     pub config_layout: ConfigLayout,
-}
-
-impl Default for CrashgenSettingsAnalysisInput {
-    fn default() -> Self {
-        Self {
-            settings: CrashgenSettingsSnapshot::default(),
-            installed_plugins: HashSet::default(),
-            crashgen_version: None,
-            config_layout: ConfigLayout::Unknown,
-        }
-    }
 }
 
 /// One typed result from evaluating a YAML-owned Crashgen Expectation.
@@ -88,7 +77,7 @@ struct CompiledConfiguration {
 /// Immutable Crashgen Settings Analyzer with validated, compiled configuration.
 ///
 /// Clones share the same immutable configuration and can analyze independent
-/// owned inputs concurrently without sharing per-call state.
+/// inputs concurrently without sharing per-call state.
 #[derive(Clone, Debug)]
 pub struct CrashgenSettingsAnalyzer {
     configuration: Arc<CompiledConfiguration>,
@@ -152,11 +141,11 @@ impl CrashgenSettingsAnalyzer {
     /// setting matches, both result collections are empty.
     pub fn analyze(
         &self,
-        mut input: CrashgenSettingsAnalysisInput,
+        input: CrashgenSettingsAnalysisInput<'_>,
     ) -> AnalyzerResult<CrashgenSettingsAnalysisResult> {
-        input.installed_plugins = input
+        let installed_plugins = input
             .installed_plugins
-            .into_iter()
+            .iter()
             .map(|plugin| plugin.trim().to_lowercase())
             .collect();
 
@@ -168,7 +157,9 @@ impl CrashgenSettingsAnalyzer {
                 let context = EvaluationContext {
                     crashgen_name: self.configuration.crashgen_name.clone(),
                     display_section: self.configuration.display_section.clone(),
-                    installed_plugins: input.installed_plugins,
+                    installed_plugins,
+                    // `EvaluationContext` (classic-config-core) owns its snapshot, so this
+                    // is the one settings copy left on the scan path.
                     settings: input.settings.clone(),
                     config_layout: input.config_layout,
                     crashgen_version: input.crashgen_version,
