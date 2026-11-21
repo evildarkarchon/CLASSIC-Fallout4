@@ -113,6 +113,11 @@ temp-env = "0.3.6"
 name = "scanlog_benchmarks"
 harness = false
 
+# Whole-run wall-clock throughput across concurrency limits (audit S5).
+[[bench]]
+name = "scan_run_throughput"
+harness = false
+
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "deny"

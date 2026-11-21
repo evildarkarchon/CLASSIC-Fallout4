@@ -32,6 +32,19 @@ cargo bench -p classic-scanlog-core --bench scanlog_benchmarks phase5_ -- --base
 - Treat a stable comparison that clears the repo's existing `warning > 5%` threshold as the minimum meaningful win bar for this phase.
 - If a hotspot does not clear that bar, the Phase 5 summary must explain why the structural change still shipped per D-12 instead of claiming benchmark proof that is not there.
 
+## Crash Log Scan Run Throughput
+
+`scan_run_throughput` in `classic-scanlog-core` times whole Targeted Crash Log Scan Runs through the public `scan_run::contract::execute` entry point over copies of the tracked `sample_logs/FO4` corpus, at several `max_concurrent` limits. It is a plain timing harness rather than a Criterion group: one sample is a multi-second batch, and the result that matters is the speedup over `max_concurrent=1`, which shows whether admitted logs actually run in parallel (audit S5).
+
+```bash
+# Point LOCALAPPDATA at a scratch dir so a developer's updated YAML Data cache is not read.
+LOCALAPPDATA=/path/to/scratch SCAN_RUN_BENCH_LOGS=951 SCAN_RUN_BENCH_CONCURRENCY=1,4,16 \
+    cargo bench -p classic-scanlog-core --bench scan_run_throughput
+```
+
+- Knobs: `SCAN_RUN_BENCH_LOGS` (default 200), `SCAN_RUN_BENCH_CONCURRENCY` (default `1,2,4,8,<cores>`), `SCAN_RUN_BENCH_REPEATS` (default 3; best and median are printed).
+- Reference, 16-core Windows machine, all 951 logs: about 137 logs/s at limit 1. At limit 16 it reached about x2.1 when every admitted log was polled on one task, and about x6.2 once each log ran on its own blocking-pool thread.
+
 ## Phase 6 Criterion Baseline Workflow
 
 Phase 6 proof for `classic-file-io-core` stays in the existing `file_io_benchmarks` harness and uses local Criterion baselines for the `phase6_mmap_variants` group only.

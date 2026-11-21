@@ -31,15 +31,13 @@ use classic_shared_core::GameId;
 use classic_shared_core::yaml::YamlFileCacheScope;
 use classic_version_registry_core::VersionRegistryScope;
 use classic_vocabulary::Vocabulary;
-use futures::stream::{FuturesUnordered, StreamExt};
 use std::collections::VecDeque;
-use std::future::Future;
 use std::path::{Path, PathBuf};
-use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::sync::mpsc;
+use tokio::task::JoinSet;
 
 #[cfg(test)]
 use self::test_support::{InfrastructureFault, ScanRunTestHooks};
@@ -748,17 +746,23 @@ struct ScheduledLogPhase {
 }
 
 /// Internal engine for one admitted log's analysis and durable finalization.
-struct SingleLogAnalysisEngine<'a> {
-    orchestrator: &'a OrchestratorCore,
-    unsolved_logs_destination: Option<&'a Path>,
+///
+/// Holds shared ownership rather than borrows so each admitted log can run as its
+/// own `'static` blocking task (audit S5): parsing and every analyzer are synchronous
+/// between awaits, so polling all logs from one task confined that CPU work to the
+/// single thread driving the run.
+#[derive(Clone)]
+struct SingleLogAnalysisEngine {
+    orchestrator: Arc<OrchestratorCore>,
+    unsolved_logs_destination: Option<Arc<Path>>,
     #[cfg(test)]
-    test_hooks: &'a ScanRunTestHooks,
+    test_hooks: Arc<ScanRunTestHooks>,
 }
 
-impl SingleLogAnalysisEngine<'_> {
+impl SingleLogAnalysisEngine {
     /// Analyzes and finalizes one admitted Crash Log without consulting cancellation again.
     async fn analyze_and_finalize(
-        &self,
+        self,
         input_index: usize,
         crash_log: PathBuf,
         phase_tx: mpsc::UnboundedSender<ScheduledLogPhase>,
@@ -797,10 +801,10 @@ impl SingleLogAnalysisEngine<'_> {
         finalize_log_outcome(
             input_index,
             result,
-            self.unsolved_logs_destination,
-            self.orchestrator,
+            self.unsolved_logs_destination.as_deref(),
+            &self.orchestrator,
             #[cfg(test)]
-            self.test_hooks,
+            &self.test_hooks,
         )
         .await
     }
@@ -849,19 +853,24 @@ impl CrashLogScanRun {
         }
 
         let unsolved_logs_destination = resolve_unsolved_logs_destination(&self.ready, &intent)?;
-        let mut orchestrator = self.build_orchestrator().await?;
+        let mut orchestrator = Arc::new(self.build_orchestrator().await?);
         let mut outcomes = schedule_logs(
-            &orchestrator,
+            Arc::clone(&orchestrator),
             logs,
-            unsolved_logs_destination.as_deref(),
+            unsolved_logs_destination.map(Arc::from),
             effective_concurrency,
             cancellation.as_ref(),
             &mut on_event,
             #[cfg(test)]
-            &self.test_hooks,
+            Arc::new(self.test_hooks.clone()),
         )
         .await;
-        orchestrator.async_exit().await?;
+        // schedule_logs joins every per-log task before returning, so the engine
+        // clones they held are gone and this is the last reference again.
+        Arc::get_mut(&mut orchestrator)
+            .expect("every per-log task should have released the orchestrator")
+            .async_exit()
+            .await?;
 
         if preserve_order {
             outcomes.sort_by_key(|outcome| outcome.input_index);
@@ -905,13 +914,13 @@ impl CrashLogScanRun {
 
 /// Schedules discovered logs and serializes every observer call from one execution pump.
 async fn schedule_logs<F>(
-    orchestrator: &OrchestratorCore,
+    orchestrator: Arc<OrchestratorCore>,
     logs: Vec<PathBuf>,
-    unsolved_logs_destination: Option<&Path>,
+    unsolved_logs_destination: Option<Arc<Path>>,
     effective_concurrency: usize,
     cancellation: Option<&Arc<AtomicBool>>,
     on_event: &mut F,
-    #[cfg(test)] test_hooks: &ScanRunTestHooks,
+    #[cfg(test)] test_hooks: Arc<ScanRunTestHooks>,
 ) -> Vec<CrashLogScanRunLogOutcome>
 where
     F: FnMut(CrashLogScanRunEvent),
@@ -936,11 +945,22 @@ where
         });
     }
 
-    type AdmittedLogFuture<'a> =
-        Pin<Box<dyn Future<Output = CrashLogScanRunLogOutcome> + Send + 'a>>;
     let (phase_tx, mut phase_rx) = mpsc::unbounded_channel::<ScheduledLogPhase>();
     let mut pending = logs.into_iter().enumerate().collect::<VecDeque<_>>();
-    let mut admitted = FuturesUnordered::<AdmittedLogFuture<'_>>::new();
+    // Each admitted log runs on its own blocking-pool thread, driven there by
+    // `Handle::block_on`, while this function stays the single ordered observer pump
+    // (ADR-0002). Polling every log from this one task confined all synchronous
+    // parse and analyzer work to one thread (audit S5: about x2 at 16 logs in
+    // flight, versus about x6 once logs are spread across threads, as measured by
+    // `benches/scan_run_throughput.rs`). The blocking pool rather than
+    // `tokio::spawn` keeps those multi-millisecond synchronous stretches off the
+    // shared runtime's async workers, which other CLASSIC work (sqlx FormID lookups,
+    // frontend tasks) still needs; the inner awaits are still serviced by the
+    // runtime's I/O and timer drivers. Blocking tasks cannot be aborted, so if this
+    // future is dropped an admitted log still runs to completion in the background,
+    // which matches ADR-0002's rule that an admitted log finishes atomically.
+    let runtime = tokio::runtime::Handle::current();
+    let mut admitted = JoinSet::<CrashLogScanRunLogOutcome>::new();
     let mut outcomes = Vec::with_capacity(total);
     let mut completed = 0usize;
 
@@ -965,11 +985,12 @@ where
                 total,
                 disposition: None,
             });
-            admitted.push(Box::pin(engine.analyze_and_finalize(
-                input_index,
-                crash_log,
-                phase_tx.clone(),
-            )));
+            let runtime = runtime.clone();
+            let analysis =
+                engine
+                    .clone()
+                    .analyze_and_finalize(input_index, crash_log, phase_tx.clone());
+            admitted.spawn_blocking(move || runtime.block_on(analysis));
         }
 
         if admitted.is_empty() {
@@ -983,9 +1004,17 @@ where
                     emit_scheduled_phase(on_event, phase, completed, total);
                 }
             }
-            maybe_outcome = admitted.next() => {
-                let Some(outcome) = maybe_outcome else {
+            maybe_outcome = admitted.join_next() => {
+                let Some(joined) = maybe_outcome else {
                     break;
+                };
+                let outcome = match joined {
+                    Ok(outcome) => outcome,
+                    // Re-raise a per-log panic on the pump so callers observe the same
+                    // unwind they did when the future was polled inline.
+                    Err(error) if error.is_panic() => std::panic::resume_unwind(error.into_panic()),
+                    // Nothing aborts these tasks, and blocking tasks cannot be aborted anyway.
+                    Err(error) => unreachable!("per-log tasks are never aborted: {error}"),
                 };
                 while let Ok(phase) = phase_rx.try_recv() {
                     emit_scheduled_phase(on_event, phase, completed, total);
