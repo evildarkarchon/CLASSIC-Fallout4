@@ -183,7 +183,7 @@ setting!(
     PublishedDefault::Bool(false),
     [
         "Remove redundant Crash Log lines before analysis.",
-        "Caution: simplifying changes each scanned Crash Log permanently."
+        "The Crash Log is left unchanged; a -simple copy goes to the Simplified Logs folder."
     ],
     true
 );

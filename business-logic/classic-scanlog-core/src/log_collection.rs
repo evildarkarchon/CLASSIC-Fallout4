@@ -20,6 +20,8 @@ use classic_file_io_core::FileIOError;
 use classic_operation_context::cancellation_requested;
 use classic_scangame_core::resolve_xse_folder_for_scan;
 
+use crate::simplified_logs::canonical_simplified_logs_directory;
+
 /// Result type for Crash Log collection: failures keep the general file I/O
 /// owner's typed [`FileIOError`] so existing binding error mapping applies.
 pub type Result<T> = std::result::Result<T, FileIOError>;
@@ -693,7 +695,32 @@ fn matches_crash_log_pattern(path: &Path) -> bool {
 /// returns an empty resolution whose scope owner must discard after observing
 /// the same monotonic control.
 pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution {
-    resolve_targeted_inputs_until_cancelled(inputs)
+    resolve_targeted_inputs_until_cancelled(inputs, None)
+        .await
+        .unwrap_or_else(|| TargetedResolution {
+            logs: Vec::new(),
+            rejected: Vec::new(),
+        })
+}
+
+/// Rejection reason for a Targeted input inside the Simplified Logs folder.
+const SIMPLIFIED_LOGS_REJECTION: &str =
+    "path is inside Simplified Logs, which holds Simplify Logs copies rather than Crash Logs";
+
+/// Resolves Targeted inputs like [`resolve_targeted_inputs`], but never accepts a
+/// copy from the Simplified Logs folder of the installation at `installation_root`.
+///
+/// A file or directory input inside that folder is rejected with a reason. A
+/// directory input that contains the folder, such as the installation root
+/// itself, still resolves, but its recursive search skips the copies. Their
+/// `-simple` names still match `crash-*.log`, so without this a Targeted scan
+/// would analyze a copy as a new Crash Log (audit S7).
+pub(crate) async fn resolve_targeted_inputs_excluding_simplified_logs(
+    inputs: Vec<PathBuf>,
+    installation_root: &Path,
+) -> TargetedResolution {
+    let excluded = canonical_simplified_logs_directory(installation_root);
+    resolve_targeted_inputs_until_cancelled(inputs, excluded.as_deref())
         .await
         .unwrap_or_else(|| TargetedResolution {
             logs: Vec::new(),
@@ -704,11 +731,18 @@ pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution
 /// Resolves Targeted inputs while cooperatively checking cancellation between
 /// metadata operations and recursive directory entries.
 ///
+/// `excluded_directory`, when given, must be canonical; inputs and discovered
+/// logs whose canonical path lies inside it are not accepted.
+///
 /// This workspace-internal seam returns `None` instead of a partial resolution
 /// when cancellation is observed. It performs no filesystem mutations.
 async fn resolve_targeted_inputs_until_cancelled(
     inputs: Vec<PathBuf>,
+    excluded_directory: Option<&Path>,
 ) -> Option<TargetedResolution> {
+    let is_excluded = |canonical: &Path| {
+        excluded_directory.is_some_and(|excluded| canonical.starts_with(excluded))
+    };
     let mut logs = Vec::new();
     let mut rejected = Vec::new();
     let mut seen: HashSet<PathBuf> = HashSet::new();
@@ -749,9 +783,20 @@ async fn resolve_targeted_inputs_until_cancelled(
             return None;
         }
 
+        let canonical_input = input.canonicalize().unwrap_or_else(|_| input.clone());
+        if is_excluded(&canonical_input) {
+            rejected.push(RejectedInput {
+                reason: SIMPLIFIED_LOGS_REJECTION.to_string(),
+                path: input,
+            });
+            if cancellation_requested() {
+                return None;
+            }
+            continue;
+        }
+
         if metadata.is_file() {
-            let canonical = input.canonicalize().unwrap_or_else(|_| input.clone());
-            if seen.insert(canonical) {
+            if seen.insert(canonical_input) {
                 logs.push(input);
             }
             if cancellation_requested() {
@@ -778,6 +823,9 @@ async fn resolve_targeted_inputs_until_cancelled(
                 }
                 let Ok(path) = entry else { continue };
                 let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
+                if is_excluded(&canonical) {
+                    continue;
+                }
                 found_any = true;
                 if seen.insert(canonical) {
                     logs.push(path);

@@ -419,7 +419,7 @@ A valid installation returns `InstalledYamlDataLoadOutcome::Ready(InstalledYamlD
 - the parsed `YamlDataCore` and requested typed game;
 - the registered shared game-data role;
 - Main and game provenance, schema versions, SHA-256 identities, and byte lengths through `main()` and `game_file()`;
-- simplify-log removal entries parsed from the retained selected Main bytes through `simplify_remove_list()`;
+- simplify-log removal entries parsed from the retained selected Main bytes through `simplify_remove_list()`, with empty and whitespace-only entries dropped;
 - `LocalIgnoreYamlDataState::{Existing, Generated}` plus the exact authoritative Local Ignore SHA-256 identity and byte length (reset results additionally use `ResetToDefault`);
 - structured cache, rejected-candidate, and Local Ignore generation/reset diagnostics.
 

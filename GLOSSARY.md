@@ -177,6 +177,10 @@ _Avoid_: auto-save, path mutation, detected path side effect
 Crash Logs and related Autoscan Reports that could not be successfully analyzed and may be moved aside for later review.
 _Avoid_: failed scans, bad logs
 
+**Simplified Logs**:
+The folder in the main CLASSIC directory, beside `Crash Logs/`, where Simplify Logs writes a `-simple` copy of each successfully scanned Crash Log with redundant lines removed. Simplify Logs never changes the Crash Log itself, and a Crash Log Scan Run never scans this folder's copies.
+_Avoid_: simplified crash log folder, sidecar logs
+
 **Unsolved Logs Destination**:
 The directory where a Standard Crash Log Scan Run may move Unsolved Logs when relocation is enabled. It can be the canonical CLASSIC backup location or a user-selected location; Targeted Crash Log Scan Runs do not use it.
 _Avoid_: failed log folder, custom move path

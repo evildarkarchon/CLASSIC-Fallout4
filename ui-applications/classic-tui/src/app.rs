@@ -14,7 +14,7 @@ use classic_scanlog_core::scan_run::contract::{
     LocalIgnoreRecoveryDecision, ObserverDeliveryFailure, ObserverFailurePolicy, ResumeError,
     RunResult, SettledRunResult,
 };
-use classic_scanlog_core::validate_custom_scan_path;
+use classic_scanlog_core::{is_inside_simplified_logs, validate_custom_scan_path};
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
 use classic_user_settings_core::{
@@ -875,7 +875,8 @@ impl App {
     /// # Errors
     ///
     /// Returns the status-line message for a folder that is not a usable directory, is a
-    /// restricted location, or sits inside this installation's `Crash Logs` folder.
+    /// restricted location, or sits inside this installation's `Crash Logs` or
+    /// `Simplified Logs` folder.
     fn validated_custom_scan_input(&self) -> Result<Option<PathBuf>, String> {
         let custom = self.custom_scan_input.value.trim();
         if custom.is_empty() {
@@ -886,6 +887,11 @@ impl App {
 
         if self.is_inside_crash_logs(&custom_path) {
             return Err("Custom Scan Folder cannot be inside Crash Logs".to_string());
+        }
+        // The scan run skips this folder anyway (its copies would be rescanned as new
+        // Crash Logs); rejecting it here tells the user instead of scanning nothing.
+        if is_inside_simplified_logs(&self.classic_root, &custom_path) {
+            return Err("Custom Scan Folder cannot be inside Simplified Logs".to_string());
         }
         Ok(Some(custom_path))
     }
@@ -1256,7 +1262,10 @@ impl App {
         }
 
         let path = Path::new(trimmed);
-        if validate_custom_scan_path(path).is_err() || self.is_inside_crash_logs(path) {
+        if validate_custom_scan_path(path).is_err()
+            || self.is_inside_crash_logs(path)
+            || is_inside_simplified_logs(&self.classic_root, path)
+        {
             PathValidationState::Invalid
         } else {
             PathValidationState::Valid

@@ -1,9 +1,9 @@
 use crate::CrashLogScanFacts;
 use crate::scan_run::contract;
-use crate::scan_run::test_support::{InfrastructureFault, LocalIgnoreResetGate, ScanRunTestHooks};
 use crate::scan_run::test_support::{
-    write_fixture_log, write_fixture_log_at, write_minimal_yaml_tree,
+    FIXTURE_LOG_SMALL, write_fixture_log, write_fixture_log_at, write_minimal_yaml_tree,
 };
+use crate::scan_run::test_support::{InfrastructureFault, LocalIgnoreResetGate, ScanRunTestHooks};
 use crate::scan_run::{
     CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRunLogOutcome,
     CrashLogScanSetupContext, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
@@ -3315,6 +3315,144 @@ fn standard_unsolved_logs_collision_preserves_existing_destination() {
         "existing"
     );
     assert!(unsolved.join("crash-collision-1.log").is_file());
+}
+
+/// Builds a Standard request over `root` with Simplify Logs on and an isolated Documents root.
+fn simplify_logs_standard_request(
+    root: &std::path::Path,
+    custom_scan_directory: Option<PathBuf>,
+) -> contract::Request {
+    let mut configuration = final_run_configuration();
+    configuration.installation_root = root.to_path_buf();
+    configuration.options = contract::Options::new(false, true);
+    configuration.max_concurrent = Some(1);
+    contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: root.to_path_buf(),
+            custom_scan_directory,
+            configured_documents_root: Some(root.join("Documents")),
+        },
+        StandardUnsolvedLogsIntent::LeaveInPlace,
+    )
+}
+
+/// Runs `request` to its terminal result with no observer.
+fn run_to_completion(request: contract::Request) -> contract::RunResult {
+    get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
+        .expect("the run should reach a terminal result")
+}
+
+/// Verifies Simplify Logs writes a `-simple` copy beside `Crash Logs/`, never rewrites the
+/// Crash Log, and that the next Standard run does not rediscover the copy (audit S7).
+#[test]
+fn standard_simplify_logs_writes_a_simple_copy_and_leaves_the_crash_log_unchanged() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    write_minimal_yaml_tree(root, &root.join("CLASSIC Data"));
+    // The minimal YAML tree removes lines containing `(void*)`.
+    // Anchored on the line text alone: the fixture's line endings follow the checkout.
+    let contents = FIXTURE_LOG_SMALL.replacen(
+        "    [0] Fallout4.exe+0733512",
+        "    [0] Fallout4.exe+0733512\n    [1] (void*) 0x0000000000000000",
+        1,
+    );
+    assert!(
+        contents.contains("(void*)"),
+        "fixture should gain a removable line"
+    );
+    let crash_logs = root.join("Crash Logs");
+    std::fs::create_dir_all(&crash_logs).expect("Crash Logs should be created");
+    let crash_log = crash_logs.join("crash-simplify.log");
+    std::fs::write(&crash_log, &contents).expect("Crash Log fixture should be written");
+
+    let first = run_to_completion(simplify_logs_standard_request(root, None));
+
+    assert_eq!(first.total, 1);
+    assert_eq!(
+        first.logs[0].disposition,
+        contract::LogDisposition::Succeeded
+    );
+    let copy = root
+        .join("Simplified Logs")
+        .join("crash-simplify-simple.log");
+    let copy_text = std::fs::read_to_string(&copy).expect("the simplified copy should exist");
+    assert!(!copy_text.contains("(void*)"));
+    assert!(copy_text.contains("PLUGINS:"));
+    assert_eq!(
+        std::fs::read_to_string(&crash_log).expect("Crash Log should stay readable"),
+        contents,
+        "Simplify Logs must leave the Crash Log untouched"
+    );
+
+    let second = run_to_completion(simplify_logs_standard_request(root, None));
+
+    assert_eq!(
+        second.total, 1,
+        "the copy must not be rediscovered as a new Crash Log"
+    );
+    assert_eq!(second.logs[0].crash_log, first.logs[0].crash_log);
+}
+
+/// Verifies a Custom Scan Folder inside Simplified Logs is skipped, not scanned.
+#[test]
+fn standard_custom_scan_folder_inside_simplified_logs_is_skipped() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    write_minimal_yaml_tree(root, &root.join("CLASSIC Data"));
+    let simplified = root.join("Simplified Logs");
+    write_fixture_log_at(&simplified, "crash-earlier-simple.log");
+
+    let result = run_to_completion(simplify_logs_standard_request(
+        root,
+        Some(simplified.clone()),
+    ));
+
+    let discovery = result
+        .discovery
+        .as_ref()
+        .expect("completed discovery must be retained");
+    assert!(discovery.accepted_logs.is_empty());
+    assert!(!discovery.searched_locations.contains(&simplified));
+    assert_eq!(result.total, 0);
+}
+
+/// Verifies Targeted inputs inside Simplified Logs are rejected with a reason.
+#[test]
+fn targeted_inputs_inside_simplified_logs_are_rejected() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    write_minimal_yaml_tree(root, &root.join("CLASSIC Data"));
+    let copy = write_fixture_log_at(&root.join("Simplified Logs"), "crash-earlier-simple.log");
+    let mut configuration = final_run_configuration();
+    configuration.installation_root = root.to_path_buf();
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![copy.clone()],
+        },
+    );
+
+    let result = run_to_completion(request);
+
+    let discovery = result
+        .discovery
+        .as_ref()
+        .expect("completed discovery must be retained");
+    assert!(discovery.accepted_logs.is_empty());
+    assert_eq!(discovery.rejected_inputs.len(), 1);
+    assert_eq!(discovery.rejected_inputs[0].path, copy);
+    assert!(
+        discovery.rejected_inputs[0]
+            .reason
+            .contains("Simplified Logs")
+    );
 }
 
 /// Verifies overlapping Standard runs atomically claim distinct collision destinations.

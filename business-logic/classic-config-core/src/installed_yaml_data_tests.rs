@@ -847,6 +847,36 @@ fn installed_snapshot_debug_does_not_expose_retained_content() {
 }
 
 #[test]
+fn installed_snapshot_drops_blank_simplify_remove_entries() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    // Removal tests `line.contains(entry)`, so a blank entry would strip every line.
+    let main_yaml = format!(
+        "{MAIN_YAML}exclude_log_records:\n  - '(void*)'\n  - ''\n  - '   '\n  - Basic Render Driver\n"
+    );
+    write_bundled_install_with_main(installation.path(), &main_yaml);
+    write_existing_local_ignore(installation.path());
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("a valid installation should load");
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+        panic!("valid existing Local Ignore should return Ready");
+    };
+
+    assert_eq!(
+        snapshot.simplify_remove_list(),
+        ["(void*)", "Basic Render Driver"]
+    );
+}
+
+#[test]
 fn installed_loading_selects_main_and_game_independently() {
     let installation = tempdir().expect("installation root should be created");
     let cache_root = tempdir().expect("cache root should be created");

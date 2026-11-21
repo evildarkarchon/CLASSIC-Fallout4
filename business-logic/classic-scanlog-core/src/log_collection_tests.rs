@@ -171,6 +171,61 @@ async fn test_targeted_explicit_file() {
 }
 
 #[tokio::test]
+async fn test_targeted_rejects_inputs_inside_simplified_logs() {
+    let temp = TempDir::new().unwrap();
+    let root = temp.path();
+    let simplified = root.join("Simplified Logs");
+    tokio::fs::create_dir_all(&simplified).await.unwrap();
+    let copy = simplified.join("crash-2024-01-01-12-00-00-simple.log");
+    tokio::fs::write(&copy, b"simplified copy").await.unwrap();
+
+    let res = resolve_targeted_inputs_excluding_simplified_logs(
+        vec![copy.clone(), simplified.clone()],
+        root,
+    )
+    .await;
+
+    assert!(res.logs.is_empty());
+    let rejected: Vec<_> = res.rejected.iter().map(|r| r.path.clone()).collect();
+    assert_eq!(rejected, vec![copy, simplified]);
+    assert!(
+        res.rejected
+            .iter()
+            .all(|r| r.reason == SIMPLIFIED_LOGS_REJECTION)
+    );
+}
+
+#[tokio::test]
+async fn test_targeted_root_directory_skips_simplified_logs_copies() {
+    let temp = TempDir::new().unwrap();
+    let root = temp.path();
+    let crash_logs = root.join("Crash Logs");
+    let simplified = root.join("Simplified Logs");
+    tokio::fs::create_dir_all(&crash_logs).await.unwrap();
+    tokio::fs::create_dir_all(&simplified).await.unwrap();
+    let original = crash_logs.join("crash-2024-01-01-12-00-00.log");
+    tokio::fs::write(&original, b"crash log").await.unwrap();
+    tokio::fs::write(
+        simplified.join("crash-2024-01-01-12-00-00-simple.log"),
+        b"simplified copy",
+    )
+    .await
+    .unwrap();
+
+    let excluding =
+        resolve_targeted_inputs_excluding_simplified_logs(vec![root.to_path_buf()], root).await;
+    let unrestricted = resolve_targeted_inputs(vec![root.to_path_buf()]).await;
+
+    assert_eq!(excluding.logs, vec![original]);
+    assert!(excluding.rejected.is_empty());
+    assert_eq!(
+        unrestricted.logs.len(),
+        2,
+        "the public resolver keeps its documented behavior and finds both files"
+    );
+}
+
+#[tokio::test]
 async fn test_targeted_directory_recursive() {
     let temp = TempDir::new().unwrap();
     let sub = temp.path().join("a").join("b");

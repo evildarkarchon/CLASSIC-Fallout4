@@ -2,6 +2,27 @@ use super::*;
 use crate::scan_intake::{CrashLogScanFacts, CrashLogScanIntakePaths};
 use tempfile::tempdir;
 
+#[test]
+fn load_drops_blank_simplify_remove_entries() {
+    let temp = tempdir().expect("tempdir should be created");
+    let paths = make_paths(temp.path());
+    create_database_dir(&paths);
+    // Removal tests `line.contains(entry)`, so a blank entry would strip every line.
+    std::fs::write(
+        paths
+            .yaml_dir_data
+            .join("databases")
+            .join("CLASSIC Main.yaml"),
+        "exclude_log_records:\n  - '(void*)'\n  - ''\n  - '  '\n  - 'Basic Render Driver'\n",
+    )
+    .expect("main YAML should be written");
+
+    assert_eq!(
+        load_simplify_remove_list(&paths.yaml_dir_data),
+        vec!["(void*)".to_string(), "Basic Render Driver".to_string()]
+    );
+}
+
 fn make_paths(root: &std::path::Path) -> CrashLogScanIntakePaths {
     CrashLogScanIntakePaths::new(root, root.join("CLASSIC Data"))
 }

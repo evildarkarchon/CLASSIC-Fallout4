@@ -1703,8 +1703,12 @@ fn build_installed_yaml_data_snapshot(
         local_ignore.bytes.len() as u64,
         local_ignore.identity.byte_len()
     );
-    let simplify_remove_list =
+    let mut simplify_remove_list =
         YamlOperations::new().get_vec_value(&selected.main.yaml, "exclude_log_records");
+    // Removal tests `line.contains(entry)`. An empty entry is contained in every line and a
+    // whitespace entry in nearly every line, so one would strip the whole Crash Log when
+    // Simplify Logs is on (audit S7).
+    simplify_remove_list.retain(|entry| !entry.trim().is_empty());
     let yaml_data = YamlDataCore::build_from_yaml_documents(
         &selected.main.yaml,
         &selected.game_file.yaml,

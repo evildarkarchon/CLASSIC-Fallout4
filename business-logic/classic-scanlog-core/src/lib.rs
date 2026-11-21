@@ -8,6 +8,7 @@
 //! - Standard Crash Log collection and Targeted input resolution
 //! - Custom-scan folder policy (restricted-path rejection and validation)
 //! - Rust-owned Crash Log Scan Run execution
+//! - Simplified Logs copy placement and scan-input exclusion
 //! - Report generation
 //!
 //! Pure Rust business logic only; the C++ bridge is a separate adapter crate.
@@ -56,6 +57,7 @@ pub(crate) mod scan_intake;
 pub mod scan_run;
 mod scan_sidecar_settings;
 pub mod segment_key;
+pub mod simplified_logs;
 pub mod version;
 
 // Re-export key types for convenience
@@ -117,6 +119,7 @@ pub use scan_run::{
     CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, StandardCrashLogScanSource,
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
+pub use simplified_logs::{is_inside_simplified_logs, simplified_logs_directory};
 pub use version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
     check_crashgen_version_status_with_exceptions, crashgen_version_gen,

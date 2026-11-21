@@ -7,9 +7,12 @@
 pub mod contract;
 
 use crate::error::{Result, ScanLogError};
-use crate::log_collection::{LogCollector, RejectedInput, resolve_targeted_inputs};
+use crate::log_collection::{
+    LogCollector, RejectedInput, resolve_targeted_inputs_excluding_simplified_logs,
+};
 use crate::orchestrator::resolve_batch_concurrency;
 use crate::report::autoscan_report_path;
+use crate::simplified_logs::{is_inside_simplified_logs, simplified_logs_directory};
 use crate::{
     AnalysisResult, ConfigIssue, CrashLogScanFacts, CrashLogScanIntake, CrashLogScanOptions,
     OrchestratorCore, ScanProgressPhase, ScanReadyAnalysis,
@@ -755,6 +758,8 @@ struct ScheduledLogPhase {
 struct SingleLogAnalysisEngine {
     orchestrator: Arc<OrchestratorCore>,
     unsolved_logs_destination: Option<Arc<Path>>,
+    /// Where Simplify Logs copies go; `None` when Simplify Logs is off.
+    simplified_logs_directory: Option<Arc<Path>>,
     #[cfg(test)]
     test_hooks: Arc<ScanRunTestHooks>,
 }
@@ -802,6 +807,7 @@ impl SingleLogAnalysisEngine {
             input_index,
             result,
             self.unsolved_logs_destination.as_deref(),
+            self.simplified_logs_directory.as_deref(),
             &self.orchestrator,
             #[cfg(test)]
             &self.test_hooks,
@@ -853,20 +859,34 @@ impl CrashLogScanRun {
         }
 
         let unsolved_logs_destination = resolve_unsolved_logs_destination(&self.ready, &intent)?;
+        // Copies go under the installation root. In-memory intake has no root, so it
+        // has nowhere to put them and writes none.
+        let simplified_logs_directory = if self.ready.analysis_config().simplify_logs {
+            self.ready
+                .paths()
+                .map(|paths| simplified_logs_directory(&paths.yaml_dir_root))
+        } else {
+            None
+        };
         let mut orchestrator = Arc::new(self.build_orchestrator().await?);
+        let engine = SingleLogAnalysisEngine {
+            orchestrator: Arc::clone(&orchestrator),
+            unsolved_logs_destination: unsolved_logs_destination.map(Arc::from),
+            simplified_logs_directory: simplified_logs_directory.map(Arc::from),
+            #[cfg(test)]
+            test_hooks: Arc::new(self.test_hooks.clone()),
+        };
         let mut outcomes = schedule_logs(
-            Arc::clone(&orchestrator),
+            engine,
             logs,
-            unsolved_logs_destination.map(Arc::from),
             effective_concurrency,
             cancellation.as_ref(),
             &mut on_event,
-            #[cfg(test)]
-            Arc::new(self.test_hooks.clone()),
         )
         .await;
-        // schedule_logs joins every per-log task before returning, so the engine
-        // clones they held are gone and this is the last reference again.
+        // schedule_logs consumes the engine and joins every per-log task before
+        // returning, so the engine clones they held are gone and this is the last
+        // reference again.
         Arc::get_mut(&mut orchestrator)
             .expect("every per-log task should have released the orchestrator")
             .async_exit()
@@ -913,25 +933,21 @@ impl CrashLogScanRun {
 }
 
 /// Schedules discovered logs and serializes every observer call from one execution pump.
+///
+/// Takes the per-log `engine` by value and drops it before returning, after every
+/// per-log task has been joined, so the caller again holds the only orchestrator
+/// reference.
 async fn schedule_logs<F>(
-    orchestrator: Arc<OrchestratorCore>,
+    engine: SingleLogAnalysisEngine,
     logs: Vec<PathBuf>,
-    unsolved_logs_destination: Option<Arc<Path>>,
     effective_concurrency: usize,
     cancellation: Option<&Arc<AtomicBool>>,
     on_event: &mut F,
-    #[cfg(test)] test_hooks: Arc<ScanRunTestHooks>,
 ) -> Vec<CrashLogScanRunLogOutcome>
 where
     F: FnMut(CrashLogScanRunEvent),
 {
     let total = logs.len();
-    let engine = SingleLogAnalysisEngine {
-        orchestrator,
-        unsolved_logs_destination,
-        #[cfg(test)]
-        test_hooks,
-    };
 
     for (input_index, crash_log) in logs.iter().enumerate() {
         on_event(CrashLogScanRunEvent {
@@ -1391,15 +1407,21 @@ pub(crate) enum CrashLogScanRunEventKind {
     Failed,
 }
 
-/// Completes report persistence and applicable Unsolved Logs movement for one admitted log.
+/// Completes report persistence, the Simplified Logs copy, and applicable Unsolved Logs
+/// movement for one admitted log.
 ///
 /// This function never consults cancellation. It returns only after durable finalization
 /// resolves. Unsolved Logs destinations are claimed atomically, so overlapping runs cannot
 /// overwrite one another before their terminal events are published.
+///
+/// `simplified_logs_directory` is `Some` only when Simplify Logs is on. A log that
+/// succeeded then gets its copy written there; a failed copy is logged as a warning and
+/// leaves the outcome unchanged.
 async fn finalize_log_outcome(
     input_index: usize,
     result: AnalysisResult,
     unsolved_logs_destination: Option<&Path>,
+    simplified_logs_directory: Option<&Path>,
     orchestrator: &OrchestratorCore,
     #[cfg(test)] test_hooks: &ScanRunTestHooks,
 ) -> CrashLogScanRunLogOutcome {
@@ -1427,6 +1449,23 @@ async fn finalize_log_outcome(
                 error = Some(message);
             }
         }
+    }
+
+    // The copy is a convenience, not part of the durable unit. Failing the log over it
+    // would send a Crash Log that scanned fine to Unsolved Logs, so a failed copy is
+    // only logged.
+    if outcome == CrashLogScanOutcome::Succeeded
+        && let Some(directory) = simplified_logs_directory
+        && let Some(lines) = result.simplified_log_lines.as_deref()
+        && let Err(copy_error) = orchestrator
+            .write_simplified_log(directory, &crash_log, lines)
+            .await
+    {
+        tracing::warn!(
+            "Simplify Logs could not write a copy of {}: {}",
+            crash_log.display(),
+            copy_error
+        );
     }
 
     let mut moved_to_unsolved_logs = false;
@@ -1550,10 +1589,23 @@ async fn discover_scan_source(
                 &request.version_registry,
                 &request.yaml_file_cache,
             );
+            // Simplified Logs holds `-simple` copies whose names still match `crash-*.log`.
+            // Scanning that folder would analyze each copy as a new Crash Log and
+            // simplify it again, so a Custom Scan Folder there is skipped (audit S7).
+            let custom_scan_directory = source.custom_scan_directory.clone().filter(|directory| {
+                let inside = is_inside_simplified_logs(&request.installation_root, directory);
+                if inside {
+                    tracing::warn!(
+                        "Skipping Custom Scan Folder {}: it is inside Simplified Logs",
+                        directory.display()
+                    );
+                }
+                !inside
+            });
             let collector = LogCollector::new(
                 source.base_directory.clone(),
                 xse_folder,
-                source.custom_scan_directory.clone(),
+                custom_scan_directory.clone(),
             );
             let logs = collector.collect_all().await?;
             if cancellation_requested(request.cancellation.as_ref()) {
@@ -1564,8 +1616,8 @@ async fn discover_scan_source(
                 source.base_directory.clone(),
                 source.base_directory.join("Crash Logs"),
             ];
-            if let Some(custom) = &source.custom_scan_directory {
-                searched_locations.push(custom.clone());
+            if let Some(custom) = custom_scan_directory {
+                searched_locations.push(custom);
             }
             if let Some(docs) = &source.configured_documents_root {
                 searched_locations.push(docs.clone());
@@ -1579,7 +1631,11 @@ async fn discover_scan_source(
             }))
         }
         CrashLogScanSource::Targeted(source) => {
-            let resolution = resolve_targeted_inputs(source.inputs.clone()).await;
+            let resolution = resolve_targeted_inputs_excluding_simplified_logs(
+                source.inputs.clone(),
+                &request.installation_root,
+            )
+            .await;
             if cancellation_requested(request.cancellation.as_ref()) {
                 return Ok(None);
             }

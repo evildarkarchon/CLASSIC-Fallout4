@@ -534,6 +534,25 @@ fn a_rejected_custom_scan_folder_stops_the_scan_before_it_starts() {
 }
 
 #[test]
+fn a_custom_scan_folder_inside_simplified_logs_stops_the_scan_before_it_starts() {
+    let (root, mut app) = app_with_installation("schema_version: \"1.0\"\n");
+    let simplified = root.path().join("Simplified Logs");
+    std::fs::create_dir_all(&simplified).unwrap();
+    app.custom_scan_input
+        .set_value(simplified.to_string_lossy().to_string());
+
+    assert_eq!(app.custom_validation_state(), PathValidationState::Invalid);
+    app.start_or_cancel_crash_scan();
+
+    assert!(!app.scan_in_progress);
+    assert!(app.scan_cancellation.is_none());
+    assert_eq!(
+        app.scan_status,
+        "Custom Scan Folder cannot be inside Simplified Logs"
+    );
+}
+
+#[test]
 fn scan_complete_switches_to_results_when_enabled() {
     let (_root, mut app) = app_with_settings_yaml(
         "schema_version: \"1.0\"\nUI:\n  preferences:\n    auto_switch_after_scan: true\n",

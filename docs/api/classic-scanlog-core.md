@@ -124,6 +124,9 @@ themselves.
   one Standard-only `UnsolvedLogsIntent`.
 - `Targeted` resolves explicit candidate paths and reports accepted and rejected
   inputs in deterministic order. It has no Unsolved Logs movement capability.
+  An input inside the installation's `Simplified Logs` folder is rejected, and
+  a directory input's recursive search skips that folder's copies (see
+  [Simplified Logs](#simplified-logs)).
 
 Use the invariant-preserving factories:
 
@@ -383,8 +386,11 @@ For an admitted log, Rust owns one durable unit:
 
 1. analyze the accepted Crash Log
 2. persist its sibling `{stem}-AUTOSCAN.md` report when analysis produced one
-3. for eligible Standard failures, finalize the configured Unsolved Logs move
-4. emit `LogFinished`
+3. when Simplify Logs is on and the log succeeded, write its
+   [Simplified Logs](#simplified-logs) copy; a failed copy is logged as a
+   warning and changes neither the disposition nor `failures`
+4. for eligible Standard failures, finalize the configured Unsolved Logs move
+5. emit `LogFinished`
 
 Destination collision handling and partial filesystem failure reporting are
 implemented once in Rust. Targeted requests never resolve or apply an Unsolved
@@ -502,6 +508,39 @@ Behavior worth knowing:
 - non-existent paths, non-file/non-directory paths, unreadable paths, and directories without matches are rejected with specific reasons
 - no directories are created and no files are moved or copied
 - inside the `classic-operation-context` cancellation scope, resolution yields between recursive entries, discards partial accumulators on cancellation, and returns an empty resolution for the scope-owning scan service to discard
+- this public function does not know the installation root, so it does not exclude `Simplified Logs`; a Crash Log Scan Run's Targeted discovery uses a crate-internal variant that does (see [Simplified Logs](#simplified-logs))
+
+## Simplified Logs
+
+Simplify Logs never rewrites a Crash Log. For each Crash Log a run with Simplify
+Logs on analyzes successfully, the run writes the reformatted lines (`CLASSIC
+Main.yaml` `exclude_log_records` matches removed, plugin load-order brackets
+zero-padded) to `<installation root>/Simplified Logs/{stem}-simple{.ext}`, for
+example `crash-2024-06-05-08-20-22-simple.log`. The folder is created on first
+use, and a rescan of the same Crash Log replaces its copy. Runs from in-memory
+intake, which has no installation root, write no copies.
+
+The folder sits beside `Crash Logs/`, never inside it, because a copy's name
+still matches `crash-*.log` and Standard discovery searches `Crash Logs/`
+recursively. The run also keeps copies out of its other inputs:
+
+- a Targeted input inside the folder is rejected with a reason naming
+  `Simplified Logs`, and a Targeted directory search skips the folder's copies
+- a Standard Custom Scan Folder inside the folder is skipped with a warning and
+  is not listed in `searched_locations`
+
+Empty and whitespace-only `exclude_log_records` entries are dropped when the
+removal list is built (`str::contains("")` is always true, so one such entry
+would remove every line).
+
+Root re-exports, both from the `simplified_logs` module:
+
+- `simplified_logs_directory(installation_root) -> PathBuf` - derives the
+  folder path; touches no filesystem.
+- `is_inside_simplified_logs(installation_root, path) -> bool` - compares
+  canonical paths, so case, `..`, and junction differences do not hide the
+  folder; `false` when either path does not exist. The TUI uses it to reject
+  such a Custom Scan Folder in settings.
 
 ## Custom-Scan Folder Policy
 

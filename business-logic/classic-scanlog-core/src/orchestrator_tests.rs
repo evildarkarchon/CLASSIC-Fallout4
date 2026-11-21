@@ -1174,6 +1174,48 @@ fn process_log_ignores_legacy_mods_opc2_yaml_entries() {
     );
 }
 
+/// Builds the fixture orchestrator with Simplify Logs set and `(void*)` as the only removal entry.
+fn make_simplifying_orchestrator(simplify_logs: bool) -> OrchestratorCore {
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    config.crashgen_latest = "1.26.2".to_string();
+    config.game_version = "1.10.163".to_string();
+    config.game_version_vr = "1.2.72".to_string();
+    config.xse_acronym = "F4SE".to_string();
+    config.simplify_logs = simplify_logs;
+    config.remove_list = vec!["(void*)".to_string()];
+    OrchestratorCore::new(config).expect("simplifying orchestrator should build")
+}
+
+#[test]
+fn process_log_carries_simplified_lines_only_when_simplify_logs_is_on() {
+    assert!(
+        FIXTURE_LOG_SMALL.contains("(void*)"),
+        "the fixture must contain a line Simplify Logs removes"
+    );
+    let fixture = write_fixture_log("crash-simplify.log", FIXTURE_LOG_SMALL);
+
+    let simplified = get_runtime()
+        .block_on(make_simplifying_orchestrator(true).process_log(fixture.path.clone()))
+        .expect("fixture should process with Simplify Logs on");
+    let plain = get_runtime()
+        .block_on(make_simplifying_orchestrator(false).process_log(fixture.path.clone()))
+        .expect("fixture should process with Simplify Logs off");
+
+    let lines = simplified
+        .simplified_log_lines
+        .as_ref()
+        .expect("Simplify Logs on should carry the reformatted lines");
+    assert!(!lines.is_empty());
+    assert!(lines.iter().all(|line| !line.contains("(void*)")));
+    assert!(plain.simplified_log_lines.is_none());
+    assert_eq!(
+        std::fs::read_to_string(&fixture.path).expect("fixture should stay readable"),
+        FIXTURE_LOG_SMALL,
+        "analysis must never rewrite the Crash Log"
+    );
+}
+
 #[test]
 fn process_log_renders_structured_mods_solu_any_matches() {
     let orchestrator = build_orchestrator_with_structured_mods_solu(concat!(

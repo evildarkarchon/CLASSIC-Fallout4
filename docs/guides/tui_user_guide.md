@@ -347,7 +347,7 @@ Top suspects:
 | **Show FormID Values**  | Display hex FormID values in output  | Off     |
 | **Statistical Logging** | Generate detailed statistics         | On      |
 | **Move Unsolved Logs**  | Move unsolved crashes to subfolder   | Off     |
-| **Simplify Logs**       | Reduce output detail (may lose info) | Off     |
+| **Simplify Logs**       | Write a trimmed `-simple` copy of each scanned log to `Simplified Logs/`; the original is unchanged | Off     |
 | **Check for Updates**   | Check for CLASSIC updates on startup | On      |
 
 ---

@@ -179,7 +179,8 @@ fn main_formid_database_game(game: &str) -> &str {
 /// Load simplify-log removal rules from `CLASSIC Main.yaml`.
 ///
 /// Missing or unreadable files return an empty list so intake preserves the
-/// existing adapter fail-soft behavior.
+/// existing adapter fail-soft behavior. Empty and whitespace-only entries are
+/// dropped; see [`retain_usable_remove_entries`].
 #[must_use]
 pub(crate) fn load_simplify_remove_list(yaml_dir_data: impl AsRef<Path>) -> Vec<String> {
     let main_yaml = yaml_dir_data
@@ -197,7 +198,18 @@ pub(crate) fn load_simplify_remove_list(yaml_dir_data: impl AsRef<Path>) -> Vec<
         Err(_) => return Vec::new(),
     };
 
-    ops.get_vec_value(&doc, "exclude_log_records")
+    let mut remove_list = ops.get_vec_value(&doc, "exclude_log_records");
+    retain_usable_remove_entries(&mut remove_list);
+    remove_list
+}
+
+/// Drops empty and whitespace-only simplify-log removal entries.
+///
+/// Removal tests `line.contains(entry)`. An empty entry is contained in every
+/// line and a whitespace entry in nearly every line, so one such entry would
+/// strip the whole Crash Log when Simplify Logs is on (audit S7).
+pub(crate) fn retain_usable_remove_entries(remove_list: &mut Vec<String>) {
+    remove_list.retain(|entry| !entry.trim().is_empty());
 }
 
 fn hardcoded_formid_database_relpaths(game: &str) -> &'static [&'static str] {

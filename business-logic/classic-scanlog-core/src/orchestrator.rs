@@ -572,6 +572,13 @@ pub struct AnalysisResult {
 
     /// Whether the scan triggered a failure condition (for Python compatibility)
     pub trigger_scan_failed: bool,
+
+    /// Reformatted Crash Log lines for the Simplified Logs copy.
+    ///
+    /// Set only when Simplify Logs is on and analysis succeeded. The scan run
+    /// writes them to `Simplified Logs/`; they are never written back to the
+    /// Crash Log.
+    pub simplified_log_lines: Option<Vec<String>>,
 }
 
 impl AnalysisResult {
@@ -632,6 +639,7 @@ impl AnalysisResult {
             incomplete: 0,
             failed: 0,
             trigger_scan_failed: false,
+            simplified_log_lines: None,
         }
     }
 
@@ -682,6 +690,7 @@ impl AnalysisResult {
             incomplete: 0,
             failed: 1,
             trigger_scan_failed: true,
+            simplified_log_lines: None,
         }
     }
 
@@ -1277,7 +1286,7 @@ impl OrchestratorCore {
         };
 
         enter_phase(ScanProgressPhase::Setup);
-        let context = self.prepare_scan_context(&log_path).await?;
+        let mut context = self.prepare_scan_context(&log_path).await?;
 
         enter_phase(ScanProgressPhase::Parse);
         let crashgen = self.resolve_crashgen_context(&log_path, &context);
@@ -1337,6 +1346,11 @@ impl OrchestratorCore {
 
         let elapsed_us = start_time.elapsed().as_micros() as u64;
         let mut result = AnalysisResult::success(log_path, report_lines, elapsed_us);
+        // Analysis no longer reads the context, so its lines move into the result
+        // instead of being copied again (audit S8 counts the existing copies).
+        if self.config.simplify_logs {
+            result.simplified_log_lines = Some(std::mem::take(&mut context.processed_lines));
+        }
 
         // Update statistics
         result.formid_count = formid_count;
@@ -1808,6 +1822,23 @@ impl OrchestratorCore {
         report_lines: &[String],
     ) -> Result<PathBuf> {
         write_autoscan_report(&self.file_io, log_path, report_lines).await
+    }
+
+    /// Writes the Simplified Logs copy of `log_path` into `directory` through this
+    /// orchestrator's file I/O, and returns the copy's path.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`crate::error::ScanLogError::ReportError`] when the folder or the copy cannot
+    /// be written.
+    pub(crate) async fn write_simplified_log(
+        &self,
+        directory: &Path,
+        log_path: &Path,
+        lines: &[String],
+    ) -> Result<PathBuf> {
+        crate::simplified_logs::write_simplified_log(&self.file_io, directory, log_path, lines)
+            .await
     }
 
     // ============================================================================
