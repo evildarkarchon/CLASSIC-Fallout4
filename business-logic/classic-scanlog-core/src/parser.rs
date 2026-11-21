@@ -18,12 +18,6 @@ use std::num::NonZeroUsize;
 use std::sync::{Arc, LazyLock};
 
 // Type aliases for complex cache types (Clippy type_complexity fix)
-/// Cache for parsed named segments indexed by hash.
-///
-/// Keys are the xxhash3 of the log (calculated from line count + sample lines).
-/// Values are `HashMap<String, Vec<Arc<str>>>` as produced by `parse_all_sections_arc`.
-type SegmentCache = Arc<RwLock<LruCache<u64, HashMap<String, Vec<Arc<str>>>>>>;
-
 /// Cache for pattern matches indexed by cache key, containing tuples of (line_num, pattern_name, matched_text)
 type PatternCache = Arc<RwLock<LruCache<String, Vec<(usize, String, String)>>>>;
 
@@ -97,8 +91,6 @@ static CRASHGEN_HEADER_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
 /// High-performance log parser with parallel processing and SIMD optimizations
 pub struct LogParser {
     compiled_patterns: Arc<Vec<Regex>>,
-    /// Bounded LRU cache for parsed segments (prevents memory leaks)
-    segment_cache: SegmentCache,
     /// Bounded LRU cache for pattern matches (prevents memory leaks)
     pattern_cache: PatternCache,
     /// Custom patterns added at runtime
@@ -129,8 +121,9 @@ impl LogParser {
     /// # Cache Sizes
     ///
     /// Default cache limits (optimized for typical usage):
-    /// - Segment cache: 100 entries (~10-50MB depending on log size)
     /// - Pattern cache: 500 entries (~5-20MB depending on pattern complexity)
+    ///
+    /// Segmentation is not cached; see `parse_all_sections_arc`.
     ///
     /// These limits prevent unbounded memory growth in long-running processes while
     /// maintaining high cache hit rates for typical workloads.
@@ -138,7 +131,7 @@ impl LogParser {
     /// # Performance
     ///
     /// The parser uses SIMD-optimized string searching (via memchr/memmem) and maintains
-    /// LRU caches for parsed segments and pattern matches, providing 15-30x speedup over
+    /// an LRU cache for pattern matches, providing 15-30x speedup over
     /// Python implementations while preventing memory leaks.
     pub fn new(_custom_boundaries: Option<Vec<(String, String)>>) -> Result<Self> {
         // Note: custom_boundaries are accepted for API compat but ignored.
@@ -148,12 +141,10 @@ impl LogParser {
         let patterns: Vec<Regex> = COMMON_PATTERNS.values().cloned().collect();
 
         // Bounded caches to prevent memory leaks in long-running processes
-        let segment_cache_size = NonZeroUsize::new(100).unwrap_or(NonZeroUsize::MIN); // ~10-50MB typical
         let pattern_cache_size = NonZeroUsize::new(500).unwrap_or(NonZeroUsize::MIN); // ~5-20MB typical
 
         Ok(Self {
             compiled_patterns: Arc::new(patterns),
-            segment_cache: Arc::new(RwLock::new(LruCache::new(segment_cache_size))),
             pattern_cache: Arc::new(RwLock::new(LruCache::new(pattern_cache_size))),
             custom_patterns: Arc::new(DashMap::new()),
             custom_patterns_snapshot: Arc::new(RwLock::new(Vec::new())),
@@ -225,7 +216,7 @@ impl LogParser {
 
     /// Clears all internal caches to free memory.
     ///
-    /// This function removes all cached segment parsing results and pattern match results.
+    /// This function removes all cached pattern match results.
     /// After clearing, subsequent operations will need to reparse and rematch, but will
     /// repopulate the caches. This is useful for long-running processes that parse many
     /// different logs and need to manage memory usage.
@@ -249,7 +240,6 @@ impl LogParser {
     /// After clearing caches, the first parse of each unique log will be slower as caches
     /// are rebuilt. Use this strategically when memory usage is a concern.
     pub fn clear_caches(&self) {
-        self.segment_cache.write().clear();
         self.pattern_cache.write().clear();
     }
 
@@ -269,28 +259,13 @@ impl LogParser {
     ///
     /// # Caching
     ///
-    /// Results are cached by xxhash3 of the input (see `calculate_hash`).
-    /// Subsequent calls with the same log are O(1) cache lookups.
+    /// Results are deliberately not cached. Segmentation is one linear pass, so
+    /// a cache key that is safe to trust (a hash of the full content) costs
+    /// about as much as the parse it would skip, while a sampled key lets two
+    /// similar logs share segments. The scan path also parses each log once per
+    /// run, so a cache there could never produce a legitimate hit.
     pub fn parse_all_sections_arc(&self, lines: &[Arc<str>]) -> HashMap<String, Vec<Arc<str>>> {
-        let cache_key = self.calculate_hash(lines);
-
-        // Check cache first
-        {
-            let cache = self.segment_cache.read();
-            if let Some(cached) = cache.peek(&cache_key) {
-                return cached.clone();
-            }
-        }
-
-        let result = Self::parse_all_sections_impl(lines);
-
-        // Store in cache
-        {
-            let mut cache = self.segment_cache.write();
-            cache.put(cache_key, result.clone());
-        }
-
-        result
+        Self::parse_all_sections_impl(lines)
     }
 
     /// Internal single-pass anchor-first segmentation implementation.
@@ -872,10 +847,6 @@ impl LogParser {
     pub fn get_stats(&self) -> HashMap<String, usize> {
         let mut stats = HashMap::new();
         stats.insert(
-            "segment_cache_size".to_string(),
-            self.segment_cache.read().len(),
-        );
-        stats.insert(
             "pattern_cache_size".to_string(),
             self.pattern_cache.read().len(),
         );
@@ -1170,42 +1141,6 @@ impl LogParser {
         // Direct byte slice comparison (LLVM optimizes this well)
         let haystack_prefix = &haystack.as_bytes()[..needle.len()];
         haystack_prefix == needle.as_bytes()
-    }
-
-    /// Calculate hash for cache key
-    ///
-    /// Optimization 4.1: Use xxhash3 with better sampling strategy for improved cache hit rate.
-    /// Expected impact: 90-95% better cache hit rate, 5-10% faster repeated parsing.
-    ///
-    /// Strategy: Hash file size, first 10 lines, last 10 lines, and middle sample
-    /// for large files to reduce collision rate from ~10% to <1%.
-    fn calculate_hash(&self, lines: &[Arc<str>]) -> u64 {
-        use xxhash_rust::xxh3::Xxh3;
-
-        let mut hasher = Xxh3::new();
-        let len = lines.len();
-
-        // Hash file size for better uniqueness
-        hasher.update(&len.to_le_bytes());
-
-        // First 10 lines (more samples than before)
-        for line in lines.iter().take(10) {
-            hasher.update(line.as_bytes());
-        }
-
-        // Middle sample for large files (reduces collisions significantly)
-        if len > 100 {
-            for line in lines.iter().skip(len / 2).take(5) {
-                hasher.update(line.as_bytes());
-            }
-        }
-
-        // Last 10 lines (more samples than before)
-        for line in lines.iter().rev().take(10) {
-            hasher.update(line.as_bytes());
-        }
-
-        hasher.digest()
     }
 }
 

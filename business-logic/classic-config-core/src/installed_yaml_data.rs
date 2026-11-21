@@ -15,7 +15,6 @@ use classic_shared_core::yaml::{
 };
 use classic_version_registry_core::VersionRegistryScope;
 use classic_vocabulary::Vocabulary;
-use fs4::fs_std::FileExt;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -1241,7 +1240,10 @@ fn acquire_local_ignore_reset_lock(path: &Path) -> Result<File, LocalIgnoreReset
             path: path.to_path_buf(),
             source,
         })?;
-    FileExt::lock_exclusive(&lock).map_err(|source| LocalIgnoreResetError::Lock {
+    // std's blocking exclusive lock (LockFileEx on Windows), the same primitive
+    // classic-durable-publication uses; it replaced fs4, whose 1.x renamed
+    // `lock_exclusive`. Released when the returned handle is dropped.
+    File::lock(&lock).map_err(|source| LocalIgnoreResetError::Lock {
         path: path.to_path_buf(),
         source,
     })?;

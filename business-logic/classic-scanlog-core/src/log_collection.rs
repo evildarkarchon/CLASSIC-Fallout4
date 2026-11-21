@@ -29,6 +29,27 @@ pub const CRASH_LOG_PATTERN: &str = "crash-*.log";
 /// File pattern for AUTOSCAN report files generated during crash analysis
 pub const CRASH_AUTOSCAN_PATTERN: &str = "crash-*-AUTOSCAN.md";
 
+/// Builds a `glob` pattern that matches `components` beneath `dir`, treating
+/// every character of `dir` literally.
+///
+/// Configured directories such as `D:\[Modding]\CLASSIC` are data, not
+/// patterns: left unescaped, a balanced `[...]` becomes a character class that
+/// matches nothing and a lone `[` makes the whole pattern invalid. Only the
+/// `components` (for example `**` or [`CRASH_LOG_PATTERN`]) keep their glob
+/// meaning. They are joined with the platform separator, skipping it where the
+/// pattern already ends in one (a drive root) or is still empty (a relative
+/// empty base folder), so the result matches what `Path::join` would build.
+fn literal_dir_glob(dir: &Path, components: &[&str]) -> String {
+    let mut pattern = glob::Pattern::escape(dir.to_string_lossy().as_ref());
+    for component in components {
+        if !pattern.is_empty() && !pattern.ends_with(std::path::is_separator) {
+            pattern.push(std::path::MAIN_SEPARATOR);
+        }
+        pattern.push_str(component);
+    }
+    pattern
+}
+
 /// Log collector for organizing crash logs from multiple sources
 ///
 /// The LogCollector handles:
@@ -205,9 +226,9 @@ impl LogCollector {
             return Ok(Some(0));
         }
 
-        // Use glob pattern matching
-        let pattern_path = source_dir.join(pattern);
-        let pattern_str = pattern_path.to_string_lossy();
+        // Use glob pattern matching; only `pattern` is a glob, the directory
+        // is escaped so brackets in a configured path stay literal.
+        let pattern_str = literal_dir_glob(source_dir, &[pattern]);
 
         for entry in glob::glob(&pattern_str)
             .map_err(|e| FileIOError::Io(format!("Invalid glob pattern '{}': {}", pattern, e)))?
@@ -290,9 +311,9 @@ impl LogCollector {
             _ => return Ok(Some(0)),
         };
 
-        // Use glob pattern matching
-        let pattern_path = source_dir.join(pattern);
-        let pattern_str = pattern_path.to_string_lossy();
+        // Use glob pattern matching; only `pattern` is a glob, the directory
+        // is escaped so brackets in a configured path stay literal.
+        let pattern_str = literal_dir_glob(source_dir, &[pattern]);
 
         for entry in glob::glob(&pattern_str)
             .map_err(|e| FileIOError::Io(format!("Invalid glob pattern '{}': {}", pattern, e)))?
@@ -483,8 +504,7 @@ impl LogCollector {
 
         // Collect from Crash Logs directory (recursively)
         if self.crash_logs_dir.exists() {
-            let pattern = self.crash_logs_dir.join("**").join(CRASH_LOG_PATTERN);
-            let pattern_str = pattern.to_string_lossy();
+            let pattern_str = literal_dir_glob(&self.crash_logs_dir, &["**", CRASH_LOG_PATTERN]);
 
             for entry in glob::glob(&pattern_str)
                 .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
@@ -504,8 +524,7 @@ impl LogCollector {
             && custom_folder.exists()
             && custom_folder.is_dir()
         {
-            let pattern = custom_folder.join(CRASH_LOG_PATTERN);
-            let pattern_str = pattern.to_string_lossy();
+            let pattern_str = literal_dir_glob(custom_folder, &[CRASH_LOG_PATTERN]);
 
             for entry in glob::glob(&pattern_str)
                 .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
@@ -739,13 +758,7 @@ async fn resolve_targeted_inputs_until_cancelled(
                 return None;
             }
         } else if metadata.is_dir() {
-            let escaped_input = glob::Pattern::escape(input.to_string_lossy().as_ref());
-            let pattern_str = format!(
-                "{escaped_input}{}**{}{}",
-                std::path::MAIN_SEPARATOR,
-                std::path::MAIN_SEPARATOR,
-                CRASH_LOG_PATTERN
-            );
+            let pattern_str = literal_dir_glob(&input, &["**", CRASH_LOG_PATTERN]);
 
             let Ok(entries) = glob::glob(&pattern_str) else {
                 rejected.push(RejectedInput {

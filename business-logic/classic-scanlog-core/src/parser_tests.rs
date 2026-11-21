@@ -454,3 +454,53 @@ fn test_parse_crash_header_tolerates_leading_quote_noise() {
         Some(&"Addictol v1.0.0 Feb 16 2026 08:02:06".to_string())
     );
 }
+
+/// Builds a 120-line log whose sampled regions (line count, first 10 lines,
+/// the five lines at `len / 2`, and the last 10 lines) are fixed, while the
+/// first call-stack frame at line 10 is supplied by the caller.
+///
+/// Two logs built from different frames are the S2 audit collision shape: a
+/// user crashing twice at the same spot produces logs that agree everywhere a
+/// sampled cache key would look, yet differ inside the call stack.
+fn make_log_with_frame(frame: &str) -> Vec<Arc<str>> {
+    let mut log: Vec<Arc<str>> = vec![
+        Arc::from("Unhandled exception at 0x7FF123456789| ACCESS_VIOLATION"),
+        Arc::from("Fallout 4 v1.10.163"),
+        Arc::from("Buffout 4 v1.28.6"),
+        Arc::from("[Compatibility]"),
+        Arc::from("F4EE: true"),
+        Arc::from("SYSTEM SPECS:"),
+        Arc::from("CPU: AMD Ryzen 9 5900X"),
+        Arc::from("GPU: NVIDIA GeForce RTX 3080"),
+        Arc::from("RAM: 32GB"),
+        Arc::from("PROBABLE CALL STACK:"),
+        Arc::from(frame),
+    ];
+    while log.len() < 100 {
+        log.push(Arc::from(format!("[{}] 0x7FF100000000 Fallout4.exe+0000000", log.len())));
+    }
+    log.push(Arc::from("PLUGINS:"));
+    while log.len() < 120 {
+        log.push(Arc::from(format!("[{:02X}] Plugin{}.esp", log.len(), log.len())));
+    }
+    log
+}
+
+#[test]
+fn test_parse_all_sections_arc_does_not_share_segments_between_similar_logs() {
+    let parser = LogParser::new(None).unwrap();
+    let first = make_log_with_frame("[0] 0x7FF111111111 FirstMod.dll+0001111");
+    let second = make_log_with_frame("[0] 0x7FF222222222 SecondMod.dll+0002222");
+    assert_eq!(first.len(), second.len());
+
+    let first_sections = parser.parse_all_sections_arc(&first);
+    let second_sections = parser.parse_all_sections_arc(&second);
+
+    let first_frame = &first_sections[segment_key::CALLSTACK][0];
+    let second_frame = &second_sections[segment_key::CALLSTACK][0];
+    assert!(first_frame.contains("FirstMod.dll"), "first log frame: {first_frame}");
+    assert!(
+        second_frame.contains("SecondMod.dll"),
+        "second log must be segmented from its own lines, got: {second_frame}"
+    );
+}

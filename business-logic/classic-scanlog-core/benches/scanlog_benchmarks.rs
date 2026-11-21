@@ -212,27 +212,12 @@ fn segment_parsing_benchmarks(c: &mut Criterion) {
 
         group.throughput(Throughput::Bytes(bytes as u64));
 
-        // Benchmark initial parse (no cache)
+        // Segmentation is uncached (audit S2), so one parse benchmark covers it.
         group.bench_with_input(
             BenchmarkId::new("parse_segments", name),
             &lines,
             |b, lines| {
                 let parser = LogParser::new(None).expect("parser creation should succeed");
-                b.iter(|| {
-                    parser.clear_caches();
-                    parser.parse_all_sections_arc(lines)
-                });
-            },
-        );
-
-        // Benchmark cached parse
-        group.bench_with_input(
-            BenchmarkId::new("parse_segments_cached", name),
-            &lines,
-            |b, lines| {
-                let parser = LogParser::new(None).expect("parser creation should succeed");
-                // Prime the cache
-                parser.parse_all_sections_arc(lines);
                 b.iter(|| parser.parse_all_sections_arc(lines));
             },
         );

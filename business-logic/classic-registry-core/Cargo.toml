@@ -1,11 +1,11 @@
 [package]
-name = "classic-registry-core"
-version = "9.1.0"
-edition = "2024"
-rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
 description = "Core registry for global singleton management in CLASSIC"
+edition = "2024"
 license = "MIT"
+name = "classic-registry-core"
+rust-version = "1.96.0"
+version = "9.1.0"
 
 [dependencies]
 # Thread-safe concurrent data structures
@@ -15,13 +15,13 @@ dashmap = "6.1.0"
 thiserror = "2.0.9"
 
 # Serialization (for Any type handling)
-serde = { version = "1.0", features = ["derive"] }
+serde = {version = "1.0", features = ["derive"]}
 serde_json = "1.0"
 
 [dev-dependencies]
 # Testing
-tokio = { version = "1.49.0", features = ["full", "test-util"] }
-serial_test = "3.2"
+serial_test = "4.0.1"
+tokio = {version = "1.49.0", features = ["full", "test-util"]}
 
 [lib]
 crate-type = ["rlib"]
@@ -32,7 +32,7 @@ path = "examples/basic_usage.rs"
 
 [lints.rust]
 deprecated = "deny"
+missing_docs = "warn" # Encourage documentation
 rust_2024_compatibility = "warn"
-unsafe_code = "deny"  # We don't use unsafe in CLASSIC
-missing_docs = "warn"   # Encourage documentation
+unsafe_code = "deny" # We don't use unsafe in CLASSIC
 unused = "deny"

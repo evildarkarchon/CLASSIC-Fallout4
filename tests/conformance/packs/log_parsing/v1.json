@@ -251,7 +251,6 @@
         ],
         "benchmarkFinite": true,
         "afterClear": {
-          "segment_cache_size": 0,
           "pattern_cache_size": 0,
           "custom_patterns": 1,
           "compiled_patterns": 7
@@ -357,7 +356,6 @@
         ],
         "benchmarkFinite": true,
         "afterClear": {
-          "segment_cache_size": 0,
           "pattern_cache_size": 0,
           "custom_patterns": 1,
           "compiled_patterns": 7

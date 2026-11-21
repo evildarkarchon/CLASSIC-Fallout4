@@ -72,7 +72,6 @@ linked-hash-map = { workspace = true }
 # Ordered collections (preserves YAML key order for Python parity)
 indexmap = { workspace = true }
 rustc-hash = { workspace = true }  # Optimization 1.2: Fast hasher for FormID counting
-xxhash-rust = { workspace = true } # Optimization 4.1: Fast hashing for cache keys
 
 # String optimization
 smartstring = { workspace = true }

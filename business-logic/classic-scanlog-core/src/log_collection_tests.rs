@@ -209,6 +209,97 @@ async fn test_targeted_directory_with_glob_metacharacters() {
     assert!(res.rejected.is_empty());
 }
 
+#[test]
+fn test_literal_dir_glob_escapes_directory_only() {
+    let sep = std::path::MAIN_SEPARATOR;
+    assert_eq!(
+        literal_dir_glob(Path::new("a[1]"), &["**", CRASH_LOG_PATTERN]),
+        format!("a[[]1[]]{sep}**{sep}crash-*.log")
+    );
+    // A root already ends in a separator, and an empty base folder has no
+    // directory part at all; neither may gain a stray separator.
+    assert_eq!(
+        literal_dir_glob(
+            Path::new(std::path::MAIN_SEPARATOR_STR),
+            &[CRASH_LOG_PATTERN]
+        ),
+        format!("{sep}crash-*.log")
+    );
+    assert_eq!(
+        literal_dir_glob(Path::new(""), &[CRASH_LOG_PATTERN]),
+        "crash-*.log"
+    );
+}
+
+#[tokio::test]
+async fn test_standard_collection_with_glob_metacharacters_in_paths() {
+    // Standard discovery builds its globs from configured directories, so a
+    // balanced `[...]` in any of them must stay literal rather than becoming
+    // a character class that matches nothing.
+    let temp = TempDir::new().unwrap();
+    let base = temp.path().join("[Modding]").join("CLASSIC");
+    tokio::fs::create_dir_all(&base).await.unwrap();
+    let base_log = base.join("crash-2024-01-01-12-00-00.log");
+    tokio::fs::write(&base_log, b"log1").await.unwrap();
+    let base_report = base.join("crash-2024-01-01-12-00-00-AUTOSCAN.md");
+    tokio::fs::write(&base_report, b"report").await.unwrap();
+
+    let xse_folder = temp.path().join("My Games [F4]").join("F4SE");
+    tokio::fs::create_dir_all(&xse_folder).await.unwrap();
+    let xse_log = xse_folder.join("crash-2024-01-01-13-00-00.log");
+    tokio::fs::write(&xse_log, b"log2").await.unwrap();
+
+    let custom_folder = temp.path().join("custom[1]");
+    tokio::fs::create_dir_all(&custom_folder).await.unwrap();
+    let custom_log = custom_folder.join("crash-2024-01-01-14-00-00.log");
+    tokio::fs::write(&custom_log, b"log3").await.unwrap();
+
+    let collector = LogCollector::new(base.clone(), Some(xse_folder), Some(custom_folder.clone()));
+    let logs = collector.collect_all().await.unwrap();
+
+    let crash_logs = base.join("Crash Logs");
+    assert!(!base_log.exists());
+    assert!(!base_report.exists());
+    assert!(
+        crash_logs
+            .join("crash-2024-01-01-12-00-00-AUTOSCAN.md")
+            .exists()
+    );
+    assert!(xse_log.exists());
+    assert_eq!(logs.len(), 3);
+    assert!(logs.contains(&crash_logs.join("crash-2024-01-01-12-00-00.log")));
+    assert!(logs.contains(&crash_logs.join("crash-2024-01-01-13-00-00.log")));
+    assert!(logs.contains(&custom_log));
+}
+
+#[tokio::test]
+async fn test_standard_collection_with_unbalanced_bracket_in_paths() {
+    // An unescaped lone `[` makes the whole pattern invalid, which used to
+    // surface as an infrastructure error instead of a normal scan.
+    let temp = TempDir::new().unwrap();
+    let base = temp.path().join("CLASSIC [beta");
+    tokio::fs::create_dir_all(&base).await.unwrap();
+    let base_log = base.join("crash-2024-01-01-12-00-00.log");
+    tokio::fs::write(&base_log, b"log1").await.unwrap();
+
+    let custom_folder = temp.path().join("logs [old");
+    tokio::fs::create_dir_all(&custom_folder).await.unwrap();
+    let custom_log = custom_folder.join("crash-2024-01-01-14-00-00.log");
+    tokio::fs::write(&custom_log, b"log3").await.unwrap();
+
+    let collector = LogCollector::new(base.clone(), None, Some(custom_folder));
+    let logs = collector.collect_all().await.unwrap();
+
+    assert_eq!(
+        logs,
+        vec![
+            base.join("Crash Logs")
+                .join("crash-2024-01-01-12-00-00.log"),
+            custom_log,
+        ]
+    );
+}
+
 #[tokio::test]
 async fn test_targeted_duplicate_file() {
     let temp = TempDir::new().unwrap();
