@@ -248,6 +248,50 @@ fn snapshot_uses_last_value_for_duplicate_key_in_section() {
     assert_eq!(snapshot.value_for("patches", "Achievements"), Some("false"));
 }
 
+/// Final settings follow first appearance in the Crash Log, not hash order.
+///
+/// Disabled Setting Notices are rendered in this order, so a hash-ordered
+/// snapshot made the same Crash Log produce differently ordered Autoscan
+/// Reports from run to run. Enough keys are used that a hash order matching
+/// insertion order by chance is negligible.
+#[test]
+fn snapshot_final_settings_follow_first_insertion_order() {
+    let mut snapshot = CrashgenSettingsSnapshot::new();
+    snapshot.insert_unscoped("Zeta", "1");
+    snapshot.insert_unscoped("Alpha", "2");
+    for key in ["Memory", "Achievements", "Wobbly", "Bravo", "Kilo", "Echo"] {
+        snapshot.insert("Patches", key, "false");
+    }
+    for key in ["Yankee", "Charlie", "Xray", "Delta"] {
+        snapshot.insert("Compatibility", key, "true");
+    }
+    // A replaced value keeps the position where the key first appeared.
+    snapshot.insert("[Patches]", "Memory", "true");
+
+    let observed = snapshot
+        .final_settings()
+        .map(|setting| (setting.section, setting.key, setting.value))
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        observed,
+        vec![
+            (None, "Zeta", "1"),
+            (None, "Alpha", "2"),
+            (Some("patches"), "Memory", "true"),
+            (Some("patches"), "Achievements", "false"),
+            (Some("patches"), "Wobbly", "false"),
+            (Some("patches"), "Bravo", "false"),
+            (Some("patches"), "Kilo", "false"),
+            (Some("patches"), "Echo", "false"),
+            (Some("compatibility"), "Yankee", "true"),
+            (Some("compatibility"), "Charlie", "true"),
+            (Some("compatibility"), "Xray", "true"),
+            (Some("compatibility"), "Delta", "true"),
+        ]
+    );
+}
+
 #[test]
 fn version_predicate_does_not_match_when_crashgen_version_is_unknown() {
     let rules = CrashgenSettingsRules {

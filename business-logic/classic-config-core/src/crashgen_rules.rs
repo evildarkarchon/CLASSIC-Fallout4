@@ -1,6 +1,8 @@
 //! Shared crashgen settings rule model and evaluator.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
+
+use indexmap::IndexMap;
 
 /// Rule severity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -318,8 +320,11 @@ pub struct EvaluationResult {
 /// exact and case-sensitive.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct CrashgenSettingsSnapshot {
-    sections: HashMap<String, HashMap<String, String>>,
-    unscoped: HashMap<String, String>,
+    // Insertion-ordered so `final_settings` follows the Crash Log. A hash map
+    // iterated in per-process random order, which reordered Disabled Setting
+    // Notices between runs of the same Crash Log.
+    sections: IndexMap<String, IndexMap<String, String>>,
+    unscoped: IndexMap<String, String>,
 }
 
 /// Borrowed view of one final crashgen setting in a snapshot.
@@ -388,10 +393,15 @@ impl CrashgenSettingsSnapshot {
 
     /// Return whether the snapshot has no scoped or unscoped settings.
     pub fn is_empty(&self) -> bool {
-        self.sections.values().all(HashMap::is_empty) && self.unscoped.is_empty()
+        self.sections.values().all(IndexMap::is_empty) && self.unscoped.is_empty()
     }
 
     /// Iterate over the final setting values retained by the snapshot.
+    ///
+    /// Unscoped settings come first, then each section in the order it first
+    /// appeared, each with its keys in first-appearance order. A replaced value
+    /// keeps the position where its key first appeared. The order is
+    /// deterministic, so callers that render it produce reproducible output.
     pub fn final_settings(&self) -> impl Iterator<Item = CrashgenSettingRef<'_>> {
         self.unscoped
             .iter()

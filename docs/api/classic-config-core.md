@@ -831,6 +831,7 @@ Contributor notes:
 - `settings` is section-aware; `evaluate_rules()` looks up by `RuleTarget.section` and `RuleTarget.key`
 - `CrashgenSettingsSnapshot` normalizes section names by trimming whitespace, accepting either `Compatibility` or `[Compatibility]`, and comparing case-insensitively after removing one bracket pair
 - setting keys are trimmed but otherwise exact and case-sensitive
+- `final_settings()` iterates in Crash Log order: unscoped settings first, then each section and its keys in first-appearance order, with a replaced value keeping its key's original position. Disabled Setting Notices follow this order, so it is what makes an Autoscan Report reproducible across runs
 - unscoped settings do not satisfy sectioned Crashgen Expectations; missing targeted sections or settings produce no outcome
 
 ### `PreflightRule` and `PreflightAction`

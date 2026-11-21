@@ -123,6 +123,44 @@ fn analyze_returns_typed_outcomes_and_separate_disabled_notices() {
     );
 }
 
+/// Disabled Setting Notices keep Crash Log order so a report is reproducible.
+#[test]
+fn disabled_setting_notices_follow_crash_log_order() {
+    let analyzer =
+        CrashgenSettingsAnalyzer::new("Buffout 4".to_string(), CrashgenEntry::default_entry())
+            .unwrap();
+    let disabled = [
+        "SmallBlockAllocator",
+        "HavokMemorySystem",
+        "ScaleformAllocator",
+        "MemoryManager",
+        "ArchiveLimits",
+        "BSTextureStreamerLocalHeap",
+        "MaxStdIO",
+        "ActorIsHostileToActor",
+    ];
+    let mut settings = CrashgenSettingsSnapshot::new();
+    for key in disabled {
+        settings.insert("Patches", key, "false");
+    }
+
+    let result = analyzer
+        .analyze(CrashgenSettingsAnalysisInput {
+            settings: &settings,
+            installed_plugins: &HashSet::new(),
+            crashgen_version: None,
+            config_layout: ConfigLayout::Unknown,
+        })
+        .unwrap();
+
+    let observed = result
+        .disabled_setting_notices
+        .iter()
+        .map(|notice| notice.setting_name.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(observed, disabled);
+}
+
 #[test]
 fn completed_analysis_without_matches_is_an_explicit_empty_result() {
     let analyzer =
