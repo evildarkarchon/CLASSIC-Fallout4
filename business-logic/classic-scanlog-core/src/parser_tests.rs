@@ -477,11 +477,18 @@ fn make_log_with_frame(frame: &str) -> Vec<Arc<str>> {
         Arc::from(frame),
     ];
     while log.len() < 100 {
-        log.push(Arc::from(format!("[{}] 0x7FF100000000 Fallout4.exe+0000000", log.len())));
+        log.push(Arc::from(format!(
+            "[{}] 0x7FF100000000 Fallout4.exe+0000000",
+            log.len()
+        )));
     }
     log.push(Arc::from("PLUGINS:"));
     while log.len() < 120 {
-        log.push(Arc::from(format!("[{:02X}] Plugin{}.esp", log.len(), log.len())));
+        log.push(Arc::from(format!(
+            "[{:02X}] Plugin{}.esp",
+            log.len(),
+            log.len()
+        )));
     }
     log
 }
@@ -498,7 +505,10 @@ fn test_parse_all_sections_arc_does_not_share_segments_between_similar_logs() {
 
     let first_frame = &first_sections[segment_key::CALLSTACK][0];
     let second_frame = &second_sections[segment_key::CALLSTACK][0];
-    assert!(first_frame.contains("FirstMod.dll"), "first log frame: {first_frame}");
+    assert!(
+        first_frame.contains("FirstMod.dll"),
+        "first log frame: {first_frame}"
+    );
     assert!(
         second_frame.contains("SecondMod.dll"),
         "second log must be segmented from its own lines, got: {second_frame}"
