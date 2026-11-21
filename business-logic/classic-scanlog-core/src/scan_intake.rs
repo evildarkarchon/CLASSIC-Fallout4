@@ -241,6 +241,8 @@ impl ScanReadyAnalysis {
 /// ever receives an already-selected snapshot (or, for adapters and tests,
 /// already-parsed in-memory data).
 enum YamlDataSource<'a> {
+    // Constructed only by `from_yaml_data`, which only the sibling unit tests call.
+    #[cfg_attr(not(test), allow(dead_code))]
     InMemory(&'a YamlDataCore),
     InstalledSnapshot(Arc<InstalledYamlDataSnapshot>),
     InstalledSnapshotBorrowed(&'a InstalledYamlDataSnapshot),
@@ -265,6 +267,8 @@ impl<'a> CrashLogScanIntake<'a> {
     /// Supplying `paths` lets in-memory tests or adapters load the same
     /// simplify-log rules and resolve the same typed FormID paths as path-backed
     /// production input.
+    // Exercised only by the sibling unit tests; there is no production caller.
+    #[cfg_attr(not(test), allow(dead_code))]
     #[must_use]
     pub fn from_yaml_data(
         yaml: &'a YamlDataCore,
@@ -437,6 +441,8 @@ impl<'a> CrashLogScanIntake<'a> {
 /// The order preserves existing behavior: main game database, hardcoded
 /// compatibility databases, then caller-provided configured databases. Relative
 /// configured paths are resolved under `yaml_dir_data` before deduplication.
+// Exercised only by the sibling unit tests; there is no production caller.
+#[cfg_attr(not(test), allow(dead_code))]
 #[must_use]
 pub fn resolve_formid_database_paths(
     yaml_dir_data: impl AsRef<Path>,
@@ -452,6 +458,8 @@ pub fn resolve_formid_database_paths(
 /// existing adapter fail-soft behavior. This compatibility helper delegates to
 /// the typed sidecar settings module that owns the YAML path/key implementation
 /// details.
+// No caller at all, not even a test: dead surface left for the dead-code retirement work.
+#[allow(dead_code)]
 #[must_use]
 pub fn load_simplify_remove_list(yaml_dir_data: impl AsRef<Path>) -> Vec<String> {
     scan_sidecar_settings::load_simplify_remove_list(yaml_dir_data)

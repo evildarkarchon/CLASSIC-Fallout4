@@ -1090,6 +1090,8 @@ pub(crate) struct CrashLogScanRunResult {
     pub succeeded: usize,
     /// Number of failed Crash Logs, excluding cancelled entries.
     pub failed: usize,
+    /// Number of Unsolved Crash Logs: no stack trace, so no analysis and no report.
+    pub unsolved: usize,
     /// Number of Crash Logs cancelled before analysis started.
     pub cancelled: usize,
     /// Per-log outcomes.
@@ -1108,6 +1110,7 @@ impl CrashLogScanRunResult {
             total: 0,
             succeeded: 0,
             failed: 0,
+            unsolved: 0,
             cancelled: 0,
             logs: Vec::new(),
         }
@@ -1123,7 +1126,11 @@ impl CrashLogScanRunResult {
             .iter()
             .filter(|outcome| outcome.outcome == CrashLogScanOutcome::CancelledBeforeStart)
             .count();
-        let failed = total.saturating_sub(succeeded + cancelled);
+        let unsolved = logs
+            .iter()
+            .filter(|outcome| outcome.outcome == CrashLogScanOutcome::Unsolved)
+            .count();
+        let failed = total.saturating_sub(succeeded + unsolved + cancelled);
 
         Self {
             status: if cancelled > 0 {
@@ -1139,6 +1146,7 @@ impl CrashLogScanRunResult {
             total,
             succeeded,
             failed,
+            unsolved,
             cancelled,
             logs,
         }
@@ -1155,6 +1163,7 @@ impl CrashLogScanRunResult {
             total: 0,
             succeeded: 0,
             failed: 0,
+            unsolved: 0,
             cancelled: 0,
             logs: Vec::new(),
         }
@@ -1196,6 +1205,7 @@ impl CrashLogScanRunResult {
             total,
             succeeded: 0,
             failed: 0,
+            unsolved: 0,
             cancelled: total,
             logs,
         }
@@ -1212,6 +1222,7 @@ impl CrashLogScanRunResult {
             total: 0,
             succeeded: 0,
             failed: 0,
+            unsolved: 0,
             cancelled: 0,
             logs: Vec::new(),
         }
@@ -1233,6 +1244,7 @@ impl CrashLogScanRunResult {
             total,
             succeeded: 0,
             failed: 0,
+            unsolved: 0,
             cancelled: 0,
             logs: Vec::new(),
         }
@@ -1256,6 +1268,7 @@ impl CrashLogScanRunResult {
             total,
             succeeded: 0,
             failed: 0,
+            unsolved: 0,
             cancelled: 0,
             logs: Vec::new(),
         }
@@ -1310,6 +1323,7 @@ impl CrashLogScanRunLogOutcome {
             disposition: Some(match self.outcome {
                 CrashLogScanOutcome::Succeeded => contract::LogDisposition::Succeeded,
                 CrashLogScanOutcome::Failed => contract::LogDisposition::Failed,
+                CrashLogScanOutcome::Unsolved => contract::LogDisposition::Unsolved,
                 CrashLogScanOutcome::CancelledBeforeStart => {
                     contract::LogDisposition::CancelledBeforeStart
                 }
@@ -1325,6 +1339,9 @@ pub(crate) enum CrashLogScanOutcome {
     Succeeded,
     /// Analysis, Autoscan Report writing, or Unsolved Logs movement failed.
     Failed,
+    /// The Crash Log has no stack trace of any form, so it was not analyzed and has no
+    /// Autoscan Report. Nothing failed; a failed Unsolved Logs move turns it into `Failed`.
+    Unsolved,
     /// Cancellation was requested before this Crash Log started analysis.
     CancelledBeforeStart,
 }
@@ -1358,7 +1375,7 @@ pub(crate) enum CrashLogScanRunEventKind {
     Phase,
     /// The Crash Log completed successfully.
     Completed,
-    /// The Crash Log failed or was cancelled.
+    /// The Crash Log failed, was Unsolved, or was cancelled.
     Failed,
 }
 
@@ -1402,8 +1419,10 @@ async fn finalize_log_outcome(
 
     let mut moved_to_unsolved_logs = false;
     let mut unsolved_logs_finalization_error = None;
-    if outcome == CrashLogScanOutcome::Failed
-        && let Some(directory) = unsolved_logs_destination
+    if matches!(
+        outcome,
+        CrashLogScanOutcome::Failed | CrashLogScanOutcome::Unsolved
+    ) && let Some(directory) = unsolved_logs_destination
     {
         let finalization = move_unsolved_artifacts(
             &crash_log,
@@ -1414,6 +1433,9 @@ async fn finalize_log_outcome(
         .await;
         moved_to_unsolved_logs = finalization.moved_any;
         if let Some(move_error) = finalization.error {
+            // A move that went wrong is a real failure, so an Unsolved log reports it as
+            // Failed rather than hiding a filesystem error behind a non-error disposition.
+            outcome = CrashLogScanOutcome::Failed;
             unsolved_logs_finalization_error = Some(move_error.clone());
             error = Some(match error {
                 Some(existing) => format!("{existing}; {move_error}"),
@@ -1489,6 +1511,8 @@ fn normalize_scan_run_concurrency(max_concurrent: Option<usize>) -> Option<usize
 fn outcome_from_analysis(result: &AnalysisResult) -> CrashLogScanOutcome {
     if result.success {
         CrashLogScanOutcome::Succeeded
+    } else if result.unsolved {
+        CrashLogScanOutcome::Unsolved
     } else if result.error.as_deref() == Some(CANCELLED_BY_USER_MESSAGE) {
         CrashLogScanOutcome::CancelledBeforeStart
     } else {

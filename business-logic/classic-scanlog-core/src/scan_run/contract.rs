@@ -1135,6 +1135,8 @@ pub struct SettledRunResult {
     pub succeeded: usize,
     /// Number of failed Crash Logs.
     pub failed: usize,
+    /// Number of Unsolved Crash Logs: no stack trace, so no analysis and no Autoscan Report.
+    pub unsolved: usize,
     /// Number of discovered Crash Logs cancelled before start.
     pub cancelled: usize,
     /// Per-log results in discovery order.
@@ -1161,6 +1163,7 @@ impl SettledRunResult {
             total,
             succeeded,
             failed,
+            unsolved,
             cancelled,
             logs,
             observer_delivery_failure,
@@ -1183,6 +1186,7 @@ impl SettledRunResult {
             total,
             succeeded,
             failed,
+            unsolved,
             cancelled,
             logs,
             observer_delivery_failure,
@@ -1207,6 +1211,7 @@ impl From<SettledRunResult> for RunResult {
             total,
             succeeded,
             failed,
+            unsolved,
             cancelled,
             logs,
             observer_delivery_failure,
@@ -1222,6 +1227,7 @@ impl From<SettledRunResult> for RunResult {
             total,
             succeeded,
             failed,
+            unsolved,
             cancelled,
             logs,
             observer_delivery_failure,
@@ -1422,12 +1428,22 @@ pub enum LogDisposition {
     Succeeded,
     /// One or more structured processing or finalization failures occurred.
     Failed,
+    /// The Crash Log has no stack trace of any form, so it was not analyzed and has no
+    /// Autoscan Report. This is not a failure: `failures` stays empty and `message`
+    /// explains why. A Standard run moves it to Unsolved Logs when that is requested; if
+    /// that move fails, the log is `Failed` instead.
+    Unsolved,
     /// Cancellation prevented this discovered Crash Log from starting.
     CancelledBeforeStart,
 }
 
 impl Vocabulary for LogDisposition {
-    const VARIANTS: &'static [Self] = &[Self::Succeeded, Self::Failed, Self::CancelledBeforeStart];
+    const VARIANTS: &'static [Self] = &[
+        Self::Succeeded,
+        Self::Failed,
+        Self::Unsolved,
+        Self::CancelledBeforeStart,
+    ];
 
     /// These tokens are frozen. They are the exact strings this contract has
     /// always returned from its inherent `as_str`, and which the Python scan-run
@@ -1437,19 +1453,21 @@ impl Vocabulary for LogDisposition {
         match self {
             Self::Succeeded => "succeeded",
             Self::Failed => "failed",
+            Self::Unsolved => "unsolved",
             Self::CancelledBeforeStart => "cancelled_before_start",
         }
     }
 
     /// Settles nothing, which is the point: the CLI, the GUI, and the TUI
-    /// already render exactly these three phrases for a terminal disposition, so
-    /// adopting them moves agreed wording to one home without changing shipped
-    /// output. Only `CancelledBeforeStart` differs from its token, and only by
-    /// the word separator.
+    /// already rendered the original three phrases for a terminal disposition, so
+    /// adopting them moved agreed wording to one home without changing shipped
+    /// output. `Unsolved` came later and reads as its token. Only
+    /// `CancelledBeforeStart` differs from its token, and only by the word separator.
     fn label(self) -> &'static str {
         match self {
             Self::Succeeded => "succeeded",
             Self::Failed => "failed",
+            Self::Unsolved => "unsolved",
             Self::CancelledBeforeStart => "cancelled before start",
         }
     }
@@ -1557,6 +1575,7 @@ impl From<EngineLogOutcome> for LogResult {
         let disposition = match outcome {
             CrashLogScanOutcome::Succeeded => LogDisposition::Succeeded,
             CrashLogScanOutcome::Failed => LogDisposition::Failed,
+            CrashLogScanOutcome::Unsolved => LogDisposition::Unsolved,
             CrashLogScanOutcome::CancelledBeforeStart => LogDisposition::CancelledBeforeStart,
         };
         let failures = [
@@ -2023,6 +2042,8 @@ pub struct RunResult {
     pub succeeded: usize,
     /// Number of failed Crash Logs.
     pub failed: usize,
+    /// Number of Unsolved Crash Logs: no stack trace, so no analysis and no Autoscan Report.
+    pub unsolved: usize,
     /// Number of discovered Crash Logs cancelled before start.
     pub cancelled: usize,
     /// Per-log results in discovery order.
@@ -2415,6 +2436,7 @@ fn project_engine_result(
         total,
         succeeded,
         failed,
+        unsolved,
         cancelled,
         logs,
     } = engine_result;
@@ -2431,6 +2453,7 @@ fn project_engine_result(
         total,
         succeeded,
         failed,
+        unsolved,
         cancelled,
         logs,
         observer_delivery_failure: None,

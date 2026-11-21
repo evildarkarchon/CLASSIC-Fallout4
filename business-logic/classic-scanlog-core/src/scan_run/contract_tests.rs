@@ -3442,6 +3442,155 @@ fn standard_unsolved_logs_filesystem_failure_is_structured() {
     );
 }
 
+/// The real corpus shape of an Unsolved Crash Log: crashgen wrote its header and stopped.
+const HEADER_ONLY_CRASH_LOG: &str = "Fallout 4 v1.10.163\nBuffout 4 v1.31.1 Feb 28 2023 00:32:02\n";
+
+/// Writes one header-only Crash Log into the Standard discovery folder.
+fn write_unsolved_log_at(directory: &std::path::Path, filename: &str) -> PathBuf {
+    std::fs::create_dir_all(directory).expect("fixture directory should be created");
+    let log_path = directory.join(filename);
+    std::fs::write(&log_path, HEADER_ONLY_CRASH_LOG).expect("Unsolved fixture should be written");
+    log_path
+}
+
+/// Builds a Standard request over `root` that moves Unsolved Logs to `destination`.
+fn standard_unsolved_request(root: &std::path::Path, destination: PathBuf) -> contract::Request {
+    let mut configuration = final_run_configuration();
+    configuration.installation_root = root.to_path_buf();
+    configuration.max_concurrent = Some(1);
+    contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: root.to_path_buf(),
+            custom_scan_directory: None,
+            configured_documents_root: Some(root.join("Documents")),
+        },
+        StandardUnsolvedLogsIntent::MoveToCustom(destination),
+    )
+}
+
+/// Verifies a log with no stack trace is Unsolved, not Failed: moved, unreported, counted apart.
+#[test]
+fn standard_log_without_stack_trace_is_unsolved_moved_and_unreported() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    write_minimal_yaml_tree(root, &root.join("CLASSIC Data"));
+    let log = write_unsolved_log_at(&root.join("Crash Logs"), "crash-header-only.log");
+    let unsolved = root.join("Unsolved Logs");
+    let mut finished = Vec::new();
+    let mut observer = |event| {
+        if let contract::Event::LogFinished { disposition, .. } = event {
+            finished.push(disposition);
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            standard_unsolved_request(root, unsolved.clone()),
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
+        .expect("an Unsolved log should be terminal result data");
+
+    assert_eq!(finished, vec![contract::LogDisposition::Unsolved]);
+    assert_eq!(result.status, contract::RunStatus::Completed);
+    assert_eq!(
+        (
+            result.total,
+            result.succeeded,
+            result.failed,
+            result.unsolved,
+            result.cancelled
+        ),
+        (1, 0, 0, 1, 0)
+    );
+    let entry = &result.logs[0];
+    assert_eq!(entry.disposition, contract::LogDisposition::Unsolved);
+    assert!(entry.failures.is_empty(), "{:?}", entry.failures);
+    assert_eq!(
+        entry.message.as_deref(),
+        Some(crate::orchestrator::UNSOLVED_NO_STACK_TRACE_MESSAGE)
+    );
+    assert!(entry.autoscan_report.is_none());
+    assert!(entry.moved_to_unsolved_logs);
+    assert!(!log.exists());
+    assert!(unsolved.join("crash-header-only.log").is_file());
+    assert!(!crate::report::autoscan_report_path(&unsolved.join("crash-header-only.log")).exists());
+}
+
+/// Verifies a Targeted run reports an Unsolved log but never moves it.
+#[test]
+fn targeted_log_without_stack_trace_is_unsolved_and_left_in_place() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    write_minimal_yaml_tree(root, &root.join("CLASSIC Data"));
+    let log = write_unsolved_log_at(&root.join("Selected"), "crash-header-only.log");
+    let mut configuration = final_run_configuration();
+    configuration.installation_root = root.to_path_buf();
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![log.clone()],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
+        .expect("an Unsolved log should be terminal result data");
+
+    assert_eq!((result.failed, result.unsolved), (0, 1));
+    assert_eq!(
+        result.logs[0].disposition,
+        contract::LogDisposition::Unsolved
+    );
+    assert!(!result.logs[0].moved_to_unsolved_logs);
+    assert!(result.logs[0].autoscan_report.is_none());
+    assert!(log.is_file());
+    assert!(!crate::report::autoscan_report_path(&log).exists());
+}
+
+/// Verifies a failed Unsolved Logs move turns an Unsolved log into a structured failure.
+#[test]
+fn unsolved_log_whose_move_fails_is_failed_with_the_finalization_stage() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    write_minimal_yaml_tree(root, &root.join("CLASSIC Data"));
+    let log = write_unsolved_log_at(&root.join("Crash Logs"), "crash-header-only.log");
+    let blocked_destination = root.join("blocked-destination");
+    std::fs::write(&blocked_destination, "not a directory")
+        .expect("blocking destination file should be written");
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            standard_unsolved_request(root, blocked_destination),
+            &contract::Cancellation::new(),
+            None,
+            contract::ObserverFailurePolicy::ContinueRun,
+        ))
+        .expect("a failed move should remain per-log result data");
+
+    assert_eq!((result.failed, result.unsolved), (1, 0));
+    let entry = &result.logs[0];
+    assert_eq!(entry.disposition, contract::LogDisposition::Failed);
+    assert_eq!(
+        entry
+            .failures
+            .iter()
+            .map(|failure| failure.stage)
+            .collect::<Vec<_>>(),
+        vec![contract::LogFailureStage::UnsolvedLogsFinalization]
+    );
+    assert!(!entry.moved_to_unsolved_logs);
+    assert!(log.is_file());
+}
+
 /// Verifies every stable infrastructure stage preserves its message and optional path.
 #[test]
 fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
@@ -3607,7 +3756,7 @@ fn every_self_owned_variant_is_listed_for_iteration() {
     // gains a variant; these three have no source to be told by, so an
     // incomplete `VARIANTS` here would silently narrow every binding's
     // exhaustive projection test into a vacuous pass.
-    assert_eq!(contract::LogDisposition::VARIANTS.len(), 3);
+    assert_eq!(contract::LogDisposition::VARIANTS.len(), 4);
     assert_eq!(contract::LogFailureStage::VARIANTS.len(), 3);
     assert_eq!(contract::InfrastructureErrorStage::VARIANTS.len(), 6);
 }

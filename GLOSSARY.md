@@ -174,7 +174,7 @@ A game or documents path discovered during Game Setup Intake that a caller may p
 _Avoid_: auto-save, path mutation, detected path side effect
 
 **Unsolved Logs**:
-Crash Logs and related Autoscan Reports that could not be successfully analyzed and may be moved aside for later review.
+Crash Logs and related Autoscan Reports that could not be successfully analyzed and may be moved aside so later runs do not scan them again. A Crash Log with no stack trace of any form is Unsolved and gets no Autoscan Report; a missing plugin list alone does not make a log Unsolved.
 _Avoid_: failed scans, bad logs
 
 **Unsolved Logs Destination**:
@@ -226,11 +226,11 @@ The structured setup validation data attached to a Crash Log Scan Run Result whe
 _Avoid_: setup error string, FCX exception, UI-only setup message
 
 **Standard Crash Log Scan Run**:
-A Crash Log Scan Run over the normal discovered scan set where failed Crash Logs and their Autoscan Reports may be moved to Unsolved Logs when that setting is enabled.
+A Crash Log Scan Run over the normal discovered scan set where failed and Unsolved Crash Logs and their Autoscan Reports may be moved to Unsolved Logs when that setting is enabled.
 _Avoid_: batch scan, normal scan
 
 **Targeted Crash Log Scan Run**:
-A Crash Log Scan Run over Crash Logs resolved from paths explicitly selected by the user for that run. Targeted runs do not move failed Crash Logs or Autoscan Reports to Unsolved Logs.
+A Crash Log Scan Run over Crash Logs resolved from paths explicitly selected by the user for that run. Targeted runs do not move failed or Unsolved Crash Logs or Autoscan Reports to Unsolved Logs.
 _Avoid_: manual scan, selected-file scan
 
 **Version Registry**:

@@ -498,6 +498,7 @@ fn map_log_disposition(value: contract::LogDisposition) -> ffi::ScanRunContractL
     match value {
         contract::LogDisposition::Succeeded => ffi::ScanRunContractLogDisposition::Succeeded,
         contract::LogDisposition::Failed => ffi::ScanRunContractLogDisposition::Failed,
+        contract::LogDisposition::Unsolved => ffi::ScanRunContractLogDisposition::Unsolved,
         contract::LogDisposition::CancelledBeforeStart => {
             ffi::ScanRunContractLogDisposition::CancelledBeforeStart
         }
@@ -637,6 +638,7 @@ fn run_result_to_dto(value: contract::RunResult) -> ffi::ScanRunContractRunResul
         total: value.total,
         succeeded: value.succeeded,
         failed: value.failed,
+        unsolved: value.unsolved,
         cancelled: value.cancelled,
         logs: value.logs.into_iter().map(log_result_to_dto).collect(),
     }
@@ -730,6 +732,7 @@ fn empty_run_result_dto() -> ffi::ScanRunContractRunResult {
         total: 0,
         succeeded: 0,
         failed: 0,
+        unsolved: 0,
         cancelled: 0,
         logs: Vec::new(),
     }

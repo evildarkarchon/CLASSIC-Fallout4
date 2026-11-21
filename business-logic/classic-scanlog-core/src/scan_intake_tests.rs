@@ -256,6 +256,7 @@ fn in_memory_yaml_without_paths_preserves_config_and_avoids_sidecar_paths() {
         crashgen_ignore: Vec::new(),
         warn_noplugins: String::new(),
         warn_outdated: String::new(),
+        mods_plugin_limit: String::new(),
         xse_acronym: "F4SE".to_string(),
         game_ignore_plugins: Vec::new(),
         game_ignore_records: Vec::new(),

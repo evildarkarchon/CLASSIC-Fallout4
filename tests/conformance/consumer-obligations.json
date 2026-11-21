@@ -423,7 +423,8 @@
                   { "lineIndex": 9, "noun": "bytes", "segmentIndex": 5, "value": 29 },
                   { "lineIndex": 10, "noun": "logs", "segmentIndex": 1, "value": 2 },
                   { "lineIndex": 10, "noun": "logs", "segmentIndex": 3, "value": 0 },
-                  { "lineIndex": 10, "noun": "logs", "segmentIndex": 5, "value": 0 }
+                  { "lineIndex": 10, "noun": "logs", "segmentIndex": 5, "value": 0 },
+                  { "lineIndex": 10, "noun": "logs", "segmentIndex": 7, "value": 0 }
                 ],
                 "typedPaths": [
                   { "lineIndex": 2, "path": "Standard", "segmentIndex": 1 },

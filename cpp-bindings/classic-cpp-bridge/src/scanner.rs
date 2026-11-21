@@ -317,6 +317,8 @@ mod ffi {
         Succeeded = 0,
         Failed = 1,
         CancelledBeforeStart = 2,
+        /// No stack trace of any form: not analyzed, no Autoscan Report, not a failure.
+        Unsolved = 3,
     }
 
     /// Stable stage for one per-log processing or finalization failure.
@@ -587,6 +589,8 @@ mod ffi {
         total: usize,
         succeeded: usize,
         failed: usize,
+        /// Logs with no stack trace, counted apart from `failed`.
+        unsolved: usize,
         cancelled: usize,
         logs: Vec<ScanRunContractLogResult>,
     }

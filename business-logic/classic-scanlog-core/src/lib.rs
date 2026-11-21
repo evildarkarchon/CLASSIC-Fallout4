@@ -40,9 +40,6 @@ pub mod gpu_detector;
 pub mod log_collection;
 pub mod mod_guidance_analyzer;
 pub mod named_record_finding_analyzer;
-// These implementation modules retain focused characterization helpers that are
-// exercised only in their sibling unit tests.
-#[allow(dead_code)]
 pub(crate) mod orchestrator;
 pub mod papyrus;
 pub mod parser;
@@ -51,7 +48,6 @@ pub mod plugin_analyzer;
 pub mod plugin_evidence_analyzer;
 pub mod record_scanner;
 pub(crate) mod report;
-#[allow(dead_code)]
 pub(crate) mod scan_intake;
 pub mod scan_run;
 mod scan_sidecar_settings;

@@ -82,7 +82,7 @@ for (const auto& log : result.logs) {
 The projection retains:
 
 - `discoveryIndex`
-- `Succeeded`, `Failed`, or `CancelledBeforeStart` disposition, as booleans that select control flow and feed counts
+- `Succeeded`, `Failed`, `Unsolved`, or `CancelledBeforeStart` disposition, as booleans that select control flow and feed counts
 - Crash Log and optional Autoscan Report paths
 - optional message and movement state
 
@@ -97,7 +97,7 @@ No `QStringList` lookup, fallback-path recovery, `qMin` clamp, or completion-ord
 After terminal projection, `ScanWorker` iterates `terminal.logs` in discovery order.
 
 - `CancelledBeforeStart` entries are skipped because they represent accepted work that Rust never admitted.
-- admitted succeeded or failed entries emit `logScanned(discoveryIndex, succeeded, crashLog)`
+- admitted succeeded, failed, or Unsolved entries emit `logScanned(discoveryIndex, succeeded, crashLog)`; an Unsolved entry reports `succeeded` as false
 
 Nothing is described in this loop any more. `ScanWorker` logs the whole rendered run once, before it iterates — every fact its per-log warnings used to carry (the Crash Log path, the outcome, the Autoscan Report, movement to Unsolved Logs, and each failure's stage and message) is a line in that block, stated once by Rust. What survives here is the signal, which carries data rather than words.
 

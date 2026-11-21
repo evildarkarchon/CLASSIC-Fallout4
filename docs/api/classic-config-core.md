@@ -464,7 +464,7 @@ Representative field groups:
 - CLASSIC metadata: `classic_version`, `classic_version_date`, `classic_records_list`
 - game metadata: `game_root_name`, `game_version`, `xse_acronym`
 - crashgen data: `crashgen_name`, `crashgen_latest_og`, `crashgen_ignore`, `crashgen_registry`
-- warnings and UI text: `warn_noplugins`, `warn_outdated`, `autoscan_text`
+- warnings and UI text: `warn_noplugins`, `warn_outdated`, `autoscan_text`, and `mods_plugin_limit` (Main YAML `Mods_Warn.Mods_Plugin_Limit`, the Autoscan Report notice for a load order past the plugin limit)
 - ignore lists: `game_ignore_plugins`, `game_ignore_records`, `ignore_list`
 - suspect maps and mod DB maps stored as `IndexMap` to preserve YAML key order
 

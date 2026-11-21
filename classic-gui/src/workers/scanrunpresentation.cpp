@@ -129,6 +129,9 @@ ScanRunLogPresentation presentLog(const classic::scanner::ScanRunContractLogResu
     case Disposition::Failed:
         presentation.failed = true;
         break;
+    case Disposition::Unsolved:
+        presentation.unsolved = true;
+        break;
     case Disposition::CancelledBeforeStart:
         presentation.cancelledBeforeStart = true;
         break;
@@ -526,6 +529,7 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
     presentation.total = static_cast<int>(result.total);
     presentation.succeeded = static_cast<int>(result.succeeded);
     presentation.failed = static_cast<int>(result.failed);
+    presentation.unsolved = static_cast<int>(result.unsolved);
     presentation.cancelled = static_cast<int>(result.cancelled);
     presentation.setupDetails = setupDetails(result);
     presentation.hasInstalledYamlData = result.has_installed_yaml_data;

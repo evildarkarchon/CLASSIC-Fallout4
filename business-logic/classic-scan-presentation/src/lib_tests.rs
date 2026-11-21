@@ -81,6 +81,7 @@ fn run_result(status: RunStatus) -> RunResult {
         total: 0,
         succeeded: 0,
         failed: 0,
+        unsolved: 0,
         cancelled: 0,
         logs: Vec::new(),
         observer_delivery_failure: None,
@@ -217,9 +218,10 @@ fn terminal_status_pins_a_completion_with_failures() {
 #[test]
 fn outcome_summary_pins_the_aggregate_tally() {
     let mut result = run_result(RunStatus::Completed);
-    result.total = 4;
+    result.total = 7;
     result.succeeded = 1;
     result.failed = 2;
+    result.unsolved = 3;
     result.cancelled = 1;
 
     assert_eq!(
@@ -239,10 +241,46 @@ fn outcome_summary_pins_the_aggregate_tally() {
                 },
                 Text("failed,"),
                 Count {
+                    value: 3,
+                    noun: "logs"
+                },
+                Text("unsolved,"),
+                Count {
                     value: 1,
                     noun: "log"
                 },
                 Text("not started"),
+            ],
+        }
+    );
+}
+
+/// Verifies a completion whose only shortfall is Unsolved logs names them instead of
+/// claiming every log was scanned, since an Unsolved log is never analyzed.
+#[test]
+fn terminal_status_pins_a_completion_with_unsolved_logs() {
+    let mut result = run_result(RunStatus::Completed);
+    result.total = 5;
+    result.succeeded = 3;
+    result.unsolved = 2;
+
+    assert_eq!(
+        render_run_result(&result)[0],
+        DisplayLine {
+            severity: Notice,
+            segments: vec![
+                Label("completed"),
+                Text("-"),
+                Count {
+                    value: 5,
+                    noun: "logs"
+                },
+                Text("discovered,"),
+                Count {
+                    value: 2,
+                    noun: "logs"
+                },
+                Text("unsolved"),
             ],
         }
     );

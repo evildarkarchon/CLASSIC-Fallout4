@@ -181,7 +181,7 @@ worker moves its result through `scan_run_contract_execution_take_result(...)`,
 
 Terminal mapping:
 
-- `Completed` emits an explicit `100% / Complete` progress update and `finished(total, succeeded, failed)`
+- `Completed` emits an explicit `100% / Complete` progress update, whose completed count includes Unsolved logs, and `finished(total, succeeded, failed)`
 - `CancelledBeforeDiscovery` emits `cancelled(...)` and has no discovery payload
 - `Cancelled` emits `cancelled(...)` with completed and not-started counts
 - `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
@@ -202,7 +202,7 @@ The presentation layer projects:
 - the envelope's `display_lines` into Qt-owned `ScanRunDisplayLinePresentation` values, plus the same sequence rendered as plain text (`message`) and as rich text (`richText`). One field covers all three payloads, because `scan_run_contract_execute` and `scan_run_pending_recovery_settle` return the same envelope and the lines describe whichever payload the presence flags select
 - the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors. This projection stays this frontend's, because the FCX Mode setup types have not adopted the shared vocabulary and `classic-scan-presentation` deliberately does not render them. It is grouped in *after* the rendered lines rather than spliced into them
 - optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`, `Generated`, `RecoveryRequired`, or `ProceedWithoutIgnore` Local Ignore state and exact identity; whether Reset To Default can succeed for this run; and diagnostic role/candidate/path/kind/message context
-- per-log `Succeeded`, `Failed`, and `CancelledBeforeStart` dispositions
+- per-log `Succeeded`, `Failed`, `Unsolved`, and `CancelledBeforeStart` dispositions
 - Autoscan Report paths and movement state
 - discovery-ordered terminal logs and Rust-owned aggregate counts
 

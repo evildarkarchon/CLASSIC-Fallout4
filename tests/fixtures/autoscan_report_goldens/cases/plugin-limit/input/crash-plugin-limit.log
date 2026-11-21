@@ -1,0 +1,35 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.37.0
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+
+[Patches]
+EnabledSetting: true
+
+SYSTEM SPECS:
+    OS: Microsoft Windows 11 Pro
+    CPU: AMD Ryzen 7 7800X3D
+
+PROBABLE CALL STACK:
+    [0] Fallout4.exe+0733512
+    [1] Form ID: 0x00012345
+    [2] Form ID: 0x01ABCDEF
+    [3] Form ID: 0x02ABCDEF
+    [4] Form ID: 0xFFABCDEF
+    [5] Form ID: 0xFE000ABC
+
+MODULES:
+    Fallout4.exe v1.10.163.0
+F4SE PLUGINS:
+    buffout4.dll v1.37.0
+
+PLUGINS:
+    [00] Fallout4.esm
+    [01] DLCRobot.esm
+    [02] MiddlePlugin.esp
+    [FE] FullPluginAtFE.esp
+    [FF] LastFullPlugin.esp
+    [00] WrappedPluginA.esp
+    [01] WrappedPluginB.esp
+    [FE:000] LightPlugin.esl
+

@@ -184,6 +184,7 @@
         "tokens": [
           "succeeded",
           "failed",
+          "unsolved",
           "cancelled_before_start",
           "not_a_real_token"
         ]
@@ -199,6 +200,11 @@
           {
             "token": "failed",
             "label": "failed",
+            "rejected": false
+          },
+          {
+            "token": "unsolved",
+            "label": "unsolved",
             "rejected": false
           },
           {

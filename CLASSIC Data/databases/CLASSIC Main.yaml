@@ -408,10 +408,9 @@ Mods_Warn:
     -----
 
   Mods_Plugin_Limit: |
-    # [!] CAUTION : ONE OF YOUR PLUGINS HAS THE [FF] PLUGIN INDEX VALUE #
-    * THIS MEANS YOU ALMOST CERTAINLY WENT OVER THE GAME PLUGIN LIMIT! *
+    ***❌ CAUTION : ONE OF YOUR PLUGINS HAS THE [FF] PLUGIN INDEX VALUE!***
+    THIS MEANS YOU ALMOST CERTAINLY WENT OVER THE GAME PLUGIN LIMIT!
     Disable some of your esm/esp plugins and re-run the Crash Logs Scan.
-    -----
 
 # =============== INCLUDE & EXCLUDE LISTS ==============
 

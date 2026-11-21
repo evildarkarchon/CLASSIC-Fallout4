@@ -174,6 +174,21 @@ Terminal results distinguish completed work from
 `LogDisposition::CancelledBeforeStart`; callers do not infer cancellation from
 missing events or free-form text.
 
+### Unsolved Crash Logs
+
+A Crash Log is Unsolved when it has no stack trace of any form: both its
+`PROBABLE CALL STACK:` frames and its raw `STACK:` dump are absent or blank.
+A missing plugin list alone does not make a log Unsolved. The check runs right
+after the log is read and parsed, before any analyzer, so an Unsolved log gets
+no Autoscan Report. Its `LogResult` has `LogDisposition::Unsolved`, no
+structured failures, and a `message` saying why. It is not a failure and is
+counted in `RunResult::unsolved`, not `failed`.
+
+A Standard run that moves Unsolved Logs moves Unsolved logs as it moves failed
+ones, so later runs do not scan them again. If that move fails, the log becomes
+`Failed` with an `UnsolvedLogsFinalization` failure. Targeted runs report the
+disposition and leave the log in place.
+
 ### Observer and event contract
 
 Observation is optional and non-controlling. `contract::Observer` receives
@@ -231,7 +246,7 @@ cancellation short-circuits abandonment ahead of every event.
 - the run-scoped FCX setup result when applicable
 - the selected Installed YAML Data metadata when intake was reached
 - Rust-selected effective concurrency when selection occurred
-- aggregate total, succeeded, failed, and cancelled counts
+- aggregate total, succeeded, failed, unsolved, and cancelled counts
 - one `LogResult` per accepted log, always in discovery order
 
 Each `LogResult` carries its discovery index, Crash Log path, optional Autoscan
@@ -305,7 +320,7 @@ counterpart anywhere else in the workspace returning the same strings.
 
 | Enum | Vocabulary Tokens | Display Labels that are more than a respelling |
 | --- | --- | --- |
-| `LogDisposition` | `succeeded`, `failed`, `cancelled_before_start` | — |
+| `LogDisposition` | `succeeded`, `failed`, `unsolved`, `cancelled_before_start` | — |
 | `LogFailureStage` | `analysis`, `report_write`, `unsolved_logs_finalization` | `Unsolved Logs finalization` |
 | `InfrastructureErrorStage` | `request_validation`, `discovery`, `intake`, `formid_database_access`, `initialization`, `internal_invariant` | `FormID database access`, `internal invariant validation` |
 
@@ -381,9 +396,10 @@ may be reworded.
 
 For an admitted log, Rust owns one durable unit:
 
-1. analyze the accepted Crash Log
+1. analyze the accepted Crash Log, or find it Unsolved before any analyzer runs
 2. persist its sibling `{stem}-AUTOSCAN.md` report when analysis produced one
-3. for eligible Standard failures, finalize the configured Unsolved Logs move
+3. for eligible Standard failures and Unsolved logs, finalize the configured
+   Unsolved Logs move
 4. emit `LogFinished`
 
 Destination collision handling and partial filesystem failure reporting are
@@ -626,7 +642,9 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
   Assembly alone sorts findings and renders the legacy named-record prose.
 - `FormIDFindingAnalyzer` accepts owned Crash Log lines and plugin/prefix facts,
   aggregates distinct canonical FormIDs with checked occurrence counts, resolves
-  plugins, and optionally enriches resolved findings through the opaque strict
+  plugins (when a load order wrapped past the plugin limit gives one prefix to
+  several plugins, the first claimant owns it; only an empty name or malformed
+  prefix is `InvalidConfiguration`), and optionally enriches resolved findings through the opaque strict
   `FormIdValueLookup` facade. Its result retains unresolved identifiers and
   distinguishes lookup disabled, miss, and hit states without carrying report
   prose. Lookup misses are data; malformed replies and operational failures use
@@ -636,7 +654,12 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
   filtering, and batch detection utilities; its former report-producing match
   methods are removed. Plugin-limit checks classify the detected game version
   from the process default Version Registry snapshot unless
-  `with_version_registry_scope(scope)` selects another scope.
+  `with_version_registry_scope(scope)` selects another scope. A complete run
+  feeds the check the game and crashgen versions from each log's own header
+  (the configured versions only when the header lacks one), and when the limit
+  is hit renders the authored `Mods_Warn.Mods_Plugin_Limit` text at the head
+  of the report's plugin section. A disabled check (NG with a pre-1.37
+  crashgen) renders nothing.
 - `RecordScanner` remains a utility-only raw record extractor and lazily caches
   its per-instance Aho-Corasick matchers with `std::sync::OnceLock`. Its former
   report-producing `scan_named_records` family is removed; `contains_record`

@@ -292,6 +292,7 @@
     "discovery_source.targeted",
     "log_disposition.succeeded",
     "log_disposition.failed",
+    "log_disposition.unsolved",
     "log_disposition.cancelled_before_start",
     "log_failure_stage.analysis",
     "log_failure_stage.report_write",

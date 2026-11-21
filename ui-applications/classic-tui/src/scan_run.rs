@@ -501,7 +501,7 @@ pub(crate) struct TerminalPresentation {
 /// guessing an index would be the structural assumption this consolidation removes.
 pub(crate) fn format_result(result: &RunResult) -> TerminalPresentation {
     let lines = render_run_result(result);
-    let completed = result.succeeded + result.failed;
+    let completed = result.succeeded + result.failed + result.unsolved;
     let percent = if result.total == 0 {
         0.0
     } else {

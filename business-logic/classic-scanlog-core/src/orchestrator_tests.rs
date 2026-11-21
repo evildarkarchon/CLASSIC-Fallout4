@@ -64,6 +64,7 @@ fn make_yaml_data(classic_version: &str) -> classic_config_core::YamlDataCore {
         crashgen_ignore: Vec::new(),
         warn_noplugins: String::new(),
         warn_outdated: String::new(),
+        mods_plugin_limit: String::new(),
         xse_acronym: "F4SE".to_string(),
         game_ignore_plugins: Vec::new(),
         game_ignore_records: Vec::new(),
@@ -1032,14 +1033,193 @@ fn derive_config_layout_returns_unknown_for_invalid_header_version() {
     assert_eq!(layout, classic_config_core::ConfigLayout::Unknown);
 }
 
-#[test]
-fn detect_incomplete_log_slice_matches_named_segment_semantics() {
-    let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
-    let orchestrator = OrchestratorCore::new(config).unwrap();
+/// Builds a Crash Log with the given header lines, optional stack frame, and plugin entries.
+fn crash_log_text(
+    game: &str,
+    crashgen: &str,
+    stack_frame: Option<&str>,
+    plugins: &[&str],
+) -> String {
+    let mut text = format!(
+        "{game}\n{crashgen}\n\nUnhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF6EF4C3512 Fallout4.exe+0733512\n\n"
+    );
+    if let Some(frame) = stack_frame {
+        text.push_str(&format!("PROBABLE CALL STACK:\n    {frame}\n\n"));
+    }
+    text.push_str("MODULES:\n    Fallout4.exe v1.10.163.0\n\nPLUGINS:\n");
+    for plugin in plugins {
+        text.push_str(&format!("    {plugin}\n"));
+    }
+    text
+}
 
-    // One plugin line should be considered complete by both APIs.
-    let one_plugin = vec!["[00] Fallout4.esm".to_string()];
-    assert!(!orchestrator.detect_incomplete_log_slice(&one_plugin));
+/// Parses raw log text into the named segment map the orchestrator works from.
+fn segments_of(text: &str) -> HashMap<String, Vec<Arc<str>>> {
+    let lines: Vec<Arc<str>> = text.lines().map(Arc::from).collect();
+    LogParser::new(None)
+        .expect("parser should build")
+        .parse_all_sections_arc(&lines)
+}
+
+const PLUGIN_LIMIT_NOTICE: &str = "PLUGIN LIMIT NOTICE FOR TESTS";
+
+/// Fixture orchestrator that also carries an authored plugin-limit notice.
+fn make_plugin_limit_orchestrator() -> OrchestratorCore {
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    config.crashgen_latest = "1.26.2".to_string();
+    config.game_version = "1.10.163".to_string();
+    config.game_version_vr = "1.2.72".to_string();
+    config.xse_acronym = "F4SE".to_string();
+    config.plugin_limit_notice = PLUGIN_LIMIT_NOTICE.to_string();
+    OrchestratorCore::new(config).expect("plugin-limit orchestrator should build")
+}
+
+#[test]
+fn stack_trace_detection_accepts_either_trace_and_nothing_else() {
+    assert!(segments_have_stack_trace(&segments_of(
+        "PROBABLE CALL STACK:\n    [0] Fallout4.exe+0733512\nMODULES:\n"
+    )));
+    assert!(segments_have_stack_trace(&segments_of(
+        "REGISTERS:\n    RAX 0x0\nSTACK:\n    [RSP+0] 0x0\n"
+    )));
+    // A header with nothing under it, or registers alone, is not a stack trace.
+    assert!(!segments_have_stack_trace(&segments_of(
+        "PROBABLE CALL STACK:\n   \n\nMODULES:\n    Fallout4.exe\nREGISTERS:\n    RAX 0x0\n"
+    )));
+    assert!(!segments_have_stack_trace(&segments_of(
+        "Fallout 4 v1.10.163\nBuffout 4 v1.31.1 Feb 28 2023 00:32:02\n"
+    )));
+}
+
+#[test]
+fn log_without_stack_trace_is_unsolved_and_gets_no_report() {
+    let orchestrator = make_fixture_orchestrator();
+    // The real corpus shape: crashgen wrote its two header lines and nothing else.
+    let fixture = write_fixture_log(
+        "crash-header-only.log",
+        "Fallout 4 v1.10.163\nBuffout 4 v1.31.1 Feb 28 2023 00:32:02\n",
+    );
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("an Unsolved log is a result, not an error");
+
+    assert!(result.unsolved);
+    assert!(!result.success);
+    assert!(result.report_lines.is_empty());
+    assert_eq!(
+        result.error.as_deref(),
+        Some(UNSOLVED_NO_STACK_TRACE_MESSAGE)
+    );
+}
+
+#[test]
+fn missing_plugin_list_alone_does_not_make_a_log_unsolved() {
+    let orchestrator = make_fixture_orchestrator();
+    let fixture = write_fixture_log(
+        "crash-no-plugins.log",
+        &crash_log_text(
+            "Fallout 4 v1.10.163",
+            "Buffout 4 v1.37.0",
+            Some("[0] Fallout4.exe+0733512"),
+            &[],
+        ),
+    );
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("log should process");
+
+    assert!(result.success, "{:?}", result.error);
+    assert!(!result.unsolved);
+    assert!(!result.report_lines.is_empty());
+}
+
+#[test]
+fn simplify_logs_rules_cannot_make_an_intact_log_unsolved() {
+    // A removal rule matching every stack frame empties the filtered call stack; the log
+    // on disk still has its trace, so it must be analyzed, not treated as Unsolved.
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    config.game_version = "1.10.163".to_string();
+    config.simplify_logs = true;
+    config.remove_list = vec!["Fallout4.exe+".to_string()];
+    let orchestrator = OrchestratorCore::new(config).expect("orchestrator should build");
+    let fixture = write_fixture_log(
+        "crash-simplified-stack.log",
+        &crash_log_text(
+            "Fallout 4 v1.10.163",
+            "Buffout 4 v1.37.0",
+            Some("[0] Fallout4.exe+0733512"),
+            &["[00] Fallout4.esm"],
+        ),
+    );
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("log should process");
+
+    assert!(!result.unsolved, "{:?}", result.error);
+    assert!(result.success, "{:?}", result.error);
+}
+
+#[test]
+fn plugin_limit_notice_leads_the_plugin_section_for_an_og_log() {
+    let orchestrator = make_plugin_limit_orchestrator();
+    let fixture = write_fixture_log(
+        "crash-plugin-limit.log",
+        &crash_log_text(
+            "Fallout 4 v1.10.163",
+            "Buffout 4 v1.37.0",
+            Some("[0] Fallout4.exe+0733512"),
+            &[
+                "[00] Fallout4.esm",
+                "[FE] FullPlugin.esp",
+                "[FF] LastPlugin.esp",
+            ],
+        ),
+    );
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("log should process");
+    let report = result.report_lines.concat();
+
+    let section = report
+        .find("Checking for Plugin-related Errors")
+        .expect("plugin section should be rendered");
+    let notice = report
+        .find(PLUGIN_LIMIT_NOTICE)
+        .expect("plugin-limit notice should be rendered");
+    assert!(
+        notice > section,
+        "notice should sit inside the plugin section"
+    );
+    assert_eq!(report.matches(PLUGIN_LIMIT_NOTICE).count(), 1);
+}
+
+#[test]
+fn plugin_limit_uses_the_logs_own_versions_not_the_configured_game() {
+    // The orchestrator is configured for OG, where [FF] means the limit was hit. This log
+    // was written by NG with a pre-1.37 Buffout, whose [FF] does not, so no notice.
+    let orchestrator = make_plugin_limit_orchestrator();
+    let fixture = write_fixture_log(
+        "crash-ng-ff.log",
+        &crash_log_text(
+            "Fallout 4 v1.10.984",
+            "Buffout 4 v1.36.0",
+            Some("[0] Fallout4.exe+0733512"),
+            &["[00] Fallout4.esm", "[FF] LastPlugin.esp"],
+        ),
+    );
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("log should process");
+
+    assert!(result.success, "{:?}", result.error);
+    assert!(!result.report_lines.concat().contains(PLUGIN_LIMIT_NOTICE));
 }
 
 #[test]
